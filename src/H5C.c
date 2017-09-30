@@ -348,10 +348,17 @@ H5C_create(size_t		      max_cache_size,
     cache_ptr->pl_head_ptr			= NULL;
     cache_ptr->pl_tail_ptr			= NULL;
 
+#ifdef PINNED_LIST
     cache_ptr->pel_len				= 0;
     cache_ptr->pel_size				= (size_t)0;
     cache_ptr->pel_head_ptr			= NULL;
     cache_ptr->pel_tail_ptr			= NULL;
+#else /* PINNED_LIST */
+    cache_ptr->psl_len				= 0;
+    cache_ptr->psl_size				= (size_t)0;
+    cache_ptr->psl_head_ptr			= NULL;
+    cache_ptr->psl_tail_ptr			= NULL;
+#endif /* PINNED_LIST */
 
     cache_ptr->LRU_list_len			= 0;
     cache_ptr->LRU_list_size			= (size_t)0;
@@ -2169,11 +2176,13 @@ H5C_resize_entry(void *thing, size_t new_size)
         }
 
         /* update the pinned and/or protected entry list */
+#ifdef PINNED_LIST
         if(entry_ptr->is_pinned) {
             H5C__DLL_UPDATE_FOR_SIZE_CHANGE((cache_ptr->pel_len), \
                                             (cache_ptr->pel_size), \
                                             (entry_ptr->size), (new_size))
         } /* end if */
+#endif /* PINNED_LIST */
         if(entry_ptr->is_protected) {
             H5C__DLL_UPDATE_FOR_SIZE_CHANGE((cache_ptr->pl_len), \
                                             (cache_ptr->pl_size), \
@@ -5317,11 +5326,15 @@ H5C_flush_invalidate_cache(H5F_t *f, hid_t dxpl_id, unsigned flags)
     if(!(flags & H5C__EVICT_ALLOW_LAST_PINS_FLAG)) {
         HDassert(cache_ptr->index_size == 0);
         HDassert(cache_ptr->clean_index_size == 0);
+#ifdef PINNED_LIST
         HDassert(cache_ptr->pel_len == 0);
         HDassert(cache_ptr->pel_size == 0);
+#endif /* PINNED_LIST */
     } /* end if */
     else {
+#ifdef PINNED_LIST
         H5C_cache_entry_t *entry_ptr;   /* Cache entry */
+#endif /* PINNED_LIST */
         unsigned u;                     /* Local index variable */
 
         /* All rings except ring 4 should be empty now */
@@ -5332,6 +5345,7 @@ H5C_flush_invalidate_cache(H5F_t *f, hid_t dxpl_id, unsigned flags)
             HDassert(cache_ptr->clean_index_ring_size[u] == 0);
         } /* end for */
 
+#ifdef PINNED_LIST
         /* Check that any remaining pinned entries are in the superblock ring */
         entry_ptr = cache_ptr->pel_head_ptr;
         while(entry_ptr) {
@@ -5341,6 +5355,7 @@ H5C_flush_invalidate_cache(H5F_t *f, hid_t dxpl_id, unsigned flags)
             /* Advance to next entry in pinned entry list */
             entry_ptr = entry_ptr->next;
         } /* end while */
+#endif /* PINNED_LIST */
     } /* end else */
     HDassert(cache_ptr->dirty_index_size == 0);
     HDassert(cache_ptr->slist_len == 0);
@@ -5399,10 +5414,14 @@ H5C_flush_invalidate_ring(H5F_t * f, hid_t dxpl_id, H5C_ring_t ring,
     hbool_t             restart_slist_scan;
     uint32_t            protected_entries = 0;
     int32_t             i;
+#ifdef PINNED_LIST
     int32_t             cur_ring_pel_len;
     int32_t             old_ring_pel_len;
+#endif /* PINNED_LIST */
     unsigned            cooked_flags;
+#ifdef PINNED_LIST
     unsigned            evict_flags;
+#endif /* PINNED_LIST */
     H5SL_node_t        *node_ptr = NULL;
     H5C_cache_entry_t  *entry_ptr = NULL;
     H5C_cache_entry_t  *next_entry_ptr = NULL;
@@ -5428,7 +5447,9 @@ H5C_flush_invalidate_ring(H5F_t * f, hid_t dxpl_id, H5C_ring_t ring,
     /* Filter out the flags that are not relevant to the flush/invalidate.
      */
     cooked_flags = flags & H5C__FLUSH_CLEAR_ONLY_FLAG;
+#ifdef PINNED_LIST
     evict_flags = flags & H5C__EVICT_ALLOW_LAST_PINS_FLAG;
+#endif /* PINNED_LIST */
 
     /* The flush proceedure here is a bit strange.
      *
@@ -5459,6 +5480,7 @@ H5C_flush_invalidate_ring(H5F_t * f, hid_t dxpl_id, H5C_ring_t ring,
      * to increasing address order, but there are no guarantees.
      */
 
+#ifdef PINNED_LIST
     /* compute the number of pinned entries in this ring */
     entry_ptr = cache_ptr->pel_head_ptr;
     cur_ring_pel_len = 0;
@@ -5470,8 +5492,11 @@ H5C_flush_invalidate_ring(H5F_t * f, hid_t dxpl_id, H5C_ring_t ring,
 
         entry_ptr = entry_ptr->next;
     } /* end while */
+#endif /* PINNED_LIST */
 
+#ifdef PINNED_LIST
     old_ring_pel_len = cur_ring_pel_len;
+#endif /* PINNED_LIST */
     while(cache_ptr->index_ring_len[ring] > 0) {
         /* first, try to flush-destroy any dirty entries.   Do this by
          * making a scan through the slist.  Note that new dirty entries
@@ -5745,6 +5770,7 @@ H5C_flush_invalidate_ring(H5F_t * f, hid_t dxpl_id, H5C_ring_t ring,
             } /* end if */
         } /* end for loop scanning hash table */
 
+#ifdef PINNED_LIST
         /* We can't do anything if entries are pinned.  The
          * hope is that the entries will be unpinned as the
          * result of destroys of entries that reference them.
@@ -5776,6 +5802,7 @@ H5C_flush_invalidate_ring(H5F_t * f, hid_t dxpl_id, H5C_ring_t ring,
 
             HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL, "Pinned entry count not decreasing, cur_ring_pel_len = %d, old_ring_pel_len = %d, ring = %d", (int)cur_ring_pel_len, (int)old_ring_pel_len, (int)ring)
         } /* end if */
+#endif /* PINNED_LIST */
 
         HDassert(protected_entries == cache_ptr->pl_len);
 
@@ -5798,8 +5825,10 @@ H5C_flush_invalidate_ring(H5F_t * f, hid_t dxpl_id, H5C_ring_t ring,
 
     if(protected_entries > 0)
         HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL, "Cache has protected entries")
+#ifdef PINNED_LIST
     else if(cur_ring_pel_len > 0)
         HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL, "Can't unpin all pinned entries in ring")
+#endif /* PINNED_LIST */
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -7272,12 +7301,14 @@ H5C__make_space_in_cache(H5F_t *f, hid_t dxpl_id, size_t space_needed,
 
 
 	/* NEED: work on a better assert for corked entries */
+#ifdef PINNED_LIST
 	HDassert( ( entries_examined > (2 * initial_list_len) ) ||
 		  ( (cache_ptr->pl_size + cache_ptr->pel_size + cache_ptr->min_clean_size) >
 		    cache_ptr->max_cache_size ) ||
 		  ( ( cache_ptr->clean_index_size + empty_space )
 		    >= cache_ptr->min_clean_size ) ||
 		  ( ( num_corked_entries )));
+#endif /* PINNED_LIST */
 #if H5C_MAINTAIN_CLEAN_AND_DIRTY_LRU_LISTS
 
         HDassert( ( entries_examined > (2 * initial_list_len) ) ||

@@ -448,6 +448,7 @@ H5C_construct_candidate_list__clean_cache(H5C_t * cache_ptr)
      */
     space_needed = cache_ptr->slist_size;
 
+#ifdef PINNED_LIST
     /* Recall that while we shouldn't have any protected entries at this
      * point, it is possible that some dirty entries may reside on the
      * pinned list at this point.
@@ -456,6 +457,7 @@ H5C_construct_candidate_list__clean_cache(H5C_t * cache_ptr)
               (cache_ptr->dLRU_list_size + cache_ptr->pel_size) );
     HDassert( cache_ptr->slist_len  <= 
               (cache_ptr->dLRU_list_len + cache_ptr->pel_len) );
+#endif /* PINNED_LIST */
 
     if(space_needed > 0) { /* we have work to do */
         H5C_cache_entry_t *entry_ptr;
@@ -488,6 +490,7 @@ H5C_construct_candidate_list__clean_cache(H5C_t * cache_ptr)
         } /* end while */
         HDassert( entry_ptr == NULL );
 
+#ifdef PINNED_LIST
         /* it is possible that there are some dirty entries on the 
          * protected entry list as well -- scan it too if necessary
          */
@@ -512,6 +515,7 @@ H5C_construct_candidate_list__clean_cache(H5C_t * cache_ptr)
 
             entry_ptr = entry_ptr->next;
         } /* end while */
+#endif /* PINNED_LIST */
 
         HDassert( nominated_entries_count == cache_ptr->slist_len );
         HDassert( nominated_entries_size == space_needed );
@@ -801,6 +805,7 @@ H5C_mark_entries_as_clean(H5F_t *  f,
     HDassert( entries_cleared == other_entries_marked );
 #endif /* H5C_DO_SANITY_CHECKS */
 
+#ifdef PINNED_LIST
     /* It is also possible that some of the cleared entries are on the
      * pinned list.  Must scan that also.
      */
@@ -826,6 +831,7 @@ H5C_mark_entries_as_clean(H5F_t *  f,
                 entry_ptr = entry_ptr->next;
         }  /* end while */
     } /* end while */
+#endif /* PINNED_LIST */
 
 #if H5C_DO_SANITY_CHECKS
     HDassert( entries_cleared == pinned_entries_marked + other_entries_marked );
@@ -1459,6 +1465,7 @@ H5C__flush_candidates_in_ring(H5F_t *f, hid_t dxpl_id, H5C_ring_t ring,
         } /* end if */
     } /* end while */
 
+#ifdef PINNED_LIST
     /* It is also possible that some of the cleared entries are on the
      * pinned list.  Must scan that also.
      *
@@ -1609,6 +1616,7 @@ H5C__flush_candidates_in_ring(H5F_t *f, hid_t dxpl_id, H5C_ring_t ring,
        *               ( entries_cleared > entries_to_clear ) ) &&
        *             ( progress ) )
        */
+#endif /* PINNED_LIST */
 
 #if H5C_DO_SANITY_CHECKS
     HDassert(init_index_len == cache_ptr->index_len);

@@ -702,6 +702,7 @@ H5C_stats(H5C_t * cache_ptr,
               (unsigned long)(cache_ptr->pl_len),
               (unsigned long)(cache_ptr->max_pl_len));
 
+#ifdef PINNED_LIST
     HDfprintf(stdout,
              "%s  current (max) PEL size / length    = %ld (%ld) / %lu (%lu)\n",
               cache_ptr->prefix,
@@ -709,6 +710,7 @@ H5C_stats(H5C_t * cache_ptr,
               (long)(cache_ptr->max_pel_size),
               (unsigned long)(cache_ptr->pel_len),
               (unsigned long)(cache_ptr->max_pel_len));
+#endif /* PINNED_LIST */
 
     HDfprintf(stdout,
               "%s  current LRU list size / length     = %ld / %lu\n",
