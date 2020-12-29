@@ -16,6 +16,7 @@
  * Jacob Smith 2017-11-10
  */
 
+#include "h5tools.h"
 #include "h5tools_utils.h"
 #include "h5test.h"
 
@@ -68,6 +69,7 @@
  *
  *****************************************************************************/
 
+H5_GCC_DIAG_OFF("format")
 
 /*----------------------------------------------------------------------------
  *
@@ -1002,6 +1004,7 @@ test_set_configured_fapl(void)
 
     hid_t            fapl_id = H5I_INVALID_HID;
     other_fa_t       wrong_fa = {0x432, 0xf82, 0x9093};
+#ifdef H5_HAVE_ROS3_VFD
     H5FD_ros3_fapl_t ros3_anon_fa = {1, FALSE, "", "", ""};
     H5FD_ros3_fapl_t ros3_auth_fa = {
         1,                            /* fapl version           */
@@ -1010,6 +1013,8 @@ test_set_configured_fapl(void)
         "12345677890abcdef",          /* simulate access key ID */
         "oiwnerwe9u0234nJw0-aoj+dsf", /* simulate secret key    */
     };
+#endif /* H5_HAVE_ROS3_VFD */
+#ifdef H5_HAVE_LIBHDFS
     H5FD_hdfs_fapl_t hdfs_fa = {
         1,    /* fapl version          */
         "",   /* namenode name         */
@@ -1018,6 +1023,7 @@ test_set_configured_fapl(void)
         "",   /* user name             */
         2048, /* stream buffer size    */
     };
+#endif /* H5_HAVE_LIBHDFS */
     unsigned         n_cases = 7; /* number of common testcases */
     testcase         cases[] = {
         {   "(common) should fail: no fapl id",
@@ -1147,7 +1153,7 @@ test_set_configured_fapl(void)
     TESTING("programmatic fapl set");
 
     for (i = 0; i < n_cases; i++) {
-        h5tools_get_fapl_info_t get_fapl_info;
+        h5tools_vfd_info_t vfd_info;
         hid_t result;
         testcase C = cases[i];
 
@@ -1170,10 +1176,9 @@ test_set_configured_fapl(void)
 #endif /* UTIL_TEST_DEBUG */
 
         /* test */
-        get_fapl_info.get_type = GET_VFD_BY_NAME;
-        get_fapl_info.info = C.conf_fa;
-        get_fapl_info.u.name = C.vfdname;
-        result = h5tools_get_fapl(H5P_DEFAULT, &get_fapl_info);
+        vfd_info.info = C.conf_fa;
+        vfd_info.name = C.vfdname;
+        result = h5tools_get_fapl(H5P_DEFAULT, NULL, &vfd_info);
         if (C.expected == 0)
             JSVERIFY( result, H5I_INVALID_HID, C.message)
         else
@@ -1221,6 +1226,7 @@ error :
 #undef UTIL_TEST_DEFAULT
 #undef UTIL_TEST_CREATE
 } /* test_set_configured_fapl */
+H5_GCC_DIAG_ON("format")
 
 
 /*----------------------------------------------------------------------------

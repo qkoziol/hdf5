@@ -13,11 +13,11 @@
 
 /*-------------------------------------------------------------------------
  *
- * Created:		H5Tdbg.c
- *			Jul 19 2007
- *			Quincey Koziol <koziol@hdfgroup.org>
+ * Created:         H5Tdbg.c
+ *                  Jul 19 2007
+ *                  Quincey Koziol
  *
- * Purpose:		Dump debugging information about a datatype
+ * Purpose:         Dump debugging information about a datatype
  *
  *-------------------------------------------------------------------------
  */
@@ -95,16 +95,23 @@
 herr_t
 H5T__print_stats(H5T_path_t H5_ATTR_UNUSED * path, int H5_ATTR_UNUSED * nprint/*in,out*/)
 {
-#ifdef H5T_DEBUG
-    hsize_t	nbytes;
-    char	bandwidth[32];
-#endif
-
     FUNC_ENTER_PACKAGE_NOERR
 
 #ifdef H5T_DEBUG
-    if (H5DEBUG(T) && path->stats.ncalls > 0) {
-        if (nprint && 0 == (*nprint)++) {
+    if(H5DEBUG(T) && path->stats.ncalls > 0) {
+        hsize_t    nbytes;
+        char    bandwidth[32];
+        struct {
+            char *user;
+            char *system;
+            char *elapsed;
+        } timestrs = {
+            H5_timer_get_time_string(path->stats.times.user),
+            H5_timer_get_time_string(path->stats.times.system),
+            H5_timer_get_time_string(path->stats.times.elapsed)
+        };
+
+        if(nprint && 0 == (*nprint)++) {
             HDfprintf(H5DEBUG(T), "H5T: type conversion statistics:\n");
             HDfprintf(H5DEBUG(T), "   %-16s %10s %10s %8s %8s %8s %10s\n",
                 "Conversion", "Elmts", "Calls", "User",
@@ -112,8 +119,9 @@ H5T__print_stats(H5T_path_t H5_ATTR_UNUSED * path, int H5_ATTR_UNUSED * nprint/*
             HDfprintf(H5DEBUG(T), "   %-16s %10s %10s %8s %8s %8s %10s\n",
                 "----------", "-----", "-----", "----",
                 "------", "-------", "---------");
-        }
-        if (path->src && path->dst)
+        } /* end if */
+
+        if(path->src && path->dst)
             nbytes = MAX(H5T_get_size(path->src), H5T_get_size(path->dst));
         else if (path->src)
             nbytes = H5T_get_size(path->src);
@@ -122,17 +130,16 @@ H5T__print_stats(H5T_path_t H5_ATTR_UNUSED * path, int H5_ATTR_UNUSED * nprint/*
         else
             nbytes = 0;
         nbytes *= path->stats.nelmts;
-        H5_bandwidth(bandwidth, (double)nbytes, path->stats.timer.etime);
-        HDfprintf(H5DEBUG(T), "   %-16s %10Hd %10d %8.2f %8.2f %8.2f %10s\n",
-            path->name,
-            path->stats.nelmts,
-            path->stats.ncalls,
-            path->stats.timer.utime,
-            path->stats.timer.stime,
-            path->stats.timer.etime,
-            bandwidth);
+        H5_bandwidth(bandwidth, (double)nbytes, path->stats.times.elapsed);
+        HDfprintf(H5DEBUG(T), "   %-16s %10" PRIdHSIZE " %10u %8s %8s %8s %10s\n",
+            path->name, path->stats.nelmts, path->stats.ncalls,
+            timestrs.user, timestrs.system, timestrs.elapsed, bandwidth);
+        free(timestrs.user);
+        free(timestrs.system);
+        free(timestrs.elapsed);
     }
 #endif
+
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5T__print_stats() */
 
@@ -405,18 +412,18 @@ H5T_debug(const H5T_t *dt, FILE *stream)
         } /* end else */
     }
     else if (H5T_ENUM == dt->shared->type) {
-        size_t	base_size;
+        size_t    base_size;
 
         /* Enumeration data type */
         HDfprintf(stream, " ");
         H5T_debug(dt->shared->parent, stream);
         base_size = dt->shared->parent->shared->size;
         for (i = 0; i < dt->shared->u.enumer.nmembs; i++) {
-            size_t	k;
+            size_t    k;
 
             HDfprintf(stream, "\n\"%s\" = 0x", dt->shared->u.enumer.name[i]);
             for (k = 0; k < base_size; k++)
-                HDfprintf(stream, "%02lx", (unsigned long)((uint8_t *)dt->shared->u.enumer.value + (i * base_size) + k));
+                HDfprintf(stream, "%02" PRIx8, *((uint8_t *)dt->shared->u.enumer.value + (i * base_size) + k));
         } /* end for */
         HDfprintf(stream, "\n");
     }

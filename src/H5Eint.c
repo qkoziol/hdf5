@@ -15,7 +15,7 @@
  *
  * Created:	H5Eint.c
  *		April 11 2007
- *		Quincey Koziol <koziol@hdfgroup.org>
+ *		Quincey Koziol
  *
  * Purpose:	General use, "internal" routines for error handling.
  *
@@ -33,7 +33,6 @@
 /* Headers */
 /***********/
 #include "H5private.h"          /* Generic Functions                        */
-#include "H5CXprivate.h"        /* API Contexts                             */
 #include "H5Epkg.h"             /* Error handling                           */
 #include "H5Iprivate.h"         /* IDs                                      */
 #include "H5MMprivate.h"        /* Memory management                        */
@@ -576,7 +575,7 @@ H5E__walk(const H5E_t *estack, H5E_direction_t direction, const H5E_walk_op_t *o
                     ret_value = (op->u.func2)((unsigned)(estack->nused - (size_t)(i + 1)), estack->slot + i, client_data);
             } /* end else */
 
-            if(ret_value  < 0)
+            if(ret_value < 0)
                 HERROR(H5E_ERROR, H5E_CANTLIST, "can't walk error stack");
         } /* end if */
     } /* end else */
@@ -672,10 +671,6 @@ H5E_printf_stack(H5E_t *estack, const char *file, const char *func, unsigned lin
     hid_t cls_id, hid_t maj_id, hid_t min_id, const char *fmt, ...)
 {
     va_list     ap;                     /* Varargs info */
-#ifndef H5_HAVE_VASPRINTF
-    int         tmp_len;        /* Current size of description buffer */
-    int         desc_len;       /* Actual length of description when formatted */
-#endif /* H5_HAVE_VASPRINTF */
     char        *tmp = NULL;      /* Buffer to place formatted description in */
     hbool_t     va_started = FALSE; /* Whether the variable argument list is open */
     herr_t	ret_value = SUCCEED;    /* Return value */
@@ -704,31 +699,9 @@ H5E_printf_stack(H5E_t *estack, const char *file, const char *func, unsigned lin
     HDva_start(ap, fmt);
     va_started = TRUE;
 
-#ifdef H5_HAVE_VASPRINTF
     /* Use the vasprintf() routine, since it does what we're trying to do below */
     if(HDvasprintf(&tmp, fmt, ap) < 0)
         HGOTO_DONE(FAIL)
-#else /* H5_HAVE_VASPRINTF */
-    /* Allocate space for the formatted description buffer */
-    tmp_len = 128;
-    if(NULL == (tmp = H5MM_malloc((size_t)tmp_len)))
-        HGOTO_DONE(FAIL)
-
-    /* If the description doesn't fit into the initial buffer size, allocate more space and try again */
-    while((desc_len = HDvsnprintf(tmp, (size_t)tmp_len, fmt, ap)) > (tmp_len - 1)) {
-        /* shutdown & restart the va_list */
-        HDva_end(ap);
-        HDva_start(ap, fmt);
-
-        /* Release the previous description, it's too small */
-        H5MM_xfree(tmp);
-
-        /* Allocate a description of the appropriate length */
-        tmp_len = desc_len + 1;
-        if(NULL == (tmp = H5MM_malloc((size_t)tmp_len)))
-            HGOTO_DONE(FAIL)
-    } /* end while */
-#endif /* H5_HAVE_VASPRINTF */
 
     /* Push the error on the stack */
     if(H5E__push_stack(estack, file, func, line, cls_id, maj_id, min_id, tmp) < 0)
@@ -737,16 +710,11 @@ H5E_printf_stack(H5E_t *estack, const char *file, const char *func, unsigned lin
 done:
     if(va_started)
         HDva_end(ap);
-#ifdef H5_HAVE_VASPRINTF
     /* Memory was allocated with HDvasprintf so it needs to be freed
      * with HDfree
      */
     if(tmp)
         HDfree(tmp);
-#else /* H5_HAVE_VASPRINTF */
-    if(tmp)
-        H5MM_xfree(tmp);
-#endif /* H5_HAVE_VASPRINTF */
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5E_printf_stack() */
@@ -994,7 +962,7 @@ H5E_dump_api_stack(hbool_t is_api)
 #ifdef H5_NO_DEPRECATED_SYMBOLS
             if(estack->auto_op.func2)
                 (void)((estack->auto_op.func2)(H5E_DEFAULT, estack->auto_data));
-#else /* H5_NO_DEPRECATED_SYMBOLS */ 
+#else /* H5_NO_DEPRECATED_SYMBOLS */
         if(estack->auto_op.vers == 1) {
             if(estack->auto_op.func1)
                 (void)((estack->auto_op.func1)(estack->auto_data));

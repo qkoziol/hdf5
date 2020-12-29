@@ -11,7 +11,7 @@
  * help@hdfgroup.org.                                                        *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-/* Programmer:  Robb Matzke <matzke@llnl.gov>
+/* Programmer:  Robb Matzke
  *              Wednesday, October  8, 1997
  *
  * Purpose:     Messages related to data layout.
@@ -373,7 +373,7 @@ H5O__layout_decode(H5F_t *f, H5O_t H5_ATTR_UNUSED *open_oh,
                 /* Check version */
                 if(mesg->version < H5O_LAYOUT_VERSION_4)
                     HGOTO_ERROR(H5E_OHDR, H5E_VERSION, NULL, "invalid layout version with virtual layout")
-                
+
                 /* Heap information */
                 H5F_addr_decode(f, &p, &(mesg->storage.u.virt.serial_list_hobjid.addr));
                 UINT32DECODE(p, mesg->storage.u.virt.serial_list_hobjid.idx);
@@ -425,14 +425,14 @@ H5O__layout_decode(H5F_t *f, H5O_t H5_ATTR_UNUSED *open_oh,
                         tmp_size = HDstrlen((const char *)heap_block_p) + 1;
                         if(NULL == (mesg->storage.u.virt.list[i].source_file_name = (char *)H5MM_malloc(tmp_size)))
                             HGOTO_ERROR(H5E_OHDR, H5E_RESOURCE, NULL, "unable to allocate memory for source file name")
-                        (void)H5MM_memcpy(mesg->storage.u.virt.list[i].source_file_name, heap_block_p, tmp_size);
+                        H5MM_memcpy(mesg->storage.u.virt.list[i].source_file_name, heap_block_p, tmp_size);
                         heap_block_p += tmp_size;
 
                         /* Source dataset name */
                         tmp_size = HDstrlen((const char *)heap_block_p) + 1;
                         if(NULL == (mesg->storage.u.virt.list[i].source_dset_name = (char *)H5MM_malloc(tmp_size)))
                             HGOTO_ERROR(H5E_OHDR, H5E_RESOURCE, NULL, "unable to allocate memory for source dataset name")
-                        (void)H5MM_memcpy(mesg->storage.u.virt.list[i].source_dset_name, heap_block_p, tmp_size);
+                        H5MM_memcpy(mesg->storage.u.virt.list[i].source_dset_name, heap_block_p, tmp_size);
                         heap_block_p += tmp_size;
 
                         /* Source selection */
@@ -967,7 +967,7 @@ H5O__layout_pre_copy_file(H5F_t H5_ATTR_UNUSED *file_src, const void *mesg_src,
     const H5O_layout_t *layout_src = (const H5O_layout_t *)mesg_src;  /* Source layout */
     herr_t ret_value = SUCCEED;   /* Return value */
 
-    FUNC_ENTER_NOAPI_NOINIT
+    FUNC_ENTER_STATIC
 
     /* check args */
     HDassert(cpy_info);
@@ -1172,35 +1172,35 @@ H5O__layout_debug(H5F_t H5_ATTR_UNUSED *f, const void *_mesg, FILE *stream,
                               "Index Type:", "Unknown", (unsigned)mesg->u.chunk.idx_type);
                     break;
             } /* end switch */
-            HDfprintf(stream, "%*s%-*s %a\n", indent, "", fwidth,
+            HDfprintf(stream, "%*s%-*s %" PRIuHADDR "\n", indent, "", fwidth,
                       "Index address:", mesg->storage.u.chunk.idx_addr);
             break;
 
         case H5D_CONTIGUOUS:
             HDfprintf(stream, "%*s%-*s %s\n", indent, "", fwidth,
                       "Type:", "Contiguous");
-            HDfprintf(stream, "%*s%-*s %a\n", indent, "", fwidth,
+            HDfprintf(stream, "%*s%-*s %" PRIuHADDR "\n", indent, "", fwidth,
                       "Data address:", mesg->storage.u.contig.addr);
-            HDfprintf(stream, "%*s%-*s %Hu\n", indent, "", fwidth,
+            HDfprintf(stream, "%*s%-*s %" PRIuHSIZE "\n", indent, "", fwidth,
                       "Data Size:", mesg->storage.u.contig.size);
             break;
 
         case H5D_COMPACT:
             HDfprintf(stream, "%*s%-*s %s\n", indent, "", fwidth,
                       "Type:", "Compact");
-            HDfprintf(stream, "%*s%-*s %Zu\n", indent, "", fwidth,
+            HDfprintf(stream, "%*s%-*s %zu\n", indent, "", fwidth,
                       "Data Size:", mesg->storage.u.compact.size);
             break;
 
         case H5D_VIRTUAL:
             HDfprintf(stream, "%*s%-*s %s\n", indent, "", fwidth,
                       "Type:", "Virtual");
-            HDfprintf(stream, "%*s%-*s %a\n", indent, "", fwidth,
+            HDfprintf(stream, "%*s%-*s %" PRIuHADDR "\n", indent, "", fwidth,
                       "Global heap address:", mesg->storage.u.virt.serial_list_hobjid.addr);
-            HDfprintf(stream, "%*s%-*s %Zu\n", indent, "", fwidth,
+            HDfprintf(stream, "%*s%-*s %zu\n", indent, "", fwidth,
                       "Global heap index:", mesg->storage.u.virt.serial_list_hobjid.idx);
             for(u = 0; u < mesg->storage.u.virt.list_nused; u++) {
-                HDfprintf(stream, "%*sMapping %u:\n", indent, "", u);
+                HDfprintf(stream, "%*sMapping %zu:\n", indent, "", u);
                 HDfprintf(stream, "%*s%-*s %s\n", indent + 3, "", fwidth - 3,
                       "Virtual selection:", "<Not yet implemented>");
                 HDfprintf(stream, "%*s%-*s %s\n", indent + 3, "", fwidth - 3,

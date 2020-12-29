@@ -47,7 +47,7 @@
 #define H5S_SEL_ITER_SHARE_WITH_DATASPACE 0x0002 /* Don't copy the dataspace
                                                  * selection when creating the
                                                  * selection iterator.
-                                                 * 
+                                                 *
                                                  * This can improve performance
                                                  * of creating the iterator, but
                                                  * the dataspace _MUST_NOT_ be
@@ -178,6 +178,7 @@ H5_DLL hid_t H5Sselect_project_intersection(hid_t src_space_id,
 H5_DLL hid_t H5Ssel_iter_create(hid_t spaceid, size_t elmt_size, unsigned flags);
 H5_DLL herr_t H5Ssel_iter_get_seq_list(hid_t sel_iter_id, size_t maxseq,
     size_t maxbytes, size_t *nseq, size_t *nbytes, hsize_t *off, size_t *len);
+H5_DLL herr_t H5Ssel_iter_reset(hid_t sel_iter_id, hid_t space_id);
 H5_DLL herr_t H5Ssel_iter_close(hid_t sel_iter_id);
 
 /* Symbols defined for compatibility with previous versions of the HDF5 API.

@@ -12,7 +12,7 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /*
- * Programmer:  Robb Matzke <robb@arborea.spizella.com>
+ * Programmer:  Robb Matzke
  *              Thursday, October  1, 1998
  *
  * Purpose:    Tests dataset fill values.
@@ -805,7 +805,7 @@ test_rdwr_cases(hid_t file, hid_t dcpl, const char *dname, void *_fillval,
         if(fill_time!=H5D_FILL_TIME_NEVER && val_rd!=fillval) {
             H5_FAILED();
                 HDfprintf(stdout, "%u: Value read was not a fill value.\n", (unsigned)__LINE__);
-            HDfprintf(stdout,"    Elmt={%Hu,%Hu,%Hu,%Hu,%Hu}, read: %u, "
+            HDfprintf(stdout,"    Elmt={%" PRIuHSIZE ",%" PRIuHSIZE ",%" PRIuHSIZE ",%" PRIuHSIZE ",%" PRIuHSIZE "}, read: %u, "
             "Fill value: %u\n",
             hs_offset[0], hs_offset[1],
             hs_offset[2], hs_offset[3],
@@ -822,7 +822,7 @@ test_rdwr_cases(hid_t file, hid_t dcpl, const char *dname, void *_fillval,
                     rd_c.z != fill_c.z)) {
                 H5_FAILED();
                 HDfprintf(stdout, "%u: Value read was not a fill value.\n", (unsigned)__LINE__);
-                HDfprintf(stdout,"    Elmt={%Hu,%Hu,%Hu,%Hu,%Hu}, read: %f, %d, %f, %c"
+                HDfprintf(stdout,"    Elmt={%" PRIuHSIZE ",%" PRIuHSIZE ",%" PRIuHSIZE ",%" PRIuHSIZE ",%" PRIuHSIZE "}, read: %f, %d, %f, %c"
                        "Fill value: %f, %d, %f, %c\n",
                        hs_offset[0], hs_offset[1],
                        hs_offset[2], hs_offset[3],
@@ -862,7 +862,7 @@ test_rdwr_cases(hid_t file, hid_t dcpl, const char *dname, void *_fillval,
                 if(buf[u] != fillval) {
                     H5_FAILED();
                     HDfprintf(stdout, "%u: Value read was not a fill value.\n", (unsigned)__LINE__);
-                    HDfprintf(stdout,"    Elmt={%Hu, %Hu, %Hu, %Hu, %Hu}, read: %u, "
+                    HDfprintf(stdout,"    Elmt={%" PRIuHSIZE ", %" PRIuHSIZE ", %" PRIuHSIZE ", %" PRIuHSIZE ", %" PRIuHSIZE "}, read: %u, "
                            "Fill value: %u\n",
                            hs_offset[0], hs_offset[1],
                            hs_offset[2], hs_offset[3],
@@ -889,7 +889,7 @@ test_rdwr_cases(hid_t file, hid_t dcpl, const char *dname, void *_fillval,
                         !H5_DBL_ABS_EQUAL(buf_c[u].y, fill_c.y) || buf_c[u].z != fill_c.z) {
                     H5_FAILED();
                     HDfprintf(stdout, "%u: Value read was not a fill value.\n", (unsigned)__LINE__);
-                    HDfprintf(stdout,"    Elmt={%Hu, %Hu, %Hu, %Hu, %Hu}, read: %f, %d, %f, %c"
+                    HDfprintf(stdout,"    Elmt={%" PRIuHSIZE ", %" PRIuHSIZE ", %" PRIuHSIZE ", %" PRIuHSIZE ", %" PRIuHSIZE "}, read: %f, %d, %f, %c"
                             "Fill value: %f, %d, %f, %c\n",
                             hs_offset[0], hs_offset[1],
                             hs_offset[2], hs_offset[3],
@@ -1284,7 +1284,7 @@ test_extend_verify_integer(unsigned lineno, const hsize_t *offset,
     /* Verify value */
     if(*test_val != *compare_val) {
         HDfprintf(stdout, "%u: Value read was not expected.\n", lineno);
-        HDfprintf(stdout,"    Elmt = {%Hu, %Hu, %Hu, %Hu, %Hu}, read: %d, "
+        HDfprintf(stdout,"    Elmt = {%" PRIuHSIZE ", %" PRIuHSIZE ", %" PRIuHSIZE ", %" PRIuHSIZE ", %" PRIuHSIZE "}, read: %d, "
                 "expected: %d\n",
                 offset[0], offset[1],
                 offset[2], offset[3],
@@ -1380,7 +1380,7 @@ test_extend_verify_cmpd_vl(unsigned lineno, const hsize_t *offset,
             HDstrcmp(test_val->b, compare_val->b) ||
             (test_val->y != compare_val->y)) {
         HDfprintf(stdout, "%u: Value read was not expected.\n", lineno);
-        HDfprintf(stdout,"    Elmt = {%Hu, %Hu, %Hu, %Hu, %Hu}, read: {%d, '%s', '%s', %d} "
+        HDfprintf(stdout,"    Elmt = {%" PRIuHSIZE ", %" PRIuHSIZE ", %" PRIuHSIZE ", %" PRIuHSIZE ", %" PRIuHSIZE "}, read: {%d, '%s', '%s', %d} "
                 "expected: {%d, '%s', '%s', %d}\n",
                 offset[0], offset[1], offset[2], offset[3], offset[4],
                 test_val->x, test_val->a, test_val->b, test_val->y,
@@ -1453,11 +1453,15 @@ test_extend_cases(hid_t file, hid_t _dcpl, const char *dset_name,
     void        *val_rd, *odd_val;
     const void  *init_val, *should_be, *even_val;
     int        val_rd_i, init_val_i = 9999;
-    comp_vl_datatype init_val_c = {87, "baz", "mumble", 129};
+    comp_vl_datatype init_val_c = {87, NULL, NULL, 129};
     comp_vl_datatype val_rd_c;
     void    *buf = NULL;
     unsigned    odd;                    /* Whether an odd or even coord. was read */
     unsigned    i, j;                   /* Local index variables */
+
+    /* Set vl datatype init value strings */
+    init_val_c.a = HDstrdup("baz");
+    init_val_c.b = HDstrdup("mumble");
 
     /* Make copy of dataset creation property list */
     if((dcpl = H5Pcopy(_dcpl)) < 0) TEST_ERROR
@@ -1802,8 +1806,10 @@ test_extend_cases(hid_t file, hid_t _dcpl, const char *dset_name,
     /* Release elements & memory buffer */
     for(i = 0; i < nelmts; i++)
         release_rtn((void *)((char *)buf + (val_size * i)));
+
+    HDfree(init_val_c.a);
+    HDfree(init_val_c.b);
     HDfree(buf);
-    buf = NULL;
 
     /* Cleanup IDs */
     if(H5Pclose(dcpl) < 0) TEST_ERROR
@@ -1813,8 +1819,10 @@ test_extend_cases(hid_t file, hid_t _dcpl, const char *dset_name,
     return 0;
 
 error:
-    if(buf)
-        HDfree(buf);
+    HDfree(init_val_c.a);
+    HDfree(init_val_c.b);
+    HDfree(buf);
+
     H5E_BEGIN_TRY {
     H5Pclose(dcpl);
     H5Dclose(dset);
@@ -1856,7 +1864,7 @@ test_extend(hid_t fapl, const char *base_name, H5D_layout_t layout)
 #else
     int        fillval_i = 0x4c70f1cd;
 #endif
-    comp_vl_datatype fillval_c = {32, "foo", "bar", 64};         /* Fill value for compound+vl datatype tests */
+    comp_vl_datatype fillval_c = {32, NULL, NULL, 64};         /* Fill value for compound+vl datatype tests */
     char    filename[1024];
 
     /* Print testing message */
@@ -1864,6 +1872,10 @@ test_extend(hid_t fapl, const char *base_name, H5D_layout_t layout)
     TESTING("chunked dataset extend")
     else
     TESTING("contiguous dataset extend")
+
+    /* Set vl datatype fill value strings */
+    fillval_c.a = HDstrdup("foo");
+    fillval_c.b = HDstrdup("bar");
 
     /* Create dataset creation property list */
     if((dcpl = H5Pcreate(H5P_DATASET_CREATE)) < 0) TEST_ERROR
@@ -1945,11 +1957,17 @@ test_extend(hid_t fapl, const char *base_name, H5D_layout_t layout)
     if(H5Pclose(dcpl) < 0) TEST_ERROR
     if(H5Fclose(file) < 0) TEST_ERROR
 
+    HDfree(fillval_c.a);
+    HDfree(fillval_c.b);
+
     PASSED();
 
     return 0;
 
 error:
+    HDfree(fillval_c.a);
+    HDfree(fillval_c.b);
+
     H5E_BEGIN_TRY {
         H5Tclose(cmpd_vl_tid);
     H5Pclose(dcpl);
@@ -1958,6 +1976,9 @@ error:
     return 1;
 
 skip:
+    HDfree(fillval_c.a);
+    HDfree(fillval_c.b);
+
     H5E_BEGIN_TRY {
     H5Pclose(dcpl);
     H5Fclose(file);

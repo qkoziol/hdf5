@@ -724,7 +724,7 @@ variable_get_final_load_size(const void *image, size_t image_len,
  */
 
 static htri_t
-verify_chksum(const void H5_ATTR_UNUSED *image, size_t H5_ATTR_UNUSED len, void *udata, 
+verify_chksum(const void H5_ATTR_UNUSED *image, size_t H5_ATTR_UNUSED len, void *udata,
     int32_t H5_ATTR_NDEBUG_UNUSED entry_type)
 {
     test_entry_t *entry;
@@ -830,13 +830,15 @@ deserialize(const void *image, size_t H5_ATTR_NDEBUG_UNUSED len, void *udata, hb
             if((*(((const char *)image) + 2)) != (char)(idx & 0xFF)) {
                 HDfprintf(stdout, "type = %d, idx = %d, addr = 0x%lx.\n",
                           type, idx, (long)addr);
-                HDfprintf(stdout, "*image = 0x%x 0x%x 0x%x\n",
-                          (int)(*((const char *)image)),
-                          (int)(*(((const char *)image) + 1)),
-                          (int)(*(((const char *)image) + 2)));
-                HDfprintf(stdout, "expected *image = 0x%x\n",
-                          (int)(idx & 0xFF),
-                          (int)((idx & 0xFF00) >> 8));
+                HDfprintf(stdout,
+                    "*image = 0x%" PRIx8 " 0x%" PRIx8 " 0x%" PRIx8 "\n",
+                    (*((const uint8_t *)image)),
+                    (*(((const uint8_t *)image) + 1)),
+                    (*(((const uint8_t *)image) + 2)));
+                HDfprintf(stdout,
+                    "expected *image = 0x%02" PRIx32 "%02" PRIx32 "\n",
+                          (uint32_t)idx & 0xFF,
+                          (((uint32_t)idx & 0xFF00) >> 8));
             } /* end if */
         HDassert((*((const char *)image)) == (char)(type & 0xFF));
         HDassert((*(((const char *)image) + 1)) == (char)((idx & 0xFF00) >> 8));
@@ -3111,12 +3113,25 @@ expunge_entry(H5F_t * file_ptr,
  * Function:    flush_cache()
  *
  * Purpose:    Flush the specified cache, destroying all entries if
-                requested.  If requested, dump stats first.
+ *             requested.  If requested, dump stats first.
  *
  * Return:    void
  *
  * Programmer:    John Mainzer
- *              6/23/04
+ *                6/23/04
+ *
+ * Changes:    Added code to setup and take down the skip list before 
+ *             and after calls to H5C_flush_cache().  Do this via calls
+ *             to the H5C_FLUSH_CACHE macro.
+ *
+ *             This is necessary, as H5C_flush() is called repeatedly
+ *             during file flush.  If we setup and took down the 
+ *             skip list on H5C_flush_cache(), we would find ourselves
+ *             doing this repeatedly -- which is contrary to the 
+ *             objective of the exercise (avoiding as many skip list
+ *             operations as possible).
+ *
+ *                                          JRM -- 5/14/20
  *
  *-------------------------------------------------------------------------
  */
@@ -3139,25 +3154,30 @@ flush_cache(H5F_t * file_ptr,
 
         cache_ptr = file_ptr->shared->cache;
 
-        if(destroy_entries)
-            result = H5C_flush_cache(file_ptr, H5C__FLUSH_INVALIDATE_FLAG);
+        if ( destroy_entries )  {
 
-        else
-            result = H5C_flush_cache(file_ptr, H5C__NO_FLAGS_SET);
+            H5C_FLUSH_CACHE(file_ptr, H5C__FLUSH_INVALIDATE_FLAG, \
+                            "error in H5C_flush_cache().")
 
-        if(dump_stats)
-            H5C_stats(cache_ptr, "test cache", dump_detailed_stats);
+        } else {
 
-        if(result < 0) {
-            pass = FALSE;
-            failure_mssg = "error in H5C_flush_cache().";
+            H5C_FLUSH_CACHE(file_ptr, H5C__NO_FLAGS_SET, \
+                            "error in H5C_flush_cache().")
         }
-        else if((destroy_entries) && ((cache_ptr->index_len != 0)
-                || (cache_ptr->index_size != 0)
-                || (cache_ptr->clean_index_size != 0)
-                || (cache_ptr->dirty_index_size != 0))) {
 
-            if(verbose) {
+        if ( dump_stats ) {
+
+            H5C_stats(cache_ptr, "test cache", dump_detailed_stats);
+        }
+
+        if ( ( pass ) && ( destroy_entries ) && 
+             ( ( cache_ptr->index_len != 0 ) || 
+               ( cache_ptr->index_size != 0 ) || 
+               ( cache_ptr->clean_index_size != 0 ) || 
+               ( cache_ptr->dirty_index_size != 0 ) ) ) {
+
+            if ( verbose ) {
+
                 HDfprintf(stdout,
                         "%s: unexpected il/is/cis/dis = %lld/%lld/%lld/%lld.\n",
                         FUNC,
@@ -3961,13 +3981,18 @@ unprotect_entry(H5F_t * file_ptr,
  * Function:    row_major_scan_forward()
  *
  * Purpose:    Do a sequence of inserts, protects, unprotects, moves,
- *        destroys while scanning through the set of entries.  If
- *        pass is false on entry, do nothing.
+ *             destroys while scanning through the set of entries.  If
+ *             pass is false on entry, do nothing.
  *
  * Return:    void
  *
  * Programmer:    John Mainzer
  *              6/12/04
+ *
+ * Changes:     Updated slist size == dirty index size checks to 
+ *              bypass the test if cache_ptr->slist_enabled is FALSE.
+ *
+ *                                           JRM -- 5/8/20
  *
  *-------------------------------------------------------------------------
  */
@@ -3983,7 +4008,7 @@ row_major_scan_forward(H5F_t * file_ptr,
                        hbool_t do_moves,
                        hbool_t move_to_main_addr,
                        hbool_t do_destroys,
-            hbool_t do_mult_ro_protects,
+                       hbool_t do_mult_ro_protects,
                        int dirty_destroys,
                        int dirty_unprotects)
 {
@@ -4022,7 +4047,10 @@ row_major_scan_forward(H5F_t * file_ptr,
                     HDfprintf(stdout, "1(i, %d, %d) ", type, tmp_idx);
 
                 insert_entry(file_ptr, type, tmp_idx, H5C__NO_FLAGS_SET);
-        HDassert(cache_ptr->slist_size == cache_ptr->dirty_index_size);
+
+                HDassert( ( ! cache_ptr->slist_enabled ) || \
+                          ( cache_ptr->slist_size == \
+                            cache_ptr->dirty_index_size ) );
             } /* end if */
 
             tmp_idx--;
@@ -4033,7 +4061,10 @@ row_major_scan_forward(H5F_t * file_ptr,
                     HDfprintf(stdout, "2(p, %d, %d) ", type, tmp_idx);
 
                 protect_entry(file_ptr, type, tmp_idx);
-        HDassert(cache_ptr->slist_size == cache_ptr->dirty_index_size);
+
+                HDassert( ( ! cache_ptr->slist_enabled ) || \
+                          ( cache_ptr->slist_size == \
+                            cache_ptr->dirty_index_size ) );
             } /* end if */
 
             tmp_idx--;
@@ -4044,7 +4075,10 @@ row_major_scan_forward(H5F_t * file_ptr,
                     HDfprintf(stdout, "3(u, %d, %d) ", type, tmp_idx);
 
                 unprotect_entry(file_ptr, type, tmp_idx, H5C__NO_FLAGS_SET);
-        HDassert(cache_ptr->slist_size == cache_ptr->dirty_index_size);
+
+                HDassert( ( ! cache_ptr->slist_enabled ) || \
+                          ( cache_ptr->slist_size == \
+                            cache_ptr->dirty_index_size ) );
             } /* end if */
 
             /* (don't decrement tmp_idx) */
@@ -4055,7 +4089,10 @@ row_major_scan_forward(H5F_t * file_ptr,
                     HDfprintf(stdout, "4(r, %d, %d, %d) ", type, tmp_idx, (int)move_to_main_addr);
 
                 move_entry(cache_ptr, type, tmp_idx, move_to_main_addr);
-        HDassert(cache_ptr->slist_size == cache_ptr->dirty_index_size);
+
+                HDassert( ( ! cache_ptr->slist_enabled ) || \
+                          ( cache_ptr->slist_size == \
+                            cache_ptr->dirty_index_size ) );
             } /* end if */
 
             tmp_idx--;
@@ -4066,7 +4103,10 @@ row_major_scan_forward(H5F_t * file_ptr,
                     HDfprintf(stdout, "5(p, %d, %d) ", type, tmp_idx);
 
                 protect_entry(file_ptr, type, tmp_idx);
-        HDassert(cache_ptr->slist_size == cache_ptr->dirty_index_size);
+
+                HDassert( ( ! cache_ptr->slist_enabled ) || \
+                          ( cache_ptr->slist_size == \
+                            cache_ptr->dirty_index_size ) );
             } /* end if */
 
             tmp_idx -= 2;
@@ -4077,7 +4117,10 @@ row_major_scan_forward(H5F_t * file_ptr,
                     HDfprintf(stdout, "6(u, %d, %d) ", type, tmp_idx);
 
                 unprotect_entry(file_ptr, type, tmp_idx, H5C__NO_FLAGS_SET);
-        HDassert(cache_ptr->slist_size == cache_ptr->dirty_index_size);
+
+                HDassert( ( ! cache_ptr->slist_enabled ) || \
+                          ( cache_ptr->slist_size == \
+                            cache_ptr->dirty_index_size ) );
             } /* end if */
 
         if(do_mult_ro_protects) {
@@ -4089,7 +4132,10 @@ row_major_scan_forward(H5F_t * file_ptr,
                         HDfprintf(stdout, "7(p-ro, %d, %d) ", type, tmp_idx);
 
             protect_entry_ro(file_ptr, type, tmp_idx);
-            HDassert(cache_ptr->slist_size == cache_ptr->dirty_index_size);
+
+            HDassert( ( ! cache_ptr->slist_enabled ) || \
+                      ( cache_ptr->slist_size == \
+                        cache_ptr->dirty_index_size ) );
         } /* end if */
 
                 tmp_idx--;
@@ -4100,7 +4146,10 @@ row_major_scan_forward(H5F_t * file_ptr,
                         HDfprintf(stdout, "8(p-ro, %d, %d) ", type, tmp_idx);
 
             protect_entry_ro(file_ptr, type, tmp_idx);
-            HDassert(cache_ptr->slist_size == cache_ptr->dirty_index_size);
+
+            HDassert( ( ! cache_ptr->slist_enabled ) || \
+                      ( cache_ptr->slist_size == \
+                        cache_ptr->dirty_index_size ) );
         } /* end if */
 
                 tmp_idx--;
@@ -4111,7 +4160,10 @@ row_major_scan_forward(H5F_t * file_ptr,
                         HDfprintf(stdout, "9(p-ro, %d, %d) ", type, tmp_idx);
 
             protect_entry_ro(file_ptr, type, tmp_idx);
-            HDassert(cache_ptr->slist_size == cache_ptr->dirty_index_size);
+
+            HDassert( ( ! cache_ptr->slist_enabled ) || \
+                      ( cache_ptr->slist_size == \
+                        cache_ptr->dirty_index_size ) );
         } /* end if */
 
                 /* (don't decrement tmp_idx) */
@@ -4122,7 +4174,10 @@ row_major_scan_forward(H5F_t * file_ptr,
                         HDfprintf(stdout, "10(u-ro, %d, %d) ", type, tmp_idx);
 
             unprotect_entry(file_ptr, type, tmp_idx, H5C__NO_FLAGS_SET);
-            HDassert(cache_ptr->slist_size == cache_ptr->dirty_index_size);
+
+            HDassert( ( ! cache_ptr->slist_enabled ) || \
+                      ( cache_ptr->slist_size == \
+                        cache_ptr->dirty_index_size ) );
         } /* end if */
 
                 tmp_idx--;
@@ -4133,7 +4188,10 @@ row_major_scan_forward(H5F_t * file_ptr,
                         HDfprintf(stdout, "11(u-ro, %d, %d) ", type, tmp_idx);
 
             unprotect_entry(file_ptr, type, tmp_idx, H5C__NO_FLAGS_SET);
-            HDassert(cache_ptr->slist_size == cache_ptr->dirty_index_size);
+
+            HDassert( ( ! cache_ptr->slist_enabled ) || \
+                      ( cache_ptr->slist_size == \
+                        cache_ptr->dirty_index_size ) );
         } /* end if */
 
                 tmp_idx--;
@@ -4144,7 +4202,10 @@ row_major_scan_forward(H5F_t * file_ptr,
                         HDfprintf(stdout, "12(u-ro, %d, %d) ", type, tmp_idx);
 
             unprotect_entry(file_ptr, type, tmp_idx, H5C__NO_FLAGS_SET);
-            HDassert(cache_ptr->slist_size == cache_ptr->dirty_index_size);
+
+            HDassert( ( ! cache_ptr->slist_enabled ) || \
+                      ( cache_ptr->slist_size == \
+                        cache_ptr->dirty_index_size ) );
         } /* end if */
         } /* if ( do_mult_ro_protects ) */
 
@@ -4153,7 +4214,10 @@ row_major_scan_forward(H5F_t * file_ptr,
                     HDfprintf(stdout, "13(p, %d, %d) ", type, idx);
 
                 protect_entry(file_ptr, type, idx);
-        HDassert(cache_ptr->slist_size == cache_ptr->dirty_index_size);
+
+                HDassert( ( ! cache_ptr->slist_enabled ) || \
+                          ( cache_ptr->slist_size == \
+                            cache_ptr->dirty_index_size ) );
             } /* end if */
 
             tmp_idx = idx - lag + 2;
@@ -4164,7 +4228,10 @@ row_major_scan_forward(H5F_t * file_ptr,
                     HDfprintf(stdout, "14(u, %d, %d) ", type, tmp_idx);
 
                 unprotect_entry(file_ptr, type, tmp_idx, H5C__NO_FLAGS_SET);
-        HDassert(cache_ptr->slist_size == cache_ptr->dirty_index_size);
+
+                HDassert( ( ! cache_ptr->slist_enabled ) || \
+                          ( cache_ptr->slist_size == \
+                            cache_ptr->dirty_index_size ) );
             } /* end if */
 
             tmp_idx--;
@@ -4175,7 +4242,10 @@ row_major_scan_forward(H5F_t * file_ptr,
                     HDfprintf(stdout, "15(p, %d, %d) ", type, tmp_idx);
 
                 protect_entry(file_ptr, type, tmp_idx);
-        HDassert(cache_ptr->slist_size == cache_ptr->dirty_index_size);
+
+                HDassert( ( ! cache_ptr->slist_enabled ) || \
+                          ( cache_ptr->slist_size == \
+                            cache_ptr->dirty_index_size ) );
             } /* end if */
 
             if(do_destroys) {
@@ -4187,7 +4257,10 @@ row_major_scan_forward(H5F_t * file_ptr,
                                 HDfprintf(stdout, "16(u, %d, %d) ", type, tmp_idx);
 
                             unprotect_entry(file_ptr, type, tmp_idx, H5C__NO_FLAGS_SET);
-                HDassert(cache_ptr->slist_size == cache_ptr->dirty_index_size);
+
+                            HDassert( ( ! cache_ptr->slist_enabled ) || \
+                                      ( cache_ptr->slist_size == \
+                                        cache_ptr->dirty_index_size ) );
                             break;
 
                         case 1:
@@ -4196,14 +4269,20 @@ row_major_scan_forward(H5F_t * file_ptr,
                                     HDfprintf(stdout, "17(u, %d, %d) ", type, tmp_idx);
 
                                 unprotect_entry(file_ptr, type, tmp_idx, H5C__NO_FLAGS_SET);
-                HDassert(cache_ptr->slist_size == cache_ptr->dirty_index_size);
+
+                                HDassert( ( ! cache_ptr->slist_enabled ) || \
+                                          ( cache_ptr->slist_size == \
+                                            cache_ptr->dirty_index_size ) );
                             } /* end if */
                             else {
                                 if(verbose)
                                     HDfprintf(stdout, "18(u, %d, %d) ", type, tmp_idx);
 
                                 unprotect_entry(file_ptr, type, tmp_idx, (dirty_unprotects ? H5C__DIRTIED_FLAG : H5C__NO_FLAGS_SET));
-                HDassert(cache_ptr->slist_size == cache_ptr->dirty_index_size);
+
+                                HDassert( ( ! cache_ptr->slist_enabled ) || \
+                                          ( cache_ptr->slist_size == \
+                                            cache_ptr->dirty_index_size ) );
                             } /* end else */
                             break;
 
@@ -4212,7 +4291,10 @@ row_major_scan_forward(H5F_t * file_ptr,
                                 HDfprintf(stdout, "19(u-del, %d, %d) ", type, tmp_idx);
 
                             unprotect_entry(file_ptr, type, tmp_idx, H5C__DELETED_FLAG);
-                HDassert(cache_ptr->slist_size == cache_ptr->dirty_index_size);
+
+                            HDassert( ( ! cache_ptr->slist_enabled ) || \
+                                      ( cache_ptr->slist_size == \
+                                        cache_ptr->dirty_index_size ) );
                             break;
 
                         case 3:
@@ -4221,14 +4303,20 @@ row_major_scan_forward(H5F_t * file_ptr,
                                     HDfprintf(stdout, "20(u-del, %d, %d) ", type, tmp_idx);
 
                                 unprotect_entry(file_ptr, type, tmp_idx, H5C__DELETED_FLAG);
-                    HDassert(cache_ptr->slist_size == cache_ptr->dirty_index_size);
+
+                            HDassert( ( ! cache_ptr->slist_enabled ) || \
+                                      ( cache_ptr->slist_size == \
+                                        cache_ptr->dirty_index_size ) );
                             } /* end if */
                             else {
                                 if(verbose)
                                     HDfprintf(stdout, "21(u-del, %d, %d) ", type, tmp_idx);
 
                                 unprotect_entry(file_ptr, type, tmp_idx, (dirty_destroys ? H5C__DIRTIED_FLAG : H5C__NO_FLAGS_SET) | H5C__DELETED_FLAG);
-                    HDassert(cache_ptr->slist_size == cache_ptr->dirty_index_size);
+
+                                HDassert( ( ! cache_ptr->slist_enabled ) || \
+                                          ( cache_ptr->slist_size == \
+                                            cache_ptr->dirty_index_size ) );
                             } /* end else */
                             break;
 
@@ -4245,7 +4333,10 @@ row_major_scan_forward(H5F_t * file_ptr,
                         HDfprintf(stdout, "22(u, %d, %d) ", type, tmp_idx);
 
                     unprotect_entry(file_ptr, type, tmp_idx, (dirty_unprotects ? H5C__DIRTIED_FLAG : H5C__NO_FLAGS_SET));
-            HDassert(cache_ptr->slist_size == cache_ptr->dirty_index_size);
+
+                    HDassert( ( ! cache_ptr->slist_enabled ) || \
+                              ( cache_ptr->slist_size == \
+                                cache_ptr->dirty_index_size ) );
                 } /* end if */
             } /* end elsef */
 

@@ -5,7 +5,7 @@ project (HDF5_CPP_SRC CXX)
 # Generate configure file
 #-----------------------------------------------------------------------------
 configure_file (${HDF_RESOURCES_DIR}/H5cxx_config.h.in
-                ${HDF5_BINARY_DIR}/H5cxx_pubconf.h
+                ${HDF5_SRC_BINARY_DIR}/H5cxx_pubconf.h
 )
 
 #-----------------------------------------------------------------------------
@@ -87,12 +87,10 @@ set (CPP_HDRS
 if (NOT ONLY_SHARED_LIBS)
   add_library (${HDF5_CPP_LIB_TARGET} STATIC ${CPP_SOURCES} ${CPP_HDRS})
   target_include_directories (${HDF5_CPP_LIB_TARGET}
-      PRIVATE "${HDF5_SRC_DIR};${HDF5_BINARY_DIR};$<$<BOOL:${HDF5_ENABLE_PARALLEL}>:${MPI_C_INCLUDE_DIRS}>"
+      PRIVATE "${HDF5_SRC_DIR};${HDF5_SRC_BINARY_DIR};$<$<BOOL:${HDF5_ENABLE_PARALLEL}>:${MPI_C_INCLUDE_DIRS}>"
       INTERFACE "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"
   )
-  target_compile_options(${HDF5_CPP_LIB_TARGET}
-      PRIVATE "${HDF5_CMAKE_CXX_FLAGS}"
-  )
+  target_compile_options(${HDF5_CPP_LIB_TARGET} PRIVATE "${HDF5_CMAKE_CXX_FLAGS}")
   target_compile_definitions(${HDF5_CPP_LIB_TARGET}
       PRIVATE $<$<BOOL:${HDF5_ENABLE_PARALLEL}>:MPICH_SKIP_MPICXX;MPICH_IGNORE_CXX_SEEK># Parallel/MPI, prevent spurious cpp/cxx warnings
   )
@@ -107,12 +105,10 @@ endif ()
 if (BUILD_SHARED_LIBS)
   add_library (${HDF5_CPP_LIBSH_TARGET} SHARED ${CPP_SOURCES} ${CPP_HDRS})
   target_include_directories (${HDF5_CPP_LIBSH_TARGET}
-      PRIVATE "${HDF5_SRC_DIR};${HDF5_BINARY_DIR};$<$<BOOL:${HDF5_ENABLE_PARALLEL}>:${MPI_C_INCLUDE_DIRS}>"
+      PRIVATE "${HDF5_SRC_DIR};${HDF5_SRC_BINARY_DIR};$<$<BOOL:${HDF5_ENABLE_PARALLEL}>:${MPI_C_INCLUDE_DIRS}>"
       INTERFACE "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"
   )
-  target_compile_options(${HDF5_CPP_LIBSH_TARGET}
-      PRIVATE "${HDF5_CMAKE_CXX_FLAGS}"
-  )
+  target_compile_options(${HDF5_CPP_LIBSH_TARGET} PRIVATE "${HDF5_CMAKE_CXX_FLAGS}")
   target_compile_definitions(${HDF5_CPP_LIBSH_TARGET}
       PUBLIC "H5_BUILT_AS_DYNAMIC_LIB"
       PRIVATE $<$<BOOL:${HDF5_ENABLE_PARALLEL}>:MPICH_SKIP_MPICXX;MPICH_IGNORE_CXX_SEEK># Parallel/MPI, prevent spurious cpp/cxx warnings
@@ -130,6 +126,17 @@ if (BUILD_SHARED_LIBS)
   H5_SET_LIB_OPTIONS (${HDF5_CPP_LIBSH_TARGET} ${HDF5_CPP_LIB_NAME} SHARED "CXX")
   set_target_properties (${HDF5_CPP_LIBSH_TARGET} PROPERTIES FOLDER libraries/cpp)
   set (install_targets ${install_targets} ${HDF5_CPP_LIBSH_TARGET})
+endif ()
+
+#-----------------------------------------------------------------------------
+# Add Target to clang-format
+#-----------------------------------------------------------------------------
+if (HDF5_ENABLE_FORMATTERS)
+  if (NOT ONLY_SHARED_LIBS)
+    clang_format (HDF5_CPP_SRC_FORMAT ${HDF5_CPP_LIB_TARGET})
+  else ()
+    clang_format (HDF5_CPP_SRC_FORMAT ${HDF5_CPP_LIBSH_TARGET})
+  endif ()
 endif ()
 
 #-----------------------------------------------------------------------------

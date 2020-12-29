@@ -15,7 +15,7 @@
  *
  * Created:		H5Abtree2.c
  *			Dec  4 2006
- *			Quincey Koziol <koziol@hdfgroup.org>
+ *			Quincey Koziol
  *
  * Purpose:		v2 B-tree callbacks for indexing attributes on objects
  *
@@ -152,7 +152,6 @@ const H5B2_class_t H5A_BT2_CORDER[1]={{ /* B-tree class information */
  * Return:	SUCCEED/FAIL
  *
  * Programmer:	Quincey Koziol
- *		koziol@hdfgroup.org
  *		Dec  4 2006
  *
  *-------------------------------------------------------------------------
@@ -381,9 +380,9 @@ H5A__dense_btree2_name_debug(FILE *stream, int indent, int fwidth,
 
     FUNC_ENTER_STATIC_NOERR
 
-    HDfprintf(stream, "%*s%-*s {%016Hx, %02x, %u, %08lx}\n", indent, "", fwidth,
+    HDfprintf(stream, "%*s%-*s {%016" PRIx64 ", %02" PRIx8 ", %u, %08" PRIx32 "}\n", indent, "", fwidth,
         "Record:",
-        (hsize_t)nrecord->id.val, (unsigned)nrecord->flags, (unsigned)nrecord->corder, (unsigned long)nrecord->hash);
+        nrecord->id.val, nrecord->flags, (unsigned)nrecord->corder, nrecord->hash);
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* H5A__dense_btree2_name_debug() */
@@ -538,9 +537,9 @@ H5A__dense_btree2_corder_debug(FILE *stream, int indent, int fwidth,
 
     FUNC_ENTER_STATIC_NOERR
 
-    HDfprintf(stream, "%*s%-*s {%016Hx, %02x, %u}\n", indent, "", fwidth,
+    HDfprintf(stream, "%*s%-*s {%016" PRIx64 ", %02" PRIx8 ", %u}\n", indent, "", fwidth,
         "Record:",
-        (hsize_t)nrecord->id.val, (unsigned)nrecord->flags, (unsigned)nrecord->corder);
+        nrecord->id.val, nrecord->flags, (unsigned)nrecord->corder);
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* H5A__dense_btree2_corder_debug() */

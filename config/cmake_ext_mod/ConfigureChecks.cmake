@@ -137,15 +137,11 @@ CHECK_INCLUDE_FILE_CONCAT ("stddef.h"        ${HDF_PREFIX}_HAVE_STDDEF_H)
 CHECK_INCLUDE_FILE_CONCAT ("stdint.h"        ${HDF_PREFIX}_HAVE_STDINT_H)
 CHECK_INCLUDE_FILE_CONCAT ("unistd.h"        ${HDF_PREFIX}_HAVE_UNISTD_H)
 
-# Darwin
-CHECK_INCLUDE_FILE_CONCAT ("mach/mach_time.h" ${HDF_PREFIX}_HAVE_MACH_MACH_TIME_H)
-
 # Windows
 CHECK_INCLUDE_FILE_CONCAT ("io.h"            ${HDF_PREFIX}_HAVE_IO_H)
 if (NOT CYGWIN)
   CHECK_INCLUDE_FILE_CONCAT ("winsock2.h"      ${HDF_PREFIX}_HAVE_WINSOCK2_H)
 endif ()
-CHECK_INCLUDE_FILE_CONCAT ("sys/timeb.h"     ${HDF_PREFIX}_HAVE_SYS_TIMEB_H)
 
 if (CMAKE_SYSTEM_NAME MATCHES "OSF")
   CHECK_INCLUDE_FILE_CONCAT ("sys/sysinfo.h" ${HDF_PREFIX}_HAVE_SYS_SYSINFO_H)
@@ -166,6 +162,8 @@ CHECK_INCLUDE_FILE_CONCAT ("memory.h"        ${HDF_PREFIX}_HAVE_MEMORY_H)
 CHECK_INCLUDE_FILE_CONCAT ("dlfcn.h"         ${HDF_PREFIX}_HAVE_DLFCN_H)
 CHECK_INCLUDE_FILE_CONCAT ("inttypes.h"      ${HDF_PREFIX}_HAVE_INTTYPES_H)
 CHECK_INCLUDE_FILE_CONCAT ("netinet/in.h"    ${HDF_PREFIX}_HAVE_NETINET_IN_H)
+CHECK_INCLUDE_FILE_CONCAT ("netdb.h"         ${HDF_PREFIX}_HAVE_NETDB_H)
+CHECK_INCLUDE_FILE_CONCAT ("arpa/inet.h"     ${HDF_PREFIX}_HAVE_ARPA_INET_H)
 # _Bool type support
 CHECK_INCLUDE_FILE_CONCAT (stdbool.h    ${HDF_PREFIX}_HAVE_STDBOOL_H)
 
@@ -274,11 +272,11 @@ if (MINGW OR NOT WINDOWS)
   # systems.
   # POSIX feature information can be found in the gcc manual at:
   # http://www.gnu.org/s/libc/manual/html_node/Feature-Test-Macros.html
-  set (HDF_EXTRA_C_FLAGS -D_POSIX_C_SOURCE=200112L)
+  set (HDF_EXTRA_C_FLAGS -D_POSIX_C_SOURCE=200809L)
 
   # Need to add this so that O_DIRECT is visible for the direct
   # VFD on Linux systems.
-  set (HDF_EXTRA_C_FLAGS -D_GNU_SOURCE)
+  set (HDF_EXTRA_C_FLAGS ${HDF_EXTRA_C_FLAGS} -D_GNU_SOURCE)
 
   option (HDF_ENABLE_LARGE_FILE "Enable support for large (64-bit) files on Linux." ON)
   if (HDF_ENABLE_LARGE_FILE AND NOT DEFINED TEST_LFS_WORKS_RUN)

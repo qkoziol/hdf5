@@ -15,7 +15,7 @@
  *
  * Created:		H5HFbtree2.c
  *			Aug  7 2006
- *			Quincey Koziol <koziol@hdfgroup.org>
+ *			Quincey Koziol
  *
  * Purpose:		v2 B-tree callbacks for "huge" object tracker
  *
@@ -360,7 +360,7 @@ H5HF__huge_bt2_indir_compare(const void *_rec1, const void *_rec2, int *result)
 {
     FUNC_ENTER_STATIC_NOERR
 
-    *result = (int)(((const H5HF_huge_bt2_indir_rec_t *)_rec1)->id - 
+    *result = (int)(((const H5HF_huge_bt2_indir_rec_t *)_rec1)->id -
                     ((const H5HF_huge_bt2_indir_rec_t *)_rec2)->id);
 
     FUNC_LEAVE_NOAPI(SUCCEED)
@@ -454,7 +454,7 @@ H5HF__huge_bt2_indir_debug(FILE *stream, int indent, int fwidth,
 
     FUNC_ENTER_STATIC_NOERR
 
-    HDfprintf(stream, "%*s%-*s {%a, %Hu, %Hu}\n", indent, "", fwidth, "Record:",
+    HDfprintf(stream, "%*s%-*s {%" PRIuHADDR ", %" PRIuHSIZE ", %" PRIuHSIZE "}\n", indent, "", fwidth, "Record:",
         nrecord->addr, nrecord->len, nrecord->id);
 
     FUNC_LEAVE_NOAPI(SUCCEED)
@@ -563,7 +563,7 @@ H5HF__huge_bt2_filt_indir_compare(const void *_rec1, const void *_rec2, int *res
 {
     FUNC_ENTER_STATIC_NOERR
 
-    *result = (int)(((const H5HF_huge_bt2_filt_indir_rec_t *)_rec1)->id - 
+    *result = (int)(((const H5HF_huge_bt2_filt_indir_rec_t *)_rec1)->id -
                     ((const H5HF_huge_bt2_filt_indir_rec_t *)_rec2)->id);
 
     FUNC_LEAVE_NOAPI(SUCCEED)
@@ -661,7 +661,7 @@ H5HF__huge_bt2_filt_indir_debug(FILE *stream, int indent, int fwidth,
 
     FUNC_ENTER_STATIC_NOERR
 
-    HDfprintf(stream, "%*s%-*s {%a, %Hu, %x, %Hu, %Hu}\n", indent, "", fwidth, "Record:",
+    HDfprintf(stream, "%*s%-*s {%" PRIuHADDR ", %" PRIuHSIZE ", %x, %" PRIuHSIZE ", %" PRIuHSIZE "}\n", indent, "", fwidth, "Record:",
         nrecord->addr, nrecord->len, nrecord->filter_mask, nrecord->obj_size, nrecord->id);
 
     FUNC_LEAVE_NOAPI(SUCCEED)
@@ -848,7 +848,7 @@ H5HF__huge_bt2_dir_debug(FILE *stream, int indent, int fwidth,
 
     FUNC_ENTER_STATIC_NOERR
 
-    HDfprintf(stream, "%*s%-*s {%a, %Hu}\n", indent, "", fwidth, "Record:",
+    HDfprintf(stream, "%*s%-*s {%" PRIuHADDR ", %" PRIuHSIZE "}\n", indent, "", fwidth, "Record:",
         nrecord->addr, nrecord->len);
 
     FUNC_LEAVE_NOAPI(SUCCEED)
@@ -1064,7 +1064,7 @@ H5HF__huge_bt2_filt_dir_debug(FILE *stream, int indent, int fwidth,
 
     FUNC_ENTER_STATIC_NOERR
 
-    HDfprintf(stream, "%*s%-*s {%a, %Hu, %x, %Hu}\n", indent, "", fwidth, "Record:",
+    HDfprintf(stream, "%*s%-*s {%" PRIuHADDR ", %" PRIuHSIZE ", %x, %" PRIuHSIZE "}\n", indent, "", fwidth, "Record:",
         nrecord->addr, nrecord->len, nrecord->filter_mask, nrecord->obj_size);
 
     FUNC_LEAVE_NOAPI(SUCCEED)

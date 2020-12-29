@@ -11,7 +11,7 @@
  * help@hdfgroup.org.                                                        *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-/* Programmer:  Quincey Koziol <koziol@hdfgroup.org>
+/* Programmer:  Quincey Koziol
  *
  * Purpose:	Generic Property Functions
  */
@@ -49,9 +49,9 @@
 
 /* Typedef for iterator when encoding a property list */
 typedef struct {
-    hbool_t encode;             /* Whether the property list should be encoded */
-    size_t *enc_size_ptr;       /* Pointer to size of encoded buffer */
-    void **pp;               /* Pointer to encoding buffer pointer */
+    hbool_t encode;         /* Whether the property list should be encoded */
+    size_t *enc_size_ptr;   /* Pointer to size of encoded buffer */
+    void **pp;              /* Pointer to encoding buffer pointer */
 } H5P_enc_iter_ud_t;
 
 
@@ -332,7 +332,7 @@ static int
 H5P__encode_cb(H5P_genprop_t *prop, void *_udata)
 {
     H5P_enc_iter_ud_t *udata = (H5P_enc_iter_ud_t *)_udata;     /* Pointer to user data */
-    int ret_value = H5_ITER_CONT;       /* Return value */
+    int ret_value = H5_ITER_CONT;    /* Return value */
 
     FUNC_ENTER_STATIC
 
@@ -687,7 +687,7 @@ done:
         on failure.
  DESCRIPTION
      Decodes a property list from a binary buffer. The contents of the buffer
-     contain the values for the correponding properties of the plist. The decode 
+     contain the values for the correponding properties of the plist. The decode
      callback of a certain property decodes its value from the buffer and sets it
      in the property list.
  GLOBAL VARIABLES

@@ -648,17 +648,17 @@ static void
 dump_table(hid_t fid, char* tablename, table_t *table)
 {
     unsigned u;
-    char *obj_addr_str = NULL;
+    char *obj_tok_str = NULL;
 
     PRINTSTREAM(rawoutstream,"%s: # of entries = %d\n", tablename,table->nobjs);
     for (u = 0; u < table->nobjs; u++) {
-        H5VLconnector_token_to_str(fid, table->objs[u].obj_token, &obj_addr_str);
+        H5VLconnector_token_to_str(fid, table->objs[u].obj_token, &obj_tok_str);
 
-        PRINTSTREAM(rawoutstream,"%s %s %d %d\n", obj_addr_str,
+        PRINTSTREAM(rawoutstream,"%s %s %d %d\n", obj_tok_str,
            table->objs[u].objname,
            table->objs[u].displayed, table->objs[u].recorded);
 
-        H5VLfree_token_str(fid, obj_addr_str);
+        H5VLfree_token_str(fid, obj_tok_str);
     }
 }
 
@@ -901,7 +901,7 @@ tmpfile(void)
  *  link_info->trg_path must be freed out of this function
  *-------------------------------------------------------------------------*/
 int
-H5tools_get_symlink_info(hid_t file_id, const char * linkpath, h5tool_link_info_t *link_info, hbool_t get_obj_type)
+H5tools_get_symlink_info(hid_t file_id, const char *linkpath, h5tool_link_info_t *link_info, hbool_t get_obj_type)
 {
     htri_t l_ret;
     H5O_info2_t trg_oinfo;

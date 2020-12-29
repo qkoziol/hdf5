@@ -411,22 +411,22 @@ check_stats(const H5F_t *f, const H5FS_t *frsp, frspace_state_t *state)
         FAIL_STACK_ERROR
 
     if(frspace_stats.tot_space != state->tot_space) {
-        HDfprintf(stdout, "frspace_stats.tot_space = %Hu, state->tot_space = %Zu\n",
+        HDfprintf(stdout, "frspace_stats.tot_space = %" PRIuHSIZE ", state->tot_space = %" PRIuHSIZE "\n",
 	    frspace_stats.tot_space, state->tot_space);
         TEST_ERROR
     } /* end if */
     if(frspace_stats.tot_sect_count != state->tot_sect_count) {
-        HDfprintf(stdout, "frspace_stats.tot_sect_count = %Hu, state->tot_sect_count = %Hu\n",
+        HDfprintf(stdout, "frspace_stats.tot_sect_count = %" PRIuHSIZE ", state->tot_sect_count = %" PRIuHSIZE "\n",
 	    frspace_stats.tot_sect_count, state->tot_sect_count);
         TEST_ERROR
     } /* end if */
     if(frspace_stats.serial_sect_count != state->serial_sect_count) {
-        HDfprintf(stdout, "frspace_stats.serial_sect_count = %Hu, state->serial_sect_count = %Hu\n",
+        HDfprintf(stdout, "frspace_stats.serial_sect_count = %" PRIuHSIZE ", state->serial_sect_count = %" PRIuHSIZE "\n",
 	    frspace_stats.serial_sect_count, state->serial_sect_count);
         TEST_ERROR
     } /* end if */
     if(frspace_stats.ghost_sect_count != state->ghost_sect_count) {
-        HDfprintf(stdout, "frspace_stats.ghost_sect_count = %Hu, state->ghost_sect_count = %Hu\n",
+        HDfprintf(stdout, "frspace_stats.ghost_sect_count = %" PRIuHSIZE ", state->ghost_sect_count = %" PRIuHSIZE "\n",
 	    frspace_stats.ghost_sect_count, state->ghost_sect_count);
         TEST_ERROR
     } /* end if */
@@ -880,7 +880,7 @@ test_fs_sect_add(hid_t fapl)
         FAIL_STACK_ERROR
     fs_addr = HADDR_UNDEF;
 
-    /* Close the file and dxpl */
+    /* Close the file */
     if(H5Fclose(file) < 0)
         FAIL_STACK_ERROR
 
@@ -1249,7 +1249,7 @@ test_fs_sect_find(hid_t fapl)
         FAIL_STACK_ERROR
     fs_addr = HADDR_UNDEF;
 
-    /* Close the file and dxpl */
+    /* Close the file */
     if(H5Fclose(file) < 0)
         FAIL_STACK_ERROR
 
@@ -2737,7 +2737,7 @@ test_fs_sect_extend(hid_t fapl)
 
     PASSED();
 
-    /* Close the file and dxpl */
+    /* Close the file */
     if(H5Fclose(file) < 0)
         FAIL_STACK_ERROR
 
@@ -2839,7 +2839,7 @@ test_fs_sect_iterate(hid_t fapl)
 	FAIL_STACK_ERROR
     fs_addr = HADDR_UNDEF;
 
-    /* Close the file and dxpl */
+    /* Close the file */
     if(H5Fclose(file) < 0)
         FAIL_STACK_ERROR
 

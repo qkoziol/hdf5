@@ -143,7 +143,7 @@ init_cparam(H5FA_create_t *cparam, farray_test_param_t *tparam)
  * Purpose:     Create file and retrieve pointer to internal file object
  *
  * Return:      SUCCEED/FAIL
- *   
+ *
  *-------------------------------------------------------------------------
  */
 static herr_t
@@ -189,19 +189,19 @@ check_stats(const H5FA_t *fa, const farray_state_t *state)
 
     /* Compare information */
     if (farray_stats.hdr_size != state->hdr_size) {
-        HDfprintf(stdout, "farray_stats.hdr_size = %Hu, state->hdr_size = %Hu\n",
+        HDfprintf(stdout, "farray_stats.hdr_size = %" PRIuHSIZE ", state->hdr_size = %" PRIuHSIZE "\n",
 	    farray_stats.hdr_size, state->hdr_size);
         TEST_ERROR
     }
 
     if (farray_stats.dblk_size != state->dblk_size) {
-        HDfprintf(stdout, "farray_stats.dblk_size = %Hu, state->dblk_size = %Hu\n",
+        HDfprintf(stdout, "farray_stats.dblk_size = %" PRIuHSIZE ", state->dblk_size = %" PRIuHSIZE "\n",
 	    farray_stats.dblk_size, state->dblk_size);
         TEST_ERROR
     }
 
     if (farray_stats.nelmts != state->nelmts) {
-        HDfprintf(stdout, "farray_stats.nelmts = %Hu, state->nelmts = %Hu\n",
+        HDfprintf(stdout, "farray_stats.nelmts = %" PRIuHSIZE ", state->nelmts = %" PRIuHSIZE "\n",
 	    farray_stats.nelmts, state->nelmts);
         TEST_ERROR
     }
@@ -262,7 +262,7 @@ set_fa_state(const H5FA_create_t *cparam, farray_state_t *state)
  *-------------------------------------------------------------------------
  */
 static int
-reopen_file(hid_t *fid, H5F_t **f, hid_t fapl_id, 
+reopen_file(hid_t *fid, H5F_t **f, hid_t fapl_id,
     H5FA_t **fa, haddr_t fa_addr, const farray_test_param_t *tparam)
 {
     /* Check for closing & re-opening the array */
