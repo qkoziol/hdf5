@@ -1,6 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * Copyright by The HDF Group.                                               *
- * Copyright by the Board of Trustees of the University of Illinois.         *
  * All rights reserved.                                                      *
  *                                                                           *
  * This file is part of HDF5.  The full HDF5 copyright notice, including     *
@@ -11,32 +10,25 @@
  * help@hdfgroup.org.                                                        *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-package hdf.hdf5lib.exceptions;
+/*
+ * Purpose:	This file contains declarations which define macros for the
+ *		H5 package.  Including this header means that the source file
+ *		is part of the H5 package.
+ */
+#ifndef _H5module_H
+#define _H5module_H
 
-/**
- * The class HDF5LibraryException returns errors raised by the HDF5 library.
- * <p>
- * This sub-class represents HDF-5 major error code <b>H5E_ATOM</b>
+/* Define the proper control macros for the generic FUNC_ENTER/LEAVE and error
+ *      reporting macros.
+ */
+#define H5_MODULE
+#define H5_MY_PKG      H5
+#define H5_MY_PKG_ERR  H5E_LIB
+#define H5_MY_PKG_INIT YES
+
+/**\defgroup H5 H5
+ * \brief General Library Functions
+ * \todo Describe concisely what the functions in this module are about.
  */
 
-public class HDF5AtomException extends HDF5LibraryException {
-    /**
-     * Constructs an <code>HDF5AtomException</code> with no specified detail
-     * message.
-     */
-    public HDF5AtomException() {
-        super();
-    }
-
-    /**
-     * Constructs an <code>HDF5AtomException</code> with the specified detail
-     * message.
-     *
-     * @param s
-     *            the detail message.
-     */
-    public HDF5AtomException(String s) {
-        super(s);
-    }
-
-}
+#endif /* _H5module_H */

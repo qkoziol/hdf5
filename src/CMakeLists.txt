@@ -174,11 +174,16 @@ IDE_GENERATED_PROPERTIES ("H5EA" "${H5EA_HDRS}" "${H5EA_SOURCES}" )
 
 
 set (H5ES_SOURCES
+    ${HDF5_SRC_DIR}/H5ES.c
+    ${HDF5_SRC_DIR}/H5ESevent.c
+    ${HDF5_SRC_DIR}/H5ESint.c
+    ${HDF5_SRC_DIR}/H5ESlist.c
 )
 set (H5ES_HDRS
     ${HDF5_SRC_DIR}/H5ESpublic.h
 )
 IDE_GENERATED_PROPERTIES ("H5ES" "${H5ES_HDRS}" "${H5ES_SOURCES}" )
+
 
 
 set (H5F_SOURCES
@@ -380,6 +385,8 @@ IDE_GENERATED_PROPERTIES ("H5HP" "${H5HP_HDRS}" "${H5HP_SOURCES}" )
 
 set (H5I_SOURCES
     ${HDF5_SRC_DIR}/H5I.c
+    ${HDF5_SRC_DIR}/H5Idbg.c
+    ${HDF5_SRC_DIR}/H5Iint.c
     ${HDF5_SRC_DIR}/H5Itest.c
 )
 set (H5I_HDRS
@@ -437,6 +444,7 @@ set (H5MP_SOURCES
 set (H5MP_HDRS
 )
 IDE_GENERATED_PROPERTIES ("H5MP" "${H5MP_HDRS}" "${H5MP_SOURCES}" )
+
 
 set (H5O_SOURCES
     ${HDF5_SRC_DIR}/H5O.c
@@ -638,6 +646,7 @@ set (H5TS_SOURCES
     ${HDF5_SRC_DIR}/H5TS.c
 )
 set (H5TS_HDRS
+    ${HDF5_SRC_DIR}/H5TSpublic.h
 )
 IDE_GENERATED_PROPERTIES ("H5TS" "${H5TS_HDRS}" "${H5TS_SOURCES}" )
 
@@ -714,6 +723,7 @@ set (H5Z_HDRS
 IDE_GENERATED_PROPERTIES ("H5Z" "${H5Z_HDRS}" "${H5Z_SOURCES}" )
 
 set (H5_MODULE_HEADERS
+    ${HDF5_SRC_DIR}/H5module.h
     ${HDF5_SRC_DIR}/H5Amodule.h
     ${HDF5_SRC_DIR}/H5ACmodule.h
     ${HDF5_SRC_DIR}/H5Bmodule.h
@@ -723,6 +733,7 @@ set (H5_MODULE_HEADERS
     ${HDF5_SRC_DIR}/H5Dmodule.h
     ${HDF5_SRC_DIR}/H5Emodule.h
     ${HDF5_SRC_DIR}/H5EAmodule.h
+    ${HDF5_SRC_DIR}/H5ESmodule.h
     ${HDF5_SRC_DIR}/H5Fmodule.h
     ${HDF5_SRC_DIR}/H5FAmodule.h
     ${HDF5_SRC_DIR}/H5FDdrvr_module.h
@@ -743,6 +754,7 @@ set (H5_MODULE_HEADERS
     ${HDF5_SRC_DIR}/H5PBmodule.h
     ${HDF5_SRC_DIR}/H5PLmodule.h
     ${HDF5_SRC_DIR}/H5Rmodule.h
+    ${HDF5_SRC_DIR}/H5RSmodule.h
     ${HDF5_SRC_DIR}/H5Smodule.h
     ${HDF5_SRC_DIR}/H5SLmodule.h
     ${HDF5_SRC_DIR}/H5SMmodule.h
@@ -763,6 +775,7 @@ set (common_SRCS
     ${H5D_SOURCES}
     ${H5E_SOURCES}
     ${H5EA_SOURCES}
+    ${H5ES_SOURCES}
     ${H5F_SOURCES}
     ${H5FA_SOURCES}
     ${H5FD_SOURCES}
@@ -832,6 +845,7 @@ set (H5_PUBLIC_HEADERS
     ${H5S_HDRS}
     ${H5SM_HDRS}
     ${H5T_HDRS}
+    ${H5TS_HDRS}
     ${H5VL_HDRS}
     ${H5Z_HDRS}
 )
@@ -870,6 +884,9 @@ set (H5_PRIVATE_HEADERS
 
     ${HDF5_SRC_DIR}/H5EApkg.h
     ${HDF5_SRC_DIR}/H5EAprivate.h
+
+    ${HDF5_SRC_DIR}/H5ESpkg.h
+    ${HDF5_SRC_DIR}/H5ESprivate.h
 
     ${HDF5_SRC_DIR}/H5Fpkg.h
     ${HDF5_SRC_DIR}/H5Fprivate.h
@@ -1119,7 +1136,8 @@ else ()
   )
   if (BUILD_SHARED_LIBS)
     add_custom_command (
-        OUTPUT     ${HDF5_GENERATED_SOURCE_DIR}/shared/shared_gen_SRCS.stamp1
+        OUTPUT     ${HDF5_GENERATED_SOURCE_DIR}/shared/H5Tinit.c
+                   ${HDF5_GENERATED_SOURCE_DIR}/shared/shared_gen_SRCS.stamp1
         COMMAND    ${CMAKE_COMMAND}
         ARGS       -E copy_if_different "${HDF5_GENERATED_SOURCE_DIR}/H5Tinit.c" "${HDF5_GENERATED_SOURCE_DIR}/shared/H5Tinit.c"
         COMMAND    ${CMAKE_COMMAND}
@@ -1355,4 +1373,42 @@ if (NOT WIN32)
       PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
       COMPONENT libraries
   )
+endif ()
+
+#-----------------------------------------------------------------------------
+# Option to build documentation
+#-----------------------------------------------------------------------------
+if (DOXYGEN_FOUND)
+  set (DOXYGEN_PACKAGE ${HDF5_PACKAGE})
+  set (DOXYGEN_VERSION_STRING ${HDF5_VERSION_STRING})
+  set (DOXYGEN_INCLUDE_ALIASES ${HDF5_DOXYGEN_DIR}/aliases)
+  set (DOXYGEN_PROJECT_LOGO ${HDF5_DOXYGEN_DIR}/img/HDFG-logo.png)
+  set (DOXYGEN_PROJECT_BRIEF "C-API Reference")
+  set (DOXYGEN_INPUT_DIRECTORY ${HDF5_SRC_DIR} ${HDF5_DOXYGEN_DIR}/dox ${HDF5_GENERATED_SOURCE_DIR}/shared)
+  set (DOXYGEN_OPTIMIZE_OUTPUT_FOR_C YES)
+  set (DOXYGEN_MACRO_EXPANSION YES)
+  set (DOXYGEN_OUTPUT_DIRECTORY ${HDF5_BINARY_DIR}/hdf5lib_docs)
+
+  # Replace variables inside @@ with the current values
+  configure_file(${HDF5_DOXYGEN_DIR}/Doxyfile.in Doxyfile @ONLY)
+
+  doxygen_add_docs(hdf5lib_doc
+#      ${common_SRCS} ${shared_gen_SRCS} ${H5_PUBLIC_HEADERS} ${H5_PRIVATE_HEADERS} ${H5_GENERATED_HEADERS} ${HDF5_DOXYGEN_DIR}/dox
+      ${DOXYGEN_INPUT_DIRECTORY}
+      ALL
+      WORKING_DIRECTORY ${HDF5_SRC_DIR}
+      COMMENT "Generating HDF5 library Source Documentation"
+  )
+  install(
+      DIRECTORY ${HDF5_BINARY_DIR}/hdf5lib_docs/html
+      DESTINATION ${HDF5_INSTALL_DATA_DIR}
+      COMPONENT Documents
+  )
+
+  if(NOT TARGET doxygen)
+    add_custom_target(doxygen)
+  endif()
+
+  add_dependencies(doxygen hdf5lib_doc)
+
 endif ()

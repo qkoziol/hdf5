@@ -25,9 +25,14 @@
  *      reporting macros.
  */
 #define H5O_MODULE
-#define H5_MY_PKG       H5O
-#define H5_MY_PKG_ERR   H5E_OHDR
-#define H5_MY_PKG_INIT  YES
+#define H5_MY_PKG      H5O
+#define H5_MY_PKG_ERR  H5E_OHDR
+#define H5_MY_PKG_INIT YES
 
+/**\defgroup H5O H5O
+ * \brief Object Interface
+ *
+ * \todo Describe concisely what the functions in this module are about.
+ *
+ */
 #endif /* _H5Omodule_H */
-

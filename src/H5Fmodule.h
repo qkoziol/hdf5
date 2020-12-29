@@ -25,9 +25,21 @@
  *      reporting macros.
  */
 #define H5F_MODULE
-#define H5_MY_PKG       H5F
-#define H5_MY_PKG_ERR   H5E_FILE
-#define H5_MY_PKG_INIT  YES
+#define H5_MY_PKG      H5F
+#define H5_MY_PKG_ERR  H5E_FILE
+#define H5_MY_PKG_INIT YES
+
+/**
+ * \defgroup H5F H5F
+ * \brief File Interface
+ * \todo Describe concisely what the functions in this module are about.
+ *
+ * \defgroup MDC Metadata Cache
+ * \ingroup H5F
+ * \defgroup PH5F Parallel
+ * \ingroup H5F
+ * \defgroup SWMR Single Writer Multiple Readers
+ * \ingroup H5F
+ */
 
 #endif /* _H5Fmodule_H */
-

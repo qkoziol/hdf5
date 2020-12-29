@@ -23,10 +23,13 @@
  *      reporting macros.
  */
 #define H5PL_MODULE
-#define H5_MY_PKG       H5PL
-#define H5_MY_PKG_ERR   H5E_PLUGIN
-#define H5_MY_PKG_INIT  YES
+#define H5_MY_PKG      H5PL
+#define H5_MY_PKG_ERR  H5E_PLUGIN
+#define H5_MY_PKG_INIT YES
+
+/**\defgroup H5PL H5PL
+ * \brief Plugins
+ * \todo Describe what programmatically controlling dynamically loaded plugins (H5PL) is all about
+ */
 
 #endif /* _H5PLmodule_H */
-
-

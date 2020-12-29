@@ -25,9 +25,15 @@
  *      reporting macros.
  */
 #define H5G_MODULE
-#define H5_MY_PKG       H5G
-#define H5_MY_PKG_ERR   H5E_SYM
-#define H5_MY_PKG_INIT  YES
+#define H5_MY_PKG      H5G
+#define H5_MY_PKG_ERR  H5E_SYM
+#define H5_MY_PKG_INIT YES
+
+/**
+ * \defgroup H5G H5G
+ * \brief Group Interface
+ * \details The HDF5 Group Interface, H5G, provides a mechanism for managing
+ *          HDF5 groups and their members, which are other HDF5 objects.
+ */
 
 #endif /* _H5Gmodule_H */
-
