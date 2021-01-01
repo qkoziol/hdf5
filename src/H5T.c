@@ -5471,7 +5471,7 @@ H5T_convert(H5T_path_t *tpath, hid_t src_id, hid_t dst_id, size_t nelmts, size_t
         H5_timer_stop(&timer);
 
         /* Record elapsed timer info */
-        H5_timer_get_times(timer, &tpath->stats.times);
+        H5_timer_get_times(&timer, &tpath->stats.times);
 
         /* Increment # of calls and # of elements converted */
         tpath->stats.ncalls++;

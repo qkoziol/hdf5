@@ -55,9 +55,6 @@
 #define H5F_SUPER_SWMR_WRITE_ACCESS 0x04
 #define H5F_SUPER_ALL_FLAGS         (H5F_SUPER_WRITE_ACCESS | H5F_SUPER_FILE_OK | H5F_SUPER_SWMR_WRITE_ACCESS)
 
-/* Mask for removing private file access flags */
-#define H5F_ACC_PUBLIC_FLAGS 0x007fu
-
 /* Free space section+aggregator merge flags */
 #define H5F_FS_MERGE_METADATA 0x01 /* Section can merge with metadata aggregator */
 #define H5F_FS_MERGE_RAWDATA  0x02 /* Section can merge with small 'raw' data aggregator */

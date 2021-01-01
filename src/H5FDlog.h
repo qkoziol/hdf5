@@ -55,11 +55,15 @@
     (H5FD_LOG_TIME_OPEN | H5FD_LOG_TIME_STAT | H5FD_LOG_TIME_READ | H5FD_LOG_TIME_WRITE |                    \
      H5FD_LOG_TIME_SEEK | H5FD_LOG_TIME_TRUNCATE | H5FD_LOG_TIME_CLOSE)
 /* Flags for tracking allocation/release of space in file */
-#define H5FD_LOG_ALLOC 0x00040000
-#define H5FD_LOG_FREE  0x00080000
+#define H5FD_LOG_ALLOC         0x00040000
+#define H5FD_LOG_FREE          0x00080000
+/* Flags for tracking time spent in lock/unlock operations for file */
+#define H5FD_LOG_TIME_LOCK     0x00100000
+#define H5FD_LOG_TIME_UNLOCK   0x00200000
 #define H5FD_LOG_ALL                                                                                         \
-    (H5FD_LOG_FREE | H5FD_LOG_ALLOC | H5FD_LOG_TIME_IO | H5FD_LOG_NUM_IO | H5FD_LOG_FLAVOR |                 \
-     H5FD_LOG_FILE_IO | H5FD_LOG_LOC_IO | H5FD_LOG_META_IO)
+    (H5FD_LOG_TIME_LOCK | H5FD_LOG_TIME_UNLOCK | H5FD_LOG_FREE | H5FD_LOG_ALLOC | \
+     H5FD_LOG_TIME_IO | H5FD_LOG_NUM_IO | H5FD_LOG_FLAVOR | H5FD_LOG_FILE_IO | \
+     H5FD_LOG_LOC_IO | H5FD_LOG_META_IO)
 
 #ifdef __cplusplus
 extern "C" {

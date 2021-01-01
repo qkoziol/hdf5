@@ -37,14 +37,6 @@
 /* The driver identification number, initialized at runtime */
 static hid_t H5FD_DIRECT_g = 0;
 
-/* Whether to ignore file locks when disabled (env var value) */
-static htri_t ignore_disabled_file_locks_s = FAIL;
-
-/* File operations */
-#define OP_UNKNOWN 0
-#define OP_READ    1
-#define OP_WRITE   2
-
 /* Driver-specific file access properties */
 typedef struct H5FD_direct_fapl_t {
     size_t  mboundary;  /* Memory boundary for alignment    */
@@ -53,70 +45,13 @@ typedef struct H5FD_direct_fapl_t {
     hbool_t must_align; /* Decides if data alignment is required        */
 } H5FD_direct_fapl_t;
 
-/*
- * The description of a file belonging to this driver. The `eoa' and `eof'
- * determine the amount of hdf5 address space in use and the high-water mark
- * of the file (the current size of the underlying Unix file). The `pos'
- * value is used to eliminate file position updates when they would be a
- * no-op. Unfortunately we've found systems that use separate file position
- * indicators for reading and writing so the lseek can only be eliminated if
- * the current operation is the same as the previous operation.  When opening
- * a file the `eof' will be set to the current file size, `eoa' will be set
- * to zero, `pos' will be set to H5F_ADDR_UNDEF (as it is when an error
- * occurs), and `op' will be set to H5F_OP_UNKNOWN.
- */
+/* The description of a file belonging to this driver */
 typedef struct H5FD_direct_t {
-    H5FD_t             pub; /*public stuff, must be first  */
-    int                fd;  /*the unix file      */
-    haddr_t            eoa; /*end of allocated region  */
-    haddr_t            eof; /*end of file; current file size*/
-    haddr_t            pos; /*current file I/O position  */
-    int                op;  /*last operation    */
-    H5FD_direct_fapl_t fa;  /*file access properties  */
-    hbool_t            ignore_disabled_file_locks;
-#ifndef H5_HAVE_WIN32_API
-    /*
-     * On most systems the combination of device and i-node number uniquely
-     * identify a file.
-     */
-    dev_t device; /*file device number    */
-    ino_t inode;  /*file i-node number    */
-#else
-    /*
-     * On H5_HAVE_WIN32_API the low-order word of a unique identifier associated with the
-     * file and the volume serial number uniquely identify a file. This number
-     * (which, both? -rpm) may change when the system is restarted or when the
-     * file is opened. After a process opens a file, the identifier is
-     * constant until the file is closed. An application can use this
-     * identifier and the volume serial number to determine whether two
-     * handles refer to the same file.
-     */
-    DWORD fileindexlo;
-    DWORD fileindexhi;
-#endif
+    H5FD_t             pub;          /* public stuff, must be first          */
+    H5FD_posix_common_t pos_com;     /* Common POSIX info                    */
 
+    H5FD_direct_fapl_t fa;           /* File access properties               */
 } H5FD_direct_t;
-
-/*
- * These macros check for overflow of various quantities.  These macros
- * assume that HDoff_t is signed and haddr_t and size_t are unsigned.
- *
- * ADDR_OVERFLOW:  Checks whether a file address of type `haddr_t'
- *      is too large to be represented by the second argument
- *      of the file seek function.
- *
- * SIZE_OVERFLOW:  Checks whether a buffer size of type `hsize_t' is too
- *      large to be represented by the `size_t' type.
- *
- * REGION_OVERFLOW:  Checks whether an address and size pair describe data
- *      which can be addressed entirely by the second
- *      argument of the file seek function.
- */
-#define MAXADDR          (((haddr_t)1 << (8 * sizeof(HDoff_t) - 1)) - 1)
-#define ADDR_OVERFLOW(A) (HADDR_UNDEF == (A) || ((A) & ~(haddr_t)MAXADDR))
-#define SIZE_OVERFLOW(Z) ((Z) & ~(hsize_t)MAXADDR)
-#define REGION_OVERFLOW(A, Z)                                                                                \
-    (ADDR_OVERFLOW(A) || SIZE_OVERFLOW(Z) || HADDR_UNDEF == (A) + (Z) || (HDoff_t)((A) + (Z)) < (HDoff_t)(A))
 
 /* Prototypes */
 static herr_t  H5FD__direct_term(void);
@@ -140,7 +75,7 @@ static herr_t  H5FD__direct_unlock(H5FD_t *_file);
 
 static const H5FD_class_t H5FD_direct_g = {
     "direct",                   /* name                 */
-    MAXADDR,                    /* maxaddr              */
+    H5_POSIX_MAXADDR,           /* maxaddr              */
     H5F_CLOSE_WEAK,             /* fc_degree            */
     H5FD__direct_term,          /* terminate            */
     NULL,                       /* sb_size              */
@@ -191,19 +126,9 @@ DESCRIPTION
 static herr_t
 H5FD__init_package(void)
 {
-    char * lock_env_var = NULL; /* Environment variable pointer */
     herr_t ret_value    = SUCCEED;
 
     FUNC_ENTER_STATIC
-
-    /* Check the use disabled file locks environment variable */
-    lock_env_var = HDgetenv("HDF5_USE_FILE_LOCKING");
-    if (lock_env_var && !HDstrcmp(lock_env_var, "BEST_EFFORT"))
-        ignore_disabled_file_locks_s = TRUE; /* Override: Ignore disabled locks */
-    else if (lock_env_var && (!HDstrcmp(lock_env_var, "TRUE") || !HDstrcmp(lock_env_var, "1")))
-        ignore_disabled_file_locks_s = FALSE; /* Override: Don't ignore disabled locks */
-    else
-        ignore_disabled_file_locks_s = FAIL; /* Environment variable not set, or not set correctly */
 
     if (H5FD_direct_init() < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, FAIL, "unable to initialize direct VFD")
@@ -443,15 +368,9 @@ H5FD__direct_fapl_copy(const void *_old_fa)
 static H5FD_t *
 H5FD__direct_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
 {
-    int                       o_flags;
-    int                       fd   = (-1);
-    H5FD_direct_t *           file = NULL;
+    H5FD_direct_t * file = NULL;
+    hbool_t         file_opened = FALSE; /* Whether the file was opened */
     const H5FD_direct_fapl_t *fa;
-#ifdef H5_HAVE_WIN32_API
-    HFILE                              filehandle;
-    struct _BY_HANDLE_FILE_INFORMATION fileinfo;
-#endif
-    h5_stat_t       sb;
     H5P_genplist_t *plist; /* Property list */
     void *          buf1, *buf2;
     H5FD_t *        ret_value = NULL;
@@ -461,69 +380,26 @@ H5FD__direct_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxad
     /* Sanity check on file offsets */
     HDassert(sizeof(HDoff_t) >= sizeof(size_t));
 
-    /* Check arguments */
-    if (!name || !*name)
-        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, NULL, "invalid file name")
-    if (0 == maxaddr || HADDR_UNDEF == maxaddr)
-        HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, NULL, "bogus maxaddr")
-    if (ADDR_OVERFLOW(maxaddr))
-        HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, NULL, "bogus maxaddr")
-
-    /* Build the open flags */
-    o_flags = (H5F_ACC_RDWR & flags) ? O_RDWR : O_RDONLY;
-    if (H5F_ACC_TRUNC & flags)
-        o_flags |= O_TRUNC;
-    if (H5F_ACC_CREAT & flags)
-        o_flags |= O_CREAT;
-    if (H5F_ACC_EXCL & flags)
-        o_flags |= O_EXCL;
-
-    /* Flag for Direct I/O */
-    o_flags |= O_DIRECT;
-
-    /* Open the file */
-    if ((fd = HDopen(name, o_flags, H5_POSIX_CREATE_MODE_RW)) < 0)
-        HSYS_GOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, NULL, "unable to open file")
-
-    if (HDfstat(fd, &sb) < 0)
-        HSYS_GOTO_ERROR(H5E_FILE, H5E_BADFILE, NULL, "unable to fstat file")
-
     /* Create the new file struct */
     if (NULL == (file = H5FL_CALLOC(H5FD_direct_t)))
         HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "unable to allocate file struct")
+
+    /* Flag for Direct I/O */
+    flags |= H5F_ACC_DIRECT;
+
+    /* Open the file */
+    if (H5FD__posix_common_open(name, flags, maxaddr, fapl_id, &file->pos_com, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL, "can't open file")
+    file_opened = TRUE;
 
     /* Get the driver specific information */
     if (NULL == (plist = H5P_object_verify(fapl_id, H5P_FILE_ACCESS)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file access property list")
     if (NULL == (fa = (const H5FD_direct_fapl_t *)H5P_peek_driver_info(plist)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, NULL, "bad VFL driver info")
-
-    file->fd = fd;
-    H5_CHECKED_ASSIGN(file->eof, haddr_t, sb.st_size, h5_stat_size_t);
-    file->pos = HADDR_UNDEF;
-    file->op  = OP_UNKNOWN;
-#ifdef H5_HAVE_WIN32_API
-    filehandle = _get_osfhandle(fd);
-    (void)GetFileInformationByHandle((HANDLE)filehandle, &fileinfo);
-    file->fileindexhi = fileinfo.nFileIndexHigh;
-    file->fileindexlo = fileinfo.nFileIndexLow;
-#else
-    file->device = sb.st_dev;
-    file->inode  = sb.st_ino;
-#endif /*H5_HAVE_WIN32_API*/
     file->fa.mboundary = fa->mboundary;
     file->fa.fbsize    = fa->fbsize;
     file->fa.cbsize    = fa->cbsize;
-
-    /* Check the file locking flags in the fapl */
-    if (ignore_disabled_file_locks_s != FAIL)
-        /* The environment variable was set, so use that preferentially */
-        file->ignore_disabled_file_locks = ignore_disabled_file_locks_s;
-    else {
-        /* Use the value in the property list */
-        if (H5P_get(plist, H5F_ACS_IGNORE_DISABLED_FILE_LOCKS_NAME, &file->ignore_disabled_file_locks) < 0)
-            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get ignore disabled file locks property")
-    }
 
     /* Try to decide if data alignment is required.  The reason to check it here
      * is to handle correctly the case that the file is in a different file system
@@ -570,15 +446,15 @@ H5FD__direct_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxad
         }
     }
 
+    /* Set return value */
+    ret_value = (H5FD_t *)file;
+
+done:
     if (buf1)
         HDfree(buf1);
     if (buf2)
         HDfree(buf2);
 
-    /* Set return value */
-    ret_value = (H5FD_t *)file;
-
-done:
     if (ret_value == NULL) {
         if (fd >= 0)
             HDclose(fd);

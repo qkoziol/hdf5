@@ -508,21 +508,6 @@ typedef struct H5F_t H5F_t;
 
 #define H5F_DECODE_LENGTH(f, p, l) DECODE_VAR(p, l, H5F_SIZEOF_SIZE(f))
 
-/*
- * Macros that check for overflows.  These are somewhat dangerous to fiddle
- * with.
- */
-#if (H5_SIZEOF_SIZE_T >= H5_SIZEOF_OFF_T)
-#define H5F_OVERFLOW_SIZET2OFFT(X) ((size_t)(X) >= (size_t)((size_t)1 << (8 * sizeof(HDoff_t) - 1)))
-#else
-#define H5F_OVERFLOW_SIZET2OFFT(X) 0
-#endif
-#if (H5_SIZEOF_HSIZE_T >= H5_SIZEOF_OFF_T)
-#define H5F_OVERFLOW_HSIZET2OFFT(X) ((hsize_t)(X) >= (hsize_t)((hsize_t)1 << (8 * sizeof(HDoff_t) - 1)))
-#else
-#define H5F_OVERFLOW_HSIZET2OFFT(X) 0
-#endif
-
 /* Sizes of object addresses & sizes in the file (in bytes) */
 #define H5F_OBJ_ADDR_SIZE sizeof(haddr_t)
 #define H5F_OBJ_SIZE_SIZE sizeof(hsize_t)
@@ -615,6 +600,11 @@ typedef struct H5F_t H5F_t;
                         */
 #define H5F_ACS_IGNORE_DISABLED_FILE_LOCKS_NAME                                                              \
     "ignore_disabled_file_locks" /* whether or not we ignore "locks disabled" errors */
+#if defined H5_IGNORE_DISABLED_FILE_LOCKS && H5_IGNORE_DISABLED_FILE_LOCKS
+#define H5F_ACS_IGNORE_DISABLED_FILE_LOCKS_DEF TRUE
+#else
+#define H5F_ACS_IGNORE_DISABLED_FILE_LOCKS_DEF FALSE
+#endif
 #ifdef H5_HAVE_PARALLEL
 #define H5F_ACS_MPI_PARAMS_COMM_NAME "mpi_params_comm" /* the MPI communicator */
 #define H5F_ACS_MPI_PARAMS_INFO_NAME "mpi_params_info" /* the MPI info struct */
@@ -747,6 +737,12 @@ typedef struct H5F_t H5F_t;
 /* Shared Message signatures */
 #define H5SM_TABLE_MAGIC "SMTB" /* Shared Message Table */
 #define H5SM_LIST_MAGIC  "SMLI" /* Shared Message List */
+
+/* Private access flags */
+#define H5F_ACC_DIRECT       0x0080u    /* Direct I/O to file */
+
+/* Mask for removing private file access flags */
+#define H5F_ACC_PUBLIC_FLAGS 0x007fu
 
 /****************************/
 /* Library Private Typedefs */
@@ -897,6 +893,7 @@ H5_DLL H5P_coll_md_read_flag_t H5F_coll_md_read(const H5F_t *f);
 H5_DLL hbool_t H5F_use_mdc_logging(const H5F_t *f);
 H5_DLL hbool_t H5F_start_mdc_log_on_access(const H5F_t *f);
 H5_DLL char *  H5F_mdc_log_location(const H5F_t *f);
+H5_DLL htri_t  H5F_get_using_file_locks(void);
 
 /* Functions that retrieve values from VFD layer */
 H5_DLL hid_t   H5F_get_driver_id(const H5F_t *f);

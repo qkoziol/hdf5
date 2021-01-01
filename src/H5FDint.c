@@ -35,6 +35,7 @@
 #include "H5Fprivate.h"  /* File access                              */
 #include "H5FDpkg.h"     /* File Drivers                             */
 #include "H5Iprivate.h"  /* IDs                                      */
+#include "H5Pprivate.h"  /* Property lists                           */
 
 /****************/
 /* Local Macros */
@@ -381,3 +382,53 @@ H5FD_driver_query(const H5FD_class_t *driver, unsigned long *flags /*out*/)
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FD_driver_query() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5FD__get_ignore_disabled_file_locks
+ *
+ * Purpose:     Retrieve the 'ignore disabled file lock' flag for a file
+ *
+ * Return:      Non-negative on success/Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5FD__get_ignore_disabled_file_locks(hid_t fapl_id, hbool_t *ignore_disabled_file_locks)
+{
+    htri_t use_file_locking;    /* Value from the "HDF5_USE_FILE_LOCKING" environment variable */
+    herr_t ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_PACKAGE
+
+    /* Sanity checks */
+    HDassert(ignore_disabled_file_locks);
+
+    /* Get the value from the "HDF5_USE_FILE_LOCKING" environment variable */
+    use_file_locking = H5F_get_using_file_locks();
+
+    /* Set the flag to return */
+    if(use_file_locking != FAIL)
+        /* The environment variable was set, so use that preferentially */
+        *ignore_disabled_file_locks = !use_file_locking;
+    else {
+        /* Check for non-default FAPL */
+        if(H5P_FILE_ACCESS_DEFAULT != fapl_id) {
+            H5P_genplist_t  *plist;             /* Property list pointer */
+
+            /* Get the FAPL */
+            if(NULL == (plist = (H5P_genplist_t *)H5I_object(fapl_id)))
+                HGOTO_ERROR(H5E_VFL, H5E_BADTYPE, FAIL, "not a file access property list")
+
+            /* Get the 'ignore disabled file locks' value in the property list */
+            if(H5P_get(plist, H5F_ACS_IGNORE_DISABLED_FILE_LOCKS_NAME, ignore_disabled_file_locks) < 0)
+                HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get ignore disabled file locks property")
+        } /* end if */
+        else
+            /* Use the default value */
+            *ignore_disabled_file_locks = H5F_ACS_IGNORE_DISABLED_FILE_LOCKS_DEF;
+    } /* end else */
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* H5FD__get_ignore_disabled_file_locks() */
+

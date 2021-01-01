@@ -240,6 +240,7 @@ set (H5FD_SOURCES
     ${HDF5_SRC_DIR}/H5FDmpi.c
     ${HDF5_SRC_DIR}/H5FDmpio.c
     ${HDF5_SRC_DIR}/H5FDmulti.c
+    ${HDF5_SRC_DIR}/H5FDposix_common.c
     ${HDF5_SRC_DIR}/H5FDros3.c
     ${HDF5_SRC_DIR}/H5FDs3comms.c
     ${HDF5_SRC_DIR}/H5FDsec2.c
@@ -896,6 +897,7 @@ set (H5_PRIVATE_HEADERS
 
     ${HDF5_SRC_DIR}/H5FDmirror_priv.h
     ${HDF5_SRC_DIR}/H5FDpkg.h
+    ${HDF5_SRC_DIR}/H5FDposix_common.h
     ${HDF5_SRC_DIR}/H5FDprivate.h
 
     ${HDF5_SRC_DIR}/H5FLprivate.h

@@ -1383,7 +1383,7 @@ H5Z_pipeline(const H5O_pline_t *pline, unsigned flags, unsigned *filter_mask /*i
 
 #ifdef H5Z_DEBUG
             H5_timer_stop(&timer);
-            H5_timer_get_times(timer, &times);
+            H5_timer_get_times(&timer, &times);
             fstats->stats[1].times.elapsed += times.elapsed;
             fstats->stats[1].times.system += times.system;
             fstats->stats[1].times.user += times.user;
@@ -1434,7 +1434,7 @@ H5Z_pipeline(const H5O_pline_t *pline, unsigned flags, unsigned *filter_mask /*i
 
 #ifdef H5Z_DEBUG
             H5_timer_stop(&timer);
-            H5_timer_get_times(timer, &times);
+            H5_timer_get_times(&timer, &times);
             fstats->stats[0].times.elapsed += times.elapsed;
             fstats->stats[0].times.system += times.system;
             fstats->stats[0].times.user += times.user;

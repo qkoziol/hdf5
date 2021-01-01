@@ -304,11 +304,6 @@
  * The default is set via the configure step.
  */
 #define H5F_ACS_IGNORE_DISABLED_FILE_LOCKS_SIZE sizeof(hbool_t)
-#if defined H5_IGNORE_DISABLED_FILE_LOCKS && H5_IGNORE_DISABLED_FILE_LOCKS
-#define H5F_ACS_IGNORE_DISABLED_FILE_LOCKS_DEF TRUE
-#else
-#define H5F_ACS_IGNORE_DISABLED_FILE_LOCKS_DEF FALSE
-#endif
 #define H5F_ACS_IGNORE_DISABLED_FILE_LOCKS_ENC H5P__encode_hbool_t
 #define H5F_ACS_IGNORE_DISABLED_FILE_LOCKS_DEC H5P__decode_hbool_t
 

@@ -544,24 +544,6 @@ typedef long int32_t;
 #define HSSIZET_MAX ((hssize_t)LLONG_MAX)
 #define HSSIZET_MIN (~(HSSIZET_MAX))
 
-/*
- * Types and max sizes for POSIX I/O.
- * OS X (Darwin) is odd since the max I/O size does not match the types.
- */
-#if defined(H5_HAVE_WIN32_API)
-#define h5_posix_io_t         unsigned int
-#define h5_posix_io_ret_t     int
-#define H5_POSIX_MAX_IO_BYTES INT_MAX
-#elif defined(H5_HAVE_DARWIN)
-#define h5_posix_io_t         size_t
-#define h5_posix_io_ret_t     ssize_t
-#define H5_POSIX_MAX_IO_BYTES INT_MAX
-#else
-#define h5_posix_io_t         size_t
-#define h5_posix_io_ret_t     ssize_t
-#define H5_POSIX_MAX_IO_BYTES SSIZET_MAX
-#endif
-
 /* POSIX I/O mode used as the third parameter to open/_open
  * when creating a new file (O_CREAT is set).
  */
@@ -644,7 +626,7 @@ H5_DLL uint64_t H5_now_usec(void);
 H5_DLL herr_t   H5_timer_init(H5_timer_t *timer /*in,out*/);
 H5_DLL herr_t   H5_timer_start(H5_timer_t *timer /*in,out*/);
 H5_DLL herr_t   H5_timer_stop(H5_timer_t *timer /*in,out*/);
-H5_DLL herr_t   H5_timer_get_times(H5_timer_t timer, H5_timevals_t *times /*in,out*/);
+H5_DLL herr_t   H5_timer_get_times(const H5_timer_t *timer, H5_timevals_t *times /*in,out*/);
 H5_DLL herr_t   H5_timer_get_total_times(H5_timer_t timer, H5_timevals_t *times /*in,out*/);
 H5_DLL char *   H5_timer_get_time_string(double seconds);
 

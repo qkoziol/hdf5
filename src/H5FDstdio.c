@@ -345,9 +345,6 @@ H5FD_stdio_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr
     /* Sanity check on file offsets */
     assert(sizeof(file_offset_t) >= sizeof(size_t));
 
-    /* Quiet compiler */
-    fapl_id = fapl_id;
-
     /* Clear the error stack */
     H5Eclear2(H5E_DEFAULT);
 

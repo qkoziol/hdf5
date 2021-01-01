@@ -1647,17 +1647,34 @@ H5F__check_if_using_file_locks(H5P_genplist_t *fapl, hbool_t *use_file_locking)
     /* Make sure the out parameter has a value */
     *use_file_locking = TRUE;
 
-    /* Check the fapl property */
-    if (H5P_get(fapl, H5F_ACS_USE_FILE_LOCKING_NAME, use_file_locking) < 0)
-        HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get use file locking flag")
-
     /* Check the environment variable */
     if (use_locks_env_g != FAIL)
         *use_file_locking = (use_locks_env_g == TRUE) ? TRUE : FALSE;
+    else {
+        /* Check the fapl property */
+        if (H5P_get(fapl, H5F_ACS_USE_FILE_LOCKING_NAME, use_file_locking) < 0)
+            HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get use file locking flag")
+    } /* end else */
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5F__check_if_using_file_locks() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5F__get_using_file_locks
+ *
+ * Purpose:     Retrieve file lock environment variable value
+ *
+ * Return:      SUCCEED/FAIL
+ *-------------------------------------------------------------------------
+ */
+htri_t
+H5F_get_using_file_locks(void)
+{
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    FUNC_LEAVE_NOAPI(use_locks_env_g)
+} /* end H5F_get_using_file_locks() */
 
 /*-------------------------------------------------------------------------
  * Function:    H5F_open

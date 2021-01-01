@@ -49,6 +49,7 @@
 H5_DLL haddr_t H5FD__alloc_real(H5FD_t *file, H5FD_mem_t type, hsize_t size, haddr_t *align_addr,
                                 hsize_t *align_size);
 H5_DLL herr_t  H5FD__free_real(H5FD_t *file, H5FD_mem_t type, haddr_t addr, hsize_t size);
+H5_DLL herr_t  H5FD__get_ignore_disabled_file_locks(hid_t fapl_id, hbool_t *ignore_disabled_file_locks);
 
 /* Testing functions */
 #ifdef H5FD_TESTING

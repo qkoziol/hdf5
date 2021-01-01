@@ -3941,8 +3941,8 @@ H5_trace(const double *returning, const char *func, const char *type, ...)
             if (H5_debug_g.ttimes) {
                 char tmp[320];
 
-                H5_timer_get_times(function_timer, &function_times);
-                H5_timer_get_times(running_timer, &running_times);
+                H5_timer_get_times(&function_timer, &function_times);
+                H5_timer_get_times(&running_timer, &running_times);
                 HDsprintf(tmp, "%.6f", (function_times.elapsed - running_times.elapsed));
                 H5RS_asprintf_cat(rs, " %*s ", (int)HDstrlen(tmp), "");
             } /* end if */
@@ -3958,8 +3958,8 @@ H5_trace(const double *returning, const char *func, const char *type, ...)
         if (current_depth > last_call_depth)
             H5RS_acat(rs, " = <delayed>\n");
         if (H5_debug_g.ttimes) {
-            H5_timer_get_times(function_timer, &function_times);
-            H5_timer_get_times(running_timer, &running_times);
+            H5_timer_get_times(&function_timer, &function_times);
+            H5_timer_get_times(&running_timer, &running_times);
             H5RS_asprintf_cat(rs, "@%.6f ", (function_times.elapsed - running_times.elapsed));
         } /* end if */
         for (i = 0; i < current_depth; i++)
@@ -3974,8 +3974,8 @@ H5_trace(const double *returning, const char *func, const char *type, ...)
 
     /* Display event time for return */
     if (returning && H5_debug_g.ttimes) {
-        H5_timer_get_times(function_timer, &function_times);
-        H5_timer_get_times(running_timer, &running_times);
+        H5_timer_get_times(&function_timer, &function_times);
+        H5_timer_get_times(&running_timer, &running_times);
         H5RS_asprintf_cat(rs, " @%.6f [dt=%.6f]", (function_times.elapsed - running_times.elapsed),
                           (function_times.elapsed - *returning));
     } /* end if */

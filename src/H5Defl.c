@@ -37,6 +37,13 @@
 /* Local Macros */
 /****************/
 
+/* Macro to check for overflow */
+#if (H5_SIZEOF_HSIZE_T >= H5_SIZEOF_OFF_T)
+#define H5_OVERFLOW_HSIZET2OFFT(X) ((hsize_t)(X) >= (hsize_t)((hsize_t)1 << (8 * sizeof(HDoff_t) - 1)))
+#else
+#define H5_OVERFLOW_HSIZET2OFFT(X) 0
+#endif
+
 /******************/
 /* Local Typedefs */
 /******************/
@@ -260,7 +267,7 @@ H5D__efl_read(const H5O_efl_t *efl, const H5D_t *dset, haddr_t addr, size_t size
         HDassert(buf);
         if (u >= efl->nused)
             HGOTO_ERROR(H5E_EFL, H5E_OVERFLOW, FAIL, "read past logical end of file")
-        if (H5F_OVERFLOW_HSIZET2OFFT((hsize_t)efl->slot[u].offset + skip))
+        if (H5_OVERFLOW_HSIZET2OFFT((hsize_t)efl->slot[u].offset + skip))
             HGOTO_ERROR(H5E_EFL, H5E_OVERFLOW, FAIL, "external file address overflowed")
         if (H5_combine_path(dset->shared->extfile_prefix, efl->slot[u].name, &full_name) < 0)
             HGOTO_ERROR(H5E_EFL, H5E_NOSPACE, FAIL, "can't build external file name")
@@ -348,7 +355,7 @@ H5D__efl_write(const H5O_efl_t *efl, const H5D_t *dset, haddr_t addr, size_t siz
         HDassert(buf);
         if (u >= efl->nused)
             HGOTO_ERROR(H5E_EFL, H5E_OVERFLOW, FAIL, "write past logical end of file")
-        if (H5F_OVERFLOW_HSIZET2OFFT((hsize_t)efl->slot[u].offset + skip))
+        if (H5_OVERFLOW_HSIZET2OFFT((hsize_t)efl->slot[u].offset + skip))
             HGOTO_ERROR(H5E_EFL, H5E_OVERFLOW, FAIL, "external file address overflowed")
         if (H5_combine_path(dset->shared->extfile_prefix, efl->slot[u].name, &full_name) < 0)
             HGOTO_ERROR(H5E_EFL, H5E_NOSPACE, FAIL, "can't build external file name")

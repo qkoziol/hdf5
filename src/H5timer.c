@@ -470,12 +470,12 @@ H5_timer_stop(H5_timer_t *timer /*in,out*/)
  *-------------------------------------------------------------------------
  */
 herr_t
-H5_timer_get_times(H5_timer_t timer, H5_timevals_t *times /*in,out*/)
+H5_timer_get_times(const H5_timer_t *timer, H5_timevals_t *times /*in,out*/)
 {
     /* Sanity check */
     HDassert(times);
 
-    if (timer.is_running) {
+    if (timer->is_running) {
         H5_timevals_t now;
 
         /* Get the current times and report the current intervals without
@@ -484,14 +484,14 @@ H5_timer_get_times(H5_timer_t timer, H5_timevals_t *times /*in,out*/)
         if (H5__timer_get_timevals(&now) < 0)
             return -1;
 
-        times->elapsed = now.elapsed - timer.initial.elapsed;
-        times->system  = now.system - timer.initial.system;
-        times->user    = now.user - timer.initial.user;
+        times->elapsed = now.elapsed - timer->initial.elapsed;
+        times->system  = now.system - timer->initial.system;
+        times->user    = now.user - timer->initial.user;
     } /* end if */
     else {
-        times->elapsed = timer.final_interval.elapsed;
-        times->system  = timer.final_interval.system;
-        times->user    = timer.final_interval.user;
+        times->elapsed = timer->final_interval.elapsed;
+        times->system  = timer->final_interval.system;
+        times->user    = timer->final_interval.user;
     } /* end else */
 
     return 0;

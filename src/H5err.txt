@@ -137,6 +137,7 @@ MINOR, FILEACC, H5E_CANTOPENFILE, Unable to open file
 MINOR, FILEACC, H5E_CANTCLOSEFILE, Unable to close file
 MINOR, FILEACC, H5E_NOTHDF5, Not an HDF5 file
 MINOR, FILEACC, H5E_BADFILE, Bad file ID accessed
+MINOR, FILEACC, H5E_CANTTRUNCATE, Unable to truncate file
 MINOR, FILEACC, H5E_TRUNCATED, File has been truncated
 MINOR, FILEACC, H5E_MOUNT, File mount error
 MINOR, FILEACC, H5E_CANTDELETEFILE, Unable to delete file
