@@ -317,6 +317,7 @@ set (H5_TESTS
     earray
     btree2
     fheap
+    pool
     accum
     hyperslab
     istore
