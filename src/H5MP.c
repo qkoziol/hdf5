@@ -132,7 +132,7 @@ H5MP__new_page(H5MP_pool_t *mp, size_t page_size)
     H5MP_page_blk_t *first_blk;        /* Pointer to first block in page */
     H5MP_page_t *    ret_value = NULL; /* Return value */
 
-    FUNC_ENTER_STATIC
+    FUNC_ENTER_PACKAGE
 
     /* Sanity check */
     HDassert(mp);
