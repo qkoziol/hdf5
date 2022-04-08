@@ -84,7 +84,7 @@ H5HP__swim_max(H5HP_t *heap, size_t loc)
     H5HP_info_t *obj;                 /* Temporary pointer to object to move in heap */
     herr_t       ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_STATIC_NOERR
+    FUNC_ENTER_PACKAGE_NOERR
 
     /* Get copies of the information about the object to move in the heap */
     val = heap->heap[loc].val;
@@ -141,7 +141,7 @@ H5HP__swim_min(H5HP_t *heap, size_t loc)
     H5HP_info_t *obj;                 /* Temporary pointer to object to move in heap */
     herr_t       ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_STATIC_NOERR
+    FUNC_ENTER_PACKAGE_NOERR
 
     /* Get copies of the information about the object to move in the heap */
     val = heap->heap[loc].val;
@@ -198,7 +198,7 @@ H5HP__sink_max(H5HP_t *heap, size_t loc)
     void * obj;                 /* Temporary pointer to object to move in heap */
     herr_t ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_STATIC_NOERR
+    FUNC_ENTER_PACKAGE_NOERR
 
     /* Get copies of the information about the object to move in the heap */
     val = heap->heap[loc].val;
@@ -266,7 +266,7 @@ H5HP__sink_min(H5HP_t *heap, size_t loc)
     void * obj;                 /* Temporary pointer to object to move in heap */
     herr_t ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_STATIC_NOERR
+    FUNC_ENTER_PACKAGE_NOERR
 
     /* Get copies of the information about the object to move in the heap */
     val = heap->heap[loc].val;
