@@ -253,10 +253,10 @@ H5E_term_package(void)
 /* Include the automatically generated error code termination */
 #include "H5Eterm.h"
             } /* end if */
-        }     /* end if */
+        } /* end if */
 
         n++; /*H5I*/
-    }        /* end if */
+    } /* end if */
     else {
         /* Destroy the error class, message, and stack id groups */
         n += (H5I_dec_type_ref(H5I_ERROR_STACK) > 0);

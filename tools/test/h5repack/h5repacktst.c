@@ -3976,7 +3976,7 @@ write_dset_in(hid_t loc_id, const char *dset_name, /* for saving reference to da
     hsize_t    dims3[3]     = {4, 3, 2};
     hsize_t    dims3r[3]    = {1, 1, 1};
     char       buf13[24][3] = {"ab", "cd", "ef", "gh", "ij", "kl", "mn", "pq", "rs", "tu", "vw", "xz",
-                         "AB", "CD", "EF", "GH", "IJ", "KL", "MN", "PQ", "RS", "TU", "VW", "XZ"}; /* string */
+                               "AB", "CD", "EF", "GH", "IJ", "KL", "MN", "PQ", "RS", "TU", "VW", "XZ"}; /* string */
     char       buf23[4][3][2]; /* bitfield, opaque */
     s_t        buf33[4][3][2]; /* compound */
     hobj_ref_t buf43[1][1][1]; /* reference */
@@ -4814,7 +4814,7 @@ write_attr_in(hid_t loc_id, const char *dset_name, /* for saving reference to da
     /* create 3D attributes with dimension [4][3][2], 24 elements */
     hsize_t    dims3[3]     = {4, 3, 2};
     char       buf13[24][3] = {"ab", "cd", "ef", "gh", "ij", "kl", "mn", "pq", "rs", "tu", "vw", "xz",
-                         "AB", "CD", "EF", "GH", "IJ", "KL", "MN", "PQ", "RS", "TU", "VW", "XZ"}; /* string */
+                               "AB", "CD", "EF", "GH", "IJ", "KL", "MN", "PQ", "RS", "TU", "VW", "XZ"}; /* string */
     char       buf23[4][3][2];  /* bitfield, opaque */
     s_t        buf33[4][3][2];  /* compound */
     hobj_ref_t buf43[4][3][2];  /* reference */

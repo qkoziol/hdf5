@@ -212,7 +212,7 @@ H5TOOLS_DLLVAR hid_t H5E_tools_min_dbg_id_g;
  *      H5_LEAVE macro won't jump back here once it's past this point.
  */
 #define CATCH                                                                                                \
-catch_except:;                                                                                               \
+    catch_except :;                                                                                          \
     past_catch = true;
 
 /*

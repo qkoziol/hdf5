@@ -2030,8 +2030,8 @@ H5FD__s3comms_load_aws_creds_from_file(FILE *file, const char *profile_name, cha
                 setting_pointers[setting_i][buffer_i] = '\0';
 
                 break; /* have read setting; don't compare with others */
-            }          /* end if possible name match */
-        }              /* end for each setting name */
+            } /* end if possible name match */
+        } /* end for each setting name */
     } while (found_setting);
 
 done:
@@ -2524,7 +2524,7 @@ H5FD_s3comms_percent_encode_char(char *repr, const unsigned char c, size_t *repr
                 HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "cannot write char %c", c);
             *repr_len += 3;
         } /* end for each continuation byte */
-    }     /* end else (multi-byte) */
+    } /* end else (multi-byte) */
 
     *(repr + *repr_len) = '\0';
 
@@ -2871,7 +2871,7 @@ H5FD_s3comms_uriencode(char *dest, const char *s, size_t s_len, bool encode_slas
             for (hex_off = 0; hex_off < hex_len; hex_off++)
                 dest[dest_off++] = hex_buffer[hex_off];
         } /* end else (not a regular character) */
-    }     /* end for each character */
+    } /* end for each character */
 
     if (dest_off < s_len)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "buffer overflow");

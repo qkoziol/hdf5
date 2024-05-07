@@ -677,15 +677,15 @@ filter_bogus1(unsigned int flags, size_t H5_ATTR_UNUSED cd_nelmts,
         while (buf_left > 0) {
             *int_ptr++ -= (int)ADD_ON;
             buf_left -= sizeof(int);
-        }  /* end while */
-    }      /* end if */
+        } /* end while */
+    } /* end if */
     else { /* write */
         /* Add the "add on" value to all the data values */
         while (buf_left > 0) {
             *int_ptr++ += (int)ADD_ON;
             buf_left -= sizeof(int);
         } /* end while */
-    }     /* end else */
+    } /* end else */
 
     return nbytes;
 } /* filter_bogus1() */
@@ -711,15 +711,15 @@ filter_bogus2(unsigned int flags, size_t H5_ATTR_UNUSED cd_nelmts,
         while (buf_left > 0) {
             *int_ptr++ /= (int)FACTOR;
             buf_left -= sizeof(int);
-        }  /* end while */
-    }      /* end if */
+        } /* end while */
+    } /* end if */
     else { /* write */
         /* Add the "add on" value to all the data values */
         while (buf_left > 0) {
             *int_ptr++ *= (int)FACTOR;
             buf_left -= sizeof(int);
         } /* end while */
-    }     /* end else */
+    } /* end else */
 
     return nbytes;
 } /* filter_bogus2() */

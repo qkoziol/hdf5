@@ -174,7 +174,7 @@ H5F_term_package(void)
     if (H5I_nmembers(H5I_FILE) > 0) {
         (void)H5I_clear_type(H5I_FILE, false, false);
         n++; /*H5I*/
-    }        /* end if */
+    } /* end if */
     else {
         /* Make certain we've cleaned up all the shared file objects */
         H5F_sfile_assert_num(0);
@@ -661,8 +661,8 @@ H5F__get_objects_cb(void *obj_ptr, hid_t obj_id, void *key)
              (!olist->file_info.ptr.shared ||
               (olist->file_info.ptr.shared && ((H5F_t *)obj_ptr)->shared == olist->file_info.ptr.shared)))) {
             add_obj = true;
-        }                /* end if */
-    }                    /* end if */
+        } /* end if */
+    } /* end if */
     else {               /* Either count opened object IDs or put the IDs on the list */
         H5O_loc_t *oloc; /* Group entry info for object */
 
@@ -719,7 +719,7 @@ H5F__get_objects_cb(void *obj_ptr, hid_t obj_id, void *key)
               (oloc && oloc->file && oloc->file->shared == olist->file_info.ptr.shared)))) {
             add_obj = true;
         } /* end if */
-    }     /* end else */
+    } /* end else */
 
     if (add_obj) {
         /* Add the object's ID to the ID list, if appropriate */
@@ -739,7 +739,7 @@ H5F__get_objects_cb(void *obj_ptr, hid_t obj_id, void *key)
          */
         if (olist->max_nobjs > 0 && olist->list_index >= olist->max_nobjs)
             HGOTO_DONE(H5_ITER_STOP); /* Indicate that the iterator should stop */
-    }                                 /* end if */
+    } /* end if */
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -872,7 +872,7 @@ H5F_prefix_open_file(H5F_t *primary_file, H5F_prefix_open_t prefix_type, const c
             strncpy(temp_file_name, ptr, temp_file_name_len);
             temp_file_name[temp_file_name_len - 1] = '\0';
         } /* end if */
-    }     /* end if */
+    } /* end if */
     else if (H5_CHECK_ABS_DRIVE(file_name)) {
         /* Try opening file */
         src_file = H5F__efc_open(efc, file_name, file_intent, H5P_FILE_CREATE_DEFAULT, fapl_id);
@@ -886,7 +886,7 @@ H5F_prefix_open_file(H5F_t *primary_file, H5F_prefix_open_t prefix_type, const c
             strncpy(temp_file_name, &file_name[2], temp_file_name_len);
             temp_file_name[temp_file_name_len - 1] = '\0';
         } /* end if */
-    }     /* end if */
+    } /* end if */
 
     /* Try searching from paths set in the environment variable */
     if (src_file == NULL) {
@@ -934,11 +934,11 @@ H5F_prefix_open_file(H5F_t *primary_file, H5F_prefix_open_t prefix_type, const c
                         break;
                     H5E_clear_stack(NULL);
                 } /* end if */
-            }     /* end while */
+            } /* end while */
 
             saved_env = (char *)H5MM_xfree(saved_env);
         } /* end if */
-    }     /* end if */
+    } /* end if */
 
     /* Try searching from property list */
     if (src_file == NULL && prop_prefix) {
@@ -978,7 +978,7 @@ H5F_prefix_open_file(H5F_t *primary_file, H5F_prefix_open_t prefix_type, const c
                 /* Reset the error stack */
                 H5E_clear_stack(NULL);
         } /* end if */
-    }     /* end if */
+    } /* end if */
 
     /* Try the relative file_name stored in temp_file_name */
     if (src_file == NULL) {
@@ -1506,7 +1506,7 @@ H5F__dest(H5F_t *f, bool flush, bool free_on_failure)
                      */
                     assert(H5AC_cache_is_clean(f, H5AC_RING_MDFSM));
                 } /* end if */
-            }     /* end if */
+            } /* end if */
 
             /* if it exists, unpin the driver information block cache entry,
              * since we're about to destroy the cache
@@ -2177,8 +2177,8 @@ H5F_open(const char *name, unsigned flags, hid_t fcpl_id, hid_t fapl_id)
             if (use_file_locking && (H5F_INTENT(file) & H5F_ACC_SWMR_WRITE)) {
                 if (H5FD_unlock(file->shared->lf) < 0)
                     HGOTO_ERROR(H5E_FILE, H5E_CANTUNLOCKFILE, NULL, "unable to unlock the file");
-            }  /* end if */
-        }      /* end if */
+            } /* end if */
+        } /* end if */
         else { /* H5F_ACC_RDONLY: check consistency of status_flags */
             /* Skip check of status_flags for file with < superblock version 3 */
             if (file->shared->sblock->super_vers >= HDF5_SUPERBLOCK_VERSION_3) {
@@ -2196,8 +2196,8 @@ H5F_open(const char *name, unsigned flags, hid_t fcpl_id, hid_t fapl_id)
                                 "file is already open for write (may use <h5clear file> to clear file "
                                 "consistency flags)");
             } /* version 3 superblock */
-        }     /* end else */
-    }         /* end if set_flag */
+        } /* end else */
+    } /* end if set_flag */
 
     /* Success */
     ret_value = file;
@@ -2614,7 +2614,7 @@ H5F_try_close(H5F_t *f, bool *was_closed /*out*/)
             if (result < 0)
                 HGOTO_ERROR(H5E_INTERNAL, H5E_BADITER, FAIL, "H5F_get_obj_ids failed(2)");
         } /* end if */
-    }     /* end if */
+    } /* end if */
 
     /* Check if this is a child file in a mounting hierarchy & proceed up the
      * hierarchy if so.
@@ -2865,8 +2865,8 @@ H5F__build_actual_name(const H5F_t *f, const H5P_genplist_t *fapl, const char *n
             if (NULL == (*actual_name = (char *)H5MM_strdup(realname)))
                 HGOTO_ERROR(H5E_FILE, H5E_CANTALLOC, FAIL, "can't duplicate real path");
         } /* end if */
-    }     /* end if */
-#endif    /* H5_HAVE_SYMLINK */
+    } /* end if */
+#endif /* H5_HAVE_SYMLINK */
 
     /* Check if we've resolved the file's name */
     if (NULL == *actual_name) {
@@ -2998,7 +2998,7 @@ H5F_addr_decode_len(size_t addr_len, const uint8_t **pp /*in,out*/, haddr_t *add
         } /* end if */
         else if (!all_zero)
             assert(0 == **pp); /*overflow */
-    }                          /* end for */
+    } /* end for */
 
     /* If 'all_zero' is still true, the address was entirely composed of '0xff'
      *  bytes, which is the encoded form of 'HADDR_UNDEF', so set the destination
@@ -3879,7 +3879,7 @@ H5F__start_swmr_write(H5F_t *f)
             if (H5I_dec_ref(obj_ids[u]) < 0)
                 HGOTO_ERROR(H5E_ID, H5E_CANTCLOSEOBJ, FAIL, "decrementing object ID failed");
         } /* end for */
-    }     /* end if */
+    } /* end if */
 
     /* Flush and reset the accumulator */
     if (H5F__accum_reset(f->shared, true) < 0)

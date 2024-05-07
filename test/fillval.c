@@ -999,8 +999,8 @@ test_rdwr_cases(hid_t file, hid_t dcpl, const char *dname, void *_fillval, H5D_f
                             fillval);
                     goto error;
                 } /* end if */
-            }     /* end for */
-        }         /* end if */
+            } /* end for */
+        } /* end if */
     }
     /* case for compound datatype */
     else if (datatype == H5T_COMPOUND) {
@@ -1027,8 +1027,8 @@ test_rdwr_cases(hid_t file, hid_t dcpl, const char *dname, void *_fillval, H5D_f
                             fill_c.x, fill_c.y, fill_c.z);
                     goto error;
                 } /* end if */
-            }     /* end for */
-        }         /* end if */
+            } /* end for */
+        } /* end if */
     }
 
     /* Write to all odd data locations */
@@ -2624,7 +2624,7 @@ main(int argc, char *argv[])
                 exit(EXIT_FAILURE);
             }
         } /* end for */
-    }     /* end if */
+    } /* end if */
 
     h5_reset();
     fapl = h5_fileaccess();
@@ -2682,7 +2682,7 @@ main(int argc, char *argv[])
             nerrors += test_create(my_fapl, FILENAME[6], H5D_COMPACT);
             nerrors += test_rdwr(my_fapl, FILENAME[7], H5D_COMPACT);
         } /* end if */
-    }     /* end for */
+    } /* end for */
 
     /* Close 2nd FAPL */
     H5Pclose(fapl2);

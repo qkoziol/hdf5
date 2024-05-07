@@ -165,7 +165,7 @@ verify_no_unknown_tags(hid_t fid)
 
             entry_ptr = entry_ptr->ht_next;
         } /* end if */
-    }     /* end for */
+    } /* end for */
 
     return 0;
 
@@ -209,7 +209,7 @@ mark_all_entries_investigated(hid_t fid)
 
             entry_ptr = entry_ptr->ht_next;
         } /* end if */
-    }     /* end for */
+    } /* end for */
 
     return 0;
 
@@ -251,7 +251,7 @@ reset_all_entries_investigated(hid_t fid)
 
             entry_ptr = entry_ptr->ht_next;
         } /* end if */
-    }     /* end for */
+    } /* end for */
 
     return 0;
 
@@ -300,7 +300,7 @@ verify_tag(hid_t fid, int id, haddr_t tag)
 
             entry_ptr = entry_ptr->ht_next;
         } /* end if */
-    }     /* end for */
+    } /* end for */
 
     /* Didn't find the tagged entry, throw an error */
     TEST_ERROR;
@@ -2687,7 +2687,7 @@ check_dataset_write_tags(void)
 
             data[(DIMS * i) + j] = k++;
         } /* end for */
-    }     /* end for */
+    } /* end for */
 
     /* Write to dataset */
     if ((H5Dwrite(did, H5T_NATIVE_INT, sid, sid, H5P_DEFAULT, data)) < 0)

@@ -3500,7 +3500,7 @@ test_simple(void)
                     assert(0);
                     break;
             } /*switch*/
-        }     /*for*/
+        } /*for*/
     }
 
     /* close */

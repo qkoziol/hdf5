@@ -206,7 +206,7 @@ H5T__conv_struct_init(const H5T_t *src, const H5T_t *dst, H5T_cdata_t *cdata, co
                     H5_CHECKED_ASSIGN(src2dst[i], int, j, unsigned);
                     break;
                 } /* end if */
-            }     /* end for */
+            } /* end for */
             if (src2dst[i] >= 0) {
                 H5T_t *type;
 
@@ -220,8 +220,8 @@ H5T__conv_struct_init(const H5T_t *src, const H5T_t *dst, H5T_cdata_t *cdata, co
                                 "can't copy destination compound member datatype");
                 priv->dst_memb[src2dst[i]] = type;
             } /* end if */
-        }     /* end for */
-    }         /* end if */
+        } /* end for */
+    } /* end if */
     else {
         /* Restore sorted conditions for the datatypes */
         /* (Required for the src2dst array to be valid) */
@@ -281,7 +281,7 @@ H5T__conv_struct_init(const H5T_t *src, const H5T_t *dst, H5T_cdata_t *cdata, co
                 priv->dst_memb_id[src2dst[i]] = tid;
             }
         } /* end if */
-    }     /* end for */
+    } /* end for */
 
     /* The compound conversion functions need a background buffer */
     cdata->need_bkg = H5T_BKG_YES;
@@ -299,7 +299,7 @@ H5T__conv_struct_init(const H5T_t *src, const H5T_t *dst, H5T_cdata_t *cdata, co
                 priv->subset_info.subset = H5T_SUBSET_FALSE;
                 break;
             } /* end if */
-        }     /* end for */
+        } /* end for */
         /* Compute the size of the data to be copied for each element.  It
          * may be smaller than either src or dst if there is extra space at
          * the end of src.
@@ -558,7 +558,7 @@ H5T__conv_struct(const H5T_t *src, const H5T_t *dst, H5T_cdata_t *cdata, const H
                         memmove(xbuf + offset, xbuf + src_memb->offset, src_memb->size);
                         offset += src_memb->size;
                     } /* end else */
-                }     /* end for */
+                } /* end for */
                 tmp_conv_ctx.u.conv.recursive = false;
 
                 /*
@@ -746,9 +746,9 @@ H5T__conv_struct_opt(const H5T_t *src, const H5T_t *dst, H5T_cdata_t *cdata, con
                             HGOTO_ERROR(H5E_DATATYPE, H5E_UNSUPPORTED, FAIL,
                                         "conversion is unsupported by this function");
                         } /* end if */
-                    }     /* end if */
-                }         /* end for */
-            }             /* end if */
+                    } /* end if */
+                } /* end for */
+            } /* end if */
             break;
 
         case H5T_CONV_FREE: {
@@ -823,7 +823,7 @@ H5T__conv_struct_opt(const H5T_t *src, const H5T_t *dst, H5T_cdata_t *cdata, con
                     xbuf += buf_stride;
                     xbkg += bkg_stride;
                 } /* end for */
-            }     /* end if */
+            } /* end if */
             else {
                 /*
                  * For each member where the destination is not larger than the
@@ -857,7 +857,7 @@ H5T__conv_struct_opt(const H5T_t *src, const H5T_t *dst, H5T_cdata_t *cdata, con
                             xbuf += buf_stride;
                             xbkg += bkg_stride;
                         } /* end for */
-                    }     /* end if */
+                    } /* end if */
                     else {
                         for (xbuf = buf, elmtno = 0; elmtno < nelmts; elmtno++) {
                             memmove(xbuf + offset, xbuf + src_memb->offset, src_memb->size);
@@ -865,7 +865,7 @@ H5T__conv_struct_opt(const H5T_t *src, const H5T_t *dst, H5T_cdata_t *cdata, con
                         } /* end for */
                         offset += src_memb->size;
                     } /* end else */
-                }     /* end else */
+                } /* end else */
                 tmp_conv_ctx.u.conv.recursive = false;
 
                 /*
@@ -900,8 +900,8 @@ H5T__conv_struct_opt(const H5T_t *src, const H5T_t *dst, H5T_cdata_t *cdata, con
                             xbuf += buf_stride;
                             xbkg += bkg_stride;
                         } /* end for */
-                    }     /* end if */
-                }         /* end for */
+                    } /* end if */
+                } /* end for */
                 tmp_conv_ctx.u.conv.recursive = false;
             } /* end else */
 

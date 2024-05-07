@@ -434,7 +434,7 @@ H5E__print(const H5E_t *estack, FILE *stream, bool bk_compatible)
 #else  /* H5_NO_DEPRECATED_SYMBOLS */
         assert(0 && "version 1 error stack print without deprecated symbols!");
 #endif /* H5_NO_DEPRECATED_SYMBOLS */
-    }  /* end if */
+    } /* end if */
     else {
         walk_op.vers    = 2;
         walk_op.u.func2 = H5E__walk2_cb;
@@ -508,7 +508,7 @@ H5E__walk(const H5E_t *estack, H5E_direction_t direction, const H5E_walk_op_t *o
 
                     ret_value = (op->u.func1)(i, &old_err, client_data);
                 } /* end for */
-            }     /* end if */
+            } /* end if */
             else {
                 H5_CHECK_OVERFLOW(estack->nused - 1, size_t, int);
                 for (i = (int)(estack->nused - 1); i >= 0 && ret_value == H5_ITER_CONT; i--) {
@@ -522,15 +522,15 @@ H5E__walk(const H5E_t *estack, H5E_direction_t direction, const H5E_walk_op_t *o
 
                     ret_value = (op->u.func1)((int)(estack->nused - (size_t)(i + 1)), &old_err, client_data);
                 } /* end for */
-            }     /* end else */
+            } /* end else */
 
             if (ret_value < 0)
                 HERROR(H5E_ERROR, H5E_CANTLIST, "can't walk error stack");
         } /* end if */
-#else     /* H5_NO_DEPRECATED_SYMBOLS */
+#else  /* H5_NO_DEPRECATED_SYMBOLS */
         assert(0 && "version 1 error stack walk without deprecated symbols!");
-#endif    /* H5_NO_DEPRECATED_SYMBOLS */
-    }     /* end if */
+#endif /* H5_NO_DEPRECATED_SYMBOLS */
+    } /* end if */
     else {
         assert(op->vers == 2);
         if (op->u.func2) {
@@ -549,7 +549,7 @@ H5E__walk(const H5E_t *estack, H5E_direction_t direction, const H5E_walk_op_t *o
             if (ret_value < 0)
                 HERROR(H5E_ERROR, H5E_CANTLIST, "can't walk error stack");
         } /* end if */
-    }     /* end else */
+    } /* end else */
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5E__walk() */

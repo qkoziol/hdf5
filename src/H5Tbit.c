@@ -210,7 +210,7 @@ H5T__bit_shift(uint8_t *buf, ssize_t shift_dist, size_t offset, size_t size)
                 H5T__bit_set(buf, offset + size - abs_shift_dist, abs_shift_dist, 0);
             }
         } /* end else */
-    }     /* end if */
+    } /* end if */
 
 done:
     /* Release resources */

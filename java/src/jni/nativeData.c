@@ -593,7 +593,7 @@ Java_hdf_hdf5lib_HDFNativeData_intToByte__II_3I(JNIEnv *env, jclass clss, jint s
             *bap = u.bytes[ij];
             bap++;
         } /* end for */
-    }     /* end for */
+    } /* end for */
 
 done:
     if (barray)
@@ -655,7 +655,7 @@ Java_hdf_hdf5lib_HDFNativeData_shortToByte__II_3S(JNIEnv *env, jclass clss, jint
             *bap = u.bytes[ij];
             bap++;
         } /* end for */
-    }     /* end for */
+    } /* end for */
 
 done:
     if (barray)
@@ -717,7 +717,7 @@ Java_hdf_hdf5lib_HDFNativeData_floatToByte__II_3F(JNIEnv *env, jclass clss, jint
             *bap = u.bytes[ij];
             bap++;
         } /* end for */
-    }     /* end for */
+    } /* end for */
 
 done:
     if (barray)
@@ -779,7 +779,7 @@ Java_hdf_hdf5lib_HDFNativeData_doubleToByte__II_3D(JNIEnv *env, jclass clss, jin
             *bap = u.bytes[ij];
             bap++;
         } /* end for */
-    }     /* end for */
+    } /* end for */
 
 done:
     if (barray)
@@ -841,7 +841,7 @@ Java_hdf_hdf5lib_HDFNativeData_longToByte__II_3J(JNIEnv *env, jclass clss, jint 
             *bap = u.bytes[ij];
             bap++;
         } /* end for */
-    }     /* end for */
+    } /* end for */
 
 done:
     if (barray)

@@ -352,7 +352,7 @@ H5O__attr_encode(H5F_t *f, uint8_t *p, const void *mesg)
         flags = (is_type_shared ? H5O_ATTR_FLAG_TYPE_SHARED : 0);
         flags |= (is_space_shared ? H5O_ATTR_FLAG_SPACE_SHARED : 0);
         *p++ = (uint8_t)flags; /* Set flags for attribute */
-    }                          /* end if */
+    } /* end if */
     else
         *p++ = 0; /* Reserved, for version <2 */
 

@@ -426,8 +426,8 @@ test_vltypes_vlen_atomic(void)
                               (int)((unsigned int *)rdata[i].p)[j]);
                 continue;
             } /* end if */
-        }     /* end for */
-    }         /* end for */
+        } /* end for */
+    } /* end for */
 
     /* Reclaim the read VL data */
     ret = H5Treclaim(tid1, sid1, xfer_pid, rdata);
@@ -513,8 +513,8 @@ test_vltypes_vlen_atomic(void)
                               (int)((unsigned int *)rdata[i].p)[j]);
                 continue;
             } /* end if */
-        }     /* end for */
-    }         /* end for */
+        } /* end for */
+    } /* end for */
 
     /* Try to reclaim read data using "bad" dataspace with no extent
      * Should fail */
@@ -680,8 +680,8 @@ rewrite_vltypes_vlen_atomic(void)
                               (int)((unsigned int *)rdata[i].p)[j]);
                 continue;
             } /* end if */
-        }     /* end for */
-    }         /* end for */
+        } /* end for */
+    } /* end for */
 
     /* Reclaim the read VL data */
     ret = H5Treclaim(tid1, sid1, xfer_pid, rdata);
@@ -753,7 +753,7 @@ test_vltypes_vlen_compound(void)
             ((s1 *)wdata[i].p)[j].i = (int)(i * 10 + j);
             ((s1 *)wdata[i].p)[j].f = (float)(i * 20 + j) / 3.0F;
         } /* end for */
-    }     /* end for */
+    } /* end for */
 
     /* Create file */
     fid1 = H5Fcreate(FILENAME, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
@@ -828,8 +828,8 @@ test_vltypes_vlen_compound(void)
                               (double)((s1 *)rdata[i].p)[j].f);
                 continue;
             } /* end if */
-        }     /* end for */
-    }         /* end for */
+        } /* end for */
+    } /* end for */
 
     /* Reclaim the VL data */
     ret = H5Treclaim(tid1, sid1, xfer_pid, rdata);
@@ -905,7 +905,7 @@ rewrite_vltypes_vlen_compound(void)
             ((s1 *)wdata[i].p)[j].i = (int)(i * 40 + j);
             ((s1 *)wdata[i].p)[j].f = (float)(i * 60 + j) / 3.0F;
         } /* end for */
-    }     /* end for */
+    } /* end for */
 
     /* Create file */
     fid1 = H5Fopen(FILENAME, H5F_ACC_RDWR, H5P_DEFAULT);
@@ -979,8 +979,8 @@ rewrite_vltypes_vlen_compound(void)
                               (double)((s1 *)rdata[i].p)[j].f);
                 continue;
             } /* end if */
-        }     /* end for */
-    }         /* end for */
+        } /* end for */
+    } /* end for */
 
     /* Reclaim the VL data */
     ret = H5Treclaim(tid1, sid1, xfer_pid, rdata);
@@ -1063,7 +1063,7 @@ test_vltypes_compound_vlen_vlen(void)
             for (k = 0; k < j + L2_INCM; k++)
                 ((unsigned int *)t1->p)[k] = i * 100 + j * 10 + k;
         } /* end for */
-    }     /* end for */
+    } /* end for */
 
     /* Create file */
     fid1 = H5Fcreate(FILENAME, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
@@ -1153,9 +1153,9 @@ test_vltypes_compound_vlen_vlen(void)
                                   (int)((unsigned int *)t1->p)[k], (int)k, (int)((unsigned int *)t2->p)[k]);
                     continue;
                 } /* end if */
-            }     /* end for */
-        }         /* end for */
-    }             /* end for */
+            } /* end for */
+        } /* end for */
+    } /* end for */
 
     /* Reclaim the VL data */
     ret = H5Treclaim(tid2, sid1, H5P_DEFAULT, rdata);
@@ -1394,8 +1394,8 @@ test_vltypes_compound_vlstr(void)
                               t2->color);
                 continue;
             } /* end if */
-        }     /* end for */
-    }         /* end for */
+        } /* end for */
+    } /* end for */
 
     /* Reclaim the VL data */
     ret = H5Treclaim(tid2, sid1, H5P_DEFAULT, rdata);
@@ -1455,8 +1455,8 @@ test_vltypes_compound_vlstr(void)
                               t2->color);
                 continue;
             } /* end if */
-        }     /* end for */
-    }         /* end for */
+        } /* end for */
+    } /* end for */
 
     /* Reclaim the write VL data */
     ret = H5Treclaim(tid2, sid1, H5P_DEFAULT, wdata2);
@@ -1611,8 +1611,8 @@ test_vltypes_compound_vlen_atomic(void)
                               (int)((unsigned int *)rdata[i].v.p)[j]);
                 continue;
             } /* end if */
-        }     /* end for */
-    }         /* end for */
+        } /* end for */
+    } /* end for */
 
     /* Reclaim the VL data */
     ret = H5Treclaim(tid2, sid1, xfer_pid, rdata);
@@ -1686,8 +1686,8 @@ test_vltypes_compound_vlen_atomic(void)
                               (int)((unsigned int *)rdata[i].v.p)[j]);
                 continue;
             } /* end if */
-        }     /* end for */
-    }         /* end for */
+        } /* end for */
+    } /* end for */
 
     /* Reclaim the VL data */
     ret = H5Treclaim(tid2, sid1, H5P_DEFAULT, rdata);
@@ -1845,8 +1845,8 @@ rewrite_vltypes_compound_vlen_atomic(void)
                               (int)((unsigned int *)rdata[i].v.p)[j]);
                 continue;
             } /* end if */
-        }     /* end for */
-    }         /* end for */
+        } /* end for */
+    } /* end for */
 
     /* Reclaim the VL data */
     ret = H5Treclaim(tid2, sid1, xfer_pid, rdata);
@@ -1950,7 +1950,7 @@ test_vltypes_vlen_vlen_atomic(void)
             for (k = 0; k < (j + 1); k++)
                 ((unsigned int *)t1->p)[k] = i * 100 + j * 10 + k;
         } /* end for */
-    }     /* end for */
+    } /* end for */
 
     /* Create file */
     fid1 = H5Fcreate(FILENAME, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
@@ -2066,9 +2066,9 @@ test_vltypes_vlen_vlen_atomic(void)
                                   (int)((unsigned int *)t1->p)[k], (int)k, (int)((unsigned int *)t2->p)[k]);
                     continue;
                 } /* end if */
-            }     /* end for */
-        }         /* end for */
-    }             /* end for */
+            } /* end for */
+        } /* end for */
+    } /* end for */
 
     /* Reclaim all the (nested) VL data */
     ret = H5Treclaim(tid2, sid1, xfer_pid, rdata);
@@ -2151,7 +2151,7 @@ rewrite_longer_vltypes_vlen_vlen_atomic(void)
             for (k = 0; k < (j + 1); k++)
                 ((unsigned int *)t1->p)[k] = i * 1000 + j * 100 + k * 10;
         } /* end for */
-    }     /* end for */
+    } /* end for */
 
     /* Open file */
     fid1 = H5Fopen(FILENAME, H5F_ACC_RDWR, H5P_DEFAULT);
@@ -2250,9 +2250,9 @@ rewrite_longer_vltypes_vlen_vlen_atomic(void)
                                   (int)((unsigned int *)t1->p)[k], (int)k, (int)((unsigned int *)t2->p)[k]);
                     continue;
                 } /* end if */
-            }     /* end for */
-        }         /* end for */
-    }             /* end for */
+            } /* end for */
+        } /* end for */
+    } /* end for */
 
     /* Reclaim all the (nested) VL data */
     ret = H5Treclaim(tid2, sid1, xfer_pid, rdata);
@@ -2331,7 +2331,7 @@ rewrite_shorter_vltypes_vlen_vlen_atomic(void)
             for (k = 0; k < (j + 1); k++)
                 ((unsigned int *)t1->p)[k] = i * 100000 + j * 1000 + k * 10;
         } /* end for */
-    }     /* end for */
+    } /* end for */
 
     /* Open file */
     fid1 = H5Fopen(FILENAME, H5F_ACC_RDWR, H5P_DEFAULT);
@@ -2436,9 +2436,9 @@ rewrite_shorter_vltypes_vlen_vlen_atomic(void)
                                   (int)((unsigned int *)t1->p)[k], (int)k, (int)((unsigned int *)t2->p)[k]);
                     continue;
                 } /* end if */
-            }     /* end for */
-        }         /* end for */
-    }             /* end for */
+            } /* end for */
+        } /* end for */
+    } /* end for */
 
     /* Reclaim all the (nested) VL data */
     ret = H5Treclaim(tid2, sid1, xfer_pid, rdata);
@@ -2526,7 +2526,7 @@ test_vltypes_fill_value(void)
     hsize_t large_dims[]         = {SPACE4_DIM_LARGE};
     size_t  dset_elmts           = 0; /* Number of elements in a particular dataset */
     const dtype1_struct fill1    = {1, 2,   "foobar", "",  NULL,     "\0",   "dead",
-                                 3, 4.0, 100.0,    1.0, "liquid", "meter"};
+                                    3, 4.0, 100.0,    1.0, "liquid", "meter"};
     const dtype1_struct wdata    = {3, 4, "", NULL, "\0", "foo", "two", 6, 8.0, 200.0, 2.0, "solid", "yard"};
     dtype1_struct      *rbuf     = NULL;                /* Buffer for reading data */
     size_t              mem_used = 0;                   /* Memory used during allocation */
@@ -2686,7 +2686,7 @@ test_vltypes_fill_value(void)
                         strcpy(dset_name2, "dataset2-chunked");
 #ifdef H5_HAVE_FILTER_DEFLATE
                     } /* end else */
-#endif                /* H5_HAVE_FILTER_DEFLATE */
+#endif /* H5_HAVE_FILTER_DEFLATE */
                 } break;
 
                 case H5D_VIRTUAL:
@@ -2726,7 +2726,7 @@ test_vltypes_fill_value(void)
             ret = H5Pclose(tmp_dcpl_id);
             CHECK(ret, FAIL, "H5Pclose");
         } /* end for */
-    }     /* end for */
+    } /* end for */
 
     ret = H5Fclose(file_id);
     CHECK(ret, FAIL, "H5Fclose");
@@ -2791,7 +2791,7 @@ test_vltypes_fill_value(void)
                         strcpy(dset_name2, "dataset2-chunked");
 #ifdef H5_HAVE_FILTER_DEFLATE
                     } /* end else */
-#endif                /* H5_HAVE_FILTER_DEFLATE */
+#endif /* H5_HAVE_FILTER_DEFLATE */
                     dset_dspace_id        = large_dspace_id;
                     dset_select_dspace_id = large_select_dspace_id;
                     dset_elmts            = SPACE4_DIM_LARGE;
@@ -2825,7 +2825,7 @@ test_vltypes_fill_value(void)
                     TestErrPrintf("%d: VL data doesn't match!, index(i) = %d\n", __LINE__, (int)i);
                     continue;
                 } /* end if */
-            }     /* end for */
+            } /* end for */
 
             /* Release the space */
             ret = H5Treclaim(dtype1_id, dset_dspace_id, xfer_pid, rbuf);
@@ -2848,15 +2848,15 @@ test_vltypes_fill_value(void)
                         TestErrPrintf("%d: VL data doesn't match!, index(i) = %d\n", __LINE__, (int)i);
                         continue;
                     } /* end if */
-                }     /* end if */
+                } /* end if */
                 else {
                     if (rbuf[i].str_id || rbuf[i].str_name || rbuf[i].str_desc || rbuf[i].str_orig ||
                         rbuf[i].str_stat || rbuf[i].str_form || rbuf[i].str_unit) {
                         TestErrPrintf("%d: VL data doesn't match!, index(i) = %d\n", __LINE__, (int)i);
                         continue;
                     } /* end if */
-                }     /* end else */
-            }         /* end for */
+                } /* end else */
+            } /* end for */
 
             /* Release the space */
             ret = H5Treclaim(dtype1_id, dset_dspace_id, xfer_pid, rbuf);
@@ -2882,7 +2882,7 @@ test_vltypes_fill_value(void)
                     TestErrPrintf("%d: VL data doesn't match!, index(i)=%d\n", __LINE__, (int)i);
                     continue;
                 } /* end if */
-            }     /* end for */
+            } /* end for */
 
             /* Release the space */
             ret = H5Treclaim(dtype1_id, dset_dspace_id, xfer_pid, rbuf);
@@ -2905,15 +2905,15 @@ test_vltypes_fill_value(void)
                         TestErrPrintf("%d: VL data doesn't match!, index(i) = %d\n", __LINE__, (int)i);
                         continue;
                     } /* end if */
-                }     /* end if */
+                } /* end if */
                 else {
                     if (rbuf[i].str_id || rbuf[i].str_name || rbuf[i].str_desc || rbuf[i].str_orig ||
                         rbuf[i].str_stat || rbuf[i].str_form || rbuf[i].str_unit) {
                         TestErrPrintf("%d: VL data doesn't match!, index(i) = %d\n", __LINE__, (int)i);
                         continue;
                     } /* end if */
-                }     /* end else */
-            }         /* end for */
+                } /* end else */
+            } /* end for */
 
             /* Release the space */
             ret = H5Treclaim(dtype1_id, dset_select_dspace_id, xfer_pid, rbuf);
@@ -2922,7 +2922,7 @@ test_vltypes_fill_value(void)
             ret = H5Dclose(dset_id);
             CHECK(ret, FAIL, "H5Dclose");
         } /* end for */
-    }     /* end for */
+    } /* end for */
 
     ret = H5Fclose(file_id);
     CHECK(ret, FAIL, "H5Fclose");
@@ -2976,7 +2976,7 @@ test_vltypes_fill_value(void)
                         strcpy(dset_name2, "dataset2-chunked");
 #ifdef H5_HAVE_FILTER_DEFLATE
                     } /* end else */
-#endif                /* H5_HAVE_FILTER_DEFLATE */
+#endif /* H5_HAVE_FILTER_DEFLATE */
                     dset_dspace_id        = large_dspace_id;
                     dset_select_dspace_id = large_select_dspace_id;
                     dset_elmts            = SPACE4_DIM_LARGE;
@@ -3025,7 +3025,7 @@ test_vltypes_fill_value(void)
                         TestErrPrintf("%d: VL data doesn't match!, index(i)=%d\n", __LINE__, (int)i);
                         continue;
                     } /* end if */
-                }     /* end if */
+                } /* end if */
                 else {
                     if (strcmp(rbuf[i].str_id, "foobar") != 0 || strcmp(rbuf[i].str_name, "") != 0 ||
                         rbuf[i].str_desc || strcmp(rbuf[i].str_orig, "\0") != 0 ||
@@ -3034,8 +3034,8 @@ test_vltypes_fill_value(void)
                         TestErrPrintf("%d: VL data doesn't match!, index(i)=%d\n", __LINE__, (int)i);
                         continue;
                     } /* end if */
-                }     /* end if */
-            }         /* end for */
+                } /* end if */
+            } /* end for */
 
             /* Release the space */
             ret = H5Treclaim(dtype1_id, dset_dspace_id, xfer_pid, rbuf);
@@ -3060,7 +3060,7 @@ test_vltypes_fill_value(void)
                         TestErrPrintf("%d: VL data doesn't match!, index(i)=%d\n", __LINE__, (int)i);
                         continue;
                     } /* end if */
-                }     /* end if */
+                } /* end if */
                 else {
                     if ((i % 2) == select_offset[0]) {
                         if (strcmp(rbuf[i].str_id, "foobar") != 0 || strcmp(rbuf[i].str_name, "") != 0 ||
@@ -3071,16 +3071,16 @@ test_vltypes_fill_value(void)
                             TestErrPrintf("%d: VL data doesn't match!, index(i) = %d\n", __LINE__, (int)i);
                             continue;
                         } /* end if */
-                    }     /* end if */
+                    } /* end if */
                     else {
                         if (rbuf[i].str_id || rbuf[i].str_name || rbuf[i].str_desc || rbuf[i].str_orig ||
                             rbuf[i].str_stat || rbuf[i].str_form || rbuf[i].str_unit) {
                             TestErrPrintf("%d: VL data doesn't match!, index(i) = %d\n", __LINE__, (int)i);
                             continue;
                         } /* end if */
-                    }     /* end else */
-                }         /* end else */
-            }             /* end for */
+                    } /* end else */
+                } /* end else */
+            } /* end for */
 
             /* Release the space */
             ret = H5Treclaim(dtype1_id, dset_select_dspace_id, xfer_pid, rbuf);
@@ -3112,7 +3112,7 @@ test_vltypes_fill_value(void)
                         TestErrPrintf("%d: VL data doesn't match!, index(i)=%d\n", __LINE__, (int)i);
                         continue;
                     } /* end if */
-                }     /* end if */
+                } /* end if */
                 else {
                     if (strcmp(rbuf[i].str_id, "foobar") != 0 || strcmp(rbuf[i].str_name, "") != 0 ||
                         rbuf[i].str_desc || strcmp(rbuf[i].str_orig, "\0") != 0 ||
@@ -3121,8 +3121,8 @@ test_vltypes_fill_value(void)
                         TestErrPrintf("%d: VL data doesn't match!, index(i)=%d\n", __LINE__, (int)i);
                         continue;
                     } /* end if */
-                }     /* end if */
-            }         /* end for */
+                } /* end if */
+            } /* end for */
 
             /* Release the space */
             ret = H5Treclaim(dtype1_id, dset_dspace_id, xfer_pid, rbuf);
@@ -3147,7 +3147,7 @@ test_vltypes_fill_value(void)
                         TestErrPrintf("%d: VL data doesn't match!, index(i)=%d\n", __LINE__, (int)i);
                         continue;
                     } /* end if */
-                }     /* end if */
+                } /* end if */
                 else {
                     if ((i % 2) == select_offset[0]) {
                         if (strcmp(rbuf[i].str_id, "foobar") != 0 || strcmp(rbuf[i].str_name, "") != 0 ||
@@ -3158,16 +3158,16 @@ test_vltypes_fill_value(void)
                             TestErrPrintf("%d: VL data doesn't match!, index(i) = %d\n", __LINE__, (int)i);
                             continue;
                         } /* end if */
-                    }     /* end if */
+                    } /* end if */
                     else {
                         if (rbuf[i].str_id || rbuf[i].str_name || rbuf[i].str_desc || rbuf[i].str_orig ||
                             rbuf[i].str_stat || rbuf[i].str_form || rbuf[i].str_unit) {
                             TestErrPrintf("%d: VL data doesn't match!, index(i) = %d\n", __LINE__, (int)i);
                             continue;
                         } /* end if */
-                    }     /* end else */
-                }         /* end else */
-            }             /* end for */
+                    } /* end else */
+                } /* end else */
+            } /* end for */
 
             /* Release the space */
             ret = H5Treclaim(dtype1_id, dset_select_dspace_id, xfer_pid, rbuf);
@@ -3180,7 +3180,7 @@ test_vltypes_fill_value(void)
             ret = H5Sclose(single_dspace_id);
             CHECK(ret, FAIL, "H5Sclose");
         } /* end for */
-    }     /* end for */
+    } /* end for */
 
     ret = H5Fclose(file_id);
     CHECK(ret, FAIL, "H5Fclose");

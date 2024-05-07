@@ -87,7 +87,7 @@ static hid_t H5FD_ROS3_g = 0;
         unsigned long long donotshadowresult = 1;                                                            \
         unsigned           donotshadowindex  = 0;                                                            \
         for (donotshadowindex = 0;                                                                           \
-             donotshadowindex < (((bin_i)*ROS3_STATS_INTERVAL) + ROS3_STATS_START_POWER);                    \
+             donotshadowindex < (((bin_i) * ROS3_STATS_INTERVAL) + ROS3_STATS_START_POWER);                  \
              donotshadowindex++) {                                                                           \
             donotshadowresult *= ROS3_STATS_BASE;                                                            \
         }                                                                                                    \
@@ -1028,7 +1028,7 @@ done:
             file = H5FL_FREE(H5FD_ros3_t, file);
         }
         curl_global_cleanup(); /* early cleanup because open failed */
-    }                          /* end if null return value (error) */
+    } /* end if null return value (error) */
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FD__ros3_open() */
