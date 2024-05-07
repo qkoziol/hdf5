@@ -139,13 +139,13 @@
  */
 #define H5FD_FLMAP_SINGLE                                                                                    \
     {                                                                                                        \
-        H5FD_MEM_SUPER, /*default*/                                                                          \
-        H5FD_MEM_SUPER, /*super*/                                                                            \
-        H5FD_MEM_SUPER, /*btree*/                                                                            \
-        H5FD_MEM_SUPER, /*draw*/                                                                             \
-        H5FD_MEM_SUPER, /*gheap*/                                                                            \
-        H5FD_MEM_SUPER, /*lheap*/                                                                            \
-        H5FD_MEM_SUPER  /*ohdr*/                                                                             \
+        H5FD_MEM_SUPER,     /*default*/                                                                      \
+            H5FD_MEM_SUPER, /*super*/                                                                        \
+            H5FD_MEM_SUPER, /*btree*/                                                                        \
+            H5FD_MEM_SUPER, /*draw*/                                                                         \
+            H5FD_MEM_SUPER, /*gheap*/                                                                        \
+            H5FD_MEM_SUPER, /*lheap*/                                                                        \
+            H5FD_MEM_SUPER  /*ohdr*/                                                                         \
     }
 
 /**
@@ -154,13 +154,13 @@
  */
 #define H5FD_FLMAP_DICHOTOMY                                                                                 \
     {                                                                                                        \
-        H5FD_MEM_SUPER, /*default*/                                                                          \
-        H5FD_MEM_SUPER, /*super*/                                                                            \
-        H5FD_MEM_SUPER, /*btree*/                                                                            \
-        H5FD_MEM_DRAW,  /*draw*/                                                                             \
-        H5FD_MEM_DRAW,  /*gheap*/                                                                            \
-        H5FD_MEM_SUPER, /*lheap*/                                                                            \
-        H5FD_MEM_SUPER  /*ohdr*/                                                                             \
+        H5FD_MEM_SUPER,     /*default*/                                                                      \
+            H5FD_MEM_SUPER, /*super*/                                                                        \
+            H5FD_MEM_SUPER, /*btree*/                                                                        \
+            H5FD_MEM_DRAW,  /*draw*/                                                                         \
+            H5FD_MEM_DRAW,  /*gheap*/                                                                        \
+            H5FD_MEM_SUPER, /*lheap*/                                                                        \
+            H5FD_MEM_SUPER  /*ohdr*/                                                                         \
     }
 
 /**
@@ -169,13 +169,13 @@
  */
 #define H5FD_FLMAP_DEFAULT                                                                                   \
     {                                                                                                        \
-        H5FD_MEM_DEFAULT, /*default*/                                                                        \
-        H5FD_MEM_DEFAULT, /*super*/                                                                          \
-        H5FD_MEM_DEFAULT, /*btree*/                                                                          \
-        H5FD_MEM_DEFAULT, /*draw*/                                                                           \
-        H5FD_MEM_DEFAULT, /*gheap*/                                                                          \
-        H5FD_MEM_DEFAULT, /*lheap*/                                                                          \
-        H5FD_MEM_DEFAULT  /*ohdr*/                                                                           \
+        H5FD_MEM_DEFAULT,     /*default*/                                                                    \
+            H5FD_MEM_DEFAULT, /*super*/                                                                      \
+            H5FD_MEM_DEFAULT, /*btree*/                                                                      \
+            H5FD_MEM_DEFAULT, /*draw*/                                                                       \
+            H5FD_MEM_DEFAULT, /*gheap*/                                                                      \
+            H5FD_MEM_DEFAULT, /*lheap*/                                                                      \
+            H5FD_MEM_DEFAULT  /*ohdr*/                                                                       \
     }
 
 /*******************/

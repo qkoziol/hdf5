@@ -763,7 +763,7 @@ do_write(results *res, file_descr *fd, parameters *parms, long ndsets, off_t nby
                     h5mem_space_id = H5Screate(H5S_SCALAR);
                     VRFY((h5mem_space_id >= 0), "H5Screate");
                 } /* end else */
-            } /* end if */
+            }     /* end if */
             /* 2D dataspace */
             else {
                 if (nbytes > 0) {
@@ -820,7 +820,7 @@ do_write(results *res, file_descr *fd, parameters *parms, long ndsets, off_t nby
                     h5mem_space_id = H5Screate(H5S_SCALAR);
                     VRFY((h5mem_space_id >= 0), "H5Screate");
                 } /* end else */
-            } /* end else */
+            }     /* end else */
 
             /* Create the dataset transfer property list */
             h5dxpl = H5Pcreate(H5P_DATASET_XFER);
@@ -836,7 +836,7 @@ do_write(results *res, file_descr *fd, parameters *parms, long ndsets, off_t nby
                     fprintf(stderr, "HDF5 Property List Set failed\n");
                     GOTOERROR(FAIL);
                 } /* end if */
-            } /* end if */
+            }     /* end if */
             break;
 
         default:
@@ -872,8 +872,8 @@ do_write(results *res, file_descr *fd, parameters *parms, long ndsets, off_t nby
                             fprintf(stderr, "HDF5 Property List Set failed\n");
                             GOTOERROR(FAIL);
                         } /* end if */
-                    } /* end if */
-                } /* end if */
+                    }     /* end if */
+                }         /* end if */
                 else {
                     /* 2D dataspace */
                     if (parms->h5_use_chunks) {
@@ -885,8 +885,8 @@ do_write(results *res, file_descr *fd, parameters *parms, long ndsets, off_t nby
                             fprintf(stderr, "HDF5 Property List Set failed\n");
                             GOTOERROR(FAIL);
                         } /* end if */
-                    } /* end if */
-                } /* end else */
+                    }     /* end if */
+                }         /* end else */
 
                 snprintf(dname, sizeof(dname), "Dataset_%ld", ndset);
                 h5ds_id = H5DCREATE(fd->h5fd, dname, ELMT_H5_TYPE, h5dset_space_id, h5dcpl);
@@ -988,8 +988,8 @@ do_write(results *res, file_descr *fd, parameters *parms, long ndsets, off_t nby
                                 /* Decrement number of bytes left this time */
                                 nbytes_toxfer -= blk_size;
                             } /* end while */
-                        } /* end else */
-                    } /* end if */
+                        }     /* end else */
+                    }         /* end if */
                     /* 2D dataspace */
                     else {
                         /* Contiguous storage */
@@ -1025,7 +1025,7 @@ do_write(results *res, file_descr *fd, parameters *parms, long ndsets, off_t nby
                                 /* Global offset advance after each I/O operation */
                                 file_offset_advance = (off_t)snbytes;
                             } /* end else */
-                        } /* end if */
+                        }     /* end if */
                         /* Chunked storage */
                         else {
                             /*Contiguous access pattern */
@@ -1064,7 +1064,7 @@ do_write(results *res, file_descr *fd, parameters *parms, long ndsets, off_t nby
                                 /* file_offset_advance = (off_t)(snbytes/blk_size*(blk_size*blk_size)); */
                                 file_offset_advance = (off_t)snbytes * (off_t)blk_size;
                             } /* end else */
-                        } /* end else */
+                        }     /* end else */
 
                         /* Common code for file access */
 
@@ -1148,8 +1148,8 @@ do_write(results *res, file_descr *fd, parameters *parms, long ndsets, off_t nby
                                     /* Decrement number of bytes left this time */
                                     nbytes_toxfer -= blk_size;
                                 } /* end while */
-                            } /* end else */
-                        } /* end if */
+                            }     /* end else */
+                        }         /* end if */
                         /* Collective file access */
                         else {
                             /* Contiguous access pattern */
@@ -1184,8 +1184,8 @@ do_write(results *res, file_descr *fd, parameters *parms, long ndsets, off_t nby
                                 /* Advance global offset in dataset */
                                 nbytes_xfer += (ssize_t)buf_size;
                             } /* end else */
-                        } /* end else */
-                    } /* end if */
+                        }     /* end else */
+                    }         /* end if */
                     /* 2D dataspace */
                     else {
                         /* Contiguous storage */
@@ -1229,7 +1229,7 @@ do_write(results *res, file_descr *fd, parameters *parms, long ndsets, off_t nby
                                 /* MPI type to be used for collective access */
                                 mpi_collective_type = mpi_inter_type;
                             } /* end else */
-                        } /* end if */
+                        }     /* end if */
                         /* Chunked storage */
                         else {
                             /*Contiguous access pattern */
@@ -1274,7 +1274,7 @@ do_write(results *res, file_descr *fd, parameters *parms, long ndsets, off_t nby
                                 /* MPI type to be used for collective access */
                                 mpi_collective_type = mpi_chunk_inter_type;
                             } /* end else */
-                        } /* end else */
+                        }     /* end else */
 
                         /* Common code for independent file access */
                         if (!parms->collective) {
@@ -1303,7 +1303,7 @@ do_write(results *res, file_descr *fd, parameters *parms, long ndsets, off_t nby
                                 /* Partially advance global offset in dataset */
                                 mpi_offset += mpi_offset_advance;
                             } /* end while */
-                        } /* end if */
+                        }     /* end if */
 
                         /* Common code for collective file access */
                         else {
@@ -1389,7 +1389,7 @@ do_write(results *res, file_descr *fd, parameters *parms, long ndsets, off_t nby
                 default:
                     break;
             } /* switch (parms->io_type) */
-        } /* end while */
+        }     /* end while */
 
         /* Stop "raw data" write timer */
         io_time_set(res->timers, HDF5_RAW_WRITE_FIXED_DIMS, TSTOP);
@@ -1407,7 +1407,7 @@ do_write(results *res, file_descr *fd, parameters *parms, long ndsets, off_t nby
 
             h5ds_id = H5I_INVALID_HID;
         } /* end if */
-    } /* end for */
+    }     /* end for */
 
 done:
     /* release MPI-I/O objects */
@@ -1452,7 +1452,7 @@ done:
             mrc = MPI_Type_free(&mpi_chunk_inter_type);
             VRFY((mrc == MPI_SUCCESS), "MPIO_TYPE_FREE");
         } /* end else */
-    } /* end if */
+    }     /* end if */
 
     /* release HDF5 objects */
     if (h5dset_space_id != -1) {
@@ -1581,7 +1581,7 @@ do_read(results *res, file_descr *fd, parameters *parms, long ndsets, off_t nbyt
         else {
             bytes_begin[0] = (off_t)blk_size * (off_t)pio_mpi_rank_g;
         } /* end else */
-    } /* end if */
+    }     /* end if */
     /* 2D dataspace */
     else {
         /* nbytes is always the number of bytes per dataset (1D or 2D). If the
@@ -1605,7 +1605,7 @@ do_read(results *res, file_descr *fd, parameters *parms, long ndsets, off_t nbyt
             else
                 bytes_begin[1] = (off_t)blk_size * (off_t)blk_size * (off_t)pio_mpi_rank_g;
         } /* end else */
-    } /* end else */
+    }     /* end else */
 
     /* Calculate the total number of bytes (bytes_count) to be
      * transferred by this process. It may be different for different
@@ -1770,7 +1770,7 @@ do_read(results *res, file_descr *fd, parameters *parms, long ndsets, off_t nbyt
                     h5mem_space_id = H5Screate(H5S_SCALAR);
                     VRFY((h5mem_space_id >= 0), "H5Screate");
                 } /* end else */
-            } /* end if */
+            }     /* end if */
             /* 2D dataspace */
             else {
                 if (nbytes > 0) {
@@ -1827,7 +1827,7 @@ do_read(results *res, file_descr *fd, parameters *parms, long ndsets, off_t nbyt
                     h5mem_space_id = H5Screate(H5S_SCALAR);
                     VRFY((h5mem_space_id >= 0), "H5Screate");
                 } /* end else */
-            } /* end else */
+            }     /* end else */
 
             /* Create the dataset transfer property list */
             h5dxpl = H5Pcreate(H5P_DATASET_XFER);
@@ -1843,7 +1843,7 @@ do_read(results *res, file_descr *fd, parameters *parms, long ndsets, off_t nbyt
                     fprintf(stderr, "HDF5 Property List Set failed\n");
                     GOTOERROR(FAIL);
                 } /* end if */
-            } /* end if */
+            }     /* end if */
             break;
 
         default:
@@ -1955,8 +1955,8 @@ do_read(results *res, file_descr *fd, parameters *parms, long ndsets, off_t nbyt
                                 /* Decrement number of bytes left this time */
                                 nbytes_toxfer -= blk_size;
                             } /* end while */
-                        } /* end else */
-                    } /* end if */
+                        }     /* end else */
+                    }         /* end if */
                     /* 2D dataspace */
                     else {
                         /* Contiguous storage */
@@ -1992,7 +1992,7 @@ do_read(results *res, file_descr *fd, parameters *parms, long ndsets, off_t nbyt
                                 /* Global offset advance after each I/O operation */
                                 file_offset_advance = (off_t)snbytes;
                             } /* end else */
-                        } /* end if */
+                        }     /* end if */
                         /* Chunked storage */
                         else {
                             /*Contiguous access pattern */
@@ -2031,7 +2031,7 @@ do_read(results *res, file_descr *fd, parameters *parms, long ndsets, off_t nbyt
                                 /* file_offset_advance = (off_t)(snbytes/blk_size*(blk_size*blk_size)); */
                                 file_offset_advance = (off_t)((size_t)snbytes * blk_size);
                             } /* end else */
-                        } /* end else */
+                        }     /* end else */
 
                         /* Common code for file access */
 
@@ -2113,8 +2113,8 @@ do_read(results *res, file_descr *fd, parameters *parms, long ndsets, off_t nbyt
                                     /* Decrement number of bytes left this time */
                                     nbytes_toxfer -= blk_size;
                                 } /* end while */
-                            } /* end else */
-                        } /* end if */
+                            }     /* end else */
+                        }         /* end if */
                         /* Collective file access */
                         else {
                             /* Contiguous access pattern */
@@ -2149,8 +2149,8 @@ do_read(results *res, file_descr *fd, parameters *parms, long ndsets, off_t nbyt
                                 /* Advance global offset in dataset */
                                 nbytes_xfer += (off_t)buf_size;
                             } /* end else */
-                        } /* end else */
-                    } /* end if */
+                        }     /* end else */
+                    }         /* end if */
                     /* 2D dataspace */
                     else {
                         /* Contiguous storage */
@@ -2194,7 +2194,7 @@ do_read(results *res, file_descr *fd, parameters *parms, long ndsets, off_t nbyt
                                 /* MPI type to be used for collective access */
                                 mpi_collective_type = mpi_inter_type;
                             } /* end else */
-                        } /* end if */
+                        }     /* end if */
                         /* Chunked storage */
                         else {
                             /*Contiguous access pattern */
@@ -2239,7 +2239,7 @@ do_read(results *res, file_descr *fd, parameters *parms, long ndsets, off_t nbyt
                                 /* MPI type to be used for collective access */
                                 mpi_collective_type = mpi_chunk_inter_type;
                             } /* end else */
-                        } /* end else */
+                        }     /* end else */
 
                         /* Common code for independent file access */
                         if (!parms->collective) {
@@ -2268,7 +2268,7 @@ do_read(results *res, file_descr *fd, parameters *parms, long ndsets, off_t nbyt
                                 /* Partially advance global offset in dataset */
                                 mpi_offset += mpi_offset_advance;
                             } /* end while */
-                        } /* end if */
+                        }     /* end if */
 
                         /* Common code for collective file access */
                         else {
@@ -2367,14 +2367,14 @@ do_read(results *res, file_descr *fd, parameters *parms, long ndsets, off_t nbyt
                                     "got (%d)\n",
                                     pio_mpi_rank_g + 1, (int)*(ucharptr - 1));
                         } /* end if */
-                    } /* end if */
-                } /* end for */
+                    }     /* end if */
+                }         /* end for */
                 if (nerror >= 20) {
                     HDprint_rank(output);
                     fprintf(output, "...");
                     fprintf(output, "total read data errors=%d\n", nerror);
                 } /* end if */
-            } /* if (parms->verify) */
+            }     /* if (parms->verify) */
 
         } /* end while */
 
@@ -2394,7 +2394,7 @@ do_read(results *res, file_descr *fd, parameters *parms, long ndsets, off_t nbyt
 
             h5ds_id = H5I_INVALID_HID;
         } /* end if */
-    } /* end for */
+    }     /* end for */
 
 done:
     /* release MPI-I/O objects */
@@ -2439,7 +2439,7 @@ done:
             mrc = MPI_Type_free(&mpi_chunk_inter_type);
             VRFY((mrc == MPI_SUCCESS), "MPIO_TYPE_FREE");
         } /* end else */
-    } /* end if */
+    }     /* end if */
 
     /* release HDF5 objects */
     if (h5dset_space_id != -1) {

@@ -265,7 +265,7 @@ H5D_virtual_check_mapping_post(const H5O_storage_virtual_ent_t *ent)
                     H5E_ARGS, H5E_BADVALUE, FAIL,
                     "virtual (single block) and source space selections have different numbers of elements");
         } /* end if */
-    } /* end if */
+    }     /* end if */
     else
         /* Make sure there are no printf substitutions */
         if ((ent->psfn_nsubs > 0) || (ent->psdn_nsubs > 0))
@@ -642,7 +642,7 @@ H5D__virtual_copy_layout(H5O_layout_t *layout)
             ent->source_space_status  = orig_list[i].source_space_status;
             ent->virtual_space_status = orig_list[i].virtual_space_status;
         } /* end for */
-    } /* end if */
+    }     /* end if */
     else {
         /* Zero out other fields related to list, just to be sure */
         virt->list        = NULL;
@@ -920,8 +920,8 @@ H5D__virtual_open_source_dset(const H5D_t *vdset, H5O_storage_virtual_ent_t *vir
                     HGOTO_ERROR(H5E_DATASET, H5E_CANTCOPY, FAIL, "can't copy source dataspace extent");
                 virtual_ent->source_space_status = H5O_VIRTUAL_STATUS_CORRECT;
             } /* end if */
-        } /* end else */
-    } /* end if */
+        }     /* end else */
+    }         /* end if */
 
 done:
     /* Release resources */
@@ -1065,7 +1065,7 @@ H5D__virtual_str_append(const char *src, size_t src_len, char **p, char **buf, s
             *buf_size = tmp_buf_size;
             *p        = *buf + p_offset;
         } /* end if */
-    } /* end else */
+    }     /* end else */
 
     /* Copy string to *p.  Note that since src in not NULL terminated, we must
      * use memcpy */
@@ -1178,7 +1178,7 @@ H5D_virtual_parse_source_name(const char *source_name, H5O_storage_virtual_name_
                                         &(*tmp_parsed_name_p)->name_segment, &name_seg_size) < 0)
                 HGOTO_ERROR(H5E_DATASET, H5E_CANTCOPY, FAIL, "unable to append name segment");
         } /* end else */
-    } /* end if */
+    }     /* end if */
 
     /* Set return values */
     *parsed_name    = tmp_parsed_name;
@@ -1512,7 +1512,7 @@ H5D__virtual_set_extent_unlim(const H5D_t *dset)
                         storage->list[i].unlim_extent_source = curr_dims[storage->list[i].unlim_dim_source];
                         storage->list[i].clip_size_virtual   = clip_size;
                     } /* end else */
-                } /* end if */
+                }     /* end if */
                 else
                     clip_size = 0;
             } /* end if */
@@ -1555,7 +1555,7 @@ H5D__virtual_set_extent_unlim(const H5D_t *dset)
                             /* Update sub_dset_nalloc */
                             storage->list[i].sub_dset_nalloc *= 2;
                         } /* end else */
-                    } /* end if */
+                    }     /* end if */
 
                     /* Check if the dataset was already opened */
                     if (storage->list[i].sub_dset[j].dset_exists)
@@ -1613,8 +1613,8 @@ H5D__virtual_set_extent_unlim(const H5D_t *dset)
                                             "unable to close source dataset");
                             storage->list[i].sub_dset[j].dset = NULL;
                         } /* end if */
-                    } /* end else */
-                } /* end for */
+                    }     /* end else */
+                }         /* end for */
 
                 /* Check if the size changed */
                 if ((first_missing == (hsize_t)storage->list[i].sub_dset_nused) &&
@@ -1653,13 +1653,13 @@ H5D__virtual_set_extent_unlim(const H5D_t *dset)
                              * dimension */
                             clip_size = bounds_start[storage->list[i].unlim_dim_virtual];
                         } /* end else */
-                    } /* end else */
+                    }     /* end else */
 
                     /* Set sub_dset_nused and clip_size_virtual */
                     storage->list[i].sub_dset_nused    = (size_t)first_missing;
                     storage->list[i].clip_size_virtual = clip_size;
                 } /* end else */
-            } /* end else */
+            }     /* end else */
 
             /* Update new_dims */
             if ((new_dims[storage->list[i].unlim_dim_virtual] == HSIZE_UNDEF) ||
@@ -1760,7 +1760,7 @@ H5D__virtual_set_extent_unlim(const H5D_t *dset)
                         /* Update cached value clip_size_source */
                         storage->list[i].clip_size_source = clip_size;
                     } /* end if */
-                } /* end if */
+                }     /* end if */
                 else {
                     /* printf mapping */
                     hsize_t first_inc_block;
@@ -1813,8 +1813,8 @@ H5D__virtual_set_extent_unlim(const H5D_t *dset)
                             storage->list[i].sub_dset[j].clipped_source_select  = NULL;
                             storage->list[i].sub_dset[j].clipped_virtual_select = NULL;
                         } /* end if */
-                    } /* end for */
-                } /* end else */
+                    }     /* end for */
+                }         /* end else */
 
                 /* Update cached value unlim_extent_virtual */
                 storage->list[i].unlim_extent_virtual = new_dims[storage->list[i].unlim_dim_virtual];
@@ -1846,7 +1846,7 @@ H5D__virtual_set_extent_unlim(const H5D_t *dset)
                 else
                     assert(!storage->list[i].sub_dset[j].clipped_virtual_select);
         } /* end for */
-    } /* end if */
+    }     /* end if */
 
     /* Mark layout as fully initialized */
     storage->init = true;
@@ -1983,12 +1983,12 @@ H5D__virtual_init_all(const H5D_t *dset)
                             HGOTO_ERROR(H5E_DATASET, H5E_CANTCLIP, FAIL,
                                         "failed to clip unlimited selection");
                     } /* end else */
-                } /* end if */
+                }     /* end if */
                 else {
                     assert(!storage->list[i].source_dset.clipped_virtual_select);
                     assert(!storage->list[i].source_dset.clipped_source_select);
                 } /* end else */
-            } /* end if */
+            }     /* end if */
             else {
                 /* printf mapping */
                 size_t sub_dset_max;
@@ -2100,7 +2100,7 @@ H5D__virtual_init_all(const H5D_t *dset)
                 /* Update sub_dset_nused */
                 storage->list[i].sub_dset_nused = sub_dset_max;
             } /* end else */
-        } /* end if */
+        }     /* end if */
         else {
             /* Limited mapping, just make sure the clipped selections were
              * already set.  Again, no need to open the source file. */
@@ -2219,7 +2219,7 @@ H5D__virtual_init(H5F_t *f, const H5D_t *dset, hid_t dapl_id)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get file close degree");
 
         assert(close_degree == H5F_CLOSE_WEAK);
-    } /* end else */
+    }  /* end else */
 #endif /* NDEBUG */
 
     /* Copy DAPL to layout */
@@ -2490,7 +2490,7 @@ H5D__virtual_pre_io(H5D_dset_io_info_t *dset_info, H5O_storage_virtual_t *storag
                             HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, FAIL,
                                         "unable to modify size of dataspace");
                     } /* end if */
-                } /* end if */
+                }     /* end if */
 
                 /* Only continue if we managed to obtain a
                  * clipped_virtual_select */
@@ -2536,8 +2536,8 @@ H5D__virtual_pre_io(H5D_dset_io_info_t *dset_info, H5O_storage_virtual_t *storag
                     else
                         *tot_nelmts += (hsize_t)select_nelmts;
                 } /* end if */
-            } /* end for */
-        } /* end if */
+            }     /* end for */
+        }         /* end if */
         else {
             if (storage->list[i].source_dset.clipped_virtual_select) {
                 /* Project intersection of file space and mapping virtual space onto
@@ -2588,8 +2588,8 @@ H5D__virtual_pre_io(H5D_dset_io_info_t *dset_info, H5O_storage_virtual_t *storag
                 assert(storage->list[i].unlim_dim_virtual >= 0);
                 assert(!storage->list[i].source_dset.dset);
             } /* end else */
-        } /* end else */
-    } /* end for */
+        }     /* end else */
+    }         /* end for */
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -2627,7 +2627,7 @@ H5D__virtual_post_io(H5O_storage_virtual_t *storage)
                         HDONE_ERROR(H5E_DATASET, H5E_CLOSEERROR, FAIL, "can't close temporary space");
                     storage->list[i].sub_dset[j].projected_mem_space = NULL;
                 } /* end if */
-        } /* end if */
+        }         /* end if */
         else
             /* Close projected memory space */
             if (storage->list[i].source_dset.projected_mem_space) {
@@ -2819,9 +2819,9 @@ H5D__virtual_read(H5D_io_info_t H5_ATTR_NDEBUG_UNUSED *io_info, H5D_dset_io_info
                  */
                 assert((tot_nelmts + (hsize_t)select_nelmts) >= nelmts);
             } /* end block */
-#endif /* NDEBUG */
-        } /* end if */
-    } /* end if */
+#endif        /* NDEBUG */
+        }     /* end if */
+    }         /* end if */
 
 done:
     /* Cleanup I/O operation */
@@ -3068,7 +3068,7 @@ H5D__virtual_hold_source_dset_files(const H5D_t *dset, H5D_virtual_held_file_t *
                     tmp->next = *head;
                     *head     = tmp;
                 } /* end if */
-        } /* end if */
+        }         /* end if */
         else if (storage->list[i].source_dset.dset) {
             /* Hold open the file */
             H5F_INCR_NOPEN_OBJS(storage->list[i].source_dset.dset->oloc.file);

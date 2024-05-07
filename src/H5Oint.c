@@ -827,8 +827,8 @@ H5O__link_oh(H5F_t *f, int adjust, H5O_t *oh, bool *deleted)
                     /* Mark the object header for deletion */
                     *deleted = true;
                 } /* end else */
-            } /* end if */
-        } /* end if */
+            }     /* end if */
+        }         /* end if */
         else {
             /* A new object, or one that will be deleted */
             if (0 == oh->nlink) {
@@ -838,7 +838,7 @@ H5O__link_oh(H5F_t *f, int adjust, H5O_t *oh, bool *deleted)
                     if (H5FO_mark(f, addr, false) < 0)
                         HGOTO_ERROR(H5E_OHDR, H5E_CANTDELETE, (-1), "can't mark object for deletion");
                 } /* end if */
-            } /* end if */
+            }     /* end if */
 
             /* Adjust the link count for the object header */
             oh->nlink = (unsigned)((int)oh->nlink + adjust);
@@ -866,7 +866,7 @@ H5O__link_oh(H5F_t *f, int adjust, H5O_t *oh, bool *deleted)
                         0)
                         HGOTO_ERROR(H5E_OHDR, H5E_CANTUPDATE, (-1), "unable to update refcount message");
                 } /* end else */
-            } /* end if */
+            }     /* end if */
             else {
                 /* Check for adding refcount message to object */
                 if (oh->nlink > 1) {
@@ -877,9 +877,9 @@ H5O__link_oh(H5F_t *f, int adjust, H5O_t *oh, bool *deleted)
                         HGOTO_ERROR(H5E_OHDR, H5E_CANTINSERT, (-1), "unable to create new refcount message");
                     oh->has_refcount_msg = true;
                 } /* end if */
-            } /* end else */
-        } /* end if */
-    } /* end if */
+            }     /* end else */
+        }         /* end if */
+    }             /* end if */
 
     /* Set return value */
     ret_value = (int)oh->nlink;
@@ -1065,7 +1065,7 @@ H5O_protect(const H5O_loc_t *loc, unsigned prot_flags, bool pin_all_chunks)
             (oh->nmesgs + udata.common.merged_null_msgs) != udata.v1_pfx_nmesgs)
             HGOTO_ERROR(H5E_OHDR, H5E_CANTLOAD, NULL, "corrupt object header - incorrect # of messages");
 #endif /* H5_STRICT_FORMAT_CHECKS */
-    } /* end if */
+    }  /* end if */
 
 #ifdef H5O_DEBUG
     H5O__assert(oh);
@@ -1232,7 +1232,7 @@ H5O_unprotect(const H5O_loc_t *loc, H5O_t *oh, unsigned oh_flags)
                     HGOTO_ERROR(H5E_OHDR, H5E_CANTUNPIN, FAIL, "unable to unpin object header chunk");
                 oh->chunk[u].chunk_proxy = NULL;
             } /* end if */
-        } /* end for */
+        }     /* end for */
 
         /* Reet the flag from the unprotect */
         oh->chunks_pinned = false;
@@ -1329,7 +1329,7 @@ H5O_touch_oh(H5F_t *f, H5O_t *oh, bool force)
             if (H5AC_mark_entry_dirty(oh) < 0)
                 HGOTO_ERROR(H5E_OHDR, H5E_CANTMARKDIRTY, FAIL, "unable to mark object header as dirty");
         } /* end else */
-    } /* end if */
+    }     /* end if */
 
 done:
     /* Release chunk */
@@ -2135,8 +2135,8 @@ H5O_get_info(const H5O_loc_t *loc, H5O_info2_t *oinfo, unsigned fields)
                 else
                     oinfo->ctime = 0;
             } /* end else */
-        } /* end else */
-    } /* end if */
+        }     /* end else */
+    }         /* end if */
 
     /* Retrieve # of attributes */
     if (fields & H5O_INFO_NUM_ATTRS)
@@ -2336,7 +2336,7 @@ H5O_obj_create(H5F_t *f, H5O_type_t obj_type, void *crt_info, H5G_loc_t *obj_loc
             /* Break out of loop */
             break;
         } /* end if */
-    } /* end for */
+    }     /* end for */
     assert(ret_value);
 
 done:
@@ -2550,9 +2550,9 @@ H5O__visit_cb(hid_t H5_ATTR_UNUSED group, const char *name, const H5L_info2_t *l
                         HGOTO_ERROR(H5E_OHDR, H5E_CANTINSERT, H5_ITER_ERROR,
                                     "can't insert object node into visited list");
                 } /* end if */
-            } /* end if */
-        } /* end if */
-    } /* end if */
+            }     /* end if */
+        }         /* end if */
+    }             /* end if */
 
 done:
     /* Release resources */

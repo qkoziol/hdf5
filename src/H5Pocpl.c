@@ -1174,7 +1174,7 @@ H5P__get_filter(const H5Z_filter_info_t *filter, unsigned int *flags /*out*/, si
             else
                 name[0] = '\0';
         } /* end if */
-    } /* end if */
+    }     /* end if */
 
     /* Filter configuration (assume filter ID has already been checked) */
     if (filter_config)
@@ -1324,7 +1324,7 @@ H5P__ocrt_pipeline_enc(const void *value, void **_pp, size_t *size)
             for (v = 0; v < pline->filter[u].cd_nelmts; v++)
                 H5_ENCODE_UNSIGNED(*pp, pline->filter[u].cd_values[v]);
         } /* end for */
-    } /* end if */
+    }     /* end if */
 
     /* calculate size required for encoding */
     *size += 1;
@@ -1580,9 +1580,9 @@ H5P__ocrt_pipeline_cmp(const void *_pline1, const void *_pline2, size_t H5_ATTR_
                     if (pline1->filter[u].cd_values[v] > pline2->filter[u].cd_values[v])
                         HGOTO_DONE(1);
                 } /* end for */
-            } /* end if */
-        } /* end for */
-    } /* end if */
+            }     /* end if */
+        }         /* end for */
+    }             /* end if */
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)

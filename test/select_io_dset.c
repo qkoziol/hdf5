@@ -3359,7 +3359,7 @@ main(void)
                                 TEST_ERROR;
 
                         } /* end switch */
-                    } /* end for test_select_config */
+                    }     /* end for test_select_config */
 
                 } /* end mwbuf */
 

@@ -852,7 +852,7 @@ H5FD__splitter_open(const char *name, unsigned flags, hid_t splitter_fapl_id, ha
             if (file_ptr->logfp == NULL)
                 HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL, "unable to open log file");
         } /* end if logfile path given */
-    } /* end if logfile pointer/handle does not exist */
+    }     /* end if logfile pointer/handle does not exist */
 
     file_ptr->rw_file = H5FD_open(name, flags, fapl_ptr->rw_fapl_id, HADDR_UNDEF);
     if (!file_ptr->rw_file)

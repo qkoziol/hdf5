@@ -1797,14 +1797,14 @@ gent_str(void)
 
     hsize_t dims2[]         = {20};
     char    string2[20][10] = {"ab cd ef1", "ab cd ef2", "ab cd ef3", "ab cd ef4", "ab cd ef5",
-                               "ab cd ef6", "ab cd ef7", "ab cd ef8", "ab cd ef9", "ab cd ef0",
-                               "ab cd ef1", "ab cd ef2", "ab cd ef3", "ab cd ef4", "ab cd ef5",
-                               "ab cd ef6", "ab cd ef7", "ab cd ef8", "ab cd ef9", "ab cd ef0"};
+                            "ab cd ef6", "ab cd ef7", "ab cd ef8", "ab cd ef9", "ab cd ef0",
+                            "ab cd ef1", "ab cd ef2", "ab cd ef3", "ab cd ef4", "ab cd ef5",
+                            "ab cd ef6", "ab cd ef7", "ab cd ef8", "ab cd ef9", "ab cd ef0"};
 
     hsize_t dims3[]        = {27};
     char    string3[27][6] = {"abcd0", "abcd1", "abcd2", "abcd3", "abcd4", "abcd5", "abcd6", "abcd7", "abcd8",
-                              "abcd9", "abcd0", "abcd1", "abcd2", "abcd3", "abcd4", "abcd5", "abcd6", "abcd7",
-                              "abcd8", "abcd9", "abcd0", "abcd1", "abcd2", "abcd3", "abcd4", "abcd5", "abcd6"};
+                           "abcd9", "abcd0", "abcd1", "abcd2", "abcd3", "abcd4", "abcd5", "abcd6", "abcd7",
+                           "abcd8", "abcd9", "abcd0", "abcd1", "abcd2", "abcd3", "abcd4", "abcd5", "abcd6"};
 
     int i, j, k, l;
 
@@ -2097,7 +2097,7 @@ gent_enum(void)
     hid_t    file, type, space, dset;
     int      val;
     enumtype data[]  = {RED, GREEN, BLUE,  GREEN, WHITE, WHITE, BLACK, GREEN, BLUE,  RED,
-                        RED, BLUE,  GREEN, BLACK, WHITE, RED,   WHITE, GREEN, GREEN, BLUE};
+                       RED, BLUE,  GREEN, BLACK, WHITE, RED,   WHITE, GREEN, GREEN, BLUE};
     hsize_t  size[1] = {NELMTS(data)};
 
     file = H5Fcreate(FILE15, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
@@ -2816,7 +2816,7 @@ gent_vldatatypes2(void)
             for (k = 0; k < (j + 1); k++)
                 ((unsigned int *)t1->p)[k] = i * 100 + j * 10 + k;
         } /* end for */
-    } /* end for */
+    }     /* end for */
 
     /* Create file */
     fid1 = H5Fcreate(FILE22, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
@@ -2949,7 +2949,7 @@ gent_vldatatypes4(void)
             ((s1 *)wdata[i].p)[j].i = (int)(i * 10 + j);
             ((s1 *)wdata[i].p)[j].f = (float)((float)(i * 20 + j) / 3.0F);
         } /* end for */
-    } /* end for */
+    }     /* end for */
 
     /* Create file */
     fid1 = H5Fcreate(FILE24, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
@@ -3018,7 +3018,7 @@ gent_vldatatypes5(void)
             for (j = 0; j < i + 5; j++)
                 ((unsigned *)wdata[i].p)[j] = (unsigned)(j * 2);
         } /* end else */
-    } /* end for */
+    }     /* end for */
 
     /* Create file */
     fid1 = H5Fcreate(FILE43, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
@@ -4088,7 +4088,7 @@ write_attr_in(hid_t loc_id, const char *dset_name, /* for saving reference to da
     /* create 3D attributes with dimension [4][3][2], 24 elements */
     hsize_t    dims3[3]     = {4, 3, 2};
     char       buf13[24][3] = {"ab", "cd", "ef", "gh", "ij", "kl", "mn", "pq", "rs", "tu", "vw", "xz",
-                               "AB", "CD", "EF", "GH", "IJ", "KL", "MN", "PQ", "RS", "TU", "VW", "XZ"}; /* string */
+                         "AB", "CD", "EF", "GH", "IJ", "KL", "MN", "PQ", "RS", "TU", "VW", "XZ"}; /* string */
     char       buf23[4][3][2]; /* bitfield, opaque */
     s_t        buf33[4][3][2]; /* compound */
     hobj_ref_t buf43[4][3][2]; /* reference */
@@ -4513,7 +4513,7 @@ write_dset_in(hid_t loc_id, const char *dset_name, /* for saving reference to da
     /* create 3D attributes with dimension [4][3][2], 24 elements */
     hsize_t    dims3[3]     = {4, 3, 2};
     char       buf13[24][3] = {"ab", "cd", "ef", "gh", "ij", "kl", "mn", "pq", "rs", "tu", "vw", "xz",
-                               "AB", "CD", "EF", "GH", "IJ", "KL", "MN", "PQ", "RS", "TU", "VW", "XZ"}; /* string */
+                         "AB", "CD", "EF", "GH", "IJ", "KL", "MN", "PQ", "RS", "TU", "VW", "XZ"}; /* string */
     char       buf23[4][3][2]; /* bitfield, opaque */
     s_t        buf33[4][3][2]; /* compound */
     hobj_ref_t buf43[4][3][2]; /* reference */
@@ -7261,31 +7261,31 @@ gent_packedbits(void)
 
     struct {
         uint8_t arr[F66_XDIM][F66_YDIM8];
-    } *dsetu8;
+    } * dsetu8;
     struct {
         uint16_t arr[F66_XDIM][F66_YDIM16];
-    } *dsetu16;
+    } * dsetu16;
     struct {
         uint32_t arr[F66_XDIM][F66_YDIM32];
-    } *dsetu32;
+    } * dsetu32;
     struct {
         uint64_t arr[F66_XDIM][F66_YDIM64];
-    } *dsetu64;
+    } * dsetu64;
     struct {
         int8_t arr[F66_XDIM][F66_YDIM8];
-    } *dset8;
+    } * dset8;
     struct {
         int16_t arr[F66_XDIM][F66_YDIM16];
-    } *dset16;
+    } * dset16;
     struct {
         int32_t arr[F66_XDIM][F66_YDIM32];
-    } *dset32;
+    } * dset32;
     struct {
         int64_t arr[F66_XDIM][F66_YDIM64];
-    } *dset64;
+    } * dset64;
     struct {
         double arr[F66_XDIM][F66_YDIM8];
-    } *dsetdbl;
+    } * dsetdbl;
 
     uint8_t  valu8bits;
     uint16_t valu16bits;
@@ -7504,31 +7504,31 @@ gent_attr_intsize(void)
 
     struct {
         uint8_t arr[F66_XDIM][F66_YDIM8];
-    } *dsetu8;
+    } * dsetu8;
     struct {
         uint16_t arr[F66_XDIM][F66_YDIM16];
-    } *dsetu16;
+    } * dsetu16;
     struct {
         uint32_t arr[F66_XDIM][F66_YDIM32];
-    } *dsetu32;
+    } * dsetu32;
     struct {
         uint64_t arr[F66_XDIM][F66_YDIM64];
-    } *dsetu64;
+    } * dsetu64;
     struct {
         int8_t arr[F66_XDIM][F66_YDIM8];
-    } *dset8;
+    } * dset8;
     struct {
         int16_t arr[F66_XDIM][F66_YDIM16];
-    } *dset16;
+    } * dset16;
     struct {
         int32_t arr[F66_XDIM][F66_YDIM64];
-    } *dset32;
+    } * dset32;
     struct {
         int64_t arr[F66_XDIM][F66_YDIM64];
-    } *dset64;
+    } * dset64;
     struct {
         double arr[F66_XDIM][F66_YDIM8];
-    } *dsetdbl;
+    } * dsetdbl;
 
     uint8_t  valu8bits;
     uint16_t valu16bits;
@@ -8619,31 +8619,31 @@ gent_intscalars(void)
 
     struct {
         uint8_t arr[F73_XDIM][F73_YDIM8];
-    } *dsetu8;
+    } * dsetu8;
     struct {
         uint16_t arr[F73_XDIM][F73_YDIM16];
-    } *dsetu16;
+    } * dsetu16;
     struct {
         uint32_t arr[F73_XDIM][F73_YDIM32];
-    } *dsetu32;
+    } * dsetu32;
     struct {
         uint64_t arr[F73_XDIM][F73_YDIM64];
-    } *dsetu64;
+    } * dsetu64;
     struct {
         int8_t arr[F73_XDIM][F73_YDIM8];
-    } *dset8;
+    } * dset8;
     struct {
         int16_t arr[F73_XDIM][F73_YDIM16];
-    } *dset16;
+    } * dset16;
     struct {
         int32_t arr[F73_XDIM][F73_YDIM32];
-    } *dset32;
+    } * dset32;
     struct {
         int64_t arr[F73_XDIM][F73_YDIM64];
-    } *dset64;
+    } * dset64;
     struct {
         double arr[F73_XDIM][F73_YDIM8];
-    } *dsetdbl;
+    } * dsetdbl;
 
     uint8_t  valu8bits;
     uint16_t valu16bits;
@@ -8880,31 +8880,31 @@ gent_attr_intscalars(void)
 
     struct {
         uint8_t arr[F73_XDIM][F73_YDIM8];
-    } *dsetu8;
+    } * dsetu8;
     struct {
         uint16_t arr[F73_XDIM][F73_YDIM16];
-    } *dsetu16;
+    } * dsetu16;
     struct {
         uint32_t arr[F73_XDIM][F73_YDIM32];
-    } *dsetu32;
+    } * dsetu32;
     struct {
         uint64_t arr[F73_XDIM][F73_YDIM64];
-    } *dsetu64;
+    } * dsetu64;
     struct {
         int8_t arr[F73_XDIM][F73_YDIM8];
-    } *dset8;
+    } * dset8;
     struct {
         int16_t arr[F73_XDIM][F73_YDIM16];
-    } *dset16;
+    } * dset16;
     struct {
         int32_t arr[F73_XDIM][F73_YDIM32];
-    } *dset32;
+    } * dset32;
     struct {
         int64_t arr[F73_XDIM][F73_YDIM64];
-    } *dset64;
+    } * dset64;
     struct {
         double arr[F73_XDIM][F73_YDIM8];
-    } *dsetdbl;
+    } * dsetdbl;
 
     uint8_t  valu8bits;
     uint16_t valu16bits;
@@ -9983,31 +9983,31 @@ gent_intsattrs(void)
 
     struct {
         uint8_t arr[F66_XDIM][F66_YDIM8];
-    } *dsetu8;
+    } * dsetu8;
     struct {
         uint16_t arr[F66_XDIM][F66_YDIM16];
-    } *dsetu16;
+    } * dsetu16;
     struct {
         uint32_t arr[F66_XDIM][F66_YDIM32];
-    } *dsetu32;
+    } * dsetu32;
     struct {
         uint64_t arr[F66_XDIM][F66_YDIM64];
-    } *dsetu64;
+    } * dsetu64;
     struct {
         int8_t arr[F66_XDIM][F66_YDIM8];
-    } *dset8;
+    } * dset8;
     struct {
         int16_t arr[F66_XDIM][F66_YDIM16];
-    } *dset16;
+    } * dset16;
     struct {
         int32_t arr[F66_XDIM][F66_YDIM32];
-    } *dset32;
+    } * dset32;
     struct {
         int64_t arr[F66_XDIM][F66_YDIM64];
-    } *dset64;
+    } * dset64;
     struct {
         double arr[F66_XDIM][F66_YDIM8];
-    } *dsetdbl;
+    } * dsetdbl;
 
     uint8_t  *asetu8  = NULL;
     uint16_t *asetu16 = NULL;
@@ -10343,13 +10343,13 @@ gent_floatsattrs(void)
 
     struct {
         float arr[F89_XDIM][F89_YDIM32];
-    } *dset32;
+    } * dset32;
     struct {
         double arr[F89_XDIM][F89_YDIM64];
-    } *dset64;
+    } * dset64;
     struct {
         long double arr[F89_XDIM][F89_YDIM128];
-    } *dset128;
+    } * dset128;
 
     float       *aset32  = NULL;
     double      *aset64  = NULL;
@@ -10647,7 +10647,7 @@ gent_intsfourdims(void)
     hsize_t dims[F81_RANK];
     struct {
         uint32_t arr[F81_ZDIM][F81_YDIM][F81_XDIM][F81_WDIM];
-    }           *dset1;
+    } * dset1;
     unsigned int i, j, k, l;
 
     fid = H5Fcreate(FILE81, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
@@ -10888,7 +10888,7 @@ gent_compound_complex2(void)
                         buf[i].b[j] = (int)(j - i * 10);
                     for (j = 0; j < dset_array_c_dims[0]; j++)
                         for (k = 0; k < dset_array_c_dims[1]; k++)
-                            buf[i].c[j][k] = (float)(j + k + i * 10) + (float)(j) * 0.1F;
+                            buf[i].c[j][k] = (float)(j + k + i * 10) + (float)(j)*0.1F;
 
                     /* Set up first nested compound */
                     buf[i].d.nested_a = (double)i;
@@ -11200,8 +11200,8 @@ H5Z_filter_dynlibud(unsigned int flags, size_t cd_nelmts, const unsigned int *cd
             *int_ptr  = (int8_t)(temp - MULTIPLIER);
             int_ptr++;
             buf_left -= sizeof(*int_ptr);
-        } /* end while */
-    } /* end if */
+        }  /* end while */
+    }      /* end if */
     else { /*write*/
         /* Add the original value with MULTIPLIER */
         while (buf_left > 0) {
@@ -11210,7 +11210,7 @@ H5Z_filter_dynlibud(unsigned int flags, size_t cd_nelmts, const unsigned int *cd
             int_ptr++;
             buf_left -= sizeof(*int_ptr);
         } /* end while */
-    } /* end else */
+    }     /* end else */
 
     return nbytes;
 } /* end H5Z_filter_dynlibud() */
@@ -12023,7 +12023,7 @@ gent_float16(void)
 
     struct {
         H5__Float16 arr[F93_XDIM][F93_YDIM];
-    } *dset16;
+    } * dset16;
 
     H5__Float16 *aset16 = NULL;
     H5__Float16  val16bits;
@@ -12093,7 +12093,7 @@ gent_float16_be(void)
 
     struct {
         H5__Float16 arr[F94_XDIM][F94_YDIM];
-    } *dset16;
+    } * dset16;
 
     H5__Float16 *aset16 = NULL;
     H5__Float16  val16bits;

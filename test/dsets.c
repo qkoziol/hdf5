@@ -1011,7 +1011,7 @@ test_compact_io(hid_t fapl)
                 TEST_ERROR;
 
         } /* end for high */
-    } /* end for low */
+    }     /* end for low */
 
     if (H5Pclose(new_fapl) < 0)
         TEST_ERROR;
@@ -1750,7 +1750,7 @@ filter_bogus2(unsigned int flags, size_t cd_nelmts, const unsigned int *cd_value
                 *int_ptr++ += (int)add_on;
                 buf_left -= sizeof(int);
             } /* end while */
-        } /* end else */
+        }     /* end else */
 
         return (nbytes);
     } /* end if */
@@ -1828,8 +1828,8 @@ filter_corrupt(unsigned int flags, size_t cd_nelmts, const unsigned int *cd_valu
         else {
             *buf_size = nbytes;
             ret_value = nbytes;
-        } /* end else */
-    } /* end if */
+        }  /* end else */
+    }      /* end if */
     else { /* Write corrupted data */
         dst += offset;
         memcpy(dst, data, (size_t)length);
@@ -2168,7 +2168,7 @@ test_filter_internal(hid_t fid, const char *name, hid_t dcpl, int if_fletcher32,
                     printf("    At index %lu,%lu\n", (unsigned long)i, (unsigned long)j);
                     goto error;
                 } /* end if */
-    } /* end else */
+    }             /* end else */
 
     PASSED();
 
@@ -2460,7 +2460,7 @@ test_get_filter_info(void)
         if (((flags & H5Z_FILTER_CONFIG_ENCODE_ENABLED) != 0) ||
             ((flags & H5Z_FILTER_CONFIG_DECODE_ENABLED) == 0))
             TEST_ERROR;
-    } /* end else */
+    }  /* end else */
 #endif /* H5_HAVE_FILTER_SZIP */
 
     /* Verify that get_filter_info throws an error when given a bad filter */
@@ -2867,7 +2867,7 @@ test_missing_filter(hid_t file)
         H5_FAILED();
         printf("    Line %d: Can't unregister deflate filter\n", __LINE__);
         goto error;
-    } /* end if */
+    }  /* end if */
 #endif /* H5_HAVE_FILTER_DEFLATE */
     /* Verify deflate filter is not registered currently */
     if (H5Zfilter_avail(H5Z_FILTER_DEFLATE) != false) {
@@ -2970,8 +2970,8 @@ test_missing_filter(hid_t file)
                 printf("    At returned: %d\n", check[i][j]);
                 goto error;
             } /* end if */
-        } /* end for */
-    } /* end for */
+        }     /* end for */
+    }         /* end for */
 
     /* Close dataset */
     if (H5Dclose(dsid) < 0) {
@@ -3056,7 +3056,7 @@ test_missing_filter(hid_t file)
         H5_FAILED();
         printf("    Line %d: Deflate filter not available\n", __LINE__);
         goto error;
-    } /* end if */
+    }  /* end if */
 #endif /* H5_HAVE_FILTER_DEFLATE */
 
     /* Pop API context */
@@ -3319,7 +3319,7 @@ test_nbit_float(hid_t file)
      * dataset datatype (no precision loss during datatype conversion)
      */
     float  orig_data[2][5] = {{188384.0F, 19.103516F, -1.0831790e9F, -84.242188F, 5.2045898F},
-                              {-49140.0F, 2350.25F, -3.2110596e-1F, 6.4998865e-5F, -0.0F}};
+                             {-49140.0F, 2350.25F, -3.2110596e-1F, 6.4998865e-5F, -0.0F}};
     float  new_data[2][5];
     size_t precision, offset;
     size_t i, j;
@@ -3706,7 +3706,7 @@ test_nbit_compound(hid_t file)
     const hsize_t size[2]         = {2, 5};
     const hsize_t chunk_size[2]   = {2, 5};
     const float   float_val[2][5] = {{188384.0F, 19.103516F, -1.0831790e9F, -84.242188F, 5.2045898F},
-                                     {-49140.0F, 2350.25F, -3.2110596e-1F, 6.4998865e-5F, -0.0F}};
+                                   {-49140.0F, 2350.25F, -3.2110596e-1F, 6.4998865e-5F, -0.0F}};
     atomic        orig_data[2][5];
     atomic        new_data[2][5];
     unsigned int  i_mask, s_mask, c_mask;
@@ -3933,7 +3933,7 @@ test_nbit_compound_2(hid_t file)
     const hsize_t size[2]         = {2, 5};
     const hsize_t chunk_size[2]   = {2, 5};
     const float   float_val[2][5] = {{188384.0F, 19.103516F, -1.0831790e9F, -84.242188F, 5.2045898F},
-                                     {-49140.0F, 2350.25F, -3.2110596e-1F, 6.4998865e-5F, -0.0F}};
+                                   {-49140.0F, 2350.25F, -3.2110596e-1F, 6.4998865e-5F, -0.0F}};
     complex       orig_data[2][5];
     complex       new_data[2][5];
     unsigned int  i_mask, s_mask, c_mask, b_mask;
@@ -4106,7 +4106,7 @@ test_nbit_compound_2(hid_t file)
                     orig_data[i][j].d[m][n].s = (short)(((long long)rand() % (long long)power) << offset[2]);
                     orig_data[i][j].d[m][n].f = float_val[i][j];
                 } /* end for */
-        } /* end for */
+        }         /* end for */
 
     PASSED();
 
@@ -6256,8 +6256,8 @@ test_can_apply(hid_t file)
                 printf("    At returned: %d\n", check[i][j]);
                 goto error;
             } /* end if */
-        } /* end for */
-    } /* end for */
+        }     /* end for */
+    }         /* end for */
 
     /* Close dataset */
     if (H5Dclose(dsid) < 0) {
@@ -6409,8 +6409,8 @@ test_can_apply2(hid_t file)
                 printf("    At returned: %d\n", check[i][j]);
                 goto error;
             } /* end if */
-        } /* end for */
-    } /* end for */
+        }     /* end for */
+    }         /* end for */
 
     /* Close dataset */
     if (H5Dclose(dsid) < 0) {
@@ -6940,8 +6940,8 @@ test_set_local(hid_t fapl)
                 printf("    At returned: %d\n", check[i][j]);
                 goto error;
             } /* end if */
-        } /* end for */
-    } /* end for */
+        }     /* end for */
+    }         /* end for */
 
     /* Close dataset */
     if (H5Dclose(dsid) < 0) {
@@ -6992,8 +6992,8 @@ test_set_local(hid_t fapl)
                 printf("    At returned: %f\n", check_dbl[i][j]);
                 goto error;
             } /* end if */
-        } /* end for */
-    } /* end for */
+        }     /* end for */
+    }         /* end for */
 
     /* Close dataset */
     if (H5Dclose(dsid) < 0) {
@@ -7965,15 +7965,15 @@ test_missing_chunk(hid_t file)
                 printf("    Line %d: Incorrect value, rdata[%u]=%d\n", __LINE__, (unsigned)u, rdata[u]);
                 TEST_ERROR;
             } /* end if */
-        } /* end if */
+        }     /* end if */
         else {
             if (rdata[u] != wdata[u]) {
                 printf("    Line %d: Incorrect value, wdata[%u]=%d, rdata[%u]=%d\n", __LINE__, (unsigned)u,
                        wdata[u], (unsigned)u, rdata[u]);
                 TEST_ERROR;
             } /* end if */
-        } /* end else */
-    } /* end for */
+        }     /* end else */
+    }         /* end for */
 
     /* Validate values read for the 2-D dataset */
     for (i = 0; i < MISSING_CHUNK_DIM; i++) {
@@ -7985,7 +7985,7 @@ test_missing_chunk(hid_t file)
                            (unsigned)j, rdata2[i][j]);
                     TEST_ERROR;
                 } /* end if */
-            } /* end if */
+            }     /* end if */
             else {
                 if (rdata2[i][j] != wdata2[i][j]) {
                     printf("    Line %d: Incorrect value, wdata2[%u][%u] = %d, rdata2[%u][%u] = %d\n",
@@ -7993,9 +7993,9 @@ test_missing_chunk(hid_t file)
                            rdata2[i][j]);
                     TEST_ERROR;
                 } /* end if */
-            } /* end else */
-        } /* end for */
-    } /* end for */
+            }     /* end else */
+        }         /* end for */
+    }             /* end for */
 
     /* Close everything */
     if (H5Pclose(dcpl) < 0)
@@ -10000,9 +10000,9 @@ test_chunk_fast(const char *driver_name, hid_t fapl)
                     if (H5Pclose(dcpl) < 0)
                         FAIL_STACK_ERROR;
                 } /* end for */
-            } /* end for */
-        } /* end for */
-    } /* end for */
+            }     /* end for */
+        }         /* end for */
+    }             /* end for */
 
     /* Close everything */
     if (H5Sclose(scalar_sid) < 0)
@@ -10364,7 +10364,7 @@ filter_expand(unsigned int flags, size_t H5_ATTR_UNUSED cd_nelmts,
             *buf_size = nbytes;
             ret_value = nbytes;
         } /* end else */
-    } /* end else */
+    }     /* end else */
 
     return ret_value;
 } /* end filter_expand() */
@@ -10697,7 +10697,7 @@ test_chunk_expand(hid_t fapl)
                             FAIL_PUTS_ERROR(
                                 "should fail to write to dataset when allocation time is not early");
                     } /* end for */
-                } /* end while */
+                }     /* end while */
 
                 /* Close the datasets */
                 if (H5Dclose(dsid) < 0)
@@ -10863,7 +10863,7 @@ test_chunk_expand(hid_t fapl)
                 if (H5Fclose(fid) < 0)
                     FAIL_STACK_ERROR;
             } /* end if */
-        } /* end for */
+        }     /* end for */
 
         /* Unregister "expansion" filter */
         if (H5Zunregister(H5Z_FILTER_EXPAND) < 0)
@@ -11392,7 +11392,7 @@ test_fixed_array(hid_t fapl)
 
         } /* end for */
 #ifdef H5_HAVE_FILTER_DEFLATE
-    } /* end for */
+    }  /* end for */
 #endif /* H5_HAVE_FILTER_DEFLATE */
 
     /* Release buffers */
@@ -11695,7 +11695,7 @@ test_single_chunk(hid_t fapl)
 
         } /* end for */
 #ifdef H5_HAVE_FILTER_DEFLATE
-    } /* end for */
+    }  /* end for */
 #endif /* H5_HAVE_FILTER_DEFLATE */
 
     /* Release buffers */
@@ -12164,7 +12164,7 @@ test_zero_dim_dset(hid_t fapl)
                 FAIL_STACK_ERROR;
 
         } /* end for high */
-    } /* end for low */
+    }     /* end for low */
 
     PASSED();
 
@@ -12722,9 +12722,9 @@ test_bt2_hdr_fd(const char *driver_name, hid_t fapl)
     const hsize_t     maxshape[2]  = {H5S_UNLIMITED, H5S_UNLIMITED};
     const hsize_t     chunk[2]     = {8, 8};
     const int         buffer[8][8] = {{0, 1, 2, 3, 4, 5, 6, 7},         {8, 9, 10, 11, 12, 13, 14, 15},
-                                      {16, 17, 18, 19, 20, 21, 22, 23}, {24, 25, 26, 27, 28, 29, 30, 31},
-                                      {32, 33, 34, 35, 36, 37, 38, 39}, {40, 41, 42, 43, 44, 45, 46, 47},
-                                      {48, 49, 50, 51, 52, 53, 54, 55}, {56, 57, 58, 59, 60, 61, 62, 63}};
+                              {16, 17, 18, 19, 20, 21, 22, 23}, {24, 25, 26, 27, 28, 29, 30, 31},
+                              {32, 33, 34, 35, 36, 37, 38, 39}, {40, 41, 42, 43, 44, 45, 46, 47},
+                              {48, 49, 50, 51, 52, 53, 54, 55}, {56, 57, 58, 59, 60, 61, 62, 63}};
     H5O_info2_t       info;
 
     TESTING("Version 2 B-tree chunk index header flush dependencies handled correctly");
@@ -15005,7 +15005,7 @@ test_versionbounds(void)
             srcfile = -1;
 
         } /* for high */
-    } /* for low */
+    }     /* for low */
 
     /* Close dataspaces and properties */
     if (H5Sclose(srcspace) < 0)
@@ -15680,7 +15680,7 @@ test_0sized_dset_metadata_alloc(hid_t fapl_id)
                 if (H5Dclose(dset_id) < 0)
                     FAIL_STACK_ERROR;
             } /* end for */
-        } /* end for */
+        }     /* end for */
 
         /* Close test file */
         if (H5Fclose(file_id) < 0)
@@ -16127,8 +16127,8 @@ main(void)
                 if (H5Fclose(file) < 0)
                     goto error;
             } /* end for new_format */
-        } /* end for minimized_ohdr */
-    } /* end for paged */
+        }     /* end for minimized_ohdr */
+    }         /* end for paged */
 
     /* Close property lists */
     if (H5Pclose(fapl2) < 0)

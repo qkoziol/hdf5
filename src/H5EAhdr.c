@@ -776,7 +776,7 @@ H5EA__hdr_dest(H5EA_hdr_t *hdr)
                                 "unable to destroy extensible array header factory");
                 hdr->elmt_fac.fac[u] = NULL;
             } /* end if */
-        } /* end for */
+        }     /* end for */
 
         /* Free factory array */
         hdr->elmt_fac.fac = (H5FL_fac_head_t **)H5FL_SEQ_FREE(H5FL_fac_head_ptr_t, hdr->elmt_fac.fac);

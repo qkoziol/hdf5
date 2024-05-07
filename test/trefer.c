@@ -3656,7 +3656,7 @@ test_reference(void)
             test_reference_region_1D(low, high); /* Test H5R dataset region reference code for 1-D datasets */
 
         } /* end high bound */
-    } /* end low bound */
+    }     /* end low bound */
 
     /* The following test is currently broken with the Direct VFD */
     if (strcmp(driver_name, "direct") != 0) {

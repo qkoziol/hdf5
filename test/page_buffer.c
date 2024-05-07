@@ -940,7 +940,7 @@ test_lru_processing(hid_t orig_fapl, const char *driver_name)
             fprintf(stderr, "Read different values than written\n");
             TEST_ERROR;
         } /* end if */
-    } /* end for */
+    }     /* end for */
     if (H5SL_count(f->shared->page_buf->slist_ptr) != page_count)
         FAIL_STACK_ERROR;
 
@@ -967,7 +967,7 @@ test_lru_processing(hid_t orig_fapl, const char *driver_name)
             fprintf(stderr, "Read different values than written\n");
             TEST_ERROR;
         } /* end if */
-    } /* end for */
+    }     /* end for */
     if (H5SL_count(f->shared->page_buf->slist_ptr) != page_count)
         FAIL_STACK_ERROR;
 
