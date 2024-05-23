@@ -10,7 +10,7 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /*
- * Purpose: C11 atomicr emulation outines
+ * Purpose: C11 atomic emulation outines
  *
  * Note:  Because this threadsafety framework operates outside the library,
  *        it does not use the error stack (although it does use error macros
@@ -77,7 +77,8 @@ H5TS_atomic_init_int(H5TS_atomic_int_t *obj, int desired)
     FUNC_ENTER_NOAPI_NAMECHECK_ONLY
 
         /* Initialize mutex that protects the "atomic" value */
-        (void) H5TS_mutex_init(&obj->mutex, H5TS_MUTEX_TYPE_PLAIN);
+        (void)
+    H5TS_mutex_init(&obj->mutex, H5TS_MUTEX_TYPE_PLAIN);
 
     /* Set the value */
     obj->value = desired;
@@ -102,7 +103,8 @@ H5TS_atomic_load_int(H5TS_atomic_int_t *obj)
     FUNC_ENTER_NOAPI_NAMECHECK_ONLY
 
         /* Lock mutex that protects the "atomic" value */
-        (void) H5TS_mutex_lock(&obj->mutex);
+        (void)
+    H5TS_mutex_lock(&obj->mutex);
 
     /* Get the value */
     ret_value = obj->value;
@@ -128,7 +130,8 @@ H5TS_atomic_store_int(H5TS_atomic_int_t *obj, int desired)
     FUNC_ENTER_NOAPI_NAMECHECK_ONLY
 
         /* Lock mutex that protects the "atomic" value */
-        (void) H5TS_mutex_lock(&obj->mutex);
+        (void)
+    H5TS_mutex_lock(&obj->mutex);
 
     /* Set the value */
     obj->value = desired;
@@ -158,7 +161,8 @@ H5TS_atomic_fetch_add_int(H5TS_atomic_int_t *obj, int arg)
     FUNC_ENTER_NOAPI_NAMECHECK_ONLY
 
         /* Lock mutex that protects the "atomic" value */
-        (void) H5TS_mutex_lock(&obj->mutex);
+        (void)
+    H5TS_mutex_lock(&obj->mutex);
 
     /* Get the current value */
     ret_value = obj->value;
@@ -191,7 +195,8 @@ H5TS_atomic_fetch_sub_int(H5TS_atomic_int_t *obj, int arg)
     FUNC_ENTER_NOAPI_NAMECHECK_ONLY
 
         /* Lock mutex that protects the "atomic" value */
-        (void) H5TS_mutex_lock(&obj->mutex);
+        (void)
+    H5TS_mutex_lock(&obj->mutex);
 
     /* Get the current value */
     ret_value = obj->value;
@@ -223,7 +228,8 @@ H5TS_atomic_destroy_int(H5TS_atomic_int_t *obj)
     FUNC_ENTER_NOAPI_NAMECHECK_ONLY
 
         /* Destroy mutex that protects the "atomic" value */
-        (void) H5TS_mutex_destroy(&obj->mutex);
+        (void)
+    H5TS_mutex_destroy(&obj->mutex);
 
     FUNC_LEAVE_NOAPI_VOID_NAMECHECK_ONLY
 } /* end H5TS_atomic_destroy_int() */
@@ -246,7 +252,8 @@ H5TS_atomic_init_uint(H5TS_atomic_uint_t *obj, unsigned desired)
     FUNC_ENTER_NOAPI_NAMECHECK_ONLY
 
         /* Initialize mutex that protects the "atomic" value */
-        (void) H5TS_mutex_init(&obj->mutex, H5TS_MUTEX_TYPE_PLAIN);
+        (void)
+    H5TS_mutex_init(&obj->mutex, H5TS_MUTEX_TYPE_PLAIN);
 
     /* Set the value */
     obj->value = desired;
@@ -271,7 +278,8 @@ H5TS_atomic_load_uint(H5TS_atomic_uint_t *obj)
     FUNC_ENTER_NOAPI_NAMECHECK_ONLY
 
         /* Lock mutex that protects the "atomic" value */
-        (void) H5TS_mutex_lock(&obj->mutex);
+        (void)
+    H5TS_mutex_lock(&obj->mutex);
 
     /* Get the value */
     ret_value = obj->value;
@@ -297,7 +305,8 @@ H5TS_atomic_store_uint(H5TS_atomic_uint_t *obj, unsigned desired)
     FUNC_ENTER_NOAPI_NAMECHECK_ONLY
 
         /* Lock mutex that protects the "atomic" value */
-        (void) H5TS_mutex_lock(&obj->mutex);
+        (void)
+    H5TS_mutex_lock(&obj->mutex);
 
     /* Set the value */
     obj->value = desired;
@@ -327,7 +336,8 @@ H5TS_atomic_fetch_add_uint(H5TS_atomic_uint_t *obj, unsigned arg)
     FUNC_ENTER_NOAPI_NAMECHECK_ONLY
 
         /* Lock mutex that protects the "atomic" value */
-        (void) H5TS_mutex_lock(&obj->mutex);
+        (void)
+    H5TS_mutex_lock(&obj->mutex);
 
     /* Get the current value */
     ret_value = obj->value;
@@ -360,7 +370,8 @@ H5TS_atomic_fetch_sub_uint(H5TS_atomic_uint_t *obj, unsigned arg)
     FUNC_ENTER_NOAPI_NAMECHECK_ONLY
 
         /* Lock mutex that protects the "atomic" value */
-        (void) H5TS_mutex_lock(&obj->mutex);
+        (void)
+    H5TS_mutex_lock(&obj->mutex);
 
     /* Get the current value */
     ret_value = obj->value;
@@ -392,7 +403,8 @@ H5TS_atomic_destroy_uint(H5TS_atomic_uint_t *obj)
     FUNC_ENTER_NOAPI_NAMECHECK_ONLY
 
         /* Destroy mutex that protects the "atomic" value */
-        (void) H5TS_mutex_destroy(&obj->mutex);
+        (void)
+    H5TS_mutex_destroy(&obj->mutex);
 
     FUNC_LEAVE_NOAPI_VOID_NAMECHECK_ONLY
 } /* end H5TS_atomic_destroy_uint() */
