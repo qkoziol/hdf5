@@ -2158,6 +2158,9 @@ if test "X$THREADS" = "Xyes"; then
     ## Check for C11 threads, we want to use C11 threads unless the builder
     ## explicitly specifies --with-pthreads=(yes | path(s))
     AC_SUBST([HAVE_C11_THREADS]) HAVE_C11_THREADS=no
+    # Comment out check for C11 threads for now, since it conflicts with the
+    # current --std=c99 compile flags at configuration time.  When we switch to
+    # --std=c11, this can be uncommented.
     #AC_CHECK_HEADERS([threads.h],[HAVE_THREADS_H="yes"],[HAVE_THREADS_H="no"])
     if test "x$HAVE_THREADS_H" = "xyes"; then
         # Default or no --> C11 threads
@@ -4465,7 +4468,7 @@ AM_CONDITIONAL([HAVE_SHARED_CONDITIONAL], [test "X$enable_shared" = "Xyes"])
 AC_CONFIG_FILES([Makefile
                  doxygen/Doxyfile
                  src/Makefile
-                 src/libhdf5.settings
+                 src/libhdf5.settings:src/libhdf5.settings.autotools.in
                  src/H5build_settings.c:${BUILD_SETTINGS_FILE}
                  test/Makefile
                  test/H5srcdir_str.h
