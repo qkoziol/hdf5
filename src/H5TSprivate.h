@@ -47,10 +47,9 @@
 #define H5TS_ONCE_INITIALIZER ONCE_FLAG_INIT
 
 /* Thread macros */
-#define H5TS_thread_self()         thrd_current()
-#define H5TS_thread_equal(t1, t2)  thrd_equal((t1), (t2))
-#define H5TS_THREAD_RETURN_TYPE    H5TS_thread_ret_t
-#define H5TS_THREAD_CANCEL_DISABLE 0
+#define H5TS_thread_self()        thrd_current()
+#define H5TS_thread_equal(t1, t2) thrd_equal((t1), (t2))
+#define H5TS_THREAD_RETURN_TYPE   H5TS_thread_ret_t
 
 /* Mutex macros */
 #define H5TS_MUTEX_TYPE_PLAIN     mtx_plain
@@ -58,17 +57,16 @@
 #else
 #ifdef H5_HAVE_WIN_THREADS
 /* Static initialization values */
-#define H5TS_ONCE_INITIALIZER      INIT_ONCE_STATIC_INIT
+#define H5TS_ONCE_INITIALIZER     INIT_ONCE_STATIC_INIT
 
 /* Thread macros */
-#define H5TS_thread_self()         GetCurrentThread()
-#define H5TS_thread_equal(t1, t2)  (GetThreadId(t1) == GetThreadId(t2))
-#define H5TS_THREAD_RETURN_TYPE    H5TS_thread_ret_t WINAPI
-#define H5TS_THREAD_CANCEL_DISABLE 0
+#define H5TS_thread_self()        GetCurrentThread()
+#define H5TS_thread_equal(t1, t2) (GetThreadId(t1) == GetThreadId(t2))
+#define H5TS_THREAD_RETURN_TYPE   H5TS_thread_ret_t WINAPI
 
 /* Mutex macros */
-#define H5TS_MUTEX_TYPE_PLAIN      0
-#define H5TS_MUTEX_TYPE_RECURSIVE  1
+#define H5TS_MUTEX_TYPE_PLAIN     0
+#define H5TS_MUTEX_TYPE_RECURSIVE 1
 #else
 /* Static initialization values */
 #define H5TS_ONCE_INITIALIZER      PTHREAD_ONCE_INIT
@@ -198,7 +196,7 @@ typedef void (*H5TS_once_init_func_t)(void);
 #if defined(H5_HAVE_STDATOMIC_H) && !defined(__cplusplus)
 typedef atomic_int  H5TS_atomic_int_t;
 typedef atomic_uint H5TS_atomic_uint_t;
-/* Suppress warning about _Atomic keywoard not supported in C99 */
+/* Suppress warning about _Atomic keyword not supported in C99 */
 H5_GCC_CLANG_DIAG_OFF("c99-c11-compat")
 typedef void *_Atomic H5TS_atomic_voidp_t;
 H5_GCC_CLANG_DIAG_ON("c99-c11-compat")
@@ -313,7 +311,6 @@ H5_DLL herr_t H5TS_key_delete(H5TS_key_t key);
 H5_DLL herr_t H5TS_thread_create(H5TS_thread_t *thread, H5TS_thread_start_func_t func, void *udata);
 H5_DLL herr_t H5TS_thread_join(H5TS_thread_t thread, H5TS_thread_ret_t *ret_val);
 H5_DLL herr_t H5TS_thread_detach(H5TS_thread_t thread);
-H5_DLL herr_t H5TS_thread_setcancelstate(int state, int *oldstate);
 H5_DLL void   H5TS_thread_yield(void);
 
 /* Thread pools */
