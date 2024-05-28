@@ -91,6 +91,7 @@
 #define H5TS_atomic_init_int(obj, desired)  atomic_init((obj), (desired))
 #define H5TS_atomic_load_int(obj)           atomic_load(obj)
 #define H5TS_atomic_store_int(obj, desired) atomic_store((obj), (desired))
+#define H5TS_atomic_compare_exchange_strong_ing(obj, arg) atomic_fetch_add((obj), (arg))
 #define H5TS_atomic_fetch_add_int(obj, arg) atomic_fetch_add((obj), (arg))
 #define H5TS_atomic_fetch_sub_int(obj, arg) atomic_fetch_sub((obj), (arg))
 #define H5TS_atomic_destroy_int(obj)        /* void */
@@ -102,7 +103,43 @@
 #define H5TS_atomic_fetch_add_uint(obj, arg) atomic_fetch_add((obj), (arg))
 #define H5TS_atomic_fetch_sub_uint(obj, arg) atomic_fetch_sub((obj), (arg))
 #define H5TS_atomic_destroy_uint(obj)        /* void */
+
+/* atomic_voidp */
+#define H5TS_atomic_init_voidp(obj, desired)  atomic_init((obj), (desired))
+#define H5TS_atomic_exchange_voidp(obj, desired) atomic_exchange((obj), (desired))
+#define H5TS_atomic_compare_exchange_strong_voidp(obj, expected, desired) atomic_compare_exchange_strong((obj), (expected), (desired))
+#define H5TS_atomic_destroy_voidp(obj)       /* void */
 #endif                                       /* H5_HAVE_STDATOMIC_H */
+
+#if defined(H5_HAVE_STDATOMIC_H)
+/* Spinlock operations, built from C11 atomics.  Generally follows the example
+ * here: http://en.cppreference.com/w/cpp/atomic/atomic_flag with some memory
+ * order improvements.
+ *
+ * Note: Pass a pointer to a H5TS_spinlock_t to all the spinlock macros.
+ *
+ */
+
+/* Initialize the lock */
+#define H5TS_SPINLOCK_INIT(lock)     \
+    do {                             \
+        *(lock) = ATOMIC_FLAG_INIT;  \
+    } while (0)
+
+/* Acquire the lock */
+#define H5TS_SPINLOCK_LOCK(lock)                                              \
+    do {                                                                      \
+        while (atomic_flag_test_and_set_explicit(lock, memory_order_acquire)) \
+            ;                                                                 \
+    } while (0)
+
+/* Release the lock */
+#define H5TS_SPINLOCK_UNLOCK(lock)                              \
+    do {                                                        \
+        atomic_flag_clear_explicit(lock, memory_order_release); \
+    } while (0)
+
+#endif
 
 /****************************/
 /* Library Private Typedefs */
@@ -116,6 +153,14 @@ typedef struct H5TS_pool_t H5TS_pool_t;
 
 /* Portability aliases */
 #ifdef H5_HAVE_C11_THREADS
+
+/* Non-recursive readers/writer lock */
+typedef struct H5TS_rwlock_t {
+    mtx_t    mutex;
+    cnd_t    read_cv, write_cv;
+    unsigned readers, writers, read_waiters, write_waiters;
+} H5TS_rwlock_t;
+
 typedef thrd_t H5TS_thread_t;
 typedef int (*H5TS_thread_start_func_t)(void *);
 typedef int       H5TS_thread_ret_t;
@@ -131,17 +176,19 @@ typedef LPTHREAD_START_ROUTINE H5TS_thread_start_func_t;
 typedef DWORD                  H5TS_thread_ret_t;
 typedef DWORD                  H5TS_key_t;
 typedef CRITICAL_SECTION       H5TS_CAPABILITY("mutex") H5TS_mutex_t;
+typedef SRWLOCK                H5TS_rwlock_t;
 typedef CONDITION_VARIABLE     H5TS_cond_t;
 typedef INIT_ONCE              H5TS_once_t;
 typedef PINIT_ONCE_FN          H5TS_once_init_func_t;
 #else
 typedef pthread_t H5TS_thread_t;
 typedef void *(*H5TS_thread_start_func_t)(void *);
-typedef void           *H5TS_thread_ret_t;
-typedef pthread_key_t   H5TS_key_t;
-typedef pthread_mutex_t H5TS_CAPABILITY("mutex") H5TS_mutex_t;
-typedef pthread_cond_t  H5TS_cond_t;
-typedef pthread_once_t  H5TS_once_t;
+typedef void            *H5TS_thread_ret_t;
+typedef pthread_key_t    H5TS_key_t;
+typedef pthread_mutex_t  H5TS_CAPABILITY("mutex") H5TS_mutex_t;
+typedef pthread_rwlock_t H5TS_rwlock_t;
+typedef pthread_cond_t   H5TS_cond_t;
+typedef pthread_once_t   H5TS_once_t;
 typedef void (*H5TS_once_init_func_t)(void);
 #endif
 #endif
@@ -150,6 +197,10 @@ typedef void (*H5TS_once_init_func_t)(void);
 #if defined(H5_HAVE_STDATOMIC_H) && !defined(__cplusplus)
 typedef atomic_int  H5TS_atomic_int_t;
 typedef atomic_uint H5TS_atomic_uint_t;
+/* Suppress warning about _Atomic keywoard not supported in C99 */
+H5_GCC_CLANG_DIAG_OFF("c99-c11-compat")
+typedef void * _Atomic H5TS_atomic_voidp_t;
+H5_GCC_CLANG_DIAG_ON("c99-c11-compat")
 #else
 typedef struct {
     H5TS_mutex_t mutex;
@@ -159,6 +210,10 @@ typedef struct {
     H5TS_mutex_t mutex;
     unsigned     value;
 } H5TS_atomic_uint_t;
+typedef struct {
+    H5TS_mutex_t mutex;
+    void *value;
+} H5TS_atomic_voidp_t;
 #endif
 
 /* Thread Barrier */
@@ -166,12 +221,29 @@ typedef struct {
 typedef pthread_barrier_t H5TS_barrier_t;
 #else
 typedef struct H5TS_barrier_t {
-    H5TS_mutex_t mutex;
-    H5TS_cond_t  cv;
     unsigned     count;
-    unsigned     entered;
-    unsigned     threshold;
+    H5TS_atomic_uint_t openings;
+    H5TS_atomic_uint_t generation;
 } H5TS_barrier_t;
+#endif
+
+#if defined(H5_HAVE_STDATOMIC_H) && !defined(__cplusplus)
+/* Spinlock, built from C11 atomic_flag */
+typedef atomic_flag H5TS_spinlock_t;
+
+/* Fast, fair, scalable (FFS) non-recursive readers/writer lock */
+typedef struct H5TS_ffs_rwlock_local_t {
+    enum {
+        H5TS_FFS_RWLOCK_READER,
+        H5TS_FFS_RWLOCK_WRITER,
+        H5TS_FFS_RWLOCK_ACTIVE_READER
+    } state;                    /* State of local lock component */
+    volatile bool spin;         /* Local 'spin' variable */
+    struct H5TS_ffs_rwlock_local_t *next, *prev; /* Neighbors in list */
+    H5TS_spinlock_t lock;       /* Spin lock for 'local' node */
+} H5TS_ffs_rwlock_local_t;
+
+typedef H5TS_ffs_rwlock_local_t *H5TS_ffs_rwlock_t;
 #endif
 
 /*****************************/
@@ -206,6 +278,23 @@ H5_DLL herr_t H5TS_mutex_trylock(H5TS_mutex_t *mutex, bool *acquired) H5TS_TRY_A
 H5_DLL herr_t H5TS_mutex_unlock(H5TS_mutex_t *mutex) H5TS_RELEASE(*mutex);
 H5_DLL herr_t H5TS_mutex_destroy(H5TS_mutex_t *mutex);
 
+/* R/W locks */
+H5_DLL herr_t H5TS_rwlock_init(H5TS_rwlock_t *lock);
+H5_DLL herr_t H5TS_rwlock_rdlock(H5TS_rwlock_t *lock);
+H5_DLL herr_t H5TS_rwlock_rdunlock(H5TS_rwlock_t *lock);
+H5_DLL herr_t H5TS_rwlock_wrlock(H5TS_rwlock_t *lock);
+H5_DLL herr_t H5TS_rwlock_wrunlock(H5TS_rwlock_t *lock);
+H5_DLL herr_t H5TS_rwlock_destroy(H5TS_rwlock_t *lock);
+
+#if defined(H5_HAVE_STDATOMIC_H) && !defined(__cplusplus)
+/* 'Fast, Fair, Scalable' (FFS) R/W locks */
+H5_DLL herr_t H5TS_ffs_rwlock_init(H5TS_ffs_rwlock_t *lock);
+H5_DLL herr_t H5TS_ffs_rwlock_rdlock(volatile H5TS_ffs_rwlock_t *lock, H5TS_ffs_rwlock_local_t *local);
+H5_DLL herr_t H5TS_ffs_rwlock_rdunlock(volatile H5TS_ffs_rwlock_t *lock, H5TS_ffs_rwlock_local_t *local);
+H5_DLL herr_t H5TS_ffs_rwlock_wrlock(volatile H5TS_ffs_rwlock_t *lock, H5TS_ffs_rwlock_local_t *local);
+H5_DLL herr_t H5TS_ffs_rwlock_wrunlock(volatile H5TS_ffs_rwlock_t *lock, H5TS_ffs_rwlock_local_t *local);
+#endif
+
 /* Condition variable operations */
 H5_DLL herr_t H5TS_cond_init(H5TS_cond_t *cond);
 H5_DLL herr_t H5TS_cond_wait(H5TS_cond_t *cond, H5TS_mutex_t *mutex);
@@ -224,6 +313,7 @@ H5_DLL herr_t H5TS_thread_create(H5TS_thread_t *thread, H5TS_thread_start_func_t
 H5_DLL herr_t H5TS_thread_join(H5TS_thread_t thread, H5TS_thread_ret_t *ret_val);
 H5_DLL herr_t H5TS_thread_detach(H5TS_thread_t thread);
 H5_DLL herr_t H5TS_thread_setcancelstate(int state, int *oldstate);
+H5_DLL void   H5TS_thread_yield(void);
 
 /* Thread pools */
 H5_DLL herr_t H5TS_pool_create(H5TS_pool_t **pool, unsigned num_threads);
@@ -247,6 +337,12 @@ H5_DLL void     H5TS_atomic_store_uint(H5TS_atomic_uint_t *obj, unsigned desired
 H5_DLL unsigned H5TS_atomic_fetch_add_uint(H5TS_atomic_uint_t *obj, unsigned arg);
 H5_DLL unsigned H5TS_atomic_fetch_sub_uint(H5TS_atomic_uint_t *obj, unsigned arg);
 H5_DLL void     H5TS_atomic_destroy_uint(H5TS_atomic_uint_t *obj);
+
+/* void * _Atomic (atomic void pointer) */
+H5_DLL void  H5TS_atomic_init_voidp(H5TS_atomic_voidp_t *obj, void *desired);
+H5_DLL void *H5TS_atomic_exchange_voidp(H5TS_atomic_voidp_t *obj, void *desired);
+H5_DLL bool  H5TS_atomic_compare_exchange_strong_voidp(H5TS_atomic_voidp_t *obj, void **expected, void *desired);
+H5_DLL void  H5TS_atomic_destroy_voidp(H5TS_atomic_voidp_t *obj);
 #endif /* H5_HAVE_STDATOMIC_H */
 
 /* Barrier related function declarations */
