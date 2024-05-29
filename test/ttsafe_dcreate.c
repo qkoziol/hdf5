@@ -26,7 +26,7 @@
  ********************************************************************/
 #include "ttsafe.h"
 
-#ifdef H5_HAVE_THREADSAFE
+#ifdef H5_HAVE_THREADSAFE_API
 
 #define FILENAME   "ttsafe_dcreate.h5"
 #define NUM_THREAD 16
@@ -157,4 +157,4 @@ cleanup_dcreate(void)
 {
     HDunlink(FILENAME);
 }
-#endif /*H5_HAVE_THREADSAFE*/
+#endif /* H5_HAVE_THREADSAFE_API */

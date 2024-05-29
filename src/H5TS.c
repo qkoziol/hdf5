@@ -36,7 +36,7 @@
 #include "H5Eprivate.h" /* Error handling                      */
 #include "H5TSpkg.h"    /* Threadsafety                        */
 
-#ifdef H5_HAVE_THREADSAFE
+#ifdef H5_HAVE_THREADSAFE_API
 
 /****************/
 /* Local Macros */
@@ -139,4 +139,4 @@ H5TSmutex_release(unsigned *lock_count)
 
     FUNC_LEAVE_API_NAMECHECK_ONLY(ret_value)
 } /* end H5TSmutex_release() */
-#endif /* H5_HAVE_THREADSAFE */
+#endif /* H5_HAVE_THREADSAFE_API */

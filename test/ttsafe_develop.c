@@ -17,7 +17,7 @@
 
 #include "ttsafe.h"
 
-#ifdef H5_HAVE_THREADSAFE
+#ifdef H5_HAVE_THREADSAFE_API
 
 typedef struct {
     H5TS_barrier_t *barrier;
@@ -161,4 +161,4 @@ tts_develop_api(void)
 
 } /* end tts_develop_api() */
 
-#endif /*H5_HAVE_THREADSAFE*/
+#endif /* H5_HAVE_THREADSAFE_API */

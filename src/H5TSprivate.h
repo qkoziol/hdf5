@@ -24,10 +24,10 @@
 
 #ifdef H5_HAVE_THREADS
 
-#ifdef H5_HAVE_THREADSAFE
+#ifdef H5_HAVE_THREADSAFE_API
 /* Include package's public headers */
 #include "H5TSdevelop.h"
-#endif /* H5_HAVE_THREADSAFE */
+#endif /* H5_HAVE_THREADSAFE_API */
 
 /**************************/
 /* Library Private Macros */
@@ -253,7 +253,7 @@ typedef H5TS_ffs_rwlock_local_t *H5TS_ffs_rwlock_t;
 /* Library-private Function Prototypes */
 /***************************************/
 
-#ifdef H5_HAVE_THREADSAFE
+#ifdef H5_HAVE_THREADSAFE_API
 /* Library/thread init/term operations */
 H5_DLL void H5TS_term_package(void);
 
@@ -265,7 +265,7 @@ H5_DLL herr_t H5TS_api_unlock(void);
 H5_DLL herr_t               H5TS_thread_id(uint64_t *id);
 H5_DLL struct H5CX_node_t **H5TS_get_api_ctx_ptr(void);
 H5_DLL struct H5E_stack_t  *H5TS_get_err_stack(void);
-#endif /* H5_HAVE_THREADSAFE */
+#endif /* H5_HAVE_THREADSAFE_API */
 
 /* 'Once' operationss */
 H5_DLL herr_t H5TS_once(H5TS_once_t *once, H5TS_once_init_func_t func);

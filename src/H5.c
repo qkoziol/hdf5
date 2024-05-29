@@ -209,14 +209,14 @@ H5_init_library(void)
      */
     if (!H5_dont_atexit_g) {
 
-#if defined(H5_HAVE_THREADSAFE)
+#ifdef H5_HAVE_THREADSAFE_API
         /* Clean up thread resources.
          *
          * This must be pushed before the library cleanup code so it's
          * executed in LIFO order (i.e., last).
          */
         (void)atexit(H5TS_term_package);
-#endif /* H5_HAVE_THREADSAFE */
+#endif /* H5_HAVE_THREADSAFE_API */
 
         /* Normal library termination code */
         (void)atexit(H5_term_library);
@@ -1199,11 +1199,11 @@ H5is_library_threadsafe(bool *is_ts /*out*/)
     FUNC_ENTER_API_NOINIT
 
     if (is_ts) {
-#ifdef H5_HAVE_THREADSAFE
+#ifdef H5_HAVE_THREADSAFE_API
         *is_ts = true;
-#else  /* H5_HAVE_THREADSAFE */
+#else  /* H5_HAVE_THREADSAFE_API */
         *is_ts = false;
-#endif /* H5_HAVE_THREADSAFE */
+#endif /* H5_HAVE_THREADSAFE_API */
     }
     else
         ret_value = FAIL;

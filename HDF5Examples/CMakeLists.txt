@@ -143,6 +143,29 @@ if (HDF_ENABLE_THREADSAFE)
   set (H5_HAVE_THREADSAFE 1)
 endif ()
 
+#-----------------------------------------------------------------------------
+# Option to use multi-threaded concurrency
+#-----------------------------------------------------------------------------
+option (HDF_ENABLE_CONCURRENCY "Enable multi-threaded concurrency" OFF)
+if (HDF_ENABLE_CONCURRENCY)
+  # Check for unsupported options
+  if (HDF_ENABLE_PARALLEL)
+    message (FATAL " **** Parallel and multi-threaded concurrency options are mutually exclusive **** ")
+  endif ()
+
+  # Check for threading package
+  if (NOT Threads_FOUND)
+    message (FATAL_ERROR " **** multi-threaded concurrency option requires a threading package and none was found **** ")
+  endif ()
+
+  # Multi-threaded concurrency and threadsafe options are mutually exclusive
+  if (HDF5_ENABLE_THREADSAFE)
+    message (FATAL_ERROR " **** multi-threaded concurrency and threadsafe options are mutually exclusive **** ")
+  endif ()
+
+  set (H5_HAVE_CONCURRENCY 1)
+endif ()
+
 set_directory_properties(PROPERTIES INCLUDE_DIRECTORIES 
     "${H5EX_HDF5_INCLUDE_DIRS}"
 )

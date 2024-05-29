@@ -36,7 +36,7 @@
 #include "H5Epkg.h"      /* Error handling                      */
 #include "H5TSpkg.h"     /* Threadsafety                        */
 
-#ifdef H5_HAVE_THREADSAFE
+#ifdef H5_HAVE_THREADSAFE_API
 
 /****************/
 /* Local Macros */
@@ -572,4 +572,4 @@ done:
     FUNC_LEAVE_NOAPI_NAMECHECK_ONLY(ret_value)
 } /* end H5TS__tinfo_term() */
 
-#endif /* H5_HAVE_THREADSAFE */
+#endif /* H5_HAVE_THREADSAFE_API */

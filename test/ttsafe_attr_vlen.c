@@ -43,7 +43,7 @@
 
 #include "ttsafe.h"
 
-#ifdef H5_HAVE_THREADSAFE
+#ifdef H5_HAVE_THREADSAFE_API
 
 #define FILENAME    "ttsafe_attr_vlen.h5"
 #define ATTR_NAME   "root_attr"
@@ -174,4 +174,4 @@ cleanup_attr_vlen(void)
     HDunlink(FILENAME);
 }
 
-#endif /*H5_HAVE_THREADSAFE*/
+#endif /* H5_HAVE_THREADSAFE_API */

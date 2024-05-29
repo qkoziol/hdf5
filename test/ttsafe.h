@@ -49,7 +49,7 @@ void tts_rec_rwlock_smoke_check_2(void);
 void tts_rec_rwlock_smoke_check_3(void);
 void tts_rec_rwlock_smoke_check_4(void);
 #endif /* !H5_HAVE_WIN_THREADS */
-#ifdef H5_HAVE_THREADSAFE
+#ifdef H5_HAVE_THREADSAFE_API
 void tts_dcreate(void);
 void tts_error(void);
 void tts_cancel(void);
@@ -65,6 +65,6 @@ void cleanup_cancel(void);
 void cleanup_acreate(void);
 void cleanup_attr_vlen(void);
 
-#endif /* H5_HAVE_THREADSAFE */
+#endif /* H5_HAVE_THREADSAFE_API */
 #endif /* H5_HAVE_THREADS */
 #endif /* TTSAFE_H */

@@ -1153,7 +1153,14 @@ H5_DLL herr_t H5_trace_args(struct H5RS_str_t *rs, const char *type, va_list ap)
 /* global library version information string */
 extern char H5_lib_vers_info_g[];
 
-#ifdef H5_HAVE_THREADSAFE
+/* Both the 'threadsafe' and 'concurrency' options provide threadsafely for
+ * API calls.
+ */
+#if defined(H5_HAVE_THREADSAFE) || defined(H5_HAVE_CONCURRENCY)
+#define H5_HAVE_THREADSAFE_API
+#endif
+
+#ifdef H5_HAVE_THREADSAFE_API
 
 /* Lock headers */
 #include "H5TSprivate.h"
@@ -1194,7 +1201,7 @@ extern char H5_lib_vers_info_g[];
                                                                                                              \
     /* Restore previous thread cancellation state */                                                         \
     H5TS_RESTORE_CANCEL;
-#else                 /* H5_HAVE_THREADSAFE */
+#else                 /* H5_HAVE_THREADSAFE_API */
 
 /* Local variable for saving cancellation state */
 #define H5CANCEL_DECL /* */
@@ -1203,7 +1210,7 @@ extern char H5_lib_vers_info_g[];
 #define H5_API_LOCK   /* */
 #define H5_API_UNLOCK /* */
 
-#endif /* H5_HAVE_THREADSAFE */
+#endif /* H5_HAVE_THREADSAFE_API */
 
 /* Library init / term status (global) */
 extern bool H5_libinit_g; /* Has the library been initialized? */

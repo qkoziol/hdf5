@@ -28,7 +28,7 @@
  ********************************************************************/
 #include "ttsafe.h"
 
-#ifdef H5_HAVE_THREADSAFE
+#ifdef H5_HAVE_THREADSAFE_API
 
 #define NUM_THREAD 16
 #define FILENAME   "ttsafe_error.h5"
@@ -257,4 +257,4 @@ cleanup_error(void)
     HDunlink(FILENAME);
 }
 
-#endif /*H5_HAVE_THREADSAFE*/
+#endif /* H5_HAVE_THREADSAFE_API */

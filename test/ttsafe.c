@@ -57,13 +57,13 @@ tts_is_threadsafe(void)
     bool is_ts;
     bool should_be;
 
-#ifdef H5_HAVE_THREADSAFE
+#ifdef H5_HAVE_THREADSAFE_API
     is_ts     = false;
     should_be = true;
-#else  /* H5_HAVE_THREADSAFE */
+#else  /* H5_HAVE_THREADSAFE_API */
     is_ts     = true;
     should_be = false;
-#endif /* H5_HAVE_THREADSAFE */
+#endif /* H5_HAVE_THREADSAFE_API */
 
     if (H5is_library_threadsafe(&is_ts) != SUCCEED)
         TestErrPrintf("H5_is_library_threadsafe() call failed - test failed\n");
@@ -115,7 +115,7 @@ main(int argc, char *argv[])
 #ifdef H5_HAVE_STDATOMIC_H
     MESSAGE(2, ("\tC11 atomics enabled\n"));
 #endif
-#ifdef H5_HAVE_THREADSAFE
+#ifdef H5_HAVE_THREADSAFE_API
     MESSAGE(2, ("\tThreadsafe API enabled\n"));
 #endif
 #endif
@@ -144,7 +144,7 @@ main(int argc, char *argv[])
             "recursive R/W lock smoke check 4 -- mixed mob", NULL);
 #endif /* !H5_HAVE_WIN_THREADS */
 
-#ifdef H5_HAVE_THREADSAFE
+#ifdef H5_HAVE_THREADSAFE_API
     AddTest("thread_id", tts_thread_id, NULL, "thread IDs", NULL);
 
     AddTest("dcreate", tts_dcreate, cleanup_dcreate, "multi-dataset creation", NULL);
@@ -159,11 +159,11 @@ main(int argc, char *argv[])
     /* Developer API routine tests */
     AddTest("developer", tts_develop_api, NULL, "developer API routines", NULL);
 
-#else /* H5_HAVE_THREADSAFE */
+#else /* H5_HAVE_THREADSAFE_API */
 
     printf("Most thread-safety tests skipped because THREADSAFE not enabled\n");
 
-#endif /* H5_HAVE_THREADSAFE */
+#endif /* H5_HAVE_THREADSAFE_API */
 
 #else /* H5_HAVE_THREADS */
 

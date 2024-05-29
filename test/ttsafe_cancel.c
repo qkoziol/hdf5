@@ -30,7 +30,7 @@
  ********************************************************************/
 #include "ttsafe.h"
 
-#ifdef H5_HAVE_THREADSAFE
+#ifdef H5_HAVE_THREADSAFE_API
 #ifdef H5_HAVE_PTHREAD_H
 
 #define FILENAME    "ttsafe_cancel.h5"
@@ -207,5 +207,5 @@ cleanup_cancel(void)
     HDunlink(FILENAME);
 }
 
-#endif /*H5_HAVE_PTHREAD_H*/
-#endif /*H5_HAVE_THREADSAFE*/
+#endif /* H5_HAVE_PTHREAD_H */
+#endif /* H5_HAVE_THREADSAFE_API */
