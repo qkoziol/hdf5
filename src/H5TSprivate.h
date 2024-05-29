@@ -233,8 +233,9 @@ typedef atomic_flag H5TS_spinlock_t;
 /* Fast, fair, scalable (FFS) non-recursive readers/writer lock */
 typedef struct H5TS_ffs_rwlock_local_t {
     enum {
-        H5TS_FFS_RWLOCK_READER,
         H5TS_FFS_RWLOCK_WRITER,
+        H5TS_FFS_RWLOCK_READER,
+        H5TS_FFS_RWLOCK_READER_UNBLOCKNEXT,
         H5TS_FFS_RWLOCK_ACTIVE_READER
     } state;                                     /* State of local lock component */
     bool                            spin;        /* Local 'spin' variable */
@@ -242,7 +243,7 @@ typedef struct H5TS_ffs_rwlock_local_t {
     H5TS_spinlock_t                 lock;        /* Spin lock for 'local' node */
 } H5TS_ffs_rwlock_local_t;
 
-typedef H5TS_ffs_rwlock_local_t * _Atomic H5TS_ffs_rwlock_t;
+typedef H5TS_ffs_rwlock_local_t *_Atomic H5TS_ffs_rwlock_t;
 #endif
 
 /*****************************/
