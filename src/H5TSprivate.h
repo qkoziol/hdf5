@@ -264,8 +264,12 @@ H5_CLANG_DIAG_ON("c11-extensions")
 /* Library/thread init/term operations */
 H5_DLL void H5TS_term_package(void);
 
+/* Prepare for / restore after user callback */
+H5_DLL herr_t H5TS_user_cb_prepare(void);
+H5_DLL herr_t H5TS_user_cb_restore(void);
+
 /* API locking */
-H5_DLL herr_t H5TS_api_lock(void);
+H5_DLL herr_t H5TS_api_lock(unsigned *dlftt);
 H5_DLL herr_t H5TS_api_unlock(void);
 
 /* Retrieve per-thread info */
@@ -289,6 +293,7 @@ H5_DLL herr_t H5TS_rwlock_init(H5TS_rwlock_t *lock);
 H5_DLL herr_t H5TS_rwlock_rdlock(H5TS_rwlock_t *lock);
 H5_DLL herr_t H5TS_rwlock_rdunlock(H5TS_rwlock_t *lock);
 H5_DLL herr_t H5TS_rwlock_wrlock(H5TS_rwlock_t *lock);
+H5_DLL herr_t H5TS_rwlock_trywrlock(H5TS_rwlock_t *lock, bool *acquired) H5TS_TRY_ACQUIRE(SUCCEED, *lock);
 H5_DLL herr_t H5TS_rwlock_wrunlock(H5TS_rwlock_t *lock);
 H5_DLL herr_t H5TS_rwlock_destroy(H5TS_rwlock_t *lock);
 

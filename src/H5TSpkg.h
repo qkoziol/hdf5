@@ -45,11 +45,16 @@
 #ifdef H5_HAVE_THREADSAFE_API
 /* Info for the global API lock */
 typedef struct H5TS_api_info_t {
+#ifdef H5_HAVE_THREADSAFE
     /* API lock */
     H5TS_mutex_t api_mutex;
 
     /* Count of recursive API calls by the same thread */
     unsigned lock_count;
+#else /* H5_HAVE_CONCURRENCY */
+    /* API lock */
+    H5TS_rwlock_t api_lock;
+#endif
 
     /* Count of # of attempts to acquire API lock */
     H5TS_atomic_uint_t attempt_lock_count;

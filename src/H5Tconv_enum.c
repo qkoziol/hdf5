@@ -22,6 +22,7 @@
 /***********/
 /* Headers */
 /***********/
+#include "H5private.h"
 #include "H5Eprivate.h"
 #include "H5Tconv.h"
 #include "H5Tconv_enum.h"

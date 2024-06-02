@@ -32,6 +32,7 @@
 #include "H5PLprivate.h" /* Plugins                                  */
 #include "H5SLprivate.h" /* Skip lists                               */
 #include "H5Tprivate.h"  /* Datatypes                                */
+#include "H5TSprivate.h" /* Threadsafety                             */
 
 #include "H5FDsec2.h" /* for H5FD_sec2_init() */
 
@@ -300,7 +301,7 @@ H5_term_library(void)
     H5E_auto2_t func;
 
     /* Acquire the API lock */
-    H5CANCEL_DECL
+    FUNC_ENTER_API_VARS
     H5_API_LOCK
 
     /* Don't do anything if the library is already closed */
@@ -1241,3 +1242,63 @@ H5is_library_terminating(bool *is_terminating /*out*/)
 
     FUNC_LEAVE_API_NOINIT(ret_value)
 } /* end H5is_library_terminating() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5_user_cb_prepare
+ *
+ * Purpose:     Prepares library before a user callback
+ *
+ * Return:      SUCCEED/FAIL
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5_user_cb_prepare(H5_user_cb_state_t *state)
+{
+    herr_t ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Prepare H5E package for user callback */
+    if (H5E_user_cb_prepare(&state->h5e_state) < 0)
+        HGOTO_ERROR(H5E_LIB, H5E_CANTSET, FAIL, "unable to prepare H5E package for user callback");
+
+#ifdef H5_HAVE_THREADSAFE_API
+    /* Prepare H5TS package for user callback */
+    if (H5TS_user_cb_prepare() < 0)
+        HGOTO_ERROR(H5E_LIB, H5E_CANTSET, FAIL, "unable to prepare H5TS package for user callback");
+#endif /* H5_HAVE_THREADSAFE_API */
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5_user_cb_prepare() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5_user_cb_restore
+ *
+ * Purpose:     Restores library after a user callback
+ *
+ * Return:      SUCCEED/FAIL
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5_user_cb_restore(const H5_user_cb_state_t *state)
+{
+    herr_t ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Restore H5E package after user callback */
+    if (H5E_user_cb_restore(&state->h5e_state) < 0)
+        HGOTO_ERROR(H5E_LIB, H5E_CANTRESTORE, FAIL, "unable to restore H5E package after user callback");
+
+#ifdef H5_HAVE_THREADSAFE_API
+    /* Restore H5TS package after user callback */
+    if (H5TS_user_cb_restore() < 0)
+        HGOTO_ERROR(H5E_LIB, H5E_CANTRESTORE, FAIL, "unable to restore H5TS package after user callback");
+#endif /* H5_HAVE_THREADSAFE_API */
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5_user_cb_restore() */

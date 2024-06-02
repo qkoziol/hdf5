@@ -2410,7 +2410,7 @@ if test "X${enable_concurrency}" = "Xyes" -a test "X${enable_threadsafe}" = "Xye
     AC_MSG_ERROR([--enable-threadsafe and --enable-concurrency are mutually exclusive])
 fi
 
-case "X-$CONCURRENT" in
+case "X-$CONCURRENCY" in
   X-|X-no)
     AC_MSG_RESULT([no])
     ;;

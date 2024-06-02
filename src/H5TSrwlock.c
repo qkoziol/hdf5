@@ -247,6 +247,59 @@ done:
 } /* end H5TS_rwlock_wrlock() */
 
 /*-------------------------------------------------------------------------
+ * Function: H5TS_rwlock_trywrlock
+ *
+ * Purpose:  Attempt to acquire a write lock
+ *
+ * Return:   Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5TS_rwlock_trywrlock(H5TS_rwlock_t *lock, bool *acquired)
+{
+    bool   have_mutex = false;
+    int    ret;
+    herr_t ret_value  = SUCCEED;
+
+    FUNC_ENTER_NOAPI_NAMECHECK_ONLY
+
+    /* Check argument */
+    if (H5_UNLIKELY(NULL == lock || NULL == acquired))
+        HGOTO_DONE(FAIL);
+
+    /* Acquire the lock's mutex */
+    if (H5_UNLIKELY(thrd_error == (ret = mtx_lock(&lock->mutex))))
+        HGOTO_DONE(FAIL);
+    if (thrd_busy == ret) {
+        /* We did not acquire the lock */
+        *acquired = false;
+        HGOTO_DONE(SUCCEED);
+    }
+    have_mutex = true;
+
+    /* Check for readers or other writers */
+    if (lock->readers || lock->writers)
+        /* We did not acquire the lock */
+        *acquired = false;
+    else {
+        /* Increment # of writers */
+        lock->writers++;
+
+        /* We acquired the lock */
+        *acquired = true;
+    }
+
+done:
+    /* Release mutex, if we're holding it */
+    if (H5_LIKELY(have_mutex))
+        if (H5_UNLIKELY(mtx_unlock(&lock->mutex) != thrd_success))
+            ret_value = FAIL;
+
+    FUNC_LEAVE_NOAPI_NAMECHECK_ONLY(ret_value)
+} /* end H5TS_rwlock_wrlock() */
+
+/*-------------------------------------------------------------------------
  * Function: H5TS_rwlock_wrunlock
  *
  * Purpose:  Release a write lock
@@ -429,6 +482,35 @@ done:
 } /* end H5TS_rwlock_wrlock() */
 
 /*-------------------------------------------------------------------------
+ * Function: H5TS_rwlock_trywrlock
+ *
+ * Purpose:  Attempt to acquire a write lock
+ *
+ * Return:   Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5TS_rwlock_trywrlock(H5TS_rwlock_t *lock, bool *acquired)
+{
+    herr_t ret_value = SUCCEED;
+
+    FUNC_ENTER_NOAPI_NAMECHECK_ONLY
+
+    /* Check argument */
+    if (H5_UNLIKELY(NULL == lock || NULL == acquired))
+        HGOTO_DONE(FAIL);
+
+    if (TryAcquireSRWLockExclusive(lock))
+        *acquired = true;
+    else
+        *acquired = false;
+
+done:
+    FUNC_LEAVE_NOAPI_NAMECHECK_ONLY(ret_value)
+} /* end H5TS_rwlock_trywrlock() */
+
+/*-------------------------------------------------------------------------
  * Function: H5TS_rwlock_wrunlock
  *
  * Purpose:  Release a write lock
@@ -588,6 +670,39 @@ H5TS_rwlock_wrlock(H5TS_rwlock_t *lock)
 done:
     FUNC_LEAVE_NOAPI_NAMECHECK_ONLY(ret_value)
 } /* end H5TS_rwlock_wrlock() */
+
+/*-------------------------------------------------------------------------
+ * Function: H5TS_rwlock_trywrlock
+ *
+ * Purpose:  Attempt to acquire a write lock
+ *
+ * Return:   Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5TS_rwlock_trywrlock(H5TS_rwlock_t *lock, bool *acquired)
+{
+    int    ret;
+    herr_t ret_value = SUCCEED;
+
+    FUNC_ENTER_NOAPI_NAMECHECK_ONLY
+
+    /* Check argument */
+    if (H5_UNLIKELY(NULL == lock || NULL == acquired))
+        HGOTO_DONE(FAIL);
+
+    ret = pthread_rwlock_trywrlock(lock);
+    if (EBUSY == ret)
+        *acquired = false;      /* We did not acquire the lock */
+    else if (H5_UNLIKELY(0 != ret))
+        HGOTO_DONE(FAIL);
+    else
+        *acquired = true; /* We acquired the lock */
+
+done:
+    FUNC_LEAVE_NOAPI_NAMECHECK_ONLY(ret_value)
+} /* end H5TS_rwlock_trywrlock() */
 
 /*-------------------------------------------------------------------------
  * Function: H5TS_rwlock_rdunlock

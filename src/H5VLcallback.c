@@ -228,8 +228,14 @@ H5VLinitialize(hid_t connector_id, hid_t vipl_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a VOL connector ID");
 
     /* Invoke class' callback, if there is one */
-    if (cls->initialize && cls->initialize(vipl_id) < 0)
-        HGOTO_ERROR(H5E_VOL, H5E_CANTCLOSEOBJ, FAIL, "VOL connector did not initialize");
+    if (cls->initialize) {
+        /* Prepare & restore library for user callback */
+        H5_BEFORE_USER_CB(FAIL) {
+            ret_value = cls->initialize(vipl_id);
+        } H5_AFTER_USER_CB(FAIL)
+        if (ret_value < 0)
+            HGOTO_ERROR(H5E_VOL, H5E_CANTCLOSEOBJ, FAIL, "VOL connector did not initialize");
+    }
 
 done:
     FUNC_LEAVE_API_NOINIT(ret_value)
@@ -258,8 +264,14 @@ H5VLterminate(hid_t connector_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a VOL connector ID");
 
     /* Invoke class' callback, if there is one */
-    if (cls->terminate && cls->terminate() < 0)
-        HGOTO_ERROR(H5E_VOL, H5E_CANTCLOSEOBJ, FAIL, "VOL connector did not terminate cleanly");
+    if (cls->terminate) {
+        /* Prepare & restore library for user callback */
+        H5_BEFORE_USER_CB(FAIL) {
+            ret_value =  cls->terminate();
+        } H5_AFTER_USER_CB(FAIL)
+        if (ret_value < 0)
+            HGOTO_ERROR(H5E_VOL, H5E_CANTCLOSEOBJ, FAIL, "VOL connector did not terminate cleanly");
+    }
 
 done:
     FUNC_LEAVE_API_NOINIT(ret_value)
@@ -394,7 +406,11 @@ H5VL_copy_connector_info(const H5VL_class_t *connector, void **dst_info, const v
     if (src_info) {
         /* Allow the connector to copy or do it ourselves */
         if (connector->info_cls.copy) {
-            if (NULL == (new_connector_info = (connector->info_cls.copy)(src_info)))
+            /* Prepare & restore library for user callback */
+            H5_BEFORE_USER_CB(FAIL) {
+                new_connector_info = (connector->info_cls.copy)(src_info);
+            } H5_AFTER_USER_CB(FAIL)
+            if (NULL == new_connector_info)
                 HGOTO_ERROR(H5E_VOL, H5E_CANTCOPY, FAIL, "connector info copy callback failed");
         } /* end if */
         else if (connector->info_cls.size > 0) {
@@ -486,7 +502,11 @@ H5VL_cmp_connector_info(const H5VL_class_t *connector, int *cmp_value, const voi
      * memory buffers
      */
     if (connector->info_cls.cmp) {
-        if ((connector->info_cls.cmp)(cmp_value, info1, info2) < 0)
+        /* Prepare & restore library for user callback */
+        H5_BEFORE_USER_CB(FAIL) {
+            ret_value = (connector->info_cls.cmp)(cmp_value, info1, info2);
+        } H5_AFTER_USER_CB(FAIL)
+        if (ret_value < 0)
             HGOTO_ERROR(H5E_VOL, H5E_CANTCOMPARE, FAIL, "can't compare connector info");
     } /* end if */
     else {
@@ -562,8 +582,12 @@ H5VL_free_connector_info(hid_t connector_id, const void *info)
     if (info) {
         /* Allow the connector to free info or do it ourselves */
         if (cls->info_cls.free) {
-            /* Cast through uintptr_t to de-const memory */
-            if ((cls->info_cls.free)((void *)(uintptr_t)info) < 0)
+            /* Prepare & restore library for user callback */
+            H5_BEFORE_USER_CB(FAIL) {
+                /* Cast through uintptr_t to de-const memory */
+                ret_value = (cls->info_cls.free)((void *)(uintptr_t)info);
+            } H5_AFTER_USER_CB(FAIL)
+            if (ret_value < 0)
                 HGOTO_ERROR(H5E_VOL, H5E_CANTRELEASE, FAIL, "connector info free request failed");
         }
         else
@@ -626,7 +650,11 @@ H5VLconnector_info_to_str(const void *info, hid_t connector_id, char **str)
 
         /* Allow the connector to serialize info */
         if (cls->info_cls.to_str) {
-            if ((cls->info_cls.to_str)(info, str) < 0)
+            /* Prepare & restore library for user callback */
+            H5_BEFORE_USER_CB(FAIL) {
+                ret_value = (cls->info_cls.to_str)(info, str);
+            } H5_AFTER_USER_CB(FAIL)
+            if (ret_value < 0)
                 HGOTO_ERROR(H5E_VOL, H5E_CANTSERIALIZE, FAIL, "can't serialize connector info");
         } /* end if */
         else
@@ -690,7 +718,10 @@ H5VLget_object(void *obj, hid_t connector_id)
 
     /* Check for 'get_object' callback in connector */
     if (cls->wrap_cls.get_object)
-        ret_value = (cls->wrap_cls.get_object)(obj);
+        /* Prepare & restore library for user callback */
+        H5_BEFORE_USER_CB(NULL) {
+            ret_value = (cls->wrap_cls.get_object)(obj);
+        } H5_AFTER_USER_CB(NULL)
     else
         ret_value = obj;
 
@@ -725,8 +756,12 @@ H5VL_get_wrap_ctx(const H5VL_class_t *connector, void *obj, void **wrap_ctx)
         /* Sanity check */
         assert(connector->wrap_cls.free_wrap_ctx);
 
-        /* Invoke connector's callback */
-        if ((connector->wrap_cls.get_wrap_ctx)(obj, wrap_ctx) < 0)
+        /* Prepare & restore library for user callback */
+        H5_BEFORE_USER_CB(FAIL) {
+            /* Invoke connector's callback */
+            ret_value = (connector->wrap_cls.get_wrap_ctx)(obj, wrap_ctx);
+        } H5_AFTER_USER_CB(FAIL)
+        if (ret_value < 0)
             HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "connector wrap context callback failed");
     } /* end if */
     else
@@ -789,8 +824,12 @@ H5VL_wrap_object(const H5VL_class_t *connector, void *wrap_ctx, void *obj, H5I_t
 
     /* Only wrap object if there's a wrap context */
     if (wrap_ctx) {
-        /* Ask the connector to wrap the object */
-        if (NULL == (ret_value = (connector->wrap_cls.wrap_object)(obj, obj_type, wrap_ctx)))
+        /* Prepare & restore library for user callback */
+        H5_BEFORE_USER_CB(NULL) {
+            /* Ask the connector to wrap the object */
+            ret_value = (connector->wrap_cls.wrap_object)(obj, obj_type, wrap_ctx);
+        } H5_AFTER_USER_CB(NULL)
+        if (NULL == ret_value)
             HGOTO_ERROR(H5E_VOL, H5E_CANTGET, NULL, "can't wrap object");
     } /* end if */
     else
@@ -855,8 +894,12 @@ H5VL_unwrap_object(const H5VL_class_t *connector, void *obj)
 
     /* Only unwrap object if there's an unwrap callback */
     if (connector->wrap_cls.wrap_object) {
-        /* Ask the connector to unwrap the object */
-        if (NULL == (ret_value = (connector->wrap_cls.unwrap_object)(obj)))
+        /* Prepare & restore library for user callback */
+        H5_BEFORE_USER_CB(NULL) {
+            /* Ask the connector to unwrap the object */
+            ret_value = (connector->wrap_cls.unwrap_object)(obj);
+        } H5_AFTER_USER_CB(NULL)
+        if (NULL == ret_value)
             HGOTO_ERROR(H5E_VOL, H5E_CANTGET, NULL, "can't unwrap object");
     } /* end if */
     else
@@ -920,8 +963,12 @@ H5VL_free_wrap_ctx(const H5VL_class_t *connector, void *wrap_ctx)
 
     /* Only free wrap context, if it's non-NULL */
     if (wrap_ctx) {
-        /* Free the connector's object wrapping context */
-        if ((connector->wrap_cls.free_wrap_ctx)(wrap_ctx) < 0)
+        /* Prepare & restore library for user callback */
+        H5_BEFORE_USER_CB(FAIL) {
+            /* Free the connector's object wrapping context */
+            ret_value = (connector->wrap_cls.free_wrap_ctx)(wrap_ctx);
+        } H5_AFTER_USER_CB(FAIL)
+        if (ret_value < 0)
             HGOTO_ERROR(H5E_VOL, H5E_CANTRELEASE, FAIL, "connector wrap context free request failed");
     } /* end if */
 
@@ -981,9 +1028,12 @@ H5VL__attr_create(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_cla
     if (NULL == cls->attr_cls.create)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, NULL, "VOL connector has no 'attr create' method");
 
-    /* Call the corresponding VOL callback */
-    if (NULL == (ret_value = (cls->attr_cls.create)(obj, loc_params, name, type_id, space_id, acpl_id,
-                                                    aapl_id, dxpl_id, req)))
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(NULL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->attr_cls.create)(obj, loc_params, name, type_id, space_id, acpl_id, aapl_id, dxpl_id, req);
+    } H5_AFTER_USER_CB(NULL)
+    if (NULL == ret_value)
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, NULL, "attribute create failed");
 
 done:
@@ -1084,8 +1134,12 @@ H5VL__attr_open(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_class
     if (NULL == cls->attr_cls.open)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, NULL, "VOL connector has no 'attr open' method");
 
-    /* Call the corresponding VOL open callback */
-    if (NULL == (ret_value = (cls->attr_cls.open)(obj, loc_params, name, aapl_id, dxpl_id, req)))
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(NULL) {
+        /* Call the corresponding VOL open callback */
+        ret_value = (cls->attr_cls.open)(obj, loc_params, name, aapl_id, dxpl_id, req);
+    } H5_AFTER_USER_CB(NULL)
+    if (NULL == ret_value)
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPENOBJ, NULL, "attribute open failed");
 
 done:
@@ -1183,8 +1237,12 @@ H5VL__attr_read(void *obj, const H5VL_class_t *cls, hid_t mem_type_id, void *buf
     if (NULL == cls->attr_cls.read)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'attr read' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->attr_cls.read)(obj, mem_type_id, buf, dxpl_id, req) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->attr_cls.read)(obj, mem_type_id, buf, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_READERROR, FAIL, "attribute read failed");
 
 done:
@@ -1280,8 +1338,12 @@ H5VL__attr_write(void *obj, const H5VL_class_t *cls, hid_t mem_type_id, const vo
     if (NULL == cls->attr_cls.write)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'attr write' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->attr_cls.write)(obj, mem_type_id, buf, dxpl_id, req) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->attr_cls.write)(obj, mem_type_id, buf, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_WRITEERROR, FAIL, "write failed");
 
 done:
@@ -1377,8 +1439,12 @@ H5VL__attr_get(void *obj, const H5VL_class_t *cls, H5VL_attr_get_args_t *args, h
     if (NULL == cls->attr_cls.get)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'attr get' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->attr_cls.get)(obj, args, dxpl_id, req) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->attr_cls.get)(obj, args, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "attribute get failed");
 
 done:
@@ -1476,9 +1542,13 @@ H5VL__attr_specific(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_c
     if (NULL == cls->attr_cls.specific)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'attr specific' method");
 
-    /* Call the corresponding VOL callback */
-    /* (Must return value from callback, for iterators) */
-    if ((ret_value = (cls->attr_cls.specific)(obj, loc_params, args, dxpl_id, req)) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        /* (Must return value from callback, for iterators) */
+        ret_value = (cls->attr_cls.specific)(obj, loc_params, args, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HERROR(H5E_VOL, H5E_CANTOPERATE, "unable to execute attribute 'specific' callback");
 
 done:
@@ -1578,9 +1648,13 @@ H5VL__attr_optional(void *obj, const H5VL_class_t *cls, H5VL_optional_args_t *ar
     if (NULL == cls->attr_cls.optional)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'attr optional' method");
 
-    /* Call the corresponding VOL callback */
-    /* (Must return value from callback, for iterators) */
-    if ((ret_value = (cls->attr_cls.optional)(obj, args, dxpl_id, req)) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        /* (Must return value from callback, for iterators) */
+        ret_value = (cls->attr_cls.optional)(obj, args, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HERROR(H5E_VOL, H5E_CANTOPERATE, "unable to execute attribute optional callback");
 
 done:
@@ -1720,8 +1794,12 @@ H5VL__attr_close(void *obj, const H5VL_class_t *cls, hid_t dxpl_id, void **req)
     if (NULL == cls->attr_cls.close)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'attr close' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->attr_cls.close)(obj, dxpl_id, req) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->attr_cls.close)(obj, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTCLOSEOBJ, FAIL, "attribute close failed");
 
 done:
@@ -1811,9 +1889,12 @@ H5VL__dataset_create(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_
     if (NULL == cls->dataset_cls.create)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, NULL, "VOL connector has no 'dataset create' method");
 
-    /* Call the corresponding VOL callback */
-    if (NULL == (ret_value = (cls->dataset_cls.create)(obj, loc_params, name, lcpl_id, type_id, space_id,
-                                                       dcpl_id, dapl_id, dxpl_id, req)))
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(NULL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->dataset_cls.create)(obj, loc_params, name, lcpl_id, type_id, space_id, dcpl_id, dapl_id, dxpl_id, req);
+    } H5_AFTER_USER_CB(NULL)
+    if (NULL == ret_value)
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, NULL, "dataset create failed");
 
 done:
@@ -1916,8 +1997,12 @@ H5VL__dataset_open(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_cl
     if (NULL == cls->dataset_cls.open)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, NULL, "VOL connector has no 'dataset open' method");
 
-    /* Call the corresponding VOL callback */
-    if (NULL == (ret_value = (cls->dataset_cls.open)(obj, loc_params, name, dapl_id, dxpl_id, req)))
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(NULL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->dataset_cls.open)(obj, loc_params, name, dapl_id, dxpl_id, req);
+    } H5_AFTER_USER_CB(NULL)
+    if (NULL == ret_value)
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPENOBJ, NULL, "dataset open failed");
 
 done:
@@ -2016,8 +2101,12 @@ H5VL__dataset_read(size_t count, void *obj[], const H5VL_class_t *cls, hid_t mem
     if (NULL == cls->dataset_cls.read)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'dataset read' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->dataset_cls.read)(count, obj, mem_type_id, mem_space_id, file_space_id, dxpl_id, buf, req) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->dataset_cls.read)(count, obj, mem_type_id, mem_space_id, file_space_id, dxpl_id, buf, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_READERROR, FAIL, "dataset read failed");
 
 done:
@@ -2139,8 +2228,12 @@ H5VL__dataset_write(size_t count, void *obj[], const H5VL_class_t *cls, hid_t me
     if (NULL == cls->dataset_cls.write)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'dataset write' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->dataset_cls.write)(count, obj, mem_type_id, mem_space_id, file_space_id, dxpl_id, buf, req) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->dataset_cls.write)(count, obj, mem_type_id, mem_space_id, file_space_id, dxpl_id, buf, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_WRITEERROR, FAIL, "dataset write failed");
 
 done:
@@ -2262,8 +2355,12 @@ H5VL__dataset_get(void *obj, const H5VL_class_t *cls, H5VL_dataset_get_args_t *a
     if (NULL == cls->dataset_cls.get)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'dataset get' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->dataset_cls.get)(obj, args, dxpl_id, req) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->dataset_cls.get)(obj, args, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "dataset get failed");
 
 done:
@@ -2360,8 +2457,12 @@ H5VL__dataset_specific(void *obj, const H5VL_class_t *cls, H5VL_dataset_specific
     if (NULL == cls->dataset_cls.specific)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'dataset specific' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->dataset_cls.specific)(obj, args, dxpl_id, req) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->dataset_cls.specific)(obj, args, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "unable to execute dataset specific callback");
 
 done:
@@ -2459,8 +2560,12 @@ H5VL__dataset_optional(void *obj, const H5VL_class_t *cls, H5VL_optional_args_t 
     if (NULL == cls->dataset_cls.optional)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'dataset optional' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->dataset_cls.optional)(obj, args, dxpl_id, req) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->dataset_cls.optional)(obj, args, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "unable to execute dataset optional callback");
 
 done:
@@ -2602,8 +2707,12 @@ H5VL__dataset_close(void *obj, const H5VL_class_t *cls, hid_t dxpl_id, void **re
     if (NULL == cls->dataset_cls.close)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'dataset close' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->dataset_cls.close)(obj, dxpl_id, req) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->dataset_cls.close)(obj, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTCLOSEOBJ, FAIL, "dataset close failed");
 
 done:
@@ -2706,9 +2815,12 @@ H5VL__datatype_commit(void *obj, const H5VL_loc_params_t *loc_params, const H5VL
     if (NULL == cls->datatype_cls.commit)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, NULL, "VOL connector has no 'datatype commit' method");
 
-    /* Call the corresponding VOL callback */
-    if (NULL == (ret_value = (cls->datatype_cls.commit)(obj, loc_params, name, type_id, lcpl_id, tcpl_id,
-                                                        tapl_id, dxpl_id, req)))
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(NULL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->datatype_cls.commit)(obj, loc_params, name, type_id, lcpl_id, tcpl_id, tapl_id, dxpl_id, req);
+    } H5_AFTER_USER_CB(NULL)
+    if (NULL == ret_value)
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, NULL, "datatype commit failed");
 
 done:
@@ -2809,8 +2921,12 @@ H5VL__datatype_open(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_c
     if (NULL == cls->datatype_cls.open)
         HGOTO_ERROR(H5E_VOL, H5E_CANTINIT, NULL, "no datatype open callback");
 
-    /* Call the corresponding VOL callback */
-    if (NULL == (ret_value = (cls->datatype_cls.open)(obj, loc_params, name, tapl_id, dxpl_id, req)))
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(NULL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->datatype_cls.open)(obj, loc_params, name, tapl_id, dxpl_id, req);
+    } H5_AFTER_USER_CB(NULL)
+    if (NULL == ret_value)
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPENOBJ, NULL, "datatype open failed");
 
 done:
@@ -2909,8 +3025,12 @@ H5VL__datatype_get(void *obj, const H5VL_class_t *cls, H5VL_datatype_get_args_t 
     if (NULL == cls->datatype_cls.get)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'datatype get' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->datatype_cls.get)(obj, args, dxpl_id, req) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->datatype_cls.get)(obj, args, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "datatype 'get' failed");
 
 done:
@@ -3007,8 +3127,12 @@ H5VL__datatype_specific(void *obj, const H5VL_class_t *cls, H5VL_datatype_specif
     if (NULL == cls->datatype_cls.specific)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'datatype specific' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->datatype_cls.specific)(obj, args, dxpl_id, req) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->datatype_cls.specific)(obj, args, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "unable to execute datatype specific callback");
 
 done:
@@ -3106,8 +3230,12 @@ H5VL__datatype_optional(void *obj, const H5VL_class_t *cls, H5VL_optional_args_t
     if (NULL == cls->datatype_cls.optional)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'datatype optional' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->datatype_cls.optional)(obj, args, dxpl_id, req) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->datatype_cls.optional)(obj, args, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "unable to execute datatype optional callback");
 
 done:
@@ -3293,8 +3421,12 @@ H5VL__datatype_close(void *obj, const H5VL_class_t *cls, hid_t dxpl_id, void **r
     if (NULL == cls->datatype_cls.close)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'datatype close' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->datatype_cls.close)(obj, dxpl_id, req) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->datatype_cls.close)(obj, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTCLOSEOBJ, FAIL, "datatype close failed");
 
 done:
@@ -3393,8 +3525,12 @@ H5VL__file_create(const H5VL_class_t *cls, const char *name, unsigned flags, hid
     if (NULL == cls->file_cls.create)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, NULL, "VOL connector has no 'file create' method");
 
-    /* Call the corresponding VOL callback */
-    if (NULL == (ret_value = (cls->file_cls.create)(name, flags, fcpl_id, fapl_id, dxpl_id, req)))
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(NULL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->file_cls.create)(name, flags, fcpl_id, fapl_id, dxpl_id, req);
+    } H5_AFTER_USER_CB(NULL)
+    if (NULL == ret_value)
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, NULL, "file create failed");
 
 done:
@@ -3496,8 +3632,12 @@ H5VL__file_open(const H5VL_class_t *cls, const char *name, unsigned flags, hid_t
     if (NULL == cls->file_cls.open)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, NULL, "VOL connector has no 'file open' method");
 
-    /* Call the corresponding VOL callback */
-    if (NULL == (ret_value = (cls->file_cls.open)(name, flags, fapl_id, dxpl_id, req)))
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(NULL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->file_cls.open)(name, flags, fapl_id, dxpl_id, req);
+    } H5_AFTER_USER_CB(NULL)
+    if (NULL == ret_value)
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPENOBJ, NULL, "open failed");
 
 done:
@@ -3755,8 +3895,12 @@ H5VL__file_get(void *obj, const H5VL_class_t *cls, H5VL_file_get_args_t *args, h
     if (NULL == cls->file_cls.get)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'file get' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->file_cls.get)(obj, args, dxpl_id, req) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->file_cls.get)(obj, args, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "file get failed");
 
 done:
@@ -3852,8 +3996,12 @@ H5VL__file_specific(void *obj, const H5VL_class_t *cls, H5VL_file_specific_args_
     if (NULL == cls->file_cls.specific)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'file specific' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->file_cls.specific)(obj, args, dxpl_id, req) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->file_cls.specific)(obj, args, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "file specific failed");
 
 done:
@@ -3983,8 +4131,12 @@ H5VL__file_optional(void *obj, const H5VL_class_t *cls, H5VL_optional_args_t *ar
     if (NULL == cls->file_cls.optional)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'file optional' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->file_cls.optional)(obj, args, dxpl_id, req) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->file_cls.optional)(obj, args, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "file optional failed");
 
 done:
@@ -4126,8 +4278,12 @@ H5VL__file_close(void *obj, const H5VL_class_t *cls, hid_t dxpl_id, void **req)
     if (NULL == cls->file_cls.close)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'file close' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->file_cls.close)(obj, dxpl_id, req) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->file_cls.close)(obj, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTCLOSEFILE, FAIL, "file close failed");
 
 done:
@@ -4223,9 +4379,12 @@ H5VL__group_create(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_cl
     if (NULL == cls->group_cls.create)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, NULL, "VOL connector has no 'group create' method");
 
-    /* Call the corresponding VOL callback */
-    if (NULL ==
-        (ret_value = (cls->group_cls.create)(obj, loc_params, name, lcpl_id, gcpl_id, gapl_id, dxpl_id, req)))
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(NULL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->group_cls.create)(obj, loc_params, name, lcpl_id, gcpl_id, gapl_id, dxpl_id, req);
+    } H5_AFTER_USER_CB(NULL)
+    if (NULL == ret_value)
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, NULL, "group create failed");
 
 done:
@@ -4325,8 +4484,12 @@ H5VL__group_open(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_clas
     if (NULL == cls->group_cls.open)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, NULL, "VOL connector has no 'group open' method");
 
-    /* Call the corresponding VOL callback */
-    if (NULL == (ret_value = (cls->group_cls.open)(obj, loc_params, name, gapl_id, dxpl_id, req)))
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(NULL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->group_cls.open)(obj, loc_params, name, gapl_id, dxpl_id, req);
+    } H5_AFTER_USER_CB(NULL)
+    if (NULL == ret_value)
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPENOBJ, NULL, "group open failed");
 
 done:
@@ -4424,8 +4587,12 @@ H5VL__group_get(void *obj, const H5VL_class_t *cls, H5VL_group_get_args_t *args,
     if (NULL == cls->group_cls.get)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'group get' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->group_cls.get)(obj, args, dxpl_id, req) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->group_cls.get)(obj, args, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "group get failed");
 
 done:
@@ -4521,8 +4688,12 @@ H5VL__group_specific(void *obj, const H5VL_class_t *cls, H5VL_group_specific_arg
     if (NULL == cls->group_cls.specific)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'group specific' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->group_cls.specific)(obj, args, dxpl_id, req) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->group_cls.specific)(obj, args, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "unable to execute group specific callback");
 
 done:
@@ -4619,9 +4790,13 @@ H5VL__group_optional(void *obj, const H5VL_class_t *cls, H5VL_optional_args_t *a
     if (NULL == cls->group_cls.optional)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'group optional' method");
 
-    /* Call the corresponding VOL callback */
-    /* (Must return value from callback, for iterators) */
-    if ((ret_value = (cls->group_cls.optional)(obj, args, dxpl_id, req)) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        /* (Must return value from callback, for iterators) */
+        ret_value = (cls->group_cls.optional)(obj, args, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HERROR(H5E_VOL, H5E_CANTOPERATE, "unable to execute group optional callback");
 
 done:
@@ -4765,8 +4940,12 @@ H5VL__group_close(void *obj, const H5VL_class_t *cls, hid_t dxpl_id, void **req)
     if (NULL == cls->group_cls.close)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'group close' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->group_cls.close)(obj, dxpl_id, req) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->group_cls.close)(obj, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTCLOSEOBJ, FAIL, "group close failed");
 
 done:
@@ -4864,8 +5043,12 @@ H5VL__link_create(H5VL_link_create_args_t *args, void *obj, const H5VL_loc_param
     if (NULL == cls->link_cls.create)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'link create' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->link_cls.create)(args, obj, loc_params, lcpl_id, lapl_id, dxpl_id, req) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->link_cls.create)(args, obj, loc_params, lcpl_id, lapl_id, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, FAIL, "link create failed");
 
 done:
@@ -4975,8 +5158,12 @@ H5VL__link_copy(void *src_obj, const H5VL_loc_params_t *loc_params1, void *dst_o
     if (NULL == cls->link_cls.copy)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'link copy' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->link_cls.copy)(src_obj, loc_params1, dst_obj, loc_params2, lcpl_id, lapl_id, dxpl_id, req) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->link_cls.copy)(src_obj, loc_params1, dst_obj, loc_params2, lcpl_id, lapl_id, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTCOPY, FAIL, "link copy failed");
 
 done:
@@ -5080,8 +5267,12 @@ H5VL__link_move(void *src_obj, const H5VL_loc_params_t *loc_params1, void *dst_o
     if (NULL == cls->link_cls.move)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'link move' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->link_cls.move)(src_obj, loc_params1, dst_obj, loc_params2, lcpl_id, lapl_id, dxpl_id, req) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->link_cls.move)(src_obj, loc_params1, dst_obj, loc_params2, lcpl_id, lapl_id, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTMOVE, FAIL, "link move failed");
 
 done:
@@ -5184,8 +5375,12 @@ H5VL__link_get(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_class_
     if (NULL == cls->link_cls.get)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'link get' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->link_cls.get)(obj, loc_params, args, dxpl_id, req) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->link_cls.get)(obj, loc_params, args, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "link get failed");
 
 done:
@@ -5283,9 +5478,13 @@ H5VL__link_specific(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_c
     if (NULL == cls->link_cls.specific)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'link specific' method");
 
-    /* Call the corresponding VOL callback */
-    /* (Must return value from callback, for iterators) */
-    if ((ret_value = (cls->link_cls.specific)(obj, loc_params, args, dxpl_id, req)) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        /* (Must return value from callback, for iterators) */
+        ret_value = (cls->link_cls.specific)(obj, loc_params, args, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HERROR(H5E_VOL, H5E_CANTOPERATE, "unable to execute link specific callback");
 
 done:
@@ -5386,8 +5585,12 @@ H5VL__link_optional(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_c
     if (NULL == cls->link_cls.optional)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'link optional' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->link_cls.optional)(obj, loc_params, args, dxpl_id, req) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->link_cls.optional)(obj, loc_params, args, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "unable to execute link optional callback");
 
 done:
@@ -5544,8 +5747,12 @@ H5VL__object_open(void *obj, const H5VL_loc_params_t *params, const H5VL_class_t
     if (NULL == cls->object_cls.open)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, NULL, "VOL connector has no 'object open' method");
 
-    /* Call the corresponding VOL callback */
-    if (NULL == (ret_value = (cls->object_cls.open)(obj, params, opened_type, dxpl_id, req)))
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(NULL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->object_cls.open)(obj, params, opened_type, dxpl_id, req);
+    } H5_AFTER_USER_CB(NULL)
+    if (NULL == ret_value)
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPENOBJ, NULL, "object open failed");
 
 done:
@@ -5645,9 +5852,12 @@ H5VL__object_copy(void *src_obj, const H5VL_loc_params_t *src_loc_params, const 
     if (NULL == cls->object_cls.copy)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'object copy' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->object_cls.copy)(src_obj, src_loc_params, src_name, dst_obj, dst_loc_params, dst_name,
-                               ocpypl_id, lcpl_id, dxpl_id, req) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->object_cls.copy)(src_obj, src_loc_params, src_name, dst_obj, dst_loc_params, dst_name, ocpypl_id, lcpl_id, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTCOPY, FAIL, "object copy failed");
 
 done:
@@ -5754,8 +5964,12 @@ H5VL__object_get(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_clas
     if (NULL == cls->object_cls.get)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'object get' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->object_cls.get)(obj, loc_params, args, dxpl_id, req) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->object_cls.get)(obj, loc_params, args, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "get failed");
 
 done:
@@ -5853,9 +6067,13 @@ H5VL__object_specific(void *obj, const H5VL_loc_params_t *loc_params, const H5VL
     if (NULL == cls->object_cls.specific)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'object specific' method");
 
-    /* Call the corresponding VOL callback */
-    /* (Must return value from callback, for iterators) */
-    if ((ret_value = (cls->object_cls.specific)(obj, loc_params, args, dxpl_id, req)) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        /* (Must return value from callback, for iterators) */
+        ret_value = (cls->object_cls.specific)(obj, loc_params, args, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HERROR(H5E_VOL, H5E_CANTOPERATE, "object specific failed");
 
 done:
@@ -5925,9 +6143,13 @@ H5VLobject_specific(void *obj, const H5VL_loc_params_t *loc_params, hid_t connec
     if (NULL == (cls = (H5VL_class_t *)H5I_object_verify(connector_id, H5I_VOL)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a VOL connector ID");
 
-    /* Bypass the H5VLint layer, calling the VOL callback directly */
-    /* (Must return value from callback, for iterators) */
-    if ((ret_value = (cls->object_cls.specific)(obj, loc_params, args, dxpl_id, req)) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Bypass the H5VLint layer, calling the VOL callback directly */
+        /* (Must return value from callback, for iterators) */
+        ret_value = (cls->object_cls.specific)(obj, loc_params, args, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HERROR(H5E_VOL, H5E_CANTOPERATE, "unable to execute object specific callback");
 
 done:
@@ -5956,8 +6178,12 @@ H5VL__object_optional(void *obj, const H5VL_loc_params_t *loc_params, const H5VL
     if (NULL == cls->object_cls.optional)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'object optional' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->object_cls.optional)(obj, loc_params, args, dxpl_id, req) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->object_cls.optional)(obj, loc_params, args, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "unable to execute object optional callback");
 
 done:
@@ -6122,8 +6348,12 @@ H5VL__introspect_get_conn_cls(void *obj, const H5VL_class_t *cls, H5VL_get_conn_
     if (NULL == cls->introspect_cls.get_conn_cls)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'get_conn_cls' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->introspect_cls.get_conn_cls)(obj, lvl, conn_cls) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->introspect_cls.get_conn_cls)(obj, lvl, conn_cls);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "can't query connector class");
 
 done:
@@ -6231,8 +6461,12 @@ H5VL_introspect_get_cap_flags(const void *info, const H5VL_class_t *cls, uint64_
     if (NULL == cls->introspect_cls.get_cap_flags)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'get_cap_flags' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->introspect_cls.get_cap_flags)(info, cap_flags) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->introspect_cls.get_cap_flags)(info, cap_flags);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "can't query connector capability flags");
 
 done:
@@ -6297,8 +6531,12 @@ H5VL__introspect_opt_query(void *obj, const H5VL_class_t *cls, H5VL_subclass_t s
     if (NULL == cls->introspect_cls.opt_query)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'opt_query' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->introspect_cls.opt_query)(obj, subcls, opt_type, flags) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->introspect_cls.opt_query)(obj, subcls, opt_type, flags);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "can't query optional operation support");
 
 done:
@@ -6399,8 +6637,12 @@ H5VL__request_wait(void *req, const H5VL_class_t *cls, uint64_t timeout, H5VL_re
     if (NULL == cls->request_cls.wait)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'async wait' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->request_cls.wait)(req, timeout, status) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->request_cls.wait)(req, timeout, status);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTRELEASE, FAIL, "request wait failed");
 
 done:
@@ -6501,8 +6743,12 @@ H5VL__request_notify(void *req, const H5VL_class_t *cls, H5VL_request_notify_t c
     if (NULL == cls->request_cls.notify)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'async notify' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->request_cls.notify)(req, cb, ctx) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->request_cls.notify)(req, cb, ctx);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTRELEASE, FAIL, "request notify failed");
 
 done:
@@ -6604,8 +6850,12 @@ H5VL__request_cancel(void *req, const H5VL_class_t *cls, H5VL_request_status_t *
     if (NULL == cls->request_cls.cancel)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'async cancel' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->request_cls.cancel)(req, status) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->request_cls.cancel)(req, status);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTRELEASE, FAIL, "request cancel failed");
 
 done:
@@ -6705,10 +6955,13 @@ H5VL__request_specific(void *req, const H5VL_class_t *cls, H5VL_request_specific
     if (NULL == cls->request_cls.specific)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'async specific' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->request_cls.specific)(req, args) < 0)
-        HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL,
-                    "unable to execute asynchronous request specific callback");
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->request_cls.specific)(req, args);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
+        HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "unable to execute asynchronous request specific callback");
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -6809,10 +7062,13 @@ H5VL__request_optional(void *req, const H5VL_class_t *cls, H5VL_optional_args_t 
     if (NULL == cls->request_cls.optional)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'async optional' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->request_cls.optional)(req, args) < 0)
-        HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL,
-                    "unable to execute asynchronous request optional callback");
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->request_cls.optional)(req, args);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
+        HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "unable to execute asynchronous request optional callback");
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -6949,8 +7205,12 @@ H5VL__request_free(void *req, const H5VL_class_t *cls)
     if (NULL == cls->request_cls.free)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'async free' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->request_cls.free)(req) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->request_cls.free)(req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTRELEASE, FAIL, "request free failed");
 
 done:
@@ -7051,8 +7311,12 @@ H5VL__blob_put(void *obj, const H5VL_class_t *cls, const void *buf, size_t size,
     if (NULL == cls->blob_cls.put)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'blob put' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->blob_cls.put)(obj, buf, size, blob_id, ctx) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->blob_cls.put)(obj, buf, size, blob_id, ctx);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTSET, FAIL, "blob put callback failed");
 
 done:
@@ -7145,8 +7409,12 @@ H5VL__blob_get(void *obj, const H5VL_class_t *cls, const void *blob_id, void *bu
     if (NULL == cls->blob_cls.get)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'blob get' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->blob_cls.get)(obj, blob_id, buf, size, ctx) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->blob_cls.get)(obj, blob_id, buf, size, ctx);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "blob get callback failed");
 
 done:
@@ -7238,8 +7506,12 @@ H5VL__blob_specific(void *obj, const H5VL_class_t *cls, void *blob_id, H5VL_blob
     if (NULL == cls->blob_cls.specific)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'blob specific' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->blob_cls.specific)(obj, blob_id, args) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->blob_cls.specific)(obj, blob_id, args);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "unable to execute blob specific callback");
 
 done:
@@ -7331,8 +7603,12 @@ H5VL__blob_optional(void *obj, const H5VL_class_t *cls, void *blob_id, H5VL_opti
     if (NULL == cls->blob_cls.optional)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'blob optional' method");
 
-    /* Call the corresponding VOL callback */
-    if ((cls->blob_cls.optional)(obj, blob_id, args) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->blob_cls.optional)(obj, blob_id, args);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "unable to execute blob optional callback");
 
 done:
@@ -7438,7 +7714,11 @@ H5VL__token_cmp(void *obj, const H5VL_class_t *cls, const H5O_token_t *token1, c
          * memory buffers.
          */
         if (cls->token_cls.cmp) {
-            if ((cls->token_cls.cmp)(obj, token1, token2, cmp_value) < 0)
+            /* Prepare & restore library for user callback */
+            H5_BEFORE_USER_CB(FAIL) {
+                ret_value = (cls->token_cls.cmp)(obj, token1, token2, cmp_value);
+            } H5_AFTER_USER_CB(FAIL)
+            if (ret_value < 0)
                 HGOTO_ERROR(H5E_VOL, H5E_CANTCOMPARE, FAIL, "can't compare object tokens");
         } /* end if */
         else
@@ -7550,7 +7830,11 @@ H5VL__token_to_str(void *obj, H5I_type_t obj_type, const H5VL_class_t *cls, cons
      *  callback, otherwise just set the token_str to NULL.
      */
     if (cls->token_cls.to_str) {
-        if ((cls->token_cls.to_str)(obj, obj_type, token, token_str) < 0)
+        /* Prepare & restore library for user callback */
+        H5_BEFORE_USER_CB(FAIL) {
+            ret_value = (cls->token_cls.to_str)(obj, obj_type, token, token_str);
+        } H5_AFTER_USER_CB(FAIL)
+        if (ret_value < 0)
             HGOTO_ERROR(H5E_VOL, H5E_CANTSERIALIZE, FAIL, "can't serialize object token");
     } /* end if */
     else
@@ -7656,7 +7940,11 @@ H5VL__token_from_str(void *obj, H5I_type_t obj_type, const H5VL_class_t *cls, co
      *  callback, otherwise just set the token to H5_TOKEN_UNDEF.
      */
     if (cls->token_cls.from_str) {
-        if ((cls->token_cls.from_str)(obj, obj_type, token_str, token) < 0)
+        /* Prepare & restore library for user callback */
+        H5_BEFORE_USER_CB(FAIL) {
+            ret_value = (cls->token_cls.from_str)(obj, obj_type, token_str, token);
+        } H5_AFTER_USER_CB(FAIL)
+        if (ret_value < 0)
             HGOTO_ERROR(H5E_VOL, H5E_CANTUNSERIALIZE, FAIL, "can't deserialize object token string");
     } /* end if */
     else
@@ -7755,8 +8043,12 @@ H5VL__optional(void *obj, const H5VL_class_t *cls, H5VL_optional_args_t *args, h
     if (NULL == cls->optional)
         HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "VOL connector has no 'optional' method");
 
-    /* Call the corresponding VOL callback */
-    if ((ret_value = (cls->optional)(obj, args, dxpl_id, req)) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL) {
+        /* Call the corresponding VOL callback */
+        ret_value = (cls->optional)(obj, args, dxpl_id, req);
+    } H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HERROR(H5E_VOL, H5E_CANTOPERATE, "unable to execute optional callback");
 
 done:
