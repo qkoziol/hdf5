@@ -84,8 +84,8 @@ H5TS_barrier_init(H5TS_barrier_t *barrier, unsigned count)
 #else
     /* Initialize fields */
     barrier->count = count;
-    H5TS_atomic_store_uint(&barrier->openings, count);
-    H5TS_atomic_store_uint(&barrier->generation, 0);
+    H5TS_atomic_init_uint(&barrier->openings, count);
+    H5TS_atomic_init_uint(&barrier->generation, 0);
 #endif
 
 done:
