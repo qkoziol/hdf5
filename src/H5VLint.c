@@ -611,7 +611,8 @@ H5VL_conn_copy(H5VL_connector_prop_t *connector_prop)
                     HGOTO_ERROR(H5E_PLIST, H5E_BADTYPE, FAIL, "not a VOL connector ID");
 
                 /* Allocate and copy connector info */
-                if (H5VL_copy_connector_info(connector, &new_connector_info, connector_prop->connector_info) < 0)
+                if (H5VL_copy_connector_info(connector, &new_connector_info, connector_prop->connector_info) <
+                    0)
                     HGOTO_ERROR(H5E_PLIST, H5E_CANTCOPY, FAIL, "connector info copy failed");
 
                 /* Set the connector info to the copy */
@@ -1650,9 +1651,11 @@ H5VL__connector_str_to_info(const char *str, hid_t connector_id, void **info)
         /* Allow the connector to deserialize info */
         if (cls->info_cls.from_str) {
             /* Prepare & restore library for user callback */
-            H5_BEFORE_USER_CB(FAIL) {
+            H5_BEFORE_USER_CB(FAIL)
+            {
                 ret_value = (cls->info_cls.from_str)(str, info);
-            } H5_AFTER_USER_CB(FAIL)
+            }
+            H5_AFTER_USER_CB(FAIL)
             if (ret_value < 0)
                 HGOTO_ERROR(H5E_VOL, H5E_CANTUNSERIALIZE, FAIL, "can't deserialize connector info");
         } /* end if */
@@ -1770,11 +1773,12 @@ H5VL_object_data(const H5VL_object_t *vol_obj)
     /* Check for 'get_object' callback in connector */
     if (vol_obj->connector->cls->wrap_cls.get_object)
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB_NOERR(NULL) {
+        H5_BEFORE_USER_CB_NOERR(NULL)
+        {
             ret_value = (vol_obj->connector->cls->wrap_cls.get_object)(vol_obj->data);
-        } H5_AFTER_USER_CB_NOERR(NULL)
-    else
-        ret_value = vol_obj->data;
+        }
+    H5_AFTER_USER_CB_NOERR(NULL)
+    else ret_value = vol_obj->data;
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5VL_object_data() */
@@ -2185,12 +2189,14 @@ H5VL__free_vol_wrapper(H5VL_wrap_ctx_t *vol_wrap_ctx)
     /* If there is a VOL connector object wrapping context, release it */
     if (vol_wrap_ctx->obj_wrap_ctx)
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB(FAIL) {
+        H5_BEFORE_USER_CB(FAIL)
+        {
             /* Release the VOL connector's object wrapping context */
             ret_value = (*vol_wrap_ctx->connector->cls->wrap_cls.free_wrap_ctx)(vol_wrap_ctx->obj_wrap_ctx);
-        } H5_AFTER_USER_CB(FAIL)
-        if (ret_value < 0)
-            HGOTO_ERROR(H5E_VOL, H5E_CANTRELEASE, FAIL, "unable to release connector's object wrapping context");
+        }
+    H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
+        HGOTO_ERROR(H5E_VOL, H5E_CANTRELEASE, FAIL, "unable to release connector's object wrapping context");
 
     /* Decrement refcount on connector */
     if (H5VL_conn_dec_rc(vol_wrap_ctx->connector) < 0)
@@ -2241,10 +2247,12 @@ H5VL_set_vol_wrapper(const H5VL_object_t *vol_obj)
             assert(vol_obj->connector->cls->wrap_cls.free_wrap_ctx);
 
             /* Prepare & restore library for user callback */
-            H5_BEFORE_USER_CB(FAIL) {
+            H5_BEFORE_USER_CB(FAIL)
+            {
                 /* Get the wrap context from the connector */
                 ret_value = (vol_obj->connector->cls->wrap_cls.get_wrap_ctx)(vol_obj->data, &obj_wrap_ctx);
-            } H5_AFTER_USER_CB(FAIL)
+            }
+            H5_AFTER_USER_CB(FAIL)
             if (ret_value < 0)
                 HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "can't retrieve VOL connector's object wrap context");
         } /* end if */

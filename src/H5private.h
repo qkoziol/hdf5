@@ -1061,35 +1061,34 @@ extern const char H5build_settings[];
 /* Prepare to call / return from user callback */
 #include "H5Eprivate.h"
 typedef struct H5_user_cb_state_t {
-    H5E_user_cb_state_t h5e_state;      /* State for H5E package */
+    H5E_user_cb_state_t h5e_state; /* State for H5E package */
 } H5_user_cb_state_t;
 
-#define H5_BEFORE_USER_CB(err)              \
-    {                                       \
-        H5_user_cb_state_t state;           \
-                                            \
-        if (H5_user_cb_prepare(&state) < 0) \
+#define H5_BEFORE_USER_CB(err)                                                                               \
+    {                                                                                                        \
+        H5_user_cb_state_t state;                                                                            \
+                                                                                                             \
+        if (H5_user_cb_prepare(&state) < 0)                                                                  \
             HGOTO_ERROR(H5E_LIB, H5E_CANTSET, (err), "preparation for user callback failed");
 
-#define H5_AFTER_USER_CB(err)                                                                     \
-        if (H5_user_cb_restore(&state) < 0)                                                       \
-            HGOTO_ERROR(H5E_LIB, H5E_CANTRESTORE, (err), "preparation for user callback failed"); \
+#define H5_AFTER_USER_CB(err)                                                                                \
+    if (H5_user_cb_restore(&state) < 0)                                                                      \
+        HGOTO_ERROR(H5E_LIB, H5E_CANTRESTORE, (err), "preparation for user callback failed");                \
     }
 
-#define H5_BEFORE_USER_CB_NOERR(err)        \
-    {                                       \
-        H5_user_cb_state_t state;           \
-                                            \
-        if (H5_user_cb_prepare(&state) < 0) \
-            ret_value = (err);              \
+#define H5_BEFORE_USER_CB_NOERR(err)                                                                         \
+    {                                                                                                        \
+        H5_user_cb_state_t state;                                                                            \
+                                                                                                             \
+        if (H5_user_cb_prepare(&state) < 0)                                                                  \
+            ret_value = (err);                                                                               \
         else {
 
-#define H5_AFTER_USER_CB_NOERR(err)             \
-            if (H5_user_cb_restore(&state) < 0) \
-                ret_value = (err);              \
-        } /* end else */                        \
+#define H5_AFTER_USER_CB_NOERR(err)                                                                          \
+    if (H5_user_cb_restore(&state) < 0)                                                                      \
+        ret_value = (err);                                                                                   \
+    } /* end else */                                                                                         \
     }
-
 
 /*-------------------------------------------------------------------------
  * Purpose: These macros are used to track arguments in event sets and are
@@ -1226,37 +1225,37 @@ extern char H5_lib_vers_info_g[];
 #define H5DLFTT_DECL /* */
 
 /* Macros for entering & leaving an API routine in a threadsafe manner */
-#define H5_API_LOCK                                                                \
-    /* Acquire the API lock */                                                     \
-    H5TS_api_lock();                                                               \
-                                                                                   \
-    /* Set thread cancellation state to 'disable', and remember previous state */  \
+#define H5_API_LOCK                                                                                          \
+    /* Acquire the API lock */                                                                               \
+    H5TS_api_lock();                                                                                         \
+                                                                                                             \
+    /* Set thread cancellation state to 'disable', and remember previous state */                            \
     H5TS_DISABLE_CANCEL;
-#define H5_API_UNLOCK                                                          \
-    /* Release the API lock */                                                 \
-    H5TS_api_unlock();                                                         \
-                                                                               \
-    /* Restore previous thread cancellation state */                           \
+#define H5_API_UNLOCK                                                                                        \
+    /* Release the API lock */                                                                               \
+    H5TS_api_unlock();                                                                                       \
+                                                                                                             \
+    /* Restore previous thread cancellation state */                                                         \
     H5TS_RESTORE_CANCEL;
 #else /* H5_HAVE_CONCURRENCY */
 /* Local variable for 'disable locking for this thread' (DLFTT) state */
 #define H5DLFTT_DECL unsigned dlftt = 0;
 
 /* Macros for entering & leaving an API routine in a threadsafe manner */
-#define H5_API_LOCK                                                                \
-    /* Acquire the API lock */                                                     \
-    H5TS_api_lock(&dlftt);                                                         \
-                                                                                   \
-    /* Set thread cancellation state to 'disable', and remember previous state */  \
-    if (0 == dlftt)                                                                \
+#define H5_API_LOCK                                                                                          \
+    /* Acquire the API lock */                                                                               \
+    H5TS_api_lock(&dlftt);                                                                                   \
+                                                                                                             \
+    /* Set thread cancellation state to 'disable', and remember previous state */                            \
+    if (0 == dlftt)                                                                                          \
         H5TS_DISABLE_CANCEL;
-#define H5_API_UNLOCK                                                              \
-    if (0 == dlftt) {                                                              \
-        /* Release the API lock */                                                 \
-        H5TS_api_unlock();                                                         \
-                                                                                   \
-        /* Restore previous thread cancellation state */                           \
-        H5TS_RESTORE_CANCEL;                                                       \
+#define H5_API_UNLOCK                                                                                        \
+    if (0 == dlftt) {                                                                                        \
+        /* Release the API lock */                                                                           \
+        H5TS_api_unlock();                                                                                   \
+                                                                                                             \
+        /* Restore previous thread cancellation state */                                                     \
+        H5TS_RESTORE_CANCEL;                                                                                 \
     }
 #endif
 #else                 /* H5_HAVE_THREADSAFE_API */
@@ -1265,7 +1264,7 @@ extern char H5_lib_vers_info_g[];
 #define H5CANCEL_DECL /* */
 
 /* Local variable for 'disable locking for this thread' (DLFTT) state */
-#define H5DLFTT_DECL /* */
+#define H5DLFTT_DECL  /* */
 
 /* No locks (non-threadsafe builds) */
 #define H5_API_LOCK   /* */
@@ -1309,8 +1308,8 @@ H5_DLL herr_t H5CX_pop(bool update_dxpl_props);
 #define FUNC_ENTER_COMMON_NOERR(asrt) FUNC_ENTER_CHECK_NAME(asrt);
 
 /* Local variables for API routines */
-#define FUNC_ENTER_API_VARS \
-    H5CANCEL_DECL           \
+#define FUNC_ENTER_API_VARS                                                                                  \
+    H5CANCEL_DECL                                                                                            \
     H5DLFTT_DECL
 
 #define FUNC_ENTER_API_COMMON                                                                                \

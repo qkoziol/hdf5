@@ -74,10 +74,10 @@ typedef struct H5TS_tinfo_node_t {
 /* Local Prototypes */
 /********************/
 static H5TS_tinfo_node_t *H5TS__tinfo_create(void);
-static herr_t H5TS__get_dlftt(unsigned *dlftt);
-static herr_t H5TS__set_dlftt(unsigned dlftt);
-static herr_t H5TS__inc_dlftt(void);
-static herr_t H5TS__dec_dlftt(void);
+static herr_t             H5TS__get_dlftt(unsigned *dlftt);
+static herr_t             H5TS__set_dlftt(unsigned dlftt);
+static herr_t             H5TS__inc_dlftt(void);
+static herr_t             H5TS__dec_dlftt(void);
 
 /*********************/
 /* Package Variables */
@@ -633,7 +633,7 @@ static herr_t
 H5TS__get_dlftt(unsigned *dlftt)
 {
     H5TS_tinfo_node_t *tinfo_node;
-    herr_t ret_value = SUCCEED;
+    herr_t             ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE_NAMECHECK_ONLY
 
@@ -665,7 +665,7 @@ static herr_t
 H5TS__set_dlftt(unsigned dlftt)
 {
     H5TS_tinfo_node_t *tinfo_node;
-    herr_t ret_value = SUCCEED;
+    herr_t             ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE_NAMECHECK_ONLY
 
@@ -697,7 +697,7 @@ static herr_t
 H5TS__inc_dlftt(void)
 {
     H5TS_tinfo_node_t *tinfo_node;
-    herr_t ret_value = SUCCEED;
+    herr_t             ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE_NAMECHECK_ONLY
 
@@ -729,7 +729,7 @@ static herr_t
 H5TS__dec_dlftt(void)
 {
     H5TS_tinfo_node_t *tinfo_node;
-    herr_t ret_value = SUCCEED;
+    herr_t             ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE_NAMECHECK_ONLY
 

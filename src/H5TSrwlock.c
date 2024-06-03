@@ -260,7 +260,7 @@ H5TS_rwlock_trywrlock(H5TS_rwlock_t *lock, bool *acquired)
 {
     bool   have_mutex = false;
     int    ret;
-    herr_t ret_value  = SUCCEED;
+    herr_t ret_value = SUCCEED;
 
     FUNC_ENTER_NOAPI_NAMECHECK_ONLY
 
@@ -694,7 +694,7 @@ H5TS_rwlock_trywrlock(H5TS_rwlock_t *lock, bool *acquired)
 
     ret = pthread_rwlock_trywrlock(lock);
     if (EBUSY == ret)
-        *acquired = false;      /* We did not acquire the lock */
+        *acquired = false; /* We did not acquire the lock */
     else if (H5_UNLIKELY(0 != ret))
         HGOTO_DONE(FAIL);
     else

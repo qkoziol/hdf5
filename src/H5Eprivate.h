@@ -194,17 +194,16 @@
 /* State to preserve across user callbacks */
 typedef struct H5E_user_cb_state_t {
 #ifndef H5_NO_DEPRECATED_SYMBOLS
-    unsigned    vers;          /* Which version callback to use */
+    unsigned vers; /* Which version callback to use */
     union {
         H5E_auto1_t func1;
         H5E_auto2_t func2;
     } u;
-#else  /* H5_NO_DEPRECATED_SYMBOLS */
+#else           /* H5_NO_DEPRECATED_SYMBOLS */
     H5E_auto2_t func2;
-#endif /* H5_NO_DEPRECATED_SYMBOLS */
-    void         *data; /* Callback data for 'automatic error reporting */
+#endif          /* H5_NO_DEPRECATED_SYMBOLS */
+    void *data; /* Callback data for 'automatic error reporting */
 } H5E_user_cb_state_t;
-
 
 /*****************************/
 /* Library Private Variables */

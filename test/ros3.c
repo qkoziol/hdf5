@@ -1078,9 +1078,10 @@ test_H5FDread_without_eoa_set_fails(void)
      * TEST *
      ********/
 
-    H5E_BEGIN_TRY{/* mute stack trace on expected failure */
-                  JSVERIFY(FAIL, H5FDread(file_shakespeare, H5FD_MEM_DRAW, H5P_DEFAULT, 1200699, 102, buffer),
-                           "cannot read before eoa is set")} H5E_END_TRY
+    H5E_BEGIN_TRY
+    {/* mute stack trace on expected failure */
+     JSVERIFY(FAIL, H5FDread(file_shakespeare, H5FD_MEM_DRAW, H5P_DEFAULT, 1200699, 102, buffer),
+              "cannot read before eoa is set")} H5E_END_TRY
     JSVERIFY_STR("", buffer, "buffer should remain untouched")
 
     /************
@@ -1385,13 +1386,15 @@ test_noops_and_autofails(void)
 
     /* auto-fail calls to write and truncate
      */
-    H5E_BEGIN_TRY{JSVERIFY(FAIL, H5FDwrite(file, H5FD_MEM_DRAW, H5P_DEFAULT, 1000, 35, data),
-                           "write must fail")} H5E_END_TRY
+    H5E_BEGIN_TRY
+    {JSVERIFY(FAIL, H5FDwrite(file, H5FD_MEM_DRAW, H5P_DEFAULT, 1000, 35, data),
+              "write must fail")} H5E_END_TRY
 
-    H5E_BEGIN_TRY{JSVERIFY(FAIL, H5FDtruncate(file, H5P_DEFAULT, false), "truncate must fail")} H5E_END_TRY
+    H5E_BEGIN_TRY
+    {JSVERIFY(FAIL, H5FDtruncate(file, H5P_DEFAULT, false), "truncate must fail")} H5E_END_TRY
 
-    H5E_BEGIN_TRY{
-        JSVERIFY(FAIL, H5FDtruncate(file, H5P_DEFAULT, true), "truncate must fail (closing)")} H5E_END_TRY
+    H5E_BEGIN_TRY
+    {JSVERIFY(FAIL, H5FDtruncate(file, H5P_DEFAULT, true), "truncate must fail (closing)")} H5E_END_TRY
 
     /************
      * TEARDOWN *
@@ -1620,11 +1623,13 @@ test_H5F_integration(void)
 
     /* Read-Write Open access is not allowed with this file driver.
      */
-    H5E_BEGIN_TRY{FAIL_IF(0 <= H5Fopen(url_h5_public, H5F_ACC_RDWR, fapl_id))} H5E_END_TRY
+    H5E_BEGIN_TRY
+    {FAIL_IF(0 <= H5Fopen(url_h5_public, H5F_ACC_RDWR, fapl_id))} H5E_END_TRY
 
     /* H5Fcreate() is not allowed with this file driver.
      */
-    H5E_BEGIN_TRY{FAIL_IF(0 <= H5Fcreate(url_missing, H5F_ACC_RDONLY, H5P_DEFAULT, fapl_id))} H5E_END_TRY
+    H5E_BEGIN_TRY
+    {FAIL_IF(0 <= H5Fcreate(url_missing, H5F_ACC_RDONLY, H5P_DEFAULT, fapl_id))} H5E_END_TRY
 
     /* Successful open.
      */
