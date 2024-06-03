@@ -8,7 +8,10 @@ on:
         description: "TS or empty"
         required: true
         type: string
-
+      concurrency:
+        description: "CC or empty"
+        required: true
+        type: string
       build_mode:
         description: "release vs. debug build"
         required: true
@@ -108,7 +111,7 @@ jobs:
             run_tests: true
 
     # Sets the job's name from the properties
-    name: "${{ matrix.name }}-${{ inputs.build_mode }}-${{ inputs.thread_safety }}"
+    name: "${{ matrix.name }}-${{ inputs.build_mode }}-${{ inputs.thread_safety }}-${{ inputs.concurrent }}"
 
     # Don't run the action if the commit message says to skip CI
     if: "!contains(github.event.head_commit.message, 'skip-ci')"
@@ -183,7 +186,7 @@ jobs:
             -DHDF5_PACKAGE_EXTLIBS:BOOL=ON \
             $GITHUB_WORKSPACE
         shell: bash
-        if: ${{ inputs.thread_safety != 'TS' }}
+        if: ${{ inputs.thread_safety != 'TS' && inputs.concurrent != 'CC'}}
 
       - name: CMake Configure (Thread-Safe)
         run: |
@@ -196,6 +199,7 @@ jobs:
             -DBUILD_STATIC_LIBS=${{ (matrix.os != 'windows-latest') }} \
             -DHDF5_ENABLE_ALL_WARNINGS=ON \
             -DHDF5_ENABLE_THREADSAFE:BOOL=ON \
+            -DHDF5_ENABLE_CONCURRENCY:BOOL=OFF \
             -DHDF5_ENABLE_PARALLEL:BOOL=${{ matrix.parallel }} \
             -DHDF5_BUILD_CPP_LIB:BOOL=OFF \
             -DHDF5_BUILD_FORTRAN:BOOL=OFF \
@@ -210,7 +214,35 @@ jobs:
             -DHDF5_PACK_EXAMPLES:BOOL=ON \
             $GITHUB_WORKSPACE
         shell: bash
-        if: ${{ inputs.thread_safety == 'TS' }}
+        if: ${{ inputs.thread_safety == 'TS' && inputs.concurrent != 'CC'}}
+
+      - name: CMake Configure (Concurrency)
+        run: |
+          mkdir "${{ runner.workspace }}/build"
+          cd "${{ runner.workspace }}/build"
+          cmake -C $GITHUB_WORKSPACE/config/cmake/cacheinit.cmake \
+            ${{ matrix.generator }} \
+            -DCMAKE_BUILD_TYPE=${{ inputs.build_mode }} \
+            -DBUILD_SHARED_LIBS=ON \
+            -DBUILD_STATIC_LIBS=${{ (matrix.os != 'windows-latest') }} \
+            -DHDF5_ENABLE_ALL_WARNINGS=ON \
+            -DHDF5_ENABLE_THREADSAFE:BOOL=OFF \
+            -DHDF5_ENABLE_CONCURRENCY:BOOL=ON \
+            -DHDF5_ENABLE_PARALLEL:BOOL=${{ matrix.parallel }} \
+            -DHDF5_BUILD_CPP_LIB:BOOL=OFF \
+            -DHDF5_BUILD_FORTRAN:BOOL=OFF \
+            -DHDF5_BUILD_JAVA:BOOL=OFF \
+            -DHDF5_BUILD_HL_LIB:BOOL=OFF \
+            -DHDF5_BUILD_DOC=OFF \
+            -DLIBAEC_USE_LOCALCONTENT=${{ matrix.localaec }} \
+            -DZLIB_USE_LOCALCONTENT=${{ matrix.localzlib }} \
+            -DHDF5_ENABLE_MIRROR_VFD:BOOL=${{ matrix.mirror_vfd }} \
+            -DHDF5_ENABLE_DIRECT_VFD:BOOL=${{ matrix.direct_vfd }} \
+            -DHDF5_ENABLE_ROS3_VFD:BOOL=${{ matrix.ros3_vfd }} \
+            -DHDF5_PACK_EXAMPLES:BOOL=ON \
+            $GITHUB_WORKSPACE
+        shell: bash
+        if: ${{ inputs.thread_safety != 'TS' && inputs.concurrent == 'CC'}}
 
       #
       # BUILD
@@ -225,13 +257,7 @@ jobs:
       - name: CMake Run Tests
         run: ctest . --parallel 2 -C ${{ inputs.build_mode }} -V
         working-directory: ${{ runner.workspace }}/build
-        if: ${{ matrix.run_tests && (inputs.thread_safety != 'TS') }}
-
-      # THREAD-SAFE
-      - name: CMake Run Thread-Safe Tests
-        run: ctest . --parallel 2 -C ${{ inputs.build_mode }} -V -R ttsafe
-        working-directory: ${{ runner.workspace }}/build
-        if: ${{ matrix.run_tests && (inputs.thread_safety == 'TS') }}
+        if: ${{ matrix.run_tests }}
 
       - name: CMake Run Package
         run: cpack -C ${{ inputs.build_mode }} -V
@@ -248,7 +274,7 @@ jobs:
               name: zip-vs2022_cl-${{ inputs.build_mode }}-binary
               path: ${{ runner.workspace }}/build/HDF5-*-win64.zip
               if-no-files-found: error # 'warn' or 'ignore' are also available, defaults to `warn`
-        if:  ${{ (matrix.os == 'windows-latest') && (inputs.thread_safety != 'TS') }}
+        if:  ${{ (matrix.os == 'windows-latest') && (inputs.thread_safety != 'TS') && (inputs.concurrent != 'CC') }}
 
       - name: Save published binary (linux)
         uses: actions/upload-artifact@v4
@@ -256,7 +282,7 @@ jobs:
               name: tgz-ubuntu-2204_gcc-${{ inputs.build_mode }}-binary
               path: ${{ runner.workspace }}/build/HDF5-*-Linux.tar.gz
               if-no-files-found: error # 'warn' or 'ignore' are also available, defaults to `warn`
-        if:  ${{ (matrix.os == 'ubuntu-latest') && (inputs.thread_safety != 'TS') }}
+        if:  ${{ (matrix.os == 'ubuntu-latest') && (inputs.thread_safety != 'TS') && (inputs.concurrent != 'CC') }}
 
       - name: Save published binary (Mac)
         uses: actions/upload-artifact@v4
@@ -264,4 +290,4 @@ jobs:
               name: tgz-osx-${{ inputs.build_mode }}-binary
               path: ${{ runner.workspace }}/build/HDF5-*-Darwin.tar.gz
               if-no-files-found: error # 'warn' or 'ignore' are also available, defaults to `warn`
-        if: ${{ (matrix.os == 'macos-13') && (inputs.thread_safety != 'TS') }}
+        if: ${{ (matrix.os == 'macos-13') && (inputs.thread_safety != 'TS') && (inputs.concurrent != 'CC') }}
