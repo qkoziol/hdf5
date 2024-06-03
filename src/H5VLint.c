@@ -287,9 +287,11 @@ H5VL__free_cls(H5VL_class_t *cls, void H5_ATTR_UNUSED **request)
     /* Shut down the VOL connector */
     if (cls->terminate) {
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB(FAIL) {
+        H5_BEFORE_USER_CB(FAIL)
+        {
             ret_value = cls->terminate();
-        } H5_AFTER_USER_CB(FAIL)
+        }
+        H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
             HGOTO_ERROR(H5E_VOL, H5E_CANTCLOSEOBJ, FAIL, "VOL connector did not terminate cleanly");
     }
@@ -1195,9 +1197,11 @@ H5VL__register_connector(const void *_cls, bool app_ref, hid_t vipl_id)
     /* Initialize the VOL connector */
     if (cls->initialize) {
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB(FAIL) {
+        H5_BEFORE_USER_CB(FAIL)
+        {
             ret_value = cls->initialize(vipl_id);
-        } H5_AFTER_USER_CB(FAIL)
+        }
+        H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
             HGOTO_ERROR(H5E_VOL, H5E_CANTINIT, H5I_INVALID_HID, "unable to init VOL connector");
     }

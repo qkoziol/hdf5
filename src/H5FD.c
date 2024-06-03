@@ -176,11 +176,14 @@ H5FD__free_cls(H5FD_class_t *cls, void H5_ATTR_UNUSED **request)
      */
     if (cls->terminate) {
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB(FAIL) {
+        H5_BEFORE_USER_CB(FAIL)
+        {
             ret_value = cls->terminate();
-        } H5_AFTER_USER_CB(FAIL)
+        }
+        H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
-            HGOTO_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "virtual file driver '%s' did not terminate cleanly", cls->name);
+            HGOTO_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "virtual file driver '%s' did not terminate cleanly",
+                        cls->name);
     }
 
     H5MM_xfree(cls);
@@ -455,9 +458,11 @@ H5FD_sb_size(H5FD_t *file)
     /* Dispatch to driver */
     if (file->cls->sb_size) {
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB_NOERR(0) {
+        H5_BEFORE_USER_CB_NOERR(0)
+        {
             ret_value = (file->cls->sb_size)(file);
-        } H5_AFTER_USER_CB_NOERR(0)
+        }
+        H5_AFTER_USER_CB_NOERR(0)
     }
 
     FUNC_LEAVE_NOAPI(ret_value)
@@ -491,9 +496,11 @@ H5FD_sb_encode(H5FD_t *file, char *name /*out*/, uint8_t *buf)
     /* Dispatch to driver */
     if (file->cls->sb_encode) {
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB(FAIL) {
+        H5_BEFORE_USER_CB(FAIL)
+        {
             ret_value = (file->cls->sb_encode)(file, name /*out*/, buf /*out*/);
-        } H5_AFTER_USER_CB(FAIL)
+        }
+        H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, FAIL, "driver sb_encode request failed");
     }
@@ -525,9 +532,11 @@ H5FD__sb_decode(H5FD_t *file, const char *name, const uint8_t *buf)
     /* Dispatch to driver */
     if (file->cls->sb_decode) {
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB(FAIL) {
+        H5_BEFORE_USER_CB(FAIL)
+        {
             ret_value = (file->cls->sb_decode)(file, name, buf);
-        } H5_AFTER_USER_CB(FAIL)
+        }
+        H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, FAIL, "driver sb_decode request failed");
     }
@@ -608,9 +617,11 @@ H5FD_fapl_get(H5FD_t *file)
     /* Dispatch to driver */
     if (file->cls->fapl_get) {
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB_NOERR(NULL) {
+        H5_BEFORE_USER_CB_NOERR(NULL)
+        {
             ret_value = (file->cls->fapl_get)(file);
-        } H5_AFTER_USER_CB_NOERR(NULL)
+        }
+        H5_AFTER_USER_CB_NOERR(NULL)
     }
 
     FUNC_LEAVE_NOAPI(ret_value)
@@ -969,10 +980,12 @@ H5FD_cmp(const H5FD_t *f1, const H5FD_t *f2)
     }
 
     /* Prepare & restore library for user callback */
-    H5_BEFORE_USER_CB_NOCHECK {
+    H5_BEFORE_USER_CB_NOCHECK
+    {
         /* Dispatch to driver */
         ret_value = (f1->cls->cmp)(f1, f2);
-    } H5_AFTER_USER_CB_NOCHECK
+    }
+    H5_AFTER_USER_CB_NOCHECK
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -1034,9 +1047,11 @@ H5FD__query(const H5FD_t *file, unsigned long *flags /*out*/)
     /* Dispatch to driver (if available) */
     if (file->cls->query) {
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB(FAIL) {
+        H5_BEFORE_USER_CB(FAIL)
+        {
             ret_value = (file->cls->query)(file, flags);
-        } H5_AFTER_USER_CB(FAIL)
+        }
+        H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "unable to query feature flags");
     }
@@ -1389,9 +1404,11 @@ H5FD_get_fs_type_map(const H5FD_t *file, H5FD_mem_t *type_map)
     /* Check for VFD class providing a type map retrieval routine */
     if (file->cls->get_type_map) {
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB(FAIL) {
+        H5_BEFORE_USER_CB(FAIL)
+        {
             ret_value = (file->cls->get_type_map)(file, type_map);
-        } H5_AFTER_USER_CB(FAIL)
+        }
+        H5_AFTER_USER_CB(FAIL)
         /* Retrieve type mapping for this file */
         if (ret_value < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "driver get type map failed");
@@ -2289,9 +2306,11 @@ H5FD_flush(H5FD_t *file, bool closing)
     /* Dispatch to driver */
     if (file->cls->flush) {
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB(FAIL) {
+        H5_BEFORE_USER_CB(FAIL)
+        {
             ret_value = (file->cls->flush)(file, H5CX_get_dxpl(), closing);
-        } H5_AFTER_USER_CB(FAIL)
+        }
+        H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, FAIL, "driver flush request failed");
     }
@@ -2360,9 +2379,11 @@ H5FD_truncate(H5FD_t *file, bool closing)
     /* Dispatch to driver */
     if (file->cls->truncate) {
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB(FAIL) {
+        H5_BEFORE_USER_CB(FAIL)
+        {
             ret_value = (file->cls->truncate)(file, H5CX_get_dxpl(), closing);
-        } H5_AFTER_USER_CB(FAIL)
+        }
+        H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTUPDATE, FAIL, "driver truncate request failed");
     }
@@ -2424,9 +2445,11 @@ H5FD_lock(H5FD_t *file, bool rw)
     /* Dispatch to driver */
     if (file->cls->lock) {
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB(FAIL) {
+        H5_BEFORE_USER_CB(FAIL)
+        {
             ret_value = (file->cls->lock)(file, rw);
-        } H5_AFTER_USER_CB(FAIL)
+        }
+        H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTLOCKFILE, FAIL, "driver lock request failed");
     }
@@ -2488,9 +2511,11 @@ H5FD_unlock(H5FD_t *file)
     /* Dispatch to driver */
     if (file->cls->unlock) {
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB(FAIL) {
+        H5_BEFORE_USER_CB(FAIL)
+        {
             ret_value = (file->cls->unlock)(file);
-        } H5_AFTER_USER_CB(FAIL)
+        }
+        H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTUNLOCKFILE, FAIL, "driver unlock request failed");
     }
@@ -2583,15 +2608,17 @@ H5FD_ctl(H5FD_t *file, uint64_t op_code, uint64_t flags, const void *input, void
      */
     if (file->cls->ctl) {
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB(FAIL) {
+        H5_BEFORE_USER_CB(FAIL)
+        {
             ret_value = (file->cls->ctl)(file, op_code, flags, input, output);
-        } H5_AFTER_USER_CB(FAIL)
+        }
+        H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
             HGOTO_ERROR(H5E_VFL, H5E_FCNTL, FAIL, "VFD ctl request failed");
     }
-    else
-        if (flags & H5FD_CTL_FAIL_IF_UNKNOWN_FLAG)
-            HGOTO_ERROR(H5E_VFL, H5E_FCNTL, FAIL, "VFD ctl request failed (no ctl callback and fail if unknown flag is set)");
+    else if (flags & H5FD_CTL_FAIL_IF_UNKNOWN_FLAG)
+        HGOTO_ERROR(H5E_VFL, H5E_FCNTL, FAIL,
+                    "VFD ctl request failed (no ctl callback and fail if unknown flag is set)");
 
 done:
 
@@ -2691,9 +2718,11 @@ H5FD_get_vfd_handle(H5FD_t *file, hid_t fapl_id, void **file_handle)
         HGOTO_ERROR(H5E_VFL, H5E_UNSUPPORTED, FAIL, "file driver has no `get_vfd_handle' method");
 
     /* Prepare & restore library for user callback */
-    H5_BEFORE_USER_CB(FAIL) {
+    H5_BEFORE_USER_CB(FAIL)
+    {
         ret_value = (file->cls->get_handle)(file, fapl_id, file_handle);
-    } H5_AFTER_USER_CB(FAIL)
+    }
+    H5_AFTER_USER_CB(FAIL)
     if (ret_value < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get file handle for file driver");
 

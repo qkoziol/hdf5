@@ -246,9 +246,11 @@ H5FD_read(H5FD_t *file, H5FD_mem_t type, haddr_t addr, size_t size, void *buf /*
         haddr_t eoa;
 
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB(FAIL) {
+        H5_BEFORE_USER_CB(FAIL)
+        {
             eoa = (file->cls->get_eoa)(file, type);
-        } H5_AFTER_USER_CB(FAIL)
+        }
+        H5_AFTER_USER_CB(FAIL)
         if (!H5_addr_defined(eoa))
             HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, FAIL, "driver get_eoa request failed");
 
@@ -259,10 +261,12 @@ H5FD_read(H5FD_t *file, H5FD_mem_t type, haddr_t addr, size_t size, void *buf /*
     }
 
     /* Prepare & restore library for user callback */
-    H5_BEFORE_USER_CB(FAIL) {
+    H5_BEFORE_USER_CB(FAIL)
+    {
         /* Dispatch to driver */
         ret_value = (file->cls->read)(file, type, dxpl_id, addr + file->base_addr, size, buf);
-    } H5_AFTER_USER_CB(FAIL)
+    }
+    H5_AFTER_USER_CB(FAIL)
     if (ret_value < 0)
         HGOTO_ERROR(H5E_VFL, H5E_READERROR, FAIL, "driver read request failed");
 
@@ -315,9 +319,11 @@ H5FD_write(H5FD_t *file, H5FD_mem_t type, haddr_t addr, size_t size, const void 
 #endif /* H5_HAVE_PARALLEL */
 
     /* Prepare & restore library for user callback */
-    H5_BEFORE_USER_CB(FAIL) {
+    H5_BEFORE_USER_CB(FAIL)
+    {
         eoa = (file->cls->get_eoa)(file, type);
-    } H5_AFTER_USER_CB(FAIL)
+    }
+    H5_AFTER_USER_CB(FAIL)
     if (!H5_addr_defined(eoa))
         HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, FAIL, "driver get_eoa request failed");
     if ((addr + file->base_addr + size) > eoa)
@@ -326,10 +332,12 @@ H5FD_write(H5FD_t *file, H5FD_mem_t type, haddr_t addr, size_t size, const void 
                     (unsigned long long)eoa);
 
     /* Prepare & restore library for user callback */
-    H5_BEFORE_USER_CB(FAIL) {
+    H5_BEFORE_USER_CB(FAIL)
+    {
         /* Dispatch to driver */
         ret_value = (file->cls->write)(file, type, dxpl_id, addr + file->base_addr, size, buf);
-    } H5_AFTER_USER_CB(FAIL)
+    }
+    H5_AFTER_USER_CB(FAIL)
     if (ret_value < 0)
         HGOTO_ERROR(H5E_VFL, H5E_WRITEERROR, FAIL, "driver write request failed");
 
@@ -470,15 +478,19 @@ H5FD_read_vector(H5FD_t *file, uint32_t count, H5FD_mem_t types[], haddr_t addrs
             }
 
             /* Prepare & restore library for user callback */
-            H5_BEFORE_USER_CB(FAIL) {
+            H5_BEFORE_USER_CB(FAIL)
+            {
                 eoa = (file->cls->get_eoa)(file, type);
-            } H5_AFTER_USER_CB(FAIL)
+            }
+            H5_AFTER_USER_CB(FAIL)
             if (!H5_addr_defined(eoa))
                 HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, FAIL, "driver get_eoa request failed");
 
             if ((addrs[i] + size) > eoa)
-                HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, FAIL, "addr overflow, addrs[%d] = %llu, sizes[%d] = %llu, eoa = %llu", (int)i,
-                            (unsigned long long)(addrs[i]), (int)i, (unsigned long long)size, (unsigned long long)eoa);
+                HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, FAIL,
+                            "addr overflow, addrs[%d] = %llu, sizes[%d] = %llu, eoa = %llu", (int)i,
+                            (unsigned long long)(addrs[i]), (int)i, (unsigned long long)size,
+                            (unsigned long long)eoa);
         }
     }
     else
@@ -492,9 +504,11 @@ H5FD_read_vector(H5FD_t *file, uint32_t count, H5FD_mem_t types[], haddr_t addrs
     /* if the underlying VFD supports vector read, make the call */
     if (file->cls->read_vector) {
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB(FAIL) {
+        H5_BEFORE_USER_CB(FAIL)
+        {
             ret_value = (file->cls->read_vector)(file, dxpl_id, count, types, addrs, sizes, bufs);
-        } H5_AFTER_USER_CB(FAIL)
+        }
+        H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
             HGOTO_ERROR(H5E_VFL, H5E_READERROR, FAIL, "driver read vector request failed");
 
@@ -539,9 +553,11 @@ H5FD_read_vector(H5FD_t *file, uint32_t count, H5FD_mem_t types[], haddr_t addrs
             }
 
             /* Prepare & restore library for user callback */
-            H5_BEFORE_USER_CB(FAIL) {
+            H5_BEFORE_USER_CB(FAIL)
+            {
                 ret_value = (file->cls->read)(file, type, dxpl_id, addrs[i], size, bufs[i]);
-            } H5_AFTER_USER_CB(FAIL)
+            }
+            H5_AFTER_USER_CB(FAIL)
             if (ret_value < 0)
                 HGOTO_ERROR(H5E_VFL, H5E_READERROR, FAIL, "driver read request failed");
         }
@@ -686,23 +702,29 @@ H5FD_write_vector(H5FD_t *file, uint32_t count, H5FD_mem_t types[], haddr_t addr
         }
 
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB(FAIL) {
+        H5_BEFORE_USER_CB(FAIL)
+        {
             eoa = (file->cls->get_eoa)(file, type);
-        } H5_AFTER_USER_CB(FAIL)
+        }
+        H5_AFTER_USER_CB(FAIL)
         if (!H5_addr_defined(eoa))
             HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, FAIL, "driver get_eoa request failed");
 
         if ((addrs[i] + size) > eoa)
-            HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, FAIL, "addr overflow, addrs[%d] = %llu, sizes[%d] = %llu, eoa = %llu",
-                        (int)i, (unsigned long long)(addrs[i]), (int)i, (unsigned long long)size, (unsigned long long)eoa);
+            HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, FAIL,
+                        "addr overflow, addrs[%d] = %llu, sizes[%d] = %llu, eoa = %llu", (int)i,
+                        (unsigned long long)(addrs[i]), (int)i, (unsigned long long)size,
+                        (unsigned long long)eoa);
     }
 
     /* if the underlying VFD supports vector write, make the call */
     if (file->cls->write_vector) {
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB(FAIL) {
+        H5_BEFORE_USER_CB(FAIL)
+        {
             ret_value = (file->cls->write_vector)(file, dxpl_id, count, types, addrs, sizes, bufs);
-        } H5_AFTER_USER_CB(FAIL)
+        }
+        H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
             HGOTO_ERROR(H5E_VFL, H5E_WRITEERROR, FAIL, "driver write vector request failed");
 
@@ -747,9 +769,11 @@ H5FD_write_vector(H5FD_t *file, uint32_t count, H5FD_mem_t types[], haddr_t addr
             }
 
             /* Prepare & restore library for user callback */
-            H5_BEFORE_USER_CB(FAIL) {
+            H5_BEFORE_USER_CB(FAIL)
+            {
                 ret_value = (file->cls->write)(file, type, dxpl_id, addrs[i], size, bufs[i]);
-            } H5_AFTER_USER_CB(FAIL)
+            }
+            H5_AFTER_USER_CB(FAIL)
             if (ret_value < 0)
                 HGOTO_ERROR(H5E_VFL, H5E_READERROR, FAIL, "driver write request failed");
         }
@@ -1005,10 +1029,13 @@ H5FD__read_selection_translate(uint32_t skip_vector_cb, H5FD_t *file, H5FD_mem_t
             }
             else {
                 /* Prepare & restore library for user callback */
-                H5_BEFORE_USER_CB(FAIL) {
+                H5_BEFORE_USER_CB(FAIL)
+                {
                     /* Issue scalar read call */
-                    ret_value = (file->cls->read)(file, type, dxpl_id, offsets[i] + file_off[file_seq_i], io_len, (void *)((uint8_t *)buf + mem_off[mem_seq_i]));
-                } H5_AFTER_USER_CB(FAIL)
+                    ret_value = (file->cls->read)(file, type, dxpl_id, offsets[i] + file_off[file_seq_i],
+                                                  io_len, (void *)((uint8_t *)buf + mem_off[mem_seq_i]));
+                }
+                H5_AFTER_USER_CB(FAIL)
                 if (ret_value < 0)
                     HGOTO_ERROR(H5E_VFL, H5E_READERROR, FAIL, "driver read request failed");
             }
@@ -1050,9 +1077,12 @@ H5FD__read_selection_translate(uint32_t skip_vector_cb, H5FD_t *file, H5FD_mem_t
 
         H5_CHECK_OVERFLOW(vec_arr_nused, size_t, uint32_t);
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB(FAIL) {
-            ret_value = (file->cls->read_vector)(file, dxpl_id, (uint32_t)vec_arr_nused, types, addrs, sizes, vec_bufs);
-        } H5_AFTER_USER_CB(FAIL)
+        H5_BEFORE_USER_CB(FAIL)
+        {
+            ret_value = (file->cls->read_vector)(file, dxpl_id, (uint32_t)vec_arr_nused, types, addrs, sizes,
+                                                 vec_bufs);
+        }
+        H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
             HGOTO_ERROR(H5E_VFL, H5E_READERROR, FAIL, "driver read vector request failed");
 
@@ -1214,15 +1244,18 @@ H5FD_read_selection(H5FD_t *file, H5FD_mem_t type, uint32_t count, H5S_t **mem_s
         haddr_t eoa;
 
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB(FAIL) {
+        H5_BEFORE_USER_CB(FAIL)
+        {
             eoa = (file->cls->get_eoa)(file, type);
-        } H5_AFTER_USER_CB(FAIL)
+        }
+        H5_AFTER_USER_CB(FAIL)
         if (!H5_addr_defined(eoa))
             HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, FAIL, "driver get_eoa request failed");
 
         for (i = 0; i < count; i++)
             if ((offsets[i]) > eoa)
-                HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, FAIL, "addr overflow, offsets[%d] = %llu, eoa = %llu", (int)i, (unsigned long long)(offsets[i]), (unsigned long long)eoa);
+                HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, FAIL, "addr overflow, offsets[%d] = %llu, eoa = %llu",
+                            (int)i, (unsigned long long)(offsets[i]), (unsigned long long)eoa);
     }
 
     /* if the underlying VFD supports selection read, make the call */
@@ -1252,9 +1285,12 @@ H5FD_read_selection(H5FD_t *file, H5FD_mem_t type, uint32_t count, H5S_t **mem_s
         }
 
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB(FAIL) {
-            ret_value = (file->cls->read_selection)(file, type, dxpl_id, count, mem_space_ids, file_space_ids, offsets, element_sizes, bufs);
-        } H5_AFTER_USER_CB(FAIL)
+        H5_BEFORE_USER_CB(FAIL)
+        {
+            ret_value = (file->cls->read_selection)(file, type, dxpl_id, count, mem_space_ids, file_space_ids,
+                                                    offsets, element_sizes, bufs);
+        }
+        H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
             HGOTO_ERROR(H5E_VFL, H5E_READERROR, FAIL, "driver read selection request failed");
 
@@ -1394,15 +1430,18 @@ H5FD_read_selection_id(uint32_t skip_cb, H5FD_t *file, H5FD_mem_t type, uint32_t
         haddr_t eoa;
 
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB(FAIL) {
+        H5_BEFORE_USER_CB(FAIL)
+        {
             eoa = (file->cls->get_eoa)(file, type);
-        } H5_AFTER_USER_CB(FAIL)
+        }
+        H5_AFTER_USER_CB(FAIL)
         if (!H5_addr_defined(eoa))
             HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, FAIL, "driver get_eoa request failed");
 
         for (i = 0; i < count; i++)
             if ((offsets[i]) > eoa)
-                HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, FAIL, "addr overflow, offsets[%d] = %llu, eoa = %llu", (int)i, (unsigned long long)(offsets[i]), (unsigned long long)eoa);
+                HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, FAIL, "addr overflow, offsets[%d] = %llu, eoa = %llu",
+                            (int)i, (unsigned long long)(offsets[i]), (unsigned long long)eoa);
     }
 
     /* if the underlying VFD supports selection read, make the call */
@@ -1410,9 +1449,12 @@ H5FD_read_selection_id(uint32_t skip_cb, H5FD_t *file, H5FD_mem_t type, uint32_t
         uint32_t actual_selection_io_mode;
 
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB(FAIL) {
-            ret_value = (file->cls->read_selection)(file, type, dxpl_id, count, mem_space_ids, file_space_ids, offsets, element_sizes, bufs);
-        } H5_AFTER_USER_CB(FAIL)
+        H5_BEFORE_USER_CB(FAIL)
+        {
+            ret_value = (file->cls->read_selection)(file, type, dxpl_id, count, mem_space_ids, file_space_ids,
+                                                    offsets, element_sizes, bufs);
+        }
+        H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
             HGOTO_ERROR(H5E_VFL, H5E_READERROR, FAIL, "driver read selection request failed");
 
@@ -1684,10 +1726,14 @@ H5FD__write_selection_translate(uint32_t skip_vector_cb, H5FD_t *file, H5FD_mem_
             }
             else {
                 /* Prepare & restore library for user callback */
-                H5_BEFORE_USER_CB(FAIL) {
+                H5_BEFORE_USER_CB(FAIL)
+                {
                     /* Issue scalar write call */
-                    ret_value = (file->cls->write)(file, type, dxpl_id, offsets[i] + file_off[file_seq_i], io_len, (const void *)((const uint8_t *)buf + mem_off[mem_seq_i]));
-                } H5_AFTER_USER_CB(FAIL)
+                    ret_value =
+                        (file->cls->write)(file, type, dxpl_id, offsets[i] + file_off[file_seq_i], io_len,
+                                           (const void *)((const uint8_t *)buf + mem_off[mem_seq_i]));
+                }
+                H5_AFTER_USER_CB(FAIL)
                 if (ret_value < 0)
                     HGOTO_ERROR(H5E_VFL, H5E_WRITEERROR, FAIL, "driver write request failed");
             }
@@ -1729,9 +1775,12 @@ H5FD__write_selection_translate(uint32_t skip_vector_cb, H5FD_t *file, H5FD_mem_
 
         H5_CHECK_OVERFLOW(vec_arr_nused, size_t, uint32_t);
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB(FAIL) {
-            ret_value = (file->cls->write_vector)(file, dxpl_id, (uint32_t)vec_arr_nused, types, addrs, sizes, vec_bufs);
-        } H5_AFTER_USER_CB(FAIL)
+        H5_BEFORE_USER_CB(FAIL)
+        {
+            ret_value = (file->cls->write_vector)(file, dxpl_id, (uint32_t)vec_arr_nused, types, addrs, sizes,
+                                                  vec_bufs);
+        }
+        H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
             HGOTO_ERROR(H5E_VFL, H5E_WRITEERROR, FAIL, "driver write vector request failed");
 
@@ -1834,9 +1883,9 @@ H5FD_write_selection(H5FD_t *file, H5FD_mem_t type, uint32_t count, H5S_t **mem_
     hid_t   *mem_space_ids = mem_space_ids_local;
     hid_t    file_space_ids_local[H5FD_LOCAL_SEL_ARR_LEN];
     hid_t   *file_space_ids = file_space_ids_local;
-    haddr_t eoa;
-    uint32_t num_spaces     = 0;
-    hid_t    dxpl_id        = H5I_INVALID_HID; /* DXPL for operation */
+    haddr_t  eoa;
+    uint32_t num_spaces = 0;
+    hid_t    dxpl_id    = H5I_INVALID_HID; /* DXPL for operation */
     uint32_t i;
     herr_t   ret_value = SUCCEED; /* Return value */
 
@@ -1883,16 +1932,18 @@ H5FD_write_selection(H5FD_t *file, H5FD_mem_t type, uint32_t count, H5S_t **mem_
      * bounds) is potentially expensive.
      */
     /* Prepare & restore library for user callback */
-    H5_BEFORE_USER_CB(FAIL) {
+    H5_BEFORE_USER_CB(FAIL)
+    {
         eoa = (file->cls->get_eoa)(file, type);
-    } H5_AFTER_USER_CB(FAIL)
+    }
+    H5_AFTER_USER_CB(FAIL)
     if (!H5_addr_defined(eoa))
         HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, FAIL, "driver get_eoa request failed");
 
     for (i = 0; i < count; i++)
         if ((offsets[i]) > eoa)
-            HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, FAIL, "addr overflow, offsets[%d] = %llu, eoa = %llu",
-                        (int)i, (unsigned long long)(offsets[i]), (unsigned long long)eoa);
+            HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, FAIL, "addr overflow, offsets[%d] = %llu, eoa = %llu", (int)i,
+                        (unsigned long long)(offsets[i]), (unsigned long long)eoa);
 
     /* if the underlying VFD supports selection write, make the call */
     if (file->cls->write_selection) {
@@ -1912,7 +1963,8 @@ H5FD_write_selection(H5FD_t *file, H5FD_mem_t type, uint32_t count, H5S_t **mem_
             if ((mem_space_ids[num_spaces] = H5I_register(H5I_DATASPACE, mem_spaces[num_spaces], true)) < 0)
                 HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "unable to register dataspace ID");
 
-            if ((file_space_ids[num_spaces] = H5I_register(H5I_DATASPACE, file_spaces[num_spaces], true)) < 0) {
+            if ((file_space_ids[num_spaces] = H5I_register(H5I_DATASPACE, file_spaces[num_spaces], true)) <
+                0) {
                 if (NULL == H5I_remove(mem_space_ids[num_spaces]))
                     HDONE_ERROR(H5E_VFL, H5E_CANTREMOVE, FAIL, "problem removing id");
                 HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "unable to register dataspace ID");
@@ -1920,9 +1972,12 @@ H5FD_write_selection(H5FD_t *file, H5FD_mem_t type, uint32_t count, H5S_t **mem_
         }
 
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB(FAIL) {
-            ret_value = (file->cls->write_selection)(file, type, dxpl_id, count, mem_space_ids, file_space_ids, offsets, element_sizes, bufs);
-        } H5_AFTER_USER_CB(FAIL)
+        H5_BEFORE_USER_CB(FAIL)
+        {
+            ret_value = (file->cls->write_selection)(file, type, dxpl_id, count, mem_space_ids,
+                                                     file_space_ids, offsets, element_sizes, bufs);
+        }
+        H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
             HGOTO_ERROR(H5E_VFL, H5E_WRITEERROR, FAIL, "driver write selection request failed");
 
@@ -2000,8 +2055,8 @@ H5FD_write_selection_id(uint32_t skip_cb, H5FD_t *file, H5FD_mem_t type, uint32_
     H5S_t  **mem_spaces = mem_spaces_local;
     H5S_t   *file_spaces_local[H5FD_LOCAL_SEL_ARR_LEN];
     H5S_t  **file_spaces = file_spaces_local;
-    haddr_t eoa;
-    hid_t    dxpl_id     = H5I_INVALID_HID; /* DXPL for operation */
+    haddr_t  eoa;
+    hid_t    dxpl_id = H5I_INVALID_HID; /* DXPL for operation */
     uint32_t i;
     uint32_t skip_selection_cb;
     uint32_t skip_vector_cb;
@@ -2053,25 +2108,30 @@ H5FD_write_selection_id(uint32_t skip_cb, H5FD_t *file, H5FD_mem_t type, uint32_
      * bounds) is potentially expensive.
      */
     /* Prepare & restore library for user callback */
-    H5_BEFORE_USER_CB(FAIL) {
+    H5_BEFORE_USER_CB(FAIL)
+    {
         eoa = (file->cls->get_eoa)(file, type);
-    } H5_AFTER_USER_CB(FAIL)
+    }
+    H5_AFTER_USER_CB(FAIL)
     if (!H5_addr_defined(eoa))
         HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, FAIL, "driver get_eoa request failed");
 
     for (i = 0; i < count; i++)
         if ((offsets[i]) > eoa)
-            HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, FAIL, "addr overflow, offsets[%d] = %llu, eoa = %llu",
-                        (int)i, (unsigned long long)(offsets[i]), (unsigned long long)eoa);
+            HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, FAIL, "addr overflow, offsets[%d] = %llu, eoa = %llu", (int)i,
+                        (unsigned long long)(offsets[i]), (unsigned long long)eoa);
 
     /* if the underlying VFD supports selection write, make the call */
     if (!skip_selection_cb && file->cls->write_selection) {
         uint32_t actual_selection_io_mode;
 
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB(FAIL) {
-            ret_value = (file->cls->write_selection)(file, type, dxpl_id, count, mem_space_ids, file_space_ids, offsets, element_sizes, bufs);
-        } H5_AFTER_USER_CB(FAIL)
+        H5_BEFORE_USER_CB(FAIL)
+        {
+            ret_value = (file->cls->write_selection)(file, type, dxpl_id, count, mem_space_ids,
+                                                     file_space_ids, offsets, element_sizes, bufs);
+        }
+        H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
             HGOTO_ERROR(H5E_VFL, H5E_WRITEERROR, FAIL, "driver write selection request failed");
 
@@ -2355,10 +2415,12 @@ H5FD_set_eoa(H5FD_t *file, H5FD_mem_t type, haddr_t addr)
     assert(H5_addr_defined(addr) && addr <= file->maxaddr);
 
     /* Prepare & restore library for user callback */
-    H5_BEFORE_USER_CB(FAIL) {
+    H5_BEFORE_USER_CB(FAIL)
+    {
         /* Dispatch to driver, convert to absolute address */
         ret_value = (file->cls->set_eoa)(file, type, addr + file->base_addr);
-    } H5_AFTER_USER_CB(FAIL)
+    }
+    H5_AFTER_USER_CB(FAIL)
     if (ret_value < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, FAIL, "driver set_eoa request failed");
 
@@ -2392,10 +2454,12 @@ H5FD_get_eoa(const H5FD_t *file, H5FD_mem_t type)
     assert(file && file->cls);
 
     /* Prepare & restore library for user callback */
-    H5_BEFORE_USER_CB(HADDR_UNDEF) {
+    H5_BEFORE_USER_CB(HADDR_UNDEF)
+    {
         /* Dispatch to driver */
         ret_value = (file->cls->get_eoa)(file, type);
-    } H5_AFTER_USER_CB(HADDR_UNDEF)
+    }
+    H5_AFTER_USER_CB(HADDR_UNDEF)
     if (!H5_addr_defined(ret_value))
         HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, HADDR_UNDEF, "driver get_eoa request failed");
 
@@ -2434,9 +2498,11 @@ H5FD_get_eof(const H5FD_t *file, H5FD_mem_t type)
     /* Dispatch to driver */
     if (file->cls->get_eof) {
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB(HADDR_UNDEF) {
+        H5_BEFORE_USER_CB(HADDR_UNDEF)
+        {
             ret_value = (file->cls->get_eof)(file, type);
-        } H5_AFTER_USER_CB(HADDR_UNDEF)
+        }
+        H5_AFTER_USER_CB(HADDR_UNDEF)
         if (!H5_addr_defined(ret_value))
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, HADDR_UNDEF, "driver get_eof request failed");
     }

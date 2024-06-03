@@ -1090,16 +1090,15 @@ typedef struct H5_user_cb_state_t {
     } /* end else */                                                                                         \
     }
 
-#define H5_BEFORE_USER_CB_NOCHECK   \
-    {                               \
-        H5_user_cb_state_t state;   \
-                                    \
-        H5_user_cb_prepare(&state); \
+#define H5_BEFORE_USER_CB_NOCHECK                                                                            \
+    {                                                                                                        \
+        H5_user_cb_state_t state;                                                                            \
+                                                                                                             \
+        H5_user_cb_prepare(&state);
 
-#define H5_AFTER_USER_CB_NOCHECK    \
-        H5_user_cb_restore(&state); \
+#define H5_AFTER_USER_CB_NOCHECK                                                                             \
+    H5_user_cb_restore(&state);                                                                              \
     }
-
 
 /*-------------------------------------------------------------------------
  * Purpose: These macros are used to track arguments in event sets and are
