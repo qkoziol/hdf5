@@ -612,10 +612,13 @@ H5L__link_cb(H5G_loc_t *grp_loc /*in*/, const char *name, const H5O_link_t H5_AT
                 HGOTO_ERROR(H5E_LINK, H5E_CANTREGISTER, FAIL, "unable to register ID for group");
 
             /* Prepare & restore library for user callback */
-            H5_BEFORE_USER_CB(FAIL) {
+            H5_BEFORE_USER_CB(FAIL)
+            {
                 /* Make callback */
-                ret_value = (link_class->create_func)(name, grp_id, udata->lnk->u.ud.udata, udata->lnk->u.ud.size, H5P_DEFAULT);
-            } H5_AFTER_USER_CB(FAIL)
+                ret_value = (link_class->create_func)(name, grp_id, udata->lnk->u.ud.udata,
+                                                      udata->lnk->u.ud.size, H5P_DEFAULT);
+            }
+            H5_AFTER_USER_CB(FAIL)
             if (ret_value < 0)
                 HGOTO_ERROR(H5E_LINK, H5E_CALLBACK, FAIL, "link creation callback failed");
         } /* end if */
@@ -950,9 +953,11 @@ H5L__get_val_real(const H5O_link_t *lnk, void *buf, size_t size)
             ssize_t len;
 
             /* Prepare & restore library for user callback */
-            H5_BEFORE_USER_CB(FAIL) {
+            H5_BEFORE_USER_CB(FAIL)
+            {
                 len = (link_class->query_func)(lnk->name, lnk->u.ud.udata, lnk->u.ud.size, buf, size);
-            } H5_AFTER_USER_CB(FAIL)
+            }
+            H5_AFTER_USER_CB(FAIL)
             if (len < 0)
                 HGOTO_ERROR(H5E_LINK, H5E_CALLBACK, FAIL, "query callback returned failure");
         } /* end if */
@@ -1358,17 +1363,23 @@ H5L__move_dest_cb(H5G_loc_t *grp_loc /*in*/, const char *name, const H5O_link_t 
 
             if (udata->copy) {
                 /* Prepare & restore library for user callback */
-                H5_BEFORE_USER_CB(FAIL) {
-                    ret_value = (link_class->copy_func)(udata->lnk->name, grp_id, udata->lnk->u.ud.udata, udata->lnk->u.ud.size);
-                } H5_AFTER_USER_CB(FAIL)
+                H5_BEFORE_USER_CB(FAIL)
+                {
+                    ret_value = (link_class->copy_func)(udata->lnk->name, grp_id, udata->lnk->u.ud.udata,
+                                                        udata->lnk->u.ud.size);
+                }
+                H5_AFTER_USER_CB(FAIL)
                 if (ret_value < 0)
                     HGOTO_ERROR(H5E_LINK, H5E_CALLBACK, FAIL, "UD copy callback returned error");
             } /* end if */
             else {
                 /* Prepare & restore library for user callback */
-                H5_BEFORE_USER_CB(FAIL) {
-                    ret_value = (link_class->move_func)(udata->lnk->name, grp_id, udata->lnk->u.ud.udata, udata->lnk->u.ud.size);
-                } H5_AFTER_USER_CB(FAIL)
+                H5_BEFORE_USER_CB(FAIL)
+                {
+                    ret_value = (link_class->move_func)(udata->lnk->name, grp_id, udata->lnk->u.ud.udata,
+                                                        udata->lnk->u.ud.size);
+                }
+                H5_AFTER_USER_CB(FAIL)
                 if (ret_value < 0)
                     HGOTO_ERROR(H5E_LINK, H5E_CALLBACK, FAIL, "UD move callback returned error");
             } /* end else */
