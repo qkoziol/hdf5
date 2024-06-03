@@ -61,7 +61,9 @@ typedef struct H5TS_thread_info_t {
     uint64_t            id;               /* Unique ID for each thread */
     struct H5CX_node_t *api_ctx_node_ptr; /* Pointer to an API context node */
     H5E_stack_t         err_stack;        /* Error stack */
+#ifdef H5_HAVE_CONCURRENCY
     unsigned            dlftt;            /* Whether locking is disabled for this thread */
+#endif /* H5_HAVE_CONCURRENCY */
 } H5TS_thread_info_t;
 
 /* An H5TS_tinfo_node_t is a thread info that is available for reuse */
@@ -74,10 +76,12 @@ typedef struct H5TS_tinfo_node_t {
 /* Local Prototypes */
 /********************/
 static H5TS_tinfo_node_t *H5TS__tinfo_create(void);
+#ifdef H5_HAVE_CONCURRENCY
 static herr_t             H5TS__get_dlftt(unsigned *dlftt);
 static herr_t             H5TS__set_dlftt(unsigned dlftt);
 static herr_t             H5TS__inc_dlftt(void);
 static herr_t             H5TS__dec_dlftt(void);
+#endif /* H5_HAVE_CONCURRENCY */
 
 /*********************/
 /* Package Variables */
@@ -170,6 +174,7 @@ H5TS_term_package(void)
     FUNC_LEAVE_NOAPI_VOID
 } /* end H5TS_term_package() */
 
+#ifdef H5_HAVE_CONCURRENCY
 /*-------------------------------------------------------------------------
  * Function:    H5TS_user_cb_prepare
  *
@@ -217,6 +222,7 @@ H5TS_user_cb_restore(void)
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5TS_user_cb_restore() */
+#endif /* H5_HAVE_CONCURRENCY */
 
 /*--------------------------------------------------------------------------
  * Function:    H5TS__mutex_acquire
@@ -292,8 +298,13 @@ done:
  *
  *--------------------------------------------------------------------------
  */
+#ifdef H5_HAVE_THREADSAFE
+herr_t
+H5TS_api_lock(void)
+#else /* H5_HAVE_CONCURRENCY */
 herr_t
 H5TS_api_lock(unsigned *dlftt)
+#endif
 {
     herr_t ret_value = SUCCEED;
 
@@ -620,6 +631,7 @@ done:
     FUNC_LEAVE_NOAPI_NAMECHECK_ONLY(ret_value)
 } /* H5TS_get_err_stack() */
 
+#ifdef H5_HAVE_CONCURRENCY
 /*--------------------------------------------------------------------------
  * Function:    H5TS__get_dlftt
  *
@@ -747,6 +759,7 @@ H5TS__dec_dlftt(void)
 done:
     FUNC_LEAVE_NOAPI_NAMECHECK_ONLY(ret_value)
 } /* H5TS__dec_dlftt() */
+#endif /* H5_HAVE_CONCURRENCY */
 
 /*--------------------------------------------------------------------------
  * Function:    H5TS__tinfo_destroy

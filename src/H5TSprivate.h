@@ -265,11 +265,17 @@ H5_CLANG_DIAG_ON("c11-extensions")
 H5_DLL void H5TS_term_package(void);
 
 /* Prepare for / restore after user callback */
+#ifdef H5_HAVE_CONCURRENCY
 H5_DLL herr_t H5TS_user_cb_prepare(void);
 H5_DLL herr_t H5TS_user_cb_restore(void);
+#endif /* H5_HAVE_CONCURRENCY */
 
 /* API locking */
+#ifdef H5_HAVE_THREADSAFE
+H5_DLL herr_t H5TS_api_lock(void);
+#else /* H5_HAVE_CONCURRENCY */
 H5_DLL herr_t H5TS_api_lock(unsigned *dlftt);
+#endif
 H5_DLL herr_t H5TS_api_unlock(void);
 
 /* Retrieve per-thread info */

@@ -1263,7 +1263,7 @@ H5_user_cb_prepare(H5_user_cb_state_t *state)
     if (H5E_user_cb_prepare(&state->h5e_state) < 0)
         HGOTO_ERROR(H5E_LIB, H5E_CANTSET, FAIL, "unable to prepare H5E package for user callback");
 
-#ifdef H5_HAVE_THREADSAFE_API
+#ifdef H5_HAVE_CONCURRENCY
     /* Prepare H5TS package for user callback */
     if (H5TS_user_cb_prepare() < 0)
         HGOTO_ERROR(H5E_LIB, H5E_CANTSET, FAIL, "unable to prepare H5TS package for user callback");
@@ -1293,7 +1293,7 @@ H5_user_cb_restore(const H5_user_cb_state_t *state)
     if (H5E_user_cb_restore(&state->h5e_state) < 0)
         HGOTO_ERROR(H5E_LIB, H5E_CANTRESTORE, FAIL, "unable to restore H5E package after user callback");
 
-#ifdef H5_HAVE_THREADSAFE_API
+#ifdef H5_HAVE_CONCURRENCY
     /* Restore H5TS package after user callback */
     if (H5TS_user_cb_restore() < 0)
         HGOTO_ERROR(H5E_LIB, H5E_CANTRESTORE, FAIL, "unable to restore H5TS package after user callback");
