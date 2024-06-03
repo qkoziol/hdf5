@@ -285,8 +285,14 @@ H5VL__free_cls(H5VL_class_t *cls, void H5_ATTR_UNUSED **request)
     assert(cls);
 
     /* Shut down the VOL connector */
-    if (cls->terminate && cls->terminate() < 0)
-        HGOTO_ERROR(H5E_VOL, H5E_CANTCLOSEOBJ, FAIL, "VOL connector did not terminate cleanly");
+    if (cls->terminate) {
+        /* Prepare & restore library for user callback */
+        H5_BEFORE_USER_CB(FAIL) {
+            ret_value = cls->terminate();
+        } H5_AFTER_USER_CB(FAIL)
+        if (ret_value < 0)
+            HGOTO_ERROR(H5E_VOL, H5E_CANTCLOSEOBJ, FAIL, "VOL connector did not terminate cleanly");
+    }
 
     /* Release the class */
     H5MM_xfree_const(cls->name);
@@ -1187,8 +1193,14 @@ H5VL__register_connector(const void *_cls, bool app_ref, hid_t vipl_id)
                     "memory allocation failed for VOL connector name");
 
     /* Initialize the VOL connector */
-    if (cls->initialize && cls->initialize(vipl_id) < 0)
-        HGOTO_ERROR(H5E_VOL, H5E_CANTINIT, H5I_INVALID_HID, "unable to init VOL connector");
+    if (cls->initialize) {
+        /* Prepare & restore library for user callback */
+        H5_BEFORE_USER_CB(FAIL) {
+            ret_value = cls->initialize(vipl_id);
+        } H5_AFTER_USER_CB(FAIL)
+        if (ret_value < 0)
+            HGOTO_ERROR(H5E_VOL, H5E_CANTINIT, H5I_INVALID_HID, "unable to init VOL connector");
+    }
 
     /* Create the new class ID */
     if ((ret_value = H5I_register(H5I_VOL, saved, app_ref)) < 0)
