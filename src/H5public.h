@@ -414,13 +414,13 @@ typedef void (*H5_atclose_func_t)(void *ctx);
 /* API adapter header (defines H5_DLL, etc.) */
 #include "H5api_adpt.h"
 
-/* Library init / term status (global) */
-H5_DLLVAR bool H5_libinit_g; /* Has the library been initialized? */
-H5_DLLVAR bool H5_libterm_g; /* Is the library being shutdown? */
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/* Library init / term status (global) */
+H5_DLLVAR bool H5_libinit_g; /* Has the library been initialized? */
+H5_DLLVAR bool H5_libterm_g; /* Is the library being shutdown? */
 
 /* Functions in H5.c */
 /**
