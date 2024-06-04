@@ -4208,10 +4208,12 @@ H5P__iterate_plist_cb(void *_item, void *_key, void *_udata)
     /* Check if we've found the correctly indexed property */
     if (*udata->curr_idx_ptr >= udata->prev_idx) {
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB_NOERR(H5_ITER_ERROR) {
+        H5_BEFORE_USER_CB_NOERR(H5_ITER_ERROR)
+        {
             /* Call the callback function */
             ret_value = (*udata->cb_func)(item, udata->udata);
-        } H5_AFTER_USER_CB_NOERR(H5_ITER_ERROR)
+        }
+        H5_AFTER_USER_CB_NOERR(H5_ITER_ERROR)
         if (ret_value != 0)
             HGOTO_DONE(ret_value);
     } /* end if */
@@ -4422,10 +4424,12 @@ H5P__iterate_pclass_cb(void *_item, void H5_ATTR_NDEBUG_UNUSED *_key, void *_uda
     /* Check if we've found the correctly indexed property */
     if (*udata->curr_idx_ptr >= udata->prev_idx) {
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB_NOERR(H5_ITER_ERROR) {
+        H5_BEFORE_USER_CB_NOERR(H5_ITER_ERROR)
+        {
             /* Call the callback function */
             ret_value = (*udata->cb_func)(item, udata->udata);
-        } H5_AFTER_USER_CB_NOERR(H5_ITER_ERROR)
+        }
+        H5_AFTER_USER_CB_NOERR(H5_ITER_ERROR)
         if (ret_value != 0)
             HGOTO_DONE(ret_value);
     } /* end if */
