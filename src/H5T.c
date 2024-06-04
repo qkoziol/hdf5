@@ -2717,14 +2717,19 @@ H5T__register(H5T_pers_t pers, const char *name, H5T_t *src, H5T_t *dst, H5T_con
                                 "unable to register ID for destination datatype");
 
                 /* Prepare & restore library for user callback */
-                H5_BEFORE_USER_CB(FAIL) {
-                    ret_value = (conv->u.app_func)(tmp_sid, tmp_did, &cdata, 0, 0, 0, NULL, NULL, H5CX_get_dxpl());
-                } H5_AFTER_USER_CB(FAIL)
+                H5_BEFORE_USER_CB(FAIL)
+                {
+                    ret_value =
+                        (conv->u.app_func)(tmp_sid, tmp_did, &cdata, 0, 0, 0, NULL, NULL, H5CX_get_dxpl());
+                }
+                H5_AFTER_USER_CB(FAIL)
                 if (ret_value < 0) {
                     if (H5I_dec_ref(tmp_sid) < 0)
-                        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTDEC, FAIL, "unable to decrement reference count on temporary ID");
+                        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTDEC, FAIL,
+                                    "unable to decrement reference count on temporary ID");
                     if (H5I_dec_ref(tmp_did) < 0)
-                        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTDEC, FAIL, "unable to decrement reference count on temporary ID");
+                        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTDEC, FAIL,
+                                    "unable to decrement reference count on temporary ID");
                     tmp_sid = tmp_did = H5I_INVALID_HID;
                     tmp_stype = tmp_dtype = NULL;
                     if (H5E_clear_stack() < 0)
@@ -2732,7 +2737,8 @@ H5T__register(H5T_pers_t pers, const char *name, H5T_t *src, H5T_t *dst, H5T_con
                     continue;
                 } /* end if */
             }     /* end if */
-            else if ((conv->u.lib_func)(old_path->src, old_path->dst, &cdata, &conv_ctx, 0, 0, 0, NULL, NULL) < 0) {
+            else if ((conv->u.lib_func)(old_path->src, old_path->dst, &cdata, &conv_ctx, 0, 0, 0, NULL,
+                                        NULL) < 0) {
                 if (H5E_clear_stack() < 0)
                     HGOTO_ERROR(H5E_DATATYPE, H5E_CANTRESET, FAIL, "unable to clear current error stack");
                 continue;
@@ -5366,9 +5372,12 @@ H5T__path_find_init_new_path(H5T_path_t *path, const H5T_t *src, const H5T_t *ds
                             "unable to register ID for destination datatype");
 
             /* Prepare & restore library for user callback */
-            H5_BEFORE_USER_CB(FAIL) {
-                status = (conv->u.app_func)(src_id, dst_id, &(path->cdata), 0, 0, 0, NULL, NULL, H5CX_get_dxpl());
-            } H5_AFTER_USER_CB(FAIL)
+            H5_BEFORE_USER_CB(FAIL)
+            {
+                status =
+                    (conv->u.app_func)(src_id, dst_id, &(path->cdata), 0, 0, 0, NULL, NULL, H5CX_get_dxpl());
+            }
+            H5_AFTER_USER_CB(FAIL)
         }
         else
             status = (conv->u.lib_func)(path->src, path->dst, &(path->cdata), conv_ctx, 0, 0, 0, NULL, NULL);
@@ -5423,9 +5432,12 @@ H5T__path_find_init_new_path(H5T_path_t *path, const H5T_t *src, const H5T_t *ds
                             "unable to register ID for destination datatype");
 
             /* Prepare & restore library for user callback */
-            H5_BEFORE_USER_CB(FAIL) {
-                status = (H5T_g.soft[i].conv.u.app_func)(src_id, dst_id, &(path->cdata), 0, 0, 0, NULL, NULL, H5CX_get_dxpl());
-            } H5_AFTER_USER_CB(FAIL)
+            H5_BEFORE_USER_CB(FAIL)
+            {
+                status = (H5T_g.soft[i].conv.u.app_func)(src_id, dst_id, &(path->cdata), 0, 0, 0, NULL, NULL,
+                                                         H5CX_get_dxpl());
+            }
+            H5_AFTER_USER_CB(FAIL)
         }
         else
             status = (H5T_g.soft[i].conv.u.lib_func)(path->src, path->dst, &(path->cdata), conv_ctx, 0, 0, 0,
@@ -5512,12 +5524,16 @@ H5T__path_free(H5T_path_t *path, H5T_conv_ctx_t *conv_ctx)
 
         if (path->conv.is_app) {
             /* Prepare & restore library for user callback */
-            H5_BEFORE_USER_CB_NOERR(FAIL) {
-                status = (path->conv.u.app_func)(conv_ctx->u.free.src_type_id, conv_ctx->u.free.dst_type_id, &(path->cdata), 0, 0, 0, NULL, NULL, H5CX_get_dxpl());
-            } H5_AFTER_USER_CB_NOERR(FAIL)
+            H5_BEFORE_USER_CB_NOERR(FAIL)
+            {
+                status = (path->conv.u.app_func)(conv_ctx->u.free.src_type_id, conv_ctx->u.free.dst_type_id,
+                                                 &(path->cdata), 0, 0, 0, NULL, NULL, H5CX_get_dxpl());
+            }
+            H5_AFTER_USER_CB_NOERR(FAIL)
         }
         else
-            status = (path->conv.u.lib_func)(path->src, path->dst, &(path->cdata), conv_ctx, 0, 0, 0, NULL, NULL);
+            status =
+                (path->conv.u.lib_func)(path->src, path->dst, &(path->cdata), conv_ctx, 0, 0, 0, NULL, NULL);
 
         if (status < 0) {
             /* Ignore any error from shutting down the path */
@@ -5928,9 +5944,13 @@ H5T_convert_with_ctx(H5T_path_t *tpath, const H5T_t *src_type, const H5T_t *dst_
     tpath->cdata.command = H5T_CONV_CONV;
     if (tpath->conv.is_app) {
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB(FAIL) {
-            ret_value = (tpath->conv.u.app_func)(conv_ctx->u.conv.src_type_id, conv_ctx->u.conv.dst_type_id, &(tpath->cdata), nelmts, buf_stride, bkg_stride, buf, bkg, conv_ctx->u.conv.dxpl_id);
-        } H5_AFTER_USER_CB(FAIL)
+        H5_BEFORE_USER_CB(FAIL)
+        {
+            ret_value = (tpath->conv.u.app_func)(conv_ctx->u.conv.src_type_id, conv_ctx->u.conv.dst_type_id,
+                                                 &(tpath->cdata), nelmts, buf_stride, bkg_stride, buf, bkg,
+                                                 conv_ctx->u.conv.dxpl_id);
+        }
+        H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
             HGOTO_ERROR(H5E_DATATYPE, H5E_CANTCONVERT, FAIL, "datatype conversion failed");
     } /* end if */
