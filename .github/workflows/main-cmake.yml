@@ -8,7 +8,7 @@ on:
         description: "TS or empty"
         required: true
         type: string
-      concurrency:
+      concurrent:
         description: "CC or empty"
         required: true
         type: string

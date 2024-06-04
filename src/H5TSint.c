@@ -301,10 +301,6 @@ done:
 #ifdef H5_HAVE_THREADSAFE
 herr_t
 H5TS_api_lock(void)
-#else /* H5_HAVE_CONCURRENCY */
-herr_t
-H5TS_api_lock(unsigned *dlftt)
-#endif
 {
     herr_t ret_value = SUCCEED;
 
@@ -318,14 +314,32 @@ H5TS_api_lock(unsigned *dlftt)
     /* Increment the attempt lock count */
     H5TS_atomic_fetch_add_uint(&H5TS_api_info_p.attempt_lock_count, 1);
 
-#ifdef H5_HAVE_THREADSAFE
     /* Acquire the library's API lock */
     if (H5_UNLIKELY(H5TS_mutex_lock(&H5TS_api_info_p.api_mutex) < 0))
         HGOTO_DONE(FAIL);
 
     /* Increment the lock count for this thread */
     H5TS_api_info_p.lock_count++;
+
+done:
+    FUNC_LEAVE_NOAPI_NAMECHECK_ONLY(ret_value)
+} /* end H5TS_api_lock() */
 #else /* H5_HAVE_CONCURRENCY */
+herr_t
+H5TS_api_lock(unsigned *dlftt)
+{
+    herr_t ret_value = SUCCEED;
+
+    FUNC_ENTER_NOAPI_NAMECHECK_ONLY
+
+    /* Initialize the thread-safety code, once */
+    if (H5_UNLIKELY(!H5_INIT_GLOBAL))
+        if (H5_UNLIKELY(H5TS_once(&H5TS_first_init_s, H5TS_ONCE_INIT_FUNC) < 0))
+            HGOTO_DONE(FAIL);
+
+    /* Increment the attempt lock count */
+    H5TS_atomic_fetch_add_uint(&H5TS_api_info_p.attempt_lock_count, 1);
+
     /* Query the DLFTT value */
     if (H5_UNLIKELY(H5TS__get_dlftt(dlftt) < 0))
         HGOTO_DONE(FAIL);
@@ -335,11 +349,11 @@ H5TS_api_lock(unsigned *dlftt)
         /* Acquire the library's API lock */
         if (H5_UNLIKELY(H5TS_rwlock_wrlock(&H5TS_api_info_p.api_lock) < 0))
             HGOTO_DONE(FAIL);
-#endif
 
 done:
     FUNC_LEAVE_NOAPI_NAMECHECK_ONLY(ret_value)
 } /* end H5TS_api_lock() */
+#endif
 
 /*--------------------------------------------------------------------------
  * Function:    H5TS__mutex_release
