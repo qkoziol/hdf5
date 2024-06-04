@@ -796,8 +796,13 @@ H5Z__prelude_callback(const H5O_pline_t *pline, hid_t dcpl_id, hid_t type_id, hi
 
                     /* Check if there is a "can apply" callback */
                     if (fclass->can_apply) {
-                        /* Make callback to filter's "can apply" function */
-                        htri_t status = (fclass->can_apply)(dcpl_id, type_id, space_id);
+                        htri_t status;
+
+                        /* Prepare & restore library for user callback */
+                        H5_BEFORE_USER_CB(FAIL) {
+                            /* Make callback to filter's "can apply" function */
+                            status = (fclass->can_apply)(dcpl_id, type_id, space_id);
+                        } H5_AFTER_USER_CB(FAIL)
 
                         /* Indicate error during filter callback */
                         if (status < 0)
@@ -813,9 +818,16 @@ H5Z__prelude_callback(const H5O_pline_t *pline, hid_t dcpl_id, hid_t type_id, hi
                 case H5Z_PRELUDE_SET_LOCAL:
                     /* Check if there is a "set local" callback */
                     if (fclass->set_local) {
-                        /* Make callback to filter's "set local" function */
-                        if ((fclass->set_local)(dcpl_id, type_id, space_id) < 0)
-                            /* Indicate error during filter callback */
+                        herr_t status;
+
+                        /* Prepare & restore library for user callback */
+                        H5_BEFORE_USER_CB(FAIL) {
+                            /* Make callback to filter's "set local" function */
+                            status = (fclass->set_local)(dcpl_id, type_id, space_id);
+                        } H5_AFTER_USER_CB(FAIL)
+
+                        /* Indicate error during filter callback */
+                        if (status < 0)
                             HGOTO_ERROR(H5E_PLINE, H5E_SETLOCAL, FAIL, "error during user callback");
                     } /* end if */
                     break;
@@ -1425,8 +1437,11 @@ H5Z_pipeline(const H5O_pline_t *pline, unsigned flags, unsigned *filter_mask /*i
 
             tmp_flags = flags | (pline->filter[idx].flags);
             tmp_flags |= (edc_read == H5Z_DISABLE_EDC) ? H5Z_FLAG_SKIP_EDC : 0;
-            new_nbytes = (fclass->filter)(tmp_flags, pline->filter[idx].cd_nelmts,
-                                          pline->filter[idx].cd_values, *nbytes, buf_size, buf);
+
+            /* Prepare & restore library for user callback */
+            H5_BEFORE_USER_CB(FAIL) {
+                new_nbytes = (fclass->filter)(tmp_flags, pline->filter[idx].cd_nelmts, pline->filter[idx].cd_values, *nbytes, buf_size, buf);
+            } H5_AFTER_USER_CB(FAIL)
 
 #ifdef H5Z_DEBUG
             H5_timer_stop(&timer);
@@ -1476,8 +1491,10 @@ H5Z_pipeline(const H5O_pline_t *pline, unsigned flags, unsigned *filter_mask /*i
             H5_timer_start(&timer);
 #endif
 
-            new_nbytes = (fclass->filter)(flags | (pline->filter[idx].flags), pline->filter[idx].cd_nelmts,
-                                          pline->filter[idx].cd_values, *nbytes, buf_size, buf);
+            /* Prepare & restore library for user callback */
+            H5_BEFORE_USER_CB(FAIL) {
+                new_nbytes = (fclass->filter)(flags | (pline->filter[idx].flags), pline->filter[idx].cd_nelmts, pline->filter[idx].cd_values, *nbytes, buf_size, buf);
+            } H5_AFTER_USER_CB(FAIL)
 
 #ifdef H5Z_DEBUG
             H5_timer_stop(&timer);
