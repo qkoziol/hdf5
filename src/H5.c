@@ -76,8 +76,8 @@ static const unsigned VERS_RELEASE_EXCEPTIONS[]    = {0};
 static const unsigned VERS_RELEASE_EXCEPTIONS_SIZE = 1;
 
 /* Library init / term status (global) */
-bool H5_libinit_g = false; /* Library hasn't been initialized */
-bool H5_libterm_g = false; /* Library isn't being shutdown */
+H5_DLLVAR bool H5_libinit_g = false; /* Library hasn't been initialized */
+H5_DLLVAR bool H5_libterm_g = false; /* Library isn't being shutdown */
 
 char        H5_lib_vers_info_g[] = H5_VERS_INFO;
 static bool H5_dont_atexit_g     = false;
