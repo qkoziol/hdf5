@@ -841,9 +841,12 @@ H5FD__core_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr
             /* Allocate memory for the file's data, using the file image callback if available. */
             if (file->fi_callbacks.image_malloc) {
                 /* Prepare & restore library for user callback */
-                H5_BEFORE_USER_CB(NULL) {
-                    file->mem = file->fi_callbacks.image_malloc(size, H5FD_FILE_IMAGE_OP_FILE_OPEN, file->fi_callbacks.udata);
-                } H5_AFTER_USER_CB(NULL)
+                H5_BEFORE_USER_CB(NULL)
+                {
+                    file->mem = file->fi_callbacks.image_malloc(size, H5FD_FILE_IMAGE_OP_FILE_OPEN,
+                                                                file->fi_callbacks.udata);
+                }
+                H5_AFTER_USER_CB(NULL)
                 if (NULL == file->mem)
                     HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "image malloc callback failed");
             } /* end if */
@@ -861,9 +864,13 @@ H5FD__core_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr
                     void *tmp;
 
                     /* Prepare & restore library for user callback */
-                    H5_BEFORE_USER_CB(NULL) {
-                        tmp = file->fi_callbacks.image_memcpy(file->mem, file_image_info.buffer, size, H5FD_FILE_IMAGE_OP_FILE_OPEN, file->fi_callbacks.udata);
-                    } H5_AFTER_USER_CB(NULL)
+                    H5_BEFORE_USER_CB(NULL)
+                    {
+                        tmp = file->fi_callbacks.image_memcpy(file->mem, file_image_info.buffer, size,
+                                                              H5FD_FILE_IMAGE_OP_FILE_OPEN,
+                                                              file->fi_callbacks.udata);
+                    }
+                    H5_AFTER_USER_CB(NULL)
                     if (file->mem != tmp)
                         HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, NULL, "image_memcpy callback failed");
                 } /* end if */
@@ -1001,9 +1008,12 @@ H5FD__core_close(H5FD_t *_file)
         /* Use image callback if available */
         if (file->fi_callbacks.image_free) {
             /* Prepare & restore library for user callback */
-            H5_BEFORE_USER_CB(FAIL) {
-                ret_value =file->fi_callbacks.image_free(file->mem, H5FD_FILE_IMAGE_OP_FILE_CLOSE, file->fi_callbacks.udata);
-            } H5_AFTER_USER_CB(FAIL)
+            H5_BEFORE_USER_CB(FAIL)
+            {
+                ret_value = file->fi_callbacks.image_free(file->mem, H5FD_FILE_IMAGE_OP_FILE_CLOSE,
+                                                          file->fi_callbacks.udata);
+            }
+            H5_AFTER_USER_CB(FAIL)
             if (ret_value < 0)
                 HGOTO_ERROR(H5E_VFL, H5E_CANTFREE, FAIL, "image_free callback failed");
         } /* end if */
@@ -1373,15 +1383,21 @@ H5FD__core_write(H5FD_t *_file, H5FD_mem_t H5_ATTR_UNUSED type, hid_t H5_ATTR_UN
         /* (Re)allocate memory for the file buffer, using callbacks if available */
         if (file->fi_callbacks.image_realloc) {
             /* Prepare & restore library for user callback */
-            H5_BEFORE_USER_CB(FAIL) {
-                x = file->fi_callbacks.image_realloc(file->mem, new_eof, H5FD_FILE_IMAGE_OP_FILE_RESIZE, file->fi_callbacks.udata);
-            } H5_AFTER_USER_CB(FAIL)
+            H5_BEFORE_USER_CB(FAIL)
+            {
+                x = file->fi_callbacks.image_realloc(file->mem, new_eof, H5FD_FILE_IMAGE_OP_FILE_RESIZE,
+                                                     file->fi_callbacks.udata);
+            }
+            H5_AFTER_USER_CB(FAIL)
             if (NULL == x)
-                HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "unable to allocate memory block of %llu bytes with callback", (unsigned long long)new_eof);
+                HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL,
+                            "unable to allocate memory block of %llu bytes with callback",
+                            (unsigned long long)new_eof);
         } /* end if */
         else {
             if (NULL == (x = H5MM_realloc(file->mem, new_eof)))
-                HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "unable to allocate memory block of %llu bytes", (unsigned long long)new_eof);
+                HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "unable to allocate memory block of %llu bytes",
+                            (unsigned long long)new_eof);
         } /* end else */
 
         memset(x + file->eof, 0, (size_t)(new_eof - file->eof));
@@ -1531,11 +1547,15 @@ H5FD__core_truncate(H5FD_t *_file, hid_t H5_ATTR_UNUSED dxpl_id, bool closing)
             /* (Re)allocate memory for the file buffer, using callback if available */
             if (file->fi_callbacks.image_realloc) {
                 /* Prepare & restore library for user callback */
-                H5_BEFORE_USER_CB(FAIL) {
-                    x = file->fi_callbacks.image_realloc(file->mem, new_eof, H5FD_FILE_IMAGE_OP_FILE_RESIZE, file->fi_callbacks.udata);
-                } H5_AFTER_USER_CB(FAIL)
+                H5_BEFORE_USER_CB(FAIL)
+                {
+                    x = file->fi_callbacks.image_realloc(file->mem, new_eof, H5FD_FILE_IMAGE_OP_FILE_RESIZE,
+                                                         file->fi_callbacks.udata);
+                }
+                H5_AFTER_USER_CB(FAIL)
                 if (NULL == x)
-                    HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "unable to allocate memory block with callback");
+                    HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL,
+                                "unable to allocate memory block with callback");
             } /* end if */
             else {
                 if (NULL == (x = H5MM_realloc(file->mem, new_eof)))

@@ -349,14 +349,17 @@ H5D__fill_init(H5D_fill_buf_info_t *fb_info, void *caller_fill_buf, H5MM_allocat
             else {
                 if (alloc_func) {
                     /* Prepare & restore library for user callback */
-                    H5_BEFORE_USER_CB(FAIL) {
+                    H5_BEFORE_USER_CB(FAIL)
+                    {
                         fb_info->fill_buf = alloc_func(fb_info->fill_buf_size, alloc_info);
-                    } H5_AFTER_USER_CB(FAIL)
+                    }
+                    H5_AFTER_USER_CB(FAIL)
                 }
                 else
                     fb_info->fill_buf = H5FL_BLK_MALLOC(non_zero_fill, fb_info->fill_buf_size);
                 if (NULL == fb_info->fill_buf)
-                    HGOTO_ERROR(H5E_DATATYPE, H5E_CANTALLOC, FAIL, "memory allocation failed for fill buffer");
+                    HGOTO_ERROR(H5E_DATATYPE, H5E_CANTALLOC, FAIL,
+                                "memory allocation failed for fill buffer");
             } /* end else */
 
             /* Get the datatype conversion path for this operation */
@@ -406,14 +409,17 @@ H5D__fill_init(H5D_fill_buf_info_t *fb_info, void *caller_fill_buf, H5MM_allocat
             else {
                 if (alloc_func) {
                     /* Prepare & restore library for user callback */
-                    H5_BEFORE_USER_CB(FAIL) {
+                    H5_BEFORE_USER_CB(FAIL)
+                    {
                         fb_info->fill_buf = alloc_func(fb_info->fill_buf_size, alloc_info);
-                    } H5_AFTER_USER_CB(FAIL)
+                    }
+                    H5_AFTER_USER_CB(FAIL)
                 }
                 else
                     fb_info->fill_buf = H5FL_BLK_MALLOC(non_zero_fill, fb_info->fill_buf_size);
                 if (NULL == fb_info->fill_buf)
-                    HGOTO_ERROR(H5E_DATATYPE, H5E_CANTALLOC, FAIL, "memory allocation failed for fill buffer");
+                    HGOTO_ERROR(H5E_DATATYPE, H5E_CANTALLOC, FAIL,
+                                "memory allocation failed for fill buffer");
             } /* end else */
 
             /* Replicate the fill value into the cached buffer */
@@ -445,16 +451,21 @@ H5D__fill_init(H5D_fill_buf_info_t *fb_info, void *caller_fill_buf, H5MM_allocat
         else {
             if (alloc_func) {
                 /* Prepare & restore library for user callback */
-                H5_BEFORE_USER_CB(FAIL) {
+                H5_BEFORE_USER_CB(FAIL)
+                {
                     fb_info->fill_buf = alloc_func(fb_info->fill_buf_size, alloc_info);
-                } H5_AFTER_USER_CB(FAIL)
+                }
+                H5_AFTER_USER_CB(FAIL)
                 if (NULL == fb_info->fill_buf)
-                    HGOTO_ERROR(H5E_DATATYPE, H5E_CANTALLOC, FAIL, "memory allocation failed for fill buffer");
+                    HGOTO_ERROR(H5E_DATATYPE, H5E_CANTALLOC, FAIL,
+                                "memory allocation failed for fill buffer");
 
                 memset(fb_info->fill_buf, 0, fb_info->fill_buf_size);
             } /* end if */
             else {
-                htri_t buf_avail = H5FL_BLK_AVAIL( zero_fill, fb_info->fill_buf_size); /* Check if there is an already zeroed out buffer available */
+                htri_t buf_avail = H5FL_BLK_AVAIL(
+                    zero_fill,
+                    fb_info->fill_buf_size); /* Check if there is an already zeroed out buffer available */
                 assert(buf_avail != FAIL);
 
                 /* Allocate temporary buffer (zeroing it if no buffer is available) */
@@ -523,9 +534,11 @@ H5D__fill_refill_vl(H5D_fill_buf_info_t *fb_info, size_t nelmts)
     /* Make a copy of the fill buffer so we can free dynamic elements after conversion */
     if (fb_info->fill_alloc_func) {
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB(FAIL) {
+        H5_BEFORE_USER_CB(FAIL)
+        {
             buf = fb_info->fill_alloc_func(fb_info->fill_buf_size, fb_info->fill_alloc_info);
-        } H5_AFTER_USER_CB(FAIL)
+        }
+        H5_AFTER_USER_CB(FAIL)
     }
     else
         buf = H5FL_BLK_MALLOC(non_zero_fill, fb_info->fill_buf_size);
@@ -554,9 +567,11 @@ done:
         /* Free temporary fill buffer */
         if (fb_info->fill_free_func) {
             /* Prepare & restore library for user callback */
-            H5_BEFORE_USER_CB_NOERR(FAIL) {
+            H5_BEFORE_USER_CB_NOERR(FAIL)
+            {
                 fb_info->fill_free_func(buf, fb_info->fill_free_info);
-            } H5_AFTER_USER_CB_NOERR(FAIL)
+            }
+            H5_AFTER_USER_CB_NOERR(FAIL)
         }
         else
             buf = H5FL_BLK_FREE(non_zero_fill, buf);
@@ -577,7 +592,7 @@ done:
 static herr_t
 H5D__fill_release(H5D_fill_buf_info_t *fb_info)
 {
-    herr_t          ret_value = SUCCEED;             /* Return value */
+    herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE_NOERR
 
@@ -589,9 +604,11 @@ H5D__fill_release(H5D_fill_buf_info_t *fb_info)
     if (!fb_info->use_caller_fill_buf && fb_info->fill_buf) {
         if (fb_info->fill_free_func) {
             /* Prepare & restore library for user callback */
-            H5_BEFORE_USER_CB_NOERR(FAIL) {
+            H5_BEFORE_USER_CB_NOERR(FAIL)
+            {
                 fb_info->fill_free_func(fb_info->fill_buf, fb_info->fill_free_info);
-            } H5_AFTER_USER_CB_NOERR(FAIL)
+            }
+            H5_AFTER_USER_CB_NOERR(FAIL)
         }
         else {
             if (fb_info->fill->buf)

@@ -1467,9 +1467,11 @@ H5Z_pipeline(const H5O_pline_t *pline, unsigned flags, unsigned *filter_mask /*i
                     H5Z_cb_return_t status;
 
                     /* Prepare & restore library for user callback */
-                    H5_BEFORE_USER_CB(FAIL) {
+                    H5_BEFORE_USER_CB(FAIL)
+                    {
                         status = cb_struct.func(pline->filter[idx].id, *buf, *buf_size, cb_struct.op_data);
-                    } H5_AFTER_USER_CB(FAIL)
+                    }
+                    H5_AFTER_USER_CB(FAIL)
                     if (H5Z_CB_FAIL == status)
                         HGOTO_ERROR(H5E_PLINE, H5E_READERROR, FAIL, "filter returned failure during read");
                 }
@@ -1533,9 +1535,11 @@ H5Z_pipeline(const H5O_pline_t *pline, unsigned flags, unsigned *filter_mask /*i
                         H5Z_cb_return_t status;
 
                         /* Prepare & restore library for user callback */
-                        H5_BEFORE_USER_CB(FAIL) {
+                        H5_BEFORE_USER_CB(FAIL)
+                        {
                             status = cb_struct.func(pline->filter[idx].id, *buf, *nbytes, cb_struct.op_data);
-                        } H5_AFTER_USER_CB(FAIL)
+                        }
+                        H5_AFTER_USER_CB(FAIL)
                         if (H5Z_CB_FAIL == status)
                             HGOTO_ERROR(H5E_PLINE, H5E_WRITEERROR, FAIL, "filter returned failure");
                     }

@@ -166,9 +166,14 @@ H5T__conv_b_b(const H5T_t *src, const H5T_t *dst, H5T_cdata_t *cdata, const H5T_
                         H5T__reverse_order(src_rev, s, src->shared->size, src->shared->u.atomic.order);
 
                         /* Prepare & restore library for user callback */
-                        H5_BEFORE_USER_CB(FAIL) {
-                            except_ret = (conv_ctx->u.conv.cb_struct.func)(H5T_CONV_EXCEPT_RANGE_HI, conv_ctx->u.conv.src_type_id, conv_ctx->u.conv.dst_type_id, src_rev, d, conv_ctx->u.conv.cb_struct.user_data);
-                        } H5_AFTER_USER_CB(FAIL)
+                        H5_BEFORE_USER_CB(FAIL)
+                        {
+                            except_ret = (conv_ctx->u.conv.cb_struct.func)(
+                                H5T_CONV_EXCEPT_RANGE_HI, conv_ctx->u.conv.src_type_id,
+                                conv_ctx->u.conv.dst_type_id, src_rev, d,
+                                conv_ctx->u.conv.cb_struct.user_data);
+                        }
+                        H5_AFTER_USER_CB(FAIL)
                     } /* end if */
 
                     if (except_ret == H5T_CONV_UNHANDLED) {
