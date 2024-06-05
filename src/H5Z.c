@@ -1463,9 +1463,17 @@ H5Z_pipeline(const H5O_pline_t *pline, unsigned flags, unsigned *filter_mask /*i
 #endif
 
             if (0 == new_nbytes) {
-                if ((cb_struct.func && (H5Z_CB_FAIL == cb_struct.func(pline->filter[idx].id, *buf, *buf_size,
-                                                                      cb_struct.op_data))) ||
-                    !cb_struct.func)
+                if (cb_struct.func) {
+                    H5Z_cb_return_t status;
+
+                    /* Prepare & restore library for user callback */
+                    H5_BEFORE_USER_CB(FAIL) {
+                        status = cb_struct.func(pline->filter[idx].id, *buf, *buf_size, cb_struct.op_data);
+                    } H5_AFTER_USER_CB(FAIL)
+                    if (H5Z_CB_FAIL == status)
+                        HGOTO_ERROR(H5E_PLINE, H5E_READERROR, FAIL, "filter returned failure during read");
+                }
+                else
                     HGOTO_ERROR(H5E_PLINE, H5E_READERROR, FAIL, "filter returned failure during read");
 
                 *nbytes = *buf_size;
@@ -1521,9 +1529,17 @@ H5Z_pipeline(const H5O_pline_t *pline, unsigned flags, unsigned *filter_mask /*i
 
             if (0 == new_nbytes) {
                 if (0 == (pline->filter[idx].flags & H5Z_FLAG_OPTIONAL)) {
-                    if ((cb_struct.func && (H5Z_CB_FAIL == cb_struct.func(pline->filter[idx].id, *buf,
-                                                                          *nbytes, cb_struct.op_data))) ||
-                        !cb_struct.func)
+                    if (cb_struct.func) {
+                        H5Z_cb_return_t status;
+
+                        /* Prepare & restore library for user callback */
+                        H5_BEFORE_USER_CB(FAIL) {
+                            status = cb_struct.func(pline->filter[idx].id, *buf, *nbytes, cb_struct.op_data);
+                        } H5_AFTER_USER_CB(FAIL)
+                        if (H5Z_CB_FAIL == status)
+                            HGOTO_ERROR(H5E_PLINE, H5E_WRITEERROR, FAIL, "filter returned failure");
+                    }
+                    else
                         HGOTO_ERROR(H5E_PLINE, H5E_WRITEERROR, FAIL, "filter returned failure");
 
                     *nbytes = *buf_size;
