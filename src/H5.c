@@ -326,8 +326,11 @@ H5_term_library(void)
         while (curr_atclose) {
             H5_atclose_node_t *tmp_atclose; /* Temporary pointer to 'atclose' node */
 
-            /* Invoke callback, providing context */
-            (*curr_atclose->func)(curr_atclose->ctx);
+            /* Prepare & restore library for user callback */
+            H5_BEFORE_USER_CB_NOCHECK {
+                /* Invoke callback, providing context */
+                (*curr_atclose->func)(curr_atclose->ctx);
+            } H5_AFTER_USER_CB_NOCHECK
 
             /* Advance to next node and free this one */
             tmp_atclose  = curr_atclose;
