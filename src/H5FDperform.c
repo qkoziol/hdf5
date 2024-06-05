@@ -50,7 +50,10 @@ H5FDperform_init(H5FD_init_t op)
     if (H5_init_library() < 0)
         HGOTO_ERROR(H5E_FUNC, H5E_CANTINIT, H5I_INVALID_HID, "library initialization failed");
 
-    ret_value = op();
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(H5I_INVALID_HID) {
+        ret_value = op();
+    } H5_AFTER_USER_CB(H5I_INVALID_HID)
 
 done:
     FUNC_LEAVE_API_NOINIT(ret_value)
