@@ -373,10 +373,12 @@ H5I__mark_node(void *_info, void H5_ATTR_UNUSED *key, void *_udata)
             herr_t status;
 
             /* Prepare & restore library for user callback */
-            H5_BEFORE_USER_CB_NOCHECK {
+            H5_BEFORE_USER_CB_NOCHECK
+            {
                 /* Discard the future object */
                 status = (info->discard_cb)(info->u.object);
-            } H5_AFTER_USER_CB_NOCHECK
+            }
+            H5_AFTER_USER_CB_NOCHECK
             if (status < 0) {
                 if (udata->force) {
                     /* Indicate node should be removed from list */
@@ -394,9 +396,11 @@ H5I__mark_node(void *_info, void H5_ATTR_UNUSED *key, void *_udata)
                 herr_t status;
 
                 /* Prepare & restore library for user callback */
-                H5_BEFORE_USER_CB_NOCHECK {
+                H5_BEFORE_USER_CB_NOCHECK
+                {
                     status = (udata->type_info->cls->free_func)(info->u.object, H5_REQUEST_NULL);
-                } H5_AFTER_USER_CB_NOCHECK
+                }
+                H5_AFTER_USER_CB_NOCHECK
                 if (status < 0) {
                     if (udata->force) {
                         /* Indicate node should be removed from list */
@@ -982,7 +986,7 @@ H5I__dec_ref(hid_t id, void **request)
      */
     if (1 == info->count) {
         H5I_type_info_t *type_info; /*ptr to the type    */
-        bool remove_node = false;
+        bool             remove_node = false;
 
         /* Get the ID's type */
         type_info = H5I_type_info_array_g[H5I_TYPE(id)];
@@ -991,9 +995,11 @@ H5I__dec_ref(hid_t id, void **request)
             herr_t status;
 
             /* Prepare & restore library for user callback */
-            H5_BEFORE_USER_CB((-1)) {
+            H5_BEFORE_USER_CB((-1))
+            {
                 status = (type_info->cls->free_func)(info->u.object, request);
-            } H5_AFTER_USER_CB((-1))
+            }
+            H5_AFTER_USER_CB((-1))
 
             if (status >= 0)
                 remove_node = true;
@@ -1604,16 +1610,18 @@ H5I__find_id(hid_t id)
 
     /* Check if this is a future ID */
     if (id_info && id_info->is_future) {
-        hid_t actual_id = H5I_INVALID_HID; /* ID for actual object */
-        void *future_object;               /* Pointer to the future object */
-        void *actual_object;               /* Pointer to the actual object */
+        hid_t  actual_id = H5I_INVALID_HID; /* ID for actual object */
+        void  *future_object;               /* Pointer to the future object */
+        void  *actual_object;               /* Pointer to the actual object */
         herr_t status = FAIL;
 
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB_NOERR(NULL) {
+        H5_BEFORE_USER_CB_NOERR(NULL)
+        {
             /* Invoke the realize callback, to get the actual object */
             status = (id_info->realize_cb)(id_info->u.object, &actual_id);
-        } H5_AFTER_USER_CB_NOERR(NULL)
+        }
+        H5_AFTER_USER_CB_NOERR(NULL)
         if (status < 0)
             HGOTO_DONE(NULL);
 
@@ -1630,10 +1638,12 @@ H5I__find_id(hid_t id)
         id_info->u.object = actual_object;
 
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB_NOERR(NULL) {
+        H5_BEFORE_USER_CB_NOERR(NULL)
+        {
             /* Discard the future object */
             status = (id_info->discard_cb)(future_object);
-        } H5_AFTER_USER_CB_NOERR(NULL)
+        }
+        H5_AFTER_USER_CB_NOERR(NULL)
         if (status < 0)
             HGOTO_DONE(NULL);
         future_object = NULL;

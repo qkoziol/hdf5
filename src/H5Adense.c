@@ -1054,20 +1054,26 @@ H5A__dense_iterate_bt2_cb(const void *_record, void *_bt2_udata)
                     HGOTO_ERROR(H5E_ATTR, H5E_CANTGET, H5_ITER_ERROR, "unable to get attribute info");
 
                 /* Prepare & restore library for user callback */
-                H5_BEFORE_USER_CB(H5_ITER_ERROR) {
+                H5_BEFORE_USER_CB(H5_ITER_ERROR)
+                {
                     /* Make the application callback */
-                    ret_value = (bt2_udata->attr_op->u.app_op2)(bt2_udata->loc_id, fh_udata.attr->shared->name, &ainfo, bt2_udata->op_data);
-                } H5_AFTER_USER_CB(H5_ITER_ERROR)
+                    ret_value = (bt2_udata->attr_op->u.app_op2)(
+                        bt2_udata->loc_id, fh_udata.attr->shared->name, &ainfo, bt2_udata->op_data);
+                }
+                H5_AFTER_USER_CB(H5_ITER_ERROR)
                 break;
             }
 
 #ifndef H5_NO_DEPRECATED_SYMBOLS
             case H5A_ATTR_OP_APP:
                 /* Prepare & restore library for user callback */
-                H5_BEFORE_USER_CB(H5_ITER_ERROR) {
+                H5_BEFORE_USER_CB(H5_ITER_ERROR)
+                {
                     /* Make the application callback */
-                    ret_value = (bt2_udata->attr_op->u.app_op)(bt2_udata->loc_id, fh_udata.attr->shared->name, bt2_udata->op_data);
-                } H5_AFTER_USER_CB(H5_ITER_ERROR)
+                    ret_value = (bt2_udata->attr_op->u.app_op)(bt2_udata->loc_id, fh_udata.attr->shared->name,
+                                                               bt2_udata->op_data);
+                }
+                H5_AFTER_USER_CB(H5_ITER_ERROR)
                 break;
 #endif /* H5_NO_DEPRECATED_SYMBOLS */
 

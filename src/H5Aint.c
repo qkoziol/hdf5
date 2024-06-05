@@ -1844,20 +1844,25 @@ H5A__attr_iterate_table(const H5A_attr_table_t *atable, hsize_t skip, hsize_t *l
                     HGOTO_ERROR(H5E_ATTR, H5E_CANTGET, H5_ITER_ERROR, "unable to get attribute info");
 
                 /* Prepare & restore library for user callback */
-                H5_BEFORE_USER_CB(H5_ITER_ERROR) {
+                H5_BEFORE_USER_CB(H5_ITER_ERROR)
+                {
                     /* Make the application callback */
-                    ret_value = (attr_op->u.app_op2)(loc_id, ((atable->attrs[u])->shared)->name, &ainfo, op_data);
-                } H5_AFTER_USER_CB(H5_ITER_ERROR)
+                    ret_value =
+                        (attr_op->u.app_op2)(loc_id, ((atable->attrs[u])->shared)->name, &ainfo, op_data);
+                }
+                H5_AFTER_USER_CB(H5_ITER_ERROR)
                 break;
             }
 
 #ifndef H5_NO_DEPRECATED_SYMBOLS
             case H5A_ATTR_OP_APP:
                 /* Prepare & restore library for user callback */
-                H5_BEFORE_USER_CB(H5_ITER_ERROR) {
+                H5_BEFORE_USER_CB(H5_ITER_ERROR)
+                {
                     /* Make the application callback */
                     ret_value = (attr_op->u.app_op)(loc_id, ((atable->attrs[u])->shared)->name, op_data);
-                } H5_AFTER_USER_CB(H5_ITER_ERROR)
+                }
+                H5_AFTER_USER_CB(H5_ITER_ERROR)
                 break;
 #endif /* H5_NO_DEPRECATED_SYMBOLS */
 

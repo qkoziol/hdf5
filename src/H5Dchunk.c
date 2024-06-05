@@ -1438,7 +1438,8 @@ H5D__chunk_mem_free(void *chk, void *pline)
 {
     FUNC_ENTER_NOAPI_NAMECHECK_ONLY
 
-    (void)H5D__chunk_mem_xfree(chk, pline);
+        (void)
+    H5D__chunk_mem_xfree(chk, pline);
 
     FUNC_LEAVE_NOAPI_VOID_NAMECHECK_ONLY
 }
@@ -8142,9 +8143,13 @@ H5D__chunk_iter_cb(const H5D_chunk_rec_t *chunk_rec, void *udata)
         offset[i] = chunk_rec->scaled[i] * chunk->dim[i];
 
     /* Prepare & restore library for user callback */
-    H5_BEFORE_USER_CB_NOERR(FAIL) {
-        ret_value = (data->op)(offset, (unsigned)chunk_rec->filter_mask, data->base_addr + chunk_rec->chunk_addr, (hsize_t)chunk_rec->nbytes, data->op_data);
-    } H5_AFTER_USER_CB_NOERR(FAIL)
+    H5_BEFORE_USER_CB_NOERR(FAIL)
+    {
+        ret_value =
+            (data->op)(offset, (unsigned)chunk_rec->filter_mask, data->base_addr + chunk_rec->chunk_addr,
+                       (hsize_t)chunk_rec->nbytes, data->op_data);
+    }
+    H5_AFTER_USER_CB_NOERR(FAIL)
 
     /* Check for callback failure and pass along return value */
     if (ret_value < 0)
