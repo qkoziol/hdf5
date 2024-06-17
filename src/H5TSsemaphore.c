@@ -1,5 +1,6 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.  *
+ * Copyright by The HDF Group.                                               *
+ * All rights reserved.                                                      *
  *                                                                           *
  * This file is part of HDF5.  The full HDF5 copyright notice, including     *
  * terms governing use, modification, and redistribution, is contained in    *
@@ -10,8 +11,12 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /*
- * Purpose: This file contains support for condition variables, equivalent to
- *        the pthread 'pthread_cond_t' type and capabilities.
+ * Purpose: This file contains support for semaphores, equivalent to POSIX
+ *        semaphore's capabilities.
+ *
+ *        Emulated semaphores are based off the Netscape Portable Runtime
+ *        implementation:
+ * https://hg.mozilla.org/projects/nspr/file/3e25d69ba6b268f2817e920a69eb2c091efe17e6/pr/src/threads/prsem.c
  *
  * Note:  Because this threadsafety framework operates outside the library,
  *        it does not use the error stack (although it does use error macros
@@ -58,138 +63,157 @@
 /* Local Variables */
 /*******************/
 
-#ifdef H5_HAVE_C11_THREADS
-
+#if defined(_WIN32)
 /*-------------------------------------------------------------------------
- * Function: H5TS_cond_init
+ * Function: H5TS_semaphore_init
  *
- * Purpose:  Initialize a H5TS_cond_t (does not allocate it)
+ * Purpose:  Initialize a H5TS_semaphore_t (does not allocate it)
  *
  * Return:   Non-negative on success / Negative on failure
  *
  *-------------------------------------------------------------------------
  */
 herr_t
-H5TS_cond_init(H5TS_cond_t *cond)
+H5TS_semaphore_init(H5TS_semaphore_t *sem, int initial_count)
 {
-    herr_t ret_value = SUCCEED;
+    /* Check argument */
+    if (H5_UNLIKELY(NULL == sem))
+        return FAIL;
 
-    FUNC_ENTER_NOAPI_NAMECHECK_ONLY
+    if (H5_UNLIKELY(NULL == (*sem = CreateSemaphore(NULL, initial_count, LONG_MAX, NULL))))
+        return FAIL;
 
-    if (H5_UNLIKELY(cnd_init(cond) != thrd_success))
-        HGOTO_DONE(FAIL);
-
-done:
-    FUNC_LEAVE_NOAPI_NAMECHECK_ONLY(ret_value)
-} /* end H5TS_cond_init() */
+    return SUCCEED;
+} /* end H5TS_semaphore_init() */
 
 /*-------------------------------------------------------------------------
- * Function: H5TS_cond_destroy
+ * Function: H5TS_semaphore_destroy
  *
- * Purpose:  Destroy a H5TS_cond_t (does not free it)
+ * Purpose:  Destroy a H5TS_semaphore_t (does not free it)
  *
  * Return:   Non-negative on success / Negative on failure
  *
  *-------------------------------------------------------------------------
  */
 herr_t
-H5TS_cond_destroy(H5TS_cond_t *cond)
+H5TS_semaphore_destroy(H5TS_semaphore_t *sem)
 {
-    FUNC_ENTER_NOAPI_NAMECHECK_ONLY
+    /* Check argument */
+    if (H5_UNLIKELY(NULL == sem))
+        return FAIL;
 
-    /* NOTE: cnd_destroy() can't fail */
-    cnd_destroy(cond);
+    if (H5_UNLIKELY(0 == CloseHandle(*sem)))
+        return FAIL;
 
-    FUNC_LEAVE_NOAPI_NAMECHECK_ONLY(SUCCEED)
-} /* end H5TS_cond_destroy() */
+    return SUCCEED;
+} /* end H5TS_semaphore_destroy() */
 
+#elif defined(__unix__) && !defined(__MACH__)
+/*
+ * POSIX semaphores
+ */
+
+/*-------------------------------------------------------------------------
+ * Function: H5TS_semaphore_init
+ *
+ * Purpose:  Initialize a H5TS_semaphore_t (does not allocate it)
+ *
+ * Return:   Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5TS_semaphore_init(H5TS_semaphore_t *sem, int initial_count)
+{
+    /* Check argument */
+    if (H5_UNLIKELY(NULL == sem))
+        return FAIL;
+
+    if (H5_UNLIKELY(0 != sem_init(sem, 0, initial_count)))
+        return FAIL;
+
+    return SUCCEED;
+} /* end H5TS_semaphore_init() */
+
+/*-------------------------------------------------------------------------
+ * Function: H5TS_semaphore_destroy
+ *
+ * Purpose:  Destroy a H5TS_semaphore_t (does not free it)
+ *
+ * Return:   Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5TS_semaphore_destroy(H5TS_semaphore_t *sem)
+{
+    /* Check argument */
+    if (H5_UNLIKELY(NULL == sem))
+        return FAIL;
+
+    if (H5_UNLIKELY(0 != sem_destroy(sem)))
+        return FAIL;
+
+    return SUCCEED;
+} /* end H5TS_semaphore_destroy() */
 #else
-#ifdef H5_HAVE_WIN_THREADS
+/*
+ * Emulate semaphore w/mutex & condition variable
+ */
+
 /*-------------------------------------------------------------------------
- * Function: H5TS_cond_init
+ * Function: H5TS_semaphore_init
  *
- * Purpose:  Initialize a H5TS_cond_t (does not allocate it)
+ * Purpose:  Initialize a H5TS_semaphore_t (does not allocate it)
  *
  * Return:   Non-negative on success / Negative on failure
  *
  *-------------------------------------------------------------------------
  */
 herr_t
-H5TS_cond_init(H5TS_cond_t *cond)
+H5TS_semaphore_init(H5TS_semaphore_t *sem, int initial_count)
 {
-    FUNC_ENTER_NOAPI_NAMECHECK_ONLY
+    /* Check argument */
+    if (H5_UNLIKELY(NULL == sem))
+        return FAIL;
 
-    InitializeConditionVariable(cond);
+    if (H5_UNLIKELY(H5TS_mutex_init(&sem->mutex, H5TS_MUTEX_TYPE_PLAIN) < 0))
+        return FAIL;
+    if (H5_UNLIKELY(H5TS_cond_init(&sem->cond) < 0)) {
+        H5TS_mutex_destroy(&sem->mutex);
+        return FAIL;
+    }
+    sem->waiters = 0;
+    sem->counter = initial_count;
 
-    FUNC_LEAVE_NOAPI_NAMECHECK_ONLY(SUCCEED)
-} /* end H5TS_cond_init() */
+    return SUCCEED;
+} /* end H5TS_semaphore_init() */
 
 /*-------------------------------------------------------------------------
- * Function: H5TS_cond_destroy
+ * Function: H5TS_semaphore_destroy
  *
- * Purpose:  Destroy a H5TS_cond_t (does not free it)
+ * Purpose:  Destroy a H5TS_semaphore_t (does not free it)
  *
  * Return:   Non-negative on success / Negative on failure
  *
  *-------------------------------------------------------------------------
  */
 herr_t
-H5TS_cond_destroy(H5TS_cond_t *cond)
-{
-    FUNC_ENTER_NOAPI_NAMECHECK_ONLY
-
-    /* Condition variables in Windows are not destroyed */
-
-    FUNC_LEAVE_NOAPI_NAMECHECK_ONLY(SUCCEED)
-} /* end H5TS_cond_destroy() */
-#else
-/*-------------------------------------------------------------------------
- * Function: H5TS_cond_init
- *
- * Purpose:  Initialize a H5TS_cond_t (does not allocate it)
- *
- * Return:   Non-negative on success / Negative on failure
- *
- *-------------------------------------------------------------------------
- */
-herr_t
-H5TS_cond_init(H5TS_cond_t *cond)
+H5TS_semaphore_destroy(H5TS_semaphore_t *sem)
 {
     herr_t ret_value = SUCCEED;
 
-    FUNC_ENTER_NOAPI_NAMECHECK_ONLY
+    /* Check argument */
+    if (H5_UNLIKELY(NULL == sem))
+        return FAIL;
 
-    if (H5_UNLIKELY(pthread_cond_init(cond, NULL)))
-        HGOTO_DONE(FAIL);
+    if (H5_UNLIKELY(H5TS_mutex_destroy(&sem->mutex) < 0))
+        ret_value = FAIL;
+    if (H5_UNLIKELY(H5TS_cond_destroy(&sem->cond) < 0))
+        return FAIL;
 
-done:
-    FUNC_LEAVE_NOAPI_NAMECHECK_ONLY(ret_value)
-} /* end H5TS_cond_init() */
-
-/*-------------------------------------------------------------------------
- * Function: H5TS_cond_destroy
- *
- * Purpose:  Destroy a H5TS_cond_t (does not free it)
- *
- * Return:   Non-negative on success / Negative on failure
- *
- *-------------------------------------------------------------------------
- */
-herr_t
-H5TS_cond_destroy(H5TS_cond_t *cond)
-{
-    herr_t ret_value = SUCCEED;
-
-    FUNC_ENTER_NOAPI_NAMECHECK_ONLY
-
-    if (H5_UNLIKELY(pthread_cond_destroy(cond)))
-        HGOTO_DONE(FAIL);
-
-done:
-    FUNC_LEAVE_NOAPI_NAMECHECK_ONLY(ret_value)
-} /* end H5TS_cond_destroy() */
-
-#endif
+    return ret_value;
+} /* end H5TS_semaphore_destroy() */
 #endif
 
 #endif /* H5_HAVE_THREADS */

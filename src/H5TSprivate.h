@@ -228,6 +228,40 @@ typedef struct H5TS_barrier_t {
 } H5TS_barrier_t;
 #endif
 
+/* Semaphores */
+#if defined(_WIN32)
+/*
+ * Windows semaphores
+ */
+
+/* System semaphore */
+typedef HANDLE H5TS_semaphore_t;
+
+#elif defined(__unix__) && !defined(__MACH__)
+/*
+ * POSIX semaphores
+ */
+#include <semaphore.h>
+
+/* System semaphore */
+typedef sem_t H5TS_semaphore_t;
+
+#else
+/*
+ * Emulated semaphores, for MacOS and unknown platforms
+ * Can't use POSIX semaphores on MacOS due to:
+ *      http://lists.apple.com/archives/darwin-kernel/2009/Apr/msg00010.html
+ */
+
+/* Emulate semaphore w/mutex & condition variable */
+typedef struct H5TS_semaphore_t {
+    H5TS_mutex_t mutex;
+    H5TS_cond_t  cond;
+    unsigned     waiters;
+    int          counter;
+} H5TS_semaphore_t;
+#endif
+
 #if defined(H5_HAVE_STDATOMIC_H) && !defined(__cplusplus)
 /* Spinlock, built from C11 atomic_flag */
 typedef atomic_flag H5TS_spinlock_t;
@@ -250,6 +284,7 @@ H5_CLANG_DIAG_OFF("c11-extensions")
 typedef H5TS_ffs_rwlock_local_t *_Atomic H5TS_ffs_rwlock_t;
 H5_GCC_DIAG_ON("c99-c11-compat")
 H5_CLANG_DIAG_ON("c11-extensions")
+
 #endif
 
 /*****************************/
@@ -289,9 +324,8 @@ H5_DLL herr_t H5TS_once(H5TS_once_t *once, H5TS_once_init_func_t func);
 
 /* Mutex operations */
 H5_DLL herr_t H5TS_mutex_init(H5TS_mutex_t *mutex, int type);
-H5_DLL herr_t H5TS_mutex_lock(H5TS_mutex_t *mutex) H5TS_ACQUIRE(*mutex);
+/* mutex lock & unlock calls are defined in H5TSmutex.h */
 H5_DLL herr_t H5TS_mutex_trylock(H5TS_mutex_t *mutex, bool *acquired) H5TS_TRY_ACQUIRE(SUCCEED, *mutex);
-H5_DLL herr_t H5TS_mutex_unlock(H5TS_mutex_t *mutex) H5TS_RELEASE(*mutex);
 H5_DLL herr_t H5TS_mutex_destroy(H5TS_mutex_t *mutex);
 
 /* R/W locks */
@@ -314,9 +348,7 @@ H5_DLL herr_t H5TS_ffs_rwlock_wrunlock(H5TS_ffs_rwlock_t *lock, H5TS_ffs_rwlock_
 
 /* Condition variable operations */
 H5_DLL herr_t H5TS_cond_init(H5TS_cond_t *cond);
-H5_DLL herr_t H5TS_cond_wait(H5TS_cond_t *cond, H5TS_mutex_t *mutex);
-H5_DLL herr_t H5TS_cond_signal(H5TS_cond_t *cond);
-H5_DLL herr_t H5TS_cond_broadcast(H5TS_cond_t *cond);
+/* condition wait, signal, broadcast calls are defined in H5TScond.h */
 H5_DLL herr_t H5TS_cond_destroy(H5TS_cond_t *cond);
 
 /* Thread-specific keys */
@@ -333,8 +365,9 @@ H5_DLL void   H5TS_thread_yield(void);
 
 /* Thread pools */
 H5_DLL herr_t H5TS_pool_create(H5TS_pool_t **pool, unsigned num_threads);
-H5_DLL herr_t H5TS_pool_add_task(H5TS_pool_t *pool, H5TS_thread_start_func_t func, void *ctx);
-H5_DLL herr_t H5TS_pool_destroy(H5TS_pool_t *pool);
+/* thread pool add task call is defined in H5TSpool.h */
+static inline herr_t H5TS_pool_add_task(H5TS_pool_t *pool, H5TS_thread_start_func_t func, void *ctx);
+H5_DLL herr_t        H5TS_pool_destroy(H5TS_pool_t *pool);
 
 /* Emulated C11 atomics */
 #if !(defined(H5_HAVE_STDATOMIC_H) && !defined(__cplusplus))
@@ -366,6 +399,21 @@ H5_DLL void  H5TS_atomic_destroy_voidp(H5TS_atomic_voidp_t *obj);
 H5_DLL herr_t H5TS_barrier_init(H5TS_barrier_t *barrier, unsigned count);
 H5_DLL herr_t H5TS_barrier_wait(H5TS_barrier_t *barrier);
 H5_DLL herr_t H5TS_barrier_destroy(H5TS_barrier_t *barrier);
+
+#if defined(H5_HAVE_STDATOMIC_H) && !defined(__cplusplus)
+H5_DLL herr_t H5TS_semaphore_init(H5TS_semaphore_t *sem, int initial_count);
+/* semaphore signal & wait calls are defined in H5TSsemaphore.h */
+static inline herr_t H5TS_semaphore_signal(H5TS_semaphore_t *sem);
+static inline herr_t H5TS_semaphore_wait(H5TS_semaphore_t *sem);
+H5_DLL herr_t        H5TS_semaphore_destroy(H5TS_semaphore_t *sem);
+#endif /* H5_HAVE_STDATOMIC_H */
+
+#include "H5TScond.h"
+#include "H5TSmutex.h"
+#include "H5TSpool.h"
+#if defined(H5_HAVE_STDATOMIC_H) && !defined(__cplusplus)
+#include "H5TSsemaphore.h"
+#endif /* H5_HAVE_STDATOMIC_H */
 
 #endif /* H5_HAVE_THREADS */
 
