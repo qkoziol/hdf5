@@ -334,7 +334,8 @@ H5_DLL herr_t H5TS_rwlock_init(H5TS_rwlock_t *lock);
 static inline herr_t H5TS_rwlock_rdlock(H5TS_rwlock_t *lock);
 static inline herr_t H5TS_rwlock_rdunlock(H5TS_rwlock_t *lock);
 static inline herr_t H5TS_rwlock_wrlock(H5TS_rwlock_t *lock);
-static inline herr_t H5TS_rwlock_trywrlock(H5TS_rwlock_t *lock, bool *acquired) H5TS_TRY_ACQUIRE(SUCCEED, *lock);
+static inline herr_t H5TS_rwlock_trywrlock(H5TS_rwlock_t *lock, bool *acquired)
+    H5TS_TRY_ACQUIRE(SUCCEED, *lock);
 static inline herr_t H5TS_rwlock_wrunlock(H5TS_rwlock_t *lock);
 H5_DLL herr_t        H5TS_rwlock_destroy(H5TS_rwlock_t *lock);
 

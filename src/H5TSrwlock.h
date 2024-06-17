@@ -196,7 +196,7 @@ H5TS_rwlock_wrlock(H5TS_rwlock_t *lock)
 static inline herr_t
 H5TS_rwlock_trywrlock(H5TS_rwlock_t *lock, bool *acquired)
 {
-    int    ret;
+    int ret;
 
     /* Check argument */
     if (H5_UNLIKELY(NULL == lock || NULL == acquired))
@@ -462,7 +462,7 @@ H5TS_rwlock_wrlock(H5TS_rwlock_t *lock)
 herr_t
 H5TS_rwlock_trywrlock(H5TS_rwlock_t *lock, bool *acquired)
 {
-    int    ret;
+    int ret;
 
     /* Check argument */
     if (H5_UNLIKELY(NULL == lock || NULL == acquired))
