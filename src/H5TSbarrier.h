@@ -11,8 +11,8 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /*
- * Purpose: This file contains support for mutex locks, equivalent to the
- *        pthread 'pthread_mutex_t' type and capabilities.
+ * Purpose: This file contains support for thread barrier operations, equivalent
+ *        to the pthread 'pthread_barrier_t' type and capabilities.
  *
  * Note:  Because this threadsafety framework operates outside the library,
  *        it does not use the error stack (although it does use error macros
@@ -52,50 +52,46 @@
 /* Local Variables */
 /*******************/
 
-#ifdef H5_HAVE_C11_THREADS
-
-#define H5TS_mutex_lock(mutex)   ((H5_UNLIKELY(mtx_lock(mutex) != thrd_success)) ? FAIL : SUCCEED)
-#define H5TS_mutex_unlock(mutex) (H5_UNLIKELY(mtx_unlock(mutex) != thrd_success) ? FAIL : SUCCEED)
-
-#else
-#ifdef H5_HAVE_WIN_THREADS
-/*-------------------------------------------------------------------------
- * Function: H5TS_mutex_lock
+/*--------------------------------------------------------------------------
+ * Function:    H5TS_barrier_wait
  *
- * Purpose:  Lock a H5TS_mutex_t
+ * Purpose:     Wait at a barrier.
  *
- * Return:   Non-negative on success / Negative on failure
+ * Note:     	Similar to pthread_barrier_wait, a barrier may be re-used
+ *		multiple times without intervening calls to H5TS_barrier_init.
  *
- *-------------------------------------------------------------------------
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *--------------------------------------------------------------------------
  */
 static inline herr_t
-H5TS_mutex_lock(H5TS_mutex_t *mutex)
+H5TS_barrier_wait(H5TS_barrier_t *barrier)
 {
-    EnterCriticalSection(mutex);
+    if (H5_UNLIKELY(NULL == barrier))
+        return FAIL;
 
-    return SUCCEED;
-} /* end H5TS_mutex_lock() */
-
-/*-------------------------------------------------------------------------
- * Function: H5TS_mutex_unlock
- *
- * Purpose:  Unlock a H5TS_mutex_t
- *
- * Return:   Non-negative on success / Negative on failure
- *
- *-------------------------------------------------------------------------
- */
-static inline herr_t
-H5TS_mutex_unlock(H5TS_mutex_t *mutex)
-{
-    LeaveCriticalSection(mutex);
-
-    return SUCCEED;
-} /* end H5TS_mutex_unlock() */
+#ifdef H5_HAVE_PTHREAD_BARRIER
+    {
+        int ret = pthread_barrier_wait(barrier);
+        if (H5_UNLIKELY(ret != 0 && ret != PTHREAD_BARRIER_SERIAL_THREAD))
+            return FAIL;
+    }
 #else
+    {
+        const unsigned my_generation = H5TS_atomic_load_uint(&barrier->generation);
 
-#define H5TS_mutex_lock(mutex)   ((H5_UNLIKELY(pthread_mutex_lock(mutex))) ? FAIL : SUCCEED)
-#define H5TS_mutex_unlock(mutex) (H5_UNLIKELY(pthread_mutex_unlock(mutex)) ? FAIL : SUCCEED)
+        /* When the last thread enters, reset the openings & bump the generation */
+        if (1 == H5TS_atomic_fetch_sub_uint(&barrier->openings, 1)) {
+            H5TS_atomic_store_uint(&barrier->openings, barrier->count);
+            H5TS_atomic_fetch_add_uint(&barrier->generation, 1);
+        }
+        else {
+            /* Not the last thread, when for the generation to change */
+            while (H5TS_atomic_load_uint(&barrier->generation) == my_generation)
+                ;
+        }
+    }
+#endif
 
-#endif
-#endif
+    return SUCCEED;
+} /* end H5TS_barrier_wait() */
