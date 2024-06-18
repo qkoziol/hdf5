@@ -27,6 +27,23 @@
 /**************************/
 
 /*
+ * When one needs to temporarily disable recording errors while trying
+ * something that's likely or expected to fail.  The code to try can be nested
+ * between these macros like:
+ *
+ *     H5E_PAUSE_ERRORS {
+ *        ...stuff here that's likely to fail...
+ *      } H5E_RESUME_ERRORS
+ *
+ * Warning: don't break, return, or longjmp() from the block of code or
+ *        the error reporting won't be properly restored!
+ *
+ */
+#define H5E_PAUSE_ERRORS H5E_pause_stack();
+
+#define H5E_RESUME_ERRORS H5E_resume_stack();
+
+/*
  * HERROR macro, used to facilitate error reporting between a FUNC_ENTER()
  * and a FUNC_LEAVE() within a function body.  The arguments are the major
  * error number, the minor error number, and a description of the error.
@@ -217,6 +234,8 @@ H5_DLL herr_t H5E_printf_stack(const char *file, const char *func, unsigned line
                                hid_t min_idx, const char *fmt, ...) H5_ATTR_FORMAT(printf, 6, 7);
 H5_DLL herr_t H5E_clear_stack(void);
 H5_DLL herr_t H5E_dump_api_stack(void);
+H5_DLL void   H5E_pause_stack(void);
+H5_DLL void   H5E_resume_stack(void);
 H5_DLL herr_t H5E_user_cb_prepare(H5E_user_cb_state_t *state);
 H5_DLL herr_t H5E_user_cb_restore(const H5E_user_cb_state_t *state);
 
