@@ -652,9 +652,15 @@ H5FD_free_driver_info(hid_t driver_id, const void *driver_info)
 
         /* Allow driver to free info or do it ourselves */
         if (driver->fapl_free) {
-            /* Free the const pointer */
-            /* Cast through uintptr_t to de-const memory */
-            if ((driver->fapl_free)((void *)(uintptr_t)driver_info) < 0)
+            /* Prepare & restore library for user callback */
+            H5_BEFORE_USER_CB(FAIL)
+            {
+                /* Free the const pointer */
+                /* (Cast through uintptr_t to de-const memory) */
+                ret_value = (driver->fapl_free)((void *)(uintptr_t)driver_info);
+            }
+            H5_AFTER_USER_CB(FAIL)
+            if (ret_value < 0)
                 HGOTO_ERROR(H5E_VFL, H5E_CANTFREE, FAIL, "driver free request failed");
         }
         else
@@ -811,7 +817,12 @@ H5FD_open(bool try, H5FD_t **_file, const char *name, unsigned flags, hid_t fapl
     if (try) {
         H5E_PAUSE_ERRORS
         {
-            file = (driver->open)(name, flags, fapl_id, maxaddr);
+            /* Prepare & restore library for user callback */
+            H5_BEFORE_USER_CB(FAIL)
+            {
+                file = (driver->open)(name, flags, fapl_id, maxaddr);
+            }
+            H5_AFTER_USER_CB(FAIL)
         }
         H5E_RESUME_ERRORS
 
@@ -819,8 +830,16 @@ H5FD_open(bool try, H5FD_t **_file, const char *name, unsigned flags, hid_t fapl
         if (NULL == file)
             HGOTO_DONE(SUCCEED);
     }
-    else if (NULL == (file = (driver->open)(name, flags, fapl_id, maxaddr)))
-        HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, FAIL, "can't open file");
+    else {
+        /* Prepare & restore library for user callback */
+        H5_BEFORE_USER_CB(FAIL)
+        {
+            file = (driver->open)(name, flags, fapl_id, maxaddr);
+        }
+        H5_AFTER_USER_CB(FAIL)
+        if (NULL == file)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, FAIL, "can't open file");
+    }
 
     /* Set the file access flags */
     file->access_flags = flags;
@@ -921,11 +940,17 @@ H5FD_close(H5FD_t *file)
     if (H5I_dec_ref(file->driver_id) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTDEC, FAIL, "can't close driver ID");
 
-    /* Dispatch to the driver for actual close. If the driver fails to
-     * close the file then the file will be in an unusable state.
-     */
-    assert(driver->close);
-    if ((driver->close)(file) < 0)
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL)
+    {
+        /* Dispatch to the driver for actual close. If the driver fails to
+         * close the file then the file will be in an unusable state.
+         */
+        assert(driver->close);
+        ret_value = (driver->close)(file);
+    }
+    H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTCLOSEFILE, FAIL, "close failed");
 
 done:

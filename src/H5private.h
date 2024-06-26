@@ -1088,9 +1088,9 @@ typedef struct H5_user_cb_state_t {
         else {
 
 #define H5_AFTER_USER_CB_NOERR(err)                                                                          \
-    if (H5_user_cb_restore(&state) < 0)                                                                      \
-        ret_value = (err);                                                                                   \
-    } /* end else */                                                                                         \
+            if (H5_user_cb_restore(&state) < 0)                                                                      \
+                ret_value = (err);                                                                                   \
+        } /* end else */                                                                                         \
     }
 
 #define H5_BEFORE_USER_CB_NOCHECK                                                                            \

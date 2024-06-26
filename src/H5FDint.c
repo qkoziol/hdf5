@@ -2540,7 +2540,12 @@ H5FD_driver_query(const H5FD_class_t *driver, unsigned long *flags /*out*/)
 
     /* Check for the driver to query and then query it */
     if (driver->query)
-        ret_value = (driver->query)(NULL, flags);
+        /* Prepare & restore library for user callback */
+        H5_BEFORE_USER_CB_NOERR(FAIL)
+        {
+            ret_value = (driver->query)(NULL, flags);
+        }
+        H5_AFTER_USER_CB_NOERR(FAIL)
     else
         *flags = 0;
 
@@ -3053,8 +3058,14 @@ H5FD_delete(const char *filename, hid_t fapl_id)
     if (NULL == driver->del)
         HGOTO_ERROR(H5E_VFL, H5E_UNSUPPORTED, FAIL, "file driver has no 'del' method");
 
-    /* Dispatch to file driver */
-    if ((driver->del)(filename, fapl_id))
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL)
+    {
+        /* Dispatch to file driver */
+        ret_value = (driver->del)(filename, fapl_id);
+    }
+    H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTDELETEFILE, FAIL, "delete failed");
 
 done:
