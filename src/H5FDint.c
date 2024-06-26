@@ -2545,9 +2545,8 @@ H5FD_driver_query(const H5FD_class_t *driver, unsigned long *flags /*out*/)
         {
             ret_value = (driver->query)(NULL, flags);
         }
-        H5_AFTER_USER_CB_NOERR(FAIL)
-    else
-        *flags = 0;
+    H5_AFTER_USER_CB_NOERR(FAIL)
+    else *flags = 0;
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FD_driver_query() */
