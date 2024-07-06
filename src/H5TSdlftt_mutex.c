@@ -107,4 +107,3 @@ done:
 } /* end H5TS_dlftt_mutex_destroy() */
 
 #endif /* H5_HAVE_THREADS */
-

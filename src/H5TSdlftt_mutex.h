@@ -104,5 +104,3 @@ H5TS_dlftt_mutex_release(H5TS_dlftt_mutex_t *mtx)
 
     return SUCCEED;
 } /* end H5TS_dlftt_mutex_release() */
-
-

@@ -202,8 +202,8 @@ typedef void (*H5TS_once_init_func_t)(void);
 
 /* Atomics */
 #if defined(H5_HAVE_STDATOMIC_H) && !defined(__cplusplus)
-typedef atomic_int  H5TS_atomic_int_t;
-typedef atomic_uint H5TS_atomic_uint_t;
+typedef atomic_int    H5TS_atomic_int_t;
+typedef atomic_uint   H5TS_atomic_uint_t;
 typedef atomic_size_t H5TS_atomic_size_t;
 /* Suppress warning about _Atomic keyword not supported in C99 */
 H5_GCC_DIAG_OFF("c99-c11-compat")
@@ -303,7 +303,7 @@ H5_CLANG_DIAG_ON("c11-extensions")
 /* Mutex that efficiently obeys the "DLFTT" locking protocol */
 typedef struct H5TS_dlftt_mutex_t {
     H5TS_mutex_t mtx;
-    unsigned dlftt;
+    unsigned     dlftt;
 } H5TS_dlftt_mutex_t;
 
 /* Mechanism for implementing Double-checked Locking Protocol (DCLP) for global
@@ -311,7 +311,7 @@ typedef struct H5TS_dlftt_mutex_t {
  * FYI: https://preshing.com/20130930/double-checked-locking-is-fixed-in-cpp11/
  */
 typedef struct H5TS_dclp_t {
-    bool init;                  /* Whether the global has been initialized */
+    bool init; /* Whether the global has been initialized */
 } H5TS_dclp_t;
 
 /* Safely call an initialization routine for a global variable. This is invoked
@@ -322,39 +322,38 @@ typedef struct H5TS_dclp_t {
  * containing a field of type H5TS_dclp_t as its first field.
  */
 #ifdef H5_HAVE_CONCURRENCY
-#define H5TS_INIT_GLOBAL(v,f,maj,min,err_ret,...)         \
-    do {                                                      \
-        if (H5_UNLIKELY(!((H5TS_dclp_t *)(v))->init)) {                    \
-            if (H5_UNLIKELY(H5TS_dlftt_mutex_acquire(&H5TS_bootstrap_mtx_g) < 0)) \
-                HGOTO_ERROR((maj), H5E_CANTLOCK, (err_ret), "can't acquire global bootstrap mutex"); \
-            if (!((H5TS_dclp_t *)(v))->init) {                     \
-                /* Invoke the init function */ \
-                if (H5_UNLIKELY((f)(v) < 0))                                   \
-                    HGOTO_ERROR((maj), (min), (err_ret), __VA_ARGS__); \
- \
-                /* Indicate that the free list is initialized */ \
-                H5TS_SET_GLOBAL_INIT(v, true); \
-            } \
-            if (H5_UNLIKELY(H5TS_dlftt_mutex_release(&H5TS_bootstrap_mtx_g) < 0)) \
-                HGOTO_ERROR((maj), H5E_CANTUNLOCK, (err_ret), "can't release global bootstrap mutex"); \
-        } \
-    } while(0)
+#define H5TS_INIT_GLOBAL(v, f, maj, min, err_ret, ...)                                                       \
+    do {                                                                                                     \
+        if (H5_UNLIKELY(!((H5TS_dclp_t *)(v))->init)) {                                                      \
+            if (H5_UNLIKELY(H5TS_dlftt_mutex_acquire(&H5TS_bootstrap_mtx_g) < 0))                            \
+                HGOTO_ERROR((maj), H5E_CANTLOCK, (err_ret), "can't acquire global bootstrap mutex");         \
+            if (!((H5TS_dclp_t *)(v))->init) {                                                               \
+                /* Invoke the init function */                                                               \
+                if (H5_UNLIKELY((f)(v) < 0))                                                                 \
+                    HGOTO_ERROR((maj), (min), (err_ret), __VA_ARGS__);                                       \
+                                                                                                             \
+                /* Indicate that the free list is initialized */                                             \
+                H5TS_SET_GLOBAL_INIT(v, true);                                                               \
+            }                                                                                                \
+            if (H5_UNLIKELY(H5TS_dlftt_mutex_release(&H5TS_bootstrap_mtx_g) < 0))                            \
+                HGOTO_ERROR((maj), H5E_CANTUNLOCK, (err_ret), "can't release global bootstrap mutex");       \
+        }                                                                                                    \
+    } while (0)
 #else /* H5_HAVE_CONCURRENCY */
-#define H5TS_INIT_GLOBAL(v,f,maj,min,err_ret,...)         \
-    do {                                                      \
-        if (H5_UNLIKELY(!((H5TS_dclp_t *)(v))->init)) {                    \
-            /* Invoke the init function */ \
-            if (H5_UNLIKELY((f)(v) < 0))                                   \
-                HGOTO_ERROR((maj), (min), (err_ret), __VA_ARGS__); \
- \
-            /* Indicate that the free list is initialized */ \
-            H5TS_SET_GLOBAL_INIT(v, true); \
-        } \
-    } while(0)
+#define H5TS_INIT_GLOBAL(v, f, maj, min, err_ret, ...)                                                       \
+    do {                                                                                                     \
+        if (H5_UNLIKELY(!((H5TS_dclp_t *)(v))->init)) {                                                      \
+            /* Invoke the init function */                                                                   \
+            if (H5_UNLIKELY((f)(v) < 0))                                                                     \
+                HGOTO_ERROR((maj), (min), (err_ret), __VA_ARGS__);                                           \
+                                                                                                             \
+            /* Indicate that the free list is initialized */                                                 \
+            H5TS_SET_GLOBAL_INIT(v, true);                                                                   \
+        }                                                                                                    \
+    } while (0)
 #endif /* H5_HAVE_CONCURRENCY */
-#define H5TS_IS_GLOBAL_INIT(v)  (((H5TS_dclp_t *)(v))->init)
-#define H5TS_SET_GLOBAL_INIT(v,x)  ((H5TS_dclp_t *)(v))->init = (x)
-
+#define H5TS_IS_GLOBAL_INIT(v)     (((H5TS_dclp_t *)(v))->init)
+#define H5TS_SET_GLOBAL_INIT(v, x) ((H5TS_dclp_t *)(v))->init = (x)
 
 /*****************************/
 /* Library-private Variables */
@@ -433,7 +432,7 @@ H5_DLL herr_t H5TS_cond_destroy(H5TS_cond_t *cond);
 /* Thread-specific keys */
 H5_DLL herr_t H5TS_key_create(H5TS_key_t *key, H5TS_key_destructor_func_t dtor);
 /* Key set & get calls are defined in H5TSkey.h */
-H5_DLL herr_t        H5TS_key_delete(H5TS_key_t key);
+H5_DLL herr_t H5TS_key_delete(H5TS_key_t key);
 
 /* Threads */
 H5_DLL herr_t H5TS_thread_create(H5TS_thread_t *thread, H5TS_thread_start_func_t func, void *udata);
@@ -471,10 +470,10 @@ H5_DLL void            H5TS_atomic_destroy_uint(H5TS_atomic_uint_t *obj);
 H5_DLL void H5TS_atomic_init_size_t(H5TS_atomic_size_t *obj, size_t desired);
 /* Atomic 'size_t' load, store, etc. calls are defined in H5TSatomic.h */
 static inline size_t H5TS_atomic_load_size_t(H5TS_atomic_size_t *obj);
-static inline void     H5TS_atomic_store_size_t(H5TS_atomic_size_t *obj, size_t desired);
+static inline void   H5TS_atomic_store_size_t(H5TS_atomic_size_t *obj, size_t desired);
 static inline size_t H5TS_atomic_fetch_add_size_t(H5TS_atomic_size_t *obj, size_t arg);
 static inline size_t H5TS_atomic_fetch_sub_size_t(H5TS_atomic_size_t *obj, size_t arg);
-H5_DLL void            H5TS_atomic_destroy_size_t(H5TS_atomic_size_t *obj);
+H5_DLL void          H5TS_atomic_destroy_size_t(H5TS_atomic_size_t *obj);
 
 /* void * _Atomic (atomic void pointer) */
 H5_DLL void H5TS_atomic_init_voidp(H5TS_atomic_voidp_t *obj, void *desired);

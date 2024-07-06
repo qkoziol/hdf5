@@ -47,11 +47,11 @@ typedef struct H5FL_reg_node_t {
 
 /* Data structure for free list of blocks */
 typedef struct H5FL_reg_head_t {
-    H5TS_dclp_t      dlcp_info; /* Information for init */
-                                /* (MUST be first field in structure) */
+    H5TS_dclp_t dlcp_info; /* Information for init */
+                           /* (MUST be first field in structure) */
 #ifdef H5_HAVE_CONCURRENCY
-    H5TS_dlftt_mutex_t     mutex;     /* Guard access to this free list */
-#endif /* H5_HAVE_CONCURRENCY */
+    H5TS_dlftt_mutex_t mutex;   /* Guard access to this free list */
+#endif                          /* H5_HAVE_CONCURRENCY */
     unsigned         allocated; /* Number of blocks allocated */
     unsigned         onlist;    /* Number of blocks on free list */
     const char      *name;      /* Name of the type */
@@ -122,11 +122,11 @@ typedef struct H5FL_blk_node_t {
 
 /* Data structure for priority queue of native block free lists */
 typedef struct H5FL_blk_head_t {
-    H5TS_dclp_t      dlcp_info; /* Information for init */
-                                /* (MUST be first field in structure) */
+    H5TS_dclp_t dlcp_info; /* Information for init */
+                           /* (MUST be first field in structure) */
 #ifdef H5_HAVE_CONCURRENCY
-    H5TS_dlftt_mutex_t     mutex;     /* Guard access to this free list */
-#endif /* H5_HAVE_CONCURRENCY */
+    H5TS_dlftt_mutex_t mutex;   /* Guard access to this free list */
+#endif                          /* H5_HAVE_CONCURRENCY */
     unsigned         allocated; /* Total number of blocks allocated */
     unsigned         onlist;    /* Total number of blocks on free list */
     size_t           list_mem;  /* Total amount of memory in blocks on free list */
@@ -199,11 +199,11 @@ typedef struct H5FL_arr_node_t {
 
 /* Data structure for free list of array blocks */
 typedef struct H5FL_arr_head_t {
-    H5TS_dclp_t      dlcp_info; /* Information for init */
-                                /* (MUST be first field in structure) */
+    H5TS_dclp_t dlcp_info; /* Information for init */
+                           /* (MUST be first field in structure) */
 #ifdef H5_HAVE_CONCURRENCY
-    H5TS_dlftt_mutex_t     mutex;     /* Guard access to this free list */
-#endif /* H5_HAVE_CONCURRENCY */
+    H5TS_dlftt_mutex_t mutex;   /* Guard access to this free list */
+#endif                          /* H5_HAVE_CONCURRENCY */
     unsigned         allocated; /* Total number of blocks allocated */
     size_t           list_mem;  /* Amount of memory in block on free list */
     const char      *name;      /* Name of the type */
@@ -220,7 +220,8 @@ typedef struct H5FL_arr_head_t {
 #ifndef H5_NO_ARR_FREE_LISTS
 /* Common macro for H5FL_ARR_DEFINE & H5FL_ARR_DEFINE_STATIC (and H5FL_BARR variants) */
 #define H5FL_ARR_DEFINE_COMMON(b, t, m)                                                                      \
-    H5FL_arr_head_t H5FL_ARR_NAME(t) = {.name = #t "_arr", .maxelem = m + 1, .base_size = b, .elem_size = sizeof(t)}
+    H5FL_arr_head_t H5FL_ARR_NAME(t) = {                                                                     \
+        .name = #t "_arr", .maxelem = m + 1, .base_size = b, .elem_size = sizeof(t)}
 
 /* Declare a free list to manage arrays of type 't' */
 #define H5FL_ARR_DEFINE(t, m) H5_DLL H5FL_ARR_DEFINE_COMMON(0, t, m)
@@ -279,8 +280,7 @@ typedef struct H5FL_seq_head_t {
 #define H5FL_SEQ_NAME(t) H5_##t##_seq_free_list
 #ifndef H5_NO_SEQ_FREE_LISTS
 /* Common macro for H5FL_SEQ_DEFINE & H5FL_SEQ_DEFINE_STATIC */
-#define H5FL_SEQ_DEFINE_COMMON(t)                                                                            \
-    H5FL_seq_head_t H5FL_SEQ_NAME(t) = {{.name = #t "_seq"}, .size = sizeof(t)}
+#define H5FL_SEQ_DEFINE_COMMON(t) H5FL_seq_head_t H5FL_SEQ_NAME(t) = {{.name = #t "_seq"}, .size = sizeof(t)}
 
 /* Declare a free list to manage sequences of type 't' */
 #define H5FL_SEQ_DEFINE(t) H5_DLL H5FL_SEQ_DEFINE_COMMON(t)
@@ -317,7 +317,7 @@ typedef struct H5FL_seq_head_t {
 #endif /* H5_NO_SEQ_FREE_LISTS */
 
 /* Forward declarations of the data structures for free list block factory */
-typedef struct H5FL_fac_head_t    H5FL_fac_head_t;
+typedef struct H5FL_fac_head_t H5FL_fac_head_t;
 
 /*
  * Macros for defining & using free list factories
