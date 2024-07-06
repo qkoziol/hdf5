@@ -162,6 +162,57 @@ H5TS_atomic_destroy_uint(H5TS_atomic_uint_t *obj)
 } /* end H5TS_atomic_destroy_uint() */
 
 /*--------------------------------------------------------------------------
+ * Function:    H5TS_atomic_init_size_t
+ *
+ * Purpose:     Initializes an atomic 'size_t' variable object with a value.
+ *
+ * Note:        Per the C11 standard, this function is not atomic and
+ *              concurrent execution from multiple threads is a data race.
+ *
+ * Return:      None
+ *
+ *--------------------------------------------------------------------------
+ */
+void
+H5TS_atomic_init_size_t(H5TS_atomic_size_t *obj, size_t desired)
+{
+    FUNC_ENTER_NOAPI_NAMECHECK_ONLY
+
+        /* Initialize mutex that protects the "atomic" value */
+        (void)
+    H5TS_mutex_init(&obj->mutex, H5TS_MUTEX_TYPE_PLAIN);
+
+    /* Set the value */
+    obj->value = desired;
+
+    FUNC_LEAVE_NOAPI_VOID_NAMECHECK_ONLY
+} /* end H5TS_atomic_init_size_t() */
+
+/*--------------------------------------------------------------------------
+ * Function:    H5TS_atomic_destroy_size_t
+ *
+ * Purpose:     Destroys / releases resources for an atomic 'size_t' variable
+ *
+ * Note:        No equivalent in the C11 atomics, but needed here, to destroy
+ *              the mutex used to protect the atomic value.
+ *
+ * Return:      None
+ *
+ *--------------------------------------------------------------------------
+ */
+void
+H5TS_atomic_destroy_size_t(H5TS_atomic_size_t *obj)
+{
+    FUNC_ENTER_NOAPI_NAMECHECK_ONLY
+
+        /* Destroy mutex that protects the "atomic" value */
+        (void)
+    H5TS_mutex_destroy(&obj->mutex);
+
+    FUNC_LEAVE_NOAPI_VOID_NAMECHECK_ONLY
+} /* end H5TS_atomic_destroy_size_t() */
+
+/*--------------------------------------------------------------------------
  * Function:    H5TS_atomic_init_voidp
  *
  * Purpose:     Initializes an atomic 'void *' variable object with a value.

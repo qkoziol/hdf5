@@ -56,12 +56,16 @@ typedef struct H5FL_reg_gc_node_t {
 
 /* The garbage collection head for regular free lists */
 typedef struct H5FL_reg_gc_list_t {
-    size_t                     mem_freed; /* Amount of free memory on list */
+#ifdef H5_HAVE_CONCURRENCY
+    bool                       init;      /* Whether the mutex has been initialized */
+    H5TS_dlftt_mutex_t         mutex;     /* Guard access to the list of free lists */
+#endif /* H5_HAVE_CONCURRENCY */
+    H5TS_atomic_size_t         mem_freed; /* Amount of free memory on list */
     struct H5FL_reg_gc_node_t *first; /* Pointer to the first node in the list of things to garbage collect */
 } H5FL_reg_gc_list_t;
 
 /* The head of the list of things to garbage collect */
-static H5FL_reg_gc_list_t H5FL_reg_gc_head = {0, NULL};
+static H5FL_reg_gc_list_t H5FL_reg_gc_head;
 
 /* A garbage collection node for array free lists */
 typedef struct H5FL_gc_arr_node_t {
@@ -70,48 +74,73 @@ typedef struct H5FL_gc_arr_node_t {
 } H5FL_gc_arr_node_t;
 
 /* The garbage collection head for array free lists */
-typedef struct H5FL_gc_arr_list_t {
-    size_t                     mem_freed; /* Amount of free memory on list */
+typedef struct H5FL_arr_gc_list_t {
+#ifdef H5_HAVE_CONCURRENCY
+    bool                       init;      /* Whether the mutex has been initialized */
+    H5TS_dlftt_mutex_t         mutex;     /* Guard access to the list of free lists */
+#endif /* H5_HAVE_CONCURRENCY */
+    H5TS_atomic_size_t         mem_freed; /* Amount of free memory on list */
     struct H5FL_gc_arr_node_t *first; /* Pointer to the first node in the list of things to garbage collect */
-} H5FL_gc_arr_list_t;
+} H5FL_arr_gc_list_t;
 
 /* The head of the list of array things to garbage collect */
-static H5FL_gc_arr_list_t H5FL_arr_gc_head = {0, NULL};
+static H5FL_arr_gc_list_t H5FL_arr_gc_head;
 
 /* A garbage collection node for blocks */
 typedef struct H5FL_blk_gc_node_t {
-    H5FL_blk_head_t           *pq;   /* Pointer to the head of the PQ to garbage collect */
+    H5FL_blk_head_t           *list;   /* Pointer to the head of the PQ to garbage collect */
     struct H5FL_blk_gc_node_t *next; /* Pointer to the next node in the list of things to garbage collect */
 } H5FL_blk_gc_node_t;
 
 /* The garbage collection head for blocks */
 typedef struct H5FL_blk_gc_list_t {
+#ifdef H5_HAVE_CONCURRENCY
+    bool                       init;      /* Whether the mutex has been initialized */
+    H5TS_dlftt_mutex_t         mutex;     /* Guard access to the list of free lists */
+#endif /* H5_HAVE_CONCURRENCY */
     size_t                     mem_freed; /* Amount of free memory on list */
     struct H5FL_blk_gc_node_t *first; /* Pointer to the first node in the list of things to garbage collect */
 } H5FL_blk_gc_list_t;
 
 /* The head of the list of PQs to garbage collect */
-static H5FL_blk_gc_list_t H5FL_blk_gc_head = {0, NULL};
+static H5FL_blk_gc_list_t H5FL_blk_gc_head;
+
+/* Data structure to store each block in factory free list */
+typedef struct H5FL_fac_node_t {
+    struct H5FL_fac_node_t *next; /* Pointer to next block in free list */
+} H5FL_fac_node_t;
+
+/* Data structure for free list block factory */
+struct H5FL_fac_head_t {
+#ifdef H5_HAVE_CONCURRENCY
+    H5TS_dlftt_mutex_t     mutex;     /* Guard access to this factory */
+#endif /* H5_HAVE_CONCURRENCY */
+    unsigned            allocated; /* Number of blocks allocated */
+    unsigned            onlist;    /* Number of blocks on free list */
+    size_t              size;      /* Size of the blocks in the list */
+    H5FL_fac_node_t    *list;      /* List of free blocks */
+    struct H5FL_fac_gc_node_t *prev_gc;   /* Previous garbage collection node in list */
+};
 
 /* A garbage collection node for factory free lists */
-struct H5FL_fac_gc_node_t {
+typedef struct H5FL_fac_gc_node_t {
     H5FL_fac_head_t           *list; /* Pointer to the head of the list to garbage collect */
     struct H5FL_fac_gc_node_t *next; /* Pointer to the next node in the list of things to garbage collect */
-};
+} H5FL_fac_gc_node_t;
 
 /* The garbage collection head for factory free lists */
 typedef struct H5FL_fac_gc_list_t {
+    H5TS_dclp_t      dlcp_info; /* Information for init */
+                                /* (MUST be first field in structure) */
+#ifdef H5_HAVE_CONCURRENCY
+    H5TS_dlftt_mutex_t     mutex;     /* Guard access to this free list */
+#endif /* H5_HAVE_CONCURRENCY */
     size_t                     mem_freed; /* Amount of free memory on list */
     struct H5FL_fac_gc_node_t *first; /* Pointer to the first node in the list of things to garbage collect */
 } H5FL_fac_gc_list_t;
 
-/* Data structure to store each block in factory free list */
-struct H5FL_fac_node_t {
-    struct H5FL_fac_node_t *next; /* Pointer to next block in free list */
-};
-
 /* The head of the list of factory things to garbage collect */
-static H5FL_fac_gc_list_t H5FL_fac_gc_head = {0, NULL};
+static H5FL_fac_gc_list_t H5FL_fac_gc_head;
 
 /* Forward declarations of local static functions */
 static void            *H5FL__malloc(size_t mem_size);
@@ -129,6 +158,9 @@ static herr_t           H5FL__arr_init(H5FL_arr_head_t *head);
 static herr_t           H5FL__arr_gc_list(H5FL_arr_head_t *head);
 static herr_t           H5FL__arr_gc(void);
 static int              H5FL__arr_term(void);
+#ifdef H5_HAVE_CONCURRENCY
+static herr_t           H5FL__fac_head_init(H5FL_fac_gc_list_t *head);
+#endif /* H5_HAVE_CONCURRENCY */
 static herr_t           H5FL__fac_gc_list(H5FL_fac_head_t *head);
 static herr_t           H5FL__fac_gc(void);
 static int              H5FL__fac_term_all(void);
@@ -217,8 +249,9 @@ done:
 /*-------------------------------------------------------------------------
  * Function:	H5FL__reg_init
  *
- * Purpose:	Initialize a free list for a certain type.  Right now, this just
- *      adds the free list to the list of things to garbage collect.
+ * Purpose:	Initialize a free list for a certain type.  Right now, this
+ *              just adds the free list to the list of things to garbage
+ *              collect.
  *
  * Return:	Success:	Non-negative
  * 		Failure:	Negative
@@ -229,7 +262,7 @@ static herr_t
 H5FL__reg_init(H5FL_reg_head_t *head)
 {
     H5FL_reg_gc_node_t *new_node;            /* Pointer to the node for the new list to garbage collect */
-    herr_t              ret_value = SUCCEED; /* return value*/
+    herr_t              ret_value = SUCCEED; /* Return value*/
 
     FUNC_ENTER_PACKAGE
 
@@ -240,16 +273,47 @@ H5FL__reg_init(H5FL_reg_head_t *head)
     /* Initialize the new garbage collection node */
     new_node->list = head;
 
-    /* Link in to the garbage collection list */
-    new_node->next         = H5FL_reg_gc_head.first;
-    H5FL_reg_gc_head.first = new_node;
+#ifdef H5_HAVE_CONCURRENCY
+    /* Take advantage of holding the global bootstrap mutex when calling this
+     * routine to also check & initialize the global list of free list's mutex
+     */
+    if (!H5FL_reg_gc_head.init) {
+        if (H5TS_dlftt_mutex_init(&H5FL_reg_gc_head.mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTINIT, FAIL, "can't initialize list of free lists' mutex");
+        H5TS_atomic_init_size_t(&H5FL_reg_gc_head.mem_freed, 0);
 
-    /* Indicate that the free list is initialized */
-    head->init = true;
+        H5FL_reg_gc_head.init = true;
+    }
+
+    /* Initialize the mutex protecting this specific list */
+    if (H5TS_dlftt_mutex_init(&head->mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTINIT, FAIL, "can't initialize list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
 
     /* Make certain that the space allocated is large enough to store a free list pointer (eventually) */
     if (head->size < sizeof(H5FL_reg_node_t))
         head->size = sizeof(H5FL_reg_node_t);
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Other 'reg' free lists could already be active and accessing the
+     * global garbage collection list-of-lists, so acquire that mutex before
+     * modifying it.
+     */
+
+    /* Acquire the mutex protecting the list of lists */
+    if (H5TS_dlftt_mutex_acquire(&H5FL_reg_gc_head.mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, FAIL, "can't lock list of list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
+
+    /* Link in to the garbage collection list */
+    new_node->next         = H5FL_reg_gc_head.first;
+    H5FL_reg_gc_head.first = new_node;
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Release the mutex protecting the list of lists */
+    if (H5TS_dlftt_mutex_release(&H5FL_reg_gc_head.mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, FAIL, "can't unlock list of list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -267,7 +331,8 @@ done:
 void *
 H5FL_reg_free(H5FL_reg_head_t *head, void *obj)
 {
-    void *ret_value = NULL; /* Return value */
+    unsigned  onlist;    /* Number of blocks on free list */
+    void     *ret_value = NULL; /* Return value */
 
     /* NOINIT OK here because this must be called after H5FL_reg_malloc/calloc
      * -NAF */
@@ -277,12 +342,18 @@ H5FL_reg_free(H5FL_reg_head_t *head, void *obj)
     assert(head);
     assert(obj);
 
+    /* Make certain that the free list is initialized */
+    assert(H5TS_IS_GLOBAL_INIT(head));
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Acquire the mutex protecting this list */
+    if (H5TS_dlftt_mutex_acquire(&head->mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, NULL, "can't lock list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
+
 #ifdef H5FL_DEBUG
     memset(obj, 255, head->size);
 #endif /* H5FL_DEBUG */
-
-    /* Make certain that the free list is initialized */
-    assert(head->init);
 
     /* Link into the free list */
     ((H5FL_reg_node_t *)obj)->next = head->list;
@@ -291,19 +362,25 @@ H5FL_reg_free(H5FL_reg_head_t *head, void *obj)
     head->list = (H5FL_reg_node_t *)obj;
 
     /* Increment the number of blocks on free list */
-    head->onlist++;
+    onlist = ++head->onlist;
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Release the mutex protecting this list */
+    if (H5TS_dlftt_mutex_release(&head->mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, NULL, "can't unlock list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
 
     /* Increment the amount of "regular" freed memory globally */
-    H5FL_reg_gc_head.mem_freed += head->size;
+    H5TS_atomic_fetch_add_size_t(&H5FL_reg_gc_head.mem_freed, head->size);
 
     /* Check for exceeding free list memory use limits */
     /* First check this particular list */
-    if (head->onlist * head->size > H5FL_reg_lst_mem_lim)
+    if (onlist * head->size > H5FL_reg_lst_mem_lim)
         if (H5FL__reg_gc_list(head) < 0)
             HGOTO_ERROR(H5E_RESOURCE, H5E_CANTGC, NULL, "garbage collection failed during free");
 
     /* Then check the global amount memory on regular free lists */
-    if (H5FL_reg_gc_head.mem_freed > H5FL_reg_glb_mem_lim)
+    if (H5TS_atomic_load_size_t(&H5FL_reg_gc_head.mem_freed) > H5FL_reg_glb_mem_lim)
         if (H5FL__reg_gc() < 0)
             HGOTO_ERROR(H5E_RESOURCE, H5E_CANTGC, NULL, "garbage collection failed during free");
 
@@ -332,9 +409,13 @@ H5FL_reg_malloc(H5FL_reg_head_t *head)
     assert(head);
 
     /* Make certain the list is initialized first */
-    if (!head->init)
-        if (H5FL__reg_init(head) < 0)
-            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTINIT, NULL, "can't initialize 'regular' blocks");
+    H5TS_INIT_GLOBAL(head, H5FL__reg_init, H5E_RESOURCE, H5E_CANTINIT, NULL, "can't initialize 'regular' blocks");
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Acquire the mutex protecting this list */
+    if (H5TS_dlftt_mutex_acquire(&head->mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, NULL, "can't lock list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
 
     /* Check for nodes available on the free list first */
     if (head->list != NULL) {
@@ -347,16 +428,41 @@ H5FL_reg_malloc(H5FL_reg_head_t *head)
         /* Decrement the number of blocks & memory on free list */
         head->onlist--;
 
+#ifdef H5_HAVE_CONCURRENCY
+        /* Release the mutex protecting this list */
+        if (H5TS_dlftt_mutex_release(&head->mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, NULL, "can't unlock list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
+
         /* Decrement the amount of global "regular" free list memory in use */
-        H5FL_reg_gc_head.mem_freed -= (head->size);
+        H5TS_atomic_fetch_sub_size_t(&H5FL_reg_gc_head.mem_freed, head->size);
     } /* end if */
     /* Otherwise allocate a node */
     else {
+#ifdef H5_HAVE_CONCURRENCY
+        /* Release the mutex protecting this list */
+        if (H5TS_dlftt_mutex_release(&head->mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, NULL, "can't unlock list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
+
+        /* Allocate new memory */
         if (NULL == (ret_value = H5FL__malloc(head->size)))
             HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "memory allocation failed");
 
+#ifdef H5_HAVE_CONCURRENCY
+        /* Acquire the mutex protecting this list */
+        if (H5TS_dlftt_mutex_acquire(&head->mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, NULL, "can't lock list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
+
         /* Increment the number of blocks allocated in list */
         head->allocated++;
+
+#ifdef H5_HAVE_CONCURRENCY
+        /* Release the mutex protecting this list */
+        if (H5TS_dlftt_mutex_release(&head->mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, NULL, "can't unlock list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
     } /* end else */
 
 done:
@@ -408,8 +514,23 @@ static herr_t
 H5FL__reg_gc_list(H5FL_reg_head_t *head)
 {
     H5FL_reg_node_t *free_list; /* Pointer to nodes in free list being garbage collected */
+    unsigned  onlist;    /* Number of blocks on free list */
+    herr_t           ret_value = SUCCEED; /* Return value*/
 
+#ifdef H5_HAVE_CONCURRENCY
+    FUNC_ENTER_PACKAGE
+#else /* H5_HAVE_CONCURRENCY */
     FUNC_ENTER_PACKAGE_NOERR
+#endif /* H5_HAVE_CONCURRENCY */
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Acquire the mutex protecting this list */
+    if (H5TS_dlftt_mutex_acquire(&head->mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, FAIL, "can't lock list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
+
+    /* Save for later */
+    onlist = head->onlist;
 
     /* For each free list being garbage collected, walk through the nodes and free them */
     free_list = head->list;
@@ -426,17 +547,26 @@ H5FL__reg_gc_list(H5FL_reg_head_t *head)
         free_list = tmp;
     } /* end while */
 
-    /* Decrement the count of nodes allocated and free the node */
+    /* Decrement the count of nodes allocated */
     head->allocated -= head->onlist;
-
-    /* Decrement global count of free memory on "regular" lists */
-    H5FL_reg_gc_head.mem_freed -= (head->onlist * head->size);
 
     /* Indicate no free nodes on the free list */
     head->list   = NULL;
     head->onlist = 0;
 
-    FUNC_LEAVE_NOAPI(SUCCEED)
+#ifdef H5_HAVE_CONCURRENCY
+    /* Release the mutex protecting this list */
+    if (H5TS_dlftt_mutex_release(&head->mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, FAIL, "can't unlock list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
+
+    /* Decrement global count of free memory on "regular" lists */
+    H5TS_atomic_fetch_sub_size_t(&H5FL_reg_gc_head.mem_freed, (onlist * head->size));
+
+#ifdef H5_HAVE_CONCURRENCY
+done:
+#endif /* H5_HAVE_CONCURRENCY */
+    FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FL__reg_gc_list() */
 
 /*-------------------------------------------------------------------------
@@ -453,9 +583,16 @@ static herr_t
 H5FL__reg_gc(void)
 {
     H5FL_reg_gc_node_t *gc_node;             /* Pointer into the list of things to garbage collect */
-    herr_t              ret_value = SUCCEED; /* return value*/
+    herr_t              ret_value = SUCCEED; /* Return value*/
 
     FUNC_ENTER_PACKAGE
+
+#ifdef H5_HAVE_CONCURRENCY
+    if (H5FL_reg_gc_head.init) {
+        /* Acquire the mutex protecting the list of lists */
+        if (H5TS_dlftt_mutex_acquire(&H5FL_reg_gc_head.mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, FAIL, "can't lock list of list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
 
     /* Walk through all the free lists, free()'ing the nodes */
     gc_node = H5FL_reg_gc_head.first;
@@ -468,8 +605,12 @@ H5FL__reg_gc(void)
         gc_node = gc_node->next;
     } /* end while */
 
-    /* Double check that all the memory on the free lists is recycled */
-    assert(H5FL_reg_gc_head.mem_freed == 0);
+#ifdef H5_HAVE_CONCURRENCY
+        /* Release the mutex protecting the list of lists */
+        if (H5TS_dlftt_mutex_release(&H5FL_reg_gc_head.mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, FAIL, "can't unlock list of list's mutex");
+    }
+#endif /* H5_HAVE_CONCURRENCY */
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -502,12 +643,16 @@ done:
 static int
 H5FL__reg_term(void)
 {
-    H5FL_reg_gc_node_t *left; /* pointer to garbage collection lists with work left */
+    H5FL_reg_gc_node_t *left = NULL; /* pointer to garbage collection lists with work left */
 
     FUNC_ENTER_PACKAGE_NOERR
 
+#ifdef H5_HAVE_CONCURRENCY
+    /* Have the regular free lists been initialized? */
+    if (H5FL_reg_gc_head.init) {
+#endif /* H5_HAVE_CONCURRENCY */
+
     /* Free the nodes on the garbage collection list, keeping nodes with allocations outstanding */
-    left = NULL;
     while (H5FL_reg_gc_head.first != NULL) {
         H5FL_reg_gc_node_t *tmp; /* Temporary pointer to a garbage collection node */
 
@@ -526,8 +671,13 @@ H5FL__reg_term(void)
         } /* end if */
         /* No allocations left open for list, get rid of it */
         else {
-            /* Reset the "initialized" flag, in case we restart this list somehow (I don't know how..) */
-            H5FL_reg_gc_head.first->list->init = false;
+#ifdef H5_HAVE_CONCURRENCY
+            /* Destroy the mutex protecting this list */
+            H5TS_dlftt_mutex_destroy(&H5FL_reg_gc_head.first->list->mutex);
+#endif /* H5_HAVE_CONCURRENCY */
+
+            /* Reset the "initialized" flag, in case we restart this list */
+            H5TS_SET_GLOBAL_INIT(H5FL_reg_gc_head.first->list, false);
 
             /* Free the node from the garbage collection list */
             H5MM_xfree(H5FL_reg_gc_head.first);
@@ -539,19 +689,34 @@ H5FL__reg_term(void)
     /* Point to the list of nodes left with allocations open, if any */
     H5FL_reg_gc_head.first = left;
 
-    FUNC_LEAVE_NOAPI(H5FL_reg_gc_head.first != NULL ? 1 : 0)
+#ifdef H5_HAVE_CONCURRENCY
+        /* Check for all lists being shut down */
+        if (NULL == left) {
+            /* Destroy concurrency objects */
+            H5TS_dlftt_mutex_destroy(&H5FL_reg_gc_head.mutex);
+            H5TS_atomic_destroy_size_t(&H5FL_reg_gc_head.mem_freed);
+
+            /* Reset init flag */
+            H5FL_reg_gc_head.init = false;
+        }
+    }
+#endif /* H5_HAVE_CONCURRENCY */
+
+    FUNC_LEAVE_NOAPI(left != NULL ? 1 : 0)
 } /* end H5FL__reg_term() */
 
 /*-------------------------------------------------------------------------
  * Function:	H5FL__blk_find_list
  *
- * Purpose:	Finds the free list for blocks of a given size.  Also moves that
- *      free list node to the head of the priority queue (if it isn't there
- *      already).  This routine does not manage the actual free list, it just
- *      works with the priority queue.
+ * Purpose:	Finds the free list for blocks of a given size.  Also moves
+ *              that free list node to the head of the priority queue (if it
+ *              isn't already there).  This routine does not manage the actual
+ *              free list, it just works with the priority queue.
+ *
+ * Note:	This routine assumes that head->mutex is held, for concurrency
+ *              builds.
  *
  * Return:	Success:	valid pointer to the free list node
- *
  *		Failure:	NULL
  *
  *-------------------------------------------------------------------------
@@ -574,9 +739,8 @@ H5FL__blk_find_list(H5FL_blk_node_t **head, size_t size)
             /* Check if we found the correct node */
             if (temp->size == size) {
                 /* Take the node found out of it's current position */
-                if (temp->next == NULL) {
+                if (temp->next == NULL)
                     temp->prev->next = NULL;
-                } /* end if */
                 else {
                     temp->prev->next = temp->next;
                     temp->next->prev = temp->prev;
@@ -603,10 +767,12 @@ H5FL__blk_find_list(H5FL_blk_node_t **head, size_t size)
  * Function:	H5FL__blk_create_list
  *
  * Purpose:	Creates a new free list for blocks of the given size at the
- *      head of the priority queue.
+ *              head of the priority queue.
+ *
+ * Note:	This routine assumes that head->mutex is held, for concurrency
+ *              builds.
  *
  * Return:	Success:	valid pointer to the free list node
- *
  *		Failure:	NULL
  *
  *-------------------------------------------------------------------------
@@ -642,7 +808,7 @@ done:
  * Function:	H5FL__blk_init
  *
  * Purpose:	Initialize a priority queue of a certain type.  Right now, this just
- *      adds the PQ to the list of things to garbage collect.
+ *              adds the PQ to the list of things to garbage collect.
  *
  * Return:	Success:	Non-negative
  * 		Failure:	Negative
@@ -662,14 +828,45 @@ H5FL__blk_init(H5FL_blk_head_t *head)
         HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, FAIL, "memory allocation failed");
 
     /* Initialize the new garbage collection node */
-    new_node->pq = head;
+    new_node->list = head;
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Take advantage of holding the global bootstrap mutex when calling this
+     * routine to also check & initialize the global list of free list's mutex
+     */
+    if (!H5FL_blk_gc_head.init) {
+        if (H5TS_dlftt_mutex_init(&H5FL_blk_gc_head.mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTINIT, FAIL, "can't initialize list of free lists' mutex");
+        H5TS_atomic_init_size_t(&H5FL_blk_gc_head.mem_freed, 0);
+
+        H5FL_blk_gc_head.init = true;
+    }
+
+    /* Initialize the mutex protecting this specific list */
+    if (H5TS_dlftt_mutex_init(&head->mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTINIT, FAIL, "can't initialize list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Other 'blk' free lists could already be active and accessing the
+     * global garbage collection list-of-lists, so acquire that mutex before
+     * modifying it.
+     */
+
+    /* Acquire the mutex protecting the list of lists */
+    if (H5TS_dlftt_mutex_acquire(&H5FL_blk_gc_head.mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, FAIL, "can't lock list of list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
 
     /* Link in to the garbage collection list */
     new_node->next         = H5FL_blk_gc_head.first;
     H5FL_blk_gc_head.first = new_node;
 
-    /* Indicate that the PQ is initialized */
-    head->init = true;
+#ifdef H5_HAVE_CONCURRENCY
+    /* Release the mutex protecting the list of lists */
+    if (H5TS_dlftt_mutex_release(&H5FL_blk_gc_head.mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, FAIL, "can't unlock list of list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -679,7 +876,7 @@ done:
  * Function:	H5FL_blk_free_block_avail
  *
  * Purpose:	Checks if a free block of the appropriate size is available
- *      for a given list.
+ *              for a given list.
  *
  * Return:	Success:	non-negative
  *		Failure:	negative
@@ -692,18 +889,35 @@ H5FL_blk_free_block_avail(H5FL_blk_head_t *head, size_t size)
     H5FL_blk_node_t *free_list;        /* The free list of nodes of correct size */
     htri_t           ret_value = FAIL; /* Return value */
 
+#ifdef H5_HAVE_CONCURRENCY
+    FUNC_ENTER_NOAPI(FAIL)
+#else /* H5_HAVE_CONCURRENCY */
     FUNC_ENTER_NOAPI_NOERR
+#endif /* H5_HAVE_CONCURRENCY */
 
     /* Double check parameters */
     assert(head);
 
-    /* check if there is a free list for blocks of this size */
+#ifdef H5_HAVE_CONCURRENCY
+    /* Acquire the mutex protecting this list */
+    if (H5TS_dlftt_mutex_acquire(&head->mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, FAIL, "can't lock list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
+
+    /* Check if there is a free list for blocks of this size */
     /* and if there are any blocks available on the list */
-    if ((free_list = H5FL__blk_find_list(&(head->head), size)) != NULL && free_list->list != NULL)
+    if ((free_list = H5FL__blk_find_list(&(head->pq), size)) != NULL && free_list->list != NULL)
         ret_value = true;
     else
         ret_value = false;
 
+#ifdef H5_HAVE_CONCURRENCY
+    /* Release the mutex protecting this list */
+    if (H5TS_dlftt_mutex_release(&head->mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, FAIL, "can't unlock list's mutex");
+
+done:
+#endif /* H5_HAVE_CONCURRENCY */
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FL_blk_free_block_avail() */
 
@@ -711,11 +925,10 @@ H5FL_blk_free_block_avail(H5FL_blk_head_t *head, size_t size)
  * Function:	H5FL_blk_malloc
  *
  * Purpose:	Allocates memory for a block.  This routine is used
- *      instead of malloc because the block can be kept on a free list so
- *      they don't thrash malloc/free as much.
+ *              instead of malloc because the block can be kept on a free list so
+ *              they don't thrash malloc/free as much.
  *
  * Return:	Success:	valid pointer to the block
- *
  *		Failure:	NULL
  *
  *-------------------------------------------------------------------------
@@ -725,6 +938,9 @@ H5FL_blk_malloc(H5FL_blk_head_t *head, size_t size)
 {
     H5FL_blk_node_t *free_list;        /* The free list of nodes of correct size */
     H5FL_blk_list_t *temp;             /* Temp. ptr to the new native list allocated */
+#ifdef H5_HAVE_CONCURRENCY
+    bool             have_mutex = false; /* Whether we're holding the list's mutex */
+#endif /* H5_HAVE_CONCURRENCY */
     void            *ret_value = NULL; /* Pointer to the block to return to the user */
 
     FUNC_ENTER_NOAPI(NULL)
@@ -734,13 +950,18 @@ H5FL_blk_malloc(H5FL_blk_head_t *head, size_t size)
     assert(size);
 
     /* Make certain the list is initialized first */
-    if (!head->init)
-        if (H5FL__blk_init(head) < 0)
-            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTINIT, NULL, "can't initialize 'block' list");
+    H5TS_INIT_GLOBAL(head, H5FL__blk_init, H5E_RESOURCE, H5E_CANTINIT, NULL, "can't initialize 'block' list");
 
-    /* check if there is a free list for blocks of this size */
+#ifdef H5_HAVE_CONCURRENCY
+    /* Acquire the mutex protecting this list */
+    if (H5TS_dlftt_mutex_acquire(&head->mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, NULL, "can't lock list's mutex");
+    have_mutex = true;
+#endif /* H5_HAVE_CONCURRENCY */
+
+    /* Check if there is a free list for blocks of this size */
     /* and if there are any blocks available on the list */
-    if (NULL != (free_list = H5FL__blk_find_list(&(head->head), size)) && NULL != free_list->list) {
+    if (NULL != (free_list = H5FL__blk_find_list(&(head->pq), size)) && NULL != free_list->list) {
         /* Remove the first node from the free list */
         temp            = free_list->list;
         free_list->list = free_list->list->next;
@@ -750,26 +971,54 @@ H5FL_blk_malloc(H5FL_blk_head_t *head, size_t size)
         head->onlist--;
         head->list_mem -= size;
 
+#ifdef H5_HAVE_CONCURRENCY
+        /* Release the mutex protecting this list */
+        if (H5TS_dlftt_mutex_release(&head->mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, NULL, "can't unlock list's mutex");
+        have_mutex = false;
+#endif /* H5_HAVE_CONCURRENCY */
+
         /* Decrement the amount of global "block" free list memory in use */
-        H5FL_blk_gc_head.mem_freed -= size;
+        H5TS_atomic_fetch_sub_size_t(&H5FL_blk_gc_head.mem_freed, size);
     } /* end if */
     /* No free list available, or there are no nodes on the list, allocate a new node to give to the user */
     else {
-        /* Check if there was no free list for native blocks of this size */
-        if (NULL == free_list)
-            /* Create a new list node and insert it to the queue */
-            free_list = H5FL__blk_create_list(&(head->head), size);
-        assert(free_list);
+#ifdef H5_HAVE_CONCURRENCY
+        /* Release the mutex protecting this list */
+        if (H5TS_dlftt_mutex_release(&head->mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, NULL, "can't unlock list's mutex");
+        have_mutex = false;
+#endif /* H5_HAVE_CONCURRENCY */
 
         /* Allocate new node, with room for the page info header and the actual page data */
         if (NULL == (temp = (H5FL_blk_list_t *)H5FL__malloc(sizeof(H5FL_blk_list_t) + size)))
             HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "memory allocation failed for chunk");
+
+#ifdef H5_HAVE_CONCURRENCY
+        /* Acquire the mutex protecting this list */
+        if (H5TS_dlftt_mutex_acquire(&head->mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, NULL, "can't lock list's mutex");
+        have_mutex = true;
+#endif /* H5_HAVE_CONCURRENCY */
+
+        /* Check (again) if there is (now) a free list for native blocks of this size */
+        if (NULL == (free_list = H5FL__blk_find_list(&(head->pq), size)))
+            /* Create a new list node and insert it to the queue */
+            if (NULL == (free_list = H5FL__blk_create_list(&(head->pq), size)))
+                HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "memory allocation failed for list node");
 
         /* Increment the number of blocks of this size */
         free_list->allocated++;
 
         /* Increment the total number of blocks allocated */
         head->allocated++;
+
+#ifdef H5_HAVE_CONCURRENCY
+        /* Release the mutex protecting this list */
+        if (H5TS_dlftt_mutex_release(&head->mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, NULL, "can't unlock list's mutex");
+        have_mutex = false;
+#endif /* H5_HAVE_CONCURRENCY */
     } /* end else */
 
     /* Initialize the block allocated */
@@ -779,6 +1028,16 @@ H5FL_blk_malloc(H5FL_blk_head_t *head, size_t size)
     ret_value = ((char *)temp) + sizeof(H5FL_blk_list_t);
 
 done:
+#ifdef H5_HAVE_CONCURRENCY
+    if (NULL == ret_value) {
+        /* Release the mutex protecting this list, if we're holding it */
+        /* (Only happens on error) */
+        if (have_mutex)
+            if (H5TS_dlftt_mutex_release(&head->mutex) < 0)
+                HDONE_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, NULL, "can't unlock list's mutex");
+    }
+#endif /* H5_HAVE_CONCURRENCY */
+
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FL_blk_malloc() */
 
@@ -786,12 +1045,11 @@ done:
  * Function:	H5FL_blk_calloc
  *
  * Purpose:	Allocates memory for a block and clear it to zeros.
- *      This routine is used
- *      instead of malloc because the block can be kept on a free list so
- *      they don't thrash malloc/free as much.
+ *              This routine is used
+ *              instead of malloc because the block can be kept on a free list so
+ *              they don't thrash malloc/free as much.
  *
  * Return:	Success:	valid pointer to the block
- *
  *		Failure:	NULL
  *
  *-------------------------------------------------------------------------
@@ -822,11 +1080,10 @@ done:
  * Function:	H5FL_blk_free
  *
  * Purpose:	Releases memory for a block.  This routine is used
- *      instead of free because the blocks can be kept on a free list so
- *      they don't thrash malloc/free as much.
+ *              instead of free because the blocks can be kept on a free list so
+ *              they don't thrash malloc/free as much.
  *
  * Return:	Success:	NULL
- *
  *		Failure:	never fails
  *
  *-------------------------------------------------------------------------
@@ -837,6 +1094,7 @@ H5FL_blk_free(H5FL_blk_head_t *head, void *block)
     H5FL_blk_node_t *free_list;        /* The free list of nodes of correct size */
     H5FL_blk_list_t *temp;             /* Temp. ptr to the new free list node allocated */
     size_t           free_size;        /* Size of the block freed */
+    size_t           list_mem;         /* Amount of memory in block on free list */
     void            *ret_value = NULL; /* Return value */
 
     /* NOINIT OK here because this must be called after H5FL_blk_malloc/calloc
@@ -853,16 +1111,24 @@ H5FL_blk_free(H5FL_blk_head_t *head, void *block)
     /* Save the block's size for later */
     free_size = temp->size;
 
+    /* Make certain that the free list is initialized */
+    assert(H5TS_IS_GLOBAL_INIT(head));
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Acquire the mutex protecting this list */
+    if (H5TS_dlftt_mutex_acquire(&head->mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, NULL, "can't lock list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
+
 #ifdef H5FL_DEBUG
     memset(temp, 255, free_size + sizeof(H5FL_blk_list_t));
 #endif /* H5FL_DEBUG */
 
     /* Check if there is a free list for native blocks of this size */
-    if (NULL == (free_list = H5FL__blk_find_list(&(head->head), free_size)))
+    if (NULL == (free_list = H5FL__blk_find_list(&(head->pq), free_size)))
         /* No free list available, create a new list node and insert it to the queue */
-        free_list = H5FL__blk_create_list(&(head->head), free_size);
-    if (NULL == free_list)
-        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTALLOC, NULL, "couldn't create new list node");
+        if (NULL == (free_list = H5FL__blk_create_list(&(head->pq), free_size)))
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTALLOC, NULL, "couldn't create new list node");
 
     /* Prepend the free'd native block to the front of the free list */
     temp->next      = free_list->list; /* Note: Overwrites the size field in union */
@@ -872,18 +1138,25 @@ H5FL_blk_free(H5FL_blk_head_t *head, void *block)
     free_list->onlist++;
     head->onlist++;
     head->list_mem += free_size;
+    list_mem = head->list_mem;
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Release the mutex protecting this list */
+    if (H5TS_dlftt_mutex_release(&head->mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, NULL, "can't unlock list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
 
     /* Increment the amount of "block" freed memory globally */
-    H5FL_blk_gc_head.mem_freed += free_size;
+    H5TS_atomic_fetch_add_size_t(&H5FL_blk_gc_head.mem_freed, free_size);
 
     /* Check for exceeding free list memory use limits */
     /* First check this particular list */
-    if (head->list_mem > H5FL_blk_lst_mem_lim)
+    if (list_mem > H5FL_blk_lst_mem_lim)
         if (H5FL__blk_gc_list(head) < 0)
             HGOTO_ERROR(H5E_RESOURCE, H5E_CANTGC, NULL, "garbage collection failed during free");
 
     /* Then check the global amount memory on block free lists */
-    if (H5FL_blk_gc_head.mem_freed > H5FL_blk_glb_mem_lim)
+    if (H5TS_atomic_load_size_t(&H5FL_blk_gc_head.mem_freed) > H5FL_blk_glb_mem_lim)
         if (H5FL__blk_gc() < 0)
             HGOTO_ERROR(H5E_RESOURCE, H5E_CANTGC, NULL, "garbage collection failed during free");
 
@@ -895,11 +1168,10 @@ done:
  * Function:	H5FL_blk_realloc
  *
  * Purpose:	Resizes a block.  This does things the straightforward, simple way,
- *      not actually using realloc.
+ *              not actually using realloc.
  *
- * Return:	Success:	NULL
- *
- *		Failure:	never fails
+ * Return:	Success:	Pointer to a block of the new size
+ *		Failure:	NULL
  *
  *-------------------------------------------------------------------------
  */
@@ -921,14 +1193,11 @@ H5FL_blk_realloc(H5FL_blk_head_t *head, void *block, size_t new_size)
         /* Get the pointer to the chunk info header in front of the chunk to free */
         temp = (H5FL_blk_list_t *)((void *)((unsigned char *)block - sizeof(H5FL_blk_list_t)));
 
-        /* check if we are actually changing the size of the buffer */
+        /* Check if we are actually changing the size of the buffer */
         if (new_size != temp->size) {
-            size_t blk_size; /* Temporary block size */
-
             if (NULL == (ret_value = H5FL_blk_malloc(head, new_size)))
                 HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "memory allocation failed for block");
-            blk_size = MIN(new_size, temp->size);
-            H5MM_memcpy(ret_value, block, blk_size);
+            H5MM_memcpy(ret_value, block, MIN(new_size, temp->size));
             H5FL_blk_free(head, block);
         } /* end if */
         else
@@ -955,15 +1224,28 @@ done:
 static herr_t
 H5FL__blk_gc_list(H5FL_blk_head_t *head)
 {
+    size_t   total_freed = 0;          /* Total amount of memory freed on a list */
     H5FL_blk_node_t *blk_head; /* Temp. ptr to the free list page node */
+    herr_t   ret_value = SUCCEED; /* Return value*/
 
+#ifdef H5_HAVE_CONCURRENCY
+    FUNC_ENTER_PACKAGE
+#else /* H5_HAVE_CONCURRENCY */
     FUNC_ENTER_PACKAGE_NOERR
+#endif /* H5_HAVE_CONCURRENCY */
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Acquire the mutex protecting this list */
+    if (H5TS_dlftt_mutex_acquire(&head->mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, FAIL, "can't lock list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
 
     /* Loop through all the nodes in the block free list queue */
-    blk_head = head->head;
+    blk_head = head->pq;
     while (blk_head != NULL) {
         H5FL_blk_node_t *blk_next; /* Temp. ptr to the next free list node */
         H5FL_blk_list_t *list;     /* The free list of native nodes of a particular size */
+        size_t list_freed = 0;     /* Amount of memory freed on a list */
 
         /* Sanity check */
         assert((blk_head->onlist && blk_head->list) || (0 == blk_head->onlist && NULL == blk_head->list));
@@ -987,11 +1269,12 @@ H5FL__blk_gc_list(H5FL_blk_head_t *head)
         blk_head->allocated -= blk_head->onlist;
         head->allocated -= blk_head->onlist;
 
-        /* Decrement count of free memory on this "block" list */
-        head->list_mem -= (blk_head->onlist * blk_head->size);
+        /* Track amount of memory freed */
+        list_freed = blk_head->onlist * blk_head->size;
+        total_freed += list_freed;
 
-        /* Decrement global count of free memory on "block" lists */
-        H5FL_blk_gc_head.mem_freed -= (blk_head->onlist * blk_head->size);
+        /* Decrement count of free memory on this "block" list */
+        head->list_mem -= list_freed;
 
         /* Indicate no free nodes on the free list */
         blk_head->list   = NULL;
@@ -1003,8 +1286,8 @@ H5FL__blk_gc_list(H5FL_blk_head_t *head)
         /* Check for list completely unused now */
         if (0 == blk_head->allocated) {
             /* Patch this node out of the PQ */
-            if (head->head == blk_head)
-                head->head = blk_head->next;
+            if (head->pq == blk_head)
+                head->pq = blk_head->next;
             if (blk_head->prev)
                 blk_head->prev->next = blk_head->next;
             if (blk_head->next)
@@ -1024,7 +1307,19 @@ H5FL__blk_gc_list(H5FL_blk_head_t *head)
     /* Double check that all the memory on this list is recycled */
     assert(0 == head->list_mem);
 
-    FUNC_LEAVE_NOAPI(SUCCEED)
+#ifdef H5_HAVE_CONCURRENCY
+    /* Release the mutex protecting this list */
+    if (H5TS_dlftt_mutex_release(&head->mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, FAIL, "can't unlock list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
+
+    /* Decrement global count of free memory on "block" lists */
+    H5TS_atomic_fetch_sub_size_t(&H5FL_blk_gc_head.mem_freed, total_freed);
+
+#ifdef H5_HAVE_CONCURRENCY
+done:
+#endif /* H5_HAVE_CONCURRENCY */
+    FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FL__blk_gc_list() */
 
 /*-------------------------------------------------------------------------
@@ -1045,11 +1340,18 @@ H5FL__blk_gc(void)
 
     FUNC_ENTER_PACKAGE
 
+#ifdef H5_HAVE_CONCURRENCY
+    if (H5FL_blk_gc_head.init) {
+        /* Acquire the mutex protecting the list of lists */
+        if (H5TS_dlftt_mutex_acquire(&H5FL_blk_gc_head.mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, FAIL, "can't lock list of list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
+
     /* Walk through all the free lists, free()'ing the nodes */
     gc_node = H5FL_blk_gc_head.first;
     while (gc_node != NULL) {
         /* For each free list being garbage collected, walk through the nodes and free them */
-        if (H5FL__blk_gc_list(gc_node->pq) < 0)
+        if (H5FL__blk_gc_list(gc_node->list) < 0)
             HGOTO_ERROR(H5E_RESOURCE, H5E_CANTGC, FAIL, "garbage collection of list failed");
 
         /* Go on to the next free list to garbage collect */
@@ -1057,7 +1359,14 @@ H5FL__blk_gc(void)
     } /* end while */
 
     /* Double check that all the memory on the free lists are recycled */
-    assert(H5FL_blk_gc_head.mem_freed == 0);
+    assert(H5TS_atomic_load_size_t(&H5FL_blk_gc_head.mem_freed) == 0);
+
+#ifdef H5_HAVE_CONCURRENCY
+        /* Release the mutex protecting the list of lists */
+        if (H5TS_dlftt_mutex_release(&H5FL_blk_gc_head.mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, FAIL, "can't unlock list of list's mutex");
+    }
+#endif /* H5_HAVE_CONCURRENCY */
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -1085,32 +1394,41 @@ done:
 static int
 H5FL__blk_term(void)
 {
-    H5FL_blk_gc_node_t *left; /* pointer to garbage collection lists with work left */
+    H5FL_blk_gc_node_t *left = NULL; /* pointer to garbage collection lists with work left */
 
     FUNC_ENTER_PACKAGE_NOERR
 
+#ifdef H5_HAVE_CONCURRENCY
+    /* Have the block free lists been initialized? */
+    if (H5FL_blk_gc_head.init) {
+#endif /* H5_HAVE_CONCURRENCY */
+
     /* Free the nodes on the garbage collection list, keeping nodes with allocations outstanding */
-    left = NULL;
     while (H5FL_blk_gc_head.first != NULL) {
         H5FL_blk_gc_node_t *tmp; /* Temporary pointer to a garbage collection node */
 
         tmp = H5FL_blk_gc_head.first->next;
 
 #ifdef H5FL_DEBUG
-        printf("%s: head->name = %s, head->allocated = %d\n", __func__, H5FL_blk_gc_head.first->pq->name,
-               (int)H5FL_blk_gc_head.first->pq->allocated);
+        printf("%s: head->name = %s, head->allocated = %d\n", __func__, H5FL_blk_gc_head.first->list->name,
+               (int)H5FL_blk_gc_head.first->list->allocated);
 #endif /* H5FL_DEBUG */
 
         /* Check if the list has allocations outstanding */
-        if (H5FL_blk_gc_head.first->pq->allocated > 0) {
+        if (H5FL_blk_gc_head.first->list->allocated > 0) {
             /* Add free list to the list of nodes with allocations open still */
             H5FL_blk_gc_head.first->next = left;
             left                         = H5FL_blk_gc_head.first;
         } /* end if */
         /* No allocations left open for list, get rid of it */
         else {
-            /* Reset the "initialized" flag, in case we restart this list somehow (I don't know how..) */
-            H5FL_blk_gc_head.first->pq->init = false;
+#ifdef H5_HAVE_CONCURRENCY
+            /* Destroy the mutex protecting this list */
+            H5TS_dlftt_mutex_destroy(&H5FL_blk_gc_head.first->list->mutex);
+#endif /* H5_HAVE_CONCURRENCY */
+
+            /* Reset the "initialized" flag, in case we restart this list */
+            H5TS_SET_GLOBAL_INIT(H5FL_blk_gc_head.first->list, false);
 
             /* Free the node from the garbage collection list */
             H5MM_free(H5FL_blk_gc_head.first);
@@ -1122,14 +1440,27 @@ H5FL__blk_term(void)
     /* Point to the list of nodes left with allocations open, if any */
     H5FL_blk_gc_head.first = left;
 
-    FUNC_LEAVE_NOAPI(H5FL_blk_gc_head.first != NULL ? 1 : 0)
+#ifdef H5_HAVE_CONCURRENCY
+        /* Check for all lists being shut down */
+        if (NULL == left) {
+            /* Destroy concurrency objects */
+            H5TS_dlftt_mutex_destroy(&H5FL_blk_gc_head.mutex);
+            H5TS_atomic_destroy_size_t(&H5FL_blk_gc_head.mem_freed);
+
+            /* Reset init flag */
+            H5FL_blk_gc_head.init = false;
+        }
+    }
+#endif /* H5_HAVE_CONCURRENCY */
+
+    FUNC_LEAVE_NOAPI(left != NULL ? 1 : 0)
 } /* end H5FL__blk_term() */
 
 /*-------------------------------------------------------------------------
  * Function:	H5FL__arr_init
  *
  * Purpose:	Initialize a free list for a arrays of certain type.  Right now,
- *      this just adds the free list to the list of things to garbage collect.
+ *              this just adds the free list to the list of things to garbage collect.
  *
  * Return:	Success:	Non-negative
  * 		Failure:	Negative
@@ -1152,21 +1483,51 @@ H5FL__arr_init(H5FL_arr_head_t *head)
     /* Initialize the new garbage collection node */
     new_node->list = head;
 
-    /* Link in to the garbage collection list */
-    new_node->next         = H5FL_arr_gc_head.first;
-    H5FL_arr_gc_head.first = new_node;
+#ifdef H5_HAVE_CONCURRENCY
+    /* Take advantage of holding the global bootstrap mutex when calling this
+     * routine to also check & initialize the global list of free list's mutex
+     */
+    if (!H5FL_arr_gc_head.init) {
+        if (H5TS_dlftt_mutex_init(&H5FL_arr_gc_head.mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTINIT, FAIL, "can't initialize list of free lists' mutex");
+        H5TS_atomic_init_size_t(&H5FL_arr_gc_head.mem_freed, 0);
+
+        H5FL_arr_gc_head.init = true;
+    }
+
+    /* Initialize the mutex protecting this specific list */
+    if (H5TS_dlftt_mutex_init(&head->mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTINIT, FAIL, "can't initialize list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
 
     /* Allocate room for the free lists */
-    if (NULL ==
-        (head->list_arr = (H5FL_arr_node_t *)H5MM_calloc((size_t)head->maxelem * sizeof(H5FL_arr_node_t))))
+    if (NULL == (head->list_arr = (H5FL_arr_node_t *)H5MM_calloc((size_t)head->maxelem * sizeof(H5FL_arr_node_t))))
         HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, FAIL, "memory allocation failed");
 
     /* Initialize the size of each array */
     for (u = 0; u < (size_t)head->maxelem; u++)
         head->list_arr[u].size = head->base_size + (head->elem_size * u);
 
-    /* Indicate that the free list is initialized */
-    head->init = true;
+#ifdef H5_HAVE_CONCURRENCY
+    /* Other 'arr' free lists could already be active and accessing the
+     * global garbage collection list-of-lists, so acquire that mutex before
+     * modifying it.
+     */
+
+    /* Acquire the mutex protecting the list of lists */
+    if (H5TS_dlftt_mutex_acquire(&H5FL_arr_gc_head.mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, FAIL, "can't lock list of list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
+
+    /* Link in to the garbage collection list */
+    new_node->next         = H5FL_arr_gc_head.first;
+    H5FL_arr_gc_head.first = new_node;
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Release the mutex protecting the list of lists */
+    if (H5TS_dlftt_mutex_release(&H5FL_arr_gc_head.mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, FAIL, "can't unlock list of list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -1188,6 +1549,7 @@ H5FL_arr_free(H5FL_arr_head_t *head, void *obj)
     H5FL_arr_list_t *temp;             /* Temp. ptr to the new free list node allocated */
     size_t           mem_size;         /* Size of memory being freed */
     size_t           free_nelem;       /* Number of elements in node being free'd */
+    size_t           list_mem;         /* Amount of memory in block on free list */
     void            *ret_value = NULL; /* Return value */
 
     /* NOINIT OK here because this must be called after H5FL_arr_malloc/calloc
@@ -1202,7 +1564,13 @@ H5FL_arr_free(H5FL_arr_head_t *head, void *obj)
     assert(head);
 
     /* Make certain that the free list is initialized */
-    assert(head->init);
+    assert(H5TS_IS_GLOBAL_INIT(head));
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Acquire the mutex protecting this list */
+    if (H5TS_dlftt_mutex_acquire(&head->mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, NULL, "can't lock list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
 
     /* Get the pointer to the info header in front of the block to free */
     temp = (H5FL_arr_list_t *)((void *)((unsigned char *)obj - sizeof(H5FL_arr_list_t)));
@@ -1225,18 +1593,25 @@ H5FL_arr_free(H5FL_arr_head_t *head, void *obj)
     /* Increment the number of blocks & memory used on free list */
     head->list_arr[free_nelem].onlist++;
     head->list_mem += mem_size;
+    list_mem = head->list_mem;
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Release the mutex protecting this list */
+    if (H5TS_dlftt_mutex_release(&head->mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, NULL, "can't unlock list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
 
     /* Increment the amount of "array" freed memory globally */
-    H5FL_arr_gc_head.mem_freed += mem_size;
+    H5TS_atomic_fetch_add_size_t(&H5FL_arr_gc_head.mem_freed, mem_size);
 
     /* Check for exceeding free list memory use limits */
     /* First check this particular list */
-    if (head->list_mem > H5FL_arr_lst_mem_lim)
+    if (list_mem > H5FL_arr_lst_mem_lim)
         if (H5FL__arr_gc_list(head) < 0)
             HGOTO_ERROR(H5E_RESOURCE, H5E_CANTGC, NULL, "garbage collection failed during free");
 
     /* Then check the global amount memory on array free lists */
-    if (H5FL_arr_gc_head.mem_freed > H5FL_arr_glb_mem_lim)
+    if (H5TS_atomic_load_size_t(&H5FL_arr_gc_head.mem_freed) > H5FL_arr_glb_mem_lim)
         if (H5FL__arr_gc() < 0)
             HGOTO_ERROR(H5E_RESOURCE, H5E_CANTGC, NULL, "garbage collection failed during free");
 
@@ -1268,9 +1643,13 @@ H5FL_arr_malloc(H5FL_arr_head_t *head, size_t elem)
     assert(elem);
 
     /* Make certain the list is initialized first */
-    if (!head->init)
-        if (H5FL__arr_init(head) < 0)
-            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTINIT, NULL, "can't initialize 'array' blocks");
+    H5TS_INIT_GLOBAL(head, H5FL__arr_init, H5E_RESOURCE, H5E_CANTINIT, NULL, "can't initialize 'array' blocks");
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Acquire the mutex protecting this list */
+    if (H5TS_dlftt_mutex_acquire(&head->mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, NULL, "can't lock list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
 
     /* Sanity check that the number of elements is supported */
     assert(elem <= (unsigned)head->maxelem);
@@ -1290,20 +1669,45 @@ H5FL_arr_malloc(H5FL_arr_head_t *head, size_t elem)
         head->list_arr[elem].onlist--;
         head->list_mem -= mem_size;
 
+#ifdef H5_HAVE_CONCURRENCY
+        /* Release the mutex protecting this list */
+        if (H5TS_dlftt_mutex_release(&head->mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, NULL, "can't unlock list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
+
         /* Decrement the amount of global "array" free list memory in use */
-        H5FL_arr_gc_head.mem_freed -= mem_size;
+        H5TS_atomic_fetch_sub_size_t(&H5FL_arr_gc_head.mem_freed, mem_size);
 
     } /* end if */
     /* Otherwise allocate a node */
     else {
-        if (NULL == (new_obj = (H5FL_arr_list_t *)H5FL__malloc(sizeof(H5FL_arr_list_t) + mem_size)))
+#ifdef H5_HAVE_CONCURRENCY
+        /* Release the mutex protecting this list */
+        if (H5TS_dlftt_mutex_release(&head->mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, NULL, "can't unlock list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
+
+        /* Allocate new memory */
+        if (NULL == (new_obj = H5FL__malloc(sizeof(H5FL_arr_list_t) + mem_size)))
             HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "memory allocation failed");
+
+#ifdef H5_HAVE_CONCURRENCY
+        /* Acquire the mutex protecting this list */
+        if (H5TS_dlftt_mutex_acquire(&head->mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, NULL, "can't lock list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
 
         /* Increment the number of blocks of this size */
         head->list_arr[elem].allocated++;
 
         /* Increment the number of blocks allocated in list, of all sizes */
         head->allocated++;
+
+#ifdef H5_HAVE_CONCURRENCY
+        /* Release the mutex protecting this list */
+        if (H5TS_dlftt_mutex_release(&head->mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, NULL, "can't unlock list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
     } /* end else */
 
     /* Initialize the new object */
@@ -1415,14 +1819,27 @@ H5FL_arr_realloc(H5FL_arr_head_t *head, void *obj, size_t new_elem)
 static herr_t
 H5FL__arr_gc_list(H5FL_arr_head_t *head)
 {
-    unsigned u; /* Counter for array of free lists */
+    size_t   total_freed = 0;          /* Total amount of memory freed on a list */
+    unsigned u;                         /* Counter for array of free lists */
+    herr_t   ret_value = SUCCEED; /* Return value*/
 
+#ifdef H5_HAVE_CONCURRENCY
+    FUNC_ENTER_PACKAGE
+#else /* H5_HAVE_CONCURRENCY */
     FUNC_ENTER_PACKAGE_NOERR
+#endif /* H5_HAVE_CONCURRENCY */
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Acquire the mutex protecting this list */
+    if (H5TS_dlftt_mutex_acquire(&head->mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, FAIL, "can't lock list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
 
     /* Walk through the array of free lists */
     for (u = 0; u < (unsigned)head->maxelem; u++) {
         if (head->list_arr[u].onlist > 0) {
             H5FL_arr_list_t *arr_free_list; /* Pointer to nodes in free list being garbage collected */
+            size_t list_freed = 0;          /* Amount of memory freed on a list */
 
             /* For each free list being garbage collected, walk through the nodes and free them */
             arr_free_list = head->list_arr[u].list;
@@ -1443,11 +1860,12 @@ H5FL__arr_gc_list(H5FL_arr_head_t *head)
             head->list_arr[u].allocated -= head->list_arr[u].onlist;
             head->allocated -= head->list_arr[u].onlist;
 
-            /* Decrement count of free memory on this "array" list */
-            head->list_mem -= (head->list_arr[u].onlist * head->list_arr[u].size);
+            /* Track amount of memory freed */
+            list_freed = head->list_arr[u].onlist * head->list_arr[u].size;
+            total_freed += list_freed;
 
-            /* Decrement global count of free memory on "array" lists */
-            H5FL_arr_gc_head.mem_freed -= (head->list_arr[u].onlist * head->list_arr[u].size);
+            /* Decrement count of free memory on this "array" list */
+            head->list_mem -= list_freed;
 
             /* Indicate no free nodes on the free list */
             head->list_arr[u].list   = NULL;
@@ -1458,7 +1876,19 @@ H5FL__arr_gc_list(H5FL_arr_head_t *head)
     /* Double check that all the memory on this list is recycled */
     assert(head->list_mem == 0);
 
-    FUNC_LEAVE_NOAPI(SUCCEED)
+#ifdef H5_HAVE_CONCURRENCY
+    /* Release the mutex protecting this list */
+    if (H5TS_dlftt_mutex_release(&head->mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, FAIL, "can't unlock list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
+
+    /* Decrement global count of free memory on "array" lists */
+    H5TS_atomic_fetch_sub_size_t(&H5FL_arr_gc_head.mem_freed, total_freed);
+
+#ifdef H5_HAVE_CONCURRENCY
+done:
+#endif /* H5_HAVE_CONCURRENCY */
+    FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FL__arr_gc_list() */
 
 /*-------------------------------------------------------------------------
@@ -1479,6 +1909,13 @@ H5FL__arr_gc(void)
 
     FUNC_ENTER_PACKAGE
 
+#ifdef H5_HAVE_CONCURRENCY
+    if (H5FL_arr_gc_head.init) {
+        /* Acquire the mutex protecting the list of lists */
+        if (H5TS_dlftt_mutex_acquire(&H5FL_arr_gc_head.mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, FAIL, "can't lock list of list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
+
     /* Walk through all the free lists, free()'ing the nodes */
     gc_arr_node = H5FL_arr_gc_head.first;
     while (gc_arr_node != NULL) {
@@ -1491,7 +1928,14 @@ H5FL__arr_gc(void)
     } /* end while */
 
     /* Double check that all the memory on the free lists are recycled */
-    assert(H5FL_arr_gc_head.mem_freed == 0);
+    assert(H5TS_atomic_load_size_t(&H5FL_arr_gc_head.mem_freed) == 0);
+
+#ifdef H5_HAVE_CONCURRENCY
+        /* Release the mutex protecting the list of lists */
+        if (H5TS_dlftt_mutex_release(&H5FL_arr_gc_head.mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, FAIL, "can't unlock list of list's mutex");
+    }
+#endif /* H5_HAVE_CONCURRENCY */
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -1519,12 +1963,16 @@ done:
 static int
 H5FL__arr_term(void)
 {
-    H5FL_gc_arr_node_t *left; /* pointer to garbage collection lists with work left */
+    H5FL_gc_arr_node_t *left = NULL; /* pointer to garbage collection lists with work left */
 
     FUNC_ENTER_PACKAGE_NOERR
 
+#ifdef H5_HAVE_CONCURRENCY
+    /* Have the array free lists been initialized? */
+    if (H5FL_arr_gc_head.init) {
+#endif /* H5_HAVE_CONCURRENCY */
+
     /* Free the nodes on the garbage collection list, keeping nodes with allocations outstanding */
-    left = NULL;
     while (H5FL_arr_gc_head.first != NULL) {
         H5FL_gc_arr_node_t *tmp; /* Temporary pointer to a garbage collection node */
 
@@ -1545,8 +1993,13 @@ H5FL__arr_term(void)
             /* Free the array of free lists */
             H5MM_xfree(H5FL_arr_gc_head.first->list->list_arr);
 
-            /* Reset the "initialized" flag, in case we restart this list somehow (I don't know how..) */
-            H5FL_arr_gc_head.first->list->init = false;
+#ifdef H5_HAVE_CONCURRENCY
+            /* Destroy the mutex protecting this list */
+            H5TS_dlftt_mutex_destroy(&H5FL_arr_gc_head.first->list->mutex);
+#endif /* H5_HAVE_CONCURRENCY */
+
+            /* Reset the "initialized" flag, in case we restart this list */
+            H5TS_SET_GLOBAL_INIT(H5FL_arr_gc_head.first->list, false);
 
             /* Free the node from the garbage collection list */
             H5MM_free(H5FL_arr_gc_head.first);
@@ -1558,7 +2011,20 @@ H5FL__arr_term(void)
     /* Point to the list of nodes left with allocations open, if any */
     H5FL_arr_gc_head.first = left;
 
-    FUNC_LEAVE_NOAPI(H5FL_arr_gc_head.first != NULL ? 1 : 0)
+#ifdef H5_HAVE_CONCURRENCY
+        /* Check for all lists being shut down */
+        if (NULL == left) {
+            /* Destroy concurrency objects */
+            H5TS_dlftt_mutex_destroy(&H5FL_arr_gc_head.mutex);
+            H5TS_atomic_destroy_size_t(&H5FL_arr_gc_head.mem_freed);
+
+            /* Reset init flag */
+            H5FL_arr_gc_head.init = false;
+        }
+    }
+#endif /* H5_HAVE_CONCURRENCY */
+
+    FUNC_LEAVE_NOAPI(left != NULL ? 1 : 0)
 } /* end H5FL__arr_term() */
 
 /*-------------------------------------------------------------------------
@@ -1581,9 +2047,6 @@ H5FL_seq_free(H5FL_seq_head_t *head, void *obj)
     /* Double check parameters */
     assert(head);
     assert(obj);
-
-    /* Make certain that the free list is initialized */
-    assert(head->queue.init);
 
     /* Use block routine */
     H5FL_blk_free(&(head->queue), obj);
@@ -1672,6 +2135,35 @@ H5FL_seq_realloc(H5FL_seq_head_t *head, void *obj, size_t new_elem)
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FL_seq_realloc() */
 
+#ifdef H5_HAVE_CONCURRENCY
+/*-------------------------------------------------------------------------
+ * Function:	H5FL__fac_head_init
+ *
+ * Purpose:	Initialize a 'list of lists'  for factory allocators.
+ *              Right now, this just initializes the mutex when concurrency
+ *              is enabled.
+ *
+ * Return:	Success:	Non-negative
+ * 		Failure:	Negative
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t
+H5FL__fac_head_init(H5FL_fac_gc_list_t *head)
+{
+    herr_t              ret_value = SUCCEED; /* Return value*/
+
+    FUNC_ENTER_PACKAGE
+
+    /* Initialize the mutex protecting this list */
+    if (H5TS_dlftt_mutex_init(&head->mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTINIT, FAIL, "can't initialize list's mutex");
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5FL__fac_head_init() */
+#endif /* H5_HAVE_CONCURRENCY */
+
 /*-------------------------------------------------------------------------
  * Function:	H5FL_fac_init
  *
@@ -1708,19 +2200,35 @@ H5FL_fac_init(size_t size)
     /* Initialize the new garbage collection node */
     new_node->list = factory;
 
+    /* Make certain that the space allocated is large enough to store a free list pointer (eventually) */
+    if (factory->size < sizeof(H5FL_fac_node_t))
+        factory->size = sizeof(H5FL_fac_node_t);
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Initialize the mutex protecting this factory */
+    if (H5TS_dlftt_mutex_init(&factory->mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTINIT, NULL, "can't initialize factory's mutex");
+
+    /* Make certain the list of lists is initialized first */
+    H5TS_INIT_GLOBAL(&H5FL_fac_gc_head, H5FL__fac_head_init, H5E_RESOURCE, H5E_CANTINIT, NULL, "can't initialize 'factory' list of lists");
+
+    /* Acquire the mutex protecting the list of lists */
+    if (H5TS_dlftt_mutex_acquire(&H5FL_fac_gc_head.mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, NULL, "can't lock list of list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
+
     /* Link in to the garbage collection list */
     new_node->next         = H5FL_fac_gc_head.first;
     H5FL_fac_gc_head.first = new_node;
     if (new_node->next)
         new_node->next->list->prev_gc = new_node;
-    /* The new factory's prev_gc field will be set to NULL */
+    /* The new factory's prev_gc field is set to NULL */
 
-    /* Make certain that the space allocated is large enough to store a free list pointer (eventually) */
-    if (factory->size < sizeof(H5FL_fac_node_t))
-        factory->size = sizeof(H5FL_fac_node_t);
-
-    /* Indicate that the free list is initialized */
-    factory->init = true;
+#ifdef H5_HAVE_CONCURRENCY
+    /* Release the mutex protecting the list of lists */
+    if (H5TS_dlftt_mutex_release(&H5FL_fac_gc_head.mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, NULL, "can't unlock list of list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
 
     /* Set return value */
     ret_value = factory;
@@ -1741,13 +2249,15 @@ done:
  *
  * Purpose:	Release a block back to a factory & put on free list
  *
- * Return:	NULL
+ * Return:	Success:	NULL
+ *		Failure:	never fails
  *
  *-------------------------------------------------------------------------
  */
 void *
 H5FL_fac_free(H5FL_fac_head_t *head, void *obj)
 {
+    unsigned  onlist;    /* Number of blocks on free list */
     void *ret_value = NULL; /* Return value */
 
     /* NOINIT OK here because this must be called after H5FL_fac_init -NAF */
@@ -1757,12 +2267,15 @@ H5FL_fac_free(H5FL_fac_head_t *head, void *obj)
     assert(head);
     assert(obj);
 
+#ifdef H5_HAVE_CONCURRENCY
+    /* Acquire the mutex protecting the factory */
+    if (H5TS_dlftt_mutex_acquire(&head->mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, NULL, "can't lock factory's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
+
 #ifdef H5FL_DEBUG
     memset(obj, 255, head->size);
 #endif /* H5FL_DEBUG */
-
-    /* Make certain that the free list is initialized */
-    assert(head->init);
 
     /* Link into the free list */
     ((H5FL_fac_node_t *)obj)->next = head->list;
@@ -1771,14 +2284,20 @@ H5FL_fac_free(H5FL_fac_head_t *head, void *obj)
     head->list = (H5FL_fac_node_t *)obj;
 
     /* Increment the number of blocks on free list */
-    head->onlist++;
+    onlist = ++head->onlist;
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Release the mutex protecting the factory */
+    if (H5TS_dlftt_mutex_release(&head->mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, NULL, "can't unlock factory's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
 
     /* Increment the amount of "factory" freed memory globally */
-    H5FL_fac_gc_head.mem_freed += head->size;
+    H5TS_atomic_fetch_add_size_t(&H5FL_fac_gc_head.mem_freed, head->size);
 
     /* Check for exceeding free list memory use limits */
     /* First check this particular list */
-    if (head->onlist * head->size > H5FL_fac_lst_mem_lim)
+    if (onlist * head->size > H5FL_fac_lst_mem_lim)
         if (H5FL__fac_gc_list(head) < 0)
             HGOTO_ERROR(H5E_RESOURCE, H5E_CANTGC, NULL, "garbage collection failed during free");
 
@@ -1811,7 +2330,12 @@ H5FL_fac_malloc(H5FL_fac_head_t *head)
 
     /* Double check parameters */
     assert(head);
-    assert(head->init);
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Acquire the mutex protecting the factory */
+    if (H5TS_dlftt_mutex_acquire(&head->mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, NULL, "can't lock factory's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
 
     /* Check for nodes available on the free list first */
     if (head->list != NULL) {
@@ -1824,16 +2348,40 @@ H5FL_fac_malloc(H5FL_fac_head_t *head)
         /* Decrement the number of blocks & memory on free list */
         head->onlist--;
 
+#ifdef H5_HAVE_CONCURRENCY
+    /* Release the mutex protecting the factory */
+    if (H5TS_dlftt_mutex_release(&head->mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, NULL, "can't unlock factory's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
+
         /* Decrement the amount of global "factory" free list memory in use */
-        H5FL_fac_gc_head.mem_freed -= (head->size);
+        H5TS_atomic_fetch_sub_size_t(&H5FL_fac_gc_head.mem_freed, head->size);
     } /* end if */
     /* Otherwise allocate a node */
     else {
+#ifdef H5_HAVE_CONCURRENCY
+        /* Release the mutex protecting the factory */
+        if (H5TS_dlftt_mutex_release(&head->mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, NULL, "can't unlock factory's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
+
         if (NULL == (ret_value = H5FL__malloc(head->size)))
             HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "memory allocation failed");
 
+#ifdef H5_HAVE_CONCURRENCY
+        /* Acquire the mutex protecting the factory */
+        if (H5TS_dlftt_mutex_acquire(&head->mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, NULL, "can't lock factory's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
+
         /* Increment the number of blocks allocated in list */
         head->allocated++;
+
+#ifdef H5_HAVE_CONCURRENCY
+        /* Release the mutex protecting the factory */
+        if (H5TS_dlftt_mutex_release(&head->mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, NULL, "can't unlock factory's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
     } /* end else */
 
 done:
@@ -1886,8 +2434,23 @@ static herr_t
 H5FL__fac_gc_list(H5FL_fac_head_t *head)
 {
     H5FL_fac_node_t *free_list; /* Pointer to nodes in free list being garbage collected */
+    unsigned  onlist;    /* Number of blocks on free list */
+    herr_t              ret_value = SUCCEED; /* Return value*/
 
+#ifdef H5_HAVE_CONCURRENCY
+    FUNC_ENTER_PACKAGE
+#else /* H5_HAVE_CONCURRENCY */
     FUNC_ENTER_PACKAGE_NOERR
+#endif /* H5_HAVE_CONCURRENCY */
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Acquire the mutex protecting the factory */
+    if (H5TS_dlftt_mutex_acquire(&head->mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, FAIL, "can't lock factory's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
+
+    /* Save for later */
+    onlist = head->onlist;
 
     /* For each free list being garbage collected, walk through the nodes and free them */
     free_list = head->list;
@@ -1907,14 +2470,23 @@ H5FL__fac_gc_list(H5FL_fac_head_t *head)
     /* Decrement the count of nodes allocated and free the node */
     head->allocated -= head->onlist;
 
-    /* Decrement global count of free memory on "factory" lists */
-    H5FL_fac_gc_head.mem_freed -= (head->onlist * head->size);
-
     /* Indicate no free nodes on the free list */
     head->list   = NULL;
     head->onlist = 0;
 
-    FUNC_LEAVE_NOAPI(SUCCEED)
+#ifdef H5_HAVE_CONCURRENCY
+    /* Release the mutex protecting the factory */
+    if (H5TS_dlftt_mutex_release(&head->mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, FAIL, "can't unlock factory's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
+
+    /* Decrement global count of free memory on "factory" lists */
+    H5TS_atomic_fetch_sub_size_t(&H5FL_fac_gc_head.mem_freed, (onlist * head->size));
+
+#ifdef H5_HAVE_CONCURRENCY
+done:
+#endif /* H5_HAVE_CONCURRENCY */
+    FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FL__fac_gc_list() */
 
 /*-------------------------------------------------------------------------
@@ -1935,6 +2507,12 @@ H5FL__fac_gc(void)
 
     FUNC_ENTER_NOAPI_NOINIT
 
+#ifdef H5_HAVE_CONCURRENCY
+    /* Acquire the mutex protecting the list of lists */
+    if (H5TS_dlftt_mutex_acquire(&H5FL_fac_gc_head.mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, FAIL, "can't lock list of list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
+
     /* Walk through all the free lists, free()'ing the nodes */
     gc_node = H5FL_fac_gc_head.first;
     while (gc_node != NULL) {
@@ -1948,6 +2526,12 @@ H5FL__fac_gc(void)
 
     /* Double check that all the memory on the free lists is recycled */
     assert(H5FL_fac_gc_head.mem_freed == 0);
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Release the mutex protecting the list of lists */
+    if (H5TS_dlftt_mutex_release(&H5FL_fac_gc_head.mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, FAIL, "can't unlock list of list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -1979,6 +2563,18 @@ H5FL_fac_term(H5FL_fac_head_t *factory)
     if (H5FL__fac_gc_list(factory) < 0)
         HGOTO_ERROR(H5E_RESOURCE, H5E_CANTGC, FAIL, "garbage collection of factory failed");
 
+#ifdef H5_HAVE_CONCURRENCY
+    /* Acquire the mutex protecting the list of lists */
+    if (H5TS_dlftt_mutex_acquire(&H5FL_fac_gc_head.mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, FAIL, "can't lock list of list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Acquire the mutex protecting the factory */
+    if (H5TS_dlftt_mutex_acquire(&factory->mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, FAIL, "can't lock factory's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
+
     /* Verify that all the blocks have been freed */
     if (factory->allocated > 0)
         HGOTO_ERROR(H5E_RESOURCE, H5E_CANTRELEASE, FAIL, "factory still has objects allocated");
@@ -2004,8 +2600,24 @@ H5FL_fac_term(H5FL_fac_head_t *factory)
             tmp->list->prev_gc = NULL;
     } /* end else */
 
+#ifdef H5_HAVE_CONCURRENCY
+    /* Release the mutex protecting the factory */
+    if (H5TS_dlftt_mutex_release(&factory->mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, FAIL, "can't unlock factory's mutex");
+
+    /* Destroy the mutex protecting this factory */
+    if (H5TS_dlftt_mutex_destroy(&factory->mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTRELEASE, FAIL, "can't destroy factory's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
+
     /* Free factory info */
     factory = H5FL_FREE(H5FL_fac_head_t, factory);
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Release the mutex protecting the list of lists */
+    if (H5TS_dlftt_mutex_release(&H5FL_fac_gc_head.mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, FAIL, "can't unlock list of list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -2040,14 +2652,20 @@ H5FL__fac_term_all(void)
         /* The list cannot have any allocations outstanding */
         assert(H5FL_fac_gc_head.first->list->allocated == 0);
 
-        /* Reset the "initialized" flag, in case we restart this list somehow (I don't know how..) */
-        H5FL_fac_gc_head.first->list->init = false;
-
         /* Free the node from the garbage collection list */
         H5FL_fac_gc_head.first = H5FL_FREE(H5FL_fac_gc_node_t, H5FL_fac_gc_head.first);
 
         H5FL_fac_gc_head.first = tmp;
     } /* end while */
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Destroy concurrency objects */
+    H5TS_dlftt_mutex_destroy(&H5FL_fac_gc_head.mutex);
+    H5TS_atomic_destroy_size_t(&H5FL_fac_gc_head.mem_freed);
+
+    /* Reset init flag */
+    H5TS_SET_GLOBAL_INIT(&H5FL_fac_gc_head, false);
+#endif /* H5_HAVE_CONCURRENCY */
 
     FUNC_LEAVE_NOAPI(0)
 } /* end H5FL__fac_term_all() */
@@ -2108,7 +2726,6 @@ done:
  *  int blk_list_lim;    IN: The limit on memory used in each "block" free list
  *
  * Return:	Success:	non-negative
- *
  *		Failure:	negative
  *
  *-------------------------------------------------------------------------
@@ -2177,7 +2794,7 @@ H5FL_get_free_list_sizes(size_t *reg_size, size_t *arr_size, size_t *blk_size, s
             H5FL_reg_head_t *reg_list = gc_node->list; /* Head of list */
 
             /* Sanity check */
-            assert(reg_list->init);
+            assert(H5TS_IS_GLOBAL_INIT(reg_list));
 
             /* Add the amount of memory for this list */
             *reg_size += (reg_list->size * reg_list->allocated);
@@ -2198,7 +2815,7 @@ H5FL_get_free_list_sizes(size_t *reg_size, size_t *arr_size, size_t *blk_size, s
             H5FL_arr_head_t *head = gc_arr_node->list; /* Head of array list elements */
 
             /* Sanity check */
-            assert(head->init);
+            assert(H5TS_IS_GLOBAL_INIT(head));
 
             /* Check for any allocated elements in this list */
             if (head->allocated > 0) {
@@ -2226,7 +2843,7 @@ H5FL_get_free_list_sizes(size_t *reg_size, size_t *arr_size, size_t *blk_size, s
             H5FL_blk_node_t *blk_head; /* Temp. ptr to the free list block node */
 
             /* Loop through all the nodes in the block free list queue */
-            blk_head = gc_blk_node->pq->head;
+            blk_head = gc_blk_node->list->pq;
             while (blk_head != NULL) {
                 /* Add size of blocks on this list */
                 *blk_size += (blk_head->allocated * blk_head->size);

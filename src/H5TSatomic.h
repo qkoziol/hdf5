@@ -278,6 +278,118 @@ H5TS_atomic_fetch_sub_uint(H5TS_atomic_uint_t *obj, unsigned arg)
 } /* end H5TS_atomic_fetch_sub_uint() */
 
 /*--------------------------------------------------------------------------
+ * Function:    H5TS_atomic_load_size_t
+ *
+ * Purpose:     Retrieves the value of atomic 'size_t' variable object.
+ *
+ * Return:      Value of the atomic 'size_t'
+ *
+ *--------------------------------------------------------------------------
+ */
+static inline size_t
+H5TS_atomic_load_size_t(H5TS_atomic_size_t *obj)
+{
+    size_t ret_value;
+
+    /* Lock mutex that protects the "atomic" value */
+    H5TS_mutex_lock(&obj->mutex);
+
+    /* Get the value */
+    ret_value = obj->value;
+
+    /* Release the object's mutex */
+    H5TS_mutex_unlock(&obj->mutex);
+
+    return ret_value;
+} /* end H5TS_atomic_load_size_t() */
+
+/*--------------------------------------------------------------------------
+ * Function:    H5TS_atomic_store_size_t
+ *
+ * Purpose:     Atomically replaces the value of the atomic 'size_t' variable
+ *
+ * Return:      None
+ *
+ *--------------------------------------------------------------------------
+ */
+static inline void
+H5TS_atomic_store_size_t(H5TS_atomic_size_t *obj, size_t desired)
+{
+    /* Lock mutex that protects the "atomic" value */
+    H5TS_mutex_lock(&obj->mutex);
+
+    /* Set the value */
+    obj->value = desired;
+
+    /* Release the object's mutex */
+    H5TS_mutex_unlock(&obj->mutex);
+
+    return;
+} /* end H5TS_atomic_store_size_t() */
+
+/*--------------------------------------------------------------------------
+ * Function:    H5TS_atomic_fetch_add_size_t
+ *
+ * Purpose:     Atomically replaces the value of an atomic 'size_t' variable with the
+ *              result of addition of the 'arg' to the old value of the
+ *              atomic variable.
+ *
+ * Return:      Returns the value of the atomic variable held previously
+ *
+ *--------------------------------------------------------------------------
+ */
+static inline size_t
+H5TS_atomic_fetch_add_size_t(H5TS_atomic_size_t *obj, size_t arg)
+{
+    size_t ret_value;
+
+    /* Lock mutex that protects the "atomic" value */
+    H5TS_mutex_lock(&obj->mutex);
+
+    /* Get the current value */
+    ret_value = obj->value;
+
+    /* Increment the value */
+    obj->value += arg;
+
+    /* Release the object's mutex */
+    H5TS_mutex_unlock(&obj->mutex);
+
+    return ret_value;
+} /* end H5TS_atomic_fetch_add_size_t() */
+
+/*--------------------------------------------------------------------------
+ * Function:    H5TS_atomic_fetch_sub_size_t
+ *
+ * Purpose:     Atomically replaces the value of an atomic 'size_t' variable with the
+ *              result of subtracting the 'arg' from the old value of the
+ *              atomic variable.
+ *
+ * Return:      Returns the value of the atomic variable held previously
+ *
+ *--------------------------------------------------------------------------
+ */
+static inline size_t
+H5TS_atomic_fetch_sub_size_t(H5TS_atomic_size_t *obj, size_t arg)
+{
+    size_t ret_value;
+
+    /* Lock mutex that protects the "atomic" value */
+    H5TS_mutex_lock(&obj->mutex);
+
+    /* Get the current value */
+    ret_value = obj->value;
+
+    /* Decrement the value */
+    obj->value -= arg;
+
+    /* Release the object's mutex */
+    H5TS_mutex_unlock(&obj->mutex);
+
+    return ret_value;
+} /* end H5TS_atomic_fetch_sub_size_t() */
+
+/*--------------------------------------------------------------------------
  * Function:    H5TS_atomic_exchange_voidp
  *
  * Purpose:     Atomically replaces the value of an atomic 'void *' variable

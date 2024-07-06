@@ -236,6 +236,10 @@ H5_DLL herr_t H5TS__api_mutex_release(unsigned *lock_count);
 H5_DLL herr_t H5TS__tinfo_init(void);
 H5_DLL void   H5TS__tinfo_destroy(void *tinfo_node);
 H5_DLL herr_t H5TS__tinfo_term(void);
+#ifndef H5TS__get_dlftt_DEF
+#define H5TS__get_dlftt_DEF
+H5_DLL herr_t H5TS__get_dlftt(unsigned *dlftt);
+#endif /* H5TS__get_dlftt_DEF */
 #endif /* H5_HAVE_THREADSAFE_API */
 
 /* Recursive R/W lock related function declarations */

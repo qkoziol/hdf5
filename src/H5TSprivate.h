@@ -102,6 +102,14 @@
 #define H5TS_atomic_fetch_sub_uint(obj, arg) atomic_fetch_sub((obj), (arg))
 #define H5TS_atomic_destroy_uint(obj)        /* void */
 
+/* atomic_size_t */
+#define H5TS_atomic_init_size_t(obj, desired)  atomic_init((obj), (desired))
+#define H5TS_atomic_load_size_t(obj)           atomic_load(obj)
+#define H5TS_atomic_store_size_t(obj, desired) atomic_store((obj), (desired))
+#define H5TS_atomic_fetch_add_size_t(obj, arg) atomic_fetch_add((obj), (arg))
+#define H5TS_atomic_fetch_sub_size_t(obj, arg) atomic_fetch_sub((obj), (arg))
+#define H5TS_atomic_destroy_size_t(obj)        /* void */
+
 /* atomic_voidp */
 #define H5TS_atomic_init_voidp(obj, desired)     atomic_init((obj), (desired))
 #define H5TS_atomic_exchange_voidp(obj, desired) atomic_exchange((obj), (desired))
@@ -196,6 +204,7 @@ typedef void (*H5TS_once_init_func_t)(void);
 #if defined(H5_HAVE_STDATOMIC_H) && !defined(__cplusplus)
 typedef atomic_int  H5TS_atomic_int_t;
 typedef atomic_uint H5TS_atomic_uint_t;
+typedef atomic_size_t H5TS_atomic_size_t;
 /* Suppress warning about _Atomic keyword not supported in C99 */
 H5_GCC_DIAG_OFF("c99-c11-compat")
 H5_CLANG_DIAG_OFF("c11-extensions")
@@ -211,6 +220,10 @@ typedef struct {
     H5TS_mutex_t mutex;
     unsigned     value;
 } H5TS_atomic_uint_t;
+typedef struct {
+    H5TS_mutex_t mutex;
+    size_t       value;
+} H5TS_atomic_size_t;
 typedef struct {
     H5TS_mutex_t mutex;
     void        *value;
@@ -287,9 +300,68 @@ H5_CLANG_DIAG_ON("c11-extensions")
 
 #endif
 
+/* Mutex that efficiently obeys the "DLFTT" locking protocol */
+typedef struct H5TS_dlftt_mutex_t {
+    H5TS_mutex_t mtx;
+    unsigned dlftt;
+} H5TS_dlftt_mutex_t;
+
+/* Mechanism for implementing Double-checked Locking Protocol (DCLP) for global
+ * variables with deferred initialization (i.e. not at library init time.
+ * FYI: https://preshing.com/20130930/double-checked-locking-is-fixed-in-cpp11/
+ */
+typedef struct H5TS_dclp_t {
+    bool init;                  /* Whether the global has been initialized */
+} H5TS_dclp_t;
+
+/* Safely call an initialization routine for a global variable. This is invoked
+ * from a single thread while blocking other threads from using the global until
+ * initialization is completed.
+ *
+ * Note that this currently assumes that the global variable is a struct
+ * containing a field of type H5TS_dclp_t as its first field.
+ */
+#ifdef H5_HAVE_CONCURRENCY
+#define H5TS_INIT_GLOBAL(v,f,maj,min,err_ret,...)         \
+    do {                                                      \
+        if (H5_UNLIKELY(!((H5TS_dclp_t *)(v))->init)) {                    \
+            if (H5_UNLIKELY(H5TS_dlftt_mutex_acquire(&H5TS_bootstrap_mtx_g) < 0)) \
+                HGOTO_ERROR((maj), H5E_CANTLOCK, (err_ret), "can't acquire global bootstrap mutex"); \
+            if (!((H5TS_dclp_t *)(v))->init) {                     \
+                /* Invoke the init function */ \
+                if (H5_UNLIKELY((f)(v) < 0))                                   \
+                    HGOTO_ERROR((maj), (min), (err_ret), __VA_ARGS__); \
+ \
+                /* Indicate that the free list is initialized */ \
+                H5TS_SET_GLOBAL_INIT(v, true); \
+            } \
+            if (H5_UNLIKELY(H5TS_dlftt_mutex_release(&H5TS_bootstrap_mtx_g) < 0)) \
+                HGOTO_ERROR((maj), H5E_CANTUNLOCK, (err_ret), "can't release global bootstrap mutex"); \
+        } \
+    } while(0)
+#else /* H5_HAVE_CONCURRENCY */
+#define H5TS_INIT_GLOBAL(v,f,maj,min,err_ret,...)         \
+    do {                                                      \
+        if (H5_UNLIKELY(!((H5TS_dclp_t *)(v))->init)) {                    \
+            /* Invoke the init function */ \
+            if (H5_UNLIKELY((f)(v) < 0))                                   \
+                HGOTO_ERROR((maj), (min), (err_ret), __VA_ARGS__); \
+ \
+            /* Indicate that the free list is initialized */ \
+            H5TS_SET_GLOBAL_INIT(v, true); \
+        } \
+    } while(0)
+#endif /* H5_HAVE_CONCURRENCY */
+#define H5TS_IS_GLOBAL_INIT(v)  (((H5TS_dclp_t *)(v))->init)
+#define H5TS_SET_GLOBAL_INIT(v,x)  ((H5TS_dclp_t *)(v))->init = (x)
+
+
 /*****************************/
 /* Library-private Variables */
 /*****************************/
+
+/* Global "bootstrapping" mutex */
+extern H5TS_dlftt_mutex_t H5TS_bootstrap_mtx_g;
 
 /***************************************/
 /* Library-private Function Prototypes */
@@ -327,6 +399,11 @@ H5_DLL herr_t H5TS_mutex_init(H5TS_mutex_t *mutex, int type);
 /* Mutex lock & unlock calls are defined in H5TSmutex.h */
 H5_DLL herr_t H5TS_mutex_trylock(H5TS_mutex_t *mutex, bool *acquired) H5TS_TRY_ACQUIRE(SUCCEED, *mutex);
 H5_DLL herr_t H5TS_mutex_destroy(H5TS_mutex_t *mutex);
+
+/* "DLFTT" aware mutex operations */
+H5_DLL herr_t H5TS_dlftt_mutex_init(H5TS_dlftt_mutex_t *mutex);
+/* DLFTT mutex lock & unlock calls are defined in H5TSdlftt_mutex.h */
+H5_DLL herr_t H5TS_dlftt_mutex_destroy(H5TS_dlftt_mutex_t *mutex);
 
 /* R/W locks */
 H5_DLL herr_t H5TS_rwlock_init(H5TS_rwlock_t *lock);
@@ -390,6 +467,15 @@ static inline unsigned H5TS_atomic_fetch_add_uint(H5TS_atomic_uint_t *obj, unsig
 static inline unsigned H5TS_atomic_fetch_sub_uint(H5TS_atomic_uint_t *obj, unsigned arg);
 H5_DLL void            H5TS_atomic_destroy_uint(H5TS_atomic_uint_t *obj);
 
+/* atomic_size_t */
+H5_DLL void H5TS_atomic_init_size_t(H5TS_atomic_size_t *obj, size_t desired);
+/* Atomic 'size_t' load, store, etc. calls are defined in H5TSatomic.h */
+static inline size_t H5TS_atomic_load_size_t(H5TS_atomic_size_t *obj);
+static inline void     H5TS_atomic_store_size_t(H5TS_atomic_size_t *obj, size_t desired);
+static inline size_t H5TS_atomic_fetch_add_size_t(H5TS_atomic_size_t *obj, size_t arg);
+static inline size_t H5TS_atomic_fetch_sub_size_t(H5TS_atomic_size_t *obj, size_t arg);
+H5_DLL void            H5TS_atomic_destroy_size_t(H5TS_atomic_size_t *obj);
+
 /* void * _Atomic (atomic void pointer) */
 H5_DLL void H5TS_atomic_init_voidp(H5TS_atomic_voidp_t *obj, void *desired);
 /* Atomic 'void *' load, store, etc. calls are defined in H5TSatomic.h */
@@ -414,6 +500,7 @@ H5_DLL herr_t        H5TS_semaphore_destroy(H5TS_semaphore_t *sem);
 /* Headers with inlined routines */
 #include "H5TScond.h"
 #include "H5TSmutex.h"
+#include "H5TSdlftt_mutex.h"
 #include "H5TSkey.h"
 #if !(defined(H5_HAVE_STDATOMIC_H) && !defined(__cplusplus))
 #include "H5TSatomic.h"
@@ -422,6 +509,17 @@ H5_DLL herr_t        H5TS_semaphore_destroy(H5TS_semaphore_t *sem);
 #include "H5TSrwlock.h"
 #include "H5TSsemaphore.h"
 #include "H5TSpool.h"
+
+#else /* H5_HAVE_THREADS */
+
+/* Aliases for atomic types used when single-threaded */
+typedef size_t H5TS_atomic_size_t;
+#define H5TS_atomic_init_size_t(obj, desired)  *(obj) = (desired)
+#define H5TS_atomic_load_size_t(obj)           *(obj)
+#define H5TS_atomic_store_size_t(obj, desired) *(obj) = (desired)
+#define H5TS_atomic_fetch_add_size_t(obj, arg) *(obj) += (arg)
+#define H5TS_atomic_fetch_sub_size_t(obj, arg) *(obj) -= (arg)
+#define H5TS_atomic_destroy_size_t(obj)        /* */
 
 #endif /* H5_HAVE_THREADS */
 

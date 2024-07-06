@@ -77,7 +77,6 @@ typedef struct H5TS_tinfo_node_t {
 /********************/
 static H5TS_tinfo_node_t *H5TS__tinfo_create(void);
 #ifdef H5_HAVE_CONCURRENCY
-static herr_t H5TS__get_dlftt(unsigned *dlftt);
 static herr_t H5TS__set_dlftt(unsigned dlftt);
 static herr_t H5TS__inc_dlftt(void);
 static herr_t H5TS__dec_dlftt(void);
@@ -107,6 +106,11 @@ static uint64_t           H5TS_next_thrd_id_s    = 0;
 
 /* Mutex for access to H5TS_tinfo_next_free_s and H5TS_next_thrd_id_s */
 static H5TS_mutex_t H5TS_tinfo_mtx_s;
+
+#ifdef H5_HAVE_CONCURRENCY
+/* "bootstrap" mutex for deferred initialization of global variables */
+H5TS_dlftt_mutex_t H5TS_bootstrap_mtx_g;
+#endif /* H5_HAVE_CONCURRENCY */
 
 /*-------------------------------------------------------------------------
  * Function: H5TS__init
@@ -457,6 +461,12 @@ H5TS__tinfo_init(void)
     if (H5_UNLIKELY(H5TS_mutex_init(&H5TS_tinfo_mtx_s, H5TS_MUTEX_TYPE_PLAIN)) < 0)
         ret_value = FAIL;
 
+#ifdef H5_HAVE_CONCURRENCY
+    /* Initialize the mutex for initialization of global variables */
+    if (H5_UNLIKELY(H5TS_dlftt_mutex_init(&H5TS_bootstrap_mtx_g)) < 0)
+        ret_value = FAIL;
+#endif /* H5_HAVE_CONCURRENCY */
+
     /* Initialize key for thread-specific API contexts */
 #ifdef H5_HAVE_WIN_THREADS
     if (H5_UNLIKELY(H5TS_key_create(&H5TS_thrd_info_key_g, NULL) < 0))
@@ -656,7 +666,7 @@ done:
  *
  *--------------------------------------------------------------------------
  */
-static herr_t
+herr_t
 H5TS__get_dlftt(unsigned *dlftt)
 {
     H5TS_tinfo_node_t *tinfo_node;
@@ -833,6 +843,12 @@ H5TS__tinfo_term(void)
     }
     if (H5_UNLIKELY(H5TS_mutex_unlock(&H5TS_tinfo_mtx_s) < 0))
         HGOTO_DONE(FAIL);
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Destroy mutex for bootstrapping global variables */
+    if (H5_UNLIKELY(H5TS_dlftt_mutex_destroy(&H5TS_bootstrap_mtx_g) < 0))
+        HGOTO_DONE(FAIL);
+#endif /* H5_HAVE_CONCURRENCY */
 
     /* Release critical section / mutex for modifying the thread info globals */
     if (H5_UNLIKELY(H5TS_mutex_destroy(&H5TS_tinfo_mtx_s) < 0))
