@@ -648,8 +648,8 @@ H5FL__reg_term(void)
             tmp = H5FL_reg_gc_head.first->next;
 
 #ifdef H5FL_DEBUG
-        printf("%s: head->name = %s, head->allocated = %d\n", __func__, H5FL_reg_gc_head.first->list->name,
-               (int)H5FL_reg_gc_head.first->list->allocated);
+            printf("%s: head->name = %s, head->allocated = %d\n", __func__,
+                   H5FL_reg_gc_head.first->list->name, (int)H5FL_reg_gc_head.first->list->allocated);
 #endif /* H5FL_DEBUG */
             /* Check if the list has allocations outstanding */
             if (H5FL_reg_gc_head.first->list->allocated > 0) {
@@ -1117,7 +1117,7 @@ H5FL_blk_free(H5FL_blk_head_t *head, void *block)
         /* No free list available, create a new list node and insert it to the queue */
         free_list = H5FL__blk_create_list(&(head->pq), free_size);
     if (NULL == free_list)
-            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTALLOC, NULL, "couldn't create new list node");
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTALLOC, NULL, "couldn't create new list node");
 
     /* Prepend the free'd native block to the front of the free list */
     temp->next      = free_list->list; /* Note: Overwrites the size field in union */
@@ -1344,7 +1344,7 @@ H5FL__blk_gc(void)
         gc_node = H5FL_blk_gc_head.first;
         while (gc_node != NULL) {
             /* For each free list being garbage collected, walk through the nodes and free them */
-        if (H5FL__blk_gc_list(gc_node->pq) < 0)
+            if (H5FL__blk_gc_list(gc_node->pq) < 0)
                 HGOTO_ERROR(H5E_RESOURCE, H5E_CANTGC, FAIL, "garbage collection of list failed");
 
             /* Go on to the next free list to garbage collect */
@@ -1403,12 +1403,12 @@ H5FL__blk_term(void)
             tmp = H5FL_blk_gc_head.first->next;
 
 #ifdef H5FL_DEBUG
-        printf("%s: head->name = %s, head->allocated = %d\n", __func__, H5FL_blk_gc_head.first->pq->name,
-               (int)H5FL_blk_gc_head.first->pq->allocated);
+            printf("%s: head->name = %s, head->allocated = %d\n", __func__, H5FL_blk_gc_head.first->pq->name,
+                   (int)H5FL_blk_gc_head.first->pq->allocated);
 #endif /* H5FL_DEBUG */
 
             /* Check if the list has allocations outstanding */
-        if (H5FL_blk_gc_head.first->pq->allocated > 0) {
+            if (H5FL_blk_gc_head.first->pq->allocated > 0) {
                 /* Add free list to the list of nodes with allocations open still */
                 H5FL_blk_gc_head.first->next = left;
                 left                         = H5FL_blk_gc_head.first;
@@ -1975,8 +1975,8 @@ H5FL__arr_term(void)
 
             /* Check if the list has allocations outstanding */
 #ifdef H5FL_DEBUG
-        printf("%s: head->name = %s, head->allocated = %d\n", __func__, H5FL_arr_gc_head.first->list->name,
-               (int)H5FL_arr_gc_head.first->list->allocated);
+            printf("%s: head->name = %s, head->allocated = %d\n", __func__,
+                   H5FL_arr_gc_head.first->list->name, (int)H5FL_arr_gc_head.first->list->allocated);
 #endif /* H5FL_DEBUG */
             if (H5FL_arr_gc_head.first->list->allocated > 0) {
                 /* Add free list to the list of nodes with allocations open still */
@@ -2218,7 +2218,7 @@ H5FL_fac_init(size_t size)
     H5FL_fac_gc_head.first = new_node;
     if (new_node->next)
         new_node->next->list->prev_gc = new_node;
-    /* The new factory's prev_gc field will be set to NULL */
+        /* The new factory's prev_gc field will be set to NULL */
 
 #ifdef H5_HAVE_CONCURRENCY
     /* Release the mutex protecting the list of lists */
