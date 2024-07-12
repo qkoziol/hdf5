@@ -48,20 +48,15 @@ static size_t H5FL_fac_glb_mem_lim = 16 * 1024 * 1024; /* Default to 16MB limit 
 static size_t H5FL_fac_lst_mem_lim =
     1024 * 1024; /* Default to 1024KB (1MB) limit on each factory free list */
 
-/* A garbage collection node for regular free lists */
-typedef struct H5FL_reg_gc_node_t {
-    H5FL_reg_head_t           *list; /* Pointer to the head of the list to garbage collect */
-    struct H5FL_reg_gc_node_t *next; /* Pointer to the next node in the list of things to garbage collect */
-} H5FL_reg_gc_node_t;
-
 /* The garbage collection head for regular free lists */
 typedef struct H5FL_reg_gc_list_t {
 #ifdef H5_HAVE_CONCURRENCY
-    bool               init;              /* Whether the mutex has been initialized */
-    H5TS_dlftt_mutex_t mutex;             /* Guard access to the list of free lists */
-#endif                                    /* H5_HAVE_CONCURRENCY */
-    H5TS_atomic_size_t         mem_freed; /* Amount of free memory on list */
-    struct H5FL_reg_gc_node_t *first; /* Pointer to the first node in the list of things to garbage collect */
+    bool               init;           /* Whether the mutex has been initialized */
+    H5TS_dlftt_mutex_t mutex;          /* Guard access to the list of free lists */
+#endif /* H5_HAVE_CONCURRENCY */
+
+    H5TS_atomic_size_t      mem_freed; /* Amount of free memory on list */
+    struct H5FL_reg_head_t *first;     /* Pointer to the first node in the list of things to garbage collect */
 } H5FL_reg_gc_list_t;
 
 /* The head of the list of things to garbage collect */
@@ -261,17 +256,9 @@ done:
 static herr_t
 H5FL__reg_init(H5FL_reg_head_t *head)
 {
-    H5FL_reg_gc_node_t *new_node;            /* Pointer to the node for the new list to garbage collect */
     herr_t              ret_value = SUCCEED; /* Return value*/
 
     FUNC_ENTER_PACKAGE
-
-    /* Allocate a new garbage collection node */
-    if (NULL == (new_node = (H5FL_reg_gc_node_t *)H5MM_malloc(sizeof(H5FL_reg_gc_node_t))))
-        HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, FAIL, "memory allocation failed");
-
-    /* Initialize the new garbage collection node */
-    new_node->list = head;
 
 #ifdef H5_HAVE_CONCURRENCY
     /* Take advantage of holding the global bootstrap mutex when calling this
@@ -306,8 +293,8 @@ H5FL__reg_init(H5FL_reg_head_t *head)
 #endif /* H5_HAVE_CONCURRENCY */
 
     /* Link in to the garbage collection list */
-    new_node->next         = H5FL_reg_gc_head.first;
-    H5FL_reg_gc_head.first = new_node;
+    head->next         = H5FL_reg_gc_head.first;
+    H5FL_reg_gc_head.first = head;
 
 #ifdef H5_HAVE_CONCURRENCY
     /* Release the mutex protecting the list of lists */
@@ -583,8 +570,8 @@ done:
 static herr_t
 H5FL__reg_gc(void)
 {
-    H5FL_reg_gc_node_t *gc_node;             /* Pointer into the list of things to garbage collect */
-    herr_t              ret_value = SUCCEED; /* Return value*/
+    H5FL_reg_head_t *gc_node;             /* Pointer into the list of things to garbage collect */
+    herr_t           ret_value = SUCCEED; /* Return value*/
 
     FUNC_ENTER_PACKAGE
 
@@ -599,7 +586,7 @@ H5FL__reg_gc(void)
         gc_node = H5FL_reg_gc_head.first;
         while (gc_node != NULL) {
             /* Release the free nodes on the list */
-            if (H5FL__reg_gc_list(gc_node->list) < 0)
+            if (H5FL__reg_gc_list(gc_node) < 0)
                 HGOTO_ERROR(H5E_RESOURCE, H5E_CANTGC, FAIL, "garbage collection of list failed");
 
             /* Go on to the next free list to garbage collect */
@@ -644,7 +631,7 @@ done:
 static int
 H5FL__reg_term(void)
 {
-    H5FL_reg_gc_node_t *left = NULL; /* pointer to garbage collection lists with work left */
+    H5FL_reg_head_t *left = NULL; /* pointer to garbage collection lists with work left */
 
     FUNC_ENTER_PACKAGE_NOERR
 
@@ -655,33 +642,29 @@ H5FL__reg_term(void)
 
         /* Free the nodes on the garbage collection list, keeping nodes with allocations outstanding */
         while (H5FL_reg_gc_head.first != NULL) {
-            H5FL_reg_gc_node_t *tmp; /* Temporary pointer to a garbage collection node */
+            H5FL_reg_head_t *tmp; /* Temporary pointer to a garbage collection node */
 
             /* Get a copy of the next node */
             tmp = H5FL_reg_gc_head.first->next;
 
 #ifdef H5FL_DEBUG
-            printf("%s: head->name = %s, head->allocated = %d\n", __func__,
-                   H5FL_reg_gc_head.first->list->name, (int)H5FL_reg_gc_head.first->list->allocated);
+            printf("%s: head->name = %s, head->allocated = %d\n", __func__, H5FL_reg_gc_head.first->name, (int)H5FL_reg_gc_head.first->allocated);
 #endif /* H5FL_DEBUG */
             /* Check if the list has allocations outstanding */
-            if (H5FL_reg_gc_head.first->list->allocated > 0) {
+            if (H5FL_reg_gc_head.first->allocated > 0) {
                 /* Add free list to the list of nodes with allocations open still */
                 H5FL_reg_gc_head.first->next = left;
                 left                         = H5FL_reg_gc_head.first;
             } /* end if */
-            /* No allocations left open for list, get rid of it */
+            /* No allocations left open for list, reset it */
             else {
 #ifdef H5_HAVE_CONCURRENCY
                 /* Destroy the mutex protecting this list */
-                H5TS_dlftt_mutex_destroy(&H5FL_reg_gc_head.first->list->mutex);
+                H5TS_dlftt_mutex_destroy(&H5FL_reg_gc_head.first->mutex);
 #endif /* H5_HAVE_CONCURRENCY */
 
                 /* Reset the "initialized" flag, in case we restart this list */
-                H5TS_SET_GLOBAL_INIT(H5FL_reg_gc_head.first->list, false);
-
-                /* Free the node from the garbage collection list */
-                H5MM_xfree(H5FL_reg_gc_head.first);
+                H5TS_SET_GLOBAL_INIT(H5FL_reg_gc_head.first, false);
             } /* end else */
 
             H5FL_reg_gc_head.first = tmp;
@@ -2789,19 +2772,17 @@ H5FL_get_free_list_sizes(size_t *reg_size, size_t *arr_size, size_t *blk_size, s
 
     /* Retrieve the amount of "regular" memory used */
     if (reg_size) {
-        H5FL_reg_gc_node_t *gc_node; /* Pointer into the list of lists */
+        H5FL_reg_head_t *gc_node; /* Pointer into the list of lists */
 
         /* Walk through all the free lists, counting the amount of memory */
         *reg_size = 0;
         gc_node   = H5FL_reg_gc_head.first;
         while (gc_node != NULL) {
-            H5FL_reg_head_t *reg_list = gc_node->list; /* Head of list */
-
             /* Sanity check */
-            assert(H5TS_IS_GLOBAL_INIT(reg_list));
+            assert(H5TS_IS_GLOBAL_INIT(gc_node));
 
             /* Add the amount of memory for this list */
-            *reg_size += (reg_list->size * reg_list->allocated);
+            *reg_size += (gc_node->size * gc_node->allocated);
 
             /* Go on to the next free list */
             gc_node = gc_node->next;

@@ -57,6 +57,7 @@ typedef struct H5FL_reg_head_t {
     const char      *name;      /* Name of the type */
     size_t           size;      /* Size of the blocks in the list */
     H5FL_reg_node_t *list;      /* List of free blocks */
+    struct H5FL_reg_head_t *next; /* Next 'reg' head free list */
 } H5FL_reg_head_t;
 
 /*
