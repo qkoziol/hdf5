@@ -467,7 +467,7 @@ H5TS__tinfo_init(void)
         ret_value = FAIL;
 #endif /* H5_HAVE_CONCURRENCY */
 
-        /* Initialize key for thread-specific API contexts */
+    /* Initialize key for thread-specific API contexts */
 #ifdef H5_HAVE_WIN_THREADS
     if (H5_UNLIKELY(H5TS_key_create(&H5TS_thrd_info_key_g, NULL) < 0))
         ret_value = FAIL;
