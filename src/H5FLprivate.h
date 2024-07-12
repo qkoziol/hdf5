@@ -317,7 +317,20 @@ typedef struct H5FL_seq_head_t {
 #endif /* H5_NO_SEQ_FREE_LISTS */
 
 /* Forward declarations of the data structures for free list block factory */
-typedef struct H5FL_fac_head_t H5FL_fac_head_t;
+typedef struct H5FL_fac_gc_node_t H5FL_fac_gc_node_t;
+typedef struct H5FL_fac_node_t    H5FL_fac_node_t;
+
+/* Data structure for free list block factory */
+typedef struct H5FL_fac_head_t {
+#ifdef H5_HAVE_CONCURRENCY
+        H5TS_dlftt_mutex_t mutex;             /* Guard access to this factory */
+#endif /* H5_HAVE_CONCURRENCY */
+    unsigned            allocated; /* Number of blocks allocated */
+    unsigned            onlist;    /* Number of blocks on free list */
+    size_t              size;      /* Size of the blocks in the list */
+    H5FL_fac_node_t    *list;      /* List of free blocks */
+    H5FL_fac_gc_node_t *prev_gc;   /* Previous garbage collection node in list */
+} H5FL_fac_head_t;
 
 /*
  * Macros for defining & using free list factories
