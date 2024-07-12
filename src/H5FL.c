@@ -105,11 +105,28 @@ typedef struct H5FL_blk_gc_list_t {
 /* The head of the list of PQs to garbage collect */
 static H5FL_blk_gc_list_t H5FL_blk_gc_head;
 
+/* Data structure to store each block in factory free list */
+typedef struct H5FL_fac_node_t {
+    struct H5FL_fac_node_t *next; /* Pointer to next block in free list */
+} H5FL_fac_node_t;
+
+/* Data structure for free list block factory */
+struct H5FL_fac_head_t {
+#ifdef H5_HAVE_CONCURRENCY
+        H5TS_dlftt_mutex_t mutex;             /* Guard access to this factory */
+#endif /* H5_HAVE_CONCURRENCY */
+    unsigned            allocated; /* Number of blocks allocated */
+    unsigned            onlist;    /* Number of blocks on free list */
+    size_t              size;      /* Size of the blocks in the list */
+    H5FL_fac_node_t    *list;      /* List of free blocks */
+    struct H5FL_fac_gc_node_t *prev_gc;   /* Previous garbage collection node in list */
+};
+
 /* A garbage collection node for factory free lists */
-struct H5FL_fac_gc_node_t {
+typedef struct H5FL_fac_gc_node_t {
     H5FL_fac_head_t           *list; /* Pointer to the head of the list to garbage collect */
     struct H5FL_fac_gc_node_t *next; /* Pointer to the next node in the list of things to garbage collect */
-};
+} H5FL_fac_gc_node_t;
 
 /* The garbage collection head for factory free lists */
 typedef struct H5FL_fac_gc_list_t {
@@ -121,11 +138,6 @@ typedef struct H5FL_fac_gc_list_t {
     size_t                     mem_freed; /* Amount of free memory on list */
     struct H5FL_fac_gc_node_t *first; /* Pointer to the first node in the list of things to garbage collect */
 } H5FL_fac_gc_list_t;
-
-/* Data structure to store each block in factory free list */
-struct H5FL_fac_node_t {
-    struct H5FL_fac_node_t *next; /* Pointer to next block in free list */
-};
 
 /* The head of the list of factory things to garbage collect */
 static H5FL_fac_gc_list_t H5FL_fac_gc_head;
