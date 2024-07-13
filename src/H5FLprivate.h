@@ -213,6 +213,7 @@ typedef struct H5FL_arr_head_t {
     size_t           base_size; /* Size of the "base" object in the list */
     size_t           elem_size; /* Size of the array elements in the list */
     H5FL_arr_node_t *list_arr;  /* Array of lists of free blocks */
+    struct H5FL_arr_head_t *next; /* Next 'arr' head free list */
 } H5FL_arr_head_t;
 
 /*
