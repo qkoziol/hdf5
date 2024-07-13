@@ -2802,14 +2802,14 @@ H5FL_get_free_list_sizes(size_t *reg_size, size_t *arr_size, size_t *blk_size, s
 
     /* Retrieve the amount of "regular" memory used */
     if (reg_size) {
+        H5FL_reg_head_t *gc_node; /* Pointer into the list of lists */
+
 #ifdef H5_HAVE_CONCURRENCY
     if (H5FL_reg_gc_head.init) {
         /* Acquire the mutex protecting the list of lists */
         if (H5TS_dlftt_mutex_acquire(&H5FL_reg_gc_head.mutex) < 0)
             HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, FAIL, "can't lock list of list's mutex");
 #endif /* H5_HAVE_CONCURRENCY */
-
-        H5FL_reg_head_t *gc_node; /* Pointer into the list of lists */
 
         /* Walk through all the free lists, counting the amount of memory */
         *reg_size = 0;
@@ -2834,14 +2834,14 @@ H5FL_get_free_list_sizes(size_t *reg_size, size_t *arr_size, size_t *blk_size, s
 
     /* Retrieve the amount of "array" memory used */
     if (arr_size) {
+        H5FL_arr_head_t *gc_arr_node; /* Pointer into the list of things to garbage collect */
+
 #ifdef H5_HAVE_CONCURRENCY
     if (H5FL_arr_gc_head.init) {
         /* Acquire the mutex protecting the list of lists */
         if (H5TS_dlftt_mutex_acquire(&H5FL_arr_gc_head.mutex) < 0)
             HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, FAIL, "can't lock list of list's mutex");
 #endif /* H5_HAVE_CONCURRENCY */
-
-        H5FL_arr_head_t *gc_arr_node; /* Pointer into the list of things to garbage collect */
 
         /* Walk through all the free lists, counting the amount of memory */
         *arr_size   = 0;
@@ -2873,14 +2873,14 @@ H5FL_get_free_list_sizes(size_t *reg_size, size_t *arr_size, size_t *blk_size, s
 
     /* Retrieve the amount of "block" memory used */
     if (blk_size) {
+        H5FL_blk_head_t *gc_blk_node; /* Pointer into the list of things */
+
 #ifdef H5_HAVE_CONCURRENCY
     if (H5FL_blk_gc_head.init) {
         /* Acquire the mutex protecting the list of lists */
         if (H5TS_dlftt_mutex_acquire(&H5FL_blk_gc_head.mutex) < 0)
             HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, FAIL, "can't lock list of list's mutex");
 #endif /* H5_HAVE_CONCURRENCY */
-
-        H5FL_blk_head_t *gc_blk_node; /* Pointer into the list of things */
 
         /* Walk through all the free lists */
         gc_blk_node = H5FL_blk_gc_head.first;
