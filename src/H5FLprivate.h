@@ -390,6 +390,9 @@ H5_DLL void            *H5FL_fac_free(H5FL_fac_head_t *head, void *obj);
 H5_DLL herr_t           H5FL_fac_term(H5FL_fac_head_t *head);
 
 /* General free list routines */
+#ifdef H5_HAVE_CONCURRENCY
+H5_DLL herr_t H5FL_init(void);
+#endif /* H5_HAVE_CONCURRENCY */
 H5_DLL herr_t H5FL_garbage_coll(void);
 H5_DLL herr_t H5FL_set_free_list_limits(int reg_global_lim, int reg_list_lim, int arr_global_lim,
                                         int arr_list_lim, int blk_global_lim, int blk_list_lim,

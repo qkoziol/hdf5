@@ -247,6 +247,9 @@ H5_init_library(void)
             herr_t (*func)(void);
             const char *descr;
         } initializer[] = {
+#ifdef H5_HAVE_CONCURRENCY
+            {H5FL_init, "free lists"},
+#endif
             {H5E_init, "error"}
         ,   {H5VL_init_phase1, "VOL"}
         ,   {H5SL_init, "skip lists"}
