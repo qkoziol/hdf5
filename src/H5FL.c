@@ -51,12 +51,12 @@ static size_t H5FL_fac_lst_mem_lim =
 /* The garbage collection head for regular free lists */
 typedef struct H5FL_reg_gc_list_t {
 #ifdef H5_HAVE_CONCURRENCY
-    bool               init;           /* Whether the mutex has been initialized */
-    H5TS_dlftt_mutex_t mutex;          /* Guard access to the list of free lists */
-#endif /* H5_HAVE_CONCURRENCY */
+    bool               init;  /* Whether the mutex has been initialized */
+    H5TS_dlftt_mutex_t mutex; /* Guard access to the list of free lists */
+#endif                        /* H5_HAVE_CONCURRENCY */
 
-    H5TS_atomic_size_t      mem_freed; /* Amount of free memory on list */
-    H5FL_reg_head_t *first;     /* Pointer to the first node in the list of things to garbage collect */
+    H5TS_atomic_size_t mem_freed; /* Amount of free memory on list */
+    H5FL_reg_head_t   *first;     /* Pointer to the first node in the list of things to garbage collect */
 } H5FL_reg_gc_list_t;
 
 /* The head of the list of things to garbage collect */
@@ -65,9 +65,9 @@ static H5FL_reg_gc_list_t H5FL_reg_gc_head;
 /* The garbage collection head for array free lists */
 typedef struct H5FL_arr_gc_list_t {
 #ifdef H5_HAVE_CONCURRENCY
-    bool               init;              /* Whether the mutex has been initialized */
-    H5TS_dlftt_mutex_t mutex;             /* Guard access to the list of free lists */
-#endif /* H5_HAVE_CONCURRENCY */
+    bool               init;  /* Whether the mutex has been initialized */
+    H5TS_dlftt_mutex_t mutex; /* Guard access to the list of free lists */
+#endif                        /* H5_HAVE_CONCURRENCY */
 
     H5TS_atomic_size_t mem_freed; /* Amount of free memory on list */
     H5FL_arr_head_t   *first;     /* Pointer to the first node in the list of things to garbage collect */
@@ -79,12 +79,12 @@ static H5FL_arr_gc_list_t H5FL_arr_gc_head;
 /* The garbage collection head for blocks */
 typedef struct H5FL_blk_gc_list_t {
 #ifdef H5_HAVE_CONCURRENCY
-    bool               init;              /* Whether the mutex has been initialized */
-    H5TS_dlftt_mutex_t mutex;             /* Guard access to the list of free lists */
-#endif /* H5_HAVE_CONCURRENCY */
+    bool               init;  /* Whether the mutex has been initialized */
+    H5TS_dlftt_mutex_t mutex; /* Guard access to the list of free lists */
+#endif                        /* H5_HAVE_CONCURRENCY */
 
-    size_t                     mem_freed; /* Amount of free memory on list */
-    H5FL_blk_head_t *first; /* Pointer to the first node in the list of things to garbage collect */
+    size_t           mem_freed; /* Amount of free memory on list */
+    H5FL_blk_head_t *first;     /* Pointer to the first node in the list of things to garbage collect */
 } H5FL_blk_gc_list_t;
 
 /* The head of the list of PQs to garbage collect */
@@ -98,12 +98,12 @@ typedef struct H5FL_fac_node_t {
 /* Data structure for free list block factory */
 struct H5FL_fac_head_t {
 #ifdef H5_HAVE_CONCURRENCY
-        H5TS_dlftt_mutex_t mutex;             /* Guard access to this factory */
-#endif /* H5_HAVE_CONCURRENCY */
-    unsigned            allocated; /* Number of blocks allocated */
-    unsigned            onlist;    /* Number of blocks on free list */
-    size_t              size;      /* Size of the blocks in the list */
-    H5FL_fac_node_t    *list;      /* List of free blocks */
+    H5TS_dlftt_mutex_t mutex;             /* Guard access to this factory */
+#endif                                    /* H5_HAVE_CONCURRENCY */
+    unsigned                   allocated; /* Number of blocks allocated */
+    unsigned                   onlist;    /* Number of blocks on free list */
+    size_t                     size;      /* Size of the blocks in the list */
+    H5FL_fac_node_t           *list;      /* List of free blocks */
     struct H5FL_fac_gc_node_t *prev_gc;   /* Previous garbage collection node in list */
 };
 
@@ -246,7 +246,7 @@ done:
 static herr_t
 H5FL__reg_init(H5FL_reg_head_t *head)
 {
-    herr_t              ret_value = SUCCEED; /* Return value*/
+    herr_t ret_value = SUCCEED; /* Return value*/
 
     FUNC_ENTER_PACKAGE
 
@@ -283,7 +283,7 @@ H5FL__reg_init(H5FL_reg_head_t *head)
 #endif /* H5_HAVE_CONCURRENCY */
 
     /* Link in to the garbage collection list */
-    head->next         = H5FL_reg_gc_head.first;
+    head->next             = H5FL_reg_gc_head.first;
     H5FL_reg_gc_head.first = head;
 
 #ifdef H5_HAVE_CONCURRENCY
@@ -638,7 +638,8 @@ H5FL__reg_term(void)
             tmp = H5FL_reg_gc_head.first->next;
 
 #ifdef H5FL_DEBUG
-            printf("%s: head->name = %s, head->allocated = %d\n", __func__, H5FL_reg_gc_head.first->name, (int)H5FL_reg_gc_head.first->allocated);
+            printf("%s: head->name = %s, head->allocated = %d\n", __func__, H5FL_reg_gc_head.first->name,
+                   (int)H5FL_reg_gc_head.first->allocated);
 #endif /* H5FL_DEBUG */
             /* Check if the list has allocations outstanding */
             if (H5FL_reg_gc_head.first->allocated > 0) {
@@ -792,7 +793,7 @@ done:
 static herr_t
 H5FL__blk_init(H5FL_blk_head_t *head)
 {
-    herr_t              ret_value = SUCCEED; /* return value*/
+    herr_t ret_value = SUCCEED; /* return value*/
 
     FUNC_ENTER_PACKAGE
 
@@ -825,7 +826,7 @@ H5FL__blk_init(H5FL_blk_head_t *head)
 #endif /* H5_HAVE_CONCURRENCY */
 
     /* Link in to the garbage collection list */
-    head->next         = H5FL_blk_gc_head.first;
+    head->next             = H5FL_blk_gc_head.first;
     H5FL_blk_gc_head.first = head;
 
 #ifdef H5_HAVE_CONCURRENCY
@@ -1376,7 +1377,8 @@ H5FL__blk_term(void)
             tmp = H5FL_blk_gc_head.first->next;
 
 #ifdef H5FL_DEBUG
-            printf("%s: head->name = %s, head->allocated = %d\n", __func__, H5FL_blk_gc_head.first->name, (int)H5FL_blk_gc_head.first->allocated);
+            printf("%s: head->name = %s, head->allocated = %d\n", __func__, H5FL_blk_gc_head.first->name,
+                   (int)H5FL_blk_gc_head.first->allocated);
 #endif /* H5FL_DEBUG */
 
             /* Check if the list has allocations outstanding */
@@ -1432,8 +1434,8 @@ H5FL__blk_term(void)
 static herr_t
 H5FL__arr_init(H5FL_arr_head_t *head)
 {
-    size_t              u;                   /* Local index variable */
-    herr_t              ret_value = SUCCEED; /* return value*/
+    size_t u;                   /* Local index variable */
+    herr_t ret_value = SUCCEED; /* return value*/
 
     FUNC_ENTER_PACKAGE
 
@@ -1455,7 +1457,8 @@ H5FL__arr_init(H5FL_arr_head_t *head)
 #endif /* H5_HAVE_CONCURRENCY */
 
     /* Allocate room for the free lists */
-    if (NULL == (head->list_arr = (H5FL_arr_node_t *)H5MM_calloc((size_t)head->maxelem * sizeof(H5FL_arr_node_t))))
+    if (NULL ==
+        (head->list_arr = (H5FL_arr_node_t *)H5MM_calloc((size_t)head->maxelem * sizeof(H5FL_arr_node_t))))
         HGOTO_ERROR(H5E_RESOURCE, H5E_CANTALLOC, FAIL, "memory allocation failed");
 
     /* Initialize the size of each array */
@@ -1474,7 +1477,7 @@ H5FL__arr_init(H5FL_arr_head_t *head)
 #endif /* H5_HAVE_CONCURRENCY */
 
     /* Link in to the garbage collection list */
-    head->next         = H5FL_arr_gc_head.first;
+    head->next             = H5FL_arr_gc_head.first;
     H5FL_arr_gc_head.first = head;
 
 #ifdef H5_HAVE_CONCURRENCY
@@ -1935,7 +1938,8 @@ H5FL__arr_term(void)
 
             /* Check if the list has allocations outstanding */
 #ifdef H5FL_DEBUG
-            printf("%s: head->name = %s, head->allocated = %d\n", __func__, H5FL_arr_gc_head.first->name, (int)H5FL_arr_gc_head.first->allocated);
+            printf("%s: head->name = %s, head->allocated = %d\n", __func__, H5FL_arr_gc_head.first->name,
+                   (int)H5FL_arr_gc_head.first->allocated);
 #endif /* H5FL_DEBUG */
             if (H5FL_arr_gc_head.first->allocated > 0) {
                 /* Add free list to the list of nodes with allocations open still */

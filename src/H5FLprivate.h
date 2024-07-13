@@ -50,14 +50,14 @@ typedef struct H5FL_reg_head_t {
     H5TS_dclp_t dlcp_info; /* Information for init */
                            /* (MUST be first field in structure) */
 #ifdef H5_HAVE_CONCURRENCY
-    H5TS_dlftt_mutex_t mutex;   /* Guard access to this free list */
-#endif                          /* H5_HAVE_CONCURRENCY */
-    unsigned         allocated; /* Number of blocks allocated */
-    unsigned         onlist;    /* Number of blocks on free list */
-    const char      *name;      /* Name of the type */
-    size_t           size;      /* Size of the blocks in the list */
-    H5FL_reg_node_t *list;      /* List of free blocks */
-    struct H5FL_reg_head_t *next; /* Next 'reg' head free list */
+    H5TS_dlftt_mutex_t mutex;          /* Guard access to this free list */
+#endif                                 /* H5_HAVE_CONCURRENCY */
+    unsigned                allocated; /* Number of blocks allocated */
+    unsigned                onlist;    /* Number of blocks on free list */
+    const char             *name;      /* Name of the type */
+    size_t                  size;      /* Size of the blocks in the list */
+    H5FL_reg_node_t        *list;      /* List of free blocks */
+    struct H5FL_reg_head_t *next;      /* Next 'reg' head free list */
 } H5FL_reg_head_t;
 
 /*
@@ -126,14 +126,14 @@ typedef struct H5FL_blk_head_t {
     H5TS_dclp_t dlcp_info; /* Information for init */
                            /* (MUST be first field in structure) */
 #ifdef H5_HAVE_CONCURRENCY
-    H5TS_dlftt_mutex_t mutex;   /* Guard access to this free list */
-#endif                          /* H5_HAVE_CONCURRENCY */
-    unsigned         allocated; /* Total number of blocks allocated */
-    unsigned         onlist;    /* Total number of blocks on free list */
-    size_t           list_mem;  /* Total amount of memory in blocks on free list */
-    const char      *name;      /* Name of the type */
-    H5FL_blk_node_t *pq;        /* Pointer to first free list in queue */
-    struct H5FL_blk_head_t *next; /* Next 'blk' head free list */
+    H5TS_dlftt_mutex_t mutex;          /* Guard access to this free list */
+#endif                                 /* H5_HAVE_CONCURRENCY */
+    unsigned                allocated; /* Total number of blocks allocated */
+    unsigned                onlist;    /* Total number of blocks on free list */
+    size_t                  list_mem;  /* Total amount of memory in blocks on free list */
+    const char             *name;      /* Name of the type */
+    H5FL_blk_node_t        *pq;        /* Pointer to first free list in queue */
+    struct H5FL_blk_head_t *next;      /* Next 'blk' head free list */
 } H5FL_blk_head_t;
 
 /*
@@ -204,16 +204,16 @@ typedef struct H5FL_arr_head_t {
     H5TS_dclp_t dlcp_info; /* Information for init */
                            /* (MUST be first field in structure) */
 #ifdef H5_HAVE_CONCURRENCY
-    H5TS_dlftt_mutex_t mutex;   /* Guard access to this free list */
-#endif                          /* H5_HAVE_CONCURRENCY */
-    unsigned         allocated; /* Total number of blocks allocated */
-    size_t           list_mem;  /* Amount of memory in block on free list */
-    const char      *name;      /* Name of the type */
-    int              maxelem;   /* Maximum number of elements in an array */
-    size_t           base_size; /* Size of the "base" object in the list */
-    size_t           elem_size; /* Size of the array elements in the list */
-    H5FL_arr_node_t *list_arr;  /* Array of lists of free blocks */
-    struct H5FL_arr_head_t *next; /* Next 'arr' head free list */
+    H5TS_dlftt_mutex_t mutex;          /* Guard access to this free list */
+#endif                                 /* H5_HAVE_CONCURRENCY */
+    unsigned                allocated; /* Total number of blocks allocated */
+    size_t                  list_mem;  /* Amount of memory in block on free list */
+    const char             *name;      /* Name of the type */
+    int                     maxelem;   /* Maximum number of elements in an array */
+    size_t                  base_size; /* Size of the "base" object in the list */
+    size_t                  elem_size; /* Size of the array elements in the list */
+    H5FL_arr_node_t        *list_arr;  /* Array of lists of free blocks */
+    struct H5FL_arr_head_t *next;      /* Next 'arr' head free list */
 } H5FL_arr_head_t;
 
 /*
