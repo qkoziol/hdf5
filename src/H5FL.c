@@ -224,7 +224,7 @@ H5FL__malloc(size_t mem_size)
 
         /* Now try allocating the memory again */
         if (NULL == (ret_value = H5MM_malloc(mem_size)))
-            HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "memory allocation failed for chunk");
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTALLOC, NULL, "memory allocation failed for chunk");
     } /* end if */
 
 done:
@@ -425,7 +425,7 @@ H5FL_reg_malloc(H5FL_reg_head_t *head)
 
         /* Allocate new memory */
         if (NULL == (ret_value = H5FL__malloc(head->size)))
-            HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "memory allocation failed");
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTALLOC, NULL, "memory allocation failed");
 
 #ifdef H5_HAVE_CONCURRENCY
         /* Acquire the mutex protecting this list */
@@ -469,7 +469,7 @@ H5FL_reg_calloc(H5FL_reg_head_t *head)
 
     /* Allocate the block */
     if (NULL == (ret_value = H5FL_reg_malloc(head)))
-        HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "memory allocation failed");
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTALLOC, NULL, "memory allocation failed");
 
     /* Clear to zeros */
     memset(ret_value, 0, head->size);
@@ -958,7 +958,7 @@ H5FL_blk_malloc(H5FL_blk_head_t *head, size_t size)
 
         /* Allocate new node, with room for the page info header and the actual page data */
         if (NULL == (temp = (H5FL_blk_list_t *)H5FL__malloc(sizeof(H5FL_blk_list_t) + size)))
-            HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "memory allocation failed for chunk");
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTALLOC, NULL, "memory allocation failed for chunk");
 
 #ifdef H5_HAVE_CONCURRENCY
         /* Acquire the mutex protecting this list */
@@ -971,7 +971,7 @@ H5FL_blk_malloc(H5FL_blk_head_t *head, size_t size)
         if (NULL == (free_list = H5FL__blk_find_list(&(head->pq), size)))
             /* Create a new list node and insert it to the queue */
             if (NULL == (free_list = H5FL__blk_create_list(&(head->pq), size)))
-                HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "memory allocation failed for list node");
+                HGOTO_ERROR(H5E_RESOURCE, H5E_CANTALLOC, NULL, "memory allocation failed for list node");
 
         /* Increment the number of blocks of this size */
         free_list->allocated++;
@@ -1033,7 +1033,7 @@ H5FL_blk_calloc(H5FL_blk_head_t *head, size_t size)
 
     /* Allocate the block */
     if (NULL == (ret_value = H5FL_blk_malloc(head, size)))
-        HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "memory allocation failed");
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTALLOC, NULL, "memory allocation failed");
 
     /* Clear the block to zeros */
     memset(ret_value, 0, size);
@@ -1162,7 +1162,7 @@ H5FL_blk_realloc(H5FL_blk_head_t *head, void *block, size_t new_size)
         /* Check if we are actually changing the size of the buffer */
         if (new_size != temp->size) {
             if (NULL == (ret_value = H5FL_blk_malloc(head, new_size)))
-                HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "memory allocation failed for block");
+                HGOTO_ERROR(H5E_RESOURCE, H5E_CANTALLOC, NULL, "memory allocation failed for block");
             H5MM_memcpy(ret_value, block, MIN(new_size, temp->size));
             H5FL_blk_free(head, block);
         } /* end if */
@@ -1456,7 +1456,7 @@ H5FL__arr_init(H5FL_arr_head_t *head)
 
     /* Allocate room for the free lists */
     if (NULL == (head->list_arr = (H5FL_arr_node_t *)H5MM_calloc((size_t)head->maxelem * sizeof(H5FL_arr_node_t))))
-        HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, FAIL, "memory allocation failed");
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTALLOC, FAIL, "memory allocation failed");
 
     /* Initialize the size of each array */
     for (u = 0; u < (size_t)head->maxelem; u++)
@@ -1644,7 +1644,7 @@ H5FL_arr_malloc(H5FL_arr_head_t *head, size_t elem)
 
         /* Allocate new memory */
         if (NULL == (new_obj = H5FL__malloc(sizeof(H5FL_arr_list_t) + mem_size)))
-            HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "memory allocation failed");
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTALLOC, NULL, "memory allocation failed");
 
 #ifdef H5_HAVE_CONCURRENCY
         /* Acquire the mutex protecting this list */
@@ -1698,7 +1698,7 @@ H5FL_arr_calloc(H5FL_arr_head_t *head, size_t elem)
 
     /* Allocate the array */
     if (NULL == (ret_value = H5FL_arr_malloc(head, elem)))
-        HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "memory allocation failed");
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTALLOC, NULL, "memory allocation failed");
 
     /* Clear to zeros */
     memset(ret_value, 0, head->list_arr[elem].size);
@@ -2139,14 +2139,14 @@ H5FL_fac_init(size_t size)
 
     /* Allocate room for the new factory */
     if (NULL == (factory = (H5FL_fac_head_t *)H5FL_CALLOC(H5FL_fac_head_t)))
-        HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "memory allocation failed for factory object");
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTALLOC, NULL, "memory allocation failed for factory object");
 
     /* Set size of blocks for factory */
     factory->size = size;
 
     /* Allocate a new garbage collection node */
     if (NULL == (new_node = (H5FL_fac_gc_node_t *)H5FL_MALLOC(H5FL_fac_gc_node_t)))
-        HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "memory allocation failed");
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTALLOC, NULL, "memory allocation failed");
 
     /* Initialize the new garbage collection node */
     new_node->list = factory;
@@ -2318,7 +2318,7 @@ H5FL_fac_malloc(H5FL_fac_head_t *head)
 #endif /* H5_HAVE_CONCURRENCY */
 
         if (NULL == (ret_value = H5FL__malloc(head->size)))
-            HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "memory allocation failed");
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTALLOC, NULL, "memory allocation failed");
 
 #ifdef H5_HAVE_CONCURRENCY
         /* Acquire the mutex protecting the factory */
@@ -2363,7 +2363,7 @@ H5FL_fac_calloc(H5FL_fac_head_t *head)
 
     /* Allocate the block */
     if (NULL == (ret_value = H5FL_fac_malloc(head)))
-        HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "memory allocation failed");
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTALLOC, NULL, "memory allocation failed");
 
     /* Clear to zeros */
     memset(ret_value, 0, head->size);
