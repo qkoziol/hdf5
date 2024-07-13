@@ -133,6 +133,7 @@ typedef struct H5FL_blk_head_t {
     size_t           list_mem;  /* Total amount of memory in blocks on free list */
     const char      *name;      /* Name of the type */
     H5FL_blk_node_t *pq;        /* Pointer to first free list in queue */
+    struct H5FL_blk_head_t *next; /* Next 'blk' head free list */
 } H5FL_blk_head_t;
 
 /*
