@@ -21,32 +21,79 @@
  *      move frequently accessed free lists to the head of the queue.
  */
 
+/****************/
+/* Module Setup */
+/****************/
+
 #include "H5FLmodule.h" /* This source code file is part of the H5FL module */
 
-/* #define H5FL_DEBUG */
-
+/***********/
+/* Headers */
+/***********/
 #include "H5private.h"   /* Generic Functions			*/
 #include "H5Eprivate.h"  /* Error handling		  	*/
 #include "H5FLprivate.h" /* Free Lists                           */
 #include "H5MMprivate.h" /* Memory management			*/
 
-/*
- * Private type definitions
- */
+/****************/
+/* Local Macros */
+/****************/
+
+/* #define H5FL_DEBUG */
+
+#define H5FL_REG_GLB_MEM_LIM (1 * 1024 * 1024)  /* Default to 1MB limit on all regular free lists */
+#define H5FL_REG_LST_MEM_LIM (1 * 65536)        /* Default to 64KB limit on each regular free list */
+#define H5FL_ARR_GLB_MEM_LIM (4 * 1024 * 1024)  /* Default to 4MB limit on all array free lists */
+#define H5FL_ARR_LST_MEM_LIM (4 * 65536)        /* Default to 256KB limit on each array free list */
+#define H5FL_BLK_GLB_MEM_LIM (16 * 1024 * 1024) /* Default to 16MB limit on all block free lists */
+#define H5FL_BLK_LST_MEM_LIM (1024 * 1024)      /* Default to 1024KB (1MB) limit on each block free list */
+#define H5FL_FAC_GLB_MEM_LIM (16 * 1024 * 1024) /* Default to 16MB limit on all factory free lists */
+#define H5FL_FAC_LST_MEM_LIM (1024 * 1024)      /* Default to 1024KB (1MB) limit on each factory free list */
+
+/******************/
+/* Local Typedefs */
+/******************/
+
+/********************/
+/* Local Prototypes */
+/********************/
+
+/*****************************/
+/* Library Private Variables */
+/*****************************/
+
+/*********************/
+/* Package Variables */
+/*********************/
+
+/*******************/
+/* Local Variables */
+/*******************/
 
 /*
-    Default limits on how much memory can accumulate on each free list before
-    it is garbage collected.
+ *  Default limits on how much memory can accumulate on each free list before
+ *  it is garbage collected.
  */
-static size_t H5FL_reg_glb_mem_lim = 1 * 1024 * 1024;  /* Default to 1MB limit on all regular free lists */
-static size_t H5FL_reg_lst_mem_lim = 1 * 65536;        /* Default to 64KB limit on each regular free list */
-static size_t H5FL_arr_glb_mem_lim = 4 * 1024 * 1024;  /* Default to 4MB limit on all array free lists */
-static size_t H5FL_arr_lst_mem_lim = 4 * 65536;        /* Default to 256KB limit on each array free list */
-static size_t H5FL_blk_glb_mem_lim = 16 * 1024 * 1024; /* Default to 16MB limit on all block free lists */
-static size_t H5FL_blk_lst_mem_lim = 1024 * 1024; /* Default to 1024KB (1MB) limit on each block free list */
-static size_t H5FL_fac_glb_mem_lim = 16 * 1024 * 1024; /* Default to 16MB limit on all factory free lists */
-static size_t H5FL_fac_lst_mem_lim =
-    1024 * 1024; /* Default to 1024KB (1MB) limit on each factory free list */
+#ifdef H5_HAVE_CONCURRENCY
+static bool H5TS_limits_init = false;
+static H5TS_atomic_size_t H5FL_reg_glb_mem_lim;
+static H5TS_atomic_size_t H5FL_reg_lst_mem_lim;
+static H5TS_atomic_size_t H5FL_arr_glb_mem_lim;
+static H5TS_atomic_size_t H5FL_arr_lst_mem_lim;
+static H5TS_atomic_size_t H5FL_blk_glb_mem_lim;
+static H5TS_atomic_size_t H5FL_blk_lst_mem_lim;
+static H5TS_atomic_size_t H5FL_fac_glb_mem_lim;
+static H5TS_atomic_size_t H5FL_fac_lst_mem_lim;
+#else /* H5_HAVE_CONCURRENCY */
+static size_t H5FL_reg_glb_mem_lim = H5FL_REG_GLB_MEM_LIM;
+static size_t H5FL_reg_lst_mem_lim = H5FL_REG_LST_MEM_LIM;
+static size_t H5FL_arr_glb_mem_lim = H5FL_ARR_GLB_MEM_LIM;
+static size_t H5FL_arr_lst_mem_lim = H5FL_ARR_LST_MEM_LIM;
+static size_t H5FL_blk_glb_mem_lim = H5FL_BLK_GLB_MEM_LIM;
+static size_t H5FL_blk_lst_mem_lim = H5FL_BLK_LST_MEM_LIM;
+static size_t H5FL_fac_glb_mem_lim = H5FL_FAC_GLB_MEM_LIM;
+static size_t H5FL_fac_lst_mem_lim = H5FL_FAC_LST_MEM_LIM;
+#endif /* H5_HAVE_CONCURRENCY */
 
 /* The garbage collection head for regular free lists */
 typedef struct H5FL_reg_gc_list_t {
@@ -115,12 +162,12 @@ typedef struct H5FL_fac_gc_node_t {
 
 /* The garbage collection head for factory free lists */
 typedef struct H5FL_fac_gc_list_t {
-    H5TS_dclp_t dlcp_info; /* Information for init */
-                           /* (MUST be first field in structure) */
 #ifdef H5_HAVE_CONCURRENCY
+    bool               init;              /* Whether the mutex has been initialized */
     H5TS_dlftt_mutex_t mutex;             /* Guard access to this free list */
-#endif                                    /* H5_HAVE_CONCURRENCY */
-    size_t                     mem_freed; /* Amount of free memory on list */
+#endif /* H5_HAVE_CONCURRENCY */
+
+    H5TS_atomic_size_t mem_freed; /* Amount of free memory on list */
     struct H5FL_fac_gc_node_t *first; /* Pointer to the first node in the list of things to garbage collect */
 } H5FL_fac_gc_list_t;
 
@@ -143,9 +190,6 @@ static herr_t           H5FL__arr_init(H5FL_arr_head_t *head);
 static herr_t           H5FL__arr_gc_list(H5FL_arr_head_t *head);
 static herr_t           H5FL__arr_gc(void);
 static int              H5FL__arr_term(void);
-#ifdef H5_HAVE_CONCURRENCY
-static herr_t H5FL__fac_head_init(H5FL_fac_gc_list_t *head);
-#endif /* H5_HAVE_CONCURRENCY */
 static herr_t H5FL__fac_gc_list(H5FL_fac_head_t *head);
 static herr_t H5FL__fac_gc(void);
 static int    H5FL__fac_term_all(void);
@@ -158,6 +202,68 @@ H5FL_DEFINE_STATIC(H5FL_fac_gc_node_t);
 
 /* Declare a free list to manage the H5FL_fac_head_t struct */
 H5FL_DEFINE(H5FL_fac_head_t);
+
+#ifdef H5_HAVE_CONCURRENCY
+/*-------------------------------------------------------------------------
+ * Function: H5FL_init
+ *
+ * Purpose:  Initialize the interface from some other layer.
+ *
+ * Return:   Success:    non-negative
+ *           Failure:    negative
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5FL_init(void)
+{
+    herr_t ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Initialize the global & per-list limit atomic variables */
+    assert(!H5TS_limits_init);
+    H5TS_atomic_init_size_t(&H5FL_reg_glb_mem_lim, H5FL_REG_GLB_MEM_LIM);
+    H5TS_atomic_init_size_t(&H5FL_reg_lst_mem_lim, H5FL_REG_LST_MEM_LIM);
+    H5TS_atomic_init_size_t(&H5FL_arr_glb_mem_lim, H5FL_ARR_GLB_MEM_LIM);
+    H5TS_atomic_init_size_t(&H5FL_arr_lst_mem_lim, H5FL_ARR_LST_MEM_LIM);
+    H5TS_atomic_init_size_t(&H5FL_blk_glb_mem_lim, H5FL_BLK_GLB_MEM_LIM);
+    H5TS_atomic_init_size_t(&H5FL_blk_lst_mem_lim, H5FL_BLK_LST_MEM_LIM);
+    H5TS_atomic_init_size_t(&H5FL_fac_glb_mem_lim, H5FL_FAC_GLB_MEM_LIM);
+    H5TS_atomic_init_size_t(&H5FL_fac_lst_mem_lim, H5FL_FAC_LST_MEM_LIM);
+    H5TS_limits_init = true;
+
+    /* Initialize the 'reg' list of lists */
+    assert(!H5FL_reg_gc_head.init);
+    if (H5TS_dlftt_mutex_init(&H5FL_reg_gc_head.mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTINIT, FAIL, "can't initialize list of free lists' mutex");
+    H5TS_atomic_init_size_t(&H5FL_reg_gc_head.mem_freed, 0);
+    H5FL_reg_gc_head.init = true;
+
+    /* Initialize the 'blk' list of lists */
+    assert(!H5FL_blk_gc_head.init);
+    if (H5TS_dlftt_mutex_init(&H5FL_blk_gc_head.mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTINIT, FAIL, "can't initialize list of free lists' mutex");
+    H5TS_atomic_init_size_t(&H5FL_blk_gc_head.mem_freed, 0);
+    H5FL_blk_gc_head.init = true;
+
+    /* Initialize the 'arr' list of lists */
+    assert(!H5FL_arr_gc_head.init);
+    if (H5TS_dlftt_mutex_init(&H5FL_arr_gc_head.mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTINIT, FAIL, "can't initialize list of free lists' mutex");
+    H5TS_atomic_init_size_t(&H5FL_arr_gc_head.mem_freed, 0);
+    H5FL_arr_gc_head.init = true;
+
+    /* Initialize the 'fac' list of lists */
+    assert(!H5FL_fac_gc_head.init);
+    if (H5TS_dlftt_mutex_init(&H5FL_fac_gc_head.mutex) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTINIT, FAIL, "can't initialize list of free lists' mutex");
+    H5TS_atomic_init_size_t(&H5FL_fac_gc_head.mem_freed, 0);
+    H5FL_fac_gc_head.init = true;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5FL_init() */
+#endif /* H5_HAVE_CONCURRENCY */
 
 /*--------------------------------------------------------------------------
  NAME
@@ -194,6 +300,23 @@ H5FL_term_package(void)
     n += H5FL__fac_term_all();
     n += H5FL__arr_term();
     n += H5FL__blk_term();
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Shut down the limits */
+    if (H5TS_limits_init) {
+        H5TS_atomic_destroy_size_t(&H5FL_reg_glb_mem_lim);
+        H5TS_atomic_destroy_size_t(&H5FL_reg_lst_mem_lim);
+        H5TS_atomic_destroy_size_t(&H5FL_arr_glb_mem_lim);
+        H5TS_atomic_destroy_size_t(&H5FL_arr_lst_mem_lim);
+        H5TS_atomic_destroy_size_t(&H5FL_blk_glb_mem_lim);
+        H5TS_atomic_destroy_size_t(&H5FL_blk_lst_mem_lim);
+        H5TS_atomic_destroy_size_t(&H5FL_fac_glb_mem_lim);
+        H5TS_atomic_destroy_size_t(&H5FL_fac_lst_mem_lim);
+        H5TS_limits_init = false;
+
+        n++;
+    }
+#endif /* H5_HAVE_CONCURRENCY */
 
     FUNC_LEAVE_NOAPI(n)
 } /* end H5FL_term_package() */
@@ -251,17 +374,6 @@ H5FL__reg_init(H5FL_reg_head_t *head)
     FUNC_ENTER_PACKAGE
 
 #ifdef H5_HAVE_CONCURRENCY
-    /* Take advantage of holding the global bootstrap mutex when calling this
-     * routine to also check & initialize the global list of free list's mutex
-     */
-    if (!H5FL_reg_gc_head.init) {
-        if (H5TS_dlftt_mutex_init(&H5FL_reg_gc_head.mutex) < 0)
-            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTINIT, FAIL, "can't initialize list of free lists' mutex");
-        H5TS_atomic_init_size_t(&H5FL_reg_gc_head.mem_freed, 0);
-
-        H5FL_reg_gc_head.init = true;
-    }
-
     /* Initialize the mutex protecting this specific list */
     if (H5TS_dlftt_mutex_init(&head->mutex) < 0)
         HGOTO_ERROR(H5E_RESOURCE, H5E_CANTINIT, FAIL, "can't initialize list's mutex");
@@ -272,11 +384,6 @@ H5FL__reg_init(H5FL_reg_head_t *head)
         head->size = sizeof(H5FL_reg_node_t);
 
 #ifdef H5_HAVE_CONCURRENCY
-    /* Other 'reg' free lists could already be active and accessing the
-     * global garbage collection list-of-lists, so acquire that mutex before
-     * modifying it.
-     */
-
     /* Acquire the mutex protecting the list of lists */
     if (H5TS_dlftt_mutex_acquire(&H5FL_reg_gc_head.mutex) < 0)
         HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, FAIL, "can't lock list of list's mutex");
@@ -352,12 +459,12 @@ H5FL_reg_free(H5FL_reg_head_t *head, void *obj)
 
     /* Check for exceeding free list memory use limits */
     /* First check this particular list */
-    if (onlist * head->size > H5FL_reg_lst_mem_lim)
+    if (onlist * head->size > H5TS_atomic_load_size_t(&H5FL_reg_lst_mem_lim))
         if (H5FL__reg_gc_list(head) < 0)
             HGOTO_ERROR(H5E_RESOURCE, H5E_CANTGC, NULL, "garbage collection failed during free");
 
     /* Then check the global amount memory on regular free lists */
-    if (H5TS_atomic_load_size_t(&H5FL_reg_gc_head.mem_freed) > H5FL_reg_glb_mem_lim)
+    if (H5TS_atomic_load_size_t(&H5FL_reg_gc_head.mem_freed) > H5TS_atomic_load_size_t(&H5FL_reg_glb_mem_lim))
         if (H5FL__reg_gc() < 0)
             HGOTO_ERROR(H5E_RESOURCE, H5E_CANTGC, NULL, "garbage collection failed during free");
 
@@ -798,28 +905,12 @@ H5FL__blk_init(H5FL_blk_head_t *head)
     FUNC_ENTER_PACKAGE
 
 #ifdef H5_HAVE_CONCURRENCY
-    /* Take advantage of holding the global bootstrap mutex when calling this
-     * routine to also check & initialize the global list of free list's mutex
-     */
-    if (!H5FL_blk_gc_head.init) {
-        if (H5TS_dlftt_mutex_init(&H5FL_blk_gc_head.mutex) < 0)
-            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTINIT, FAIL, "can't initialize list of free lists' mutex");
-        H5TS_atomic_init_size_t(&H5FL_blk_gc_head.mem_freed, 0);
-
-        H5FL_blk_gc_head.init = true;
-    }
-
     /* Initialize the mutex protecting this specific list */
     if (H5TS_dlftt_mutex_init(&head->mutex) < 0)
         HGOTO_ERROR(H5E_RESOURCE, H5E_CANTINIT, FAIL, "can't initialize list's mutex");
 #endif /* H5_HAVE_CONCURRENCY */
 
 #ifdef H5_HAVE_CONCURRENCY
-    /* Other 'blk' free lists could already be active and accessing the
-     * global garbage collection list-of-lists, so acquire that mutex before
-     * modifying it.
-     */
-
     /* Acquire the mutex protecting the list of lists */
     if (H5TS_dlftt_mutex_acquire(&H5FL_blk_gc_head.mutex) < 0)
         HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, FAIL, "can't lock list of list's mutex");
@@ -1118,12 +1209,12 @@ H5FL_blk_free(H5FL_blk_head_t *head, void *block)
 
     /* Check for exceeding free list memory use limits */
     /* First check this particular list */
-    if (list_mem > H5FL_blk_lst_mem_lim)
+    if (list_mem > H5TS_atomic_load_size_t(&H5FL_blk_lst_mem_lim))
         if (H5FL__blk_gc_list(head) < 0)
             HGOTO_ERROR(H5E_RESOURCE, H5E_CANTGC, NULL, "garbage collection failed during free");
 
     /* Then check the global amount memory on block free lists */
-    if (H5TS_atomic_load_size_t(&H5FL_blk_gc_head.mem_freed) > H5FL_blk_glb_mem_lim)
+    if (H5TS_atomic_load_size_t(&H5FL_blk_gc_head.mem_freed) > H5TS_atomic_load_size_t(&H5FL_blk_glb_mem_lim))
         if (H5FL__blk_gc() < 0)
             HGOTO_ERROR(H5E_RESOURCE, H5E_CANTGC, NULL, "garbage collection failed during free");
 
@@ -1440,17 +1531,6 @@ H5FL__arr_init(H5FL_arr_head_t *head)
     FUNC_ENTER_PACKAGE
 
 #ifdef H5_HAVE_CONCURRENCY
-    /* Take advantage of holding the global bootstrap mutex when calling this
-     * routine to also check & initialize the global list of free list's mutex
-     */
-    if (!H5FL_arr_gc_head.init) {
-        if (H5TS_dlftt_mutex_init(&H5FL_arr_gc_head.mutex) < 0)
-            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTINIT, FAIL, "can't initialize list of free lists' mutex");
-        H5TS_atomic_init_size_t(&H5FL_arr_gc_head.mem_freed, 0);
-
-        H5FL_arr_gc_head.init = true;
-    }
-
     /* Initialize the mutex protecting this specific list */
     if (H5TS_dlftt_mutex_init(&head->mutex) < 0)
         HGOTO_ERROR(H5E_RESOURCE, H5E_CANTINIT, FAIL, "can't initialize list's mutex");
@@ -1466,11 +1546,6 @@ H5FL__arr_init(H5FL_arr_head_t *head)
         head->list_arr[u].size = head->base_size + (head->elem_size * u);
 
 #ifdef H5_HAVE_CONCURRENCY
-    /* Other 'arr' free lists could already be active and accessing the
-     * global garbage collection list-of-lists, so acquire that mutex before
-     * modifying it.
-     */
-
     /* Acquire the mutex protecting the list of lists */
     if (H5TS_dlftt_mutex_acquire(&H5FL_arr_gc_head.mutex) < 0)
         HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, FAIL, "can't lock list of list's mutex");
@@ -1563,12 +1638,12 @@ H5FL_arr_free(H5FL_arr_head_t *head, void *obj)
 
     /* Check for exceeding free list memory use limits */
     /* First check this particular list */
-    if (list_mem > H5FL_arr_lst_mem_lim)
+    if (list_mem > H5TS_atomic_load_size_t(&H5FL_arr_lst_mem_lim))
         if (H5FL__arr_gc_list(head) < 0)
             HGOTO_ERROR(H5E_RESOURCE, H5E_CANTGC, NULL, "garbage collection failed during free");
 
     /* Then check the global amount memory on array free lists */
-    if (H5TS_atomic_load_size_t(&H5FL_arr_gc_head.mem_freed) > H5FL_arr_glb_mem_lim)
+    if (H5TS_atomic_load_size_t(&H5FL_arr_gc_head.mem_freed) > H5TS_atomic_load_size_t(&H5FL_arr_glb_mem_lim))
         if (H5FL__arr_gc() < 0)
             HGOTO_ERROR(H5E_RESOURCE, H5E_CANTGC, NULL, "garbage collection failed during free");
 
@@ -2090,35 +2165,6 @@ H5FL_seq_realloc(H5FL_seq_head_t *head, void *obj, size_t new_elem)
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FL_seq_realloc() */
 
-#ifdef H5_HAVE_CONCURRENCY
-/*-------------------------------------------------------------------------
- * Function:	H5FL__fac_head_init
- *
- * Purpose:	Initialize a 'list of lists'  for factory allocators.
- *              Right now, this just initializes the mutex when concurrency
- *              is enabled.
- *
- * Return:	Success:	Non-negative
- * 		Failure:	Negative
- *
- *-------------------------------------------------------------------------
- */
-static herr_t
-H5FL__fac_head_init(H5FL_fac_gc_list_t *head)
-{
-    herr_t ret_value = SUCCEED; /* Return value*/
-
-    FUNC_ENTER_PACKAGE
-
-    /* Initialize the mutex protecting this list */
-    if (H5TS_dlftt_mutex_init(&head->mutex) < 0)
-        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTINIT, FAIL, "can't initialize list's mutex");
-
-done:
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5FL__fac_head_init() */
-#endif /* H5_HAVE_CONCURRENCY */
-
 /*-------------------------------------------------------------------------
  * Function:	H5FL_fac_init
  *
@@ -2163,10 +2209,6 @@ H5FL_fac_init(size_t size)
     /* Initialize the mutex protecting this factory */
     if (H5TS_dlftt_mutex_init(&factory->mutex) < 0)
         HGOTO_ERROR(H5E_RESOURCE, H5E_CANTINIT, NULL, "can't initialize factory's mutex");
-
-    /* Make certain the list of lists is initialized first */
-    H5TS_INIT_GLOBAL(&H5FL_fac_gc_head, H5FL__fac_head_init, H5E_RESOURCE, H5E_CANTINIT, NULL,
-                     "can't initialize 'factory' list of lists");
 
     /* Acquire the mutex protecting the list of lists */
     if (H5TS_dlftt_mutex_acquire(&H5FL_fac_gc_head.mutex) < 0)
@@ -2253,12 +2295,12 @@ H5FL_fac_free(H5FL_fac_head_t *head, void *obj)
 
     /* Check for exceeding free list memory use limits */
     /* First check this particular list */
-    if (onlist * head->size > H5FL_fac_lst_mem_lim)
+    if (onlist * head->size > H5TS_atomic_load_size_t(&H5FL_fac_lst_mem_lim))
         if (H5FL__fac_gc_list(head) < 0)
             HGOTO_ERROR(H5E_RESOURCE, H5E_CANTGC, NULL, "garbage collection failed during free");
 
     /* Then check the global amount memory on factory free lists */
-    if (H5FL_fac_gc_head.mem_freed > H5FL_fac_glb_mem_lim)
+    if (H5TS_atomic_load_size_t(&H5FL_fac_gc_head.mem_freed) > H5TS_atomic_load_size_t(&H5FL_fac_glb_mem_lim))
         if (H5FL__fac_gc() < 0)
             HGOTO_ERROR(H5E_RESOURCE, H5E_CANTGC, NULL, "garbage collection failed during free");
 
@@ -2481,7 +2523,7 @@ H5FL__fac_gc(void)
     } /* end while */
 
     /* Double check that all the memory on the free lists is recycled */
-    assert(H5FL_fac_gc_head.mem_freed == 0);
+    assert(H5TS_atomic_load_size_t(&H5FL_fac_gc_head.mem_freed) == 0);
 
 #ifdef H5_HAVE_CONCURRENCY
     /* Release the mutex protecting the list of lists */
@@ -2564,16 +2606,14 @@ H5FL_fac_term(H5FL_fac_head_t *factory)
     /* Destroy the mutex protecting this factory */
     if (H5TS_dlftt_mutex_destroy(&factory->mutex) < 0)
         HGOTO_ERROR(H5E_RESOURCE, H5E_CANTRELEASE, FAIL, "can't destroy factory's mutex");
-#endif /* H5_HAVE_CONCURRENCY */
 
-    /* Free factory info */
-    factory = H5FL_FREE(H5FL_fac_head_t, factory);
-
-#ifdef H5_HAVE_CONCURRENCY
     /* Release the mutex protecting the list of lists */
     if (H5TS_dlftt_mutex_release(&H5FL_fac_gc_head.mutex) < 0)
         HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, FAIL, "can't unlock list of list's mutex");
 #endif /* H5_HAVE_CONCURRENCY */
+
+    /* Free factory info */
+    factory = H5FL_FREE(H5FL_fac_head_t, factory);
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -2593,6 +2633,11 @@ static int
 H5FL__fac_term_all(void)
 {
     FUNC_ENTER_PACKAGE_NOERR
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Have the array free lists been initialized? */
+    if (H5FL_fac_gc_head.init) {
+#endif /* H5_HAVE_CONCURRENCY */
 
     /* Free the nodes on the garbage collection list */
     while (H5FL_fac_gc_head.first != NULL) {
@@ -2615,12 +2660,13 @@ H5FL__fac_term_all(void)
     } /* end while */
 
 #ifdef H5_HAVE_CONCURRENCY
-    /* Destroy concurrency objects */
-    H5TS_dlftt_mutex_destroy(&H5FL_fac_gc_head.mutex);
-    H5TS_atomic_destroy_size_t(&H5FL_fac_gc_head.mem_freed);
+        /* Destroy concurrency objects */
+        H5TS_dlftt_mutex_destroy(&H5FL_fac_gc_head.mutex);
+        H5TS_atomic_destroy_size_t(&H5FL_fac_gc_head.mem_freed);
 
-    /* Reset init flag */
-    H5TS_SET_GLOBAL_INIT(&H5FL_fac_gc_head, false);
+        /* Reset init flag */
+        H5FL_fac_gc_head.init = false;
+    }
 #endif /* H5_HAVE_CONCURRENCY */
 
     FUNC_LEAVE_NOAPI(0)
@@ -2690,27 +2736,36 @@ herr_t
 H5FL_set_free_list_limits(int reg_global_lim, int reg_list_lim, int arr_global_lim, int arr_list_lim,
                           int blk_global_lim, int blk_list_lim, int fac_global_lim, int fac_list_lim)
 {
+    size_t lim;
     herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI_NOERR
 
     /* Set the limit variables */
     /* limit on all regular free lists */
-    H5FL_reg_glb_mem_lim = (reg_global_lim == -1 ? UINT_MAX : (size_t)reg_global_lim);
+    lim = (reg_global_lim == -1 ? UINT_MAX : (size_t)reg_global_lim);
+    H5TS_atomic_store_size_t(&H5FL_reg_glb_mem_lim, lim);
     /* limit on each regular free list */
-    H5FL_reg_lst_mem_lim = (reg_list_lim == -1 ? UINT_MAX : (size_t)reg_list_lim);
+    lim = (reg_list_lim == -1 ? UINT_MAX : (size_t)reg_list_lim);
+    H5TS_atomic_store_size_t(&H5FL_reg_lst_mem_lim, lim);
     /* limit on all array free lists */
-    H5FL_arr_glb_mem_lim = (arr_global_lim == -1 ? UINT_MAX : (size_t)arr_global_lim);
+    lim = (arr_global_lim == -1 ? UINT_MAX : (size_t)arr_global_lim);
+    H5TS_atomic_store_size_t(&H5FL_arr_glb_mem_lim, lim);
     /* limit on each array free list */
-    H5FL_arr_lst_mem_lim = (arr_list_lim == -1 ? UINT_MAX : (size_t)arr_list_lim);
+    lim = (arr_list_lim == -1 ? UINT_MAX : (size_t)arr_list_lim);
+    H5TS_atomic_store_size_t(&H5FL_arr_lst_mem_lim, lim);
     /* limit on all block free lists */
-    H5FL_blk_glb_mem_lim = (blk_global_lim == -1 ? UINT_MAX : (size_t)blk_global_lim);
+    lim = (blk_global_lim == -1 ? UINT_MAX : (size_t)blk_global_lim);
+    H5TS_atomic_store_size_t(&H5FL_blk_glb_mem_lim, lim);
     /* limit on each block free list */
-    H5FL_blk_lst_mem_lim = (blk_list_lim == -1 ? UINT_MAX : (size_t)blk_list_lim);
+    lim = (blk_list_lim == -1 ? UINT_MAX : (size_t)blk_list_lim);
+    H5TS_atomic_store_size_t(&H5FL_blk_lst_mem_lim, lim);
     /* limit on all factory free lists */
-    H5FL_fac_glb_mem_lim = (fac_global_lim == -1 ? UINT_MAX : (size_t)fac_global_lim);
+    lim = (fac_global_lim == -1 ? UINT_MAX : (size_t)fac_global_lim);
+    H5TS_atomic_store_size_t(&H5FL_fac_glb_mem_lim, lim);
     /* limit on each factory free list */
-    H5FL_fac_lst_mem_lim = (fac_list_lim == -1 ? UINT_MAX : (size_t)fac_list_lim);
+    lim = (fac_list_lim == -1 ? UINT_MAX : (size_t)fac_list_lim);
+    H5TS_atomic_store_size_t(&H5FL_fac_lst_mem_lim, lim);
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FL_set_free_list_limits() */
@@ -2737,10 +2792,23 @@ H5FL_set_free_list_limits(int reg_global_lim, int reg_list_lim, int arr_global_l
 herr_t
 H5FL_get_free_list_sizes(size_t *reg_size, size_t *arr_size, size_t *blk_size, size_t *fac_size)
 {
+    herr_t           ret_value = SUCCEED; /* Return value*/
+
+#ifdef H5_HAVE_CONCURRENCY
+    FUNC_ENTER_NOAPI(FAIL)
+#else  /* H5_HAVE_CONCURRENCY */
     FUNC_ENTER_NOAPI_NOERR
+#endif /* H5_HAVE_CONCURRENCY */
 
     /* Retrieve the amount of "regular" memory used */
     if (reg_size) {
+#ifdef H5_HAVE_CONCURRENCY
+    if (H5FL_reg_gc_head.init) {
+        /* Acquire the mutex protecting the list of lists */
+        if (H5TS_dlftt_mutex_acquire(&H5FL_reg_gc_head.mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, FAIL, "can't lock list of list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
+
         H5FL_reg_head_t *gc_node; /* Pointer into the list of lists */
 
         /* Walk through all the free lists, counting the amount of memory */
@@ -2756,10 +2824,23 @@ H5FL_get_free_list_sizes(size_t *reg_size, size_t *arr_size, size_t *blk_size, s
             /* Go on to the next free list */
             gc_node = gc_node->next;
         } /* end while */
+#ifdef H5_HAVE_CONCURRENCY
+        /* Release the mutex protecting the list of lists */
+        if (H5TS_dlftt_mutex_release(&H5FL_reg_gc_head.mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, FAIL, "can't unlock list of list's mutex");
+    }
+#endif /* H5_HAVE_CONCURRENCY */
     }     /* end if */
 
     /* Retrieve the amount of "array" memory used */
     if (arr_size) {
+#ifdef H5_HAVE_CONCURRENCY
+    if (H5FL_arr_gc_head.init) {
+        /* Acquire the mutex protecting the list of lists */
+        if (H5TS_dlftt_mutex_acquire(&H5FL_arr_gc_head.mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, FAIL, "can't lock list of list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
+
         H5FL_arr_head_t *gc_arr_node; /* Pointer into the list of things to garbage collect */
 
         /* Walk through all the free lists, counting the amount of memory */
@@ -2782,10 +2863,23 @@ H5FL_get_free_list_sizes(size_t *reg_size, size_t *arr_size, size_t *blk_size, s
             /* Go on to the next free list */
             gc_arr_node = gc_arr_node->next;
         } /* end while */
+#ifdef H5_HAVE_CONCURRENCY
+        /* Release the mutex protecting the list of lists */
+        if (H5TS_dlftt_mutex_release(&H5FL_arr_gc_head.mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, FAIL, "can't unlock list of list's mutex");
+    }
+#endif /* H5_HAVE_CONCURRENCY */
     }     /* end if */
 
     /* Retrieve the amount of "block" memory used */
     if (blk_size) {
+#ifdef H5_HAVE_CONCURRENCY
+    if (H5FL_blk_gc_head.init) {
+        /* Acquire the mutex protecting the list of lists */
+        if (H5TS_dlftt_mutex_acquire(&H5FL_blk_gc_head.mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, FAIL, "can't lock list of list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
+
         H5FL_blk_head_t *gc_blk_node; /* Pointer into the list of things */
 
         /* Walk through all the free lists */
@@ -2807,10 +2901,23 @@ H5FL_get_free_list_sizes(size_t *reg_size, size_t *arr_size, size_t *blk_size, s
             /* Go on to the next free list */
             gc_blk_node = gc_blk_node->next;
         } /* end while */
+#ifdef H5_HAVE_CONCURRENCY
+        /* Release the mutex protecting the list of lists */
+        if (H5TS_dlftt_mutex_release(&H5FL_blk_gc_head.mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, FAIL, "can't unlock list of list's mutex");
+    }
+#endif /* H5_HAVE_CONCURRENCY */
     }     /* end if */
 
     /* Retrieve the amount of "factory" memory used */
     if (fac_size) {
+#ifdef H5_HAVE_CONCURRENCY
+    if (H5FL_fac_gc_head.init) {
+        /* Acquire the mutex protecting the list of lists */
+        if (H5TS_dlftt_mutex_acquire(&H5FL_fac_gc_head.mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, FAIL, "can't lock list of list's mutex");
+#endif /* H5_HAVE_CONCURRENCY */
+
         H5FL_fac_gc_node_t *gc_fac_node; /* Pointer into the list of things to garbage collect */
 
         /* Walk through all the free lists */
@@ -2825,7 +2932,16 @@ H5FL_get_free_list_sizes(size_t *reg_size, size_t *arr_size, size_t *blk_size, s
             /* Go on to the next free list to garbage collect */
             gc_fac_node = gc_fac_node->next;
         } /* end while */
+#ifdef H5_HAVE_CONCURRENCY
+        /* Release the mutex protecting the list of lists */
+        if (H5TS_dlftt_mutex_release(&H5FL_fac_gc_head.mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, FAIL, "can't unlock list of list's mutex");
+    }
+#endif /* H5_HAVE_CONCURRENCY */
     }     /* end if */
 
-    FUNC_LEAVE_NOAPI(SUCCEED)
+#ifdef H5_HAVE_CONCURRENCY
+done:
+#endif /* H5_HAVE_CONCURRENCY */
+    FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FL_get_free_list_sizes() */
