@@ -2551,19 +2551,19 @@ H5FL__fac_gc(void)
             HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, FAIL, "can't lock list of list's mutex");
 #endif /* H5_HAVE_CONCURRENCY */
 
-    /* Walk through all the free lists, free()'ing the nodes */
-    gc_node = H5FL_fac_gc_head.first;
-    while (gc_node != NULL) {
-        /* Release the free nodes on the list */
-        if (H5FL__fac_gc_list(gc_node->list) < 0)
-            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTGC, FAIL, "garbage collection of list failed");
+        /* Walk through all the free lists, free()'ing the nodes */
+        gc_node = H5FL_fac_gc_head.first;
+        while (gc_node != NULL) {
+            /* Release the free nodes on the list */
+            if (H5FL__fac_gc_list(gc_node->list) < 0)
+                HGOTO_ERROR(H5E_RESOURCE, H5E_CANTGC, FAIL, "garbage collection of list failed");
 
-        /* Go on to the next free list to garbage collect */
-        gc_node = gc_node->next;
-    } /* end while */
+            /* Go on to the next free list to garbage collect */
+            gc_node = gc_node->next;
+        } /* end while */
 
-    /* Double check that all the memory on the free lists is recycled */
-    assert(H5TS_atomic_load_size_t(&H5FL_fac_gc_head.mem_freed) == 0);
+        /* Double check that all the memory on the free lists is recycled */
+        assert(H5TS_atomic_load_size_t(&H5FL_fac_gc_head.mem_freed) == 0);
 
 #ifdef H5_HAVE_CONCURRENCY
         /* Release the mutex protecting the list of lists */
