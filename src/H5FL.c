@@ -2545,9 +2545,10 @@ H5FL__fac_gc(void)
     FUNC_ENTER_NOAPI_NOINIT
 
 #ifdef H5_HAVE_CONCURRENCY
-    /* Acquire the mutex protecting the list of lists */
-    if (H5TS_dlftt_mutex_acquire(&H5FL_fac_gc_head.mutex) < 0)
-        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, FAIL, "can't lock list of list's mutex");
+    if (H5FL_fac_gc_head.init) {
+        /* Acquire the mutex protecting the list of lists */
+        if (H5TS_dlftt_mutex_acquire(&H5FL_fac_gc_head.mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTLOCK, FAIL, "can't lock list of list's mutex");
 #endif /* H5_HAVE_CONCURRENCY */
 
     /* Walk through all the free lists, free()'ing the nodes */
@@ -2565,9 +2566,10 @@ H5FL__fac_gc(void)
     assert(H5TS_atomic_load_size_t(&H5FL_fac_gc_head.mem_freed) == 0);
 
 #ifdef H5_HAVE_CONCURRENCY
-    /* Release the mutex protecting the list of lists */
-    if (H5TS_dlftt_mutex_release(&H5FL_fac_gc_head.mutex) < 0)
-        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, FAIL, "can't unlock list of list's mutex");
+        /* Release the mutex protecting the list of lists */
+        if (H5TS_dlftt_mutex_release(&H5FL_fac_gc_head.mutex) < 0)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, FAIL, "can't unlock list of list's mutex");
+    }
 #endif /* H5_HAVE_CONCURRENCY */
 
 done:
