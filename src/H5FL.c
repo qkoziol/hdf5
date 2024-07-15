@@ -964,7 +964,7 @@ H5FL_blk_free_block_avail(H5FL_blk_head_t *head, size_t size)
 
     /* Check if there is a free list for blocks of this size */
     /* and if there are any blocks available on the list */
-    if ((free_list = H5FL__blk_find_list(&(head->pq), size)) != NULL && free_list->list != NULL)
+    if ((free_list = H5FL__blk_find_list(&head->pq, size)) != NULL && free_list->list != NULL)
         ret_value = true;
     else
         ret_value = false;
@@ -1019,7 +1019,7 @@ H5FL_blk_malloc(H5FL_blk_head_t *head, size_t size)
 
     /* Check if there is a free list for blocks of this size */
     /* and if there are any blocks available on the list */
-    if (NULL != (free_list = H5FL__blk_find_list(&(head->pq), size)) && NULL != free_list->list) {
+    if (NULL != (free_list = H5FL__blk_find_list(&head->pq, size)) && NULL != free_list->list) {
         /* Remove the first node from the free list */
         temp            = free_list->list;
         free_list->list = free_list->list->next;
@@ -1060,9 +1060,9 @@ H5FL_blk_malloc(H5FL_blk_head_t *head, size_t size)
 #endif /* H5_HAVE_CONCURRENCY */
 
         /* Check (again) if there is (now) a free list for native blocks of this size */
-        if (NULL == (free_list = H5FL__blk_find_list(&(head->pq), size)))
+        if (NULL == (free_list = H5FL__blk_find_list(&head->pq, size)))
             /* Create a new list node and insert it to the queue */
-            if (NULL == (free_list = H5FL__blk_create_list(&(head->pq), size)))
+            if (NULL == (free_list = H5FL__blk_create_list(&head->pq, size)))
                 HGOTO_ERROR(H5E_RESOURCE, H5E_CANTALLOC, NULL, "memory allocation failed for list node");
 
         /* Increment the number of blocks of this size */
@@ -1183,9 +1183,9 @@ H5FL_blk_free(H5FL_blk_head_t *head, void *block)
 #endif /* H5FL_DEBUG */
 
     /* Check if there is a free list for native blocks of this size */
-    if (NULL == (free_list = H5FL__blk_find_list(&(head->pq), free_size)))
+    if (NULL == (free_list = H5FL__blk_find_list(&head->pq, free_size)))
         /* No free list available, create a new list node and insert it to the queue */
-        if (NULL == (free_list = H5FL__blk_create_list(&(head->pq), free_size)))
+        if (NULL == (free_list = H5FL__blk_create_list(&head->pq, free_size)))
             HGOTO_ERROR(H5E_RESOURCE, H5E_CANTALLOC, NULL, "couldn't create new list node");
 
     /* Prepend the free'd native block to the front of the free list */
@@ -2079,7 +2079,7 @@ H5FL_seq_free(H5FL_seq_head_t *head, void *obj)
     assert(obj);
 
     /* Use block routine */
-    H5FL_blk_free(&(head->queue), obj);
+    H5FL_blk_free(&head->queue, obj);
 
     FUNC_LEAVE_NOAPI(NULL)
 } /* end H5FL_seq_free() */
@@ -2106,7 +2106,7 @@ H5FL_seq_malloc(H5FL_seq_head_t *head, size_t elem)
     assert(elem);
 
     /* Use block routine */
-    ret_value = H5FL_blk_malloc(&(head->queue), head->size * elem);
+    ret_value = H5FL_blk_malloc(&head->queue, head->size * elem);
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FL_seq_malloc() */
@@ -2133,7 +2133,7 @@ H5FL_seq_calloc(H5FL_seq_head_t *head, size_t elem)
     assert(elem);
 
     /* Use block routine */
-    ret_value = H5FL_blk_calloc(&(head->queue), head->size * elem);
+    ret_value = H5FL_blk_calloc(&head->queue, head->size * elem);
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FL_seq_calloc() */
@@ -2160,7 +2160,7 @@ H5FL_seq_realloc(H5FL_seq_head_t *head, void *obj, size_t new_elem)
     assert(new_elem);
 
     /* Use block routine */
-    ret_value = H5FL_blk_realloc(&(head->queue), obj, head->size * new_elem);
+    ret_value = H5FL_blk_realloc(&head->queue, obj, head->size * new_elem);
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FL_seq_realloc() */
