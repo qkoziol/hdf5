@@ -2452,7 +2452,7 @@ if test "X${enable_concurrency}" = "Xyes" -a "X$THREADS" = "Xno"; then
 fi
 
 # The concurrency and threadsafe options are mutually exclusive
-if test "X${enable_concurrency}" = "Xyes" -a test "X${enable_threadsafe}" = "Xyes"; then
+if test "X${enable_concurrency}" = "Xyes" -a "X${enable_threadsafe}" = "Xyes"; then
     AC_MSG_ERROR([--enable-threadsafe and --enable-concurrency are mutually exclusive])
 fi
 
@@ -3634,7 +3634,7 @@ if test "X$SUBFILING_VFD" = "Xyes"; then
     )
 
     # Check for threads availability
-    if test "x$HAVE_THREADS" = "xno"; then
+    if test "x$THREADS" = "xno"; then
       AC_MSG_ERROR([Subfiling VFD requires thread operations support.])
     fi
 
