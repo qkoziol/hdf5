@@ -504,7 +504,7 @@ H5FL_reg_malloc(H5FL_reg_head_t *head)
 
     /* Make certain the list is initialized first */
     H5_GLOBAL_INIT(head, H5FL__reg_init, H5E_RESOURCE, H5E_CANTINIT, NULL,
-                     "can't initialize 'regular' blocks");
+                   "can't initialize 'regular' blocks");
 
 #ifdef H5_HAVE_CONCURRENCY
     /* Acquire the mutex protecting this list */
@@ -1712,8 +1712,7 @@ H5FL_arr_malloc(H5FL_arr_head_t *head, size_t elem)
     assert(elem);
 
     /* Make certain the list is initialized first */
-    H5_GLOBAL_INIT(head, H5FL__arr_init, H5E_RESOURCE, H5E_CANTINIT, NULL,
-                     "can't initialize 'array' blocks");
+    H5_GLOBAL_INIT(head, H5FL__arr_init, H5E_RESOURCE, H5E_CANTINIT, NULL, "can't initialize 'array' blocks");
 
 #ifdef H5_HAVE_CONCURRENCY
     /* Acquire the mutex protecting this list */
