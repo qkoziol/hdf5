@@ -47,7 +47,7 @@ typedef struct H5FL_reg_node_t {
 
 /* Data structure for free list of blocks */
 typedef struct H5FL_reg_head_t {
-    H5TS_dclp_t dlcp_info; /* Information for init */
+    H5_global_t dlcp_info; /* Information for init */
                            /* (MUST be first field in structure) */
 #ifdef H5_HAVE_CONCURRENCY
     H5TS_dlftt_mutex_t mutex;          /* Guard access to this free list */
@@ -123,7 +123,7 @@ typedef struct H5FL_blk_node_t {
 
 /* Data structure for priority queue of native block free lists */
 typedef struct H5FL_blk_head_t {
-    H5TS_dclp_t dlcp_info; /* Information for init */
+    H5_global_t dlcp_info; /* Information for init */
                            /* (MUST be first field in structure) */
 #ifdef H5_HAVE_CONCURRENCY
     H5TS_dlftt_mutex_t mutex;          /* Guard access to this free list */
@@ -201,7 +201,7 @@ typedef struct H5FL_arr_node_t {
 
 /* Data structure for free list of array blocks */
 typedef struct H5FL_arr_head_t {
-    H5TS_dclp_t dlcp_info; /* Information for init */
+    H5_global_t dlcp_info; /* Information for init */
                            /* (MUST be first field in structure) */
 #ifdef H5_HAVE_CONCURRENCY
     H5TS_dlftt_mutex_t mutex;          /* Guard access to this free list */

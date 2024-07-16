@@ -419,7 +419,7 @@ H5FL_reg_free(H5FL_reg_head_t *head, void *obj)
     assert(obj);
 
     /* Make certain that the free list is initialized */
-    assert(H5TS_IS_GLOBAL_INIT(head));
+    assert(H5_GLOBAL_IS_INIT(head));
 
 #ifdef H5_HAVE_CONCURRENCY
     /* Acquire the mutex protecting this list */
@@ -485,7 +485,7 @@ H5FL_reg_malloc(H5FL_reg_head_t *head)
     assert(head);
 
     /* Make certain the list is initialized first */
-    H5TS_INIT_GLOBAL(head, H5FL__reg_init, H5E_RESOURCE, H5E_CANTINIT, NULL,
+    H5_GLOBAL_INIT(head, H5FL__reg_init, H5E_RESOURCE, H5E_CANTINIT, NULL,
                      "can't initialize 'regular' blocks");
 
 #ifdef H5_HAVE_CONCURRENCY
@@ -754,7 +754,7 @@ H5FL__reg_term(void)
 #endif /* H5_HAVE_CONCURRENCY */
 
                 /* Reset the "initialized" flag, in case we restart this list */
-                H5TS_SET_GLOBAL_INIT(H5FL_reg_gc_head.first, false);
+                H5_GLOBAL_SET_INIT(H5FL_reg_gc_head.first, false);
             } /* end else */
 
             H5FL_reg_gc_head.first = tmp;
@@ -1000,7 +1000,7 @@ H5FL_blk_malloc(H5FL_blk_head_t *head, size_t size)
     assert(size);
 
     /* Make certain the list is initialized first */
-    H5TS_INIT_GLOBAL(head, H5FL__blk_init, H5E_RESOURCE, H5E_CANTINIT, NULL, "can't initialize 'block' list");
+    H5_GLOBAL_INIT(head, H5FL__blk_init, H5E_RESOURCE, H5E_CANTINIT, NULL, "can't initialize 'block' list");
 
 #ifdef H5_HAVE_CONCURRENCY
     /* Acquire the mutex protecting this list */
@@ -1162,7 +1162,7 @@ H5FL_blk_free(H5FL_blk_head_t *head, void *block)
     free_size = temp->size;
 
     /* Make certain that the free list is initialized */
-    assert(H5TS_IS_GLOBAL_INIT(head));
+    assert(H5_GLOBAL_IS_INIT(head));
 
 #ifdef H5_HAVE_CONCURRENCY
     /* Acquire the mutex protecting this list */
@@ -1478,7 +1478,7 @@ H5FL__blk_term(void)
 #endif /* H5_HAVE_CONCURRENCY */
 
                 /* Reset the "initialized" flag, in case we restart this list */
-                H5TS_SET_GLOBAL_INIT(H5FL_blk_gc_head.first, false);
+                H5_GLOBAL_SET_INIT(H5FL_blk_gc_head.first, false);
             } /* end else */
 
             H5FL_blk_gc_head.first = tmp;
@@ -1588,7 +1588,7 @@ H5FL_arr_free(H5FL_arr_head_t *head, void *obj)
     assert(head);
 
     /* Make certain that the free list is initialized */
-    assert(H5TS_IS_GLOBAL_INIT(head));
+    assert(H5_GLOBAL_IS_INIT(head));
 
 #ifdef H5_HAVE_CONCURRENCY
     /* Acquire the mutex protecting this list */
@@ -1667,7 +1667,7 @@ H5FL_arr_malloc(H5FL_arr_head_t *head, size_t elem)
     assert(elem);
 
     /* Make certain the list is initialized first */
-    H5TS_INIT_GLOBAL(head, H5FL__arr_init, H5E_RESOURCE, H5E_CANTINIT, NULL,
+    H5_GLOBAL_INIT(head, H5FL__arr_init, H5E_RESOURCE, H5E_CANTINIT, NULL,
                      "can't initialize 'array' blocks");
 
 #ifdef H5_HAVE_CONCURRENCY
@@ -2024,7 +2024,7 @@ H5FL__arr_term(void)
 #endif /* H5_HAVE_CONCURRENCY */
 
                 /* Reset the "initialized" flag, in case we restart this list */
-                H5TS_SET_GLOBAL_INIT(H5FL_arr_gc_head.first, false);
+                H5_GLOBAL_SET_INIT(H5FL_arr_gc_head.first, false);
             } /* end else */
 
             H5FL_arr_gc_head.first = tmp;
@@ -2775,7 +2775,7 @@ H5FL_get_free_list_sizes(size_t *reg_size, size_t *arr_size, size_t *blk_size, s
             gc_node   = H5FL_reg_gc_head.first;
             while (gc_node != NULL) {
                 /* Sanity check */
-                assert(H5TS_IS_GLOBAL_INIT(gc_node));
+                assert(H5_GLOBAL_IS_INIT(gc_node));
 
                 /* Add the amount of memory for this list */
                 *reg_size += (gc_node->size * gc_node->allocated);
@@ -2807,7 +2807,7 @@ H5FL_get_free_list_sizes(size_t *reg_size, size_t *arr_size, size_t *blk_size, s
             gc_arr_node = H5FL_arr_gc_head.first;
             while (gc_arr_node != NULL) {
                 /* Sanity check */
-                assert(H5TS_IS_GLOBAL_INIT(gc_arr_node));
+                assert(H5_GLOBAL_IS_INIT(gc_arr_node));
 
                 /* Check for any allocated elements in this list */
                 if (gc_arr_node->allocated > 0) {

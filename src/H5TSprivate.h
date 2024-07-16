@@ -306,55 +306,6 @@ typedef struct H5TS_dlftt_mutex_t {
     unsigned     dlftt;
 } H5TS_dlftt_mutex_t;
 
-/* Mechanism for implementing Double-checked Locking Protocol (DCLP) for global
- * variables with deferred initialization (i.e. not at library init time.
- * FYI: https://preshing.com/20130930/double-checked-locking-is-fixed-in-cpp11/
- */
-typedef struct H5TS_dclp_t {
-    bool init; /* Whether the global has been initialized */
-} H5TS_dclp_t;
-
-/* Safely call an initialization routine for a global variable. This is invoked
- * from a single thread while blocking other threads from using the global until
- * initialization is completed.
- *
- * Note that this currently assumes that the global variable is a struct
- * containing a field of type H5TS_dclp_t as its first field.
- */
-#ifdef H5_HAVE_CONCURRENCY
-#define H5TS_INIT_GLOBAL(v, f, maj, min, err_ret, ...)                                                       \
-    do {                                                                                                     \
-        if (H5_UNLIKELY(!((H5TS_dclp_t *)(v))->init)) {                                                      \
-            if (H5_UNLIKELY(H5TS_dlftt_mutex_acquire(&H5TS_bootstrap_mtx_g) < 0))                            \
-                HGOTO_ERROR((maj), H5E_CANTLOCK, (err_ret), "can't acquire global bootstrap mutex");         \
-            if (!((H5TS_dclp_t *)(v))->init) {                                                               \
-                /* Invoke the init function */                                                               \
-                if (H5_UNLIKELY((f)(v) < 0))                                                                 \
-                    HGOTO_ERROR((maj), (min), (err_ret), __VA_ARGS__);                                       \
-                                                                                                             \
-                /* Indicate that the free list is initialized */                                             \
-                H5TS_SET_GLOBAL_INIT(v, true);                                                               \
-            }                                                                                                \
-            if (H5_UNLIKELY(H5TS_dlftt_mutex_release(&H5TS_bootstrap_mtx_g) < 0))                            \
-                HGOTO_ERROR((maj), H5E_CANTUNLOCK, (err_ret), "can't release global bootstrap mutex");       \
-        }                                                                                                    \
-    } while (0)
-#else /* H5_HAVE_CONCURRENCY */
-#define H5TS_INIT_GLOBAL(v, f, maj, min, err_ret, ...)                                                       \
-    do {                                                                                                     \
-        if (H5_UNLIKELY(!((H5TS_dclp_t *)(v))->init)) {                                                      \
-            /* Invoke the init function */                                                                   \
-            if (H5_UNLIKELY((f)(v) < 0))                                                                     \
-                HGOTO_ERROR((maj), (min), (err_ret), __VA_ARGS__);                                           \
-                                                                                                             \
-            /* Indicate that the free list is initialized */                                                 \
-            H5TS_SET_GLOBAL_INIT(v, true);                                                                   \
-        }                                                                                                    \
-    } while (0)
-#endif /* H5_HAVE_CONCURRENCY */
-#define H5TS_IS_GLOBAL_INIT(v)     (((H5TS_dclp_t *)(v))->init)
-#define H5TS_SET_GLOBAL_INIT(v, x) ((H5TS_dclp_t *)(v))->init = (x)
-
 /*****************************/
 /* Library-private Variables */
 /*****************************/
