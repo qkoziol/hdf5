@@ -145,8 +145,8 @@ typedef struct H5FL_fac_node_t {
 /* Data structure for free list block factory */
 struct H5FL_fac_head_t {
 #ifdef H5_HAVE_CONCURRENCY
-    H5TS_dlftt_mutex_t mutex;     /* Guard access to this factory */
-#endif /* H5_HAVE_CONCURRENCY */
+    H5TS_dlftt_mutex_t mutex; /* Guard access to this factory */
+#endif                        /* H5_HAVE_CONCURRENCY */
 
     unsigned         allocated;   /* Number of blocks allocated */
     unsigned         onlist;      /* Number of blocks on free list */
@@ -486,7 +486,7 @@ H5FL_reg_malloc(H5FL_reg_head_t *head)
 
     /* Make certain the list is initialized first */
     H5_GLOBAL_INIT(head, H5FL__reg_init, H5E_RESOURCE, H5E_CANTINIT, NULL,
-                     "can't initialize 'regular' blocks");
+                   "can't initialize 'regular' blocks");
 
 #ifdef H5_HAVE_CONCURRENCY
     /* Acquire the mutex protecting this list */
@@ -1667,8 +1667,7 @@ H5FL_arr_malloc(H5FL_arr_head_t *head, size_t elem)
     assert(elem);
 
     /* Make certain the list is initialized first */
-    H5_GLOBAL_INIT(head, H5FL__arr_init, H5E_RESOURCE, H5E_CANTINIT, NULL,
-                     "can't initialize 'array' blocks");
+    H5_GLOBAL_INIT(head, H5FL__arr_init, H5E_RESOURCE, H5E_CANTINIT, NULL, "can't initialize 'array' blocks");
 
 #ifdef H5_HAVE_CONCURRENCY
     /* Acquire the mutex protecting this list */
@@ -2170,8 +2169,8 @@ H5FL_seq_realloc(H5FL_seq_head_t *head, void *obj, size_t new_elem)
 H5FL_fac_head_t *
 H5FL_fac_init(size_t size)
 {
-    H5FL_fac_head_t    *factory   = NULL; /* Pointer to new block factory */
-    H5FL_fac_head_t    *ret_value = NULL; /* Return value */
+    H5FL_fac_head_t *factory   = NULL; /* Pointer to new block factory */
+    H5FL_fac_head_t *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_NOAPI(NULL)
 
@@ -2200,7 +2199,7 @@ H5FL_fac_init(size_t size)
 #endif /* H5_HAVE_CONCURRENCY */
 
     /* Link in to the garbage collection list */
-    factory->next         = H5FL_fac_gc_head.first;
+    factory->next          = H5FL_fac_gc_head.first;
     H5FL_fac_gc_head.first = factory;
     if (factory->next)
         factory->next->prev = factory;
@@ -2480,7 +2479,7 @@ done:
 static herr_t
 H5FL__fac_gc(void)
 {
-    H5FL_fac_head_t *fac;             /* Pointer into the list of things to garbage collect */
+    H5FL_fac_head_t *fac;                 /* Pointer into the list of things to garbage collect */
     herr_t           ret_value = SUCCEED; /* return value*/
 
     FUNC_ENTER_NOAPI_NOINIT
@@ -2530,7 +2529,7 @@ done:
 herr_t
 H5FL_fac_term(H5FL_fac_head_t *factory)
 {
-    herr_t           ret_value = SUCCEED; /* Return value */
+    herr_t ret_value = SUCCEED; /* Return value */
 
     /* NOINIT OK here because this must be called after H5FL_fac_init -NAF */
     FUNC_ENTER_NOAPI_NOINIT
@@ -2616,7 +2615,7 @@ H5FL__fac_term_all(void)
 #endif /* H5_HAVE_CONCURRENCY */
 
         /* Sanity check */
-        assert (NULL == H5FL_fac_gc_head.first);
+        assert(NULL == H5FL_fac_gc_head.first);
 
 #ifdef H5_HAVE_CONCURRENCY
         /* Destroy concurrency objects */

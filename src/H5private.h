@@ -1685,7 +1685,7 @@ typedef struct H5_global_t {
  *
  * FYI: https://preshing.com/20130930/double-checked-locking-is-fixed-in-cpp11/
  */
-#define H5_GLOBAL_INIT(v, f, maj, min, err_ret, ...)                                                       \
+#define H5_GLOBAL_INIT(v, f, maj, min, err_ret, ...)                                                         \
     do {                                                                                                     \
         if (H5_UNLIKELY(!((H5_global_t *)(v))->init)) {                                                      \
             if (H5_UNLIKELY(H5TS_dlftt_mutex_acquire(&H5TS_bootstrap_mtx_g) < 0))                            \
@@ -1696,14 +1696,14 @@ typedef struct H5_global_t {
                     HGOTO_ERROR((maj), (min), (err_ret), __VA_ARGS__);                                       \
                                                                                                              \
                 /* Indicate that the free list is initialized */                                             \
-                H5_GLOBAL_SET_INIT(v, true);                                                               \
+                H5_GLOBAL_SET_INIT(v, true);                                                                 \
             }                                                                                                \
             if (H5_UNLIKELY(H5TS_dlftt_mutex_release(&H5TS_bootstrap_mtx_g) < 0))                            \
                 HGOTO_ERROR((maj), H5E_CANTUNLOCK, (err_ret), "can't release global bootstrap mutex");       \
         }                                                                                                    \
     } while (0)
 #else /* H5_HAVE_CONCURRENCY */
-#define H5_GLOBAL_INIT(v, f, maj, min, err_ret, ...)                                                       \
+#define H5_GLOBAL_INIT(v, f, maj, min, err_ret, ...)                                                         \
     do {                                                                                                     \
         if (H5_UNLIKELY(!((H5_global_t *)(v))->init)) {                                                      \
             /* Invoke the init function */                                                                   \
@@ -1711,7 +1711,7 @@ typedef struct H5_global_t {
                 HGOTO_ERROR((maj), (min), (err_ret), __VA_ARGS__);                                           \
                                                                                                              \
             /* Indicate that the free list is initialized */                                                 \
-            H5_GLOBAL_SET_INIT(v, true);                                                                   \
+            H5_GLOBAL_SET_INIT(v, true);                                                                     \
         }                                                                                                    \
     } while (0)
 #endif /* H5_HAVE_CONCURRENCY */
