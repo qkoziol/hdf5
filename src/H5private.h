@@ -1666,6 +1666,58 @@ H5_DLL herr_t H5CX_pop(bool update_dxpl_props);
   #define HDcompile_assert(e)     do { typedef struct { unsigned int b: (e); } x; } while(0)
 */
 
+/* Safely call an initialization routine for a global variable.
+ *
+ * Note that this currently assumes that the global variable is a struct
+ * containing a field of type H5_global_t as its first field.
+ */
+typedef struct H5_global_t {
+    bool init; /* Whether the global has been initialized */
+} H5_global_t;
+
+#ifdef H5_HAVE_CONCURRENCY
+
+/* Mechanism for implementing double-checked locking protocol (DCLP) for global
+ * variables with deferred initialization (i.e. not at library init time).
+ *
+ * This is invoked from a single thread while blocking other threads from
+ * using the global until initialization is completed.
+ *
+ * FYI: https://preshing.com/20130930/double-checked-locking-is-fixed-in-cpp11/
+ */
+#define H5_GLOBAL_INIT(v, f, maj, min, err_ret, ...)                                                       \
+    do {                                                                                                     \
+        if (H5_UNLIKELY(!((H5_global_t *)(v))->init)) {                                                      \
+            if (H5_UNLIKELY(H5TS_dlftt_mutex_acquire(&H5TS_bootstrap_mtx_g) < 0))                            \
+                HGOTO_ERROR((maj), H5E_CANTLOCK, (err_ret), "can't acquire global bootstrap mutex");         \
+            if (!((H5_global_t *)(v))->init) {                                                               \
+                /* Invoke the init function */                                                               \
+                if (H5_UNLIKELY((f)(v) < 0))                                                                 \
+                    HGOTO_ERROR((maj), (min), (err_ret), __VA_ARGS__);                                       \
+                                                                                                             \
+                /* Indicate that the free list is initialized */                                             \
+                H5_GLOBAL_SET_INIT(v, true);                                                               \
+            }                                                                                                \
+            if (H5_UNLIKELY(H5TS_dlftt_mutex_release(&H5TS_bootstrap_mtx_g) < 0))                            \
+                HGOTO_ERROR((maj), H5E_CANTUNLOCK, (err_ret), "can't release global bootstrap mutex");       \
+        }                                                                                                    \
+    } while (0)
+#else /* H5_HAVE_CONCURRENCY */
+#define H5_GLOBAL_INIT(v, f, maj, min, err_ret, ...)                                                       \
+    do {                                                                                                     \
+        if (H5_UNLIKELY(!((H5_global_t *)(v))->init)) {                                                      \
+            /* Invoke the init function */                                                                   \
+            if (H5_UNLIKELY((f)(v) < 0))                                                                     \
+                HGOTO_ERROR((maj), (min), (err_ret), __VA_ARGS__);                                           \
+                                                                                                             \
+            /* Indicate that the free list is initialized */                                                 \
+            H5_GLOBAL_SET_INIT(v, true);                                                                   \
+        }                                                                                                    \
+    } while (0)
+#endif /* H5_HAVE_CONCURRENCY */
+#define H5_GLOBAL_IS_INIT(v)     (((H5_global_t *)(v))->init)
+#define H5_GLOBAL_SET_INIT(v, x) ((H5_global_t *)(v))->init = (x)
+
 /* Private typedefs */
 
 /* Union for const/non-const pointer for use by functions that manipulate
