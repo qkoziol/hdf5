@@ -263,6 +263,26 @@ typedef struct H5TS_semaphore_t {
 #if defined(H5_HAVE_STDATOMIC_H) && !defined(__cplusplus)
 /* Spinlock, built from C11 atomic_flag */
 typedef atomic_flag H5TS_spinlock_t;
+
+/* Fast, fair, scalable (FFS) non-recursive readers/writer lock */
+typedef struct H5TS_ffs_rwlock_local_t {
+    enum {
+        H5TS_FFS_RWLOCK_WRITER,
+        H5TS_FFS_RWLOCK_READER,
+        H5TS_FFS_RWLOCK_READER_UNBLOCKNEXT,
+        H5TS_FFS_RWLOCK_ACTIVE_READER
+    } state;                                     /* State of local lock component */
+    bool                            spin;        /* Local 'spin' variable */
+    struct H5TS_ffs_rwlock_local_t *next, *prev; /* Neighbors in list */
+    H5TS_spinlock_t                 lock;        /* Spin lock for 'local' node */
+} H5TS_ffs_rwlock_local_t;
+
+H5_GCC_DIAG_OFF("c99-c11-compat")
+H5_CLANG_DIAG_OFF("c11-extensions")
+typedef H5TS_ffs_rwlock_local_t *_Atomic H5TS_ffs_rwlock_t;
+H5_GCC_DIAG_ON("c99-c11-compat")
+H5_CLANG_DIAG_ON("c11-extensions")
+
 #endif
 
 /*****************************/
@@ -304,6 +324,15 @@ static inline herr_t H5TS_rwlock_rdunlock(H5TS_rwlock_t *lock);
 static inline herr_t H5TS_rwlock_wrlock(H5TS_rwlock_t *lock);
 static inline herr_t H5TS_rwlock_wrunlock(H5TS_rwlock_t *lock);
 H5_DLL herr_t        H5TS_rwlock_destroy(H5TS_rwlock_t *lock);
+
+#if defined(H5_HAVE_STDATOMIC_H) && !defined(__cplusplus)
+/* 'Fast, Fair, Scalable' (FFS) R/W locks */
+H5_DLL herr_t H5TS_ffs_rwlock_init(H5TS_ffs_rwlock_t *lock);
+H5_DLL herr_t H5TS_ffs_rwlock_rdlock(H5TS_ffs_rwlock_t *lock, H5TS_ffs_rwlock_local_t *local);
+H5_DLL herr_t H5TS_ffs_rwlock_rdunlock(H5TS_ffs_rwlock_t *lock, H5TS_ffs_rwlock_local_t *local);
+H5_DLL herr_t H5TS_ffs_rwlock_wrlock(H5TS_ffs_rwlock_t *lock, H5TS_ffs_rwlock_local_t *local);
+H5_DLL herr_t H5TS_ffs_rwlock_wrunlock(H5TS_ffs_rwlock_t *lock, H5TS_ffs_rwlock_local_t *local);
+#endif
 
 /* Condition variable operations */
 H5_DLL herr_t H5TS_cond_init(H5TS_cond_t *cond);
