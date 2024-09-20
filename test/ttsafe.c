@@ -129,9 +129,6 @@ main(int argc, char *argv[])
     AddTest("atomics", tts_atomics, NULL, "emulation of C11 atomics", NULL);
 #endif /* H5_HAVE_STDATOMIC_H */
     AddTest("rwlock", tts_rwlock, NULL, "simple R/W locks", NULL);
-#ifdef H5_HAVE_STDATOMIC_H
-//    AddTest("ffs_rwlock", tts_ffs_rwlock, NULL, "FFS R/W locks", NULL);
-#endif /* H5_HAVE_STDATOMIC_H */
 #ifndef H5_HAVE_WIN_THREADS
     /* Recursive R/W locks */
     AddTest("rec_rwlock_1", tts_rec_rwlock_smoke_check_1, NULL, "recursive R/W lock smoke check 1 -- basic",
@@ -143,9 +140,7 @@ main(int argc, char *argv[])
     AddTest("rec_rwlock_4", tts_rec_rwlock_smoke_check_4, NULL,
             "recursive R/W lock smoke check 4 -- mixed mob", NULL);
 #endif /* !H5_HAVE_WIN_THREADS */
-#ifdef H5_HAVE_STDATOMIC_H
     AddTest("semaphore", tts_semaphore, NULL, "lightweight system semaphores", NULL);
-#endif /* H5_HAVE_STDATOMIC_H */
 
 #ifdef H5_HAVE_THREADSAFE_API
     AddTest("thread_id", tts_thread_id, NULL, "thread IDs", NULL);

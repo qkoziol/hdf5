@@ -228,7 +228,7 @@ H5TS_rwlock_trywrlock(H5TS_rwlock_t *lock, bool *acquired)
         return FAIL;
 
     return SUCCEED;
-} /* end H5TS_rwlock_wrlock() */
+} /* end H5TS_rwlock_trywrlock() */
 
 /*-------------------------------------------------------------------------
  * Function: H5TS_rwlock_wrunlock
@@ -480,7 +480,7 @@ H5TS_rwlock_trywrlock(H5TS_rwlock_t *lock, bool *acquired)
 } /* end H5TS_rwlock_trywrlock() */
 
 /*-------------------------------------------------------------------------
- * Function: H5TS_rwlock_wrunlock
+ * Function: H5TS_rwlock_rdunlock
  *
  * Purpose:  Release a write lock
  *
