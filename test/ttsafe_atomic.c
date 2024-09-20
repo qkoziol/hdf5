@@ -17,7 +17,7 @@
 
 #include "ttsafe.h"
 
-#ifdef H5_HAVE_THREADS
+#if defined(H5_HAVE_THREADS) && !defined(H5_HAVE_STDATOMIC_H)
 
 #define NUM_THREADS 16
 
@@ -175,4 +175,4 @@ tts_atomics(void)
 
 } /* end tts_atomics() */
 
-#endif /* H5_HAVE_THREADS */
+#endif /* defined(H5_HAVE_THREADS) && !defined(H5_HAVE_STDATOMIC_H) */

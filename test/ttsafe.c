@@ -141,10 +141,9 @@ main(int argc, char *argv[])
             "recursive R/W lock smoke check 4 -- mixed mob", NULL);
 #endif /* !H5_HAVE_WIN_THREADS */
     AddTest("semaphore", tts_semaphore, NULL, "lightweight system semaphores", NULL);
-
-#ifdef H5_HAVE_THREADSAFE_API
     AddTest("thread_id", tts_thread_id, NULL, "thread IDs", NULL);
 
+#ifdef H5_HAVE_THREADSAFE_API
     AddTest("dcreate", tts_dcreate, cleanup_dcreate, "multi-dataset creation", NULL);
     AddTest("error", tts_error, cleanup_error, "per-thread error stacks", NULL);
 #ifdef H5_HAVE_PTHREAD_H
