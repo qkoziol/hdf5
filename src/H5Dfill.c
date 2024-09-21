@@ -163,7 +163,8 @@ H5D__fill(const void *fill, const H5T_t *fill_type, void *buf, const H5T_t *buf_
 
         /* Set up type conversion function */
         if (NULL == (tpath = H5T_path_find(fill_type, buf_type)))
-            HGOTO_ERROR(H5E_DATASET, H5E_UNSUPPORTED, FAIL, "unable to convert between src and dest datatype");
+            HGOTO_ERROR(H5E_DATASET, H5E_UNSUPPORTED, FAIL,
+                        "unable to convert between src and dest datatype");
 
         /* If there's VL type of data, make multiple copies of fill value first,
          * then do conversion on each element so that each of them has a copy
@@ -181,14 +182,16 @@ H5D__fill(const void *fill, const H5T_t *fill_type, void *buf, const H5T_t *buf_
                 HGOTO_ERROR(H5E_DATASET, H5E_CANTALLOC, FAIL, "memory allocation failed");
 
             /* Allocate a background buffer, if necessary */
-            if (H5T_path_bkg(tpath) && NULL == (bkg_buf = H5FL_BLK_CALLOC(type_conv, (size_t)nelmts * buf_size)))
+            if (H5T_path_bkg(tpath) &&
+                NULL == (bkg_buf = H5FL_BLK_CALLOC(type_conv, (size_t)nelmts * buf_size)))
                 HGOTO_ERROR(H5E_DATASET, H5E_CANTALLOC, FAIL, "memory allocation failed");
 
             /* Replicate the file's fill value into the temporary buffer */
             H5VM_array_fill(tmp_buf, fill, src_type_size, (size_t)nelmts);
 
             /* Convert from file's fill value into memory form */
-            if (H5T_convert(tpath, fill_type, buf_type, (size_t)nelmts, (size_t)0, (size_t)0, tmp_buf, bkg_buf) < 0)
+            if (H5T_convert(tpath, fill_type, buf_type, (size_t)nelmts, (size_t)0, (size_t)0, tmp_buf,
+                            bkg_buf) < 0)
                 HGOTO_ERROR(H5E_DATASET, H5E_CANTCONVERT, FAIL, "data type conversion failed");
 
             /* Allocate the chunk selection iterator */
@@ -197,7 +200,8 @@ H5D__fill(const void *fill, const H5T_t *fill_type, void *buf, const H5T_t *buf_
 
             /* Create a selection iterator for scattering the elements to memory buffer */
             if (H5S_select_iter_init(mem_iter, space, dst_type_size, 0) < 0)
-                HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, FAIL, "unable to initialize memory selection information");
+                HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, FAIL,
+                            "unable to initialize memory selection information");
             mem_iter_init = true;
 
             /* Scatter the data into memory */
@@ -236,7 +240,8 @@ H5D__fill(const void *fill, const H5T_t *fill_type, void *buf, const H5T_t *buf_
                 } /* end if */
 
                 /* Perform datatype conversion */
-                if (H5T_convert(tpath, fill_type, buf_type, (size_t)1, (size_t)0, (size_t)0, elem_ptr, bkg_ptr) < 0)
+                if (H5T_convert(tpath, fill_type, buf_type, (size_t)1, (size_t)0, (size_t)0, elem_ptr,
+                                bkg_ptr) < 0)
                     HGOTO_ERROR(H5E_DATASET, H5E_CANTCONVERT, FAIL, "data type conversion failed");
 
                 /* Point at element buffer */
@@ -358,11 +363,13 @@ H5D__fill_init(H5D_fill_buf_info_t *fb_info, void *caller_fill_buf, H5MM_allocat
 
             /* Get the datatype conversion path for this operation */
             if (NULL == (fb_info->fill_to_mem_tpath = H5T_path_find(dset_type, fb_info->mem_type)))
-                HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, FAIL, "unable to convert between src and dst datatypes");
+                HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, FAIL,
+                            "unable to convert between src and dst datatypes");
 
             /* Get the inverse datatype conversion path for this operation */
             if (NULL == (fb_info->mem_to_dset_tpath = H5T_path_find(fb_info->mem_type, dset_type)))
-                HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, FAIL, "unable to convert between src and dst datatypes");
+                HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, FAIL,
+                            "unable to convert between src and dst datatypes");
 
             /* Check if we need to allocate a background buffer */
             if (H5T_path_bkg(fb_info->fill_to_mem_tpath) || H5T_path_bkg(fb_info->mem_to_dset_tpath)) {
@@ -508,12 +515,14 @@ H5D__fill_refill_vl(H5D_fill_buf_info_t *fb_info, size_t nelmts)
         memset(fb_info->bkg_buf, 0, fb_info->max_elmt_size);
 
     /* Type convert the dataset buffer, to copy any VL components */
-    if (H5T_convert(fb_info->fill_to_mem_tpath, fb_info->file_type, fb_info->mem_type, (size_t)1, (size_t)0, (size_t)0, fb_info->fill_buf, fb_info->bkg_buf) < 0)
+    if (H5T_convert(fb_info->fill_to_mem_tpath, fb_info->file_type, fb_info->mem_type, (size_t)1, (size_t)0,
+                    (size_t)0, fb_info->fill_buf, fb_info->bkg_buf) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTCONVERT, FAIL, "data type conversion failed");
 
     /* Replicate the fill value into the cached buffer */
     if (nelmts > 1)
-        H5VM_array_fill((void *)((unsigned char *)fb_info->fill_buf + fb_info->mem_elmt_size), fb_info->fill_buf, fb_info->mem_elmt_size, (nelmts - 1));
+        H5VM_array_fill((void *)((unsigned char *)fb_info->fill_buf + fb_info->mem_elmt_size),
+                        fb_info->fill_buf, fb_info->mem_elmt_size, (nelmts - 1));
 
     /* Reset the entire background buffer, if necessary */
     if (H5T_path_bkg(fb_info->mem_to_dset_tpath))
@@ -536,7 +545,8 @@ H5D__fill_refill_vl(H5D_fill_buf_info_t *fb_info, size_t nelmts)
     H5MM_memcpy(buf, fb_info->fill_buf, fb_info->fill_buf_size);
 
     /* Type convert the dataset buffer, to copy any VL components */
-    if (H5T_convert(fb_info->mem_to_dset_tpath, fb_info->mem_type, fb_info->file_type, nelmts, (size_t)0, (size_t)0, fb_info->fill_buf, fb_info->bkg_buf) < 0)
+    if (H5T_convert(fb_info->mem_to_dset_tpath, fb_info->mem_type, fb_info->file_type, nelmts, (size_t)0,
+                    (size_t)0, fb_info->fill_buf, fb_info->bkg_buf) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTCONVERT, FAIL, "data type conversion failed");
 
 done:

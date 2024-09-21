@@ -826,7 +826,7 @@ H5FD_open(bool try, H5FD_t **_file, const char *name, unsigned flags, hid_t fapl
             H5_AFTER_USER_CB(FAIL)
         }
         H5E_RESUME_ERRORS
-        /* clang-format on */
+/* clang-format on */
 
 /* Check if file was not opened */
 if (NULL == file)
