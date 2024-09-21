@@ -47,6 +47,21 @@ New Features
 
     Configuration:
     -------------
+    - Added configuration option for API concurrency support:
+
+          CMake:      HDF5_ENABLE_CONCURRENCY (ON/OFF) (Default: OFF)
+          Autotools:  --enable-concurrency    (yes/no) (Default: no)
+
+      This option enables support for concurrent multithreaded operation
+      of supported API routines.  This option also provides threadsafe
+      execution of all other, non-concurrent operations.  The 'concurrency'
+      option thus is a superset of the existing 'threadsafe' option.  Both
+      options are currently available, although mutually exclusive.  As the
+      'concurrency' code becomes more stable over time, the 'threadsafe' option
+      may be deprecated in favor of the new 'concurrency' option.
+      The following API routines support concurrent multithreaded operation:
+      <none yet>
+
     - Added signed Windows msi binary and signed Apple dmg binary files.
 
       The release process now provides signed Windows and Apple installation
@@ -60,10 +75,10 @@ New Features
 
       This option enables support for threading and concurrency algorithms
       within the HDF5 library.  It is required for, but separate from, the
-      'threadsafe' configure option, which makes the HDF5 API safe to call from
-      multiple threads.  It is possible to enable the 'threads' option and
-      disable the 'threadsafe' option, but not vice versa.  The 'threads' option
-      must be on to enable the subfiling VFD.
+      'threadsafe' and 'concurrency' configure options.  It is possible to
+      enable the 'threads' option and disable the 'threadsafe' and 'concurrency'
+      options, but not vice versa.  The 'threads' option must be on to enable
+      the subfiling VFD.
 
     - Moved examples to the HDF5Examples folder in the source tree.
 

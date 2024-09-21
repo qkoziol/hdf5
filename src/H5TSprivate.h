@@ -88,8 +88,6 @@
 #define H5TS_atomic_init_int(obj, desired)  atomic_init((obj), (desired))
 #define H5TS_atomic_load_int(obj)           atomic_load(obj)
 #define H5TS_atomic_store_int(obj, desired) atomic_store((obj), (desired))
-#define H5TS_atomic_compare_exchange_strong_int(obj, exp, des)                                               \
-    atomic_compare_exchange_strong((obj), (exp), (des))
 #define H5TS_atomic_fetch_add_int(obj, arg) atomic_fetch_add((obj), (arg))
 #define H5TS_atomic_fetch_sub_int(obj, arg) atomic_fetch_sub((obj), (arg))
 #define H5TS_atomic_destroy_int(obj)        /* void */
@@ -383,16 +381,18 @@ static inline herr_t H5TS_semaphore_wait(H5TS_semaphore_t *sem);
 H5_DLL herr_t        H5TS_semaphore_destroy(H5TS_semaphore_t *sem);
 
 /* Headers with inlined routines */
+#ifndef __cplusplus
 #include "H5TScond.h"
 #include "H5TSmutex.h"
 #include "H5TSkey.h"
-#if !(defined(H5_HAVE_STDATOMIC_H) && !defined(__cplusplus))
+#ifndef H5_HAVE_STDATOMIC_H
 #include "H5TSatomic.h"
 #endif /* H5_HAVE_STDATOMIC_H */
 #include "H5TSbarrier.h"
 #include "H5TSrwlock.h"
 #include "H5TSsemaphore.h"
 #include "H5TSpool.h"
+#endif /* __cplusplus */
 
 #endif /* H5_HAVE_THREADS */
 

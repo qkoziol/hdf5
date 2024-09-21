@@ -49,8 +49,8 @@ void tts_rec_rwlock_smoke_check_3(void);
 void tts_rec_rwlock_smoke_check_4(void);
 #endif /* !H5_HAVE_WIN_THREADS */
 void tts_semaphore(void);
-void tts_thread_id(void);
 #ifdef H5_HAVE_THREADSAFE_API
+void tts_thread_id(void);
 void tts_dcreate(void);
 void tts_error(void);
 void tts_cancel(void);

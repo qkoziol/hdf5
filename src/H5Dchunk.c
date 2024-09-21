@@ -1438,7 +1438,6 @@ H5D__chunk_mem_free(void *chk, void *pline)
 {
     FUNC_ENTER_NOAPI_NAMECHECK_ONLY
 
-        (void)
     H5D__chunk_mem_xfree(chk, pline);
 
     FUNC_LEAVE_NOAPI_VOID_NAMECHECK_ONLY

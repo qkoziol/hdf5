@@ -815,12 +815,18 @@ H5FD_open(bool try, H5FD_t **_file, const char *name, unsigned flags, hid_t fapl
 
     /* Try dispatching to file driver */
     if (try) {
-        H5E_PAUSE_ERRORS{/* Prepare & restore library for user callback */
-                         H5_BEFORE_USER_CB(FAIL){file = (driver->open)(name, flags, fapl_id, maxaddr);
-    }
-    H5_AFTER_USER_CB(FAIL)
-}
-H5E_RESUME_ERRORS
+        /* clang-format off */
+        H5E_PAUSE_ERRORS
+        {
+            /* Prepare & restore library for user callback */
+            H5_BEFORE_USER_CB(FAIL)
+            {
+                file = (driver->open)(name, flags, fapl_id, maxaddr);
+            }
+            H5_AFTER_USER_CB(FAIL)
+        }
+        H5E_RESUME_ERRORS
+        /* clang-format on */
 
 /* Check if file was not opened */
 if (NULL == file)
