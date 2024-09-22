@@ -118,7 +118,8 @@ jobs:
         working-directory: ${{ runner.workspace }}/build
 
       - name: Autotools Run Tests
-        run: make check -j2
+#        run: make check -j2
+        run: make check
         working-directory: ${{ runner.workspace }}/build
 
       # INSTALL (note that this runs even when we don't run the tests)
