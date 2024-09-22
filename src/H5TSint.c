@@ -668,7 +668,7 @@ H5TS__get_dlftt(unsigned *dlftt)
     /* Check if info for thread has been created */
     if (H5_UNLIKELY(H5TS_key_get_value(H5TS_thrd_info_key_g, (void **)&tinfo_node) < 0))
         HGOTO_DONE(FAIL);
-    if (NULL == tinfo_node)
+    if (H5_UNLIKELY(NULL == tinfo_node))
         /* Create thread info for this thread */
         if (H5_UNLIKELY(NULL == (tinfo_node = H5TS__tinfo_create())))
             HGOTO_DONE(FAIL);
@@ -700,7 +700,7 @@ H5TS__set_dlftt(unsigned dlftt)
     /* Check if info for thread has been created */
     if (H5_UNLIKELY(H5TS_key_get_value(H5TS_thrd_info_key_g, (void **)&tinfo_node) < 0))
         HGOTO_DONE(FAIL);
-    if (NULL == tinfo_node)
+    if (H5_UNLIKELY(NULL == tinfo_node))
         /* Create thread info for this thread */
         if (H5_UNLIKELY(NULL == (tinfo_node = H5TS__tinfo_create())))
             HGOTO_DONE(FAIL);
@@ -732,7 +732,7 @@ H5TS__inc_dlftt(void)
     /* Check if info for thread has been created */
     if (H5_UNLIKELY(H5TS_key_get_value(H5TS_thrd_info_key_g, (void **)&tinfo_node) < 0))
         HGOTO_DONE(FAIL);
-    if (NULL == tinfo_node)
+    if (H5_UNLIKELY(NULL == tinfo_node))
         /* Create thread info for this thread */
         if (H5_UNLIKELY(NULL == (tinfo_node = H5TS__tinfo_create())))
             HGOTO_DONE(FAIL);
@@ -764,7 +764,7 @@ H5TS__dec_dlftt(void)
     /* Check if info for thread has been created */
     if (H5_UNLIKELY(H5TS_key_get_value(H5TS_thrd_info_key_g, (void **)&tinfo_node) < 0))
         HGOTO_DONE(FAIL);
-    if (NULL == tinfo_node)
+    if (H5_UNLIKELY(NULL == tinfo_node))
         /* Create thread info for this thread */
         if (H5_UNLIKELY(NULL == (tinfo_node = H5TS__tinfo_create())))
             HGOTO_DONE(FAIL);
