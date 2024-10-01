@@ -143,6 +143,7 @@ main(int argc, char *argv[])
 
 #ifdef H5_HAVE_THREADSAFE_API
     AddTest("thread_id", tts_thread_id, NULL, "thread IDs", NULL);
+
     AddTest("dcreate", tts_dcreate, cleanup_dcreate, "multi-dataset creation", NULL);
     AddTest("error", tts_error, cleanup_error, "per-thread error stacks", NULL);
 #ifdef H5_HAVE_PTHREAD_H
@@ -151,6 +152,9 @@ main(int argc, char *argv[])
 #endif /* H5_HAVE_PTHREAD_H */
     AddTest("acreate", tts_acreate, cleanup_acreate, "multi-attribute creation", NULL);
     AddTest("attr_vlen", tts_attr_vlen, cleanup_attr_vlen, "multi-file-attribute-vlen read", NULL);
+
+    /* Error stack test must be done after thread_id test to not mess up expected IDs */
+    AddTest("error_stacks", tts_error_stacks, NULL, "error stack tests", NULL);
 
     /* Developer API routine tests */
     AddTest("developer", tts_develop_api, NULL, "developer API routines", NULL);
