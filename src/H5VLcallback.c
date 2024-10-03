@@ -787,8 +787,7 @@ H5VLget_object(void *obj, hid_t connector_id)
             ret_value = (connector->cls->wrap_cls.get_object)(obj);
         }
     H5_AFTER_USER_CB(NULL)
-    else
-        ret_value = obj;
+    else ret_value = obj;
 
 done:
     FUNC_LEAVE_API_NOINIT(ret_value)
