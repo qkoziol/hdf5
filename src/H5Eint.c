@@ -357,7 +357,7 @@ H5E_user_cb_prepare(H5E_user_cb_state_t *state)
     else
         state->u.func2 = stack->auto_op.func2;
 #else  /* H5_NO_DEPRECATED_SYMBOLS */
-    state->func2         = stack->auto_op.func2;
+    state->func2 = stack->auto_op.func2;
 #endif /* H5_NO_DEPRECATED_SYMBOLS */
     state->data = stack->auto_data;
 
