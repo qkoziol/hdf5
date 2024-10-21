@@ -1310,13 +1310,15 @@ H5VL__register_connector(const H5VL_class_t *cls, hid_t vipl_id)
 
     /* Initialize the VOL connector */
     if (cls->initialize) {
+        herr_t status;
+
         /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB(FAIL)
+        H5_BEFORE_USER_CB(NULL)
         {
-            ret_value = cls->initialize(vipl_id);
+            status = cls->initialize(vipl_id);
         }
-        H5_AFTER_USER_CB(FAIL)
-        if (ret_value < 0)
+        H5_AFTER_USER_CB(NULL)
+        if (status < 0)
             HGOTO_ERROR(H5E_VOL, H5E_CANTINIT, NULL, "unable to init VOL connector");
     }
     init_done = true;
