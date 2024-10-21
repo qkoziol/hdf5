@@ -103,8 +103,8 @@ tts_develop_api_thr_2(void *_udata)
 void
 tts_develop_api(const void H5_ATTR_UNUSED *params)
 {
-    hid_t         def_fapl = H5I_INVALID_HID;
-    hid_t         vol_id   = H5I_INVALID_HID;
+    hid_t                   def_fapl = H5I_INVALID_HID;
+    hid_t                   vol_id   = H5I_INVALID_HID;
     H5TS_thread_t           thread_1, thread_2;
     H5TS_barrier_t          barrier;
     unsigned                lock_count = UINT_MAX;
