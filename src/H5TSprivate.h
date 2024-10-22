@@ -178,12 +178,38 @@ typedef CONDITION_VARIABLE     H5TS_cond_t;
 typedef INIT_ONCE              H5TS_once_t;
 typedef PINIT_ONCE_FN          H5TS_once_init_func_t;
 #else
+
+/* Non-recursive readers/writer lock */
+#if defined(__MACH__)
+/*
+ * Emulated pthread rwlock for MacOS
+ *
+ * Can't use pthread rwlock on MacOS due to: "The results [of calling
+ *      pthread_rwlock_wrlock] are undefined if the calling thread already
+ *      holds the lock at the time the call is made."
+ *  but the pthread standard says: "If a deadlock condition occurs or the
+ *      calling thread already owns the read-write lock for writing or reading,
+ *      the call shall either deadlock or return [EDEADLK]."
+ *
+ * The net result of this is that the current version of MacOS (v15.x) allows
+ * the same thread to recursively acquire a write lock, violating the pthread
+ * guarantee of deadlocking or failing.
+ *
+ */
+typedef struct H5TS_rwlock_t {
+    pthread_mutex_t    mutex;
+    pthread_cond_t    read_cv, write_cv;
+    unsigned readers, writers, read_waiters, write_waiters;
+} H5TS_rwlock_t;
+#else
+typedef pthread_rwlock_t H5TS_rwlock_t;
+#endif
+
 typedef pthread_t H5TS_thread_t;
 typedef void *(*H5TS_thread_start_func_t)(void *);
 typedef void            *H5TS_thread_ret_t;
 typedef pthread_key_t    H5TS_key_t;
 typedef pthread_mutex_t  H5TS_CAPABILITY("mutex") H5TS_mutex_t;
-typedef pthread_rwlock_t H5TS_rwlock_t;
 typedef pthread_cond_t   H5TS_cond_t;
 typedef pthread_once_t   H5TS_once_t;
 typedef void (*H5TS_once_init_func_t)(void);
