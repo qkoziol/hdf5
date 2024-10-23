@@ -196,7 +196,7 @@ H5TS_rwlock_init(H5TS_rwlock_t *lock)
 {
     pthread_mutexattr_t  _attr;
     pthread_mutexattr_t *attr      = NULL;
-    herr_t ret_value = SUCCEED;
+    herr_t               ret_value = SUCCEED;
 
     FUNC_ENTER_NOAPI_NAMECHECK_ONLY
 
