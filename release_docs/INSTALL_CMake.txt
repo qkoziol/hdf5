@@ -988,10 +988,12 @@ NOTE:
 
     The high-level, C++, Fortran and Java interfaces are not compatible
     with the HDF5_ENABLE_THREADSAFE option because the lock is not hoisted
-    into the higher-level API calls.
-    Unless HDF5_ALLOW_UNSUPPORTED has been specified,
-    the following options must be disabled:
+    into the higher-level API calls.  Unless HDF5_ALLOW_UNSUPPORTED has been
+    specified, the following options must be disabled:
        HDF5_BUILD_HL_LIB, HDF5_BUILD_CPP_LIB, HDF5_BUILD_FORTRAN, HDF5_BUILD_JAVA
+
+    The multi-threaded concurrency and threadsafe options are mutually
+    exclusive, only one or the other may be enabled.
 
     The multi-threaded concurrency, C++, and Java interfaces are not compatible
     with the HDF5_ENABLE_PARALLEL option.
@@ -1001,14 +1003,9 @@ NOTE:
 
     The high-level, C++, Fortran, and Java interfaces are not compatible
     with the HDF5_ENABLE_CONCURRENCY option because the lock is not hoisted
-    into the higher-level API calls.
-    Unless ALLOW_UNSUPPORTED has been specified,
-    the following options must be disabled:
+    into the higher-level API calls.  Unless HDF5_ALLOW_UNSUPPORTED has been
+    specified, the following options must be disabled:
        HDF5_BUILD_HL_LIB, HDF5_BUILD_CPP_LIB, HDF5_BUILD_FORTRAN, HDF5_BUILD_JAVA
-
-    The multi-threaded concurrency and threadsafe options are mutually
-    exclusive, only one or the other may be enabled.
-
 
 ========================================================================
 VII. User Defined Options for HDF5 Libraries with CMake
