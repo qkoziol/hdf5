@@ -3093,7 +3093,7 @@ H5FD_check_plugin_load(const H5FD_class_t *cls, const H5PL_key_t *key, bool *suc
 {
     herr_t ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_NOAPI_NOERR
+    FUNC_ENTER_NOAPI(FAIL)
 
     /* Sanity checks */
     assert(cls);
@@ -3115,6 +3115,7 @@ H5FD_check_plugin_load(const H5FD_class_t *cls, const H5PL_key_t *key, bool *suc
             *success = true;
     }
 
+done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FD_check_plugin_load() */
 

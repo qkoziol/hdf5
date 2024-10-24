@@ -76,7 +76,7 @@ H5TS__pthread_first_thread_init(void)
     FUNC_ENTER_NOAPI_NAMECHECK_ONLY
 
     /* Initialize H5TS package */
-    H5TS__init();
+    H5TS__init_package();
 
     FUNC_LEAVE_NOAPI_VOID_NAMECHECK_ONLY
 } /* end H5TS__pthread_first_thread_init() */

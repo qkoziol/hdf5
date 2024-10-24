@@ -88,6 +88,9 @@ static herr_t H5TS__dec_dlftt(void);
 /* Package Variables */
 /*********************/
 
+/* Package initialization variable */
+bool H5_PKG_INIT_VAR = false;
+
 /* Per-thread info */
 H5TS_key_t H5TS_thrd_info_key_g;
 
@@ -110,7 +113,7 @@ static uint64_t           H5TS_next_thrd_id_s    = 0;
 static H5TS_mutex_t H5TS_tinfo_mtx_s;
 
 /*-------------------------------------------------------------------------
- * Function: H5TS__init
+ * Function: H5TS_init
  *
  * Purpose:  Initialize the H5TS interface
  *
@@ -119,11 +122,34 @@ static H5TS_mutex_t H5TS_tinfo_mtx_s;
  *-------------------------------------------------------------------------
  */
 herr_t
-H5TS__init(void)
+H5TS_init(void)
 {
     herr_t ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_PACKAGE_NAMECHECK_ONLY
+    FUNC_ENTER_NOAPI(FAIL)
+    /* FUNC_ENTER() does all the work */
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5TS_init() */
+
+/*--------------------------------------------------------------------------
+NAME
+   H5TS__init_package -- Initialize interface-specific information
+USAGE
+    herr_t H5TS__init_package()
+RETURNS
+    Non-negative on success/Negative on failure
+DESCRIPTION
+    Initializes any interface-specific data or routines.
+
+--------------------------------------------------------------------------*/
+herr_t
+H5TS__init_package(void)
+{
+    herr_t ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_PACKAGE_NOERR
 
     /* Initialize the global API lock info */
 #ifdef H5_HAVE_THREADSAFE
@@ -141,8 +167,8 @@ H5TS__init(void)
         HGOTO_DONE(FAIL);
 
 done:
-    FUNC_LEAVE_NOAPI_NAMECHECK_ONLY(ret_value)
-} /* end H5TS__init() */
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* H5TS__init_package() */
 
 /*-------------------------------------------------------------------------
  * Function: H5TS_term_package
