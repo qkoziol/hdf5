@@ -37,7 +37,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="HDFG-logo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">HDF5<span id="projectnumber">&#160;1.17.0.97e1ed4</span>
+   <div id="projectname">HDF5<span id="projectnumber">&#160;1.17.0.b8a06b5</span>
    </div>
    <div id="projectbrief">API Reference</div>
   </td>
@@ -255,7 +255,7 @@ Tasks:</h1>
 <li><code>$ git push</code></li>
 </ul>
 </li>
-<li>Update default configuration mode<ul>
+<li>** OBSOLETE CURRENTLY ** Most will disappear when autotools support is removed, and none of these are currently necessary Update default configuration mode<ul>
 <li><code>$ git checkout hdf5_X_Y_Z;</code> and <code>$ bin/switch_maint_mode -disable ./configure.ac</code> to disable <code>AM_MAINTAINER_MODE</code>.</li>
 <li>Need to set option <code>HDF5_GENERATE_HEADERS</code> to <code>OFF</code>, currently in line 996 of <a href="https://github.com/HDFGroup/hdf5/blob/develop/src/CMakeLists.txt">src/CMakeLists.txt</a>.</li>
 <li>Change the <b>release preparation branch</b>'s (i.e. hdf5_X_Y_Z) default configuration mode from development to production in <a href="https://github.com/HDFGroup/hdf5/blob/develop/configure.ac">configure.ac</a>.</li>
@@ -263,7 +263,7 @@ Tasks:</h1>
 <li>Change <code>default=debug</code> to <code>default=production</code> at the bottom of the <code>AS_HELP_STRING</code> for <code>--enable-build-mode</code>.</li>
 <li>Under <code>if test "X-$BUILD_MODE" = X- ; then</code> change <code>BUILD_MODE=debug</code> to <code>BUILD_MODE=production</code>.</li>
 <li>Run <code>sh ./autogen.sh</code> to regenerate the UNIX build system files and commit the changes. (use <code>git status --ignored</code> to see the changes and <code>git add -f</code> to add all files. First delete any new files not to be committed, notably <code><a class="el" href="_h5public_8h.html">src/H5public.h</a>~</code> and <code>autom4te.cache/</code>.)</li>
-<li><code>$ git push with commit message listing change steps for creating release branch</code></li>
+<li><code>$ git push with commit message listing change steps for creating release branch</code> ** END OBSOLETE CURRENTLY **</li>
 </ul>
 </li>
 <li>E-mail <a href="#" onclick="location.href='mai'+'lto:'+'hdf'+'5l'+'ib@'+'hd'+'fgr'+'ou'+'p.o'+'rg'; return false;">hdf5l<span class="obfuscator">.nosp@m.</span>ib@h<span class="obfuscator">.nosp@m.</span>dfgro<span class="obfuscator">.nosp@m.</span>up.o<span class="obfuscator">.nosp@m.</span>rg</a> to indicate that the code freeze on the release support branch (i.e. hdf5_X_Y) has been lifted and development on the next maintenance release can resume. The code freeze will remain in place on the release preparation branch (i.e. hdf5_X_Y_Z) indefinitely.</li>
