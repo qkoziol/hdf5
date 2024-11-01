@@ -37,7 +37,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="HDFG-logo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">HDF5<span id="projectnumber">&#160;1.17.0.b8a06b5</span>
+   <div id="projectname">HDF5<span id="projectnumber">&#160;2.0.0.e8257bd</span>
    </div>
    <div id="projectbrief">API Reference</div>
   </td>
@@ -63,6 +63,7 @@ var searchBox = new SearchBox("searchBox", "search/",'.html');
       <li><a href="_r_f_c.html"><span>RFCs</span></a></li>
       <li><a href="_s_p_e_c.html"><span>Specifications</span></a></li>
       <li><a href="_g_l_s.html"><span>Glossary</span></a></li>
+      <li><a href="_f_t_s.html"><span>Full-Text&#160;Search</span></a></li>
       <li><a href="_about.html"><span>About</span></a></li>
       <li>
         <div id="MSearchBox" class="MSearchBoxInactive">
@@ -194,6 +195,7 @@ Formatting Options</h2>
 <li><b>&ndash;string</b> Print 1-byte integer datasets as ASCII </li>
 <li><b>&ndash;noindex</b> Do not print array indices with the data </li>
 <li><b>&ndash;format=T</b> Set the floating point output format </li>
+<li><b>&ndash;lformat=T</b> Set the floating point long double output format </li>
 <li><b>&ndash;sort_by=Q</b> Sort groups and attributes by index Q </li>
 <li><b>&ndash;sort_order=Z</b> Sort groups and attributes by order Z </li>
 <li><b>&ndash;no-compact-subset</b> Disable compact form of subsetting and allow the use of "[" in dataset names. </li>
@@ -230,7 +232,8 @@ Option Argument Conventions</h3>
 <li><b>F</b> - is a filename. </li>
 <li><b>P</b> - is the full path from the root group to the object. </li>
 <li><b>N</b> - is an integer greater than 1. </li>
-<li><b>T</b> - is a string containing the floating point format, e.g '%.3f' </li>
+<li><b>T</b> - is a string containing the floating point format, e.g '%.3g' </li>
+<li><b>T</b> - is a string containing the floating point long double format, e.g '%.3Lg' </li>
 <li><b>U</b> - is a URI reference (as defined in [IETF RFC 2396], updated by [IETF RFC 2732]) </li>
 <li><b>B</b> - is the form of binary output: NATIVE for a memory type, FILE for the file type, LE or BE for pre-existing little or big endian types. Must be used with -o (output file) and it is recommended that -d (dataset) is used. B is an optional argument, defaults to NATIVE </li>
 <li><b>Q</b> - is the sort index type. It can be "creation_order" or "name" (default) </li>
