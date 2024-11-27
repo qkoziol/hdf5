@@ -4,7 +4,7 @@
  *                                                                           *
  * This file is part of HDF5.  The full HDF5 copyright notice, including     *
  * terms governing use, modification, and redistribution, is contained in    *
- * the COPYING file, which can be found at the root of the source code       *
+ * the LICENSE file, which can be found at the root of the source code       *
  * distribution tree, or in https://www.hdfgroup.org/licenses.               *
  * If you do not have access to either file, you may request a copy from     *
  * help@hdfgroup.org.                                                        *
@@ -22,9 +22,9 @@
 /***********/
 /* Headers */
 /***********/
-#include "H5private.h"
-#include "H5Eprivate.h"
-#include "H5Tconv.h"
+#include "H5private.h"  /* Generic Functions                    */
+#include "H5Eprivate.h" /* Error handling                       */
+#include "H5Tconv.h"    /* Datatype conversions                 */
 #include "H5Tconv_enum.h"
 
 /******************/
@@ -401,7 +401,8 @@ H5T__conv_enum(const H5T_t *src, const H5T_t *dst, H5T_cdata_t *cdata, const H5T
                     if (n < 0 || (unsigned)n >= priv->length || priv->src2dst[n] < 0) {
                         /*overflow*/
                         except_ret = H5T_CONV_UNHANDLED;
-                        /*If user's exception handler is present, use it*/
+
+                        /* If user's exception handler is present, use it*/
                         if (conv_ctx->u.conv.cb_struct.func) {
                             /* Prepare & restore library for user callback */
                             H5_BEFORE_USER_CB(FAIL)
@@ -447,7 +448,8 @@ H5T__conv_enum(const H5T_t *src, const H5T_t *dst, H5T_cdata_t *cdata, const H5T
                     } /* end while */
                     if (lt >= rt) {
                         except_ret = H5T_CONV_UNHANDLED;
-                        /*If user's exception handler is present, use it*/
+
+                        /* If user's exception handler is present, use it*/
                         if (conv_ctx->u.conv.cb_struct.func) {
                             /* Prepare & restore library for user callback */
                             H5_BEFORE_USER_CB(FAIL)

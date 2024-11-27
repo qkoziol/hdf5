@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define FILE      "h5ex_t_regrefatt.h5"
+#define FILENAME  "h5ex_t_regrefatt.h5"
 #define DATASET   "DS1"
 #define DATASET2  "DS2"
 #define ATTRIBUTE "A1"
@@ -62,7 +62,7 @@ main(void)
     /*
      * Create a new file using the default properties.
      */
-    file = H5Fcreate(FILE, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    file = H5Fcreate(FILENAME, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
     if (file < 0)
         goto done;
 
@@ -148,7 +148,7 @@ main(void)
     /*
      * Open file, dataset, and attribute.
      */
-    file = H5Fopen(FILE, H5F_ACC_RDONLY, H5P_DEFAULT);
+    file = H5Fopen(FILENAME, H5F_ACC_RDONLY, H5P_DEFAULT);
     if (file < 0)
         goto done;
 
@@ -169,7 +169,7 @@ main(void)
 #if H5_VERSION_GE(1, 12, 0) && !defined(H5_USE_110_API) && !defined(H5_USE_18_API) && !defined(H5_USE_16_API)
     rdata = (H5R_ref_t *)malloc(dims[0] * sizeof(H5R_ref_t));
 #else
-    rdata  = (hdset_reg_ref_t *)malloc(dims[0] * sizeof(hdset_reg_ref_t));
+    rdata = (hdset_reg_ref_t *)malloc(dims[0] * sizeof(hdset_reg_ref_t));
 #endif
 
     status = H5Sclose(space);

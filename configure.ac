@@ -2,11 +2,10 @@
 ##
 ## Copyright by The HDF Group.
 ## All rights reserved.
-## Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 ##
 ## This file is part of HDF5.  The full HDF5 copyright notice, including
 ## terms governing use, modification, and redistribution, is contained in
-## the COPYING file, which can be found at the root of the source code
+## the LICENSE file, which can be found at the root of the source code
 ## distribution tree, or in https://www.hdfgroup.org/licenses.
 ## If you do not have access to either file, you may request a copy from
 ## help@hdfgroup.org.
@@ -23,7 +22,7 @@ AC_PREREQ([2.71])
 ## NOTE: Do not forget to change the version number here when we do a
 ## release!!!
 ##
-AC_INIT([HDF5], [1.15.0], [help@hdfgroup.org])
+AC_INIT([HDF5], [2.0.0], [help@hdfgroup.org])
 
 AC_CONFIG_SRCDIR([src/H5.c])
 AC_CONFIG_HEADERS([src/H5config.h])
@@ -575,6 +574,58 @@ AC_CHECK_SIZEOF([float])
 AC_CHECK_SIZEOF([double])
 AC_CHECK_SIZEOF([long double])
 
+## ----------------------------------------------------------------------
+## Check if complex number support is available
+##
+HAVE_COMPLEX_NUMBERS="no"
+AC_CHECK_SIZEOF([float complex], [], [#include <complex.h>])
+AC_CHECK_SIZEOF([double complex], [], [#include <complex.h>])
+AC_CHECK_SIZEOF([long double complex], [], [#include <complex.h>])
+
+if test "$ac_cv_sizeof_float_complex" != 0 &&
+   test "$ac_cv_sizeof_double_complex" != 0 &&
+   test "$ac_cv_sizeof_long_double_complex" != 0; then
+  # Check if __STDC_NO_COMPLEX__ macro is defined, in which case complex number
+  # support is not available
+  AC_MSG_CHECKING([if __STDC_NO_COMPLEX__ is defined])
+  TEST_SRC="`(echo \"#define HAVE_STDC_NO_COMPLEX 1\"; cat $srcdir/config/cmake/HDFTests.c)`"
+  AC_CACHE_VAL([hdf5_cv_have_stdc_no_complex],
+  [AC_RUN_IFELSE(
+      [AC_LANG_SOURCE([$TEST_SRC])],
+      [hdf5_cv_have_stdc_no_complex=yes],
+      [hdf5_cv_have_stdc_no_complex=no],
+      [hdf5_cv_have_stdc_no_complex=maybe])])
+  AC_MSG_RESULT(${hdf5_cv_have_stdc_no_complex})
+
+  if test "X$hdf5_cv_have_stdc_no_complex" == "Xno"; then
+    # Compile simple test program with complex numbers
+    AC_MSG_CHECKING([if complex number test program can be compiled and linked])
+    TEST_SRC="`(echo \"#define HAVE_COMPLEX_NUMBERS 1\"; cat $srcdir/config/cmake/HDFTests.c)`"
+    AC_CACHE_VAL([hdf5_cv_have_complex_numbers],
+    [AC_RUN_IFELSE(
+        [AC_LANG_SOURCE([$TEST_SRC])],
+        [hdf5_cv_have_complex_numbers=yes],
+        [hdf5_cv_have_complex_numbers=no],
+        [hdf5_cv_have_complex_numbers=maybe])])
+    AC_MSG_RESULT(${hdf5_cv_have_complex_numbers})
+
+    if test "X$hdf5_cv_have_complex_numbers" == "Xyes"; then
+      HAVE_COMPLEX_NUMBERS="yes"
+
+      # Define HAVE_COMPLEX_NUMBERS macro for H5pubconf.h.
+      AC_DEFINE([HAVE_COMPLEX_NUMBERS], [1], [Determine if complex number support is available])
+      AC_DEFINE([HAVE_C99_COMPLEX_NUMBERS], [1], [Determine if C99 complex number types are present])
+    fi
+  fi
+fi
+
+# Define HAVE_COMPLEX_NUMBERS value to substitute into other files for conditional testing
+AC_SUBST([HAVE_COMPLEX_NUMBERS])
+AC_SUBST([HAVE_C99_COMPLEX_NUMBERS])
+
+AC_MSG_CHECKING([if complex number support is available])
+AC_MSG_RESULT([$HAVE_COMPLEX_NUMBERS])
+
 #-----------------------------------------------------------------------------
 # Option for enabling/disabling support for non-standard features, datatypes,
 # etc. These features should still be checked for at configure time, but these
@@ -855,6 +906,7 @@ if test "X$HDF_FORTRAN" = "Xyes"; then
   if test "$MY_FLT128_DIG" -gt "$MY_LDBL_DIG" ; then
     AC_MSG_RESULT([yes])
     AC_DEFINE([HAVE_FLOAT128], [1], [Determine if __float128 will be used in the Fortran wrappers])
+    AC_CHECK_SIZEOF([__float128])
   else
     ## Can't use __float128, but write an undef line anyway
     AC_MSG_RESULT([no])
@@ -1154,7 +1206,6 @@ AC_LANG_POP(C++)
 ## library is disabled.
 AC_SUBST([HDF5_HL])
 AC_SUBST([HDF5_HL_TOOLS])
-AC_SUBST([HDF5_HL_GIF_TOOLS])
 
 ## The high-level library and high-level tools are enabled unless the build mode
 ## is clean.
@@ -1476,27 +1527,6 @@ AC_ARG_ENABLE([tools],
               [HDF5_TOOLS=$enableval])
 
 AC_MSG_RESULT([$HDF5_TOOLS])
-
-## ----------------------------------------------------------------------
-## Check if they would like to disable building the high-level GIF
-## tools (they have unfixed CVE issues)
-##
-
-AC_MSG_CHECKING([if the high-level GIF tools are enabled])
-AC_ARG_ENABLE([hlgiftools],
-     [AS_HELP_STRING([--enable-hlgiftools],
-                     [Enable the high-level GIF tools. NOTE: These have unfixed CVE issues!
-                     [default=no]
-                     ])],
-     [HDF5_HL_GIF_TOOLS=$enableval])
-
-if test "X-$HDF5_TOOLS" = "X-yes" -a "X-$HDF5_HL" = "X-yes" -a "X-$HDF5_HL_GIF_TOOLS" = "X-yes"; then
-  AC_MSG_RESULT([yes])
-else
-  AC_MSG_RESULT([no])
-  HDF5_HL_GIF_TOOLS="no"
-fi
-
 
 ## ----------------------------------------------------------------------
 ## Check if they would like to enable building doxygen files
@@ -3916,10 +3946,10 @@ AC_DEFINE_UNQUOTED([DEFAULT_PLUGINDIR], ["$default_plugindir"],
 ## for the speed optimization of hard conversions.  Soft conversions can
 ## actually benefit little.
 ##
-AC_MSG_CHECKING([whether exception handling functions is checked during data conversions])
+AC_MSG_CHECKING([whether exception handling functions are checked during data conversions])
 AC_ARG_ENABLE([dconv-exception],
               [AS_HELP_STRING([--enable-dconv-exception],
-                              [if exception handling functions is checked during
+                              [Check exception handling functions during
                               data conversions [default=yes]])],
               [DCONV_EXCEPTION=$enableval], [DCONV_EXCEPTION=yes])
 
@@ -3940,7 +3970,7 @@ fi
 AC_MSG_CHECKING([whether data accuracy is guaranteed during data conversions])
 AC_ARG_ENABLE([dconv-accuracy],
               [AS_HELP_STRING([--enable-dconv-accuracy],
-                              [if data accuracy is guaranteed during
+                              [Guarantee data accuracy during
                               data conversions [default=yes]])],
               [DATA_ACCURACY=$enableval], [DATA_ACCURACY=yes])
 
@@ -4128,8 +4158,9 @@ fi
 ## and installed with the libraries (used to generate libhdf5.settings).
 ##
 
-## HDF5 version from the first line of the README.md file.
-H5_VERSION="`cut -d' ' -f3 $srcdir/README.md | head -1`"
+## HDF5 version from H5public.h (3rd field of #define H5_VERS_STR "1.17.0"
+## w/ sed to remove quotes).
+H5_VERSION=`grep 'H5_VERS_STR' $srcdir/src/H5public.h | sed s/\"//g | cut -d' ' -f3`
 AC_SUBST([H5_VERSION])
 
 ## Configuration date
@@ -4316,10 +4347,10 @@ esac
 AC_SUBST([DEFAULT_API_VERSION])
 AC_MSG_CHECKING([which version of public symbols to use by default])
 AC_ARG_WITH([default-api-version],
-            [AS_HELP_STRING([--with-default-api-version=(default|v16|v18|v110|v112|v114|v116)],
+            [AS_HELP_STRING([--with-default-api-version=(default|v16|v18|v110|v112|v114|v200)],
                             [Specify default release version of public symbols
-                             [default=v116]])],,
-            [withval=v116])
+                             [default=v200]])],,
+            [withval=v200])
 
 ## Allowing "default" allows the GitHub CI to check that we didn't forget
 ## to change the defaults when creating a new major version
@@ -4348,11 +4379,11 @@ elif test "X$withval" = "Xv114"; then
     DEFAULT_API_VERSION=v114
     AC_DEFINE([USE_114_API_DEFAULT], [1],
               [Define using v1.14 public API symbols by default])
-elif test "X$withval" = "Xv116" -o "X$withval" = "Xdefault"; then
-    AC_MSG_RESULT([v116])
-    DEFAULT_API_VERSION=v116
-    AC_DEFINE([USE_116_API_DEFAULT], [1],
-              [Define using v1.16 public API symbols by default])
+elif test "X$withval" = "Xv200" -o "X$withval" = "Xdefault"; then
+    AC_MSG_RESULT([v200])
+    DEFAULT_API_VERSION=v200
+    AC_DEFINE([USE_200_API_DEFAULT], [1],
+              [Define using v2.0 public API symbols by default])
 else
     AC_MSG_ERROR([invalid version of public symbols given])
 fi
@@ -4362,7 +4393,7 @@ fi
 ## if the user insists on doing this via the --enable-unsupported configure
 ## flag, we'll let them.
 if test "X${ALLOW_UNSUPPORTED}" != "Xyes"; then
-  if test "X${DEFAULT_API_VERSION}" != "Xv116" -a "X${DEPRECATED_SYMBOLS}" = "Xno" ; then
+  if test "X${DEFAULT_API_VERSION}" != "Xv200" -a "X${DEPRECATED_SYMBOLS}" = "Xno" ; then
     AC_MSG_ERROR([Removing old public API symbols not allowed when using them as default public API symbols. Use --enable-unsupported to override this error.])
   fi
 fi
@@ -4488,7 +4519,6 @@ AM_CONDITIONAL([BUILD_HDF5_HL_CONDITIONAL], [test "X$HDF5_HL" = "Xyes"])
 AM_CONDITIONAL([BUILD_TESTS_CONDITIONAL], [test "X$HDF5_TESTS" = "Xyes"])
 AM_CONDITIONAL([BUILD_TESTS_PARALLEL_CONDITIONAL], [test -n "$TESTPARALLEL"])
 AM_CONDITIONAL([BUILD_TOOLS_CONDITIONAL], [test "X$HDF5_TOOLS" = "Xyes"])
-AM_CONDITIONAL([BUILD_TOOLS_HL_GIF_CONDITIONAL], [test "X$HDF5_HL_GIF_TOOLS" = "Xyes"])
 AM_CONDITIONAL([BUILD_DOXYGEN_CONDITIONAL], [test "X$HDF5_DOXYGEN" = "Xyes"])
 
 ## ----------------------------------------------------------------------
@@ -4696,22 +4726,14 @@ AC_CONFIG_FILES([Makefile
                  hl/test/Makefile
                  hl/test/H5srcdir_str.h
                  hl/tools/Makefile
-                 hl/tools/gif2h5/Makefile
-                 hl/tools/gif2h5/h52giftest.sh
                  hl/tools/h5watch/Makefile
                  hl/tools/h5watch/testh5watch.sh
-                 hl/examples/Makefile
-                 hl/examples/run-hlc-ex.sh
                  hl/c++/Makefile
                  hl/c++/src/Makefile
                  hl/c++/test/Makefile
-                 hl/c++/examples/Makefile
-                 hl/c++/examples/run-hlc++-ex.sh
                  hl/fortran/Makefile
                  hl/fortran/src/Makefile
-                 hl/fortran/test/Makefile
-                 hl/fortran/examples/Makefile
-                 hl/fortran/examples/run-hlfortran-ex.sh])
+                 hl/fortran/test/Makefile])
 
 AC_CONFIG_FILES([utils/subfiling_vfd/h5fuse], [chmod +x utils/subfiling_vfd/h5fuse])
 if test -n "$TESTPARALLEL"; then

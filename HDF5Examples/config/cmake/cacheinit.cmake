@@ -8,17 +8,19 @@ set (BUILD_SHARED_LIBS ON CACHE BOOL "Build Shared Libraries" FORCE)
 
 set (H5EX_BUILD_TESTING ON CACHE BOOL "Build HDF5 Unit Testing" FORCE)
 
-#set (HDF_ENABLE_PARALLEL ON CACHE BOOL "Enable parallel build (requires MPI)" FORCE)
+#set (H5EX_ENABLE_PARALLEL ON CACHE BOOL "Enable parallel build (requires MPI)" FORCE)
 
-#set (HDF_BUILD_FORTRAN ON CACHE BOOL "Build FORTRAN support" FORCE)
+#set (H5EX_BUILD_HL ON CACHE BOOL "Build High Level support" FORCE)
 
-#set (HDF_BUILD_FILTERS ON CACHE BOOL "Build filter support" FORCE)
+#set (H5EX_BUILD_FORTRAN ON CACHE BOOL "Build FORTRAN support" FORCE)
 
-#set (HDF_ENABLE_F2003 ON CACHE BOOL "Enable FORTRAN 2003 Standard" FORCE)
+#set (H5EX_BUILD_CXX ON CACHE BOOL "Build C++ support" FORCE)
 
-#set (HDF_ENABLE_THREADSAFE ON CACHE BOOL "Enable Threadsafety" FORCE)
+#set (H5EX_BUILD_FILTERS ON CACHE BOOL "Build filter support" FORCE)
 
-#set (HDF_BUILD_JAVA ON CACHE BOOL "Build JAVA support" FORCE)
+#set (H5EX_ENABLE_F2003 ON CACHE BOOL "Enable FORTRAN 2003 Standard" FORCE)
+
+#set (H5EX_BUILD_JAVA ON CACHE BOOL "Build JAVA support" FORCE)
 
 set (HDF5_PACKAGE_NAME "hdf5" CACHE STRING "Name of HDF5 package" FORCE)
 

@@ -204,7 +204,7 @@ Useful tools for working with HDF5 files include:
 \li HDFView:            A java browser to view HDF (HDF4 and HDF5) files
 
 <h4>h5dump</h4>
-The h5dump utility displays the contents of an HDF5 file in Data Description Language (\ref DDLBNF114).
+The h5dump utility displays the contents of an HDF5 file in Data Description Language (\ref DDLBNF200).
 Below is an example of h5dump output for an HDF5 file that contains no objects:
 \code
 $ h5dump file.h5
@@ -262,7 +262,7 @@ FORTRAN routines are similar; they begin with “h5*” and end with “_f”.
 <li>
 Java routines are similar; the routine names begin with “H5*” and are prefixed with “H5.” as the class. Constants are
 in the HDF5Constants class and are prefixed with "HDF5Constants.". The function arguments
-are usually similar, @see @ref HDF5LIB
+are usually similar, see @ref HDF5LIB
 </li>
 </ul>
 For example:
@@ -616,8 +616,7 @@ on the <a href="http://hdfeos.org/">HDF-EOS Tools and Information Center</a> pag
 \section secHDF5Examples Examples
 \li \ref LBExamples
 \li \ref ExAPI
-\li <a href="https://github.com/HDFGroup/hdf5/tree/develop/HDF5Examples">Examples in the Source Code</a>
-\li <a href="https://\DSPURL/Other+Examples">Other Examples</a>
+\li <a href="https://\SRCURL/HDF5Examples">Examples in the Source Code</a>
 
 \section secHDF5ExamplesCompile How To Compile
 For information on compiling in C, C++ and Fortran, see: \ref LBCompiling
@@ -626,7 +625,7 @@ For information on compiling in C, C++ and Fortran, see: \ref LBCompiling
 <a href="http://hdfeos.org/zoo/index.php">IDL, MATLAB, and NCL Examples for HDF-EOS</a>
 Examples of how to access and visualize NASA HDF-EOS files using IDL, MATLAB, and NCL.
 
-<a href="https://\AEXURL/misc-examples/">Miscellaneous Examples</a>
+<a href="https://\AEXURL/misc-examples/index.html">Miscellaneous Examples</a>
 These (very old) examples resulted from working with users, and are not fully tested. Most of them are in C, with a few in Fortran and Java.
 
 <a href="https://\AEXURL/special_values_HDF5_example.tar">Using Special Values</a>

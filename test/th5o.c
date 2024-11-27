@@ -4,7 +4,7 @@
  *                                                                           *
  * This file is part of HDF5.  The full HDF5 copyright notice, including     *
  * terms governing use, modification, and redistribution, is contained in    *
- * the COPYING file, which can be found at the root of the source code       *
+ * the LICENSE file, which can be found at the root of the source code       *
  * distribution tree, or in https://www.hdfgroup.org/licenses.               *
  * If you do not have access to either file, you may request a copy from     *
  * help@hdfgroup.org.                                                        *
@@ -545,6 +545,7 @@ test_h5o_refcount(void)
     hid_t       grp, dset, dtype, dspace; /* Object identifiers */
     char        filename[1024];
     H5O_info2_t oinfo; /* Object info struct */
+    H5L_info2_t linfo; /* Buffer for H5Lget_info */
     hsize_t     dims[RANK];
     herr_t      ret; /* Value returned from API calls */
 
@@ -567,6 +568,10 @@ test_h5o_refcount(void)
     CHECK(dtype, FAIL, "H5Tcopy");
     ret = H5Tcommit2(fid, "datatype", dtype, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     CHECK(ret, FAIL, "H5Tcommit2");
+
+    /* Test passing a datatype ID to H5Lget_info2, it should not fail */
+    ret = H5Lget_info2(dtype, "/datatype", &linfo, H5P_DEFAULT);
+    CHECK(ret, FAIL, "H5Lget_info2");
 
     /* Create the data space for the dataset. */
     dims[0] = DIM0;
@@ -747,6 +752,7 @@ test_h5o_plist(void)
     hid_t    grp, dset, dtype, dspace; /* Object identifiers */
     hid_t    fapl;                     /* File access property list */
     hid_t    gcpl, dcpl, tcpl;         /* Object creation properties */
+    hid_t    bad_pl = H5I_INVALID_HID; /* Invalid property list dues to invalid arg */
     char     filename[1024];
     unsigned def_max_compact, def_min_dense; /* Default phase change parameters */
     unsigned max_compact, min_dense;         /* Actual phase change parameters */
@@ -848,6 +854,14 @@ test_h5o_plist(void)
     CHECK(tcpl, FAIL, "H5Tget_create_plist");
     dcpl = H5Dget_create_plist(dset);
     CHECK(dcpl, FAIL, "H5Dget_create_plist");
+
+    /* Test passing in a non-group identifier to the H5G API */
+    H5E_BEGIN_TRY
+    {
+        bad_pl = H5Gget_create_plist(dtype);
+    }
+    H5E_END_TRY
+    VERIFY(bad_pl, H5I_INVALID_HID, "H5Gget_create_plist");
 
     /* Retrieve attribute phase change values on each creation property list and verify */
     ret = H5Pget_attr_phase_change(gcpl, &max_compact, &min_dense);
@@ -1215,6 +1229,7 @@ test_h5o_comment(void)
     /* Getting the comment on the file and verify it */
     comment_len = H5Oget_comment(fid, NULL, (size_t)0);
     CHECK(comment_len, FAIL, "H5Oget_comment");
+    VERIFY(comment_len, strlen(file_comment), "H5Oget_comment");
 
     len = H5Oget_comment(fid, check_comment, (size_t)comment_len + 1);
     CHECK(len, FAIL, "H5Oget_comment");
@@ -1232,6 +1247,7 @@ test_h5o_comment(void)
 
     len = H5Oget_comment(grp, check_comment, (size_t)comment_len + 1);
     CHECK(len, FAIL, "H5Oget_comment");
+    VERIFY(len, strlen(grp_comment), "H5Oget_comment");
 
     ret_value = strcmp(grp_comment, check_comment);
     VERIFY(ret_value, 0, "H5Oget_comment");
@@ -1243,6 +1259,7 @@ test_h5o_comment(void)
     /* Getting the comment on the datatype and verify it */
     comment_len = H5Oget_comment(dtype, NULL, (size_t)0);
     CHECK(comment_len, FAIL, "H5Oget_comment");
+    VERIFY(comment_len, strlen(dtype_comment), "H5Oget_comment");
 
     len = H5Oget_comment(dtype, check_comment, (size_t)comment_len + 1);
     CHECK(len, FAIL, "H5Oget_comment");
@@ -1260,6 +1277,7 @@ test_h5o_comment(void)
 
     len = H5Oget_comment(dset, check_comment, (size_t)comment_len + 1);
     CHECK(ret, len, "H5Oget_comment");
+    VERIFY(len, strlen(dset_comment), "H5Oget_comment");
 
     ret_value = strcmp(dset_comment, check_comment);
     VERIFY(ret_value, 0, "H5Oget_comment");
@@ -1401,6 +1419,7 @@ test_h5o_comment_by_name(void)
 
     len = H5Oget_comment_by_name(fid, ".", check_comment, (size_t)comment_len + 1, H5P_DEFAULT);
     CHECK(len, FAIL, "H5Oget_comment_by_name");
+    VERIFY(len, strlen(file_comment), "H5Oget_comment");
 
     ret_value = strcmp(file_comment, check_comment);
     VERIFY(ret_value, 0, "H5Oget_comment_by_name");
@@ -1860,6 +1879,164 @@ test_h5o_getinfo_visit(void)
 
 } /* test_h5o_getinfo_visit() */
 
+#define G1              "g1"           /* Group /g1 */
+#define G1G2            "g1/g2"        /* Group /g1/g2 */
+#define ATTR1           "Attr1"        /* Attribute Attr1 */
+#define D1G1G2          "/g1/g2/dset1" /* Dataset /g1/g2/dset1 */
+#define NUM_OBJS        4              /* Number of objects including root group */
+#define NUM_ATTRS       1              /* Number of attributes belong to root group */
+#define VISIT2_FILENAME "th5o_visit2"
+
+typedef struct {
+    unsigned idx;    /* Index in object visit structure */
+    unsigned fields; /* Fields to verify number of attributes in callback */
+} ovisit2_ud_t;
+
+/* Names of objects being visited, in this order */
+static const char *visited_objs[] = {".", "g1", "g1/g2", "g1/g2/dset1"};
+
+/****************************************************************
+**
+**  visit_obj_cb():
+**      This is the callback function invoked by H5Ovisit1() in
+**      test_h5o_getinfo_visit():
+**      --Verify that the object info returned to the callback
+**        function is the same as H5Oget_info2().
+**
+****************************************************************/
+static int
+visit2_obj_cb(hid_t obj_id, const char *name, const H5O_info1_t H5_ATTR_UNUSED *info, void *_op_data)
+{
+    H5O_info1_t oinfo;
+
+    memset(&oinfo, 0, sizeof(oinfo));
+    ovisit2_ud_t *op_data = (ovisit2_ud_t *)_op_data;
+
+    if (strcmp(visited_objs[op_data->idx], name) != 0)
+        return H5_ITER_ERROR;
+
+    if (H5Oget_info2(obj_id, &oinfo, op_data->fields) < 0)
+        return H5_ITER_ERROR;
+
+    if (op_data->fields == H5O_INFO_NUM_ATTRS)
+        if (oinfo.num_attrs != NUM_ATTRS)
+            return H5_ITER_ERROR;
+
+    /* Advance to next location in expected output */
+    op_data->idx++;
+
+    return H5_ITER_CONT;
+}
+
+/****************************************************************
+**
+**  test_h5o_visit2():
+**    Verify that H5Ovisit2 visits the nested groups and objects
+**    instead of only root group.
+**
+****************************************************************/
+static void
+test_h5o_visit2(void)
+{
+    hid_t           fid  = H5I_INVALID_HID;                         /* HDF5 File ID */
+    hid_t           gid1 = H5I_INVALID_HID, gid2 = H5I_INVALID_HID; /* Group IDs */
+    hid_t           sid   = H5I_INVALID_HID;                        /* Dataspace ID */
+    hid_t           did   = H5I_INVALID_HID;                        /* Dataset ID */
+    hid_t           attid = H5I_INVALID_HID;                        /* Attribute ID */
+    hid_t           obj_id;                                         /* Object ID for root group */
+    char            filename[1024];                                 /* File used in this test */
+    ovisit2_ud_t    udata;                                          /* User-data for visiting */
+    unsigned        fields;                                         /* Fields to return */
+    H5_index_t      idx_type = H5_INDEX_NAME;
+    H5_iter_order_t order    = H5_ITER_DEC;
+    bool            vol_is_native;
+    herr_t          ret; /* Value returned from API calls */
+
+    /* Output message about test being performed */
+    MESSAGE(5, ("Testing H5Ovisit2 visits all nested groups and objects\n"));
+
+    h5_fixname(VISIT2_FILENAME, H5P_DEFAULT, filename, sizeof filename);
+
+    /* Create an HDF5 file */
+    fid = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    CHECK(fid, FAIL, "H5Fcreate");
+
+    /* Check if native VOL is being used */
+    CHECK(h5_using_native_vol(H5P_DEFAULT, fid, &vol_is_native), FAIL, "h5_using_native_vol");
+    if (!vol_is_native) {
+        CHECK(H5Fclose(fid), FAIL, "H5Fclose");
+        MESSAGE(5, (" -- SKIPPED --\n"));
+        return;
+    }
+
+    /* Create group G1 in the file */
+    gid1 = H5Gcreate2(fid, G1, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    CHECK(gid1, FAIL, "H5Gcreate2");
+
+    /* Create group G1G2 in the file */
+    gid2 = H5Gcreate2(fid, G1G2, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    CHECK(gid2, FAIL, "H5Gcreate2");
+
+    /* Create dataspace */
+    sid = H5Screate(H5S_SCALAR);
+    CHECK(sid, FAIL, "H5Screate");
+
+    did = H5Dcreate2(gid2, D1G1G2, H5T_NATIVE_INT, sid, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    CHECK(did, FAIL, "H5Dcreate2");
+
+    /* Add an attribute to verify H5O_get_info with H5O_INFO_NUM_ATTRS works */
+    attid = H5Acreate2(fid, ATTR1, H5T_NATIVE_INT, sid, H5P_DEFAULT, H5P_DEFAULT);
+    CHECK(attid, FAIL, "H5Acreate2");
+
+    H5Aclose(attid);
+    H5Dclose(did);
+    H5Gclose(gid2);
+    H5Gclose(gid1);
+
+    /* Open root object */
+    obj_id = H5Oopen(fid, "/", H5P_DEFAULT);
+    CHECK(obj_id, FAIL, "H5Oopen");
+
+    /* Visit root with H5O_INFO_META_SIZE */
+    udata.idx = 0; /* first object, i.e., root group */
+    fields = udata.fields = H5O_INFO_META_SIZE;
+    ret                   = H5Ovisit2(obj_id, idx_type, order, visit2_obj_cb, &udata, fields);
+    CHECK(ret, FAIL, "H5Ovisit2");
+
+    /* Verify that all objects were visitted */
+    VERIFY(udata.idx, NUM_OBJS, "idx should be the same as NUM_OBJS");
+
+    /* Visit root with H5O_INFO_BASIC */
+    udata.idx = 0; /* first object, i.e., root group */
+    fields = udata.fields = H5O_INFO_BASIC;
+    ret                   = H5Ovisit2(obj_id, idx_type, order, visit2_obj_cb, &udata, fields);
+    CHECK(ret, FAIL, "H5Ovisit2");
+
+    /* Verify that all objects were visitted */
+    VERIFY(udata.idx, NUM_OBJS, "idx should be the same as NUM_OBJS");
+
+    /* Visit root with H5O_INFO_ALL */
+    udata.idx = 0; /* first object, i.e., root group */
+    fields = udata.fields = H5O_INFO_ALL;
+    ret                   = H5Ovisit2(obj_id, idx_type, order, visit2_obj_cb, &udata, fields);
+    CHECK(ret, FAIL, "H5Ovisit2");
+
+    /* Visit root with H5O_INFO_NUM_ATTRS */
+    udata.idx = 0; /* first object, i.e., root group */
+    fields = udata.fields = H5O_INFO_NUM_ATTRS;
+    ret                   = H5Ovisit2(obj_id, idx_type, order, visit2_obj_cb, &udata, fields);
+    CHECK(ret, FAIL, "H5Ovisit2");
+
+    /* Verify that all objects were visitted */
+    VERIFY(udata.idx, NUM_OBJS, "idx should be the same as NUM_OBJS");
+
+    /* Close object and file */
+    ret = H5Oclose(obj_id);
+    CHECK(ret, FAIL, "H5Oclose");
+    ret = H5Fclose(fid);
+    CHECK(ret, FAIL, "H5Fclose");
+}
+
 #endif /* H5_NO_DEPRECATED_SYMBOLS */
 
 /****************************************************************
@@ -1868,7 +2045,7 @@ test_h5o_getinfo_visit(void)
 **
 ****************************************************************/
 void
-test_h5o(void)
+test_h5o(const void H5_ATTR_UNUSED *params)
 {
     /* Output message about test being performed */
     MESSAGE(5, ("Testing Objects\n"));
@@ -1888,6 +2065,7 @@ test_h5o(void)
 #ifndef H5_NO_DEPRECATED_SYMBOLS
     test_h5o_open_by_addr_deprec(); /* Test opening objects by address with H5Lget_info1 */
     test_h5o_getinfo_visit();       /* Test object info for H5Oget_info1/2 and H5Ovisit1 */
+    test_h5o_visit2();              /* Test behavior of H5Ovisit2 */
 #endif                              /* H5_NO_DEPRECATED_SYMBOLS */
 } /* test_h5o() */
 
@@ -1901,14 +2079,20 @@ test_h5o(void)
  *-------------------------------------------------------------------------
  */
 void
-cleanup_h5o(void)
+cleanup_h5o(void H5_ATTR_UNUSED *params)
 {
-    char filename[1024];
+    if (GetTestCleanup()) {
+        char filename[1024];
 
-    H5E_BEGIN_TRY
-    {
-        h5_fixname(TEST_FILENAME, H5P_DEFAULT, filename, sizeof filename);
-        H5Fdelete(filename, H5P_DEFAULT);
+        H5E_BEGIN_TRY
+        {
+            h5_fixname(TEST_FILENAME, H5P_DEFAULT, filename, sizeof filename);
+            H5Fdelete(filename, H5P_DEFAULT);
+#ifndef H5_NO_DEPRECATED_SYMBOLS
+            h5_fixname(VISIT2_FILENAME, H5P_DEFAULT, filename, sizeof filename);
+            H5Fdelete(filename, H5P_DEFAULT);
+#endif /* H5_NO_DEPRECATED_SYMBOLS */
+        }
+        H5E_END_TRY
     }
-    H5E_END_TRY
 }

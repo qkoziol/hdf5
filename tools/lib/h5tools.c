@@ -4,7 +4,7 @@
  *                                                                           *
  * This file is part of HDF5.  The full HDF5 copyright notice, including     *
  * terms governing use, modification, and redistribution, is contained in    *
- * the COPYING file, which can be found at the root of the source code       *
+ * the LICENSE file, which can be found at the root of the source code       *
  * distribution tree, or in https://www.hdfgroup.org/licenses.               *
  * If you do not have access to either file, you may request a copy from     *
  * help@hdfgroup.org.                                                        *
@@ -671,12 +671,8 @@ h5tools_set_fapl_vol(hid_t fapl_id, h5tools_vol_info_t *vol_info)
                 /* Check for VOL connectors that ship with the library, then try
                  * registering by name if that fails.
                  */
-                if (!strcmp(vol_info->u.name, H5VL_NATIVE_NAME)) {
-                    connector_id = H5VL_NATIVE;
-                }
-                else if (!strcmp(vol_info->u.name, H5VL_PASSTHRU_NAME)) {
+                if (!strcmp(vol_info->u.name, H5VL_PASSTHRU_NAME))
                     connector_id = H5VL_PASSTHRU;
-                }
                 else {
                     /* NOTE: Not being able to pass in a VIPL may be a limitation for some
                      * connectors.
@@ -698,12 +694,8 @@ h5tools_set_fapl_vol(hid_t fapl_id, h5tools_vol_info_t *vol_info)
             }
             else {
                 /* Check for VOL connectors that ship with the library */
-                if (vol_info->u.value == H5VL_NATIVE_VALUE) {
-                    connector_id = H5VL_NATIVE;
-                }
-                else if (vol_info->u.value == H5VL_PASSTHRU_VALUE) {
+                if (vol_info->u.value == H5VL_PASSTHRU_VALUE)
                     connector_id = H5VL_PASSTHRU;
-                }
                 else {
                     /* NOTE: Not being able to pass in a VIPL may be a limitation for some
                      * connectors.
@@ -1994,6 +1986,28 @@ render_bin_output(FILE *stream, hid_t container, hid_t tid, void *_mem, hsize_t 
                 H5TOOLS_DEBUG("H5T_STD_REF_OBJ");
             }
         } break;
+
+        case H5T_COMPLEX: {
+            hid_t memb = H5I_INVALID_HID;
+
+            H5TOOLS_DEBUG("H5T_COMPLEX");
+
+            /* get the base datatype for each complex number element */
+            memb = H5Tget_super(tid);
+
+            for (block_index = 0; block_index < block_nelmts; block_index++) {
+                mem = ((unsigned char *)_mem) + block_index * size;
+
+                /* dump the complex number element */
+                if (render_bin_output(stream, container, memb, mem, 2) < 0) {
+                    H5Tclose(memb);
+                    H5TOOLS_THROW((-1), "render_bin_output failed");
+                }
+            }
+
+            H5Tclose(memb);
+            break;
+        }
 
         case H5T_TIME:
         case H5T_OPAQUE:

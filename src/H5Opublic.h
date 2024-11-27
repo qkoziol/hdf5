@@ -4,7 +4,7 @@
  *                                                                           *
  * This file is part of HDF5.  The full HDF5 copyright notice, including     *
  * terms governing use, modification, and redistribution, is contained in    *
- * the COPYING file, which can be found at the root of the source code       *
+ * the LICENSE file, which can be found at the root of the source code       *
  * distribution tree, or in https://www.hdfgroup.org/licenses.               *
  * If you do not have access to either file, you may request a copy from     *
  * help@hdfgroup.org.                                                        *
@@ -276,7 +276,7 @@ H5_DLL hid_t H5Oopen(hid_t loc_id, const char *name, hid_t lapl_id);
 H5_DLL hid_t H5Oopen_async(const char *app_file, const char *app_func, unsigned app_line, hid_t loc_id,
                            const char *name, hid_t lapl_id, hid_t es_id);
 #else
-H5_DLL hid_t  H5Oopen_async(hid_t loc_id, const char *name, hid_t lapl_id, hid_t es_id);
+H5_DLL hid_t H5Oopen_async(hid_t loc_id, const char *name, hid_t lapl_id, hid_t es_id);
 #endif
 
 /**
@@ -365,8 +365,8 @@ H5_DLL hid_t H5Oopen_by_idx_async(const char *app_file, const char *app_func, un
                                   const char *group_name, H5_index_t idx_type, H5_iter_order_t order,
                                   hsize_t n, hid_t lapl_id, hid_t es_id);
 #else
-H5_DLL hid_t  H5Oopen_by_idx_async(hid_t loc_id, const char *group_name, H5_index_t idx_type,
-                                   H5_iter_order_t order, hsize_t n, hid_t lapl_id, hid_t es_id);
+H5_DLL hid_t H5Oopen_by_idx_async(hid_t loc_id, const char *group_name, H5_index_t idx_type,
+                                  H5_iter_order_t order, hsize_t n, hid_t lapl_id, hid_t es_id);
 #endif
 
 /**
@@ -1208,6 +1208,8 @@ H5_DLL ssize_t H5Oget_comment_by_name(hid_t loc_id, const char *name, char *comm
  *          group change during the iteration, the resulting behavior
  *          is undefined.
  *
+ * \callback_note
+ *
  * \par Example
  *      An example snippet from test/links.c:
  *      \snippet links.c H5Ovisit3_snip
@@ -1310,6 +1312,8 @@ H5_DLL herr_t H5Ovisit3(hid_t obj_id, H5_index_t idx_type, H5_iter_order_t order
  *          successfully, every link or object below the specified point
  *          in the file has been presented to the application for whatever
  *          processing the application requires.
+ *
+ * \callback_note
  *
  * \par Example
  *      An example snippet from test/links.c:
@@ -2254,6 +2258,8 @@ H5_DLL herr_t H5Ovisit1(hid_t obj_id, H5_index_t idx_type, H5_iter_order_t order
  *          in the file has been presented to the application for whatever
  *          processing the application requires.
  *
+ * \callback_note
+ *
  * \version 1.10.5 The macro #H5Ovisit_by_name was removed and the function
  *          H5Ovisit_by_name1() was copied to #H5Ovisit_by_name.
  * \version 1.10.3 The H5Ovisit_by_name() function was renamed to H5Ovisit_by_name1(),
@@ -2346,6 +2352,7 @@ H5_DLL herr_t H5Ovisit_by_name1(hid_t loc_id, const char *obj_name, H5_index_t i
  *          group change during the iteration, the resulting behavior
  *          is undefined.
  *
+ * \callback_note
  *
  * \since 1.10.3
  *
@@ -2455,6 +2462,8 @@ H5_DLL herr_t H5Ovisit2(hid_t obj_id, H5_index_t idx_type, H5_iter_order_t order
  *          successfully, every link or object below the specified point
  *          in the file has been presented to the application for whatever
  *          processing the application requires.
+ *
+ * \callback_note
  *
  * \since 1.10.3
  *

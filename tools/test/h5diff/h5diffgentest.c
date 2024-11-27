@@ -4,7 +4,7 @@
  *                                                                           *
  * This file is part of HDF5.  The full HDF5 copyright notice, including     *
  * terms governing use, modification, and redistribution, is contained in    *
- * the COPYING file, which can be found at the root of the source code       *
+ * the LICENSE file, which can be found at the root of the source code       *
  * distribution tree, or in https://www.hdfgroup.org/licenses.               *
  * If you do not have access to either file, you may request a copy from     *
  * help@hdfgroup.org.                                                        *
@@ -1962,7 +1962,7 @@ out:
  * Purpose: Check all HDF5 classes
  * H5T_INTEGER, H5T_FLOAT
  * H5T_TIME, H5T_STRING, H5T_BITFIELD, H5T_OPAQUE, H5T_COMPOUND, H5T_REFERENCE,
- * H5T_ENUM, H5T_VLEN, H5T_ARRAY
+ * H5T_ENUM, H5T_VLEN, H5T_ARRAY, H5T_COMPLEX
  *
  *-------------------------------------------------------------------------
  */
@@ -5697,13 +5697,13 @@ test_objs_strings(const char *fname1, const char *fname2)
 
     hsize_t dims2[]          = {20};
     char    string2A[20][10] = {"ab cd ef1", "ab cd ef2", "ab cd ef3", "ab cd ef4", "ab cd ef5",
-                             "ab cd ef6", "ab cd ef7", "ab cd ef8", "ab cd 9",   "ab cd 0",
-                             "ab cd 1",   "ab cd 2",   "ab cd ef3", "ab cd ef4", "ab cd ef5",
-                             "ab cd ef6", "ab cd ef7", "ab cd ef8", "ab cd ef9", "ab cd ef0"};
+                                "ab cd ef6", "ab cd ef7", "ab cd ef8", "ab cd 9",   "ab cd 0",
+                                "ab cd 1",   "ab cd 2",   "ab cd ef3", "ab cd ef4", "ab cd ef5",
+                                "ab cd ef6", "ab cd ef7", "ab cd ef8", "ab cd ef9", "ab cd ef0"};
     char    string2B[20][10] = {"ab cd ef1", "ab cd ef2", "ab cd ef3", "ab cd ef4", "ab cd ef5",
-                             "ab cd ef6", "ab cd ef7", "ab cd ef8", "ab cd ef9", "ab cd ef0",
-                             "ab cd ef1", "ab cd ef2", "ab cd 3",   "ab cd 4",   "ab cd 5",
-                             "ab cd 6",   "ab cd ef7", "ab cd ef8", "ab cd ef9", "ab cd ef0"};
+                                "ab cd ef6", "ab cd ef7", "ab cd ef8", "ab cd ef9", "ab cd ef0",
+                                "ab cd ef1", "ab cd ef2", "ab cd 3",   "ab cd 4",   "ab cd 5",
+                                "ab cd 6",   "ab cd ef7", "ab cd ef8", "ab cd ef9", "ab cd ef0"};
 
     hsize_t dims3[]      = {27};
     char string3A[27][6] = {"abcd0", "abcd1", "abcd2", "abcd3", "abcd4", "abcd5", "abcd6", "abcd7", "abcd8",
@@ -5868,6 +5868,7 @@ write_attr_strings(hid_t loc_id, const char *dset_name, hid_t fid,
     int        buf6[2][3]  = {{1, 2, 3}, {4, 5, 6}}; /* array */
     int        buf7[2]     = {1, 2};                 /* integer */
     float      buf8[2]     = {1.0, 2.0};             /* float */
+    float      buf9[4]     = {1.0, 2.0, 3.0, 4.0};   /* complex */
 
     /* create 2D attributes with dimension [3][2], 6 elements */
     hsize_t    dims2[2]              = {3, 2};
@@ -5881,13 +5882,15 @@ write_attr_strings(hid_t loc_id, const char *dset_name, hid_t fid,
     int buf62[6][3] = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}, {10, 11, 12}, {13, 14, 15}, {16, 17, 18}}; /* array */
     int buf72[3][2] = {{1, 2}, {3, 4}, {5, 6}};               /* integer */
     float buf82[3][2] = {{1.0, 2.0}, {3.0, 4.0}, {5.0, 6.0}}; /* float */
+    float buf92[6][2] = {{1.0, 2.0}, {3.0, 4.0},  {5.0, 6.0},
+                         {7.0, 8.0}, {9.0, 10.0}, {11.0, 12.0}}; /* complex */
 
     /* create 3D attributes with dimension [4][3][2], 24 elements */
     hsize_t    dims3[3]                 = {4, 3, 2};
     char       buf13[4][3][2][STR_SIZE] = {{{"ab", "cd"}, {"ef", "gh"}, {"ij", "kl"}},
-                                     {{"mn", "pq"}, {"rs", "tu"}, {"vw", "xz"}},
-                                     {{"AB", "CD"}, {"EF", "GH"}, {"IJ", "KL"}},
-                                     {{"MN", "PQ"}, {"RS", "TU"}, {"VW", "XZ"}}}; /* string */
+                                           {{"mn", "pq"}, {"rs", "tu"}, {"vw", "xz"}},
+                                           {{"AB", "CD"}, {"EF", "GH"}, {"IJ", "KL"}},
+                                           {{"MN", "PQ"}, {"RS", "TU"}, {"VW", "XZ"}}}; /* string */
     char      *buf13a[4][3][2];                                                         /* VL string */
     char       buf23[4][3][2];                                                          /* bitfield, opaque */
     s_t        buf33[4][3][2];                                                          /* compound */
@@ -5897,6 +5900,7 @@ write_attr_strings(hid_t loc_id, const char *dset_name, hid_t fid,
     int        buf63[24][3];                                                            /* array */
     int        buf73[4][3][2];                                                          /* integer */
     float      buf83[4][3][2];                                                          /* float */
+    float      buf93[24][2];                                                            /* complex */
 
     /*-------------------------------------------------------------------------
      * 1D attributes
@@ -6142,6 +6146,18 @@ write_attr_strings(hid_t loc_id, const char *dset_name, hid_t fid,
      */
     write_attr(loc_id, 1, dims, "integer", H5T_NATIVE_INT, buf7);
     write_attr(loc_id, 1, dims, "float", H5T_NATIVE_FLOAT, buf8);
+
+    /*-------------------------------------------------------------------------
+     * H5T_COMPLEX
+     *-------------------------------------------------------------------------
+     */
+
+    if (make_diffs)
+        memset(buf9, 0, sizeof(buf9));
+
+    tid = H5Tcomplex_create(H5T_NATIVE_FLOAT);
+    write_attr(loc_id, 1, dims, "complex", tid, buf9);
+    status = H5Tclose(tid);
 
     /*-------------------------------------------------------------------------
      * 2D attributes
@@ -6424,6 +6440,18 @@ write_attr_strings(hid_t loc_id, const char *dset_name, hid_t fid,
 
     write_attr(loc_id, 2, dims2, "integer2D", H5T_NATIVE_INT, buf72);
     write_attr(loc_id, 2, dims2, "float2D", H5T_NATIVE_FLOAT, buf82);
+
+    /*-------------------------------------------------------------------------
+     * H5T_COMPLEX
+     *-------------------------------------------------------------------------
+     */
+
+    if (make_diffs)
+        memset(buf92, 0, sizeof(buf92));
+
+    tid = H5Tcomplex_create(H5T_NATIVE_FLOAT);
+    write_attr(loc_id, 2, dims2, "complex2D", tid, buf92);
+    status = H5Tclose(tid);
 
     /*-------------------------------------------------------------------------
      * 3D attributes
@@ -6816,6 +6844,24 @@ write_attr_strings(hid_t loc_id, const char *dset_name, hid_t fid,
      */
     write_attr(loc_id, 3, dims3, "integer3D", H5T_NATIVE_INT, buf73);
     write_attr(loc_id, 3, dims3, "float3D", H5T_NATIVE_FLOAT, buf83);
+
+    /*-------------------------------------------------------------------------
+     * H5T_COMPLEX
+     *-------------------------------------------------------------------------
+     */
+
+    f = 1;
+    for (i = 0; i < 24; i++)
+        for (j = 0; j < 2; j++) {
+            if (make_diffs)
+                buf93[i][j] = 0;
+            else
+                buf93[i][j] = f++;
+        }
+
+    tid = H5Tcomplex_create(H5T_NATIVE_FLOAT);
+    write_attr(loc_id, 3, dims3, "complex3D", tid, buf93);
+    status = H5Tclose(tid);
 }
 
 /*-------------------------------------------------------------------------
@@ -6857,6 +6903,7 @@ write_attr_in(hid_t loc_id, const char *dset_name, hid_t fid,
     int        buf6[2][3]  = {{1, 2, 3}, {4, 5, 6}}; /* array */
     int        buf7[2]     = {1, 2};                 /* integer */
     float      buf8[2]     = {1.0, 2.0};             /* float */
+    float      buf9[4]     = {1.0, 2.0, 3.0, 4.0};   /* complex */
 
     /* create 2D attributes with dimension [3][2], 6 elements */
     hsize_t    dims2[2]              = {3, 2};
@@ -6870,13 +6917,15 @@ write_attr_in(hid_t loc_id, const char *dset_name, hid_t fid,
     int buf62[6][3] = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}, {10, 11, 12}, {13, 14, 15}, {16, 17, 18}}; /* array */
     int buf72[3][2] = {{1, 2}, {3, 4}, {5, 6}};               /* integer */
     float buf82[3][2] = {{1.0, 2.0}, {3.0, 4.0}, {5.0, 6.0}}; /* float */
+    float buf92[6][2] = {{1.0, 2.0}, {3.0, 4.0},  {5.0, 6.0},
+                         {7.0, 8.0}, {9.0, 10.0}, {11.0, 12.0}}; /* complex */
 
     /* create 3D attributes with dimension [4][3][2], 24 elements */
     hsize_t    dims3[3]                 = {4, 3, 2};
     char       buf13[4][3][2][STR_SIZE] = {{{"ab", "cd"}, {"ef", "gh"}, {"ij", "kl"}},
-                                     {{"mn", "pq"}, {"rs", "tu"}, {"vw", "xz"}},
-                                     {{"AB", "CD"}, {"EF", "GH"}, {"IJ", "KL"}},
-                                     {{"MN", "PQ"}, {"RS", "TU"}, {"VW", "XZ"}}}; /* string */
+                                           {{"mn", "pq"}, {"rs", "tu"}, {"vw", "xz"}},
+                                           {{"AB", "CD"}, {"EF", "GH"}, {"IJ", "KL"}},
+                                           {{"MN", "PQ"}, {"RS", "TU"}, {"VW", "XZ"}}}; /* string */
     char      *buf13a[4][3][2];                                                         /* VL string */
     char       buf23[4][3][2];                                                          /* bitfield, opaque */
     s_t        buf33[4][3][2];                                                          /* compound */
@@ -6886,6 +6935,7 @@ write_attr_in(hid_t loc_id, const char *dset_name, hid_t fid,
     int        buf63[24][3];                                                            /* array */
     int        buf73[4][3][2];                                                          /* integer */
     float      buf83[4][3][2];                                                          /* float */
+    float      buf93[24][2];                                                            /* complex */
 
     /*-------------------------------------------------------------------------
      * 1D attributes
@@ -7130,6 +7180,18 @@ write_attr_in(hid_t loc_id, const char *dset_name, hid_t fid,
     */
     write_attr(loc_id, 1, dims, "integer", H5T_NATIVE_INT, buf7);
     write_attr(loc_id, 1, dims, "float", H5T_NATIVE_FLOAT, buf8);
+
+    /*-------------------------------------------------------------------------
+     * H5T_COMPLEX
+     *-------------------------------------------------------------------------
+     */
+
+    if (make_diffs)
+        memset(buf9, 0, sizeof(buf9));
+
+    tid = H5Tcomplex_create(H5T_NATIVE_FLOAT);
+    write_attr(loc_id, 1, dims, "complex", tid, buf9);
+    status = H5Tclose(tid);
 
     /*-------------------------------------------------------------------------
      * 2D attributes
@@ -7413,6 +7475,18 @@ write_attr_in(hid_t loc_id, const char *dset_name, hid_t fid,
 
     write_attr(loc_id, 2, dims2, "integer2D", H5T_NATIVE_INT, buf72);
     write_attr(loc_id, 2, dims2, "float2D", H5T_NATIVE_FLOAT, buf82);
+
+    /*-------------------------------------------------------------------------
+     * H5T_COMPLEX
+     *-------------------------------------------------------------------------
+     */
+
+    if (make_diffs)
+        memset(buf92, 0, sizeof(buf92));
+
+    tid = H5Tcomplex_create(H5T_NATIVE_FLOAT);
+    write_attr(loc_id, 2, dims2, "complex2D", tid, buf92);
+    status = H5Tclose(tid);
 
     /*-------------------------------------------------------------------------
      * 3D attributes
@@ -7805,6 +7879,24 @@ write_attr_in(hid_t loc_id, const char *dset_name, hid_t fid,
     */
     write_attr(loc_id, 3, dims3, "integer3D", H5T_NATIVE_INT, buf73);
     write_attr(loc_id, 3, dims3, "float3D", H5T_NATIVE_FLOAT, buf83);
+
+    /*-------------------------------------------------------------------------
+     * H5T_COMPLEX
+     *-------------------------------------------------------------------------
+     */
+
+    f = 1;
+    for (i = 0; i < 24; i++)
+        for (j = 0; j < 2; j++) {
+            if (make_diffs)
+                buf93[i][j] = 0;
+            else
+                buf93[i][j] = f++;
+        }
+
+    tid = H5Tcomplex_create(H5T_NATIVE_FLOAT);
+    write_attr(loc_id, 3, dims3, "complex3D", tid, buf93);
+    status = H5Tclose(tid);
 }
 
 /*-------------------------------------------------------------------------
@@ -7849,6 +7941,7 @@ write_dset_in(hid_t loc_id, const char *dset_name, hid_t fid,
     int        buf6[2][3]  = {{1, 2, 3}, {4, 5, 6}}; /* array */
     int        buf7[2]     = {1, 2};                 /* integer */
     float      buf8[2]     = {1.0, 2.0};             /* float */
+    float      buf9[4]     = {1.0, 2.0, 3.0, 4.0};   /* complex */
 
     /* create 2D attributes with dimension [3][2], 6 elements */
     hsize_t    dims2[2]              = {3, 2};
@@ -7861,13 +7954,15 @@ write_dset_in(hid_t loc_id, const char *dset_name, hid_t fid,
     int buf62[6][3] = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}, {10, 11, 12}, {13, 14, 15}, {16, 17, 18}}; /* array */
     int buf72[3][2] = {{1, 2}, {3, 4}, {5, 6}};               /* integer */
     float buf82[3][2] = {{1.0, 2.0}, {3.0, 4.0}, {5.0, 6.0}}; /* float */
+    float buf92[6][2] = {{1.0, 2.0}, {3.0, 4.0},  {5.0, 6.0},
+                         {7.0, 8.0}, {9.0, 10.0}, {11.0, 12.0}}; /* complex */
 
     /* create 3D attributes with dimension [4][3][2], 24 elements */
     hsize_t    dims3[3]                 = {4, 3, 2};
     char       buf13[4][3][2][STR_SIZE] = {{{"ab", "cd"}, {"ef", "gh"}, {"ij", "kl"}},
-                                     {{"mn", "pq"}, {"rs", "tu"}, {"vw", "xz"}},
-                                     {{"AB", "CD"}, {"EF", "GH"}, {"IJ", "KL"}},
-                                     {{"MN", "PQ"}, {"RS", "TU"}, {"VW", "XZ"}}}; /* string */
+                                           {{"mn", "pq"}, {"rs", "tu"}, {"vw", "xz"}},
+                                           {{"AB", "CD"}, {"EF", "GH"}, {"IJ", "KL"}},
+                                           {{"MN", "PQ"}, {"RS", "TU"}, {"VW", "XZ"}}}; /* string */
     char      *buf13a[4][3][2];                                                         /* VL string */
     char       buf23[4][3][2];                                                          /* bitfield, opaque */
     s_t        buf33[4][3][2];                                                          /* compound */
@@ -7876,6 +7971,7 @@ write_dset_in(hid_t loc_id, const char *dset_name, hid_t fid,
     int        buf63[24][3];                                                            /* array */
     int        buf73[4][3][2];                                                          /* integer */
     float      buf83[4][3][2];                                                          /* float */
+    float      buf93[24][2];                                                            /* complex */
 
     if (make_diffs == 2)
         dimarray[0] = 4;
@@ -8100,6 +8196,18 @@ write_dset_in(hid_t loc_id, const char *dset_name, hid_t fid,
     write_dset(loc_id, 1, dims, "float", H5T_NATIVE_FLOAT, buf8);
 
     /*-------------------------------------------------------------------------
+     * H5T_COMPLEX
+     *-------------------------------------------------------------------------
+     */
+
+    if (make_diffs)
+        memset(buf9, 0, sizeof(buf9));
+
+    tid = H5Tcomplex_create(H5T_NATIVE_FLOAT);
+    write_dset(loc_id, 1, dims, "complex", tid, buf9);
+    status = H5Tclose(tid);
+
+    /*-------------------------------------------------------------------------
      * 2D
      *-------------------------------------------------------------------------
      */
@@ -8255,6 +8363,18 @@ write_dset_in(hid_t loc_id, const char *dset_name, hid_t fid,
      */
 
     write_dset(loc_id, 2, dims2, "float2D", H5T_NATIVE_FLOAT, buf82);
+
+    /*-------------------------------------------------------------------------
+     * H5T_COMPLEX
+     *-------------------------------------------------------------------------
+     */
+
+    if (make_diffs)
+        memset(buf92, 0, sizeof(buf92));
+
+    tid = H5Tcomplex_create(H5T_NATIVE_FLOAT);
+    write_dset(loc_id, 2, dims2, "complex2D", tid, buf92);
+    status = H5Tclose(tid);
 
     /*-------------------------------------------------------------------------
      * 3D
@@ -8436,6 +8556,24 @@ write_dset_in(hid_t loc_id, const char *dset_name, hid_t fid,
 
     write_dset(loc_id, 3, dims3, "integer3D", H5T_NATIVE_INT, buf73);
     write_dset(loc_id, 3, dims3, "float3D", H5T_NATIVE_FLOAT, buf83);
+
+    /*-------------------------------------------------------------------------
+     * H5T_COMPLEX
+     *-------------------------------------------------------------------------
+     */
+
+    f = 1;
+    for (i = 0; i < 24; i++)
+        for (j = 0; j < 2; j++) {
+            if (make_diffs)
+                buf93[i][j] = 0;
+            else
+                buf93[i][j] = f++;
+        }
+
+    tid = H5Tcomplex_create(H5T_NATIVE_FLOAT);
+    write_dset(loc_id, 3, dims3, "complex3D", tid, buf93);
+    status = H5Tclose(tid);
 }
 
 /*-------------------------------------------------------------------------
