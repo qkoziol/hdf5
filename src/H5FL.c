@@ -380,7 +380,11 @@ H5FL__reg_init(H5FL_reg_head_t *head)
 {
     herr_t ret_value = SUCCEED; /* Return value*/
 
+#ifdef H5_HAVE_CONCURRENCY
     FUNC_ENTER_PACKAGE
+#else  /* H5_HAVE_CONCURRENCY */
+    FUNC_ENTER_PACKAGE_NOERR
+#endif /* H5_HAVE_CONCURRENCY */
 
 #ifdef H5_HAVE_CONCURRENCY
     /* Initialize the mutex protecting this specific list */
@@ -915,7 +919,11 @@ H5FL__blk_init(H5FL_blk_head_t *head)
 {
     herr_t ret_value = SUCCEED; /* return value*/
 
+#ifdef H5_HAVE_CONCURRENCY
     FUNC_ENTER_PACKAGE
+#else  /* H5_HAVE_CONCURRENCY */
+    FUNC_ENTER_PACKAGE_NOERR
+#endif /* H5_HAVE_CONCURRENCY */
 
 #ifdef H5_HAVE_CONCURRENCY
     /* Initialize the mutex protecting this specific list */
