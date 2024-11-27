@@ -412,7 +412,9 @@ H5FL__reg_init(H5FL_reg_head_t *head)
         HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, FAIL, "can't unlock list of list's mutex");
 #endif /* H5_HAVE_CONCURRENCY */
 
+#ifdef H5_HAVE_CONCURRENCY
 done:
+#endif /* H5_HAVE_CONCURRENCY */
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FL__reg_init() */
 
@@ -947,7 +949,9 @@ H5FL__blk_init(H5FL_blk_head_t *head)
         HGOTO_ERROR(H5E_RESOURCE, H5E_CANTUNLOCK, FAIL, "can't unlock list of list's mutex");
 #endif /* H5_HAVE_CONCURRENCY */
 
+#ifdef H5_HAVE_CONCURRENCY
 done:
+#endif /* H5_HAVE_CONCURRENCY */
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FL__blk_init() */
 
