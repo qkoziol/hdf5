@@ -29,6 +29,7 @@
 #include "H5Ipkg.h"      /* IDs                                      */
 #include "H5MMprivate.h" /* Memory management                        */
 #include "H5Pprivate.h"  /* Property lists                           */
+#include "H5TSprivate.h" /* Threadsafety                             */
 
 /****************/
 /* Local Macros */
@@ -93,44 +94,16 @@ H5I_type_t
 H5Iregister_type(size_t H5_ATTR_UNUSED hash_size, unsigned reserved, H5I_free_t free_func)
 {
     H5I_class_t *cls       = NULL;      /* New ID class */
-    H5I_type_t   new_type  = H5I_BADID; /* New ID type value */
     H5I_type_t   ret_value = H5I_BADID; /* Return value */
 
     FUNC_ENTER_API(H5I_BADID)
-
-    /* Generate a new H5I_type_t value */
-
-    /* Increment the number of types */
-    if (H5I_next_type_g < H5I_MAX_NUM_TYPES) {
-        new_type = (H5I_type_t)H5I_next_type_g;
-        H5I_next_type_g++;
-    }
-    else {
-        bool done; /* Indicate that search was successful */
-        int  i;
-
-        /* Look for a free type to give out */
-        done = false;
-        for (i = H5I_NTYPES; i < H5I_MAX_NUM_TYPES && done == false; i++) {
-            if (NULL == H5I_type_info_array_g[i]) {
-                /* Found a free type ID */
-                new_type = (H5I_type_t)i;
-                done     = true;
-            }
-        }
-
-        /* Verify that we found a type to give out */
-        if (done == false)
-            HGOTO_ERROR(H5E_ID, H5E_NOSPACE, H5I_BADID, "Maximum number of ID types exceeded");
-    }
 
     /* Allocate new ID class */
     if (NULL == (cls = H5MM_calloc(sizeof(H5I_class_t))))
         HGOTO_ERROR(H5E_ID, H5E_CANTALLOC, H5I_BADID, "ID class allocation failed");
 
-    /* Initialize class fields */
-    cls->type      = new_type;
-    cls->flags     = H5I_CLASS_IS_APPLICATION;
+    /* Initialize non-zero class fields */
+    cls->type      = H5I_UNINIT;
     cls->reserved  = reserved;
     cls->free_func = free_func;
 
@@ -138,8 +111,12 @@ H5Iregister_type(size_t H5_ATTR_UNUSED hash_size, unsigned reserved, H5I_free_t 
     if (H5I_register_type(cls) < 0)
         HGOTO_ERROR(H5E_ID, H5E_CANTINIT, H5I_BADID, "can't initialize ID class");
 
+    /* Indicate that the class object should be freed when the type is destroyed */
+    /* (Should be set after errors could occur) */
+    cls->flags     = H5I_CLASS_IS_APPLICATION;
+
     /* Set return value */
-    ret_value = new_type;
+    ret_value = cls->type;
 
 done:
     /* Clean up on error */
@@ -170,11 +147,12 @@ H5Itype_exists(H5I_type_t type)
     /* Validate parameter */
     if (H5I_IS_LIB_TYPE(type))
         HGOTO_ERROR(H5E_ID, H5E_BADGROUP, FAIL, "cannot call public function on library type");
-    if (type <= H5I_BADID || (int)type >= H5I_next_type_g)
+    if (type <= H5I_BADID || (int)type >= H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g))
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, FAIL, "invalid type number");
 
-    if (NULL == H5I_type_info_array_g[type])
-        ret_value = false;
+    /* Check for valid type */
+    if ((ret_value = H5I__is_type_valid(type)) < 0)
+        HGOTO_ERROR(H5E_ID, H5E_CANTGET, FAIL, "can't check if ID is valid");
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -195,6 +173,7 @@ done:
 herr_t
 H5Inmembers(H5I_type_t type, hsize_t *num_members)
 {
+    htri_t is_valid;            /* Whether type is valid */
     herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -206,9 +185,11 @@ H5Inmembers(H5I_type_t type, hsize_t *num_members)
      * the private interface handle it, because the public interface throws
      * an error when the supplied type does not exist.
      */
-    if (type <= H5I_BADID || (int)type >= H5I_next_type_g)
+    if (type <= H5I_BADID || (int)type >= H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g))
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, FAIL, "invalid type number");
-    if (NULL == H5I_type_info_array_g[type])
+    if ((is_valid = H5I__is_type_valid(type)) < 0)
+        HGOTO_ERROR(H5E_ID, H5E_CANTGET, FAIL, "can't check if ID is valid");
+    else if (false == is_valid)
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, FAIL, "supplied type does not exist");
 
     if (num_members) {
@@ -363,7 +344,7 @@ H5Iobject_verify(hid_t id, H5I_type_t type)
     /* Validate parameters */
     if (H5I_IS_LIB_TYPE(type))
         HGOTO_ERROR(H5E_ID, H5E_BADGROUP, NULL, "cannot call public function on library type");
-    if (type < 1 || (int)type >= H5I_next_type_g)
+    if (type < 1 || (int)type >= H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g))
         HGOTO_ERROR(H5E_ID, H5E_BADGROUP, NULL, "identifier has invalid type");
 
     ret_value = H5I_object_verify(id, type);
@@ -396,7 +377,7 @@ H5Iget_type(hid_t id)
 
     ret_value = H5I_get_type(id);
 
-    if (ret_value <= H5I_BADID || (int)ret_value >= H5I_next_type_g || NULL == H5I_object(id))
+    if (ret_value <= H5I_BADID || (int)ret_value >= H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g )|| NULL == H5I_object(id))
         HGOTO_DONE(H5I_BADID);
 
 done:
@@ -541,7 +522,7 @@ H5Iinc_type_ref(H5I_type_t type)
     FUNC_ENTER_API((-1))
 
     /* Check arguments */
-    if (type <= 0 || (int)type >= H5I_next_type_g)
+    if (type <= 0 || (int)type >= H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g))
         HGOTO_ERROR(H5E_ID, H5E_BADID, (-1), "invalid ID type");
     if (H5I_IS_LIB_TYPE(type))
         HGOTO_ERROR(H5E_ID, H5E_BADGROUP, (-1), "cannot call public function on library type");
@@ -612,7 +593,7 @@ H5Iget_type_ref(H5I_type_t type)
     FUNC_ENTER_API((-1))
 
     /* Check arguments */
-    if (type <= 0 || (int)type >= H5I_next_type_g)
+    if (type <= 0 || (int)type >= H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g))
         HGOTO_ERROR(H5E_ID, H5E_BADID, (-1), "invalid ID type");
     if (H5I_IS_LIB_TYPE(type))
         HGOTO_ERROR(H5E_ID, H5E_BADGROUP, (-1), "cannot call public function on library type");

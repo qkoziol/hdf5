@@ -166,6 +166,43 @@ H5TS_atomic_fetch_sub_int(H5TS_atomic_int_t *obj, int arg)
 } /* end H5TS_atomic_fetch_sub_int() */
 
 /*--------------------------------------------------------------------------
+ * Function:    H5TS_atomic_compare_exchange_weak_int
+ *
+ * Purpose:     Atomically compares the contents of 'obj' with 'expected', and
+ *              if those are bitwise equal, replaces the former with 'desired'
+ *              (performs read-modify-write operation). Otherwise, loads the
+ *              actual contents of 'obj' into '*expected' (performs load
+ *              operation).
+ *
+ * Return:      The result of the comparison: true if 'obj' was equal to
+ *              'expected', false otherwise.
+ *
+ *--------------------------------------------------------------------------
+ */
+static inline bool
+H5TS_atomic_compare_exchange_weak_int(H5TS_atomic_int_t *obj, int *expected, int desired)
+{
+    bool ret_value;
+
+    /* Lock mutex that protects the "atomic" value */
+    H5TS_mutex_lock(&obj->mutex);
+
+    /* Compare 'obj' w/'expected' */
+    if (obj->value == *expected) {
+        obj->value = desired;
+        ret_value  = true;
+    }
+    else {
+        *expected = obj->value;
+        ret_value = false;
+    }
+    /* Release the object's mutex */
+    H5TS_mutex_unlock(&obj->mutex);
+
+    return ret_value;
+} /* end H5TS_atomic_compare_exchange_weak_int() */
+
+/*--------------------------------------------------------------------------
  * Function:    H5TS_atomic_load_uint
  *
  * Purpose:     Retrieves the value of atomic 'unsigned' variable object.

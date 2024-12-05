@@ -661,7 +661,7 @@ static struct {
 H5FL_DEFINE_STATIC(H5T_path_t);
 
 /* Datatype ID class */
-static const H5I_class_t H5I_DATATYPE_CLS[1] = {{
+static H5I_class_t H5I_DATATYPE_CLS[1] = {{
     H5I_DATATYPE,             /* ID class value */
     0,                        /* Class flags    */
     8,                        /* # of reserved IDs for class */

@@ -88,7 +88,7 @@ htri_t H5FD_ignore_disabled_file_locks_p = FAIL;
 static unsigned long H5FD_file_serial_no_g;
 
 /* File driver ID class */
-static const H5I_class_t H5I_VFL_CLS[1] = {{
+static H5I_class_t H5I_VFL_CLS[1] = {{
     H5I_VFL,                   /* ID class value */
     0,                         /* Class flags */
     0,                         /* # of reserved IDs for class */

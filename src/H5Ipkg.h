@@ -25,6 +25,9 @@
 /* Get package's private header */
 #include "H5Iprivate.h"
 
+/* Other private headers needed by this file */
+#include "H5TSprivate.h" /* Threadsafety              */
+
 /**************************/
 /* Package Private Macros */
 /**************************/
@@ -76,20 +79,36 @@ typedef struct H5I_id_info_t {
 
 /* Type information structure used */
 typedef struct H5I_type_info_t {
+#ifdef H5_HAVE_CONCURRENCY
+    H5TS_dlftt_mutex_t mutex;        /* Guard the type info struct */
+    bool mutex_init;                 /* Whether the mutex has been initialized */
+#endif /* H5_HAVE_CONCURRENCY */
+
     const H5I_class_t *cls;          /* Pointer to ID class */
     unsigned           init_count;   /* # of times this type has been initialized */
     uint64_t           id_count;     /* Current number of IDs held */
     uint64_t           nextid;       /* ID to use for the next object */
+    bool               marking;      /* Whether the ID type is being marked for clearing */
     H5I_id_info_t     *last_id_info; /* Info for most recent ID looked up */
     H5I_id_info_t     *hash_table;   /* Hash table pointer for this ID type */
 } H5I_type_info_t;
+
+/* Elements for global type info array */
+typedef struct {
+#ifdef H5_HAVE_CONCURRENCY
+    H5TS_dlftt_mutex_t mutex;           /* Guard the type info pointer */
+    bool mutex_init;                    /* Whether the mutex has been initialized */
+#endif /* H5_HAVE_CONCURRENCY */
+
+    H5I_type_info_t *type_info;         /* Pointer to type info object */
+} H5I_ti_arr_elmt_t;
 
 /*****************************/
 /* Package Private Variables */
 /*****************************/
 
 /* Array of pointers to ID types */
-H5_DLLVAR H5I_type_info_t *H5I_type_info_array_g[H5I_MAX_NUM_TYPES];
+H5_DLLVAR H5I_ti_arr_elmt_t H5I_type_info_array_g[H5I_MAX_NUM_TYPES];
 
 /* Variable to keep track of the number of types allocated.  Its value is the
  * next type ID to be handed out, so it is always one greater than the number
@@ -98,7 +117,11 @@ H5_DLLVAR H5I_type_info_t *H5I_type_info_array_g[H5I_MAX_NUM_TYPES];
  * types (or IDs within a type) are needed, adjust TYPE_BITS in H5Ipkg.h
  * and/or increase size of hid_t
  */
+#ifdef H5_HAVE_CONCURRENCY
+H5_DLLVAR H5TS_atomic_int_t H5I_next_type_g;
+#else  /* H5_HAVE_CONCURRENCY */
 H5_DLLVAR int H5I_next_type_g;
+#endif /* H5_HAVE_CONCURRENCY */
 
 /******************************/
 /* Package Private Prototypes */
@@ -111,6 +134,9 @@ H5_DLL void          *H5I__remove_verify(hid_t id, H5I_type_t type);
 H5_DLL int            H5I__inc_type_ref(H5I_type_t type);
 H5_DLL int            H5I__get_type_ref(H5I_type_t type);
 H5_DLL H5I_id_info_t *H5I__find_id(hid_t id);
+H5_DLL htri_t         H5I__is_type_valid(H5I_type_t type);
+H5_DLL herr_t         H5I__type_info_acquire(H5I_type_t type);
+H5_DLL herr_t         H5I__type_info_release(H5I_type_t type);
 
 /* Testing functions */
 #ifdef H5I_TESTING

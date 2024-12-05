@@ -116,7 +116,7 @@ H5FL_DEFINE(H5F_t);
 H5FL_DEFINE(H5F_shared_t);
 
 /* File ID class */
-static const H5I_class_t H5I_FILE_CLS[1] = {{
+static H5I_class_t H5I_FILE_CLS[1] = {{
     H5I_FILE,                 /* ID class value */
     0,                        /* Class flags */
     0,                        /* # of reserved IDs for class */

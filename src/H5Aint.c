@@ -123,7 +123,7 @@ typedef H5A_t *H5A_t_ptr;
 H5FL_SEQ_DEFINE_STATIC(H5A_t_ptr);
 
 /* Attribute ID class */
-static const H5I_class_t H5I_ATTR_CLS[1] = {{
+static H5I_class_t H5I_ATTR_CLS[1] = {{
     H5I_ATTR,                 /* ID class value */
     0,                        /* Class flags */
     0,                        /* # of reserved IDs for class */

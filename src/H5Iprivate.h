@@ -61,7 +61,7 @@ typedef struct H5I_class_t {
 /***************************************/
 /* Library-private Function Prototypes */
 /***************************************/
-H5_DLL herr_t     H5I_register_type(const H5I_class_t *cls);
+H5_DLL herr_t     H5I_register_type(H5I_class_t *cls);
 H5_DLL int64_t    H5I_nmembers(H5I_type_t type);
 H5_DLL herr_t     H5I_clear_type(H5I_type_t type, bool force, bool app_ref);
 H5_DLL H5I_type_t H5I_get_type(hid_t id);
@@ -97,7 +97,9 @@ H5_DLL htri_t H5I_is_file_object(hid_t id);
 H5_DLL hid_t  H5I_register(H5I_type_t type, const void *object, bool app_ref);
 H5_DLL herr_t H5I_register_using_existing_id(H5I_type_t type, void *object, bool app_ref, hid_t existing_id);
 
+#ifdef H5I_DEBUG
 /* Debugging functions */
 H5_DLL herr_t H5I_dump_ids_for_type(H5I_type_t type);
+#endif /* H5I_DEBUG */
 
 #endif /* H5Iprivate_H */

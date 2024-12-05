@@ -32,6 +32,8 @@
 #include "H5Tprivate.h"  /* Datatypes                                */
 #include "H5VLprivate.h" /* Virtual Object Layer                     */
 
+#ifdef H5I_DEBUG
+
 /****************/
 /* Local Macros */
 /****************/
@@ -164,14 +166,22 @@ herr_t
 H5I_dump_ids_for_type(H5I_type_t type)
 {
     H5I_type_info_t *type_info = NULL;
+    bool have_lock = false;        /* Whether the type's lock is held */
+    herr_t ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_NOAPI_NOERR
+    FUNC_ENTER_NOAPI(FAIL)
 
     fprintf(stderr, "Dumping ID type %d\n", (int)type);
-    type_info = H5I_type_info_array_g[type];
+
+    /* Acquire the mutex protecting the global type info */
+    if (H5I__type_info_acquire(type) < 0)
+        HGOTO_ERROR(H5E_ID, H5E_CANTLOCK, FAIL, "can't lock type info's mutex");
+    have_lock = true;
+
+    /* Get the pointer to the type info */
+    type_info = H5I_type_info_array_g[type].type_info;
 
     if (type_info) {
-
         H5I_id_info_t *item = NULL;
         H5I_id_info_t *tmp  = NULL;
 
@@ -200,5 +210,11 @@ H5I_dump_ids_for_type(H5I_type_t type)
     else
         fprintf(stderr, "Global type info/tracking pointer for that type is NULL\n");
 
-    FUNC_LEAVE_NOAPI(SUCCEED)
+done:
+    /* Release exclusive access for the type */
+    if (have_lock && H5I__type_info_release(type) < 0)
+        HDONE_ERROR(H5E_ID, H5E_CANTUNLOCK, FAIL, "can't release lock on type");
+
+    FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5I_dump_ids_for_type() */
+#endif /* H5I_DEBUG */

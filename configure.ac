@@ -3072,8 +3072,8 @@ AC_SUBST([INTERNAL_DEBUG_OUTPUT])
 ## too specialized or have huge performance hits. These
 ## are not listed in the "all" packages list.
 ##
-## all_packages="AC,B2,CX,D,F,FA,FL,FS,MM,O,T,TS,Z"
-all_packages="AC,B2,CX,D,F,MM,O,T,TS,Z"
+## all_packages="AC,B2,CX,D,F,FA,FL,FS,I,MM,O,T,TS,Z"
+all_packages="AC,B2,CX,D,F,I,MM,O,T,TS,Z"
 
 case "X-$INTERNAL_DEBUG_OUTPUT" in
   X-yes|X-all)

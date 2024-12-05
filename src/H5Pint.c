@@ -392,7 +392,7 @@ H5FL_DEFINE_STATIC(H5P_genprop_t);
 H5FL_DEFINE_STATIC(H5P_genplist_t);
 
 /* Generic Property Class ID class */
-static const H5I_class_t H5I_GENPROPCLS_CLS[1] = {{
+static H5I_class_t H5I_GENPROPCLS_CLS[1] = {{
     H5I_GENPROP_CLS,                /* ID class value */
     0,                              /* Class flags */
     0,                              /* # of reserved IDs for class */
@@ -400,7 +400,7 @@ static const H5I_class_t H5I_GENPROPCLS_CLS[1] = {{
 }};
 
 /* Generic Property List ID class */
-static const H5I_class_t H5I_GENPROPLST_CLS[1] = {{
+static H5I_class_t H5I_GENPROPLST_CLS[1] = {{
     H5I_GENPROP_LST,               /* ID class value */
     0,                             /* Class flags */
     0,                             /* # of reserved IDs for class */
