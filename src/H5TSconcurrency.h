@@ -31,10 +31,10 @@
 /* Local Macros */
 /****************/
 
-#define H5TS_ATOMIC_GET_NEXT_INT(obj, limit)  H5TS_atomic_get_next_int(obj, limit)
+#define H5TS_ATOMIC_GET_NEXT_INT(obj, limit) H5TS_atomic_get_next_int(obj, limit)
 
 #ifdef H5_HAVE_CONCURRENCY
-#define H5TS_ATOMIC_LOAD_INT(obj)           H5TS_atomic_load_int(obj)
+#define H5TS_ATOMIC_LOAD_INT(obj) H5TS_atomic_load_int(obj)
 
 #define H5TS_ATOMIC_INIT_SIZE_T(obj, desired)  H5TS_atomic_init_size_t(obj, desired)
 #define H5TS_ATOMIC_LOAD_SIZE_T(obj)           H5TS_atomic_load_size_t(obj)
@@ -43,7 +43,7 @@
 #define H5TS_ATOMIC_FETCH_SUB_SIZE_T(obj, arg) H5TS_atomic_fetch_sub_size_t(obj, arg)
 #define H5TS_ATOMIC_DESTROY_SIZE_T(obj)        H5TS_atomic_destroy_size_t(obj)
 #else /* H5_HAVE_CONCURRENCY */
-#define H5TS_ATOMIC_LOAD_INT(obj)           *(obj)
+#define H5TS_ATOMIC_LOAD_INT(obj) *(obj)
 
 #define H5TS_ATOMIC_INIT_SIZE_T(obj, desired)  *(obj) = (desired)
 #define H5TS_ATOMIC_LOAD_SIZE_T(obj)           *(obj)
@@ -73,7 +73,6 @@
 /* Local Variables */
 /*******************/
 
-
 #ifdef H5_HAVE_CONCURRENCY
 /*--------------------------------------------------------------------------
  * Function:    H5TS_atomic_get_next_int
@@ -96,11 +95,11 @@ H5TS_atomic_get_next_int(H5TS_atomic_int_t *obj, int limit)
         if (cur_val == limit)
             return -1;
         new_val = cur_val + 1;
-    } while(!H5TS_atomic_compare_exchange_weak_int(obj, &cur_val, new_val));
+    } while (!H5TS_atomic_compare_exchange_weak_int(obj, &cur_val, new_val));
 
     return cur_val;
 } /* end H5TS_atomic_get_next_int() */
-#else /* H5_HAVE_CONCURRENCY */
+#else  /* H5_HAVE_CONCURRENCY */
 /*--------------------------------------------------------------------------
  * Function:    H5TS_atomic_get_next_int
  *
@@ -127,4 +126,3 @@ H5TS_atomic_get_next_int(int *obj, int limit)
     return new_val;
 } /* end H5TS_atomic_get_next_int() */
 #endif /* H5_HAVE_CONCURRENCY */
-

@@ -90,8 +90,9 @@
 #define H5TS_atomic_store_int(obj, desired) atomic_store((obj), (desired))
 #define H5TS_atomic_fetch_add_int(obj, arg) atomic_fetch_add((obj), (arg))
 #define H5TS_atomic_fetch_sub_int(obj, arg) atomic_fetch_sub((obj), (arg))
-#define H5TS_atomic_compare_exchange_weak_int(obj, expected, desired) atomic_compare_exchange_weak((obj), (expected), (desired))
-#define H5TS_atomic_destroy_int(obj)        /* void */
+#define H5TS_atomic_compare_exchange_weak_int(obj, expected, desired)                                        \
+    atomic_compare_exchange_weak((obj), (expected), (desired))
+#define H5TS_atomic_destroy_int(obj) /* void */
 
 /* atomic_uint */
 #define H5TS_atomic_init_uint(obj, desired)  atomic_init((obj), (desired))
@@ -471,7 +472,7 @@ H5_DLL herr_t H5TS_semaphore_destroy(H5TS_semaphore_t *sem);
 #else /* H5_HAVE_THREADS */
 
 /* Aliases for atomic types used when single-threaded */
-typedef int H5TS_atomic_int_t;
+typedef int    H5TS_atomic_int_t;
 typedef size_t H5TS_atomic_size_t;
 #define H5TS_atomic_init_size_t(obj, desired)  *(obj) = (desired)
 #define H5TS_atomic_load_size_t(obj)           *(obj)

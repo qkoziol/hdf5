@@ -113,7 +113,7 @@ H5Iregister_type(size_t H5_ATTR_UNUSED hash_size, unsigned reserved, H5I_free_t 
 
     /* Indicate that the class object should be freed when the type is destroyed */
     /* (Should be set after errors could occur) */
-    cls->flags     = H5I_CLASS_IS_APPLICATION;
+    cls->flags = H5I_CLASS_IS_APPLICATION;
 
     /* Set return value */
     ret_value = cls->type;
@@ -377,7 +377,8 @@ H5Iget_type(hid_t id)
 
     ret_value = H5I_get_type(id);
 
-    if (ret_value <= H5I_BADID || (int)ret_value >= H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g )|| NULL == H5I_object(id))
+    if (ret_value <= H5I_BADID || (int)ret_value >= H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g) ||
+        NULL == H5I_object(id))
         HGOTO_DONE(H5I_BADID);
 
 done:

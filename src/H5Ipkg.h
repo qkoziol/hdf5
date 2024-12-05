@@ -80,9 +80,9 @@ typedef struct H5I_id_info_t {
 /* Type information structure used */
 typedef struct H5I_type_info_t {
 #ifdef H5_HAVE_CONCURRENCY
-    H5TS_dlftt_mutex_t mutex;        /* Guard the type info struct */
-    bool mutex_init;                 /* Whether the mutex has been initialized */
-#endif /* H5_HAVE_CONCURRENCY */
+    H5TS_dlftt_mutex_t mutex;      /* Guard the type info struct */
+    bool               mutex_init; /* Whether the mutex has been initialized */
+#endif                             /* H5_HAVE_CONCURRENCY */
 
     const H5I_class_t *cls;          /* Pointer to ID class */
     unsigned           init_count;   /* # of times this type has been initialized */
@@ -96,11 +96,11 @@ typedef struct H5I_type_info_t {
 /* Elements for global type info array */
 typedef struct {
 #ifdef H5_HAVE_CONCURRENCY
-    H5TS_dlftt_mutex_t mutex;           /* Guard the type info pointer */
-    bool mutex_init;                    /* Whether the mutex has been initialized */
-#endif /* H5_HAVE_CONCURRENCY */
+    H5TS_dlftt_mutex_t mutex;      /* Guard the type info pointer */
+    bool               mutex_init; /* Whether the mutex has been initialized */
+#endif                             /* H5_HAVE_CONCURRENCY */
 
-    H5I_type_info_t *type_info;         /* Pointer to type info object */
+    H5I_type_info_t *type_info; /* Pointer to type info object */
 } H5I_ti_arr_elmt_t;
 
 /*****************************/

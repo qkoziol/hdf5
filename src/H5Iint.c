@@ -92,15 +92,15 @@ bool H5_PKG_INIT_VAR = false;
 
 /* Concurrency globals for type info array */
 #ifdef H5_HAVE_CONCURRENCY
-static bool H5I_concur_gbl_init;            /* Whether the global mutex & atomic variables have been initialized */
-#endif /* H5_HAVE_CONCURRENCY */
+static bool H5I_concur_gbl_init; /* Whether the global mutex & atomic variables have been initialized */
+#endif                           /* H5_HAVE_CONCURRENCY */
 
 /* Declared extern in H5Ipkg.h and documented there */
 H5I_ti_arr_elmt_t H5I_type_info_array_g[H5I_MAX_NUM_TYPES];
 #ifdef H5_HAVE_CONCURRENCY
 H5TS_atomic_int_t H5I_next_type_g;
 #else  /* H5_HAVE_CONCURRENCY */
-int              H5I_next_type_g = (int)H5I_NTYPES;
+int H5I_next_type_g = (int)H5I_NTYPES;
 #endif /* H5_HAVE_CONCURRENCY */
 
 /* Declare a free list to manage the H5I_id_info_t struct */
@@ -126,7 +126,7 @@ H5FL_DEFINE_STATIC(H5I_id_info_t);
 herr_t
 H5I__init_package(void)
 {
-    herr_t          ret_value = SUCCEED; /* Return value */
+    herr_t ret_value = SUCCEED; /* Return value */
 
 #ifdef H5_HAVE_CONCURRENCY
     FUNC_ENTER_PACKAGE
@@ -142,9 +142,10 @@ H5I__init_package(void)
     H5TS_atomic_init_int(&H5I_next_type_g, (int)H5I_NTYPES);
 
     /* Initialize the mutices protecting the type information */
-    for(unsigned u = 0; u < H5I_MAX_NUM_TYPES; u++) {
+    for (unsigned u = 0; u < H5I_MAX_NUM_TYPES; u++) {
         if (H5TS_dlftt_mutex_init(&H5I_type_info_array_g[u].mutex) < 0)
-            HGOTO_ERROR(H5E_ID, H5E_CANTINIT, FAIL, "can't initialize global type info array type_info->mutexmutex");
+            HGOTO_ERROR(H5E_ID, H5E_CANTINIT, FAIL,
+                        "can't initialize global type info array type_info->mutexmutex");
         H5I_type_info_array_g[u].mutex_init = true;
     } /* end for */
 
@@ -220,7 +221,7 @@ H5I_term_package(void)
                 /* Indicate that the concurrency globals are initialized */
                 if (H5I_concur_gbl_init) {
                     /* Destroy the mutices protecting global type info array elements */
-                    for(unsigned u = 0; u < H5I_MAX_NUM_TYPES; u++)
+                    for (unsigned u = 0; u < H5I_MAX_NUM_TYPES; u++)
                         if (H5I_type_info_array_g[u].mutex_init) {
                             H5TS_dlftt_mutex_destroy(&H5I_type_info_array_g[u].mutex);
                             H5I_type_info_array_g[u].mutex_init = false;
@@ -257,7 +258,7 @@ herr_t
 H5I_register_type(H5I_class_t *cls)
 {
     H5I_type_info_t *type_info = NULL;    /* Pointer to the ID type*/
-    bool have_lock = false;        /* Whether the type's lock is held */
+    bool             have_lock = false;   /* Whether the type's lock is held */
     herr_t           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
@@ -276,7 +277,7 @@ H5I_register_type(H5I_class_t *cls)
 
     /* Generate a new H5I_type_t value, if necessary */
     if (H5I_UNINIT == cls->type) {
-        H5I_type_t   new_type;  /* New ID type value */
+        H5I_type_t new_type; /* New ID type value */
 
         /* Get the next available type value */
         new_type = H5TS_ATOMIC_GET_NEXT_INT(&H5I_next_type_g, H5I_MAX_NUM_TYPES);
@@ -293,7 +294,7 @@ H5I_register_type(H5I_class_t *cls)
                 if (NULL == H5I_type_info_array_g[i].type_info) {
                     /* Found a free type ID */
                     new_type = (H5I_type_t)i;
-                    found     = true;
+                    found    = true;
                     break;
                 }
 
@@ -350,9 +351,9 @@ done:
 int64_t
 H5I_nmembers(H5I_type_t type)
 {
-    H5I_type_info_t *type_info = NULL; /* Pointer to the ID type */
-    bool have_lock = false;        /* Whether the type's lock is held */
-    int64_t          ret_value = 0;    /* Return value */
+    H5I_type_info_t *type_info = NULL;  /* Pointer to the ID type */
+    bool             have_lock = false; /* Whether the type's lock is held */
+    int64_t          ret_value = 0;     /* Return value */
 
     FUNC_ENTER_NOAPI((-1))
 
@@ -446,8 +447,8 @@ H5I__clear_type(H5I_type_info_t *type_info, bool force, bool app_ref)
 
     /* Construct udata */
     udata.type_info = type_info;
-    udata.force   = force;
-    udata.app_ref = app_ref;
+    udata.force     = force;
+    udata.app_ref   = app_ref;
 
     /* Clearing a type is done in two phases (mark-and-sweep). This is because
      * the type's free callback can free other IDs, potentially corrupting
@@ -494,8 +495,8 @@ done:
 herr_t
 H5I_clear_type(H5I_type_t type, bool force, bool app_ref)
 {
-    bool                have_lock = false;               /* Whether the lock is held */
-    herr_t              ret_value = SUCCEED; /* Return value */
+    bool   have_lock = false;   /* Whether the lock is held */
+    herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
@@ -625,7 +626,7 @@ H5I__mark_node(void *_info, void H5_ATTR_UNUSED *key, void *_udata)
 static herr_t
 H5I__destroy_type_info(H5I_type_t type, H5I_type_info_t *type_info)
 {
-    herr_t           ret_value = SUCCEED; /* Return value */
+    herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -660,7 +661,7 @@ herr_t
 H5I__destroy_type(H5I_type_t type)
 {
     H5I_type_info_t *type_info = NULL;    /* Pointer to the ID type */
-    bool                have_lock = false;               /* Whether the lock is held */
+    bool             have_lock = false;   /* Whether the lock is held */
     herr_t           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -717,7 +718,7 @@ H5I__register(H5I_type_t type, const void *object, bool app_ref, H5I_future_real
     H5I_type_info_t *type_info = NULL;            /* Pointer to the type */
     H5I_id_info_t   *info      = NULL;            /* Pointer to the new ID information */
     hid_t            new_id    = H5I_INVALID_HID; /* New ID */
-    bool                have_lock = false;               /* Whether the lock is held */
+    bool             have_lock = false;           /* Whether the lock is held */
     hid_t            ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -832,7 +833,7 @@ H5I_register_using_existing_id(H5I_type_t type, void *object, bool app_ref, hid_
 {
     H5I_type_info_t *type_info = NULL;    /* Pointer to the type */
     H5I_id_info_t   *info      = NULL;    /* Pointer to the new ID information */
-    bool                have_lock = false;               /* Whether the lock is held */
+    bool             have_lock = false;   /* Whether the lock is held */
     herr_t           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
@@ -1168,7 +1169,7 @@ H5I_remove(hid_t id)
 {
     H5I_type_info_t *type_info = NULL;      /* Pointer to the ID type */
     H5I_type_t       type      = H5I_BADID; /* ID's type */
-    bool                have_lock = false;               /* Whether the lock is held */
+    bool             have_lock = false;     /* Whether the lock is held */
     void            *ret_value = NULL;      /* Return value */
 
     FUNC_ENTER_NOAPI(NULL)
@@ -1219,9 +1220,9 @@ done:
 static int
 H5I__dec_ref(hid_t id, void **request)
 {
-    H5I_id_info_t *info      = NULL; /* Pointer to the ID */
-    bool                have_lock = false;               /* Whether the lock is held */
-    int            ret_value = 0;    /* Return value */
+    H5I_id_info_t *info      = NULL;  /* Pointer to the ID */
+    bool           have_lock = false; /* Whether the lock is held */
+    int            ret_value = 0;     /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -1619,9 +1620,9 @@ done:
 int
 H5I__inc_type_ref(H5I_type_t type)
 {
-    H5I_type_info_t *type_info = NULL; /* Pointer to the type */
-    bool                have_lock = false;               /* Whether the lock is held */
-    int              ret_value = -1;   /* Return value */
+    H5I_type_info_t *type_info = NULL;  /* Pointer to the type */
+    bool             have_lock = false; /* Whether the lock is held */
+    int              ret_value = -1;    /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -1671,9 +1672,9 @@ done:
 int
 H5I_dec_type_ref(H5I_type_t type)
 {
-    H5I_type_info_t *type_info = NULL; /* Pointer to the ID type */
-    bool                have_lock = false;               /* Whether the lock is held */
-    herr_t           ret_value = 0;    /* Return value */
+    H5I_type_info_t *type_info = NULL;  /* Pointer to the ID type */
+    bool             have_lock = false; /* Whether the lock is held */
+    herr_t           ret_value = 0;     /* Return value */
 
     FUNC_ENTER_NOAPI((-1))
 
@@ -1726,9 +1727,9 @@ done:
 int
 H5I__get_type_ref(H5I_type_t type)
 {
-    H5I_type_info_t *type_info = NULL; /* Pointer to the type  */
-    bool                have_lock = false;               /* Whether the lock is held */
-    int              ret_value = -1;   /* Return value         */
+    H5I_type_info_t *type_info = NULL;  /* Pointer to the type  */
+    bool             have_lock = false; /* Whether the lock is held */
+    int              ret_value = -1;    /* Return value         */
 
     FUNC_ENTER_PACKAGE
 
@@ -1781,8 +1782,8 @@ H5I__iterate_cb(void *_item, void H5_ATTR_UNUSED *_key, void *_udata)
      * its reference count is positive.
      */
     if (!udata->app_ref || info->app_count > 0) {
-        void      *object;
-        herr_t     cb_ret_val = FAIL;
+        void  *object;
+        herr_t cb_ret_val = FAIL;
 
         /* The stored object pointer might be an H5VL_object_t, in which
          * case we'll need to get the wrapped object struct (H5F_t *, etc.).
@@ -1836,7 +1837,7 @@ herr_t
 H5I_iterate(H5I_type_t type, H5I_search_func_t func, void *udata, bool app_ref)
 {
     H5I_type_info_t *type_info = NULL;    /* Pointer to the type */
-    bool                have_lock = false;               /* Whether the lock is held */
+    bool             have_lock = false;   /* Whether the lock is held */
     herr_t           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
@@ -1900,11 +1901,11 @@ done:
 H5I_id_info_t *
 H5I__find_id(hid_t id)
 {
-    H5I_type_t       type;             /* ID's type */
-    H5I_type_info_t *type_info = NULL; /* Pointer to the type */
-    H5I_id_info_t   *id_info   = NULL; /* ID's info */
-    bool                have_lock = false;               /* Whether the lock is held */
-    H5I_id_info_t   *ret_value = NULL; /* Return value */
+    H5I_type_t       type;              /* ID's type */
+    H5I_type_info_t *type_info = NULL;  /* Pointer to the type */
+    H5I_id_info_t   *id_info   = NULL;  /* ID's info */
+    bool             have_lock = false; /* Whether the lock is held */
+    H5I_id_info_t   *ret_value = NULL;  /* Return value */
 
     FUNC_ENTER_PACKAGE_NOERR
 
@@ -2043,7 +2044,7 @@ herr_t
 H5I_find_id(const void *object, H5I_type_t type, hid_t *id)
 {
     H5I_type_info_t *type_info = NULL;    /* Pointer to the type */
-    bool                have_lock = false;               /* Whether the lock is held */
+    bool             have_lock = false;   /* Whether the lock is held */
     herr_t           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
@@ -2108,9 +2109,9 @@ htri_t
 H5I__is_type_valid(H5I_type_t type)
 {
 #ifdef H5_HAVE_CONCURRENCY
-    bool have_lock = false;               /* Whether the lock is held */
-#endif /* H5_HAVE_CONCURRENCY */
-    htri_t ret_value = true;              /* Return value */
+    bool have_lock = false;  /* Whether the lock is held */
+#endif                       /* H5_HAVE_CONCURRENCY */
+    htri_t ret_value = true; /* Return value */
 
 #ifdef H5_HAVE_CONCURRENCY
     FUNC_ENTER_PACKAGE
@@ -2152,11 +2153,11 @@ done:
 herr_t
 H5I__type_info_acquire(H5I_type_t
 #ifndef H5_HAVE_CONCURRENCY
-    H5_ATTR_UNUSED
+                           H5_ATTR_UNUSED
 #endif /* NDEBUG */
-    type)
+                               type)
 {
-    herr_t ret_value = SUCCEED;  /* Return value */
+    herr_t ret_value = SUCCEED; /* Return value */
 
 #ifdef H5_HAVE_CONCURRENCY
     FUNC_ENTER_PACKAGE
@@ -2187,11 +2188,11 @@ done:
 herr_t
 H5I__type_info_release(H5I_type_t
 #ifndef H5_HAVE_CONCURRENCY
-    H5_ATTR_UNUSED
+                           H5_ATTR_UNUSED
 #endif /* NDEBUG */
-    type)
+                               type)
 {
-    herr_t ret_value = SUCCEED;  /* Return value */
+    herr_t ret_value = SUCCEED; /* Return value */
 
 #ifdef H5_HAVE_CONCURRENCY
     FUNC_ENTER_PACKAGE
@@ -2239,4 +2240,3 @@ H5I__type_info_free(H5I_type_info_t *type_info)
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5I__type_info_free() */
-

@@ -166,8 +166,8 @@ herr_t
 H5I_dump_ids_for_type(H5I_type_t type)
 {
     H5I_type_info_t *type_info = NULL;
-    bool have_lock = false;        /* Whether the type's lock is held */
-    herr_t ret_value = SUCCEED; /* Return value */
+    bool             have_lock = false;   /* Whether the type's lock is held */
+    herr_t           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
