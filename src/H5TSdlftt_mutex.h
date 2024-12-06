@@ -64,6 +64,47 @@ H5_DLL herr_t H5TS__get_dlftt(unsigned *dlftt);
  *
  * Purpose:     Acquires the lock on a mutex, obeying the "DLFTT" protocol
  *
+ * Note:     	Algorithm flowchart:
+ *
+ *          .─────────.
+ *         (   Start   )
+ *          `─────────'          Acquire DLFTT Mutex
+ *               │               -------------------
+ *               ▼
+ *               Λ
+ *              ╱ ╲
+ *             ╱   ╲
+ *            ╱     ╲
+ *           ╱       ╲
+ *          ╱         ╲    N    ┌────────────────┐
+ *         ▕  bypass?  ▏───────▶│Get DLFTT value │────────┐
+ *          ╲         ╱         └────────────────┘        │
+ *           ╲       ╱                                    │
+ *            ╲     ╱                                     ▼
+ *             ╲   ╱                                      Λ
+ *              ╲ ╱                                      ╱ ╲
+ *               V                                      ╱   ╲
+ *            Y  │                                     ╱     ╲
+ *               ▼                                    ╱       ╲
+ *        ┌────────────┐     ┌───────────────┐   Y   ╱         ╲
+ *        │ ++refcount │◀────│ bypass = true │◀─────▕ DLFTT > 0?▏
+ *        └────────────┘     └───────────────┘       ╲         ╱
+ *               │                                    ╲       ╱
+ *               │                                     ╲     ╱
+ *               │                                      ╲   ╱
+ *               │                                       ╲ ╱
+ *               │                                        V
+ *               │                                     N  │
+ *               │                                        ▼
+ *               │                  .─.            ┌────────────┐
+ *               └────────────────▶( X )◀──────────│ Lock mutex │
+ *                                  `─'            └────────────┘
+ *                                   │
+ *                                   ▼
+ *                              .─────────.
+ *                             (    End    )
+ *                              `─────────'
+ *
  * Return:      Non-negative on success / Negative on failure
  *
  *--------------------------------------------------------------------------
@@ -71,15 +112,29 @@ H5_DLL herr_t H5TS__get_dlftt(unsigned *dlftt);
 static inline herr_t
 H5TS_dlftt_mutex_acquire(H5TS_dlftt_mutex_t *mtx)
 {
-    /* Query the DLFTT value */
-    if (H5_UNLIKELY(H5TS__get_dlftt(&mtx->dlftt) < 0))
-        return FAIL;
+    /* Check whether we are bypassing locking the mutex */
+    if (mtx->bypass)
+        /* Increment refcount */
+        mtx->rc++;
+    else {
+        unsigned     dlftt = 0;
 
-    /* Don't acquire the mutex if locking is disabled */
-    if (0 == mtx->dlftt)
-        /* Acquire the mutex */
-        if (H5_UNLIKELY(H5TS_mutex_lock(&mtx->mtx) < 0))
+        /* Query the DLFTT value */
+        if (H5_UNLIKELY(H5TS__get_dlftt(&dlftt) < 0))
             return FAIL;
+
+        /* Acquire the mutex if locking is not disabled */
+        if (0 == dlftt) {
+            /* Acquire the mutex */
+            if (H5_UNLIKELY(H5TS_mutex_lock(&mtx->mtx) < 0))
+                return FAIL;
+        } /* end if */
+        else {
+            /* Indicate that lock should be bypassed */
+            mtx->bypass = true;
+            mtx->rc = 1;
+        } /* end else */
+    } /* end else */
 
     return SUCCEED;
 } /* end H5TS_dlftt_mutex_acquire() */
@@ -89,6 +144,47 @@ H5TS_dlftt_mutex_acquire(H5TS_dlftt_mutex_t *mtx)
  *
  * Purpose:     Releases the lock on a mutex, obeying the "DLFTT" protocol
  *
+ * Note:     	Algorithm flowchart:
+ *
+ *          .─────────.
+ *         (   Start   )
+ *          `─────────'
+ *               │                Release DLFTT Mutex
+ *               ▼                -------------------
+ *               Λ
+ *              ╱ ╲
+ *             ╱   ╲
+ *            ╱     ╲
+ *           ╱       ╲
+ *          ╱         ╲  Y ┌────────────┐
+ *         ▕  bypass?  ▏──▶│ --refcount │
+ *          ╲         ╱    └────────────┘
+ *           ╲       ╱            │
+ *            ╲     ╱             ▼
+ *             ╲   ╱              Λ
+ *              ╲ ╱              ╱ ╲
+ *               V              ╱   ╲
+ *             N │             ╱     ╲
+ *               ▼            ╱       ╲
+ *        ┌────────────┐     ╱refcount ╲  Y ┌───────────────┐
+ *        │Unlock mutex│    ▕   == 0?   ▏──▶│bypass = false │
+ *        └────────────┘     ╲         ╱    └───────────────┘
+ *               │            ╲       ╱             │
+ *               │             ╲     ╱              │
+ *               │              ╲   ╱               │
+ *               │               ╲ ╱                │
+ *               │                V                 │
+ *               │              N │                 │
+ *               │                ▼                 │
+ *               │               .─.                │
+ *               └─────────────▶( X )◀──────────────┘
+ *                               `─'
+ *                                │
+ *                                ▼
+ *                           .─────────.
+ *                          (    End    )
+ *                           `─────────'
+ *
  * Return:      Non-negative on success / Negative on failure
  *
  *--------------------------------------------------------------------------
@@ -96,11 +192,20 @@ H5TS_dlftt_mutex_acquire(H5TS_dlftt_mutex_t *mtx)
 static inline herr_t
 H5TS_dlftt_mutex_release(H5TS_dlftt_mutex_t *mtx)
 {
-    /* Don't release the mutex if locking is disabled */
-    if (0 == mtx->dlftt)
+    /* Check if we are bypassing the lock currently */
+    if (mtx->bypass) {
+        /* Decrement refcount */
+        mtx->rc--;
+
+        /* Check for done bypassing */
+        if (0 == mtx->rc)
+            mtx->bypass = false;
+    } /* end if */
+    else {
         /* Release the mutex */
         if (H5_UNLIKELY(H5TS_mutex_unlock(&mtx->mtx) < 0))
             return FAIL;
+    } /* end else */
 
     return SUCCEED;
 } /* end H5TS_dlftt_mutex_release() */
