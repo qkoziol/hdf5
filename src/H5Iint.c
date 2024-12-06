@@ -141,7 +141,7 @@ H5I__init_package(void)
     /* Initialize the global atomic variables */
     H5TS_atomic_init_int(&H5I_next_type_g, (int)H5I_NTYPES);
 
-    /* Initialize the mutices protecting the type information */
+    /* Initialize the mutexes protecting the type information */
     for (unsigned u = 0; u < H5I_MAX_NUM_TYPES; u++) {
         if (H5TS_dlftt_mutex_init(&H5I_type_info_array_g[u].mutex) < 0)
             HGOTO_ERROR(H5E_ID, H5E_CANTINIT, FAIL,
@@ -220,7 +220,7 @@ H5I_term_package(void)
 #ifdef H5_HAVE_CONCURRENCY
                 /* Indicate that the concurrency globals are initialized */
                 if (H5I_concur_gbl_init) {
-                    /* Destroy the mutices protecting global type info array elements */
+                    /* Destroy the mutexes protecting global type info array elements */
                     for (unsigned u = 0; u < H5I_MAX_NUM_TYPES; u++)
                         if (H5I_type_info_array_g[u].mutex_init) {
                             H5TS_dlftt_mutex_destroy(&H5I_type_info_array_g[u].mutex);
