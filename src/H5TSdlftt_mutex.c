@@ -78,7 +78,7 @@ H5TS_dlftt_mutex_init(H5TS_dlftt_mutex_t *mutex)
     if (H5_UNLIKELY(H5TS_mutex_init(&mutex->mtx, H5TS_MUTEX_TYPE_PLAIN)) < 0)
         HGOTO_DONE(FAIL);
     mutex->bypass = false;
-    mutex->rc = 0;
+    mutex->rc     = 0;
 
 done:
     FUNC_LEAVE_NOAPI_NAMECHECK_ONLY(ret_value)

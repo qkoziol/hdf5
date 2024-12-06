@@ -308,9 +308,9 @@ typedef atomic_flag H5TS_spinlock_t;
 
 /* Mutex that efficiently obeys the "DLFTT" locking protocol */
 typedef struct H5TS_dlftt_mutex_t {
-    H5TS_mutex_t mtx;   /* Underlying mutex */
-    bool bypass;        /* Whether locking is being bypassed (due to DLFTT protocol) */
-    unsigned rc;        /* Refcount of locks bypassed */
+    H5TS_mutex_t mtx;    /* Underlying mutex */
+    bool         bypass; /* Whether locking is being bypassed (due to DLFTT protocol) */
+    unsigned     rc;     /* Refcount of locks bypassed */
 } H5TS_dlftt_mutex_t;
 
 /*****************************/

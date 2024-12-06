@@ -117,7 +117,7 @@ H5TS_dlftt_mutex_acquire(H5TS_dlftt_mutex_t *mtx)
         /* Increment refcount */
         mtx->rc++;
     else {
-        unsigned     dlftt = 0;
+        unsigned dlftt = 0;
 
         /* Query the DLFTT value */
         if (H5_UNLIKELY(H5TS__get_dlftt(&dlftt) < 0))
@@ -132,9 +132,9 @@ H5TS_dlftt_mutex_acquire(H5TS_dlftt_mutex_t *mtx)
         else {
             /* Indicate that lock should be bypassed */
             mtx->bypass = true;
-            mtx->rc = 1;
+            mtx->rc     = 1;
         } /* end else */
-    } /* end else */
+    }     /* end else */
 
     return SUCCEED;
 } /* end H5TS_dlftt_mutex_acquire() */
