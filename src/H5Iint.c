@@ -2404,11 +2404,11 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5I__id_info_release(H5I_id_info_t *
+H5I__id_info_release(H5I_id_info_t
 #ifndef H5_HAVE_CONCURRENCY
                          H5_ATTR_UNUSED
 #endif /* NDEBUG */
-                             info)
+                            *info)
 {
     herr_t ret_value = SUCCEED; /* Return value */
 
