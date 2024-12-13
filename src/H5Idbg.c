@@ -87,7 +87,8 @@ H5I__id_dump_cb(void *_item, void H5_ATTR_UNUSED *_key, void *_udata)
     fprintf(stderr, "         id = %" PRIdHID "\n", info->id);
     fprintf(stderr, "         count = %u\n", info->count);
     fprintf(stderr, "         obj   = 0x%8p\n", info->u.c_object);
-    fprintf(stderr, "         marked = %d\n", info->marked);
+    fprintf(stderr, "         gen   = %u\n", info->gen);
+    fprintf(stderr, "         del_later = %s\n", info->del_later ? "true" : "false");
 
     /* Get the group location, so we get get the name */
     switch (type) {
@@ -189,7 +190,9 @@ H5I_dump_ids_for_type(H5I_type_t type)
         fprintf(stderr, "     init_count = %u\n", type_info->init_count);
         fprintf(stderr, "     reserved   = %u\n", type_info->cls->reserved);
         fprintf(stderr, "     id_count   = %llu\n", (unsigned long long)type_info->id_count);
-        fprintf(stderr, "     nextid        = %llu\n", (unsigned long long)type_info->nextid);
+        fprintf(stderr, "     nextid     = %llu\n", (unsigned long long)type_info->nextid);
+        fprintf(stderr, "     gen        = %u\n", type_info->gen);
+        fprintf(stderr, "     iterating  = %s\n", type_info->iterating ? "true" : "false");
 
         /* List */
         if (type_info->id_count > 0) {
