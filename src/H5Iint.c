@@ -157,6 +157,76 @@ H5I_term_package(void)
 } /* end H5I_term_package() */
 
 /*-------------------------------------------------------------------------
+ * Function:    H5I__register_type_common
+ *
+ * Purpose:     Common functionality for H5Iregister_type(1|2)
+ *
+ * Return:      Success:    Type ID of the new type
+ *              Failure:    H5I_BADID
+ *-------------------------------------------------------------------------
+ */
+H5I_type_t
+H5I__register_type_common(unsigned reserved, H5I_free_t free_func)
+{
+    H5I_class_t *cls       = NULL;      /* New ID class */
+    H5I_type_t   new_type  = H5I_BADID; /* New ID type value */
+    H5I_type_t   ret_value = H5I_BADID; /* Return value */
+
+    FUNC_ENTER_PACKAGE
+
+    /* Generate a new H5I_type_t value */
+
+    /* Increment the number of types */
+    if (H5I_next_type_g < H5I_MAX_NUM_TYPES) {
+        new_type = (H5I_type_t)H5I_next_type_g;
+        H5I_next_type_g++;
+    }
+    else {
+        bool done; /* Indicate that search was successful */
+        int  i;
+
+        /* Look for a free type to give out */
+        done = false;
+        for (i = H5I_NTYPES; i < H5I_MAX_NUM_TYPES && done == false; i++) {
+            if (NULL == H5I_type_info_array_g[i]) {
+                /* Found a free type ID */
+                new_type = (H5I_type_t)i;
+                done     = true;
+            }
+        }
+
+        /* Verify that we found a type to give out */
+        if (done == false)
+            HGOTO_ERROR(H5E_ID, H5E_NOSPACE, H5I_BADID, "Maximum number of ID types exceeded");
+    }
+
+    /* Allocate new ID class */
+    if (NULL == (cls = H5MM_calloc(sizeof(H5I_class_t))))
+        HGOTO_ERROR(H5E_ID, H5E_CANTALLOC, H5I_BADID, "ID class allocation failed");
+
+    /* Initialize class fields */
+    cls->type      = new_type;
+    cls->flags     = H5I_CLASS_IS_APPLICATION;
+    cls->reserved  = reserved;
+    cls->free_func = free_func;
+
+    /* Register the new ID class */
+    if (H5I_register_type(cls) < 0)
+        HGOTO_ERROR(H5E_ID, H5E_CANTINIT, H5I_BADID, "can't initialize ID class");
+
+    /* Set return value */
+    ret_value = new_type;
+
+done:
+    /* Clean up on error */
+    if (ret_value == H5I_BADID)
+        if (cls)
+            cls = H5MM_xfree(cls);
+
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5I__register_type_common() */
+
+/*-------------------------------------------------------------------------
  * Function:    H5I_register_type
  *
  * Purpose:     Creates a new type of ID's to give out.
@@ -1487,7 +1557,7 @@ H5I__iterate_cb(void *_item, void H5_ATTR_UNUSED *_key, void *_udata)
     if ((!udata->app_ref) || (info->app_count > 0)) {
         H5I_type_t type = udata->obj_type;
         void      *object;
-        herr_t     cb_ret_val;
+        herr_t     cb_ret_val = FAIL;
 
         /* The stored object pointer might be an H5VL_object_t, in which
          * case we'll need to get the wrapped object struct (H5F_t *, etc.).
@@ -1495,7 +1565,12 @@ H5I__iterate_cb(void *_item, void H5_ATTR_UNUSED *_key, void *_udata)
         object = H5I__unwrap(info->u.object, type);
 
         /* Invoke callback function */
-        cb_ret_val = (*udata->user_func)((void *)object, info->id, udata->user_udata);
+        /* Prepare & restore library for user callback */
+        H5_BEFORE_USER_CB_NOERR(H5_ITER_ERROR)
+        {
+            cb_ret_val = (*udata->user_func)((void *)object, info->id, udata->user_udata);
+        }
+        H5_AFTER_USER_CB_NOERR(H5_ITER_ERROR)
 
         /* Set the return value based on the callback's return value */
         if (cb_ret_val > 0)
