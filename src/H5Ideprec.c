@@ -84,8 +84,8 @@
 H5I_type_t
 H5Iregister_type1(size_t H5_ATTR_UNUSED hash_size, unsigned reserved, H5I_free_t free_func)
 {
-    H5I_class_t *cls       = NULL;      /* New ID class */
-    H5I_type_t ret_value = H5I_BADID;
+    H5I_class_t *cls       = NULL; /* New ID class */
+    H5I_type_t   ret_value = H5I_BADID;
 
     FUNC_ENTER_API(H5I_BADID)
 

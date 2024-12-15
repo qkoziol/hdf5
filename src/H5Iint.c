@@ -69,9 +69,9 @@ static void          *H5I__unwrap(void *object, H5I_type_t type);
 static herr_t         H5I__clear_type(H5I_type_info_t *type_info, bool force, bool app_ref);
 static herr_t         H5I__destroy_type_info(H5I_type_t type, H5I_type_info_t *type_info);
 static herr_t         H5I__remove_id_info(H5I_type_info_t *type_info, H5I_id_info_t *info, void **request,
-                                            bool make_cb, bool force, bool try, bool id_locked);
+                                          bool make_cb, bool force, bool try, bool id_locked);
 static void          *H5I__remove_common(H5I_type_info_t *type_info, H5I_id_info_t *info, void **request,
-                                        bool make_cb);
+                                         bool make_cb);
 static int            H5I__dec_ref(hid_t id, void **request);
 static int            H5I__dec_app_ref(hid_t id, void **request);
 static int            H5I__dec_app_ref_always_close(hid_t id, void **request);
@@ -433,9 +433,9 @@ H5I__unwrap(void *object, H5I_type_t type)
 static herr_t
 H5I__clear_type(H5I_type_info_t *type_info, bool force, bool app_ref)
 {
-    H5I_id_info_t *item = NULL;
-    H5I_id_info_t *tmp  = NULL;
-    herr_t ret_value      = SUCCEED; /* Return value */
+    H5I_id_info_t *item      = NULL;
+    H5I_id_info_t *tmp       = NULL;
+    herr_t         ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -459,7 +459,7 @@ H5I__clear_type(H5I_type_info_t *type_info, bool force, bool app_ref)
         else {
             /* Delete the object if its refcount is <= 1 or forcing is on */
             if (force || (item->count - (!app_ref * item->app_count)) <= 1) {
-                herr_t status;  /* Whether ID was successfully removed */
+                herr_t status; /* Whether ID was successfully removed */
 
                 /* Try removing ID from hash table */
                 status = H5I__remove_id_info(type_info, item, H5_REQUEST_NULL, true, force, true, false);
@@ -1060,10 +1060,10 @@ H5I__remove_verify(hid_t id, H5I_type_t type)
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5I__remove_id_info(H5I_type_info_t *type_info, H5I_id_info_t *info, void **request,
-    bool make_cb, bool force, bool try, bool id_locked)
+H5I__remove_id_info(H5I_type_info_t *type_info, H5I_id_info_t *info, void **request, bool make_cb, bool force,
+                    bool try, bool id_locked)
 {
-    herr_t           ret_value      = SUCCEED; /* Return value */
+    herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -1077,7 +1077,7 @@ H5I__remove_id_info(H5I_type_info_t *type_info, H5I_id_info_t *info, void **requ
 
     /* Check if we want to make any callbacks */
     if (make_cb) {
-        herr_t status;              /* Status from callback */
+        herr_t status; /* Status from callback */
 
         /* Check if this is an un-realized future object */
         if (info->is_future) {
@@ -1144,10 +1144,9 @@ done:
  *-------------------------------------------------------------------------
  */
 static void *
-H5I__remove_common(H5I_type_info_t *type_info, H5I_id_info_t *info, void **request,
-    bool make_cb)
+H5I__remove_common(H5I_type_info_t *type_info, H5I_id_info_t *info, void **request, bool make_cb)
 {
-    void *ret_value = NULL;  /* Return value */
+    void *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -1297,7 +1296,7 @@ H5I__dec_ref(hid_t id, void **request)
         if (NULL == H5I__remove_common(type_info, info, request, true))
             HGOTO_ERROR(H5E_ID, H5E_CANTDELETE, (-1), "can't remove ID node");
         have_id_lock = false; /* Deleting the ID will unlock & destroy its mutex */
-    } /* end if */
+    }                         /* end if */
     else {
         --(info->count);
         ret_value = (int)info->count;
