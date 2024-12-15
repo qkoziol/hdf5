@@ -68,7 +68,10 @@ typedef struct {
 static void          *H5I__unwrap(void *object, H5I_type_t type);
 static herr_t         H5I__clear_type(H5I_type_info_t *type_info, bool force, bool app_ref);
 static herr_t         H5I__destroy_type_info(H5I_type_t type, H5I_type_info_t *type_info);
-static void          *H5I__remove_common(H5I_type_info_t *type_info, H5I_id_info_t *info);
+static herr_t         H5I__remove_id_info(H5I_type_info_t *type_info, H5I_id_info_t *info, void **request,
+                                            bool make_cb, bool force, bool try, bool id_locked);
+static void          *H5I__remove_common(H5I_type_info_t *type_info, H5I_id_info_t *info, void **request,
+                                        bool make_cb);
 static int            H5I__dec_ref(hid_t id, void **request);
 static int            H5I__dec_app_ref(hid_t id, void **request);
 static int            H5I__dec_app_ref_always_close(hid_t id, void **request);
@@ -419,10 +422,9 @@ H5I__unwrap(void *object, H5I_type_t type)
 } /* end H5I__unwrap() */
 
 /*-------------------------------------------------------------------------
- * Function:    H5I__clear_type
+ * Function:    H5I__del_id_from_type
  *
- * Purpose:     Internal routine to remove all objects from the type, calling the
- *              free function for each object regardless of the reference count.
+ * Purpose:     Delete an ID from a type, freeing it if possible
  *
  * Return:      SUCCEED/FAIL
  *
@@ -433,91 +435,50 @@ H5I__clear_type(H5I_type_info_t *type_info, bool force, bool app_ref)
 {
     H5I_id_info_t *item = NULL;
     H5I_id_info_t *tmp  = NULL;
+    herr_t ret_value      = SUCCEED; /* Return value */
 
-    FUNC_ENTER_PACKAGE_NOERR
+    FUNC_ENTER_PACKAGE
 
     /* Increment the generation of the type */
     type_info->gen++;
 
     /* Indicate that we're iterating this type right now */
-    type_info->iterating = true;
+    type_info->iterating++;
 
     /* Delete nodes from the local hash table */
     HASH_ITER(hh, type_info->hash_table, item, tmp)
     {
-        bool del_node = false; /* Whether to delete the node */
-
-        if (item->del_later)
-            del_node = true;
-        else
-            /* Do nothing to the object if the reference count is larger than
-             * one and forcing is off.
-             */
-            if (force || (item->count - (!app_ref * item->app_count)) <= 1) {
-                herr_t status;
-
-                /* Check if this is an un-realized future object */
-                if (item->is_future) {
-                    /* Prepare & restore library for user callback */
-                    H5_BEFORE_USER_CB_NOCHECK
-                    {
-                        /* Discard the future object */
-                        status = (item->discard_cb)(item->u.object);
-                    }
-                    H5_AFTER_USER_CB_NOCHECK
-                    if (status < 0) {
-                        if (force)
-                            /* Indicate node should be removed from list */
-                            del_node = true;
-                    }
-                    else
-                        /* Indicate node should be removed from list */
-                        del_node = true;
-                }
-                else {
-                    /* Check for a 'free' function and call it, if it exists */
-                    if (type_info->cls->free_func) {
-                        /* Prepare & restore library for user callback */
-                        H5_BEFORE_USER_CB_NOCHECK
-                        {
-                            status = (type_info->cls->free_func)(item->u.object, H5_REQUEST_NULL);
-                        }
-                        H5_AFTER_USER_CB_NOCHECK
-                        if (status < 0) {
-                            if (force)
-                                /* Indicate node should be removed from list */
-                                del_node = true;
-                        }
-                        else
-                            /* Indicate node should be removed from list */
-                            del_node = true;
-                    }
-                    else
-                        /* Indicate node should be removed from list */
-                        del_node = true;
-                }
+        /* Check if this ID node was deleted, through an iteration callback */
+        if (item->del_later) {
+            /* Remove ID from hash table */
+            if (H5I__remove_id_info(type_info, item, H5_REQUEST_NULL, true, true, false, false) < 0) {
+                type_info->iterating--;
+                HGOTO_ERROR(H5E_ID, H5E_CANTDELETE, FAIL, "can't remove ID node from hash table");
             }
-
-        /* Remove ID node if requested */
-        if (del_node) {
-            /* Decrement the number of IDs in the type */
-            type_info->id_count--;
-
-            /* Remove ID from (local) hash table */
-            HASH_DELETE(hh, type_info->hash_table, item);
-
-            /* Delete ID info */
-            H5I__id_info_free(item, false);
         }
-        else
-            /* Move item to new type generation */
-            item->gen = type_info->gen;
+        else {
+            /* Delete the object if its refcount is <= 1 or forcing is on */
+            if (force || (item->count - (!app_ref * item->app_count)) <= 1) {
+                herr_t status;  /* Whether ID was successfully removed */
+
+                /* Try removing ID from hash table */
+                status = H5I__remove_id_info(type_info, item, H5_REQUEST_NULL, true, force, true, false);
+
+                /* If not successful, move the item to a new type generation */
+                if (status < 0)
+                    item->gen = type_info->gen;
+            }
+            else
+                /* Move item to new type generation */
+                item->gen = type_info->gen;
+        }
     }
 
     /* Indicate that we're done iterating this type */
-    type_info->iterating = false;
+    type_info->iterating--;
 
-    FUNC_LEAVE_NOAPI(SUCCEED)
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5I__clear_type() */
 
 /*-------------------------------------------------------------------------
@@ -1090,6 +1051,87 @@ H5I__remove_verify(hid_t id, H5I_type_t type)
 } /* end H5I__remove_verify() */
 
 /*-------------------------------------------------------------------------
+ * Function:    H5I__remove_id_info
+ *
+ * Purpose:     Common code to remove a specified ID from its type.
+ *
+ * Return:      SUCCEED/FAIL
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t
+H5I__remove_id_info(H5I_type_info_t *type_info, H5I_id_info_t *info, void **request,
+    bool make_cb, bool force, bool try, bool id_locked)
+{
+    herr_t           ret_value      = SUCCEED; /* Return value */
+
+    FUNC_ENTER_PACKAGE
+
+    /* Sanity check */
+    assert(type_info);
+    assert(info);
+
+    /* Check if this ID was the last one accessed */
+    if (type_info->last_id_info == info)
+        type_info->last_id_info = NULL;
+
+    /* Check if we want to make any callbacks */
+    if (make_cb) {
+        herr_t status;              /* Status from callback */
+
+        /* Check if this is an un-realized future object */
+        if (info->is_future) {
+            /* Prepare & restore library for user callback */
+            H5_BEFORE_USER_CB(FAIL)
+            {
+                /* Discard the future object */
+                status = (info->discard_cb)(info->u.object);
+            }
+            H5_AFTER_USER_CB(FAIL)
+            if (status < 0)
+                if (!force) {
+                    /* Leave without pushing error when only trying */
+                    if (try)
+                        HGOTO_DONE(FAIL);
+                    else
+                        HGOTO_ERROR(H5E_ID, H5E_CALLBACK, FAIL, "ID free callback failed");
+                }
+        }
+        else {
+            /* Check for a 'free' function and call it, if it exists */
+            if (type_info->cls->free_func) {
+                /* Prepare & restore library for user callback */
+                H5_BEFORE_USER_CB(FAIL)
+                {
+                    status = (type_info->cls->free_func)(info->u.object, request);
+                }
+                H5_AFTER_USER_CB(FAIL)
+                if (status < 0)
+                    if (!force) {
+                        /* Leave without pushing error when only trying */
+                        if (try)
+                            HGOTO_DONE(FAIL);
+                        else
+                            HGOTO_ERROR(H5E_ID, H5E_CALLBACK, FAIL, "ID free callback failed");
+                    }
+            }
+        }
+    }
+
+    /* Remove ID from hash table */
+    HASH_DELETE(hh, type_info->hash_table, info);
+
+    /* Decrement the number of IDs in the type */
+    type_info->id_count--;
+
+    /* Delete ID info */
+    H5I__id_info_free(info, id_locked);
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5I__remove_id_info() */
+
+/*-------------------------------------------------------------------------
  * Function:    H5I__remove_common
  *
  * Purpose:     Common code to remove a specified ID from its type.
@@ -1102,42 +1144,30 @@ H5I__remove_verify(hid_t id, H5I_type_t type)
  *-------------------------------------------------------------------------
  */
 static void *
-H5I__remove_common(H5I_type_info_t *type_info, H5I_id_info_t *info)
+H5I__remove_common(H5I_type_info_t *type_info, H5I_id_info_t *info, void **request,
+    bool make_cb)
 {
-    bool  del_node  = false; /* Whether to delete the node */
     void *ret_value = NULL;  /* Return value */
 
     FUNC_ENTER_PACKAGE
 
     /* Sanity check */
     assert(type_info);
+    assert(info);
 
-    /* Delete the node */
-    if (info) {
-        /* Delete the node if we're not iterating the type, or if we've already
-         * visited the node when iterating
-         */
-        if (!type_info->iterating || info->gen >= type_info->gen)
-            del_node = true;
-        else
-            info->del_later = true;
-
-        if (del_node)
-            HASH_DELETE(hh, type_info->hash_table, info);
-    }
-    else
-        HGOTO_ERROR(H5E_ID, H5E_CANTDELETE, NULL, "can't remove ID node from hash table");
-
-    /* Check if this ID was the last one accessed */
-    if (type_info->last_id_info == info)
-        type_info->last_id_info = NULL;
-
+    /* Save pointer to ID's object */
     ret_value = info->u.object;
 
-    if (del_node) {
-        H5I__id_info_free(info, true);
-        type_info->id_count--;
+    /* Delete the node if we're not iterating the type, or if we've already
+     * visited the node when iterating
+     */
+    if (0 == type_info->iterating || info->gen >= type_info->gen) {
+        /* Remove ID from hash table */
+        if (H5I__remove_id_info(type_info, info, request, make_cb, false, false, true) < 0)
+            HGOTO_ERROR(H5E_ID, H5E_CANTDELETE, NULL, "can't remove ID node from hash table");
     }
+    else
+        info->del_later = true;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -1188,7 +1218,7 @@ H5I_remove(hid_t id)
     have_id_lock = true;
 
     /* Remove the node from the type */
-    if (NULL == (ret_value = H5I__remove_common(type_info, id_info)))
+    if (NULL == (ret_value = H5I__remove_common(type_info, id_info, H5_REQUEST_NULL, false)))
         HGOTO_ERROR(H5E_ID, H5E_CANTDELETE, NULL, "can't remove ID node");
     have_id_lock = false; /* Deleting the ID will unlock & destroy its mutex */
 
@@ -1254,7 +1284,6 @@ H5I__dec_ref(hid_t id, void **request)
      */
     if (1 == info->count) {
         H5I_type_info_t *type_info; /*ptr to the type    */
-        bool             remove_node = false;
 
         /* Acquire exclusive access for the type */
         if (H5I__type_info_acquire(H5I_TYPE(id)) < 0)
@@ -1264,30 +1293,10 @@ H5I__dec_ref(hid_t id, void **request)
         /* Get the ID's type */
         type_info = H5I_type_info_array_g[H5I_TYPE(id)].type_info;
 
-        if (type_info->cls->free_func) {
-            herr_t status;
-
-            /* Prepare & restore library for user callback */
-            H5_BEFORE_USER_CB((-1))
-            {
-                status = (type_info->cls->free_func)(info->u.object, request);
-            }
-            H5_AFTER_USER_CB((-1))
-
-            if (status >= 0)
-                remove_node = true;
-        }
-        else
-            remove_node = true;
-
-        if (remove_node) {
-            /* Remove the node from the type */
-            if (NULL == H5I__remove_common(type_info, info))
-                HGOTO_ERROR(H5E_ID, H5E_CANTDELETE, (-1), "can't remove ID node");
-            have_id_lock = false; /* Deleting the ID will unlock & destroy its mutex */
-        }                         /* end if */
-        else
-            ret_value = -1;
+        /* Try removing the node from the type */
+        if (NULL == H5I__remove_common(type_info, info, request, true))
+            HGOTO_ERROR(H5E_ID, H5E_CANTDELETE, (-1), "can't remove ID node");
+        have_id_lock = false; /* Deleting the ID will unlock & destroy its mutex */
     } /* end if */
     else {
         --(info->count);
@@ -1892,7 +1901,7 @@ H5I_iterate(H5I_type_t type, H5I_search_func_t func, void *udata, bool app_ref)
         type_info->gen++;
 
         /* Indicate that we're iterating this type right now */
-        type_info->iterating = true;
+        type_info->iterating++;
 
         /* Set up iterator user data */
         iter_udata.user_func  = func;
@@ -1903,30 +1912,27 @@ H5I_iterate(H5I_type_t type, H5I_search_func_t func, void *udata, bool app_ref)
         /* Iterate over IDs */
         HASH_ITER(hh, type_info->hash_table, item, tmp)
         {
-            int ret;
-
-            /* Check if this ID node was deleted, through the iteration callback */
+            /* Check if this ID node was deleted, through an iteration callback */
             if (item->del_later) {
-                /* Decrement the number of IDs in the type */
-                type_info->id_count--;
-
-                /* Remove ID from (local) hash table */
-                HASH_DELETE(hh, type_info->hash_table, item);
-
-                /* Delete ID info */
-                H5I__id_info_free(item, false);
+                /* Remove ID from hash table */
+                if (H5I__remove_id_info(type_info, item, H5_REQUEST_NULL, true, true, false, false) < 0) {
+                    type_info->iterating--;
+                    HGOTO_ERROR(H5E_ID, H5E_CANTDELETE, FAIL, "can't remove ID node from hash table");
+                }
             }
             else {
+                int ret;
+
                 /* Acquire exclusive access to the ID */
                 if (H5I__id_info_acquire(item) < 0) {
-                    type_info->iterating = false;
+                    type_info->iterating--;
                     HGOTO_ERROR(H5E_ID, H5E_CANTLOCK, FAIL, "can't acquire lock on ID");
                 }
                 have_id_lock = true;
 
                 ret = H5I__iterate_cb((void *)item, NULL, (void *)&iter_udata);
                 if (H5_ITER_ERROR == ret) {
-                    type_info->iterating = false;
+                    type_info->iterating--;
                     HGOTO_ERROR(H5E_ID, H5E_BADITER, FAIL, "iteration failed");
                 }
                 if (H5_ITER_STOP == ret)
@@ -1937,7 +1943,7 @@ H5I_iterate(H5I_type_t type, H5I_search_func_t func, void *udata, bool app_ref)
 
                 /* Release exclusive access for the ID */
                 if (H5I__id_info_release(item) < 0) {
-                    type_info->iterating = false;
+                    type_info->iterating--;
                     HGOTO_ERROR(H5E_ID, H5E_CANTUNLOCK, FAIL, "can't release lock on ID");
                 }
                 have_id_lock = false;
@@ -1945,7 +1951,7 @@ H5I_iterate(H5I_type_t type, H5I_search_func_t func, void *udata, bool app_ref)
         }
 
         /* Indicate that we're done iterating this type */
-        type_info->iterating = false;
+        type_info->iterating--;
     }
 
 done:
@@ -2073,7 +2079,7 @@ H5I__find_id(hid_t id)
 
         /* Swap the actual object in for the future object */
         future_object = id_info->u.object;
-        if (NULL == (actual_object = H5I__remove_common(type_info, actual_id_info))) {
+        if (NULL == (actual_object = H5I__remove_common(type_info, actual_id_info, H5_REQUEST_NULL, false))) {
             H5I__id_info_release(actual_id_info);
             HGOTO_DONE(NULL);
         }

@@ -94,7 +94,7 @@ typedef struct H5I_type_info_t {
     unsigned           init_count;   /* # of times this type has been initialized */
     uint64_t           id_count;     /* Current number of IDs held */
     uint64_t           nextid;       /* ID to use for the next object */
-    bool               iterating;    /* Whether the type is being iterated */
+    unsigned           iterating;    /* Whether the type is being iterated */
     unsigned           gen;          /* Generation count for type */
     H5I_id_info_t     *last_id_info; /* Info for most recent ID looked up */
     H5I_id_info_t     *hash_table;   /* Hash table pointer for this ID type */
