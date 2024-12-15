@@ -92,8 +92,8 @@ static int H5I__iterate_pub_cb(void *obj, hid_t id, void *udata);
 H5I_type_t
 H5Iregister_type2(unsigned reserved, H5I_free_t free_func)
 {
-    H5I_class_t *cls       = NULL;      /* New ID class */
-    H5I_type_t ret_value = H5I_BADID;
+    H5I_class_t *cls       = NULL; /* New ID class */
+    H5I_type_t   ret_value = H5I_BADID;
 
     FUNC_ENTER_API(H5I_BADID)
 
