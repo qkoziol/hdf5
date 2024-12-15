@@ -74,16 +74,15 @@ static int H5I__iterate_pub_cb(void *obj, hid_t id, void *udata);
 /*******************/
 
 /*-------------------------------------------------------------------------
- * Function:    H5Iregister_type
+ * Function:    H5Iregister_type2
  *
- * Purpose:     Public interface to H5I_register_type.  Creates a new type
+ * Purpose:     Public interface to H5I_register_type2.  Creates a new type
  *              of ID's to give out.  A specific number (RESERVED) of type
  *              entries may be reserved to enable "constant" values to be handed
  *              out which are valid IDs in the type, but which do not map to any
- *              data structures and are not allocated dynamically later. HASH_SIZE is
- *              the minimum hash table size to use for the type. FREE_FUNC is
- *              called with an object pointer when the object is removed from
- *              the type.
+ *              data structures and are not allocated dynamically later.
+ *              FREE_FUNC is called with an object pointer when the object is
+ *              removed from the type.
  *
  * Return:      Success:    Type ID of the new type
  *              Failure:    H5I_BADID
@@ -91,10 +90,10 @@ static int H5I__iterate_pub_cb(void *obj, hid_t id, void *udata);
  *-------------------------------------------------------------------------
  */
 H5I_type_t
-H5Iregister_type(size_t H5_ATTR_UNUSED hash_size, unsigned reserved, H5I_free_t free_func)
+H5Iregister_type2(unsigned reserved, H5I_free_t free_func)
 {
     H5I_class_t *cls       = NULL;      /* New ID class */
-    H5I_type_t   ret_value = H5I_BADID; /* Return value */
+    H5I_type_t ret_value = H5I_BADID;
 
     FUNC_ENTER_API(H5I_BADID)
 
@@ -125,7 +124,7 @@ done:
             cls = H5MM_xfree(cls);
 
     FUNC_LEAVE_API(ret_value)
-} /* end H5Iregister_type() */
+} /* end H5Iregister_type2() */
 
 /*-------------------------------------------------------------------------
  * Function:    H5Itype_exists
