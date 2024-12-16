@@ -451,7 +451,8 @@ H5I__clear_type(H5I_type_info_t *type_info, bool force, bool app_ref)
         /* Check if this ID node was deleted, through an iteration callback */
         if (item->del_later) {
             /* Remove ID from hash table */
-            if (H5I__remove_id_info(type_info, item, H5_REQUEST_NULL, item->make_cb_later, true, false, false) < 0) {
+            if (H5I__remove_id_info(type_info, item, H5_REQUEST_NULL, item->make_cb_later, true, false,
+                                    false) < 0) {
                 type_info->iterating--;
                 HGOTO_ERROR(H5E_ID, H5E_CANTDELETE, FAIL, "can't remove ID node from hash table");
             }
@@ -1166,7 +1167,7 @@ H5I__remove_common(H5I_type_info_t *type_info, H5I_id_info_t *info, void **reque
             HGOTO_ERROR(H5E_ID, H5E_CANTDELETE, NULL, "can't remove ID node from hash table");
     }
     else {
-        info->del_later = true;
+        info->del_later     = true;
         info->make_cb_later = make_cb;
     }
 
@@ -1916,7 +1917,8 @@ H5I_iterate(H5I_type_t type, H5I_search_func_t func, void *udata, bool app_ref)
             /* Check if this ID node was deleted, through an iteration callback */
             if (item->del_later) {
                 /* Remove ID from hash table */
-                if (H5I__remove_id_info(type_info, item, H5_REQUEST_NULL, item->make_cb_later, true, false, false) < 0) {
+                if (H5I__remove_id_info(type_info, item, H5_REQUEST_NULL, item->make_cb_later, true, false,
+                                        false) < 0) {
                     type_info->iterating--;
                     HGOTO_ERROR(H5E_ID, H5E_CANTDELETE, FAIL, "can't remove ID node from hash table");
                 }

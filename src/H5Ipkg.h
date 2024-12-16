@@ -66,8 +66,8 @@ typedef struct H5I_id_info_t {
         const void *c_object; /* Const pointer associated with the ID */
         void       *object;   /* Pointer associated with the ID */
     } u;
-    bool     del_later; /* Indicate that ID should be deleted in clear operation */
-    bool     make_cb_later; /* Indicate the that the ID free callbacks should be performed, when deleting later */
+    bool del_later;     /* Indicate that ID should be deleted in clear operation */
+    bool make_cb_later; /* Indicate the that the ID free callbacks should be performed, when deleting later */
     unsigned gen;       /* Type generation the ID belongs to */
 
     /* Future ID info */
