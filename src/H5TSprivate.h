@@ -161,7 +161,8 @@ typedef struct H5TS_pool_t H5TS_pool_t;
 /* Portability aliases */
 #ifdef H5_HAVE_C11_THREADS
 
-/* Non-recursive readers/writer lock */
+/* Non-recursive downgradeable readers/writer lock */
+/* (C11 doesn't provide rwlocks) */
 typedef struct H5TS_rwlock_t {
     mtx_t    mutex;
     cnd_t    read_cv, write_cv;
@@ -183,16 +184,27 @@ typedef LPTHREAD_START_ROUTINE H5TS_thread_start_func_t;
 typedef DWORD                  H5TS_thread_ret_t;
 typedef DWORD                  H5TS_key_t;
 typedef CRITICAL_SECTION       H5TS_CAPABILITY("mutex") H5TS_mutex_t;
-typedef SRWLOCK                H5TS_rwlock_t;
 typedef CONDITION_VARIABLE     H5TS_cond_t;
 typedef INIT_ONCE              H5TS_once_t;
 typedef PINIT_ONCE_FN          H5TS_once_init_func_t;
 #else
+typedef pthread_t H5TS_thread_t;
+typedef void *(*H5TS_thread_start_func_t)(void *);
+typedef void           *H5TS_thread_ret_t;
+typedef pthread_key_t   H5TS_key_t;
+typedef pthread_mutex_t H5TS_CAPABILITY("mutex") H5TS_mutex_t;
+typedef pthread_cond_t  H5TS_cond_t;
+typedef pthread_once_t  H5TS_once_t;
+typedef void (*H5TS_once_init_func_t)(void);
+#endif
 
-/* Non-recursive readers/writer lock */
-#if defined(__MACH__)
+/* Non-recursive downgradeable readers/writer lock */
 /*
- * Emulated pthread rwlock for MacOS
+ * Emulate pthread rwlock, for MacOS (see below) and to add capability to
+ * "downgrade" a write lock to a read lock without releasing the lock.
+ * (which is not available in pthreads or Windows slim R/W (SRW) locks).
+ *
+ * The problem with the Mac's implementation of pthread rwlocks:
  *
  * Can't use pthread rwlock on MacOS due to: "The results [of calling
  *      pthread_rwlock_wrlock] are undefined if the calling thread already
@@ -207,23 +219,11 @@ typedef PINIT_ONCE_FN          H5TS_once_init_func_t;
  *
  */
 typedef struct H5TS_rwlock_t {
-    pthread_mutex_t mutex;
-    pthread_cond_t  read_cv, write_cv;
-    unsigned        readers, writers, read_waiters, write_waiters;
+    H5TS_mutex_t mutex;
+    H5TS_cond_t  read_cv, write_cv;
+    unsigned     readers, writers, read_waiters, write_waiters;
 } H5TS_rwlock_t;
-#else
-typedef pthread_rwlock_t H5TS_rwlock_t;
-#endif
 
-typedef pthread_t H5TS_thread_t;
-typedef void *(*H5TS_thread_start_func_t)(void *);
-typedef void           *H5TS_thread_ret_t;
-typedef pthread_key_t   H5TS_key_t;
-typedef pthread_mutex_t H5TS_CAPABILITY("mutex") H5TS_mutex_t;
-typedef pthread_cond_t  H5TS_cond_t;
-typedef pthread_once_t  H5TS_once_t;
-typedef void (*H5TS_once_init_func_t)(void);
-#endif
 #endif
 
 /* Atomics */
@@ -372,6 +372,7 @@ static inline herr_t H5TS_rwlock_rdunlock(H5TS_rwlock_t *lock);
 static inline herr_t H5TS_rwlock_wrlock(H5TS_rwlock_t *lock);
 static inline herr_t H5TS_rwlock_trywrlock(H5TS_rwlock_t *lock, bool *acquired)
     H5TS_TRY_ACQUIRE(SUCCEED, *lock);
+static inline herr_t H5TS_rwlock_wrlock_downgrade(H5TS_rwlock_t *lock);
 static inline herr_t H5TS_rwlock_wrunlock(H5TS_rwlock_t *lock);
 #endif
 H5_DLL herr_t H5TS_rwlock_destroy(H5TS_rwlock_t *lock);
