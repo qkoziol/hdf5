@@ -1084,10 +1084,10 @@ H5I__remove_id_info(H5I_type_info_t *type_info, H5I_id_info_t *info, void **requ
         if (info->is_future) {
             /* Prepare & restore library for user callback */
             H5_BEFORE_USER_CB(FAIL)
-            {
-                /* Discard the future object */
-                status = (info->discard_cb)(info->u.object);
-            }
+                {
+                    /* Discard the future object */
+                    status = (info->discard_cb)(info->u.object);
+                }
             H5_AFTER_USER_CB(FAIL)
             if (status < 0)
                 if (!force) {
@@ -1103,9 +1103,9 @@ H5I__remove_id_info(H5I_type_info_t *type_info, H5I_id_info_t *info, void **requ
             if (type_info->cls->free_func) {
                 /* Prepare & restore library for user callback */
                 H5_BEFORE_USER_CB(FAIL)
-                {
-                    status = (type_info->cls->free_func)(info->u.object, request);
-                }
+                    {
+                        status = (type_info->cls->free_func)(info->u.object, request);
+                    }
                 H5_AFTER_USER_CB(FAIL)
                 if (status < 0)
                     if (!force) {
