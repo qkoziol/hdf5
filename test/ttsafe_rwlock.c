@@ -29,7 +29,7 @@
 typedef struct {
     H5TS_rwlock_t  lock;
     int            val;
-    int           errors;
+    int            errors;
     H5TS_barrier_t barrier;
 } atomic_counter_t;
 
@@ -181,7 +181,7 @@ static H5TS_THREAD_RETURN_TYPE
 test_trywrlock(void *_counter)
 {
     atomic_counter_t *counter = (atomic_counter_t *)_counter;
-    bool acquired;
+    bool              acquired;
     bool              is_writer = false;
     herr_t            result;
     H5TS_thread_ret_t ret_value = 0;
@@ -190,7 +190,7 @@ test_trywrlock(void *_counter)
     for (unsigned u = 0; u < (NUM_ITERS * 10); u++) {
         /* Try acquiring the lock for writing */
         acquired = false;
-        result = H5TS_rwlock_trywrlock(&counter->lock, &acquired);
+        result   = H5TS_rwlock_trywrlock(&counter->lock, &acquired);
         CHECK_I(result, "H5TS_rwlock_wrlock");
 
         /* Check if we acquired the lock */
@@ -235,7 +235,6 @@ test_trywrlock(void *_counter)
 
             /* Reset is_writer flag */
             is_writer = false;
-
         }
         else {
             /* Wait at barrier, to let writer acquire the lock */
@@ -263,14 +262,12 @@ test_trywrlock(void *_counter)
             /* Wait at barrier again, to let writer know other threads are done trying the lock */
             result = H5TS_barrier_wait(&counter->barrier);
             CHECK_I(result, "H5TS_barrier_wait");
-
         }
 
         /* Wait at barrier, to get all threads together again */
         result = H5TS_barrier_wait(&counter->barrier);
         CHECK_I(result, "H5TS_barrier_wait");
     }
-
 
     return ret_value;
 }
@@ -279,7 +276,7 @@ static H5TS_THREAD_RETURN_TYPE
 test_downgrade(void *_counter)
 {
     atomic_counter_t *counter = (atomic_counter_t *)_counter;
-    bool acquired;
+    bool              acquired;
     bool              is_writer = false;
     herr_t            result;
     H5TS_thread_ret_t ret_value = 0;
@@ -288,7 +285,7 @@ test_downgrade(void *_counter)
     for (unsigned u = 0; u < (NUM_ITERS * 10); u++) {
         /* Try acquiring the lock for writing */
         acquired = false;
-        result = H5TS_rwlock_trywrlock(&counter->lock, &acquired);
+        result   = H5TS_rwlock_trywrlock(&counter->lock, &acquired);
         CHECK_I(result, "H5TS_rwlock_wrlock");
 
         /* Check if we acquired the lock */
@@ -337,7 +334,6 @@ test_downgrade(void *_counter)
 
             /* Reset is_writer flag */
             is_writer = false;
-
         }
         else {
             /* Wait at barrier, to let writer acquire the lock */
@@ -380,7 +376,6 @@ test_downgrade(void *_counter)
         CHECK_I(result, "H5TS_barrier_wait");
     }
 
-
     return ret_value;
 }
 
@@ -412,14 +407,12 @@ tts_rwlock(const void H5_ATTR_UNUSED *params)
     result = H5TS_rwlock_destroy(NULL);
     VERIFY(result, FAIL, "H5TS_rwlock_destroy");
 
-
     /* Create & destroy lock */
     result = H5TS_rwlock_init(&lock);
     CHECK_I(result, "H5TS_rwlock_init");
 
     result = H5TS_rwlock_destroy(&lock);
     CHECK_I(result, "H5TS_rwlock_destroy");
-
 
     /* Read lock & unlock */
     result = H5TS_rwlock_init(&lock);
@@ -434,7 +427,6 @@ tts_rwlock(const void H5_ATTR_UNUSED *params)
     result = H5TS_rwlock_destroy(&lock);
     CHECK_I(result, "H5TS_rwlock_destroy");
 
-
     /* Write lock & unlock */
     result = H5TS_rwlock_init(&lock);
     CHECK_I(result, "H5TS_rwlock_init");
@@ -447,7 +439,6 @@ tts_rwlock(const void H5_ATTR_UNUSED *params)
 
     result = H5TS_rwlock_destroy(&lock);
     CHECK_I(result, "H5TS_rwlock_destroy");
-
 
     /* Hold read lock w/many threads */
     result = H5TS_rwlock_init(&counter.lock);
@@ -472,7 +463,6 @@ tts_rwlock(const void H5_ATTR_UNUSED *params)
     result = H5TS_rwlock_destroy(&counter.lock);
     CHECK_I(result, "H5TS_rwlock_destroy");
 
-
     /* Increment counter w/many threads */
     result = H5TS_rwlock_init(&counter.lock);
     CHECK_I(result, "H5TS_rwlock_init");
@@ -493,7 +483,6 @@ tts_rwlock(const void H5_ATTR_UNUSED *params)
 
     result = H5TS_rwlock_destroy(&counter.lock);
     CHECK_I(result, "H5TS_rwlock_destroy");
-
 
     /* Increment & decrement counter w/many threads while reading */
     result = H5TS_rwlock_init(&counter.lock);
@@ -526,7 +515,6 @@ tts_rwlock(const void H5_ATTR_UNUSED *params)
     result = H5TS_rwlock_destroy(&counter.lock);
     CHECK_I(result, "H5TS_rwlock_destroy");
 
-
     /* Test H5TS_rwlock_trywrlock() */
     result = H5TS_rwlock_init(&counter.lock);
     CHECK_I(result, "H5TS_rwlock_init");
@@ -534,7 +522,7 @@ tts_rwlock(const void H5_ATTR_UNUSED *params)
     result = H5TS_barrier_init(&counter.barrier, NUM_THREADS);
     CHECK_I(result, "H5TS_barrier_init");
 
-    counter.val = 0;
+    counter.val    = 0;
     counter.errors = 0;
     for (unsigned u = 0; u < NUM_THREADS; u++) {
         result = H5TS_thread_create(&threads[u], test_trywrlock, &counter);
@@ -554,7 +542,6 @@ tts_rwlock(const void H5_ATTR_UNUSED *params)
 
     VERIFY(counter.errors, 0, "test_trywrlock");
 
-
     /* Test H5TS_rwlock_downgrade() */
     result = H5TS_rwlock_init(&counter.lock);
     CHECK_I(result, "H5TS_rwlock_init");
@@ -562,7 +549,7 @@ tts_rwlock(const void H5_ATTR_UNUSED *params)
     result = H5TS_barrier_init(&counter.barrier, NUM_THREADS);
     CHECK_I(result, "H5TS_barrier_init");
 
-    counter.val = 0;
+    counter.val    = 0;
     counter.errors = 0;
     for (unsigned u = 0; u < NUM_THREADS; u++) {
         result = H5TS_thread_create(&threads[u], test_downgrade, &counter);
