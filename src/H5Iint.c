@@ -1269,9 +1269,9 @@ H5I__dec_ref(hid_t id, void **request)
 
             /* Prepare & restore library for user callback */
             H5_BEFORE_USER_CB((-1))
-            {
-                status = (type_info->cls->free_func)(info->u.object, request);
-            }
+                {
+                    status = (type_info->cls->free_func)(info->u.object, request);
+                }
             H5_AFTER_USER_CB((-1))
 
             if (status >= 0)
@@ -1820,9 +1820,9 @@ H5I__iterate_cb(void *_item, void H5_ATTR_UNUSED *_key, void *_udata)
         /* Invoke callback function */
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB_NOERR(H5_ITER_ERROR)
-        {
-            cb_ret_val = (*udata->user_func)((void *)object, info->id, udata->user_udata);
-        }
+            {
+                cb_ret_val = (*udata->user_func)((void *)object, info->id, udata->user_udata);
+            }
         H5_AFTER_USER_CB_NOERR(H5_ITER_ERROR)
 
         /* Set the return value based on the callback's return value */
@@ -2053,10 +2053,10 @@ H5I__find_id(hid_t id)
 
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB_NOERR(NULL)
-        {
-            /* Invoke the realize callback, to get the actual object */
-            status = (id_info->realize_cb)(id_info->u.object, &actual_id);
-        }
+            {
+                /* Invoke the realize callback, to get the actual object */
+                status = (id_info->realize_cb)(id_info->u.object, &actual_id);
+            }
         H5_AFTER_USER_CB_NOERR(NULL)
         if (status < 0)
             HGOTO_DONE(NULL);
@@ -2081,10 +2081,10 @@ H5I__find_id(hid_t id)
 
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB_NOERR(NULL)
-        {
-            /* Discard the future object */
-            status = (id_info->discard_cb)(future_object);
-        }
+            {
+                /* Discard the future object */
+                status = (id_info->discard_cb)(future_object);
+            }
         H5_AFTER_USER_CB_NOERR(NULL)
         if (status < 0)
             HGOTO_DONE(NULL);
