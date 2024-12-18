@@ -460,10 +460,10 @@ H5I__clear_type(H5I_type_info_t *type_info, bool force, bool app_ref)
                 if (item->is_future) {
                     /* Prepare & restore library for user callback */
                     H5_BEFORE_USER_CB_NOCHECK
-                    {
-                        /* Discard the future object */
-                        status = (item->discard_cb)(item->u.object);
-                    }
+                        {
+                            /* Discard the future object */
+                            status = (item->discard_cb)(item->u.object);
+                        }
                     H5_AFTER_USER_CB_NOCHECK
                     if (status < 0) {
                         if (force)
@@ -479,9 +479,9 @@ H5I__clear_type(H5I_type_info_t *type_info, bool force, bool app_ref)
                     if (type_info->cls->free_func) {
                         /* Prepare & restore library for user callback */
                         H5_BEFORE_USER_CB_NOCHECK
-                        {
-                            status = (type_info->cls->free_func)(item->u.object, H5_REQUEST_NULL);
-                        }
+                            {
+                                status = (type_info->cls->free_func)(item->u.object, H5_REQUEST_NULL);
+                            }
                         H5_AFTER_USER_CB_NOCHECK
                         if (status < 0) {
                             if (force)
