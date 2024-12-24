@@ -168,6 +168,14 @@ main(int argc, char *argv[])
 
 #endif /* H5_HAVE_THREADSAFE_API */
 
+#ifdef H5_HAVE_CONCURRENCY
+    /* Test library packages' threadsafety */
+    AddTest("h5fl", tts_h5fl, NULL, NULL, NULL, 0, "Multithreaded H5FL package");
+#else  /* H5_HAVE_CONCURRENCY */
+    /* Test library packages' threadsafety */
+    AddTest("-h5fl", tts_h5fl, NULL, NULL, NULL, 0, "Multithreaded H5FL package");
+#endif /* H5_HAVE_CONCURRENCY */
+
 #else /* H5_HAVE_THREADS */
 
     printf("Most threading tests skipped because THREADS not enabled\n");
