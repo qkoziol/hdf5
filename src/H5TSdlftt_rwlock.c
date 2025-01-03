@@ -108,4 +108,3 @@ done:
 } /* end H5TS_dlftt_rwlock_destroy() */
 
 #endif /* H5_HAVE_THREADS */
-

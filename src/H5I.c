@@ -619,8 +619,8 @@ done:
 htri_t
 H5Iis_valid(hid_t id)
 {
-    bool is_valid = false;              /* Whether ID is valid */
-    htri_t         ret_value = true; /* Return value */
+    bool   is_valid  = false; /* Whether ID is valid */
+    htri_t ret_value = true;  /* Return value */
 
     FUNC_ENTER_API(FAIL)
 

@@ -381,4 +381,3 @@ H5TS_dlftt_rwlock_wrunlock(H5TS_dlftt_rwlock_t *lck)
 
     return SUCCEED;
 } /* end H5TS_dlftt_rwlock_wrunlock() */
-

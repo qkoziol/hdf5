@@ -177,8 +177,8 @@ static H5I_class_t H5I_ERRCLS_CLS[1] = {{
     H5I_ERROR_CLASS,                  /* ID class value */
     0,                                /* Class flags */
     0,                                /* # of reserved IDs for class */
-    NULL,                     /* Callback for locking objects of this class */
-    NULL,                     /* Callback for unlocking objects of this class */
+    NULL,                             /* Callback for locking objects of this class */
+    NULL,                             /* Callback for unlocking objects of this class */
     (H5I_free_t)H5E__unregister_class /* Callback routine for closing objects of this class */
 }};
 
@@ -187,8 +187,8 @@ static H5I_class_t H5I_ERRMSG_CLS[1] = {{
     H5I_ERROR_MSG,             /* ID class value */
     0,                         /* Class flags */
     0,                         /* # of reserved IDs for class */
-    NULL,                     /* Callback for locking objects of this class */
-    NULL,                     /* Callback for unlocking objects of this class */
+    NULL,                      /* Callback for locking objects of this class */
+    NULL,                      /* Callback for unlocking objects of this class */
     (H5I_free_t)H5E__close_msg /* Callback routine for closing objects of this class */
 }};
 
@@ -197,8 +197,8 @@ static H5I_class_t H5I_ERRSTK_CLS[1] = {{
     H5I_ERROR_STACK,             /* ID class value */
     0,                           /* Class flags */
     0,                           /* # of reserved IDs for class */
-    NULL,                     /* Callback for locking objects of this class */
-    NULL,                     /* Callback for unlocking objects of this class */
+    NULL,                        /* Callback for locking objects of this class */
+    NULL,                        /* Callback for unlocking objects of this class */
     (H5I_free_t)H5E__close_stack /* Callback routine for closing objects of this class */
 }};
 

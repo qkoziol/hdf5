@@ -316,8 +316,8 @@ typedef struct H5TS_dlftt_mutex_t {
 /* R/W lock that efficiently obeys the "DLFTT" locking protocol */
 typedef struct H5TS_dlftt_rwlock_t {
     H5TS_rwlock_t lck;    /* Underlying R/W lock */
-    bool         bypass; /* Whether locking is being bypassed (due to DLFTT protocol) */
-    unsigned     rc;     /* Refcount of locks bypassed */
+    bool          bypass; /* Whether locking is being bypassed (due to DLFTT protocol) */
+    unsigned      rc;     /* Refcount of locks bypassed */
 } H5TS_dlftt_rwlock_t;
 
 /*****************************/
