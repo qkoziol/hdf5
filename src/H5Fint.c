@@ -120,6 +120,8 @@ static H5I_class_t H5I_FILE_CLS[1] = {{
     H5I_FILE,                 /* ID class value */
     0,                        /* Class flags */
     0,                        /* # of reserved IDs for class */
+    NULL,                     /* Callback for locking objects of this class */
+    NULL,                     /* Callback for unlocking objects of this class */
     (H5I_free_t)H5F__close_cb /* Callback routine for closing objects of this class */
 }};
 

@@ -1749,13 +1749,14 @@ typedef struct H5_global_t {
 
 #ifdef H5_HAVE_CONCURRENCY
 
-/* Mechanism for implementing double-checked locking protocol (DCLP) for global
- * variables with deferred initialization (i.e. not at library init time).
+/* Mechanism for implementing the double-checked locking pattern (DCLP) for
+ * global variables with deferred initialization (i.e. not at library init time).
  *
  * This is invoked from a single thread while blocking other threads from
  * using the global until initialization is completed.
  *
- * FYI: https://preshing.com/20130930/double-checked-locking-is-fixed-in-cpp11/
+ * For background on DCLP:
+ *  https://preshing.com/20130930/double-checked-locking-is-fixed-in-cpp11/
  */
 #define H5_GLOBAL_INIT(v, f, maj, min, err_ret, ...)                                                         \
     do {                                                                                                     \

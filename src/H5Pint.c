@@ -396,6 +396,8 @@ static H5I_class_t H5I_GENPROPCLS_CLS[1] = {{
     H5I_GENPROP_CLS,                /* ID class value */
     0,                              /* Class flags */
     0,                              /* # of reserved IDs for class */
+    NULL,                     /* Callback for locking objects of this class */
+    NULL,                     /* Callback for unlocking objects of this class */
     (H5I_free_t)H5P__close_class_cb /* Callback routine for closing objects of this class */
 }};
 
@@ -404,6 +406,8 @@ static H5I_class_t H5I_GENPROPLST_CLS[1] = {{
     H5I_GENPROP_LST,               /* ID class value */
     0,                             /* Class flags */
     0,                             /* # of reserved IDs for class */
+    NULL,                     /* Callback for locking objects of this class */
+    NULL,                     /* Callback for unlocking objects of this class */
     (H5I_free_t)H5P__close_list_cb /* Callback routine for closing objects of this class */
 }};
 
