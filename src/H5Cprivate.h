@@ -162,7 +162,6 @@
  *    H5C__FLUSH_CLEAR_ONLY_FLAG
  *    H5C__FLUSH_IGNORE_PROTECTED_FLAG (can't use this flag in combination
  *                      with H5C__FLUSH_INVALIDATE_FLAG)
- *    H5C__DURING_FLUSH_FLAG
  *
  * These flags apply to H5C_flush_single_entry():
  *    H5C__FLUSH_INVALIDATE_FLAG
@@ -187,9 +186,8 @@
 #define H5C__FLUSH_COLLECTIVELY_FLAG        0x00800
 #define H5C__EVICT_ALLOW_LAST_PINS_FLAG     0x01000
 #define H5C__DEL_FROM_SLIST_ON_DESTROY_FLAG 0x02000
-#define H5C__DURING_FLUSH_FLAG              0x04000 /* Set when the entire cache is being flushed */
-#define H5C__GENERATE_IMAGE_FLAG            0x08000 /* Set during parallel I/O */
-#define H5C__UPDATE_PAGE_BUFFER_FLAG        0x10000 /* Set during parallel I/O */
+#define H5C__GENERATE_IMAGE_FLAG            0x04000 /* Set during parallel I/O */
+#define H5C__UPDATE_PAGE_BUFFER_FLAG        0x08000 /* Set during parallel I/O */
 
 /* Debugging/sanity checking/statistics settings */
 /* #define H5C_DO_SANITY_CHECKS */

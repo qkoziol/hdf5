@@ -234,6 +234,7 @@ H5E_last_maj_id_g = H5I_INVALID_HID;
 
 /* RESOURCE: Resource errors */
     H5E_ALREADYEXISTS_g =
+    H5E_BADRC_g =
     H5E_CANTALLOC_g =
     H5E_CANTCOPY_g =
     H5E_CANTFREE_g =

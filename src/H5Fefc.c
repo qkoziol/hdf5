@@ -625,7 +625,7 @@ H5F__efc_remove_ent(H5F_efc_t *efc, H5F_efc_ent_t *ent)
     assert(ent);
 
     /* Remove from skip list */
-    if (ent != H5SL_remove(efc->slist, ent->name))
+    if (ent != H5SL_remove(efc->slist, ent->name, false, NULL))
         HGOTO_ERROR(H5E_FILE, H5E_CANTDELETE, FAIL, "can't delete entry from skip list");
 
     /* Remove from LRU list */

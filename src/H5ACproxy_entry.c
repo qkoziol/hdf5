@@ -196,7 +196,7 @@ H5AC_proxy_entry_remove_parent(H5AC_proxy_entry_t *pentry, void *_parent)
     assert(parent);
 
     /* Remove parent from skip list */
-    if (NULL == (rem_parent = (H5AC_info_t *)H5SL_remove(pentry->parents, &parent->addr)))
+    if (NULL == (rem_parent = H5SL_remove(pentry->parents, &parent->addr, false, NULL)))
         HGOTO_ERROR(H5E_CACHE, H5E_CANTREMOVE, FAIL, "unable to remove proxy entry parent from skip list");
     if (!H5_addr_eq(rem_parent->addr, parent->addr))
         HGOTO_ERROR(H5E_CACHE, H5E_BADVALUE, FAIL, "removed proxy entry parent not the same as real parent");

@@ -714,7 +714,7 @@ H5FS__size_node_decr(H5FS_sinfo_t *sinfo, unsigned bin, H5FS_node_t *fspace_node
         assert(fspace_node->serial_count == 0);
 
         /* Remove size tracking list from bin */
-        tmp_fspace_node = (H5FS_node_t *)H5SL_remove(sinfo->bins[bin].bin_list, &fspace_node->sect_size);
+        tmp_fspace_node = H5SL_remove(sinfo->bins[bin].bin_list, &fspace_node->sect_size, false, NULL);
         if (tmp_fspace_node == NULL || tmp_fspace_node != fspace_node)
             HGOTO_ERROR(H5E_FSPACE, H5E_CANTREMOVE, FAIL, "can't remove free space node from skip list");
 
@@ -770,7 +770,7 @@ H5FS__sect_unlink_size(H5FS_sinfo_t *sinfo, const H5FS_section_class_t *cls, H5F
         HGOTO_ERROR(H5E_FSPACE, H5E_NOTFOUND, FAIL, "can't find section size node");
 
     /* Remove the section's node from the list */
-    tmp_sect_node = (H5FS_section_info_t *)H5SL_remove(fspace_node->sect_list, &sect->addr);
+    tmp_sect_node = H5SL_remove(fspace_node->sect_list, &sect->addr, false, NULL);
     if (tmp_sect_node == NULL || tmp_sect_node != sect)
         HGOTO_ERROR(H5E_FSPACE, H5E_NOTFOUND, FAIL, "can't find section node on size list");
 
@@ -810,7 +810,7 @@ H5FS__sect_unlink_rest(H5FS_t *fspace, const H5FS_section_class_t *cls, H5FS_sec
     if (!(cls->flags & H5FS_CLS_SEPAR_OBJ)) {
         H5FS_section_info_t *tmp_sect_node; /* Temporary section node */
 
-        tmp_sect_node = (H5FS_section_info_t *)H5SL_remove(fspace->sinfo->merge_list, &sect->addr);
+        tmp_sect_node = H5SL_remove(fspace->sinfo->merge_list, &sect->addr, false, NULL);
         if (tmp_sect_node == NULL || tmp_sect_node != sect)
             HGOTO_ERROR(H5E_FSPACE, H5E_NOTFOUND, FAIL, "can't find section node on size list");
     } /* end if */
@@ -1097,6 +1097,7 @@ static herr_t
 H5FS__sect_merge(H5FS_t *fspace, H5FS_section_info_t **sect, void *op_data)
 {
     H5FS_section_class_t *sect_cls;            /* Section's class */
+    H5SL_node_t *greater_sect_node = NULL; /* Skip list node for section greater than new section */
     bool                  modified;            /* Flag to indicate merge or shrink occurred */
     bool                  remove_sect = false; /* Whether a section should be removed before shrinking */
     htri_t                status;              /* Status value */
@@ -1114,12 +1115,11 @@ H5FS__sect_merge(H5FS_t *fspace, H5FS_section_info_t **sect, void *op_data)
     if (fspace->sinfo->merge_list) {
         do {
             H5SL_node_t *less_sect_node;           /* Skip list node for section less than new section */
-            H5SL_node_t *greater_sect_node = NULL; /* Skip list node for section greater than new section */
             H5FS_section_info_t  *tmp_sect;        /* Temporary free space section */
             H5FS_section_class_t *tmp_sect_cls;    /* Temporary section's class */
-            bool greater_sect_node_valid = false;  /* Indicate if 'greater than' section node is valid */
 
-            /* Reset 'modification occurred' flag */
+            /* Reset state */
+            greater_sect_node = NULL;
             modified = false;
 
             /* Look for neighboring section before new section */
@@ -1127,12 +1127,15 @@ H5FS__sect_merge(H5FS_t *fspace, H5FS_section_info_t **sect, void *op_data)
 
             /* Check for node before new node able to merge with new node */
             if (less_sect_node) {
-                /* Check for node greater than section */
-                greater_sect_node       = H5SL_next(less_sect_node);
-                greater_sect_node_valid = true;
+                /* Check for node greater than section cheaply */
+                greater_sect_node       = H5SL_after(less_sect_node);
 
                 /* Get section for 'less than' skip list node */
                 tmp_sect = (H5FS_section_info_t *)H5SL_item(less_sect_node);
+
+                /* Return the skip list node */
+                if (H5SL_return(less_sect_node) < 0)
+                    HGOTO_ERROR(H5E_FSPACE, H5E_CANTRELEASE, FAIL, "can't return skip list node");
 
                 /* Get classes for right & left sections */
                 tmp_sect_cls = &fspace->sect_cls[tmp_sect->type];
@@ -1172,13 +1175,18 @@ H5FS__sect_merge(H5FS_t *fspace, H5FS_section_info_t **sect, void *op_data)
             }         /* end if */
 
             /* Look for section after new (or merged) section, if not already determined */
-            if (!greater_sect_node_valid)
+            if (NULL == greater_sect_node)
                 greater_sect_node = H5SL_above(fspace->sinfo->merge_list, &(*sect)->addr);
 
             /* Check for node after new node able to merge with new node */
             if (greater_sect_node) {
                 /* Get section for 'greater than' skip list node */
                 tmp_sect = (H5FS_section_info_t *)H5SL_item(greater_sect_node);
+
+                /* Return the skip list node */
+                if (H5SL_return(greater_sect_node) < 0)
+                    HGOTO_ERROR(H5E_FSPACE, H5E_CANTRELEASE, FAIL, "can't return skip list node");
+                greater_sect_node = NULL;
 
                 /* Get classes for right & left sections */
                 sect_cls     = &fspace->sect_cls[(*sect)->type];
@@ -1259,6 +1267,10 @@ H5FS__sect_merge(H5FS_t *fspace, H5FS_section_info_t **sect, void *op_data)
                             *sect = (H5FS_section_info_t *)H5SL_item(last_node);
                             assert(*sect);
 
+                            /* Return the skip list node */
+                            if (H5SL_return(last_node) < 0)
+                                HGOTO_ERROR(H5E_FSPACE, H5E_CANTRELEASE, FAIL, "can't return skip list node");
+
                             /* Indicate that this section needs to be removed if it causes a shrink */
                             remove_sect = true;
                         } /* end if */
@@ -1276,6 +1288,10 @@ H5FS__sect_merge(H5FS_t *fspace, H5FS_section_info_t **sect, void *op_data)
         *sect = NULL;
 
 done:
+    /* Return the 'greater' skip list node */
+    if (greater_sect_node && H5SL_return(greater_sect_node) < 0)
+        HDONE_ERROR(H5E_FSPACE, H5E_CANTRELEASE, FAIL, "can't return skip list node");
+
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5FS__sect_merge() */
 
@@ -1574,12 +1590,12 @@ static htri_t
 H5FS__sect_find_node(H5FS_t *fspace, hsize_t request, H5FS_section_info_t **node)
 {
     H5FS_node_t *fspace_node;       /* Free list size node */
-    unsigned     bin;               /* Bin to put the free space section in */
-    htri_t       ret_value = false; /* Return value */
-
     H5SL_node_t                *curr_size_node = NULL;
+    H5SL_node_t *curr_sect_node   = NULL;
     const H5FS_section_class_t *cls; /* Class of section */
     hsize_t                     alignment;
+    unsigned     bin;               /* Bin to put the free space section in */
+    htri_t       ret_value = false; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -1632,12 +1648,15 @@ H5FS__sect_find_node(H5FS_t *fspace, hsize_t request, H5FS_section_info_t **node
                 curr_size_node = H5SL_first(fspace->sinfo->bins[bin].bin_list);
                 while (curr_size_node != NULL) {
                     H5FS_node_t *curr_fspace_node = NULL;
-                    H5SL_node_t *curr_sect_node   = NULL;
 
                     /* Get the free space node for free space sections of the same size */
                     curr_fspace_node = (H5FS_node_t *)H5SL_item(curr_size_node);
 
-                    /* Get the Skip list which holds  pointers to actual free list sections */
+                    /* Get the next size node in the bin */
+                    /* (in case the current node is removed from the skip list) */
+                    curr_size_node = H5SL_next(curr_size_node);
+
+                    /* Get the skip list which holds pointers to actual free list sections */
                     curr_sect_node = (H5SL_node_t *)H5SL_first(curr_fspace_node->sect_list);
 
                     while (curr_sect_node != NULL) {
@@ -1647,6 +1666,10 @@ H5FS__sect_find_node(H5FS_t *fspace, hsize_t request, H5FS_section_info_t **node
 
                         /* Get section node */
                         curr_sect = (H5FS_section_info_t *)H5SL_item(curr_sect_node);
+
+                        /* Get the next section node in the list */
+                        /* (in case the current node is removed from the skip list) */
+                        curr_sect_node = H5SL_next(curr_sect_node);
 
                         assert(H5_addr_defined(curr_sect->addr));
                         assert(curr_fspace_node->sect_size == curr_sect->size);
@@ -1661,18 +1684,14 @@ H5FS__sect_find_node(H5FS_t *fspace, hsize_t request, H5FS_section_info_t **node
 
                         if ((curr_sect->size >= (request + frag_size)) && (cls->split)) {
                             /* remove the section with aligned address */
-                            if (NULL == (*node = (H5FS_section_info_t *)H5SL_remove(
-                                             curr_fspace_node->sect_list, &curr_sect->addr)))
-                                HGOTO_ERROR(H5E_FSPACE, H5E_CANTREMOVE, FAIL,
-                                            "can't remove free space node from skip list");
+                            if (NULL == (*node = H5SL_remove(curr_fspace_node->sect_list, &curr_sect->addr, false, NULL)))
+                                HGOTO_ERROR(H5E_FSPACE, H5E_CANTREMOVE, FAIL, "can't remove free space node from skip list");
                             /* Decrement # of sections in section size node */
                             if (H5FS__size_node_decr(fspace->sinfo, bin, curr_fspace_node, cls) < 0)
-                                HGOTO_ERROR(H5E_FSPACE, H5E_CANTREMOVE, FAIL,
-                                            "can't remove free space size node from skip list");
+                                HGOTO_ERROR(H5E_FSPACE, H5E_CANTREMOVE, FAIL, "can't remove free space size node from skip list");
 
                             if (H5FS__sect_unlink_rest(fspace, cls, *node) < 0)
-                                HGOTO_ERROR(H5E_FSPACE, H5E_CANTFREE, FAIL,
-                                            "can't remove section from non-size tracking data structures");
+                                HGOTO_ERROR(H5E_FSPACE, H5E_CANTFREE, FAIL, "can't remove section from non-size tracking data structures");
 
                             /*
                              * The split() callback splits NODE into 2 sections:
@@ -1689,16 +1708,11 @@ H5FS__sect_find_node(H5FS_t *fspace, hsize_t request, H5FS_section_info_t **node
                                 assert(split_sect->addr < (*node)->addr);
                                 assert(request <= (*node)->size);
                             } /* end if */
+
                             /* Indicate that we found a node for the request */
                             HGOTO_DONE(true);
                         } /* end if */
-
-                        /* Get the next section node in the list */
-                        curr_sect_node = H5SL_next(curr_sect_node);
                     } /* end while of curr_sect_node */
-
-                    /* Get the next size node in the bin */
-                    curr_size_node = H5SL_next(curr_size_node);
                 } /* end while of curr_size_node */
             }     /* else of alignment */
         }         /* if bin_list */
@@ -1707,6 +1721,12 @@ H5FS__sect_find_node(H5FS_t *fspace, hsize_t request, H5FS_section_info_t **node
     } while (bin < fspace->sinfo->nbins);
 
 done:
+    /* Return any checked out skip list nodes */
+    if (curr_size_node && H5SL_return(curr_size_node) < 0)
+        HDONE_ERROR(H5E_FSPACE, H5E_CANTRELEASE, FAIL, "can't return skip list node");
+    if (curr_sect_node && H5SL_return(curr_sect_node) < 0)
+        HDONE_ERROR(H5E_FSPACE, H5E_CANTRELEASE, FAIL, "can't return skip list node");
+
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5FS__sect_find_node() */
 
@@ -2035,7 +2055,7 @@ H5FS_sect_change_class(H5F_t *f, H5FS_t *fspace, H5FS_section_info_t *sect, uint
         else {
             H5FS_section_info_t *tmp_sect_node; /* Temporary section node */
 
-            tmp_sect_node = (H5FS_section_info_t *)H5SL_remove(fspace->sinfo->merge_list, &sect->addr);
+            tmp_sect_node = H5SL_remove(fspace->sinfo->merge_list, &sect->addr, false, NULL);
             if (tmp_sect_node == NULL || tmp_sect_node != sect)
                 HGOTO_ERROR(H5E_FSPACE, H5E_NOTFOUND, FAIL, "can't find section node on size list");
         } /* end else */
@@ -2239,6 +2259,11 @@ H5FS_sect_try_shrink_eoa(H5F_t *f, H5FS_t *fspace, void *op_data)
             /* Get the pointer to the last section, from the last node */
             tmp_sect = (H5FS_section_info_t *)H5SL_item(last_node);
             assert(tmp_sect);
+
+            /* Return the skip list node */
+            if (H5SL_return(last_node) < 0)
+                HGOTO_ERROR(H5E_FSPACE, H5E_CANTRELEASE, FAIL, "can't return skip list node");
+
             tmp_sect_cls = &fspace->sect_cls[tmp_sect->type];
             if (tmp_sect_cls->can_shrink) {
                 /* Check if the section can be shrunk away */

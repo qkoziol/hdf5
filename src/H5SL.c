@@ -248,6 +248,21 @@
         H5SL_SHRINK(X, _lvl);                                                                                \
     }
 
+/* Macro used to return a checked-out node to a skip list */
+#define H5SL_RETURN(X, ERR)                                                                                 \
+    do { \
+        /* Decrement the # of times the node is checked out */ \
+        if (0 == X->checked_out) \
+            HGOTO_ERROR(H5E_SLIST, H5E_BADRC, ERR, "refcount on skip list node is already zero"); \
+        X->checked_out--; \
+ \
+        /* Decrement # of checked out nodes */ \
+        if (0 == X->slist->num_checked_out) \
+            HGOTO_ERROR(H5E_SLIST, H5E_BADRC, ERR, "refcount on skip list is already zero"); \
+        if (0 == X->checked_out) \
+            X->slist->num_checked_out--; \
+    } while (0)
+
 /* Macro used to insert node.  Does not actually insert the node.  After running
  * this macro, X will contain the node before where the new node should be
  * inserted (at level 0). */
@@ -306,7 +321,7 @@
     }
 
 /* Macro used to remove node */
-#define H5SL_REMOVE(CMP, SLIST, X, TYPE, KEY, HASHVAL)                                                       \
+#define H5SL_REMOVE(CMP, SLIST, X, TYPE, KEY, RICO, CONWR, HASHVAL)                                                       \
     {                                                                                                        \
         H5SL_node_t *_last  = X;             /* Lowest node in the current gap */                            \
         H5SL_node_t *_llast = X;             /* Lowest node in the previous gap */                           \
@@ -457,6 +472,16 @@
             }                                                                                                \
             assert(!X->level);                                                                               \
                                                                                                              \
+/* Check for returning a checked out node */ \
+        if (X->checked_out) { \
+            if (RICO) { \
+H5SL_RETURN(X, NULL); \
+*CONWR = true; \
+            } \
+            else \
+                HGOTO_ERROR(H5E_SLIST, H5E_BADRC, NULL, "refcount on skip list node is not zero"); \
+        } \
+ \
             /* Remove the node */                                                                            \
             X->backward->forward[0] = X->forward[0];                                                         \
             if (SLIST->last == X)                                                                            \
@@ -486,6 +511,12 @@ struct H5SL_node_t {
     size_t               level;      /* The level of this node */
     size_t               log_nalloc; /* log2(Number of slots allocated in forward) */
     uint32_t             hashval;    /* Hash value for key (only for strings, currently) */
+    size_t               checked_out; /* # of times a node is checked out,
+                                       * e.g. with H5SL_find, H5SL_first, etc.
+                                       * Checked out nodes must be returned
+                                       * with H5SL_return.
+                                       */
+    struct H5SL_t *slist;             /* Skip list that the node belongs to */
     struct H5SL_node_t **forward;    /* Array of forward pointers from this node */
     struct H5SL_node_t  *backward;   /* Backward pointer from this node */
 };
@@ -499,6 +530,11 @@ struct H5SL_t {
     /* Dynamic values for each list */
     int          curr_level; /* Current top level used in list */
     size_t       nobjs;      /* Number of active objects in skip list */
+    size_t       num_checked_out;   /* Number of nodes checked out, e.g. with
+                                     * H5SL_find, H5SL_first, etc.
+                                     * Checked out nodes must be returned
+                                     * with H5SL_return.
+                                     */
     H5SL_node_t *header;     /* Header for nodes in skip list */
     H5SL_node_t *last;       /* Pointer to last node in skip list */
 };
@@ -644,19 +680,17 @@ H5SL__new_node(void *item, const void *key, uint32_t hashval)
     FUNC_ENTER_PACKAGE
 
     /* Allocate the node */
-    if (NULL == (ret_value = (H5SL_node_t *)H5FL_MALLOC(H5SL_node_t)))
+    if (NULL == (ret_value = (H5SL_node_t *)H5FL_CALLOC(H5SL_node_t)))
         HGOTO_ERROR(H5E_SLIST, H5E_NOSPACE, NULL, "memory allocation failed");
 
-    /* Initialize node */
+    /* Initialize non-zero/NULL values */
     ret_value->key     = key;
     ret_value->item    = item;
-    ret_value->level   = 0;
     ret_value->hashval = hashval;
     if (NULL == (ret_value->forward = (H5SL_node_t **)H5FL_FAC_MALLOC(H5SL_fac_g[0]))) {
         ret_value = H5FL_FREE(H5SL_node_t, ret_value);
         HGOTO_ERROR(H5E_SLIST, H5E_NOSPACE, NULL, "memory allocation failed");
     }
-    ret_value->log_nalloc = 0;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -757,6 +791,7 @@ H5SL__insert_common(H5SL_t *slist, void *item, const void *key)
         HGOTO_ERROR(H5E_SLIST, H5E_NOSPACE, NULL, "can't create new skip list node");
 
     /* Update the links */
+    x->slist = slist;
     x->backward      = prev;
     x->forward[0]    = prev->forward[0];
     prev->forward[0] = x;
@@ -814,6 +849,10 @@ H5SL__release_common(H5SL_t *slist, H5SL_operator_t op, void *op_data)
 
     /* Check internal consistency */
     /* (Pre-condition) */
+
+    /* Check for any remaining checked out nodes */
+    if (slist->num_checked_out > 0)
+        HGOTO_ERROR(H5E_SLIST, H5E_BADRC, FAIL, "nodes are still checked out");
 
     /* Free skip list nodes */
     node = slist->header->forward[0];
@@ -939,7 +978,7 @@ H5SL_create(H5SL_type_t type, H5SL_cmp_t cmp)
     assert(type >= H5SL_TYPE_INT && type <= H5SL_TYPE_GENERIC);
 
     /* Allocate skip list structure */
-    if (NULL == (new_slist = H5FL_MALLOC(H5SL_t)))
+    if (NULL == (new_slist = H5FL_CALLOC(H5SL_t)))
         HGOTO_ERROR(H5E_SLIST, H5E_NOSPACE, NULL, "memory allocation failed");
 
     /* Set the static internal fields */
@@ -949,7 +988,6 @@ H5SL_create(H5SL_type_t type, H5SL_cmp_t cmp)
 
     /* Set the dynamic internal fields */
     new_slist->curr_level = -1;
-    new_slist->nobjs      = 0;
 
     /* Allocate the header node */
     if (NULL == (header = H5SL__new_node(NULL, NULL, (uint32_t)ULONG_MAX)))
@@ -958,10 +996,8 @@ H5SL_create(H5SL_type_t type, H5SL_cmp_t cmp)
     /* Initialize header node's forward pointer */
     header->forward[0] = NULL;
 
-    /* Initialize header node's backward pointer */
-    header->backward = NULL;
-
     /* Attach the header */
+    header->slist = new_slist;
     new_slist->header = header;
     new_slist->last   = header;
 
@@ -970,10 +1006,9 @@ H5SL_create(H5SL_type_t type, H5SL_cmp_t cmp)
 
 done:
     /* Error cleanup */
-    if (ret_value == NULL) {
+    if (ret_value == NULL)
         if (new_slist != NULL)
             new_slist = H5FL_FREE(H5SL_t, new_slist);
-    }
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5SL_create() */
@@ -996,7 +1031,7 @@ done:
  EXAMPLES
  REVISION LOG
 --------------------------------------------------------------------------*/
-size_t
+H5_ATTR_PURE size_t
 H5SL_count(H5SL_t *slist)
 {
     FUNC_ENTER_NOAPI_NOINIT_NOERR
@@ -1095,6 +1130,10 @@ H5SL_add(H5SL_t *slist, void *item, const void *key)
     if (NULL == (ret_value = H5SL__insert_common(slist, item, key)))
         HGOTO_ERROR(H5E_SLIST, H5E_CANTINSERT, NULL, "can't create new skip list node");
 
+    /* Increment the # of times the node is checked out and increment # of checked out nodes */
+    ret_value->checked_out++;
+    slist->num_checked_out++;
+
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5SL_add() */
@@ -1105,9 +1144,14 @@ done:
  PURPOSE
     Removes an object from a skip list
  USAGE
-    void *H5SL_remove(slist,key)
-        H5SL_t *slist;          IN/OUT: Pointer to skip list
-        void *key;              IN: Key for item to remove
+    void *H5SL_remove(slist, key, return_if_checked_out)
+        H5SL_t *slist;              IN/OUT: Pointer to skip list
+        void *key;                  IN: Key for item to remove
+        bool return_if_checked_out; IN: Flag to indicate a checked out entry
+                                        should be treated as returned, instead
+                                        of an error
+        bool *checked_out_node_was_returned; OUT: Output flag to indicate that a
+                                        checked out entry actually was returned
 
  RETURNS
     Returns pointer to item removed on success, NULL on failure.
@@ -1119,7 +1163,8 @@ done:
  REVISION LOG
 --------------------------------------------------------------------------*/
 void *
-H5SL_remove(H5SL_t *slist, const void *key)
+H5SL_remove(H5SL_t *slist, const void *key, bool return_if_checked_out,
+                        bool *checked_out_node_was_returned)
 {
     H5SL_node_t *x;                /* Current node to examine */
     uint32_t     hashval   = 0;    /* Hash value for key */
@@ -1142,39 +1187,39 @@ H5SL_remove(H5SL_t *slist, const void *key)
     x = slist->header;
     switch (slist->type) {
         case H5SL_TYPE_INT:
-            H5SL_REMOVE(SCALAR, slist, x, const int, key, -)
+            H5SL_REMOVE(SCALAR, slist, x, const int, key, return_if_checked_out, checked_out_node_was_returned, -)
             break;
 
         case H5SL_TYPE_HADDR:
-            H5SL_REMOVE(SCALAR, slist, x, const haddr_t, key, -)
+            H5SL_REMOVE(SCALAR, slist, x, const haddr_t, key, return_if_checked_out, checked_out_node_was_returned, -)
             break;
 
         case H5SL_TYPE_STR:
-            H5SL_REMOVE(STRING, slist, x, char *, key, hashval)
+            H5SL_REMOVE(STRING, slist, x, char *, key, return_if_checked_out, checked_out_node_was_returned, hashval)
             break;
 
         case H5SL_TYPE_HSIZE:
-            H5SL_REMOVE(SCALAR, slist, x, const hsize_t, key, -)
+            H5SL_REMOVE(SCALAR, slist, x, const hsize_t, key, return_if_checked_out, checked_out_node_was_returned, -)
             break;
 
         case H5SL_TYPE_UNSIGNED:
-            H5SL_REMOVE(SCALAR, slist, x, const unsigned, key, -)
+            H5SL_REMOVE(SCALAR, slist, x, const unsigned, key, return_if_checked_out, checked_out_node_was_returned, -)
             break;
 
         case H5SL_TYPE_SIZE:
-            H5SL_REMOVE(SCALAR, slist, x, const size_t, key, -)
+            H5SL_REMOVE(SCALAR, slist, x, const size_t, key, return_if_checked_out, checked_out_node_was_returned, -)
             break;
 
         case H5SL_TYPE_OBJ:
-            H5SL_REMOVE(OBJ, slist, x, const H5_obj_t, key, -)
+            H5SL_REMOVE(OBJ, slist, x, const H5_obj_t, key, return_if_checked_out, checked_out_node_was_returned, -)
             break;
 
         case H5SL_TYPE_HID:
-            H5SL_REMOVE(SCALAR, slist, x, const hid_t, key, -)
+            H5SL_REMOVE(SCALAR, slist, x, const hid_t, key, return_if_checked_out, checked_out_node_was_returned, -)
             break;
 
         case H5SL_TYPE_GENERIC:
-            H5SL_REMOVE(GENERIC, slist, x, const void, key, -)
+            H5SL_REMOVE(GENERIC, slist, x, const void, key, return_if_checked_out, checked_out_node_was_returned, -)
             break;
 
         default:
@@ -1206,12 +1251,8 @@ done:
 void *
 H5SL_remove_first(H5SL_t *slist)
 {
-    void        *ret_value = NULL;                      /* Return value             */
-    H5SL_node_t *head      = slist->header;             /* Skip list header         */
-    H5SL_node_t *tmp       = slist->header->forward[0]; /* Temporary node pointer   */
-    H5SL_node_t *next;                                  /* Next node to search for  */
     size_t       level;                                 /* Skip list level          */
-    size_t       i;                                     /* Index                    */
+    void        *ret_value = NULL;                      /* Return value             */
 
     FUNC_ENTER_NOAPI_NOINIT
 
@@ -1229,6 +1270,12 @@ H5SL_remove_first(H5SL_t *slist)
 
     /* Check for empty list */
     if (slist->last != slist->header) {
+        H5SL_node_t *head = slist->header;             /* Skip list header         */
+        H5SL_node_t *tmp  = slist->header->forward[0]; /* Temporary node pointer   */
+
+        /* Check for node being checked out */
+        if (tmp->checked_out)
+            HGOTO_ERROR(H5E_SLIST, H5E_BADRC, NULL, "refcount on skip list node is not zero");
 
         /* Assign return value */
         ret_value = tmp->item;
@@ -1247,7 +1294,9 @@ H5SL_remove_first(H5SL_t *slist)
         tmp          = H5FL_FREE(H5SL_node_t, tmp);
 
         /* Reshape the skip list as necessary to maintain 1-2-3 condition */
-        for (i = 0; i < level; i++) {
+        for (size_t i = 0; i < level; i++) {
+            H5SL_node_t *next;                             /* Next node to search for  */
+
             next = head->forward[i + 1];
             assert(next);
 
@@ -1668,6 +1717,13 @@ H5SL_find(H5SL_t *slist, const void *key)
     ret_value = NULL;
 
 done:
+    if (ret_value) {
+        /* Increment the # of times the node is checked out and increment # of checked out nodes */
+        if (0 == ret_value->checked_out)
+            slist->num_checked_out++;
+        ret_value->checked_out++;
+    }
+
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5SL_find() */
 
@@ -1773,6 +1829,13 @@ H5SL_below(H5SL_t *slist, const void *key)
     }
 
 done:
+    if (ret_value) {
+        /* Increment the # of times the node is checked out and increment # of checked out nodes */
+        if (0 == ret_value->checked_out)
+            slist->num_checked_out++;
+        ret_value->checked_out++;
+    }
+
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5SL_below() */
 
@@ -1869,6 +1932,13 @@ H5SL_above(H5SL_t *slist, const void *key)
         ret_value = NULL;
 
 done:
+    if (ret_value) {
+        /* Increment the # of times the node is checked out and increment # of checked out nodes */
+        if (0 == ret_value->checked_out)
+            slist->num_checked_out++;
+        ret_value->checked_out++;
+    }
+
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5SL_above() */
 
@@ -1894,6 +1964,8 @@ done:
 H5SL_node_t *
 H5SL_first(H5SL_t *slist)
 {
+    H5SL_node_t *ret_value = NULL; /* Return value */
+
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
     /* Check args */
@@ -1902,7 +1974,17 @@ H5SL_first(H5SL_t *slist)
     /* Check internal consistency */
     /* (Pre-condition) */
 
-    FUNC_LEAVE_NOAPI(slist->header->forward[0])
+    /* Set return value */
+    ret_value = slist->header->forward[0];
+
+    if (ret_value) {
+        /* Increment the # of times the node is checked out and increment # of checked out nodes */
+        if (0 == ret_value->checked_out)
+            slist->num_checked_out++;
+        ret_value->checked_out++;
+    }
+
+    FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5SL_first() */
 
 /*--------------------------------------------------------------------------
@@ -1927,7 +2009,9 @@ H5SL_first(H5SL_t *slist)
 H5SL_node_t *
 H5SL_next(H5SL_node_t *slist_node)
 {
-    FUNC_ENTER_NOAPI_NOINIT_NOERR
+    H5SL_node_t *ret_value = NULL; /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT
 
     /* Check args */
     assert(slist_node);
@@ -1935,8 +2019,83 @@ H5SL_next(H5SL_node_t *slist_node)
     /* Check internal consistency */
     /* (Pre-condition) */
 
-    FUNC_LEAVE_NOAPI(slist_node->forward[0])
+    /* Set return value */
+    ret_value = slist_node->forward[0];
+
+    if (ret_value) {
+        /* Change the # of times the nodes are checked out.  Don't increment #
+         * of checked out nodes.
+         */
+        if (0 == slist_node->checked_out)
+            HGOTO_ERROR(H5E_SLIST, H5E_BADRC, NULL, "refcount on skip list node is already zero");
+        slist_node->checked_out--;
+        /* NOTE: It appears at first reading that these two 'if' statements
+         *       would cancel out and could be removed.  They do cancel in most
+         *       circumstances, but they don't cancel when two iterators are
+         *       operating on the same skip list and pass by one another.
+         */
+        if (0 == slist_node->checked_out)
+            slist_node->slist->num_checked_out--;
+        if (0 == ret_value->checked_out)
+            ret_value->slist->num_checked_out++;
+        ret_value->checked_out++;
+    }
+    else {
+        /* If we've reached the end of the list, treat that as returning the
+         * checked out skip list node.
+         */
+        H5SL_RETURN(slist_node, NULL);
+    }
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5SL_next() */
+
+/*--------------------------------------------------------------------------
+ NAME
+    H5SL_after
+ PURPOSE
+    Gets a pointer to the node after a given node in a skip list
+ USAGE
+    H5SL_node_t *H5SL_after(slist_node)
+        H5SL_node_t *slist_node;          IN: Pointer to skip list node
+
+ RETURNS
+    Returns pointer to node after slist_node in skip list on success, NULL on failure.
+ DESCRIPTION
+    Retrieves a pointer to the node after a given one, for reasoning about
+    two adjacent nodes.
+ GLOBAL VARIABLES
+ COMMENTS, BUGS, ASSUMPTIONS
+ EXAMPLES
+ REVISION LOG
+--------------------------------------------------------------------------*/
+H5SL_node_t *
+H5SL_after(H5SL_node_t *slist_node)
+{
+    H5SL_node_t *ret_value = NULL; /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    /* Check args */
+    assert(slist_node);
+    assert(slist_node->checked_out > 0);
+
+    /* Check internal consistency */
+    /* (Pre-condition) */
+
+    /* Set return value */
+    ret_value = slist_node->forward[0];
+
+    if (ret_value) {
+        /* Increment the # of times the node is checked out and increment # of checked out nodes */
+        if (0 == ret_value->checked_out)
+            ret_value->slist->num_checked_out++;
+        ret_value->checked_out++;
+    }
+
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5SL_after() */
 
 /*--------------------------------------------------------------------------
  NAME
@@ -1960,7 +2119,9 @@ H5SL_next(H5SL_node_t *slist_node)
 H5SL_node_t *
 H5SL_prev(H5SL_node_t *slist_node)
 {
-    FUNC_ENTER_NOAPI_NOINIT_NOERR
+    H5SL_node_t *ret_value = NULL; /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT
 
     /* Check args */
     assert(slist_node);
@@ -1969,8 +2130,82 @@ H5SL_prev(H5SL_node_t *slist_node)
     /* (Pre-condition) */
 
     /* Walk backward, detecting the header node (which has it's key set to NULL) */
-    FUNC_LEAVE_NOAPI(slist_node->backward->key == NULL ? NULL : slist_node->backward)
+    ret_value = (slist_node->backward->key == NULL) ? NULL : slist_node->backward;
+
+    if (ret_value) {
+        /* Change the # of times the nodes are checked out.  Don't increment #
+         * of checked out nodes.
+         */
+        if (0 == slist_node->checked_out)
+            HGOTO_ERROR(H5E_SLIST, H5E_BADRC, NULL, "refcount on skip list node is already zero");
+        slist_node->checked_out--;
+        /* NOTE: It appears at first reading that these two 'if' statements
+         *       would cancel out and could be removed.  They do cancel in most
+         *       circumstances, but they don't cancel when two iterators are
+         *       operating on the same skip list and pass by one another.
+         */
+        if (0 == slist_node->checked_out)
+            slist_node->slist->num_checked_out--;
+        if (0 == ret_value->checked_out)
+            ret_value->slist->num_checked_out++;
+        ret_value->checked_out++;
+    }
+    else {
+        /* If we've reached the end of the list, treat that as returning the
+         * checked out skip list node.
+         */
+        H5SL_RETURN(slist_node, NULL);
+    }
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5SL_prev() */
+
+/*--------------------------------------------------------------------------
+ NAME
+    H5SL_before
+ PURPOSE
+    Gets a pointer to the node before a given node in a skip list
+ USAGE
+    H5SL_node_t *H5SL_after(slist_node)
+        H5SL_node_t *slist_node;          IN: Pointer to skip list node
+
+ RETURNS
+    Returns pointer to node before slist_node in skip list on success, NULL on failure.
+ DESCRIPTION
+    Retrieves a pointer to the node before a given one, for reasoning about
+    two adjacent nodes.
+ GLOBAL VARIABLES
+ COMMENTS, BUGS, ASSUMPTIONS
+ EXAMPLES
+ REVISION LOG
+--------------------------------------------------------------------------*/
+H5SL_node_t *
+H5SL_before(H5SL_node_t *slist_node)
+{
+    H5SL_node_t *ret_value = NULL; /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    /* Check args */
+    assert(slist_node);
+    assert(slist_node->checked_out > 0);
+
+    /* Check internal consistency */
+    /* (Pre-condition) */
+
+    /* Walk backward, detecting the header node (which has it's key set to NULL) */
+    ret_value = (slist_node->backward->key == NULL) ? NULL : slist_node->backward;
+
+    if (ret_value) {
+        /* Increment the # of times the node is checked out and increment # of checked out nodes */
+        if (0 == ret_value->checked_out)
+            ret_value->slist->num_checked_out++;
+        ret_value->checked_out++;
+    }
+
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5SL_before() */
 
 /*--------------------------------------------------------------------------
  NAME
@@ -1994,6 +2229,8 @@ H5SL_prev(H5SL_node_t *slist_node)
 H5SL_node_t *
 H5SL_last(H5SL_t *slist)
 {
+    H5SL_node_t *ret_value = NULL; /* Return value */
+
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
     /* Check args */
@@ -2003,7 +2240,17 @@ H5SL_last(H5SL_t *slist)
     /* (Pre-condition) */
 
     /* Find last node, avoiding the header node */
-    FUNC_LEAVE_NOAPI(slist->last == slist->header ? NULL : slist->last)
+    ret_value = (slist->last == slist->header) ? NULL : slist->last;
+
+    if (ret_value) {
+        /* Increment the # of times the node is checked out and increment # of checked out nodes */
+        if (0 == ret_value->checked_out)
+            slist->num_checked_out++;
+        ret_value->checked_out++;
+    }
+
+    /* Find last node, avoiding the header node */
+    FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5SL_last() */
 
 /*--------------------------------------------------------------------------
@@ -2027,7 +2274,9 @@ H5SL_last(H5SL_t *slist)
 void *
 H5SL_item(H5SL_node_t *slist_node)
 {
-    FUNC_ENTER_NOAPI_NOINIT_NOERR
+    void *ret_value = NULL; /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT
 
     /* Check args */
     assert(slist_node);
@@ -2035,7 +2284,14 @@ H5SL_item(H5SL_node_t *slist_node)
     /* Check internal consistency */
     /* (Pre-condition) */
 
-    FUNC_LEAVE_NOAPI(slist_node->item)
+    if (0 == slist_node->checked_out)
+        HGOTO_ERROR(H5E_SLIST, H5E_BADRC, NULL, "refcount on skip list node is zero");
+
+    /* Set return value */
+    ret_value = slist_node->item;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5SL_item() */
 
 /*--------------------------------------------------------------------------
@@ -2110,6 +2366,45 @@ H5SL_iterate(H5SL_t *slist, H5SL_operator_t op, void *op_data)
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5SL_iterate() */
+
+/*--------------------------------------------------------------------------
+ NAME
+    H5SL_return
+ PURPOSE
+    Return a checked-out skip list node
+ USAGE
+    herr_t H5SL_return(slist_node)
+        H5SL_node_t *slist_node;  IN: Pointer to skip list node to return
+
+ RETURNS
+    Returns non-negative on success, negative on failure.
+ DESCRIPTION
+    Returns a checked-out skip list node to its list.  Primarily for releasing
+    the lock on the skip list when concurrency is enabled.
+ GLOBAL VARIABLES
+ COMMENTS, BUGS, ASSUMPTIONS
+ EXAMPLES
+ REVISION LOG
+--------------------------------------------------------------------------*/
+herr_t
+H5SL_return(H5SL_node_t *slist_node)
+{
+    herr_t ret_value = SUCCEED;
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Check args */
+    assert(slist_node);
+
+    /* Check internal consistency */
+    /* (Pre-condition) */
+
+    /* Return the node */
+    H5SL_RETURN(slist_node, FAIL);
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5SL_return() */
 
 /*--------------------------------------------------------------------------
  NAME

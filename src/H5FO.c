@@ -218,7 +218,7 @@ H5FO_delete(H5F_t *f, haddr_t addr)
     assert(H5_addr_defined(addr));
 
     /* Remove from container */
-    if (NULL == (open_obj = (H5FO_open_obj_t *)H5SL_remove(f->shared->open_objs, &addr)))
+    if (NULL == (open_obj = H5SL_remove(f->shared->open_objs, &addr, false, NULL)))
         HGOTO_ERROR(H5E_CACHE, H5E_CANTRELEASE, FAIL, "can't remove object from container");
 
     /* Check if the object was deleted from the file */
@@ -491,7 +491,7 @@ H5FO_top_decr(const H5F_t *f, haddr_t addr)
 
         if (obj_count->count == 0) {
             /* Remove from container */
-            if (NULL == (obj_count = (H5FO_obj_count_t *)H5SL_remove(f->obj_count, &addr)))
+            if (NULL == (obj_count = H5SL_remove(f->obj_count, &addr, false, NULL)))
                 HGOTO_ERROR(H5E_CACHE, H5E_CANTRELEASE, FAIL, "can't remove object from container");
 
             /* Release the object information */

@@ -232,6 +232,7 @@ hid_t H5E_OPENERROR_g      = H5I_INVALID_HID;      /* Can't open directory or fi
 
 /* RESOURCE: Resource errors */
 hid_t H5E_ALREADYEXISTS_g  = H5I_INVALID_HID;      /* Object already exists */
+hid_t H5E_BADRC_g          = H5I_INVALID_HID;      /* Reference count is incorrect */
 hid_t H5E_CANTALLOC_g      = H5I_INVALID_HID;      /* Can't allocate space */
 hid_t H5E_CANTCOPY_g       = H5I_INVALID_HID;      /* Unable to copy object */
 hid_t H5E_CANTFREE_g       = H5I_INVALID_HID;      /* Unable to free object */
@@ -250,6 +251,6 @@ hid_t H5E_BADSIZE_g        = H5I_INVALID_HID;      /* Bad size for object */
 hid_t H5E_CANTCONVERT_g    = H5I_INVALID_HID;      /* Can't convert datatypes */
 
 /* Number of minor error messages */
-#define H5E_NUM_MIN_ERRORS 140
+#define H5E_NUM_MIN_ERRORS 141
 
 #endif /* H5Edefin_H */

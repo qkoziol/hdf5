@@ -621,8 +621,8 @@ H5PB_remove_entry(const H5F_shared_t *f_sh, haddr_t addr)
     /* If found, remove the entry from the PB cache */
     if (page_entry) {
         assert(page_entry->type != H5F_MEM_PAGE_DRAW);
-        if (NULL == H5SL_remove(page_buf->slist_ptr, &(page_entry->addr)))
-            HGOTO_ERROR(H5E_CACHE, H5E_BADVALUE, FAIL, "Page Entry is not in skip list");
+        if (NULL == H5SL_remove(page_buf->slist_ptr, &page_entry->addr, false, NULL))
+            HGOTO_ERROR(H5E_PAGEBUF, H5E_BADVALUE, FAIL, "page entry is not in skip list");
 
         /* Remove from LRU list */
         H5PB__REMOVE_LRU(page_buf, page_entry)
@@ -812,6 +812,8 @@ H5PB_read(H5F_shared_t *f_sh, H5FD_mem_t type, haddr_t addr, size_t size, void *
                 node = H5SL_next(node);
             } /* end if */
         }     /* end for */
+        if (node && H5SL_return(node) < 0)
+            HGOTO_ERROR(H5E_PAGEBUF, H5E_CANTRELEASE, FAIL, "can't return skip list node");
     }         /* end if */
     else {
         /* A raw data access could span 1 or 2 PB entries at this point so
@@ -1108,7 +1110,7 @@ H5PB_write(H5F_shared_t *f_sh, H5FD_mem_t type, haddr_t addr, size_t size, const
             }     /* end else-if */
             /* Discard all fully written pages from the page buffer */
             else {
-                page_entry = (H5PB_entry_t *)H5SL_remove(page_buf->slist_ptr, (void *)(&search_addr));
+                page_entry = H5SL_remove(page_buf->slist_ptr, &search_addr, false, NULL);
                 if (page_entry) {
                     /* Remove from LRU list */
                     H5PB__REMOVE_LRU(page_buf, page_entry)
@@ -1197,7 +1199,7 @@ H5PB_write(H5F_shared_t *f_sh, H5FD_mem_t type, haddr_t addr, size_t size, const
                     /* Lookup & remove the page from the new skip list page if
                      * it exists to see if this is a new page from the MF layer
                      */
-                    page_entry = (H5PB_entry_t *)H5SL_remove(page_buf->mf_slist_ptr, (void *)(&search_addr));
+                    page_entry = H5SL_remove(page_buf->mf_slist_ptr, &search_addr, false, NULL);
 
                 /* Calculate offset into the buffer of the page and the user buffer */
                 offset     = (0 == i ? addr - search_addr : 0);
@@ -1469,8 +1471,8 @@ H5PB__make_space(H5F_shared_t *f_sh, H5PB_t *page_buf, H5FD_mem_t inserted_type)
     }     /* end else */
 
     /* Remove from page index */
-    if (NULL == H5SL_remove(page_buf->slist_ptr, &(page_entry->addr)))
-        HGOTO_ERROR(H5E_PAGEBUF, H5E_BADVALUE, FAIL, "Tail Page Entry is not in skip list");
+    if (NULL == H5SL_remove(page_buf->slist_ptr, &page_entry->addr, false, NULL))
+        HGOTO_ERROR(H5E_PAGEBUF, H5E_BADVALUE, FAIL, "tail page entry is not in skip list");
 
     /* Remove entry from LRU list */
     H5PB__REMOVE_LRU(page_buf, page_entry)
