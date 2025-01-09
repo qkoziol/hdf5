@@ -170,7 +170,7 @@ H5C_create(size_t max_cache_size, size_t min_clean_size, int max_type_id,
 
     cache_ptr->log_flush = log_flush;
 
-    cache_ptr->evictions_enabled      = true;
+    cache_ptr->evictions_enabled = true;
 
     cache_ptr->resize_ctl.version            = H5C__CURR_AUTO_SIZE_CTL_VER;
     cache_ptr->resize_ctl.initial_size       = H5C__DEF_AR_INIT_SIZE;
@@ -211,11 +211,11 @@ H5C_create(size_t max_cache_size, size_t min_clean_size, int max_type_id,
      * Initial value of image_ctl must match H5C__DEFAULT_CACHE_IMAGE_CTL
      * in H5Cprivate.h.
      */
-    cache_ptr->image_ctl.version            = H5C__CURR_CACHE_IMAGE_CTL_VER;
-    cache_ptr->image_ctl.entry_ageout       = -1;
-    cache_ptr->image_ctl.flags              = H5C_CI__ALL_FLAGS;
+    cache_ptr->image_ctl.version      = H5C__CURR_CACHE_IMAGE_CTL_VER;
+    cache_ptr->image_ctl.entry_ageout = -1;
+    cache_ptr->image_ctl.flags        = H5C_CI__ALL_FLAGS;
 
-    cache_ptr->image_addr                = HADDR_UNDEF;
+    cache_ptr->image_addr = HADDR_UNDEF;
 
     /* Set return value */
     ret_value = cache_ptr;

@@ -1096,12 +1096,12 @@ done:
 static herr_t
 H5FS__sect_merge(H5FS_t *fspace, H5FS_section_info_t **sect, void *op_data)
 {
-    H5FS_section_class_t *sect_cls;            /* Section's class */
-    H5SL_node_t *greater_sect_node = NULL; /* Skip list node for section greater than new section */
-    bool                  modified;            /* Flag to indicate merge or shrink occurred */
-    bool                  remove_sect = false; /* Whether a section should be removed before shrinking */
-    htri_t                status;              /* Status value */
-    herr_t                ret_value = SUCCEED; /* Return value */
+    H5FS_section_class_t *sect_cls;                 /* Section's class */
+    H5SL_node_t          *greater_sect_node = NULL; /* Skip list node for section greater than new section */
+    bool                  modified;                 /* Flag to indicate merge or shrink occurred */
+    bool                  remove_sect = false;      /* Whether a section should be removed before shrinking */
+    htri_t                status;                   /* Status value */
+    herr_t                ret_value = SUCCEED;      /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -1114,13 +1114,13 @@ H5FS__sect_merge(H5FS_t *fspace, H5FS_section_info_t **sect, void *op_data)
     /* Loop until no more merging */
     if (fspace->sinfo->merge_list) {
         do {
-            H5SL_node_t *less_sect_node;           /* Skip list node for section less than new section */
-            H5FS_section_info_t  *tmp_sect;        /* Temporary free space section */
-            H5FS_section_class_t *tmp_sect_cls;    /* Temporary section's class */
+            H5SL_node_t          *less_sect_node; /* Skip list node for section less than new section */
+            H5FS_section_info_t  *tmp_sect;       /* Temporary free space section */
+            H5FS_section_class_t *tmp_sect_cls;   /* Temporary section's class */
 
             /* Reset state */
             greater_sect_node = NULL;
-            modified = false;
+            modified          = false;
 
             /* Look for neighboring section before new section */
             less_sect_node = H5SL_below(fspace->sinfo->merge_list, &(*sect)->addr);
@@ -1128,7 +1128,7 @@ H5FS__sect_merge(H5FS_t *fspace, H5FS_section_info_t **sect, void *op_data)
             /* Check for node before new node able to merge with new node */
             if (less_sect_node) {
                 /* Check for node greater than section cheaply */
-                greater_sect_node       = H5SL_after(less_sect_node);
+                greater_sect_node = H5SL_after(less_sect_node);
 
                 /* Get section for 'less than' skip list node */
                 tmp_sect = (H5FS_section_info_t *)H5SL_item(less_sect_node);
@@ -1589,13 +1589,13 @@ done:
 static htri_t
 H5FS__sect_find_node(H5FS_t *fspace, hsize_t request, H5FS_section_info_t **node)
 {
-    H5FS_node_t *fspace_node;       /* Free list size node */
+    H5FS_node_t                *fspace_node; /* Free list size node */
     H5SL_node_t                *curr_size_node = NULL;
-    H5SL_node_t *curr_sect_node   = NULL;
+    H5SL_node_t                *curr_sect_node = NULL;
     const H5FS_section_class_t *cls; /* Class of section */
     hsize_t                     alignment;
-    unsigned     bin;               /* Bin to put the free space section in */
-    htri_t       ret_value = false; /* Return value */
+    unsigned                    bin;               /* Bin to put the free space section in */
+    htri_t                      ret_value = false; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -1684,14 +1684,18 @@ H5FS__sect_find_node(H5FS_t *fspace, hsize_t request, H5FS_section_info_t **node
 
                         if ((curr_sect->size >= (request + frag_size)) && (cls->split)) {
                             /* remove the section with aligned address */
-                            if (NULL == (*node = H5SL_remove(curr_fspace_node->sect_list, &curr_sect->addr, false, NULL)))
-                                HGOTO_ERROR(H5E_FSPACE, H5E_CANTREMOVE, FAIL, "can't remove free space node from skip list");
+                            if (NULL == (*node = H5SL_remove(curr_fspace_node->sect_list, &curr_sect->addr,
+                                                             false, NULL)))
+                                HGOTO_ERROR(H5E_FSPACE, H5E_CANTREMOVE, FAIL,
+                                            "can't remove free space node from skip list");
                             /* Decrement # of sections in section size node */
                             if (H5FS__size_node_decr(fspace->sinfo, bin, curr_fspace_node, cls) < 0)
-                                HGOTO_ERROR(H5E_FSPACE, H5E_CANTREMOVE, FAIL, "can't remove free space size node from skip list");
+                                HGOTO_ERROR(H5E_FSPACE, H5E_CANTREMOVE, FAIL,
+                                            "can't remove free space size node from skip list");
 
                             if (H5FS__sect_unlink_rest(fspace, cls, *node) < 0)
-                                HGOTO_ERROR(H5E_FSPACE, H5E_CANTFREE, FAIL, "can't remove section from non-size tracking data structures");
+                                HGOTO_ERROR(H5E_FSPACE, H5E_CANTFREE, FAIL,
+                                            "can't remove section from non-size tracking data structures");
 
                             /*
                              * The split() callback splits NODE into 2 sections:
@@ -1712,10 +1716,10 @@ H5FS__sect_find_node(H5FS_t *fspace, hsize_t request, H5FS_section_info_t **node
                             /* Indicate that we found a node for the request */
                             HGOTO_DONE(true);
                         } /* end if */
-                    } /* end while of curr_sect_node */
-                } /* end while of curr_size_node */
-            }     /* else of alignment */
-        }         /* if bin_list */
+                    }     /* end while of curr_sect_node */
+                }         /* end while of curr_size_node */
+            }             /* else of alignment */
+        }                 /* if bin_list */
         /* Advance to next larger bin */
         bin++;
     } while (bin < fspace->sinfo->nbins);

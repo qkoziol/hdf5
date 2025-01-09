@@ -1013,15 +1013,13 @@ H5AC__log_moved_entry(const H5F_t *f, haddr_t old_addr, haddr_t new_addr)
         /* if the entry appears in the cleaned entry slist, under its old
          * address, remove it.
          */
-        if (NULL !=
-            (slist_entry_ptr = H5SL_remove(aux_ptr->c_slist_ptr, &old_addr, false, NULL)))
+        if (NULL != (slist_entry_ptr = H5SL_remove(aux_ptr->c_slist_ptr, &old_addr, false, NULL)))
             slist_entry_ptr = H5FL_FREE(H5AC_slist_entry_t, slist_entry_ptr);
 
         /* if the entry appears in the dirtied entry slist under its old
          * address, remove it, but don't free it. Set addr to new_addr.
          */
-        if (NULL !=
-            (slist_entry_ptr = H5SL_remove(aux_ptr->d_slist_ptr, &old_addr, false, NULL)))
+        if (NULL != (slist_entry_ptr = H5SL_remove(aux_ptr->d_slist_ptr, &old_addr, false, NULL)))
             slist_entry_ptr->addr = new_addr;
         else {
             /* otherwise, allocate a new entry that is ready

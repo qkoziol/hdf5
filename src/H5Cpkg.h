@@ -1033,7 +1033,7 @@
             if (H5SL_insert((cache_ptr)->slist_ptr, entry_ptr, &((entry_ptr)->addr)) < 0)                    \
                 HGOTO_ERROR(H5E_CACHE, H5E_BADVALUE, (fail_val), "can't insert entry in skip list");         \
                                                                                                              \
-            (entry_ptr)->in_slist      = true;                                                               \
+            (entry_ptr)->in_slist = true;                                                                    \
             (cache_ptr)->slist_len++;                                                                        \
             (cache_ptr)->slist_size += (entry_ptr)->size;                                                    \
             ((cache_ptr)->slist_ring_len[(entry_ptr)->ring])++;                                              \
@@ -1059,13 +1059,13 @@
  *-------------------------------------------------------------------------
  */
 
-#define H5C__REMOVE_ENTRY_FROM_SLIST(cache_ptr, entry_ptr, fail_val)                           \
+#define H5C__REMOVE_ENTRY_FROM_SLIST(cache_ptr, entry_ptr, fail_val)                                         \
     do {                                                                                                     \
         assert(cache_ptr);                                                                                   \
                                                                                                              \
         if ((cache_ptr)->slist_enabled) {                                                                    \
-            bool checked_out_node_was_returned = false; \
-            \
+            bool checked_out_node_was_returned = false;                                                      \
+                                                                                                             \
             assert(entry_ptr);                                                                               \
             assert(!(entry_ptr)->is_read_only);                                                              \
             assert((entry_ptr)->ro_ref_count == 0);                                                          \
@@ -1078,16 +1078,18 @@
             assert((cache_ptr)->slist_ring_size[(entry_ptr)->ring] <= (cache_ptr)->slist_size);              \
             assert((cache_ptr)->slist_size >= (entry_ptr)->size);                                            \
                                                                                                              \
-            if (H5SL_remove((cache_ptr)->slist_ptr, &(entry_ptr)->addr, true, &checked_out_node_was_returned) != (entry_ptr))                      \
+            if (H5SL_remove((cache_ptr)->slist_ptr, &(entry_ptr)->addr, true,                                \
+                            &checked_out_node_was_returned) != (entry_ptr))                                  \
                 HGOTO_ERROR(H5E_CACHE, H5E_BADVALUE, (fail_val), "can't delete entry from skip list");       \
-            \
-            /* Check for whether to restart the scan */ \
-            if (checked_out_node_was_returned) { \
-                if ((cache_ptr)->slist_scan_in_progress) \
-                    (cache_ptr)->slist_scan_next_addr_removed = true; \
-                else \
-                    HGOTO_ERROR(H5E_CACHE, H5E_INCONSISTENTSTATE, (fail_val), "returned a checked out skip list node when not iterating skip list");       \
-            }                                                                                                    \
+                                                                                                             \
+            /* Check for whether to restart the scan */                                                      \
+            if (checked_out_node_was_returned) {                                                             \
+                if ((cache_ptr)->slist_scan_in_progress)                                                     \
+                    (cache_ptr)->slist_scan_next_addr_removed = true;                                        \
+                else                                                                                         \
+                    HGOTO_ERROR(H5E_CACHE, H5E_INCONSISTENTSTATE, (fail_val),                                \
+                                "returned a checked out skip list node when not iterating skip list");       \
+            }                                                                                                \
             assert((cache_ptr)->slist_len > 0);                                                              \
             (cache_ptr)->slist_len--;                                                                        \
             assert((cache_ptr)->slist_size >= (entry_ptr)->size);                                            \

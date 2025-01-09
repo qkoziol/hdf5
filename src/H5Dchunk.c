@@ -1034,8 +1034,8 @@ H5D__chunk_is_data_cached(const H5D_shared_t *shared_dset)
 static herr_t
 H5D__chunk_io_init(H5D_io_info_t *io_info, H5D_dset_io_info_t *dinfo)
 {
-    const H5D_t     *dataset = dinfo->dset;         /* Local pointer to dataset info */
-    H5SL_node_t *chunk_node = NULL;                 /* Current node in chunk skip list */
+    const H5D_t     *dataset    = dinfo->dset;      /* Local pointer to dataset info */
+    H5SL_node_t     *chunk_node = NULL;             /* Current node in chunk skip list */
     H5D_chunk_map_t *fm;                            /* Convenience pointer to chunk map */
     hssize_t         old_offset[H5O_LAYOUT_NDIMS];  /* Old selection offset */
     htri_t           file_space_normalized = false; /* File dataspace was normalized */
@@ -2454,8 +2454,8 @@ done:
 static herr_t
 H5D__chunk_mdio_init(H5D_io_info_t *io_info, H5D_dset_io_info_t *dinfo)
 {
-    H5SL_node_t      *piece_node = NULL;   /* Current node in chunk skip list */
-    herr_t            ret_value = SUCCEED; /* Return value */
+    H5SL_node_t *piece_node = NULL;    /* Current node in chunk skip list */
+    herr_t       ret_value  = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -2465,8 +2465,8 @@ H5D__chunk_mdio_init(H5D_io_info_t *io_info, H5D_dset_io_info_t *dinfo)
 
     /* Iterate over skip list */
     while (piece_node) {
-        H5D_piece_info_t *piece_info;          /* Piece information for current piece */
-        H5D_chunk_ud_t    udata;               /* Chunk data from index */
+        H5D_piece_info_t *piece_info; /* Piece information for current piece */
+        H5D_chunk_ud_t    udata;      /* Chunk data from index */
 
         /* Get piece info */
         if (NULL == (piece_info = (H5D_piece_info_t *)H5D_CHUNK_GET_NODE_INFO(dinfo, piece_node)))

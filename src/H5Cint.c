@@ -1278,13 +1278,13 @@ H5C__flush_invalidate_ring(H5F_t *f, H5C_ring_t ring, unsigned flags)
                 else if (entry_ptr->is_pinned) {
                     if (H5C__flush_single_entry(f, entry_ptr, 0) < 0)
                         HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL, "dirty pinned entry flush failed");
-                }     /* end else-if */
+                } /* end else-if */
                 else {
                     if (H5C__flush_single_entry(f, entry_ptr,
                                                 (cooked_flags | H5C__FLUSH_INVALIDATE_FLAG |
                                                  H5C__DEL_FROM_SLIST_ON_DESTROY_FLAG)) < 0)
                         HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL, "dirty entry flush destroy failed");
-                }     /* end else */
+                } /* end else */
 
                 /* Check for restarting scan */
                 if (cache_ptr->slist_scan_next_addr_removed) {
@@ -1299,7 +1299,7 @@ H5C__flush_invalidate_ring(H5F_t *f, H5C_ring_t ring, unsigned flags)
                     H5C__UPDATE_STATS_FOR_SLIST_SCAN_RESTART(cache_ptr);
                 }
             } /* end if */
-        } /* end while loop scanning skip list */
+        }     /* end while loop scanning skip list */
 
         /* Reset the skip list scanning flag */
         cache_ptr->slist_scan_in_progress = false;
@@ -1315,8 +1315,10 @@ H5C__flush_invalidate_ring(H5F_t *f, H5C_ring_t ring, unsigned flags)
          */
 
         if (node_ptr == NULL) {
-            assert(cache_ptr->slist_len == (uint32_t)((int32_t)initial_slist_len + cache_ptr->slist_len_increase));
-            assert(cache_ptr->slist_size == (size_t)((ssize_t)initial_slist_size + cache_ptr->slist_size_increase));
+            assert(cache_ptr->slist_len ==
+                   (uint32_t)((int32_t)initial_slist_len + cache_ptr->slist_len_increase));
+            assert(cache_ptr->slist_size ==
+                   (size_t)((ssize_t)initial_slist_size + cache_ptr->slist_size_increase));
         } /* end if */
 #endif    /* H5C_DO_SANITY_CHECKS */
 
@@ -1390,8 +1392,7 @@ H5C__flush_invalidate_ring(H5F_t *f, H5C_ring_t ring, unsigned flags)
                      * decline during the pass.
                      */
                     if ((NULL != next_entry_ptr && NULL == cache_ptr->entry_watched_for_removal) ||
-                        cache_ptr->entries_loaded_counter > 0 ||
-                        cache_ptr->entries_inserted_counter > 0 ||
+                        cache_ptr->entries_loaded_counter > 0 || cache_ptr->entries_inserted_counter > 0 ||
                         cache_ptr->entries_relocated_counter > 0) {
 
                         next_entry_ptr = cache_ptr->il_head;
@@ -1437,13 +1438,18 @@ H5C__flush_invalidate_ring(H5F_t *f, H5C_ring_t ring, unsigned flags)
             if (evict_flags)
                 HGOTO_DONE(true);
 
-            HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL, "Pinned entry count not decreasing, cur_ring_pel_len = %d, old_ring_pel_len = %d, ring = %d", (int)cur_ring_pel_len, (int)old_ring_pel_len, (int)ring);
+            HGOTO_ERROR(
+                H5E_CACHE, H5E_CANTFLUSH, FAIL,
+                "Pinned entry count not decreasing, cur_ring_pel_len = %d, old_ring_pel_len = %d, ring = %d",
+                (int)cur_ring_pel_len, (int)old_ring_pel_len, (int)ring);
         } /* end if */
 
         assert(protected_entries == cache_ptr->pl_len);
 
         if (protected_entries > 0 && protected_entries == cache_ptr->index_len)
-            HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL, "Only protected entries left in cache, protected_entries = %d", (int)protected_entries);
+            HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL,
+                        "Only protected entries left in cache, protected_entries = %d",
+                        (int)protected_entries);
     } /* main while loop */
 
     /* Invariants, after destroying all entries in the ring */
@@ -1503,9 +1509,9 @@ H5C__flush_ring(H5F_t *f, H5C_ring_t ring, unsigned flags)
     bool               flushed_entries_last_pass;
     bool               ignore_protected;
     bool               tried_to_flush_protected_entry = false;
-    uint32_t           protected_entries = 0;
-    H5SL_node_t       *node_ptr          = NULL;
-    H5C_cache_entry_t *entry_ptr         = NULL;
+    uint32_t           protected_entries              = 0;
+    H5SL_node_t       *node_ptr                       = NULL;
+    H5C_cache_entry_t *entry_ptr                      = NULL;
 #ifdef H5C_DO_SANITY_CHECKS
     uint32_t initial_slist_len  = 0;
     size_t   initial_slist_size = 0;
@@ -1638,8 +1644,8 @@ H5C__flush_ring(H5F_t *f, H5C_ring_t ring, unsigned flags)
                         break;
                     }
                 } /* end else */
-            } /* end if */
-        } /* while (node_ptr != NULL) */
+            }     /* end if */
+        }         /* while (node_ptr != NULL) */
 
 #ifdef H5C_DO_SANITY_CHECKS
         /* Verify that the skip list size and length are as expected. */

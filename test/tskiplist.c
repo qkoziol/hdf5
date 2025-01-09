@@ -454,12 +454,12 @@ test_skiplist_remove_many(void)
 static void
 test_skiplist_remove_checked_out(void)
 {
-    H5SL_t *slist;      /* Skip list created */
-    H5SL_node_t *node;  /* Skip list node */
-    size_t  num;        /* Number of elements in skip list */
-    size_t  u;          /* Local index variable */
-    int    *found_item; /* Item found in skip list */
-    herr_t  ret;        /* Generic return value */
+    H5SL_t      *slist;      /* Skip list created */
+    H5SL_node_t *node;       /* Skip list node */
+    size_t       num;        /* Number of elements in skip list */
+    size_t       u;          /* Local index variable */
+    int         *found_item; /* Item found in skip list */
+    herr_t       ret;        /* Generic return value */
 
     /* Output message about test being performed */
     MESSAGE(7, ("Testing Removal of Checked Out Items From Skip List\n"));
@@ -570,7 +570,7 @@ test_skiplist_firstnextafter(void)
         VERIFY(*found_item, sort_rand_num[u], "H5SL_next");
         u++;
         after = H5SL_after(node);
-        node = H5SL_next(node);
+        node  = H5SL_next(node);
         VERIFY(after, node, "H5SL_after");
         if (after) {
             ret = H5SL_return(after);
@@ -1010,7 +1010,7 @@ test_skiplist_lastprevbefore(void)
         VERIFY(*found_item, sort_rand_num[u], "H5SL_prev");
         u--;
         before = H5SL_before(node);
-        node = H5SL_prev(node);
+        node   = H5SL_prev(node);
         VERIFY(before, node, "H5SL_before");
         if (before) {
             ret = H5SL_return(before);

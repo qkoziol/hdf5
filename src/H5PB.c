@@ -814,7 +814,7 @@ H5PB_read(H5F_shared_t *f_sh, H5FD_mem_t type, haddr_t addr, size_t size, void *
         }     /* end for */
         if (node && H5SL_return(node) < 0)
             HGOTO_ERROR(H5E_PAGEBUF, H5E_CANTRELEASE, FAIL, "can't return skip list node");
-    }         /* end if */
+    } /* end if */
     else {
         /* A raw data access could span 1 or 2 PB entries at this point so
            we need to handle that */
