@@ -136,13 +136,13 @@ test_skiplist_create(void)
 static void
 test_skiplist_insert(void)
 {
-    H5SL_t *slist;     /* Skip list created */
-    int     key,       /* Key of item to insert */
-        item;          /* Item to insert */
-    int    search_key; /* Key of item to search for in skip list */
-    int   *found_item; /* Item found in skip list */
+    H5SL_t *slist;      /* Skip list created */
+    int     key,        /* Key of item to insert */
+        item;           /* Item to insert */
+    int     search_key; /* Key of item to search for in skip list */
+    int    *found_item; /* Item found in skip list */
     ssize_t num;        /* Number of elements in skip list */
-    herr_t ret;        /* Generic return value */
+    herr_t  ret;        /* Generic return value */
 
     /* Output message about test being performed */
     MESSAGE(7, ("Testing Insertion Into Skip List\n"));
@@ -201,7 +201,7 @@ static void
 test_skiplist_insert_many(void)
 {
     H5SL_t *slist;      /* Skip list created */
-    ssize_t  num;        /* Number of elements in skip list */
+    ssize_t num;        /* Number of elements in skip list */
     size_t  u;          /* Local index variable */
     int    *found_item; /* Item found in skip list */
     herr_t  ret;        /* Generic return value */
@@ -271,14 +271,14 @@ test_skiplist_insert_many(void)
 static void
 test_skiplist_remove(void)
 {
-    H5SL_t *slist;     /* Skip list created */
-    int     key1,      /* Key of 1st item to insert */
-        key2,          /* Key of 2nd item to insert */
-        key3;          /* Key of 3rd item to insert */
-    int    search_key; /* Key of item to search for in skip list */
-    int   *found_item; /* Item found in skip list */
+    H5SL_t *slist;      /* Skip list created */
+    int     key1,       /* Key of 1st item to insert */
+        key2,           /* Key of 2nd item to insert */
+        key3;           /* Key of 3rd item to insert */
+    int     search_key; /* Key of item to search for in skip list */
+    int    *found_item; /* Item found in skip list */
     ssize_t num;        /* Number of elements in skip list */
-    herr_t ret;        /* Generic return value */
+    herr_t  ret;        /* Generic return value */
 
     /* Output message about test being performed */
     MESSAGE(7, ("Testing Removal From Skip List\n"));
@@ -354,7 +354,7 @@ static void
 test_skiplist_remove_many(void)
 {
     H5SL_t *slist;      /* Skip list created */
-    ssize_t  num;        /* Number of elements in skip list */
+    ssize_t num;        /* Number of elements in skip list */
     size_t  u;          /* Local index variable */
     int    *found_item; /* Item found in skip list */
     herr_t  ret;        /* Generic return value */
@@ -456,7 +456,7 @@ test_skiplist_remove_checked_out(void)
 {
     H5SL_t      *slist;      /* Skip list created */
     H5SL_node_t *node;       /* Skip list node */
-    ssize_t       num;        /* Number of elements in skip list */
+    ssize_t      num;        /* Number of elements in skip list */
     size_t       u;          /* Local index variable */
     int         *found_item; /* Item found in skip list */
     herr_t       ret;        /* Generic return value */
@@ -527,7 +527,7 @@ test_skiplist_firstnextafter(void)
     H5SL_t      *slist;      /* Skip list created */
     H5SL_node_t *after;      /* Skip list node after current node */
     H5SL_node_t *node;       /* Skip list node */
-    ssize_t       num;        /* Number of elements in skip list */
+    ssize_t      num;        /* Number of elements in skip list */
     size_t       u;          /* Local index variable */
     int         *found_item; /* Item found in skip list */
     herr_t       ret;        /* Generic return value */
@@ -599,7 +599,7 @@ test_skiplist_string(void)
 {
     H5SL_t      *slist; /* Skip list created */
     H5SL_node_t *node;  /* Skip list node */
-    ssize_t       num;   /* Number of elements in skip list */
+    ssize_t      num;   /* Number of elements in skip list */
     size_t       u;     /* Local index variable */
     typedef struct string_node {
         int         i;
@@ -670,7 +670,7 @@ static void
 test_skiplist_iterate(void)
 {
     H5SL_t *slist; /* Skip list created */
-    ssize_t  num;   /* Number of elements in skip list */
+    ssize_t num;   /* Number of elements in skip list */
     size_t  u;     /* Local index variable */
     herr_t  ret;   /* Generic return value */
 
@@ -717,7 +717,7 @@ test_skiplist_hsize(void)
 {
     H5SL_t      *slist; /* Skip list created */
     H5SL_node_t *node;  /* Skip list node */
-    ssize_t       num;   /* Number of elements in skip list */
+    ssize_t      num;   /* Number of elements in skip list */
     size_t       u;     /* Local index variable */
     hsize_t      data[10]        = {10, 20, 15, 5, 50, 30, 31, 32, 80, 90};
     hsize_t      sorted_data[10] = {5, 10, 15, 20, 30, 31, 32, 50, 80, 90};
@@ -772,7 +772,7 @@ test_skiplist_unsigned(void)
 {
     H5SL_t      *slist; /* Skip list created */
     H5SL_node_t *node;  /* Skip list node */
-    ssize_t       num;   /* Number of elements in skip list */
+    ssize_t      num;   /* Number of elements in skip list */
     size_t       u;     /* Local index variable */
     unsigned     data[10]        = {10, 20, 15, 5, 50, 30, 31, 32, 80, 90};
     unsigned     sorted_data[10] = {5, 10, 15, 20, 30, 31, 32, 50, 80, 90};
@@ -827,7 +827,7 @@ test_skiplist_obj(void)
 {
     H5SL_t      *slist; /* Skip list created */
     H5SL_node_t *node;  /* Skip list node */
-    ssize_t       num;   /* Number of elements in skip list */
+    ssize_t      num;   /* Number of elements in skip list */
     size_t       u;     /* Local index variable */
     H5_obj_t     data[10]        = {{10, 12}, {20, 12}, {10, 32}, {10, 11}, {50, 1},
                                     {8, 12},  {31, 12}, {20, 11}, {31, 11}, {8, 32}};
@@ -908,7 +908,7 @@ test_skiplist_generic(void)
 {
     H5SL_t      *slist; /* Skip list created */
     H5SL_node_t *node;  /* Skip list node */
-    ssize_t       num;   /* Number of elements in skip list */
+    ssize_t      num;   /* Number of elements in skip list */
     size_t       u;     /* Local index variable */
     generic_t    data[10]        = {{10, 1},   {20, 13}, {15, 32}, {5, 2},   {50, 37},
                                     {30, 100}, {31, 38}, {32, 34}, {80, 32}, {90, 0}};
@@ -967,7 +967,7 @@ test_skiplist_lastprevbefore(void)
     H5SL_t      *slist;      /* Skip list created */
     H5SL_node_t *before;     /* Skip list node before current node */
     H5SL_node_t *node;       /* Skip list node */
-    ssize_t       num;        /* Number of elements in skip list */
+    ssize_t      num;        /* Number of elements in skip list */
     size_t       u;          /* Local index variable */
     int         *found_item; /* Item found in skip list */
     herr_t       ret;        /* Generic return value */
@@ -1195,7 +1195,7 @@ static void
 test_skiplist_free(void)
 {
     H5SL_t  *slist;      /* Skip list created */
-    ssize_t   num;        /* Number of elements in skip list */
+    ssize_t  num;        /* Number of elements in skip list */
     size_t   u;          /* Local index variable */
     unsigned free_count; /* Number of items freed */
     herr_t   ret;        /* Generic return value */
@@ -1450,8 +1450,8 @@ test_skiplist_below(void)
     VERIFY(*found_item, 5, "H5SL_below");
     ret = H5SL_return(node);
     CHECK(ret, FAIL, "H5SL_return");
-    find_item = 4;
-    found_item      = H5SL_less(slist, &find_item);
+    find_item  = 4;
+    found_item = H5SL_less(slist, &find_item);
     CHECK_PTR_NULL(found_item, "H5SL_less");
 
     /* Close the skip list */

@@ -1019,12 +1019,12 @@
         assert(cache_ptr);                                                                                   \
                                                                                                              \
         if ((cache_ptr)->slist_enabled) {                                                                    \
-            /* If the 'slist_during_flush' flag is set, the cache is iterating over */ \
-            /* the skip list and may have a skip list node checked out. */ \
-            /* Set the 'already_locked' flag when that's true, if the node */ \
-            /* has not already been returned (indicated with the */ \
-            /* 'slist_restart_scan' flag) */ \
-            bool already_locked = (cache_ptr)->slist_during_flush & !(cache_ptr)->slist_restart_scan; \
+            /* If the 'slist_during_flush' flag is set, the cache is iterating over */                       \
+            /* the skip list and may have a skip list node checked out. */                                   \
+            /* Set the 'already_locked' flag when that's true, if the node */                                \
+            /* has not already been returned (indicated with the */                                          \
+            /* 'slist_restart_scan' flag) */                                                                 \
+            bool already_locked = (cache_ptr)->slist_during_flush & !(cache_ptr)->slist_restart_scan;        \
                                                                                                              \
             assert(entry_ptr);                                                                               \
             assert((entry_ptr)->size > 0);                                                                   \
@@ -1037,14 +1037,14 @@
             assert((cache_ptr)->slist_ring_size[(entry_ptr)->ring] <= (cache_ptr)->slist_size);              \
             assert((cache_ptr)->slist_ptr);                                                                  \
                                                                                                              \
-            if (H5SL_insert((cache_ptr)->slist_ptr, entry_ptr, &(entry_ptr)->addr, already_locked) < 0)                    \
+            if (H5SL_insert((cache_ptr)->slist_ptr, entry_ptr, &(entry_ptr)->addr, already_locked) < 0)      \
                 HGOTO_ERROR(H5E_CACHE, H5E_BADVALUE, (fail_val), "can't insert entry in skip list");         \
                                                                                                              \
             (entry_ptr)->in_slist = true;                                                                    \
             (cache_ptr)->slist_len++;                                                                        \
             (cache_ptr)->slist_size += (entry_ptr)->size;                                                    \
-            (cache_ptr)->slist_ring_len[(entry_ptr)->ring]++;                                              \
-            (cache_ptr)->slist_ring_size[(entry_ptr)->ring] += (entry_ptr)->size;                          \
+            (cache_ptr)->slist_ring_len[(entry_ptr)->ring]++;                                                \
+            (cache_ptr)->slist_ring_size[(entry_ptr)->ring] += (entry_ptr)->size;                            \
             H5C__SLIST_INSERT_ENTRY_SC(cache_ptr, entry_ptr);                                                \
                                                                                                              \
             assert((cache_ptr)->slist_len > 0);                                                              \
@@ -1066,18 +1066,18 @@
  *-------------------------------------------------------------------------
  */
 
-#define H5C__REMOVE_ENTRY_FROM_SLIST(cache_ptr, entry_ptr, fail_val)                           \
+#define H5C__REMOVE_ENTRY_FROM_SLIST(cache_ptr, entry_ptr, fail_val)                                         \
     do {                                                                                                     \
         assert(cache_ptr);                                                                                   \
                                                                                                              \
         if ((cache_ptr)->slist_enabled) {                                                                    \
             bool checked_out_node_was_returned = false;                                                      \
-            /* If the 'slist_during_flush' flag is set, the cache is iterating over */ \
-            /* the skip list and may have a skip list node checked out that gets */ \
-            /* removed.  Set the 'allow_return' flag when that's true, if the */ \
-            /* node has not already been returned (indicated with the */ \
-            /* 'slist_restart_scan' flag) */ \
-            bool allow_return = (cache_ptr)->slist_during_flush & !(cache_ptr)->slist_restart_scan; \
+            /* If the 'slist_during_flush' flag is set, the cache is iterating over */                       \
+            /* the skip list and may have a skip list node checked out that gets */                          \
+            /* removed.  Set the 'allow_return' flag when that's true, if the */                             \
+            /* node has not already been returned (indicated with the */                                     \
+            /* 'slist_restart_scan' flag) */                                                                 \
+            bool allow_return = (cache_ptr)->slist_during_flush & !(cache_ptr)->slist_restart_scan;          \
                                                                                                              \
             assert(entry_ptr);                                                                               \
             assert(!(entry_ptr)->is_read_only);                                                              \
@@ -1092,22 +1092,21 @@
             assert((cache_ptr)->slist_size >= (entry_ptr)->size);                                            \
                                                                                                              \
             if (H5SL_remove((cache_ptr)->slist_ptr, &(entry_ptr)->addr, allow_return,                        \
-                            (allow_return ? &checked_out_node_was_returned : NULL)) != (entry_ptr))                                  \
-{ \
-abort(); \
+                            (allow_return ? &checked_out_node_was_returned : NULL)) != (entry_ptr)) {        \
+                abort();                                                                                     \
                 HGOTO_ERROR(H5E_CACHE, H5E_BADVALUE, (fail_val), "can't delete entry from skip list");       \
-} \
+            }                                                                                                \
                                                                                                              \
             /* Check for whether to restart the scan */                                                      \
-            if (checked_out_node_was_returned)                                                              \
-                (cache_ptr)->slist_restart_scan = true;                                        \
+            if (checked_out_node_was_returned)                                                               \
+                (cache_ptr)->slist_restart_scan = true;                                                      \
             assert((cache_ptr)->slist_len > 0);                                                              \
             (cache_ptr)->slist_len--;                                                                        \
             assert((cache_ptr)->slist_size >= (entry_ptr)->size);                                            \
             (cache_ptr)->slist_size -= (entry_ptr)->size;                                                    \
             (cache_ptr)->slist_ring_len[(entry_ptr)->ring]--;                                                \
             assert((cache_ptr)->slist_ring_size[(entry_ptr)->ring] >= (entry_ptr)->size);                    \
-            (cache_ptr)->slist_ring_size[(entry_ptr)->ring] -= (entry_ptr)->size;                          \
+            (cache_ptr)->slist_ring_size[(entry_ptr)->ring] -= (entry_ptr)->size;                            \
             H5C__SLIST_REMOVE_ENTRY_SC(cache_ptr, entry_ptr);                                                \
             (entry_ptr)->in_slist = false;                                                                   \
         }                                                                                                    \

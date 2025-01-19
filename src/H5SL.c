@@ -253,40 +253,43 @@
 #define H5SL_RETURN(X, ERR)                                                                                  \
     do {                                                                                                     \
         /* Decrement the # of times the node is checked out */                                               \
-        if (0 == H5TS_ATOMIC_LOAD(size_t, &X->checked_out)) \
+        if (0 == H5TS_ATOMIC_LOAD(size_t, &X->checked_out))                                                  \
             HGOTO_ERROR(H5E_SLIST, H5E_BADRC, ERR, "refcount on skip list node is already zero");            \
-        H5TS_ATOMIC_FETCH_SUB(size_t, &X->checked_out, 1); \
+        H5TS_ATOMIC_FETCH_SUB(size_t, &X->checked_out, 1);                                                   \
                                                                                                              \
         /* Decrement # of checked out nodes */                                                               \
-        if (0 == H5TS_ATOMIC_LOAD(size_t, &X->slist->num_checked_out)) \
+        if (0 == H5TS_ATOMIC_LOAD(size_t, &X->slist->num_checked_out))                                       \
             HGOTO_ERROR(H5E_SLIST, H5E_BADRC, ERR, "refcount on skip list is already zero");                 \
-        if (0 == H5TS_ATOMIC_LOAD(size_t, &X->checked_out)) { \
-            H5TS_ATOMIC_FETCH_SUB(size_t, &X->slist->num_checked_out, 1); \
-            if (0 == H5TS_ATOMIC_LOAD(size_t, &X->slist->num_checked_out) && H5SL_LOCK_INT_NONE != H5TS_ATOMIC_LOAD(H5SL_lock_mode_int_t, &X->slist->mode)) { \
-                H5TS_rwlock_lock_mode_t prev_mode = (H5TS_rwlock_lock_mode_t)H5TS_ATOMIC_LOAD(H5SL_lock_mode_int_t, &X->slist->mode); \
+        if (0 == H5TS_ATOMIC_LOAD(size_t, &X->checked_out)) {                                                \
+            H5TS_ATOMIC_FETCH_SUB(size_t, &X->slist->num_checked_out, 1);                                    \
+            if (0 == H5TS_ATOMIC_LOAD(size_t, &X->slist->num_checked_out) &&                                 \
+                H5SL_LOCK_INT_NONE != H5TS_ATOMIC_LOAD(H5SL_lock_mode_int_t, &X->slist->mode)) {             \
+                H5TS_rwlock_lock_mode_t prev_mode =                                                          \
+                    (H5TS_rwlock_lock_mode_t)H5TS_ATOMIC_LOAD(H5SL_lock_mode_int_t, &X->slist->mode);        \
                                                                                                              \
-                H5TS_ATOMIC_STORE(H5SL_lock_mode_int_t, &X->slist->mode, H5SL_LOCK_INT_NONE); \
-                if (H5TS_dlftt_rwlock_unlock(&X->slist->lock, prev_mode) < 0) \
-                    HGOTO_ERROR(H5E_SLIST, H5E_CANTUNLOCK, ERR, "can't unlock list"); \
-            } \
-        } \
+                H5TS_ATOMIC_STORE(H5SL_lock_mode_int_t, &X->slist->mode, H5SL_LOCK_INT_NONE);                \
+                if (H5TS_dlftt_rwlock_unlock(&X->slist->lock, prev_mode) < 0)                                \
+                    HGOTO_ERROR(H5E_SLIST, H5E_CANTUNLOCK, ERR, "can't unlock list");                        \
+            }                                                                                                \
+        }                                                                                                    \
     } while (0)
 #else
 #define H5SL_RETURN(X, ERR)                                                                                  \
     do {                                                                                                     \
         /* Decrement the # of times the node is checked out */                                               \
-        if (0 == H5TS_ATOMIC_LOAD(size_t, &X->checked_out)) \
+        if (0 == H5TS_ATOMIC_LOAD(size_t, &X->checked_out))                                                  \
             HGOTO_ERROR(H5E_SLIST, H5E_BADRC, ERR, "refcount on skip list node is already zero");            \
-        H5TS_ATOMIC_FETCH_SUB(size_t, &X->checked_out, 1); \
+        H5TS_ATOMIC_FETCH_SUB(size_t, &X->checked_out, 1);                                                   \
                                                                                                              \
         /* Decrement # of checked out nodes */                                                               \
-        if (0 == H5TS_ATOMIC_LOAD(size_t, &X->slist->num_checked_out)) \
+        if (0 == H5TS_ATOMIC_LOAD(size_t, &X->slist->num_checked_out))                                       \
             HGOTO_ERROR(H5E_SLIST, H5E_BADRC, ERR, "refcount on skip list is already zero");                 \
-        if (0 == H5TS_ATOMIC_LOAD(size_t, &X->checked_out)) { \
-            H5TS_ATOMIC_FETCH_SUB(size_t, &X->slist->num_checked_out, 1); \
-            if (0 == H5TS_ATOMIC_LOAD(size_t, &X->slist->num_checked_out) && H5SL_LOCK_INT_NONE != H5TS_ATOMIC_LOAD(H5SL_lock_mode_int_t, &X->slist->mode)) \
-                H5TS_ATOMIC_STORE(H5SL_lock_mode_int_t, &X->slist->mode, H5SL_LOCK_INT_NONE); \
-        } \
+        if (0 == H5TS_ATOMIC_LOAD(size_t, &X->checked_out)) {                                                \
+            H5TS_ATOMIC_FETCH_SUB(size_t, &X->slist->num_checked_out, 1);                                    \
+            if (0 == H5TS_ATOMIC_LOAD(size_t, &X->slist->num_checked_out) &&                                 \
+                H5SL_LOCK_INT_NONE != H5TS_ATOMIC_LOAD(H5SL_lock_mode_int_t, &X->slist->mode))               \
+                H5TS_ATOMIC_STORE(H5SL_lock_mode_int_t, &X->slist->mode, H5SL_LOCK_INT_NONE);                \
+        }                                                                                                    \
     } while (0)
 #endif
 
@@ -500,9 +503,9 @@
             assert(!X->level);                                                                               \
                                                                                                              \
             /* Check for returning a checked out node */                                                     \
-            if (H5TS_ATOMIC_LOAD(size_t, &X->checked_out)) { \
+            if (H5TS_ATOMIC_LOAD(size_t, &X->checked_out)) {                                                 \
                 if (RICO) {                                                                                  \
-                    H5SL_RETURN(X, NULL);                                                             \
+                    H5SL_RETURN(X, NULL);                                                                    \
                     *CONWR = true;                                                                           \
                 }                                                                                            \
                 else                                                                                         \
@@ -516,7 +519,7 @@
             else                                                                                             \
                 X->forward[0]->backward = X->backward;                                                       \
             SLIST->nobjs--;                                                                                  \
-            H5SL__dest_node(X); \
+            H5SL__dest_node(X);                                                                              \
                                                                                                              \
             HGOTO_DONE(tmp);                                                                                 \
         }                                                                                                    \
@@ -532,9 +535,9 @@
 
 /* Types of locks that can be acquired (internal) */
 typedef enum H5SL_lock_mode_int_t {
-    H5SL_LOCK_INT_NONE = 0,
+    H5SL_LOCK_INT_NONE      = 0,
     H5SL_LOCK_INT_EXCLUSIVE = H5SL_LOCK_EXCLUSIVE,
-    H5SL_LOCK_INT_SHARED = H5SL_LOCK_SHARED
+    H5SL_LOCK_INT_SHARED    = H5SL_LOCK_SHARED
 } H5SL_lock_mode_int_t;
 
 /* Define portable atomic types */
@@ -543,12 +546,13 @@ H5TS_DEF_ATOMIC_TYPE(size_t)
 
 /* Skip list node data structure */
 struct H5SL_node_t {
-    const void *key;               /* Pointer to node's key */
-    void       *item;              /* Pointer to node's item */
-    size_t      level;             /* The level of this node */
-    size_t      log_nalloc;        /* log2(Number of slots allocated in forward) */
-    uint32_t    hashval;           /* Hash value for key (only for strings, currently) */
-    H5TS_ATOMIC_TYPE(size_t) checked_out;       /* # of times a node is checked out,
+    const void *key;        /* Pointer to node's key */
+    void       *item;       /* Pointer to node's item */
+    size_t      level;      /* The level of this node */
+    size_t      log_nalloc; /* log2(Number of slots allocated in forward) */
+    uint32_t    hashval;    /* Hash value for key (only for strings, currently) */
+    H5TS_ATOMIC_TYPE(size_t)
+    checked_out;                   /* # of times a node is checked out,
                                     * e.g. with H5SL_find, H5SL_first, etc.
                                     * Checked out nodes must be returned
                                     * with H5SL_return.
@@ -565,26 +569,27 @@ struct H5SL_t {
     H5SL_cmp_t  cmp;  /* Comparison callback, if type is H5SL_TYPE_GENERIC */
 
     /* Dynamic values for each list */
-    int    curr_level;        /* Current top level used in list */
-    size_t nobjs;             /* Number of active objects in skip list */
-    H5TS_ATOMIC_TYPE(size_t) num_checked_out;   /* Number of nodes checked out, e.g. with
-                               * H5SL_find, H5SL_first, etc.
-                               * Checked out nodes must be returned
-                               * with H5SL_return.
-                               */
+    int    curr_level; /* Current top level used in list */
+    size_t nobjs;      /* Number of active objects in skip list */
+    H5TS_ATOMIC_TYPE(size_t)
+    num_checked_out;                             /* Number of nodes checked out, e.g. with
+                                                  * H5SL_find, H5SL_first, etc.
+                                                  * Checked out nodes must be returned
+                                                  * with H5SL_return.
+                                                  */
     H5TS_ATOMIC_TYPE(H5SL_lock_mode_int_t) mode; /* How this skip list is currently locked */
 
 #ifdef H5_HAVE_CONCURRENCY
-    H5TS_dlftt_rwlock_t lock;      /* Guard the skip list */
+    H5TS_dlftt_rwlock_t lock; /* Guard the skip list */
 #endif
 
-    H5SL_node_t *header;    /* Header for nodes in skip list */
-    H5SL_node_t *last;      /* Pointer to last node in skip list */
+    H5SL_node_t *header; /* Header for nodes in skip list */
+    H5SL_node_t *last;   /* Pointer to last node in skip list */
 };
 
 /* Static functions */
 static H5SL_node_t *H5SL__new_node(void *item, const void *key, uint32_t hashval);
-static void H5SL__dest_node(H5SL_node_t *node);
+static void         H5SL__dest_node(H5SL_node_t *node);
 static H5SL_node_t *H5SL__insert_common(H5SL_t *slist, void *item, const void *key);
 static herr_t       H5SL__release_common(H5SL_t *slist, bool closing, H5SL_operator_t op, void *op_data);
 static herr_t       H5SL__close_common(H5SL_t *slist, H5SL_operator_t op, void *op_data);
@@ -779,7 +784,7 @@ H5SL__dest_node(H5SL_node_t *node)
     H5FL_FAC_FREE(H5SL_fac_g[node->log_nalloc], node->forward);
     H5FL_FREE(H5SL_node_t, node);
 
-    FUNC_LEAVE_NOAPI_VOID                                                                                \
+    FUNC_LEAVE_NOAPI_VOID
 } /* end H5SL__dest_node() */
 
 /*--------------------------------------------------------------------------
@@ -969,7 +974,7 @@ H5SL__release_common(H5SL_t *slist, bool closing, H5SL_operator_t op, void *op_d
         H5_GCC_CLANG_DIAG_ON("cast-qual")
 
         H5SL__dest_node(node);
-        node          = next_node;
+        node = next_node;
     }
 
     /* Skip this work if we're closing the skip list anyway */
@@ -1171,7 +1176,7 @@ H5SL_count(H5SL_t *slist)
 #ifdef H5_HAVE_CONCURRENCY
     bool have_lock = false; /* Whether we're holding the list's lock */
 #endif
-    ssize_t ret_value = SSIZE_MAX;       /* Return value */
+    ssize_t ret_value = SSIZE_MAX; /* Return value */
 
 #ifdef H5_HAVE_CONCURRENCY
     FUNC_ENTER_NOAPI_NOINIT
@@ -1251,7 +1256,8 @@ H5SL_insert(H5SL_t *slist, void *item, const void *key, bool already_locked)
      */
     if (already_locked) {
         if (H5SL_LOCK_INT_EXCLUSIVE != H5TS_ATOMIC_LOAD(H5SL_lock_mode_int_t, &slist->mode))
-            HGOTO_ERROR(H5E_SLIST, H5E_CANTMODIFY, FAIL, "can't insert entries without exclusive lock on list");
+            HGOTO_ERROR(H5E_SLIST, H5E_CANTMODIFY, FAIL,
+                        "can't insert entries without exclusive lock on list");
     }
 #ifdef H5_HAVE_CONCURRENCY
     else {
@@ -1416,7 +1422,9 @@ H5SL_remove(H5SL_t *slist, const void *key, bool return_if_checked_out, bool *ch
          * the RICO flag is not set
          */
         if (NULL != checked_out_node_was_returned)
-            HGOTO_ERROR(H5E_SLIST, H5E_BADVALUE, NULL, "can't have non-NULL checked_out_node_was_returned pointer without setting return_if_checked_out flag");
+            HGOTO_ERROR(H5E_SLIST, H5E_BADVALUE, NULL,
+                        "can't have non-NULL checked_out_node_was_returned pointer without setting "
+                        "return_if_checked_out flag");
 
 #ifdef H5_HAVE_CONCURRENCY
         /* Acquire an exclusive lock on the list */

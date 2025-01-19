@@ -339,8 +339,8 @@ H5FO_marked(const H5F_t *f, haddr_t addr)
 herr_t
 H5FO_dest(const H5F_t *f)
 {
-    ssize_t         nobjs;           /* Number of objects still open */
-    herr_t ret_value = SUCCEED; /* Return value */
+    ssize_t nobjs;               /* Number of objects still open */
+    herr_t  ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
@@ -572,8 +572,8 @@ H5FO_top_count(const H5F_t *f, haddr_t addr)
 herr_t
 H5FO_top_dest(H5F_t *f)
 {
-    ssize_t         nobjs;           /* Number of objects still open */
-    herr_t ret_value = SUCCEED; /* Return value */
+    ssize_t nobjs;               /* Number of objects still open */
+    herr_t  ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 

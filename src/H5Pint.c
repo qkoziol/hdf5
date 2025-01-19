@@ -1004,11 +1004,13 @@ H5P_copy_plist(const H5P_genplist_t *old_plist, bool app_ref)
 
             /* Insert property name into deleted list */
             if (H5SL_insert(new_plist->del, new_name, new_name, false) < 0)
-                HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert property into deleted skip list");
+                HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, H5I_INVALID_HID,
+                            "can't insert property into deleted skip list");
 
             /* Add property name to "seen" list */
             if (H5SL_insert(seen, new_name, new_name, false) < 0)
-                HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert property into seen skip list");
+                HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, H5I_INVALID_HID,
+                            "can't insert property into seen skip list");
             nseen++;
 
             /* Get the next property node in the skip list */
@@ -1055,7 +1057,8 @@ H5P_copy_plist(const H5P_genplist_t *old_plist, bool app_ref)
 
             /* Add property name to "seen" list */
             if (H5SL_insert(seen, new_prop->name, new_prop->name, false) < 0)
-                HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert property into seen skip list");
+                HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, H5I_INVALID_HID,
+                            "can't insert property into seen skip list");
             nseen++;
 
             /* Increment the number of properties in list */
@@ -1092,7 +1095,8 @@ H5P_copy_plist(const H5P_genplist_t *old_plist, bool app_ref)
                     /* Add property name to "seen" list, if we have other classes to work on */
                     if (has_parent_class) {
                         if (H5SL_insert(seen, tmp->name, tmp->name, false) < 0)
-                            HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert property into seen skip list");
+                            HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, H5I_INVALID_HID,
+                                        "can't insert property into seen skip list");
                         nseen++;
                     } /* end if */
 
@@ -1946,7 +1950,8 @@ H5P__create(H5P_genclass_t *pclass)
 
                     /* Add property name to "seen" list */
                     if (H5SL_insert(seen, tmp->name, tmp->name, false) < 0)
-                        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, NULL, "can't insert property into seen skip list");
+                        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, NULL,
+                                    "can't insert property into seen skip list");
 
                     /* Increment the number of properties in list */
                     plist->nprops++;
@@ -4175,7 +4180,7 @@ H5P_is_default_plist(hid_t plist_id)
         H5P_LST_ATTRIBUTE_CREATE_ID_g, H5P_LST_ATTRIBUTE_ACCESS_ID_g, H5P_LST_OBJECT_COPY_ID_g,
         H5P_LST_LINK_CREATE_ID_g,      H5P_LST_LINK_ACCESS_ID_g,      H5P_LST_VOL_INITIALIZE_ID_g,
         H5P_LST_REFERENCE_ACCESS_ID_g};
-    bool ret_value = false;     /* Return value */
+    bool ret_value = false; /* Return value */
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
@@ -5296,11 +5301,11 @@ H5P_close(H5P_genplist_t *plist)
     H5SL_t         *seen = NULL;         /* Skip list to hold names of properties already seen */
     size_t          nseen;               /* Number of items 'seen' */
     bool            has_parent_class;    /* Flag to indicate that this property list's class has a parent */
-    ssize_t         sndel;                /* Number of items deleted */
+    ssize_t         sndel;               /* Number of items deleted */
     size_t          ndel;                /* Number of items deleted */
     H5SL_node_t    *curr_node;           /* Current node in skip list */
     H5P_genprop_t  *tmp;                 /* Temporary pointer to properties */
-    ssize_t         nprops;           /* Number of properties in list */
+    ssize_t         nprops;              /* Number of properties in list */
     unsigned        make_cb   = 0;       /* Operator data for property free callback */
     herr_t          ret_value = SUCCEED; /* return value */
 
@@ -5401,7 +5406,8 @@ H5P_close(H5P_genplist_t *plist)
 
                         /* Allocate space for a temporary copy of the property value */
                         if (NULL == (tmp_value = H5MM_malloc(tmp->size)))
-                            HGOTO_ERROR(H5E_PLIST, H5E_CANTALLOC, FAIL, "memory allocation failed for temporary property value");
+                            HGOTO_ERROR(H5E_PLIST, H5E_CANTALLOC, FAIL,
+                                        "memory allocation failed for temporary property value");
                         H5MM_memcpy(tmp_value, tmp->value, tmp->size);
 
                         /* Prepare & restore library for user callback */
@@ -5419,7 +5425,8 @@ H5P_close(H5P_genplist_t *plist)
                     /* Add property name to "seen" list, if we have other classes to work on */
                     if (has_parent_class) {
                         if (H5SL_insert(seen, tmp->name, tmp->name, false) < 0)
-                            HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into seen skip list");
+                            HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL,
+                                        "can't insert property into seen skip list");
                         nseen++;
                     } /* end if */
                 }     /* end if */

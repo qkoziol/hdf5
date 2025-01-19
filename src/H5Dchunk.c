@@ -65,7 +65,7 @@
 
 /* Macros for iterating over chunks to operate on */
 #define H5D_CHUNK_IS_VALID_NODE(node) ((node) != NULL && (node) != ((H5SL_node_t *)1))
-#define H5D_CHUNK_GET_FIRST_NODE(dinfo, mode)                                                                      \
+#define H5D_CHUNK_GET_FIRST_NODE(dinfo, mode)                                                                \
     (dinfo->layout_io_info.chunk_map->use_single                                                             \
          ? (H5SL_node_t *)(1)                                                                                \
          : H5SL_first(dinfo->layout_io_info.chunk_map->dset_sel_pieces, (mode)))
@@ -76,7 +76,8 @@
     (dinfo->layout_io_info.chunk_map->use_single ? (H5SL_node_t *)NULL : H5SL_next(node))
 #define H5D_CHUNK_GET_NODE_COUNT(dinfo)                                                                      \
     (dinfo->layout_io_info.chunk_map->use_single                                                             \
-         ? 1 : H5SL_count(dinfo->layout_io_info.chunk_map->dset_sel_pieces))
+         ? 1                                                                                                 \
+         : H5SL_count(dinfo->layout_io_info.chunk_map->dset_sel_pieces))
 
 /* Sanity check on chunk index types: commonly used by a lot of routines in this file */
 #define H5D_CHUNK_STORAGE_INDEX_CHK(storage)                                                                 \
@@ -2034,7 +2035,7 @@ H5D__create_piece_mem_map_hyper(const H5D_dset_io_info_t *dinfo)
     hsize_t           mem_sel_start[H5S_MAX_RANK];  /* Offset of low bound of file selection */
     hsize_t           mem_sel_end[H5S_MAX_RANK];    /* Offset of high bound of file selection */
     hssize_t          adjust[H5S_MAX_RANK];         /* Adjustment to make to all file chunks */
-        ssize_t num_pieces;             /* # of pieces in the skip list */
+    ssize_t           num_pieces;                   /* # of pieces in the skip list */
     unsigned          u;                            /* Local index variable */
     herr_t            ret_value = SUCCEED;          /* Return value */
 
@@ -2168,7 +2169,7 @@ H5D__create_piece_mem_map_1d(const H5D_dset_io_info_t *dinfo)
     H5D_chunk_map_t  *fm;                  /* Convenience pointer to chunk map */
     H5D_piece_info_t *piece_info;          /* Pointer to chunk information */
     H5SL_node_t      *curr_node = NULL;    /* Current node in skip list */
-        ssize_t num_pieces;             /* # of pieces in the skip list */
+    ssize_t           num_pieces;          /* # of pieces in the skip list */
     herr_t            ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -2752,11 +2753,14 @@ H5D__chunk_read(H5D_io_info_t *io_info, H5D_dset_io_info_t *dset_info)
                    sizeof(chunk_addrs_local) / sizeof(chunk_addrs_local[0]));
             if (num_chunks > (sizeof(chunk_mem_spaces_local) / sizeof(chunk_mem_spaces_local[0]))) {
                 if (NULL == (chunk_mem_spaces = H5MM_malloc(num_chunks * sizeof(H5S_t *))))
-                    HGOTO_ERROR(H5E_DATASET, H5E_CANTALLOC, FAIL, "memory allocation failed for memory space list");
+                    HGOTO_ERROR(H5E_DATASET, H5E_CANTALLOC, FAIL,
+                                "memory allocation failed for memory space list");
                 if (NULL == (chunk_file_spaces = H5MM_malloc(num_chunks * sizeof(H5S_t *))))
-                    HGOTO_ERROR(H5E_DATASET, H5E_CANTALLOC, FAIL, "memory allocation failed for file space list");
+                    HGOTO_ERROR(H5E_DATASET, H5E_CANTALLOC, FAIL,
+                                "memory allocation failed for file space list");
                 if (NULL == (chunk_addrs = H5MM_malloc(num_chunks * sizeof(haddr_t))))
-                    HGOTO_ERROR(H5E_DATASET, H5E_CANTALLOC, FAIL, "memory allocation failed for chunk address list");
+                    HGOTO_ERROR(H5E_DATASET, H5E_CANTALLOC, FAIL,
+                                "memory allocation failed for chunk address list");
             } /* end if */
             else {
                 chunk_mem_spaces  = chunk_mem_spaces_local;
@@ -3088,11 +3092,14 @@ H5D__chunk_write(H5D_io_info_t *io_info, H5D_dset_io_info_t *dset_info)
                    sizeof(chunk_addrs_local) / sizeof(chunk_addrs_local[0]));
             if (num_chunks > (sizeof(chunk_mem_spaces_local) / sizeof(chunk_mem_spaces_local[0]))) {
                 if (NULL == (chunk_mem_spaces = H5MM_malloc(num_chunks * sizeof(H5S_t *))))
-                    HGOTO_ERROR(H5E_DATASET, H5E_CANTALLOC, FAIL, "memory allocation failed for memory space list");
+                    HGOTO_ERROR(H5E_DATASET, H5E_CANTALLOC, FAIL,
+                                "memory allocation failed for memory space list");
                 if (NULL == (chunk_file_spaces = H5MM_malloc(num_chunks * sizeof(H5S_t *))))
-                    HGOTO_ERROR(H5E_DATASET, H5E_CANTALLOC, FAIL, "memory allocation failed for file space list");
+                    HGOTO_ERROR(H5E_DATASET, H5E_CANTALLOC, FAIL,
+                                "memory allocation failed for file space list");
                 if (NULL == (chunk_addrs = H5MM_malloc(num_chunks * sizeof(haddr_t))))
-                    HGOTO_ERROR(H5E_DATASET, H5E_CANTALLOC, FAIL, "memory allocation failed for chunk address list");
+                    HGOTO_ERROR(H5E_DATASET, H5E_CANTALLOC, FAIL,
+                                "memory allocation failed for chunk address list");
             } /* end if */
             else {
                 chunk_mem_spaces  = chunk_mem_spaces_local;

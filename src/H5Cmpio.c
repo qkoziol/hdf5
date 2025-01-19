@@ -966,7 +966,7 @@ H5C__collective_write(H5F_t *f)
     haddr_t         *addrs          = NULL;
     size_t          *sizes          = NULL;
     uint32_t         count32;
-    ssize_t           scount;
+    ssize_t          scount;
     size_t           count;
     herr_t           ret_value = SUCCEED;
 

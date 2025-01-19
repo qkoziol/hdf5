@@ -255,7 +255,7 @@ H5AC__broadcast_candidate_list(H5AC_t *cache_ptr, unsigned *num_entries_ptr, had
     H5AC_aux_t *aux_ptr       = NULL;
     haddr_t    *haddr_buf_ptr = NULL;
     int         mpi_result;
-    ssize_t snum_entries;
+    ssize_t     snum_entries;
     unsigned    num_entries;
     herr_t      ret_value = SUCCEED; /* Return value */
 
@@ -385,9 +385,9 @@ H5AC__broadcast_clean_list(H5AC_t *cache_ptr)
     haddr_t    *addr_buf_ptr = NULL;
     H5AC_aux_t *aux_ptr;
     int         mpi_result;
-    ssize_t snum_entries;
+    ssize_t     snum_entries;
     unsigned    num_entries;
-    herr_t      ret_value   = SUCCEED; /* Return value */
+    herr_t      ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -580,9 +580,9 @@ H5AC__copy_candidate_list_to_buffer(const H5AC_t *cache_ptr, unsigned *num_entri
     H5AC_addr_list_ud_t udata;
     haddr_t            *haddr_buf_ptr = NULL;
     size_t              buf_size;
-    ssize_t snum_entries;
+    ssize_t             snum_entries;
     unsigned            num_entries;
-    herr_t              ret_value   = SUCCEED; /* Return value */
+    herr_t              ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -1578,7 +1578,7 @@ H5AC__rsp__dist_md_write__flush(H5F_t *f)
     H5AC_aux_t *aux_ptr;
     haddr_t    *haddr_buf_ptr = NULL;
     int         mpi_result;
-    ssize_t snum_entries;
+    ssize_t     snum_entries;
     unsigned    num_entries = 0;
     herr_t      ret_value   = SUCCEED; /* Return value */
 

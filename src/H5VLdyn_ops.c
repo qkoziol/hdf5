@@ -313,7 +313,7 @@ H5VL__unregister_opt_operation(H5VL_subclass_t subcls, const char *op_name)
     /* Check for dynamic operations in the VOL subclass */
     if (H5VL_opt_ops_g[subcls]) {
         H5VL_dyn_op_t *dyn_op; /* Info about operation */
-        ssize_t nops;          /* # of operations left */
+        ssize_t        nops;   /* # of operations left */
 
         /* Search for dynamic operation with correct name */
         if (NULL == (dyn_op = H5SL_remove(H5VL_opt_ops_g[subcls], op_name, false, NULL)))

@@ -283,7 +283,8 @@ H5FD__core_add_dirty_region(H5FD_core_t *file, haddr_t start, haddr_t end)
             item->start = start;
             item->end   = end;
             if (H5SL_insert(file->dirty_list, item, &item->start, false) < 0)
-                HGOTO_ERROR(H5E_VFL, H5E_CANTINSERT, FAIL, "can't insert new dirty region: (%llu, %llu)\n", (unsigned long long)start, (unsigned long long)end);
+                HGOTO_ERROR(H5E_VFL, H5E_CANTINSERT, FAIL, "can't insert new dirty region: (%llu, %llu)\n",
+                            (unsigned long long)start, (unsigned long long)end);
         } /* end if */
         else {
             /* Store the new item endpoint if it's bigger */

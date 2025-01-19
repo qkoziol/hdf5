@@ -862,7 +862,7 @@ H5PB_read(H5F_shared_t *f_sh, H5FD_mem_t type, haddr_t addr, size_t size, void *
                 void   *new_page_buf = NULL;
                 size_t  page_size    = page_buf->page_size;
                 ssize_t snpages;
-                size_t npages;
+                size_t  npages;
                 haddr_t eoa;
 
                 /* make space for new entry */
@@ -1173,10 +1173,10 @@ H5PB_write(H5F_shared_t *f_sh, H5FD_mem_t type, haddr_t addr, size_t size, const
             } /* end if */
             /* If not found */
             else {
-                void  *new_page_buf;
+                void   *new_page_buf;
                 ssize_t snpages;
-                size_t npages;
-                size_t page_size = page_buf->page_size;
+                size_t  npages;
+                size_t  page_size = page_buf->page_size;
 
                 /* Make space for new entry */
                 if ((snpages = H5SL_count(page_buf->slist_ptr)) < 0)

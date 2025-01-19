@@ -269,7 +269,7 @@ H5C_dump_cache_skip_list(H5C_t *cache_ptr, char *calling_fcn)
          */
         fprintf(stdout, "Num:    Addr:               Len: Prot/Pind: Dirty: Type:\n");
 
-        i = 0;
+        i        = 0;
         node_ptr = H5SL_first(cache_ptr->slist_ptr, H5SL_LOCK_SHARED);
         while (node_ptr) {
             entry_ptr = (H5C_cache_entry_t *)H5SL_item(node_ptr);

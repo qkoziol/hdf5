@@ -665,8 +665,8 @@ static herr_t
 H5FS__size_node_decr(H5FS_sinfo_t *sinfo, unsigned bin, H5FS_node_t *fspace_node,
                      const H5FS_section_class_t *cls)
 {
-    ssize_t num_nodes;          /* # of nodes on section list */
-    herr_t ret_value = SUCCEED; /* Return value */
+    ssize_t num_nodes;           /* # of nodes on section list */
+    herr_t  ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -1035,7 +1035,8 @@ H5FS__sect_link_rest(H5FS_t *fspace, const H5FS_section_class_t *cls, H5FS_secti
                 HGOTO_ERROR(H5E_FSPACE, H5E_CANTCREATE, FAIL,
                             "can't create skip list for merging free space sections");
         if (H5SL_insert(fspace->sinfo->merge_list, sect, &sect->addr, false) < 0)
-            HGOTO_ERROR(H5E_FSPACE, H5E_CANTINSERT, FAIL, "can't insert free space node into merging skip list");
+            HGOTO_ERROR(H5E_FSPACE, H5E_CANTINSERT, FAIL,
+                        "can't insert free space node into merging skip list");
     } /* end if */
 
     /* Update section info & check if we need more room for the serialized free space sections */
@@ -1100,11 +1101,11 @@ done:
 static herr_t
 H5FS__sect_merge(H5FS_t *fspace, H5FS_section_info_t **sect, void *op_data)
 {
-    H5FS_section_class_t *sect_cls;                 /* Section's class */
-    bool                  modified;                 /* Flag to indicate merge or shrink occurred */
-    bool                  remove_sect = false;      /* Whether a section should be removed before shrinking */
-    htri_t                status;                   /* Status value */
-    herr_t                ret_value = SUCCEED;      /* Return value */
+    H5FS_section_class_t *sect_cls;            /* Section's class */
+    bool                  modified;            /* Flag to indicate merge or shrink occurred */
+    bool                  remove_sect = false; /* Whether a section should be removed before shrinking */
+    htri_t                status;              /* Status value */
+    herr_t                ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -1117,13 +1118,13 @@ H5FS__sect_merge(H5FS_t *fspace, H5FS_section_info_t **sect, void *op_data)
     /* Loop until no more merging */
     if (fspace->sinfo->merge_list) {
         do {
-            H5SL_node_t          *greater_sect_node;    /* Skip list node for section greater than new section */
-            H5SL_node_t          *less_sect_node; /* Skip list node for section less than new section */
-            H5FS_section_info_t  *tmp_sect;       /* Temporary free space section */
-            H5FS_section_class_t *tmp_sect_cls;   /* Temporary section's class */
+            H5SL_node_t          *greater_sect_node; /* Skip list node for section greater than new section */
+            H5SL_node_t          *less_sect_node;    /* Skip list node for section less than new section */
+            H5FS_section_info_t  *tmp_sect;          /* Temporary free space section */
+            H5FS_section_class_t *tmp_sect_cls;      /* Temporary section's class */
 
             /* Reset state */
-            modified          = false;
+            modified = false;
 
             /* Look for neighboring section before new section */
             less_sect_node = H5SL_below(fspace->sinfo->merge_list, &(*sect)->addr, H5SL_LOCK_SHARED);
@@ -1651,7 +1652,8 @@ H5FS__sect_find_node(H5FS_t *fspace, hsize_t request, H5FS_section_info_t **node
                     curr_size_node = H5SL_next(curr_size_node);
 
                     /* Get the skip list which holds pointers to actual free list sections */
-                    curr_sect_node = (H5SL_node_t *)H5SL_first(curr_fspace_node->sect_list, H5SL_LOCK_EXCLUSIVE);
+                    curr_sect_node =
+                        (H5SL_node_t *)H5SL_first(curr_fspace_node->sect_list, H5SL_LOCK_EXCLUSIVE);
 
                     while (curr_sect_node != NULL) {
                         H5FS_section_info_t *curr_sect = NULL;
@@ -2047,7 +2049,8 @@ H5FS_sect_change_class(H5F_t *f, H5FS_t *fspace, H5FS_section_info_t *sect, uint
                     HGOTO_ERROR(H5E_FSPACE, H5E_CANTCREATE, FAIL,
                                 "can't create skip list for merging free space sections");
             if (H5SL_insert(fspace->sinfo->merge_list, sect, &sect->addr, false) < 0)
-                HGOTO_ERROR(H5E_FSPACE, H5E_CANTINSERT, FAIL, "can't insert free space node into merging skip list");
+                HGOTO_ERROR(H5E_FSPACE, H5E_CANTINSERT, FAIL,
+                            "can't insert free space node into merging skip list");
         } /* end if */
         else {
             H5FS_section_info_t *tmp_sect_node; /* Temporary section node */
@@ -2123,7 +2126,7 @@ H5FS__sect_assert(const H5FS_t *fspace)
                 H5SL_node_t *curr_size_node;   /* Current section size node in skip list */
                 size_t       bin_serial_count; /* # of serializable sections in this bin */
                 size_t       bin_ghost_count;  /* # of ghost sections in this bin */
-                ssize_t num_sizes;          /* # of node sizes in list */
+                ssize_t      num_sizes;        /* # of node sizes in list */
 
                 /* Get # of sizes in list */
                 num_sizes = H5SL_count(fspace->sinfo->bins[u].bin_list);
@@ -2218,7 +2221,7 @@ H5FS__sect_assert(const H5FS_t *fspace)
 
     /* Make certain that the number of sections on the address list is correct */
     if (fspace->sinfo->merge_list) {
-        ssize_t num_sects;          /* # of sections in list */
+        ssize_t num_sects; /* # of sections in list */
 
         /* Get # of sections in list */
         num_sects = H5SL_count(fspace->sinfo->merge_list);

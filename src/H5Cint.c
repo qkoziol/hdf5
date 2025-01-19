@@ -1387,7 +1387,9 @@ H5C__flush_invalidate_ring(H5F_t *f, H5C_ring_t ring, unsigned flags)
                      * buckets typically have at most two or three entries.
                      */
                     cache_ptr->entry_watched_for_removal = next_entry_ptr;
-                    if (H5C__flush_single_entry(f, entry_ptr, (cooked_flags | H5C__FLUSH_INVALIDATE_FLAG | H5C__DEL_FROM_SLIST_ON_DESTROY_FLAG)) < 0)
+                    if (H5C__flush_single_entry(f, entry_ptr,
+                                                (cooked_flags | H5C__FLUSH_INVALIDATE_FLAG |
+                                                 H5C__DEL_FROM_SLIST_ON_DESTROY_FLAG)) < 0)
                         HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL, "Entry flush destroy failed");
 
                     /* Restart the index list scan if necessary.  Must do this

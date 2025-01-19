@@ -2596,7 +2596,8 @@ H5O__visit_cb(hid_t H5_ATTR_UNUSED group, const char *name, const H5L_info2_t *l
 
                     /* Add to list of visited objects */
                     if (H5SL_insert(udata->visited, new_node, new_node, false) < 0)
-                        HGOTO_ERROR(H5E_OHDR, H5E_CANTINSERT, H5_ITER_ERROR, "can't insert object node into visited list");
+                        HGOTO_ERROR(H5E_OHDR, H5E_CANTINSERT, H5_ITER_ERROR,
+                                    "can't insert object node into visited list");
                 } /* end if */
             }     /* end if */
         }         /* end if */

@@ -161,7 +161,7 @@ typedef struct H5TS_pool_t H5TS_pool_t;
 /* Types of R/W locks that can be acquired */
 typedef enum H5TS_rwlock_lock_mode_t {
     H5TS_RWLOCK_LOCK_EXCLUSIVE = 1,
-    H5TS_RWLOCK_LOCK_SHARED = 2
+    H5TS_RWLOCK_LOCK_SHARED    = 2
 } H5TS_rwlock_lock_mode_t;
 
 /* Portability aliases */

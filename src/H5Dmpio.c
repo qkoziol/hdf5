@@ -1085,10 +1085,10 @@ static herr_t
 H5D__mpio_get_sum_chunk_dset(const H5D_io_info_t *io_info, const H5D_dset_io_info_t *dset_info,
                              int *sum_chunkf)
 {
-    int    num_chunkf; /* Number of chunks to iterate over */
+    int     num_chunkf; /* Number of chunks to iterate over */
     ssize_t ori_num_chunkf;
-    int    mpi_code; /* MPI return code */
-    herr_t ret_value = SUCCEED;
+    int     mpi_code; /* MPI return code */
+    herr_t  ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
 
@@ -1097,13 +1097,14 @@ H5D__mpio_get_sum_chunk_dset(const H5D_io_info_t *io_info, const H5D_dset_io_inf
     assert(dset_info->layout->type == H5D_CHUNKED);
 
     /* Get the number of chunks to perform I/O on */
-    num_chunkf     = 0;
+    num_chunkf = 0;
     if ((ori_num_chunkf = H5SL_count(dset_info->layout_io_info.chunk_map->dset_sel_pieces)) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get # of pieces");
     H5_CHECKED_ASSIGN(num_chunkf, int, ori_num_chunkf, ssize_t);
 
     /* Determine the summation of number of chunks for all processes */
-    if (MPI_SUCCESS != (mpi_code = MPI_Allreduce(&num_chunkf, sum_chunkf, 1, MPI_INT, MPI_SUM, io_info->comm)))
+    if (MPI_SUCCESS !=
+        (mpi_code = MPI_Allreduce(&num_chunkf, sum_chunkf, 1, MPI_INT, MPI_SUM, io_info->comm)))
         HMPI_GOTO_ERROR(FAIL, "MPI_Allreduce failed", mpi_code)
 
 done:
@@ -2050,7 +2051,7 @@ H5D__multi_chunk_collective_io(H5D_io_info_t *io_info, H5D_dset_io_info_t *dset_
     H5FD_mpio_collective_opt_t orig_coll_opt_mode =
         H5FD_MPIO_COLLECTIVE_IO;           /* Original parallel transfer property on entering this function */
     size_t                    total_chunk; /* Total # of chunks in dataset */
-    ssize_t                   snum_chunk;   /* Number of chunks for this process */
+    ssize_t                   snum_chunk;  /* Number of chunks for this process */
     size_t                    num_chunk;   /* Number of chunks for this process */
     H5SL_node_t              *piece_node      = NULL; /* Current node in chunk skip list */
     H5D_piece_info_t         *next_chunk_info = NULL; /* Chunk info for next selected chunk */
@@ -2101,7 +2102,8 @@ H5D__multi_chunk_collective_io(H5D_io_info_t *io_info, H5D_dset_io_info_t *dset_
         /* Start at the beginning of the chunk map skiplist.  Since these chunks are
          * stored in index order and since we're iterating in index order we can
          * just check for each chunk being selected in order */
-        if (NULL == (piece_node = H5SL_first(dset_info->layout_io_info.chunk_map->dset_sel_pieces, H5SL_LOCK_SHARED)))
+        if (NULL ==
+            (piece_node = H5SL_first(dset_info->layout_io_info.chunk_map->dset_sel_pieces, H5SL_LOCK_SHARED)))
             HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "couldn't get piece node from skip list");
         if (NULL == (next_chunk_info = (H5D_piece_info_t *)H5SL_item(piece_node)))
             HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "couldn't get piece info from skip list");
@@ -3169,7 +3171,7 @@ H5D__mpio_collective_filtered_chunk_io_setup(const H5D_io_info_t *io_info, const
 {
     H5D_filtered_collective_chunk_info_t *local_info_array    = NULL;
     H5D_mpio_filtered_dset_info_t        *curr_dset_info      = NULL;
-    H5SL_node_t *chunk_node = NULL;
+    H5SL_node_t                          *chunk_node          = NULL;
     size_t                                num_chunks_selected = 0;
     size_t                                num_chunks_to_read  = 0;
     size_t                                buf_idx             = 0;
@@ -3234,7 +3236,7 @@ H5D__mpio_collective_filtered_chunk_io_setup(const H5D_io_info_t *io_info, const
     for (size_t dset_idx = 0; dset_idx < num_dset_infos; dset_idx++) {
         H5D_chunk_ud_t udata;
         H5O_fill_t    *fill_msg;
-        ssize_t num_pieces;             /* # of pieces in the skip list */
+        ssize_t        num_pieces; /* # of pieces in the skip list */
         haddr_t        prev_tag = HADDR_UNDEF;
 
         /* Skip this dataset if no I/O is being performed */
@@ -3349,7 +3351,7 @@ H5D__mpio_collective_filtered_chunk_io_setup(const H5D_io_info_t *io_info, const
             HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get # of pieces in skip list");
 
         if (num_pieces > 0) {
-            bool         filter_partial_edge_chunks;
+            bool filter_partial_edge_chunks;
 
             /* Determine whether partial edge chunks should be filtered */
             filter_partial_edge_chunks = !(di[dset_idx].dset->shared->layout.u.chunk.flags &
