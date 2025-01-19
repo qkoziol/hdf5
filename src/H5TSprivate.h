@@ -158,6 +158,12 @@ typedef void (*H5TS_key_destructor_func_t)(void *);
 /* Thread pool */
 typedef struct H5TS_pool_t H5TS_pool_t;
 
+/* Types of R/W locks that can be acquired */
+typedef enum H5TS_rwlock_lock_mode_t {
+    H5TS_RWLOCK_LOCK_EXCLUSIVE = 1,
+    H5TS_RWLOCK_LOCK_SHARED = 2
+} H5TS_rwlock_lock_mode_t;
+
 /* Portability aliases */
 #ifdef H5_HAVE_C11_THREADS
 
@@ -374,6 +380,8 @@ H5_DLL herr_t H5TS_dlftt_mutex_destroy(H5TS_dlftt_mutex_t *mutex);
 H5_DLL herr_t H5TS_rwlock_init(H5TS_rwlock_t *lock);
 /* R/W lock & unlock calls are defined in H5TSrwlock.h */
 #if !defined(__cplusplus)
+static inline herr_t H5TS_rwlock_lock(H5TS_rwlock_t *lock, H5TS_rwlock_lock_mode_t mode);
+static inline herr_t H5TS_rwlock_unlock(H5TS_rwlock_t *lock, H5TS_rwlock_lock_mode_t mode);
 static inline herr_t H5TS_rwlock_rdlock(H5TS_rwlock_t *lock);
 static inline herr_t H5TS_rwlock_rdunlock(H5TS_rwlock_t *lock);
 static inline herr_t H5TS_rwlock_wrlock(H5TS_rwlock_t *lock);

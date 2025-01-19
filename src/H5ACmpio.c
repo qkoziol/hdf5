@@ -215,7 +215,7 @@ H5AC_add_candidate(H5AC_t *cache_ptr, haddr_t addr)
         HGOTO_ERROR(H5E_CACHE, H5E_CANTALLOC, FAIL, "Can't allocate candidate slist entry");
     slist_entry_ptr->addr = addr;
 
-    if (H5SL_insert(aux_ptr->candidate_slist_ptr, slist_entry_ptr, &(slist_entry_ptr->addr)) < 0)
+    if (H5SL_insert(aux_ptr->candidate_slist_ptr, slist_entry_ptr, &slist_entry_ptr->addr, false) < 0)
         HGOTO_ERROR(H5E_CACHE, H5E_CANTINSERT, FAIL, "can't insert entry into dirty entry slist");
 
 done:
@@ -255,6 +255,7 @@ H5AC__broadcast_candidate_list(H5AC_t *cache_ptr, unsigned *num_entries_ptr, had
     H5AC_aux_t *aux_ptr       = NULL;
     haddr_t    *haddr_buf_ptr = NULL;
     int         mpi_result;
+    ssize_t snum_entries;
     unsigned    num_entries;
     herr_t      ret_value = SUCCEED; /* Return value */
 
@@ -276,7 +277,9 @@ H5AC__broadcast_candidate_list(H5AC_t *cache_ptr, unsigned *num_entries_ptr, had
      * receivers can set up buffers to receive them.  If there aren't
      * any, we are done.
      */
-    num_entries = (unsigned)H5SL_count(aux_ptr->candidate_slist_ptr);
+    if ((snum_entries = H5SL_count(aux_ptr->candidate_slist_ptr)) < 0)
+        HGOTO_ERROR(H5E_CACHE, H5E_CANTGET, FAIL, "can't get # of candidate entries");
+    H5_CHECKED_ASSIGN(num_entries, unsigned, snum_entries, ssize_t);
     if (MPI_SUCCESS != (mpi_result = MPI_Bcast(&num_entries, 1, MPI_UNSIGNED, 0, aux_ptr->mpi_comm)))
         HMPI_GOTO_ERROR(FAIL, "MPI_Bcast failed", mpi_result)
 
@@ -382,7 +385,8 @@ H5AC__broadcast_clean_list(H5AC_t *cache_ptr)
     haddr_t    *addr_buf_ptr = NULL;
     H5AC_aux_t *aux_ptr;
     int         mpi_result;
-    unsigned    num_entries = 0;
+    ssize_t snum_entries;
+    unsigned    num_entries;
     herr_t      ret_value   = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -398,7 +402,9 @@ H5AC__broadcast_clean_list(H5AC_t *cache_ptr)
      * receives can set up a buffer to receive them.  If there aren't
      * any, we are done.
      */
-    num_entries = (unsigned)H5SL_count(aux_ptr->c_slist_ptr);
+    if ((snum_entries = H5SL_count(aux_ptr->c_slist_ptr)) < 0)
+        HGOTO_ERROR(H5E_CACHE, H5E_CANTGET, FAIL, "can't get # of clean entries");
+    H5_CHECKED_ASSIGN(num_entries, unsigned, snum_entries, ssize_t);
     if (MPI_SUCCESS != (mpi_result = MPI_Bcast(&num_entries, 1, MPI_UNSIGNED, 0, aux_ptr->mpi_comm)))
         HMPI_GOTO_ERROR(FAIL, "MPI_Bcast failed", mpi_result)
 
@@ -574,7 +580,8 @@ H5AC__copy_candidate_list_to_buffer(const H5AC_t *cache_ptr, unsigned *num_entri
     H5AC_addr_list_ud_t udata;
     haddr_t            *haddr_buf_ptr = NULL;
     size_t              buf_size;
-    unsigned            num_entries = 0;
+    ssize_t snum_entries;
+    unsigned            num_entries;
     herr_t              ret_value   = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -591,7 +598,9 @@ H5AC__copy_candidate_list_to_buffer(const H5AC_t *cache_ptr, unsigned *num_entri
     assert(haddr_buf_ptr_ptr != NULL);
     assert(*haddr_buf_ptr_ptr == NULL);
 
-    num_entries = (unsigned)H5SL_count(aux_ptr->candidate_slist_ptr);
+    if ((snum_entries = H5SL_count(aux_ptr->candidate_slist_ptr)) < 0)
+        HGOTO_ERROR(H5E_CACHE, H5E_CANTGET, FAIL, "can't get # of candidate entries");
+    H5_CHECKED_ASSIGN(num_entries, unsigned, snum_entries, ssize_t);
 
     /* allocate a buffer(s) to store the list of candidate entry
      * base addresses in
@@ -722,7 +731,7 @@ H5AC__log_dirtied_entry(const H5AC_info_t *entry_ptr)
                 HGOTO_ERROR(H5E_CACHE, H5E_CANTALLOC, FAIL, "Can't allocate dirty slist entry .");
             slist_entry_ptr->addr = addr;
 
-            if (H5SL_insert(aux_ptr->d_slist_ptr, slist_entry_ptr, &(slist_entry_ptr->addr)) < 0)
+            if (H5SL_insert(aux_ptr->d_slist_ptr, slist_entry_ptr, &slist_entry_ptr->addr, false) < 0)
                 HGOTO_ERROR(H5E_CACHE, H5E_CANTINSERT, FAIL, "can't insert entry into dirty entry slist.");
 
             aux_ptr->dirty_bytes += entry_ptr->size;
@@ -855,7 +864,7 @@ H5AC__log_flushed_entry(H5C_t *cache_ptr, haddr_t addr, bool was_dirty, unsigned
                 HGOTO_ERROR(H5E_CACHE, H5E_CANTALLOC, FAIL, "Can't allocate clean slist entry .");
             slist_entry_ptr->addr = addr;
 
-            if (H5SL_insert(aux_ptr->c_slist_ptr, slist_entry_ptr, &(slist_entry_ptr->addr)) < 0)
+            if (H5SL_insert(aux_ptr->c_slist_ptr, slist_entry_ptr, &slist_entry_ptr->addr, false) < 0)
                 HGOTO_ERROR(H5E_CACHE, H5E_CANTINSERT, FAIL, "can't insert entry into clean entry slist.");
         } /* end if */
     }     /* end else-if */
@@ -914,7 +923,7 @@ H5AC__log_inserted_entry(const H5AC_info_t *entry_ptr)
         if (NULL == (slist_entry_ptr = H5FL_MALLOC(H5AC_slist_entry_t)))
             HGOTO_ERROR(H5E_CACHE, H5E_CANTALLOC, FAIL, "Can't allocate dirty slist entry .");
         slist_entry_ptr->addr = entry_ptr->addr;
-        if (H5SL_insert(aux_ptr->d_slist_ptr, slist_entry_ptr, &(slist_entry_ptr->addr)) < 0)
+        if (H5SL_insert(aux_ptr->d_slist_ptr, slist_entry_ptr, &slist_entry_ptr->addr, false) < 0)
             HGOTO_ERROR(H5E_CACHE, H5E_CANTINSERT, FAIL, "can't insert entry into dirty entry slist.");
 
         /* Entry to insert should not be in clean list either */
@@ -1043,7 +1052,7 @@ H5AC__log_moved_entry(const H5F_t *f, haddr_t old_addr, haddr_t new_addr)
         } /* end else */
 
         /* insert / reinsert the entry in the dirty slist */
-        if (H5SL_insert(aux_ptr->d_slist_ptr, slist_entry_ptr, &(slist_entry_ptr->addr)) < 0)
+        if (H5SL_insert(aux_ptr->d_slist_ptr, slist_entry_ptr, &slist_entry_ptr->addr, false) < 0)
             HGOTO_ERROR(H5E_CACHE, H5E_CANTINSERT, FAIL, "can't insert entry into dirty entry slist.");
     } /* end if */
     else if (!entry_dirty) {
@@ -1569,6 +1578,7 @@ H5AC__rsp__dist_md_write__flush(H5F_t *f)
     H5AC_aux_t *aux_ptr;
     haddr_t    *haddr_buf_ptr = NULL;
     int         mpi_result;
+    ssize_t snum_entries;
     unsigned    num_entries = 0;
     herr_t      ret_value   = SUCCEED; /* Return value */
 
@@ -1588,7 +1598,9 @@ H5AC__rsp__dist_md_write__flush(H5F_t *f)
     if (H5C_construct_candidate_list__clean_cache(cache_ptr) < 0)
         HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL, "Can't construct candidate list.");
 
-    if (H5SL_count(aux_ptr->candidate_slist_ptr) > 0) {
+    if ((snum_entries = H5SL_count(aux_ptr->candidate_slist_ptr)) < 0)
+        HGOTO_ERROR(H5E_CACHE, H5E_CANTGET, FAIL, "can't get # of candidate entries");
+    if (snum_entries > 0) {
         herr_t result;
 
         /* convert the candidate list into the format we

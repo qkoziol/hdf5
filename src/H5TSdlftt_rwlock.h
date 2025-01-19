@@ -60,6 +60,159 @@ H5_DLL herr_t H5TS__get_dlftt(unsigned *dlftt);
 /*******************/
 
 /*--------------------------------------------------------------------------
+ * Function:    H5TS_dlftt_rwlock_lock
+ *
+ * Purpose:     Acquires a shared lock on a R/W lock, determined at runtime,
+ *              obeying the "DLFTT" protocol
+ *
+ * Note:     	Algorithm flowchart:
+ *
+ *          .─────────.
+ *         (   Start   )
+ *          `─────────'          Acquire DLFTT R/W lock
+ *               │               ----------------------
+ *               ▼
+ *               Λ
+ *              ╱ ╲
+ *             ╱   ╲
+ *            ╱     ╲
+ *           ╱       ╲
+ *          ╱         ╲    N    ┌────────────────┐
+ *         ▕  bypass?  ▏───────▶│Get DLFTT value │────────┐
+ *          ╲         ╱         └────────────────┘        │
+ *           ╲       ╱                                    │
+ *            ╲     ╱                                     ▼
+ *             ╲   ╱                                      Λ
+ *              ╲ ╱                                      ╱ ╲
+ *               V                                      ╱   ╲
+ *            Y  │                                     ╱     ╲
+ *               ▼                                    ╱       ╲
+ *        ┌────────────┐     ┌───────────────┐   Y   ╱         ╲
+ *        │ ++refcount │◀────│ bypass = true │◀─────▕ DLFTT > 0?▏
+ *        └────────────┘     └───────────────┘       ╲         ╱
+ *               │                                    ╲       ╱
+ *               │                                     ╲     ╱
+ *               │                                      ╲   ╱
+ *               │                                       ╲ ╱
+ *               │                                        V
+ *               │                                     N  │
+ *               │                                        ▼
+ *               │                  .─.            ┌────────────┐
+ *               └────────────────▶( X )◀──────────│    Lock    │
+ *                                  `─'            └────────────┘
+ *                                   │
+ *                                   ▼
+ *                              .─────────.
+ *                             (    End    )
+ *                              `─────────'
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *--------------------------------------------------------------------------
+ */
+static inline herr_t
+H5TS_dlftt_rwlock_lock(H5TS_dlftt_rwlock_t *lck, H5TS_rwlock_lock_mode_t mode)
+{
+    /* Check whether we are bypassing locking the R/W lock */
+    if (lck->bypass)
+        /* Increment refcount */
+        lck->rc++;
+    else {
+        unsigned dlftt = 0;
+
+        /* Query the DLFTT value */
+        if (H5_UNLIKELY(H5TS__get_dlftt(&dlftt) < 0))
+            return FAIL;
+
+        /* Acquire the lock if locking is not disabled */
+        if (0 == dlftt) {
+            /* Acquire the lock */
+            if (H5_UNLIKELY(H5TS_rwlock_lock(&lck->lck, mode) < 0))
+                return FAIL;
+        } /* end if */
+        else {
+            /* Indicate that lock should be bypassed */
+            lck->bypass = true;
+            lck->rc     = 1;
+        } /* end else */
+    }     /* end else */
+
+    return SUCCEED;
+} /* end H5TS_dlftt_rwlock_lock() */
+
+/*--------------------------------------------------------------------------
+ * Function:    H5TS_dlftt_rwlock_unlock
+ *
+ * Purpose:     Releases a shared lock on a R/W lock, determined at runtime,
+ *              obeying the "DLFTT" protocol
+ *
+ * Note:     	Algorithm flowchart:
+ *
+ *          .─────────.
+ *         (   Start   )
+ *          `─────────'
+ *               │                Release DLFTT R/W Lock
+ *               ▼                ----------------------
+ *               Λ
+ *              ╱ ╲
+ *             ╱   ╲
+ *            ╱     ╲
+ *           ╱       ╲
+ *          ╱         ╲  Y ┌────────────┐
+ *         ▕  bypass?  ▏──▶│ --refcount │
+ *          ╲         ╱    └────────────┘
+ *           ╲       ╱            │
+ *            ╲     ╱             ▼
+ *             ╲   ╱              Λ
+ *              ╲ ╱              ╱ ╲
+ *               V              ╱   ╲
+ *             N │             ╱     ╲
+ *               ▼            ╱       ╲
+ *        ┌────────────┐     ╱refcount ╲  Y ┌───────────────┐
+ *        │   Unlock   │    ▕   == 0?   ▏──▶│bypass = false │
+ *        └────────────┘     ╲         ╱    └───────────────┘
+ *               │            ╲       ╱             │
+ *               │             ╲     ╱              │
+ *               │              ╲   ╱               │
+ *               │               ╲ ╱                │
+ *               │                V                 │
+ *               │              N │                 │
+ *               │                ▼                 │
+ *               │               .─.                │
+ *               └─────────────▶( X )◀──────────────┘
+ *                               `─'
+ *                                │
+ *                                ▼
+ *                           .─────────.
+ *                          (    End    )
+ *                           `─────────'
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *--------------------------------------------------------------------------
+ */
+static inline herr_t
+H5TS_dlftt_rwlock_unlock(H5TS_dlftt_rwlock_t *lck, H5TS_rwlock_lock_mode_t mode)
+{
+    /* Check if we are bypassing the lock currently */
+    if (lck->bypass) {
+        /* Decrement refcount */
+        lck->rc--;
+
+        /* Check for done bypassing */
+        if (0 == lck->rc)
+            lck->bypass = false;
+    } /* end if */
+    else {
+        /* Release the lock */
+        if (H5_UNLIKELY(H5TS_rwlock_unlock(&lck->lck, mode) < 0))
+            return FAIL;
+    } /* end else */
+
+    return SUCCEED;
+} /* end H5TS_dlftt_rwlock_unlock() */
+
+/*--------------------------------------------------------------------------
  * Function:    H5TS_dlftt_rwlock_rdlock
  *
  * Purpose:     Acquires a shared lock on a R/W lock, obeying the "DLFTT" protocol

@@ -1018,7 +1018,7 @@ gen_ref_files(const char *filename, H5F_libver_t low_bound, H5F_libver_t high_bo
      * Create test file, attribute, group and dataset
      */
 
-    if ((dwbuf = calloc(sizeof(unsigned), 100)) == NULL)
+    if (NULL == (dwbuf = calloc(100, sizeof(unsigned))))
         TEST_ERROR;
 
     /* Create the test file */

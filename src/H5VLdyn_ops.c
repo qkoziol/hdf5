@@ -216,7 +216,7 @@ H5VL__register_opt_operation(H5VL_subclass_t subcls, const char *op_name, int *o
     new_op->op_val = H5VL_opt_vals_g[subcls]++;
 
     /* Insert into subclass's skip list */
-    if (H5SL_insert(H5VL_opt_ops_g[subcls], new_op, new_op->op_name) < 0)
+    if (H5SL_insert(H5VL_opt_ops_g[subcls], new_op, new_op->op_name, false) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTINSERT, FAIL, "can't insert operation info into skip list");
 
     /* Return the next operation value to the caller */
@@ -246,7 +246,7 @@ H5VL__num_opt_operation(void)
     /* Iterate over the VOL subclasses */
     for (subcls = 0; subcls < NELMTS(H5VL_opt_vals_g); subcls++)
         if (H5VL_opt_ops_g[subcls])
-            ret_value += H5SL_count(H5VL_opt_ops_g[subcls]);
+            ret_value += (size_t)H5SL_count(H5VL_opt_ops_g[subcls]);
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5VL__num_opt_operation() */
@@ -313,6 +313,7 @@ H5VL__unregister_opt_operation(H5VL_subclass_t subcls, const char *op_name)
     /* Check for dynamic operations in the VOL subclass */
     if (H5VL_opt_ops_g[subcls]) {
         H5VL_dyn_op_t *dyn_op; /* Info about operation */
+        ssize_t nops;          /* # of operations left */
 
         /* Search for dynamic operation with correct name */
         if (NULL == (dyn_op = H5SL_remove(H5VL_opt_ops_g[subcls], op_name, false, NULL)))
@@ -321,8 +322,12 @@ H5VL__unregister_opt_operation(H5VL_subclass_t subcls, const char *op_name)
         /* Release the info for the operation */
         H5VL__release_dyn_op(dyn_op);
 
+        /* Get the # of operations */
+        if ((nops = H5SL_count(H5VL_opt_ops_g[subcls])) < 0)
+            HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "can't get # of dynamic operations");
+
         /* Close the skip list, if no more operations in it */
-        if (0 == H5SL_count(H5VL_opt_ops_g[subcls])) {
+        if (0 == nops) {
             if (H5SL_close(H5VL_opt_ops_g[subcls]) < 0)
                 HGOTO_ERROR(H5E_VOL, H5E_CANTCLOSEOBJ, FAIL, "can't close dyn op skip list");
             H5VL_opt_ops_g[subcls] = NULL;

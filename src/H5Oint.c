@@ -2595,9 +2595,8 @@ H5O__visit_cb(hid_t H5_ATTR_UNUSED group, const char *name, const H5L_info2_t *l
                     *new_node = obj_pos;
 
                     /* Add to list of visited objects */
-                    if (H5SL_insert(udata->visited, new_node, new_node) < 0)
-                        HGOTO_ERROR(H5E_OHDR, H5E_CANTINSERT, H5_ITER_ERROR,
-                                    "can't insert object node into visited list");
+                    if (H5SL_insert(udata->visited, new_node, new_node, false) < 0)
+                        HGOTO_ERROR(H5E_OHDR, H5E_CANTINSERT, H5_ITER_ERROR, "can't insert object node into visited list");
                 } /* end if */
             }     /* end if */
         }         /* end if */
@@ -2744,7 +2743,7 @@ H5O__visit(H5G_loc_t *loc, const char *obj_name, H5_index_t idx_type, H5_iter_or
                             "can't deserialize object token into address");
 
             /* Add to list of visited objects */
-            if (H5SL_insert(udata.visited, obj_pos, obj_pos) < 0)
+            if (H5SL_insert(udata.visited, obj_pos, obj_pos, false) < 0)
                 HGOTO_ERROR(H5E_OHDR, H5E_CANTINSERT, FAIL, "can't insert object node into visited list");
         }
 

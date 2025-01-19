@@ -14,14 +14,13 @@
  *              This file contains tests for metadata tagging.
  */
 
-#define H5F_FRIEND /*suppress error about including H5Fpkg      */
 #define H5F_TESTING
 
 #include "h5test.h"
 #include "cache_common.h"
 
 #include "H5CXprivate.h" /* API Contexts                         */
-#include "H5Fpkg.h"
+#include "H5Fprivate.h"
 #include "H5HLprivate.h"
 #include "H5VLnative_private.h" /* Native VOL connector                     */
 

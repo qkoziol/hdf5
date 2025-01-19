@@ -233,7 +233,7 @@ ref_path_table_put(const char *path, const H5O_token_t *token)
         memcpy(&new_node->obj_token, token, sizeof(H5O_token_t));
         new_node->path = strdup(path);
 
-        return (H5SL_insert(ref_path_table, new_node, &(new_node->obj_token)));
+        return (H5SL_insert(ref_path_table, new_node, &new_node->obj_token, false));
     }
     else
         return (-1);

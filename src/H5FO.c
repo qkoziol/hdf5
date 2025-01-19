@@ -177,7 +177,7 @@ H5FO_insert(const H5F_t *f, haddr_t addr, void *obj, bool delete_flag)
     open_obj->deleted = delete_flag;
 
     /* Insert into container */
-    if (H5SL_insert(f->shared->open_objs, &open_obj->addr, open_obj) < 0)
+    if (H5SL_insert(f->shared->open_objs, &open_obj->addr, open_obj, false) < 0)
         HGOTO_ERROR(H5E_CACHE, H5E_CANTINSERT, FAIL, "can't insert object into container");
 
 done:
@@ -339,6 +339,7 @@ H5FO_marked(const H5F_t *f, haddr_t addr)
 herr_t
 H5FO_dest(const H5F_t *f)
 {
+    ssize_t         nobjs;           /* Number of objects still open */
     herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
@@ -348,8 +349,12 @@ H5FO_dest(const H5F_t *f)
     assert(f->shared);
     assert(f->shared->open_objs);
 
+    /* Get # of objects in the object info set */
+    if ((nobjs = H5SL_count(f->shared->open_objs)) < 0)
+        HGOTO_ERROR(H5E_CACHE, H5E_CANTGET, FAIL, "can't get # of objects in open object info set");
+
     /* Check if the object info set is empty */
-    if (H5SL_count(f->shared->open_objs) != 0)
+    if (0 != nobjs)
         HGOTO_ERROR(H5E_CACHE, H5E_CANTRELEASE, FAIL, "objects still in open object info set");
 
     /* Release the open object info set container */
@@ -444,7 +449,7 @@ H5FO_top_incr(const H5F_t *f, haddr_t addr)
         obj_count->count = 1;
 
         /* Insert into container */
-        if (H5SL_insert(f->obj_count, &obj_count->addr, obj_count) < 0)
+        if (H5SL_insert(f->obj_count, &obj_count->addr, obj_count, false) < 0)
             HGOTO_ERROR(H5E_CACHE, H5E_CANTINSERT, FAIL, "can't insert object into container");
     } /* end if */
 
@@ -567,6 +572,7 @@ H5FO_top_count(const H5F_t *f, haddr_t addr)
 herr_t
 H5FO_top_dest(H5F_t *f)
 {
+    ssize_t         nobjs;           /* Number of objects still open */
     herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
@@ -575,8 +581,12 @@ H5FO_top_dest(H5F_t *f)
     assert(f);
     assert(f->obj_count);
 
+    /* Get # of objects in the object info set */
+    if ((nobjs = H5SL_count(f->obj_count)) < 0)
+        HGOTO_ERROR(H5E_CACHE, H5E_CANTGET, FAIL, "can't get # of objects in open object info set");
+
     /* Check if the object count set is empty */
-    if (H5SL_count(f->obj_count) != 0)
+    if (0 != nobjs)
         HGOTO_ERROR(H5E_CACHE, H5E_CANTRELEASE, FAIL, "objects still in open object info set");
 
     /* Release the open object count set container */

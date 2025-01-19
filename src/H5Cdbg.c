@@ -96,7 +96,7 @@ H5C_dump_cache(H5C_t *cache_ptr, const char *cache_name)
         entry_ptr = cache_ptr->index[i];
 
         while (entry_ptr != NULL) {
-            if (H5SL_insert(slist_ptr, entry_ptr, &(entry_ptr->addr)) < 0)
+            if (H5SL_insert(slist_ptr, entry_ptr, &entry_ptr->addr, false) < 0)
                 HGOTO_ERROR(H5E_CACHE, H5E_BADVALUE, FAIL, "can't insert entry in skip list");
 
             entry_ptr = entry_ptr->ht_next;
@@ -270,27 +270,18 @@ H5C_dump_cache_skip_list(H5C_t *cache_ptr, char *calling_fcn)
         fprintf(stdout, "Num:    Addr:               Len: Prot/Pind: Dirty: Type:\n");
 
         i = 0;
-
-        node_ptr = H5SL_first(cache_ptr->slist_ptr);
-        if (node_ptr != NULL)
+        node_ptr = H5SL_first(cache_ptr->slist_ptr, H5SL_LOCK_SHARED);
+        while (node_ptr) {
             entry_ptr = (H5C_cache_entry_t *)H5SL_item(node_ptr);
-        else
-            entry_ptr = NULL;
 
-        while (entry_ptr != NULL) {
             fprintf(stdout, "%s%d       0x%016llx  %4lld    %d/%d       %d    %s\n", cache_ptr->prefix, i,
                     (long long)(entry_ptr->addr), (long long)(entry_ptr->size),
                     (int)(entry_ptr->is_protected), (int)(entry_ptr->is_pinned), (int)(entry_ptr->is_dirty),
                     entry_ptr->type->name);
             fprintf(stdout, "		node_ptr = %p, item = %p\n", (void *)node_ptr, H5SL_item(node_ptr));
 
-            /* increment node_ptr before we delete its target */
+            /* Advance to next node */
             node_ptr = H5SL_next(node_ptr);
-            if (node_ptr != NULL)
-                entry_ptr = (H5C_cache_entry_t *)H5SL_item(node_ptr);
-            else
-                entry_ptr = NULL;
-
             i++;
         } /* end while */
     }     /* end if */
@@ -1495,8 +1486,7 @@ done:
 bool
 H5C__entry_in_skip_list(H5C_t *cache_ptr, H5C_cache_entry_t *target_ptr)
 {
-    H5SL_node_t *node_ptr;
-    bool         in_slist;
+    H5SL_node_t *node_ptr = NULL;
     bool         ret_value;
 
     FUNC_ENTER_PACKAGE
@@ -1505,9 +1495,8 @@ H5C__entry_in_skip_list(H5C_t *cache_ptr, H5C_cache_entry_t *target_ptr)
     assert(cache_ptr);
     assert(cache_ptr->slist_ptr);
 
-    node_ptr = H5SL_first(cache_ptr->slist_ptr);
-    in_slist = false;
-    while ((node_ptr != NULL) && (!in_slist)) {
+    node_ptr = H5SL_first(cache_ptr->slist_ptr, H5SL_LOCK_SHARED);
+    while (node_ptr) {
         H5C_cache_entry_t *entry_ptr;
 
         entry_ptr = (H5C_cache_entry_t *)H5SL_item(node_ptr);
@@ -1517,15 +1506,19 @@ H5C__entry_in_skip_list(H5C_t *cache_ptr, H5C_cache_entry_t *target_ptr)
         assert(entry_ptr->in_slist);
 
         if (entry_ptr == target_ptr)
-            in_slist = true;
-        else
-            node_ptr = H5SL_next(node_ptr);
+            HGOTO_DONE(true);
+
+        node_ptr = H5SL_next(node_ptr);
     }
 
     /* Set return value */
-    ret_value = in_slist;
+    ret_value = false;
 
 done:
+    /* Return the skip list node */
+    if (node_ptr)
+        H5SL_return(node_ptr);
+
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5C__entry_in_skip_list() */
 #endif /* H5C_DO_SLIST_SANITY_CHECKS */

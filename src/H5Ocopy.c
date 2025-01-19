@@ -274,7 +274,7 @@ H5O__copy_header_real(const H5O_loc_t *oloc_src, H5O_loc_t *oloc_dst /*out*/, H5
             addr_map->udata              = cpy_udata;
 
             /* Insert into skip list */
-            if (H5SL_insert(cpy_info->map_list, addr_map, &(addr_map->src_obj_pos)) < 0) {
+            if (H5SL_insert(cpy_info->map_list, addr_map, &addr_map->src_obj_pos, false) < 0) {
                 addr_map = H5FL_FREE(H5O_addr_map_t, addr_map);
                 HGOTO_ERROR(H5E_OHDR, H5E_CANTINSERT, FAIL, "can't insert object into skip list");
             } /* end if */
@@ -674,7 +674,7 @@ H5O__copy_header_real(const H5O_loc_t *oloc_src, H5O_loc_t *oloc_dst /*out*/, H5
     addr_map->udata            = cpy_udata;
 
     /* Insert into skip list */
-    if (H5SL_insert(cpy_info->map_list, addr_map, &(addr_map->src_obj_pos)) < 0) {
+    if (H5SL_insert(cpy_info->map_list, addr_map, &addr_map->src_obj_pos, false) < 0) {
         addr_map = H5FL_FREE(H5O_addr_map_t, addr_map);
         HGOTO_ERROR(H5E_OHDR, H5E_CANTINSERT, FAIL, "can't insert object into skip list");
     } /* end if */
@@ -1193,7 +1193,7 @@ H5O__copy_search_comm_dt_attr_cb(const H5A_t *attr, void *_udata)
 
             /* Add the destination datatype to the skip list */
             *addr = ((H5O_shared_t *)(key->dt))->u.loc.oh_addr;
-            if (H5SL_insert(udata->dst_dt_list, addr, key) < 0)
+            if (H5SL_insert(udata->dst_dt_list, addr, key, false) < 0)
                 HGOTO_ERROR(H5E_OHDR, H5E_CANTINSERT, FAIL, "can't insert object into skip list");
             obj_inserted = true;
         } /* end if */
@@ -1272,7 +1272,7 @@ H5O__copy_search_comm_dt_check(H5O_loc_t *obj_oloc, H5O_copy_search_comm_dt_ud_t
 
             /* Add the destination datatype to the skip list */
             *addr = obj_oloc->addr;
-            if (H5SL_insert(udata->dst_dt_list, addr, key) < 0)
+            if (H5SL_insert(udata->dst_dt_list, addr, key, false) < 0)
                 HGOTO_ERROR(H5E_OHDR, H5E_CANTINSERT, FAIL, "can't insert object into skip list");
             obj_inserted = true;
         } /* end if */
@@ -1298,7 +1298,7 @@ H5O__copy_search_comm_dt_check(H5O_loc_t *obj_oloc, H5O_copy_search_comm_dt_ud_t
 
                 /* Add the destination datatype to the skip list */
                 *addr = ((H5O_shared_t *)(key->dt))->u.loc.oh_addr;
-                if (H5SL_insert(udata->dst_dt_list, addr, key) < 0)
+                if (H5SL_insert(udata->dst_dt_list, addr, key, false) < 0)
                     HGOTO_ERROR(H5E_OHDR, H5E_CANTINSERT, FAIL, "can't insert object into skip list");
                 obj_inserted = true;
             } /* end if */
@@ -1615,7 +1615,7 @@ H5O__copy_insert_comm_dt(H5F_t *file_src, H5O_t *oh_src, H5O_loc_t *oloc_dst, H5
 
     /* Add the destination datatype to the skip list */
     *addr = oloc_dst->addr;
-    if (H5SL_insert(cpy_info->dst_dt_list, addr, key) < 0)
+    if (H5SL_insert(cpy_info->dst_dt_list, addr, key, false) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTINSERT, FAIL, "can't insert object into skip list");
 
 done:

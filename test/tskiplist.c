@@ -141,7 +141,7 @@ test_skiplist_insert(void)
         item;          /* Item to insert */
     int    search_key; /* Key of item to search for in skip list */
     int   *found_item; /* Item found in skip list */
-    size_t num;        /* Number of elements in skip list */
+    ssize_t num;        /* Number of elements in skip list */
     herr_t ret;        /* Generic return value */
 
     /* Output message about test being performed */
@@ -163,7 +163,7 @@ test_skiplist_insert(void)
     /* Insert an object into the skip list */
     key  = 2;
     item = 10;
-    ret  = H5SL_insert(slist, &item, &key);
+    ret  = H5SL_insert(slist, &item, &key, false);
     CHECK(ret, FAIL, "H5SL_insert");
 
     /* Check that the skip list has one element */
@@ -182,7 +182,7 @@ test_skiplist_insert(void)
 
     /* Attempt to insert duplicate key (should fail) */
     search_key = 2;
-    ret        = H5SL_insert(slist, &search_key, &search_key);
+    ret        = H5SL_insert(slist, &search_key, &search_key, false);
     VERIFY(ret, FAIL, "H5SL_insert");
 
     /* Close the skip list */
@@ -201,7 +201,7 @@ static void
 test_skiplist_insert_many(void)
 {
     H5SL_t *slist;      /* Skip list created */
-    size_t  num;        /* Number of elements in skip list */
+    ssize_t  num;        /* Number of elements in skip list */
     size_t  u;          /* Local index variable */
     int    *found_item; /* Item found in skip list */
     herr_t  ret;        /* Generic return value */
@@ -219,7 +219,7 @@ test_skiplist_insert_many(void)
 
     /* Insert many objects into the skip list */
     for (u = 0; u < NUM_ELEMS; u++) {
-        ret = H5SL_insert(slist, &rand_num[u], &rand_num[u]);
+        ret = H5SL_insert(slist, &rand_num[u], &rand_num[u], false);
         CHECK(ret, FAIL, "H5SL_insert");
     } /* end for */
 
@@ -244,7 +244,7 @@ test_skiplist_insert_many(void)
 
     /* Insert many objects into the skip list */
     for (u = 0; u < NUM_ELEMS; u++) {
-        ret = H5SL_insert(slist, &rand_num[u], &rand_num[u]);
+        ret = H5SL_insert(slist, &rand_num[u], &rand_num[u], false);
         CHECK(ret, FAIL, "H5SL_insert");
     } /* end for */
 
@@ -277,7 +277,7 @@ test_skiplist_remove(void)
         key3;          /* Key of 3rd item to insert */
     int    search_key; /* Key of item to search for in skip list */
     int   *found_item; /* Item found in skip list */
-    size_t num;        /* Number of elements in skip list */
+    ssize_t num;        /* Number of elements in skip list */
     herr_t ret;        /* Generic return value */
 
     /* Output message about test being performed */
@@ -298,15 +298,15 @@ test_skiplist_remove(void)
 
     /* Insert three objects into the skip list */
     key1 = 15;
-    ret  = H5SL_insert(slist, &key1, &key1);
+    ret  = H5SL_insert(slist, &key1, &key1, false);
     CHECK(ret, FAIL, "H5SL_insert");
 
     key2 = 10;
-    ret  = H5SL_insert(slist, &key2, &key2);
+    ret  = H5SL_insert(slist, &key2, &key2, false);
     CHECK(ret, FAIL, "H5SL_insert");
 
     key3 = 20;
-    ret  = H5SL_insert(slist, &key3, &key3);
+    ret  = H5SL_insert(slist, &key3, &key3, false);
     CHECK(ret, FAIL, "H5SL_insert");
 
     /* Check that the skip list has three elements */
@@ -354,7 +354,7 @@ static void
 test_skiplist_remove_many(void)
 {
     H5SL_t *slist;      /* Skip list created */
-    size_t  num;        /* Number of elements in skip list */
+    ssize_t  num;        /* Number of elements in skip list */
     size_t  u;          /* Local index variable */
     int    *found_item; /* Item found in skip list */
     herr_t  ret;        /* Generic return value */
@@ -372,7 +372,7 @@ test_skiplist_remove_many(void)
 
     /* Insert many objects into the skip list */
     for (u = 0; u < NUM_ELEMS; u++) {
-        ret = H5SL_insert(slist, &rand_num[u], &rand_num[u]);
+        ret = H5SL_insert(slist, &rand_num[u], &rand_num[u], false);
         CHECK(ret, FAIL, "H5SL_insert");
     } /* end for */
 
@@ -396,7 +396,7 @@ test_skiplist_remove_many(void)
 
     /* Insert many objects into the skip list */
     for (u = 0; u < NUM_ELEMS; u++) {
-        ret = H5SL_insert(slist, &rand_num[u], &rand_num[u]);
+        ret = H5SL_insert(slist, &rand_num[u], &rand_num[u], false);
         CHECK(ret, FAIL, "H5SL_insert");
     } /* end for */
 
@@ -420,7 +420,7 @@ test_skiplist_remove_many(void)
 
     /* Insert many objects into the skip list */
     for (u = 0; u < NUM_ELEMS; u++) {
-        ret = H5SL_insert(slist, &rand_num[u], &rand_num[u]);
+        ret = H5SL_insert(slist, &rand_num[u], &rand_num[u], false);
         CHECK(ret, FAIL, "H5SL_insert");
     } /* end for */
 
@@ -456,7 +456,7 @@ test_skiplist_remove_checked_out(void)
 {
     H5SL_t      *slist;      /* Skip list created */
     H5SL_node_t *node;       /* Skip list node */
-    size_t       num;        /* Number of elements in skip list */
+    ssize_t       num;        /* Number of elements in skip list */
     size_t       u;          /* Local index variable */
     int         *found_item; /* Item found in skip list */
     herr_t       ret;        /* Generic return value */
@@ -474,7 +474,7 @@ test_skiplist_remove_checked_out(void)
 
     /* Insert many objects into the skip list */
     for (u = 0; u < NUM_ELEMS; u++) {
-        ret = H5SL_insert(slist, &rand_num[u], &rand_num[u]);
+        ret = H5SL_insert(slist, &rand_num[u], &rand_num[u], false);
         CHECK(ret, FAIL, "H5SL_insert");
     } /* end for */
 
@@ -483,18 +483,14 @@ test_skiplist_remove_checked_out(void)
     VERIFY(num, NUM_ELEMS, "H5SL_count");
 
     /* Iterate over all the nodes in the skip list, removing them  */
-    node = H5SL_first(slist);
+    node = H5SL_first(slist, H5SL_LOCK_EXCLUSIVE);
     CHECK_PTR(node, "H5SL_first");
     u = 0;
     while (node != NULL) {
         bool returned = false;
 
         found_item = (int *)H5SL_item(node);
-        VERIFY(*found_item, sort_rand_num[u], "H5SL_next");
-
-        /* Try removing the node that is currently checked out, without permission */
-        found_item = (int *)H5SL_remove(slist, &sort_rand_num[u], false, NULL);
-        VERIFY(found_item, NULL, "H5SL_remove");
+        VERIFY(*found_item, sort_rand_num[u], "H5SL_item");
 
         /* Remove the node that is currently checked out, with permission */
         found_item = (int *)H5SL_remove(slist, &sort_rand_num[u], true, &returned);
@@ -506,7 +502,7 @@ test_skiplist_remove_checked_out(void)
         u++;
 
         /* Get new first node */
-        node = H5SL_first(slist);
+        node = H5SL_first(slist, H5SL_LOCK_EXCLUSIVE);
     } /* end while */
 
     /* Check that the skip list has correct # of elements */
@@ -531,7 +527,7 @@ test_skiplist_firstnextafter(void)
     H5SL_t      *slist;      /* Skip list created */
     H5SL_node_t *after;      /* Skip list node after current node */
     H5SL_node_t *node;       /* Skip list node */
-    size_t       num;        /* Number of elements in skip list */
+    ssize_t       num;        /* Number of elements in skip list */
     size_t       u;          /* Local index variable */
     int         *found_item; /* Item found in skip list */
     herr_t       ret;        /* Generic return value */
@@ -548,12 +544,12 @@ test_skiplist_firstnextafter(void)
 
     VERIFY(num, 0, "H5SL_count");
     /* Check that the list appears empty */
-    node = H5SL_first(slist);
+    node = H5SL_first(slist, H5SL_LOCK_SHARED);
     CHECK_PTR_NULL(node, "H5SL_first");
 
     /* Insert many objects into the skip list */
     for (u = 0; u < NUM_ELEMS; u++) {
-        ret = H5SL_insert(slist, &rand_num[u], &rand_num[u]);
+        ret = H5SL_insert(slist, &rand_num[u], &rand_num[u], false);
         CHECK(ret, FAIL, "H5SL_insert");
     } /* end for */
 
@@ -562,7 +558,7 @@ test_skiplist_firstnextafter(void)
     VERIFY(num, NUM_ELEMS, "H5SL_count");
 
     /* Iterate over all the nodes in the skip list */
-    node = H5SL_first(slist);
+    node = H5SL_first(slist, H5SL_LOCK_SHARED);
     CHECK_PTR(node, "H5SL_first");
     u = 0;
     while (node != NULL) {
@@ -583,7 +579,7 @@ test_skiplist_firstnextafter(void)
     CHECK(ret, FAIL, "H5SL_release");
 
     /* Check that the list appears empty again */
-    node = H5SL_first(slist);
+    node = H5SL_first(slist, H5SL_LOCK_SHARED);
     CHECK_PTR_NULL(node, "H5SL_first");
 
     /* Close the skip list */
@@ -603,7 +599,7 @@ test_skiplist_string(void)
 {
     H5SL_t      *slist; /* Skip list created */
     H5SL_node_t *node;  /* Skip list node */
-    size_t       num;   /* Number of elements in skip list */
+    ssize_t       num;   /* Number of elements in skip list */
     size_t       u;     /* Local index variable */
     typedef struct string_node {
         int         i;
@@ -629,7 +625,7 @@ test_skiplist_string(void)
 
     /* Insert objects into the skip list */
     for (u = 0; u < 10; u++) {
-        ret = H5SL_insert(slist, &data[u], data[u].s);
+        ret = H5SL_insert(slist, &data[u], data[u].s, false);
         CHECK(ret, FAIL, "H5SL_insert");
     } /* end for */
 
@@ -638,7 +634,7 @@ test_skiplist_string(void)
     VERIFY(num, 10, "H5SL_count");
 
     /* Iterate over all the nodes in the skip list */
-    node = H5SL_first(slist);
+    node = H5SL_first(slist, H5SL_LOCK_SHARED);
     u    = 0;
     while (node != NULL) {
         found_item = (string_node *)H5SL_item(node);
@@ -674,7 +670,7 @@ static void
 test_skiplist_iterate(void)
 {
     H5SL_t *slist; /* Skip list created */
-    size_t  num;   /* Number of elements in skip list */
+    ssize_t  num;   /* Number of elements in skip list */
     size_t  u;     /* Local index variable */
     herr_t  ret;   /* Generic return value */
 
@@ -691,7 +687,7 @@ test_skiplist_iterate(void)
 
     /* Insert many objects into the skip list */
     for (u = 0; u < NUM_ELEMS; u++) {
-        ret = H5SL_insert(slist, &rand_num[u], &rand_num[u]);
+        ret = H5SL_insert(slist, &rand_num[u], &rand_num[u], false);
         CHECK(ret, FAIL, "H5SL_insert");
     } /* end for */
 
@@ -721,7 +717,7 @@ test_skiplist_hsize(void)
 {
     H5SL_t      *slist; /* Skip list created */
     H5SL_node_t *node;  /* Skip list node */
-    size_t       num;   /* Number of elements in skip list */
+    ssize_t       num;   /* Number of elements in skip list */
     size_t       u;     /* Local index variable */
     hsize_t      data[10]        = {10, 20, 15, 5, 50, 30, 31, 32, 80, 90};
     hsize_t      sorted_data[10] = {5, 10, 15, 20, 30, 31, 32, 50, 80, 90};
@@ -741,7 +737,7 @@ test_skiplist_hsize(void)
 
     /* Insert objects into the skip list */
     for (u = 0; u < 10; u++) {
-        ret = H5SL_insert(slist, &data[u], &data[u]);
+        ret = H5SL_insert(slist, &data[u], &data[u], false);
         CHECK(ret, FAIL, "H5SL_insert");
     } /* end for */
 
@@ -750,7 +746,7 @@ test_skiplist_hsize(void)
     VERIFY(num, 10, "H5SL_count");
 
     /* Iterate over all the nodes in the skip list */
-    node = H5SL_first(slist);
+    node = H5SL_first(slist, H5SL_LOCK_SHARED);
     u    = 0;
     while (node != NULL) {
         found_item = (hsize_t *)H5SL_item(node);
@@ -776,7 +772,7 @@ test_skiplist_unsigned(void)
 {
     H5SL_t      *slist; /* Skip list created */
     H5SL_node_t *node;  /* Skip list node */
-    size_t       num;   /* Number of elements in skip list */
+    ssize_t       num;   /* Number of elements in skip list */
     size_t       u;     /* Local index variable */
     unsigned     data[10]        = {10, 20, 15, 5, 50, 30, 31, 32, 80, 90};
     unsigned     sorted_data[10] = {5, 10, 15, 20, 30, 31, 32, 50, 80, 90};
@@ -796,7 +792,7 @@ test_skiplist_unsigned(void)
 
     /* Insert objects into the skip list */
     for (u = 0; u < 10; u++) {
-        ret = H5SL_insert(slist, &data[u], &data[u]);
+        ret = H5SL_insert(slist, &data[u], &data[u], false);
         CHECK(ret, FAIL, "H5SL_insert");
     } /* end for */
 
@@ -805,7 +801,7 @@ test_skiplist_unsigned(void)
     VERIFY(num, 10, "H5SL_count");
 
     /* Iterate over all the nodes in the skip list */
-    node = H5SL_first(slist);
+    node = H5SL_first(slist, H5SL_LOCK_SHARED);
     u    = 0;
     while (node != NULL) {
         found_item = (unsigned *)H5SL_item(node);
@@ -831,7 +827,7 @@ test_skiplist_obj(void)
 {
     H5SL_t      *slist; /* Skip list created */
     H5SL_node_t *node;  /* Skip list node */
-    size_t       num;   /* Number of elements in skip list */
+    ssize_t       num;   /* Number of elements in skip list */
     size_t       u;     /* Local index variable */
     H5_obj_t     data[10]        = {{10, 12}, {20, 12}, {10, 32}, {10, 11}, {50, 1},
                                     {8, 12},  {31, 12}, {20, 11}, {31, 11}, {8, 32}};
@@ -853,7 +849,7 @@ test_skiplist_obj(void)
 
     /* Insert objects into the skip list */
     for (u = 0; u < 10; u++) {
-        ret = H5SL_insert(slist, &data[u], &data[u]);
+        ret = H5SL_insert(slist, &data[u], &data[u], false);
         CHECK(ret, FAIL, "H5SL_insert");
     } /* end for */
 
@@ -862,7 +858,7 @@ test_skiplist_obj(void)
     VERIFY(num, 10, "H5SL_count");
 
     /* Iterate over all the nodes in the skip list */
-    node = H5SL_first(slist);
+    node = H5SL_first(slist, H5SL_LOCK_SHARED);
     u    = 0;
     while (node != NULL) {
         found_item = (H5_obj_t *)H5SL_item(node);
@@ -912,7 +908,7 @@ test_skiplist_generic(void)
 {
     H5SL_t      *slist; /* Skip list created */
     H5SL_node_t *node;  /* Skip list node */
-    size_t       num;   /* Number of elements in skip list */
+    ssize_t       num;   /* Number of elements in skip list */
     size_t       u;     /* Local index variable */
     generic_t    data[10]        = {{10, 1},   {20, 13}, {15, 32}, {5, 2},   {50, 37},
                                     {30, 100}, {31, 38}, {32, 34}, {80, 32}, {90, 0}};
@@ -934,7 +930,7 @@ test_skiplist_generic(void)
 
     /* Insert objects into the skip list */
     for (u = 0; u < 10; u++) {
-        ret = H5SL_insert(slist, &data[u], &data[u]);
+        ret = H5SL_insert(slist, &data[u], &data[u], false);
         CHECK(ret, FAIL, "H5SL_insert");
     } /* end for */
 
@@ -943,7 +939,7 @@ test_skiplist_generic(void)
     VERIFY(num, 10, "H5SL_count");
 
     /* Iterate over all the nodes in the skip list */
-    node = H5SL_first(slist);
+    node = H5SL_first(slist, H5SL_LOCK_SHARED);
     u    = 0;
     while (node != NULL) {
         found_item = (generic_t *)H5SL_item(node);
@@ -971,7 +967,7 @@ test_skiplist_lastprevbefore(void)
     H5SL_t      *slist;      /* Skip list created */
     H5SL_node_t *before;     /* Skip list node before current node */
     H5SL_node_t *node;       /* Skip list node */
-    size_t       num;        /* Number of elements in skip list */
+    ssize_t       num;        /* Number of elements in skip list */
     size_t       u;          /* Local index variable */
     int         *found_item; /* Item found in skip list */
     herr_t       ret;        /* Generic return value */
@@ -988,12 +984,12 @@ test_skiplist_lastprevbefore(void)
     VERIFY(num, 0, "H5SL_count");
 
     /* Check that the list appears empty */
-    node = H5SL_last(slist);
+    node = H5SL_last(slist, H5SL_LOCK_SHARED);
     CHECK_PTR_NULL(node, "H5SL_last");
 
     /* Insert many objects into the skip list */
     for (u = 0; u < NUM_ELEMS; u++) {
-        ret = H5SL_insert(slist, &rand_num[u], &rand_num[u]);
+        ret = H5SL_insert(slist, &rand_num[u], &rand_num[u], false);
         CHECK(ret, FAIL, "H5SL_insert");
     } /* end for */
 
@@ -1002,7 +998,7 @@ test_skiplist_lastprevbefore(void)
     VERIFY(num, NUM_ELEMS, "H5SL_count");
 
     /* Iterate over all the nodes in the skip list */
-    node = H5SL_last(slist);
+    node = H5SL_last(slist, H5SL_LOCK_SHARED);
     CHECK_PTR(node, "H5SL_last");
     u = NUM_ELEMS - 1;
     while (node != NULL) {
@@ -1023,7 +1019,7 @@ test_skiplist_lastprevbefore(void)
     CHECK(ret, FAIL, "H5SL_release");
 
     /* Check that the list appears empty again */
-    node = H5SL_last(slist);
+    node = H5SL_last(slist, H5SL_LOCK_SHARED);
     CHECK_PTR_NULL(node, "H5SL_last");
 
     /* Close the skip list */
@@ -1059,13 +1055,13 @@ test_skiplist_find(void)
 
     /* Insert objects into the skip list */
     for (u = 0; u < 10; u++) {
-        ret = H5SL_insert(slist, &data[u], &data[u]);
+        ret = H5SL_insert(slist, &data[u], &data[u], false);
         CHECK(ret, FAIL, "H5SL_insert");
     } /* end for */
 
     /* Find the element with key==30 in the skip list */
     find_item = 30;
-    node      = H5SL_find(slist, &find_item);
+    node      = H5SL_find(slist, &find_item, H5SL_LOCK_SHARED);
     CHECK_PTR(node, "H5SL_find");
 
     /* Iterate over the rest of the nodes in the skip list */
@@ -1079,7 +1075,7 @@ test_skiplist_find(void)
 
     /* Check for trying to locate non-existent item */
     find_item = 81;
-    node      = H5SL_find(slist, &find_item);
+    node      = H5SL_find(slist, &find_item, H5SL_LOCK_SHARED);
     CHECK_PTR_NULL(node, "H5SL_find");
 
     /* Close the skip list */
@@ -1115,13 +1111,13 @@ test_skiplist_add(void)
 
     /* Insert objects into the skip list */
     for (u = 0; u < 10; u++) {
-        ret = H5SL_insert(slist, &data[u], &data[u]);
+        ret = H5SL_insert(slist, &data[u], &data[u], false);
         CHECK(ret, FAIL, "H5SL_insert");
     } /* end for */
 
     /* Add the element with key==12 in the skip list */
     new_item = 12;
-    node     = H5SL_add(slist, &new_item, &new_item);
+    node     = H5SL_add(slist, &new_item, &new_item, H5SL_LOCK_SHARED);
     CHECK_PTR(node, "H5SL_add");
 
     /* Advance to next node in list */
@@ -1177,7 +1173,7 @@ test_skiplist_destroy(void)
 
     /* Insert objects into the skip list */
     for (u = 0; u < NUM_ELEMS; u++) {
-        ret = H5SL_insert(slist, &rand_num[u], &rand_num[u]);
+        ret = H5SL_insert(slist, &rand_num[u], &rand_num[u], false);
         CHECK(ret, FAIL, "H5SL_insert");
     } /* end for */
 
@@ -1199,7 +1195,7 @@ static void
 test_skiplist_free(void)
 {
     H5SL_t  *slist;      /* Skip list created */
-    size_t   num;        /* Number of elements in skip list */
+    ssize_t   num;        /* Number of elements in skip list */
     size_t   u;          /* Local index variable */
     unsigned free_count; /* Number of items freed */
     herr_t   ret;        /* Generic return value */
@@ -1213,7 +1209,7 @@ test_skiplist_free(void)
 
     /* Insert objects into the skip list */
     for (u = 0; u < NUM_ELEMS; u++) {
-        ret = H5SL_insert(slist, &rand_num[u], &rand_num[u]);
+        ret = H5SL_insert(slist, &rand_num[u], &rand_num[u], false);
         CHECK(ret, FAIL, "H5SL_insert");
     } /* end for */
 
@@ -1229,7 +1225,7 @@ test_skiplist_free(void)
 
     /* Insert objects into the skip list again */
     for (u = 0; u < NUM_ELEMS; u++) {
-        ret = H5SL_insert(slist, &rand_num[u], &rand_num[u]);
+        ret = H5SL_insert(slist, &rand_num[u], &rand_num[u], false);
         CHECK(ret, FAIL, "H5SL_insert");
     } /* end for */
 
@@ -1269,7 +1265,7 @@ test_skiplist_less(void)
 
     /* Insert objects into the skip list */
     for (u = 0; u < 10; u++) {
-        ret = H5SL_insert(slist, &data[u], &data[u]);
+        ret = H5SL_insert(slist, &data[u], &data[u], false);
         CHECK(ret, FAIL, "H5SL_insert");
     } /* end for */
 
@@ -1333,7 +1329,7 @@ test_skiplist_greater(void)
 
     /* Insert objects into the skip list */
     for (u = 0; u < 10; u++) {
-        ret = H5SL_insert(slist, &data[u], &data[u]);
+        ret = H5SL_insert(slist, &data[u], &data[u], false);
         CHECK(ret, FAIL, "H5SL_insert");
     } /* end for */
 
@@ -1398,27 +1394,27 @@ test_skiplist_below(void)
 
     /* Insert objects into the skip list */
     for (u = 0; u < 10; u++) {
-        ret = H5SL_insert(slist, &data[u], &data[u]);
+        ret = H5SL_insert(slist, &data[u], &data[u], false);
         CHECK(ret, FAIL, "H5SL_insert");
     } /* end for */
 
     /* Check for exact match of items in various positions */
     find_item = 20;
-    node      = H5SL_below(slist, &find_item);
+    node      = H5SL_below(slist, &find_item, H5SL_LOCK_SHARED);
     CHECK_PTR(node, "H5SL_below");
     found_item = (unsigned *)H5SL_item(node);
     VERIFY(*found_item, find_item, "H5SL_below");
     ret = H5SL_return(node);
     CHECK(ret, FAIL, "H5SL_return");
     find_item = 90;
-    node      = H5SL_below(slist, &find_item);
+    node      = H5SL_below(slist, &find_item, H5SL_LOCK_SHARED);
     CHECK_PTR(node, "H5SL_below");
     found_item = (unsigned *)H5SL_item(node);
     VERIFY(*found_item, find_item, "H5SL_below");
     ret = H5SL_return(node);
     CHECK(ret, FAIL, "H5SL_return");
     find_item = 5;
-    node      = H5SL_below(slist, &find_item);
+    node      = H5SL_below(slist, &find_item, H5SL_LOCK_SHARED);
     CHECK_PTR(node, "H5SL_below");
     found_item = (unsigned *)H5SL_item(node);
     VERIFY(*found_item, find_item, "H5SL_below");
@@ -1427,36 +1423,36 @@ test_skiplist_below(void)
 
     /* Find item less than a missing key, in various positions */
     find_item = 19;
-    node      = H5SL_below(slist, &find_item);
+    node      = H5SL_below(slist, &find_item, H5SL_LOCK_SHARED);
     CHECK_PTR(node, "H5SL_below");
     found_item = (unsigned *)H5SL_item(node);
     VERIFY(*found_item, 15, "H5SL_below");
     ret = H5SL_return(node);
     CHECK(ret, FAIL, "H5SL_return");
     find_item = 89;
-    node      = H5SL_below(slist, &find_item);
+    node      = H5SL_below(slist, &find_item, H5SL_LOCK_SHARED);
     CHECK_PTR(node, "H5SL_below");
     found_item = (unsigned *)H5SL_item(node);
     VERIFY(*found_item, 80, "H5SL_below");
     ret = H5SL_return(node);
     CHECK(ret, FAIL, "H5SL_return");
     find_item = 100;
-    node      = H5SL_below(slist, &find_item);
+    node      = H5SL_below(slist, &find_item, H5SL_LOCK_SHARED);
     CHECK_PTR(node, "H5SL_below");
     found_item = (unsigned *)H5SL_item(node);
     VERIFY(*found_item, 90, "H5SL_below");
     ret = H5SL_return(node);
     CHECK(ret, FAIL, "H5SL_return");
     find_item = 9;
-    node      = H5SL_below(slist, &find_item);
+    node      = H5SL_below(slist, &find_item, H5SL_LOCK_SHARED);
     CHECK_PTR(node, "H5SL_below");
     found_item = (unsigned *)H5SL_item(node);
     VERIFY(*found_item, 5, "H5SL_below");
     ret = H5SL_return(node);
     CHECK(ret, FAIL, "H5SL_return");
     find_item = 4;
-    node      = (H5SL_node_t *)H5SL_less(slist, &find_item);
-    CHECK_PTR_NULL(node, "H5SL_below");
+    found_item      = H5SL_less(slist, &find_item);
+    CHECK_PTR_NULL(found_item, "H5SL_less");
 
     /* Close the skip list */
     ret = H5SL_close(slist);
@@ -1491,27 +1487,27 @@ test_skiplist_above(void)
 
     /* Insert objects into the skip list */
     for (u = 0; u < 10; u++) {
-        ret = H5SL_insert(slist, &data[u], &data[u]);
+        ret = H5SL_insert(slist, &data[u], &data[u], false);
         CHECK(ret, FAIL, "H5SL_insert");
     } /* end for */
 
     /* Check for exact match of items in various positions */
     find_item = 20;
-    node      = H5SL_above(slist, &find_item);
+    node      = H5SL_above(slist, &find_item, H5SL_LOCK_SHARED);
     CHECK_PTR(node, "H5SL_above");
     found_item = (unsigned *)H5SL_item(node);
     VERIFY(*found_item, find_item, "H5SL_above");
     ret = H5SL_return(node);
     CHECK(ret, FAIL, "H5SL_return");
     find_item = 90;
-    node      = H5SL_above(slist, &find_item);
+    node      = H5SL_above(slist, &find_item, H5SL_LOCK_SHARED);
     CHECK_PTR(node, "H5SL_above");
     found_item = (unsigned *)H5SL_item(node);
     VERIFY(*found_item, find_item, "H5SL_above");
     ret = H5SL_return(node);
     CHECK(ret, FAIL, "H5SL_return");
     find_item = 5;
-    node      = H5SL_above(slist, &find_item);
+    node      = H5SL_above(slist, &find_item, H5SL_LOCK_SHARED);
     CHECK_PTR(node, "H5SL_above");
     found_item = (unsigned *)H5SL_item(node);
     VERIFY(*found_item, find_item, "H5SL_above");
@@ -1520,31 +1516,31 @@ test_skiplist_above(void)
 
     /* Find item greater than a missing key, in various positions */
     find_item = 19;
-    node      = H5SL_above(slist, &find_item);
+    node      = H5SL_above(slist, &find_item, H5SL_LOCK_SHARED);
     CHECK_PTR(node, "H5SL_above");
     found_item = (unsigned *)H5SL_item(node);
     VERIFY(*found_item, 20, "H5SL_above");
     ret = H5SL_return(node);
     CHECK(ret, FAIL, "H5SL_return");
     find_item = 89;
-    node      = H5SL_above(slist, &find_item);
+    node      = H5SL_above(slist, &find_item, H5SL_LOCK_SHARED);
     CHECK_PTR(node, "H5SL_above");
     found_item = (unsigned *)H5SL_item(node);
     VERIFY(*found_item, 90, "H5SL_above");
     ret = H5SL_return(node);
     CHECK(ret, FAIL, "H5SL_return");
     find_item = 100;
-    node      = H5SL_above(slist, &find_item);
+    node      = H5SL_above(slist, &find_item, H5SL_LOCK_SHARED);
     CHECK_PTR_NULL(node, "H5SL_above");
     find_item = 6;
-    node      = H5SL_above(slist, &find_item);
+    node      = H5SL_above(slist, &find_item, H5SL_LOCK_SHARED);
     CHECK_PTR(node, "H5SL_above");
     found_item = (unsigned *)H5SL_item(node);
     VERIFY(*found_item, 10, "H5SL_above");
     ret = H5SL_return(node);
     CHECK(ret, FAIL, "H5SL_return");
     find_item = 4;
-    node      = H5SL_above(slist, &find_item);
+    node      = H5SL_above(slist, &find_item, H5SL_LOCK_SHARED);
     CHECK_PTR(node, "H5SL_above");
     found_item = (unsigned *)H5SL_item(node);
     VERIFY(*found_item, 5, "H5SL_above");
@@ -1582,7 +1578,7 @@ test_skiplist_remove_first(void)
 
     /* Insert objects into the skip list */
     for (u = 0; u < 10; u++) {
-        ret = H5SL_insert(slist, &data[u], &data[u]);
+        ret = H5SL_insert(slist, &data[u], &data[u], false);
         CHECK(ret, FAIL, "H5SL_insert");
     } /* end for */
 
@@ -1626,7 +1622,7 @@ test_skiplist_remove_first_many(void)
 
     /* Insert objects into the skip list */
     for (u = 0; u < NUM_ELEMS; u++) {
-        ret = H5SL_insert(slist, &rand_num[u], &rand_num[u]);
+        ret = H5SL_insert(slist, &rand_num[u], &rand_num[u], false);
         CHECK(ret, FAIL, "H5SL_insert");
     } /* end for */
 
