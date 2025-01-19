@@ -1268,8 +1268,8 @@ H5C__flush_invalidate_ring(H5F_t *f, H5C_ring_t ring, unsigned flags)
 
                 /* Set the 'during flush' flag when the node_ptr is still within
                  * the list.  The flag indicates that the entry flush, and any
-                 * other operations that occur until it's finished, are occuring
-                 * within the context of a cache flush operation.
+                 * other operations that occur until it's finished, are
+                 * occurring within the context of a cache flush operation.
                  */
                 if (node_ptr)
                     cache_ptr->slist_during_flush = true;
@@ -1631,7 +1631,7 @@ H5C__flush_ring(H5F_t *f, H5C_ring_t ring, unsigned flags)
                     /* Set the 'during flush' flag when the node_ptr is still
                      * within the list.  The flag indicates that the entry
                      * flush, and any other operations that occur until it's
-                     * finished, are occuring within the context of a cache
+                     * finished, are occurring within the context of a cache
                      * flush operation.
                      */
                     if (node_ptr)
