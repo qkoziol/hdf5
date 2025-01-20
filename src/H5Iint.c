@@ -105,11 +105,7 @@ static bool H5I_concur_gbl_init; /* Whether the global mutex & atomic variables 
 
 /* Declared extern in H5Ipkg.h and documented there */
 H5I_ti_arr_elmt_t H5I_type_info_array_g[H5I_MAX_NUM_TYPES];
-#ifdef H5_HAVE_CONCURRENCY
-H5TS_atomic_int_t H5I_next_type_g;
-#else  /* H5_HAVE_CONCURRENCY */
-int H5I_next_type_g = (int)H5I_NTYPES;
-#endif /* H5_HAVE_CONCURRENCY */
+H5TS_ATOMIC_TYPE(int) H5I_next_type_g;
 
 /* Declare a free list to manage the H5I_id_info_t struct */
 H5FL_DEFINE_STATIC(H5I_id_info_t);
@@ -142,12 +138,12 @@ H5I__init_package(void)
     FUNC_ENTER_PACKAGE_NOERR
 #endif /* H5_HAVE_CONCURRENCY */
 
+    /* Initialize the global atomic variables */
+    H5TS_ATOMIC_INIT(int, &H5I_next_type_g, (int)H5I_NTYPES);
+
 #ifdef H5_HAVE_CONCURRENCY
     /* Sanity check */
     assert(!H5I_concur_gbl_init);
-
-    /* Initialize the global atomic variables */
-    H5TS_atomic_init_int(&H5I_next_type_g, (int)H5I_NTYPES);
 
     /* Initialize the mutexes protecting the type information */
     for (unsigned u = 0; u < H5I_MAX_NUM_TYPES; u++) {
@@ -158,7 +154,6 @@ H5I__init_package(void)
 
     /* Indicate that the concurrency globals are initialized */
     H5I_concur_gbl_init = true;
-
 #endif /* H5_HAVE_CONCURRENCY */
 
 #ifdef H5_HAVE_CONCURRENCY
@@ -193,7 +188,7 @@ H5I_term_package(void)
         int              i;
 
         /* Count the number of types still in use */
-        for (i = 0; i < H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g); i++) {
+        for (i = 0; i < H5TS_ATOMIC_LOAD(int, &H5I_next_type_g); i++) {
             /* Acquire shared access for the type */
             H5I__type_info_rdlock(i);
 
@@ -206,7 +201,7 @@ H5I_term_package(void)
 
         /* If no types are still being used then clean up */
         if (0 == in_use) {
-            for (i = 0; i < H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g); i++) {
+            for (i = 0; i < H5TS_ATOMIC_LOAD(int, &H5I_next_type_g); i++) {
                 /* Acquire exclusive access for the type */
                 H5I__type_info_wrlock(i);
 
@@ -224,6 +219,9 @@ H5I_term_package(void)
 
             /* Shut down interface */
             if (0 == in_use) {
+                /* Destroy the type info counter */
+                H5TS_ATOMIC_DESTROY(int, &H5I_next_type_g);
+
 #ifdef H5_HAVE_CONCURRENCY
                 /* Indicate that the concurrency globals are initialized */
                 if (H5I_concur_gbl_init) {
@@ -233,9 +231,6 @@ H5I_term_package(void)
                             H5TS_dlftt_rwlock_destroy(&H5I_type_info_array_g[u].lock);
                             H5I_type_info_array_g[u].lock_init = false;
                         }
-
-                    /* Destroy the type info counter */
-                    H5TS_atomic_destroy_int(&H5I_next_type_g);
 
                     H5I_concur_gbl_init = false;
                 }
@@ -365,7 +360,7 @@ H5I_nmembers(H5I_type_t type)
     FUNC_ENTER_NOAPI((-1))
 
     /* Validate parameter */
-    if (type <= H5I_BADID || (int)type >= H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g))
+    if (type <= H5I_BADID || (int)type >= H5TS_ATOMIC_LOAD(int, &H5I_next_type_g))
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, FAIL, "invalid type number");
 
     /* Acquire a shared lock on the global type info */
@@ -511,7 +506,7 @@ H5I_clear_type(H5I_type_t type, bool force, bool app_ref)
     FUNC_ENTER_NOAPI(FAIL)
 
     /* Validate parameters */
-    if (type <= H5I_BADID || (int)type >= H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g))
+    if (type <= H5I_BADID || (int)type >= H5TS_ATOMIC_LOAD(int, &H5I_next_type_g))
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, FAIL, "invalid type number");
 
     /* Acquire exclusive access for the type */
@@ -587,7 +582,7 @@ H5I__destroy_type(H5I_type_t type)
     FUNC_ENTER_PACKAGE
 
     /* Validate parameter */
-    if (type <= H5I_BADID || (int)type >= H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g))
+    if (type <= H5I_BADID || (int)type >= H5TS_ATOMIC_LOAD(int, &H5I_next_type_g))
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, FAIL, "invalid type number");
 
     /* Acquire exclusive access for the type */
@@ -644,7 +639,7 @@ H5I__register(H5I_type_t type, const void *object, bool app_ref, H5I_future_real
     FUNC_ENTER_PACKAGE
 
     /* Check arguments */
-    if (type <= H5I_BADID || (int)type >= H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g))
+    if (type <= H5I_BADID || (int)type >= H5TS_ATOMIC_LOAD(int, &H5I_next_type_g))
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, H5I_INVALID_HID, "invalid type number");
 
     /* Allocate new ID info */
@@ -777,7 +772,7 @@ H5I_register_using_existing_id(H5I_type_t type, void *object, bool app_ref, hid_
         HGOTO_ERROR(H5E_ID, H5E_BADVALUE, FAIL, "ID already in use");
 
     /* Make sure type number is valid */
-    if (type <= H5I_BADID || (int)type >= H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g))
+    if (type <= H5I_BADID || (int)type >= H5TS_ATOMIC_LOAD(int, &H5I_next_type_g))
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, FAIL, "invalid type number");
 
     /* Make sure requested ID belongs to object's type */
@@ -936,7 +931,7 @@ H5I_object_verify(hid_t id, H5I_type_t type)
 
     FUNC_ENTER_NOAPI(NULL)
 
-    assert(type >= 1 && (int)type < H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g));
+    assert(type >= 1 && (int)type < H5TS_ATOMIC_LOAD(int, &H5I_next_type_g));
 
     /* Verify that the type of the ID is correct */
     if (type != H5I_TYPE(id))
@@ -982,7 +977,7 @@ H5I_acquire(hid_t id, H5I_type_t type, H5I_lock_mode_t mode)
     FUNC_ENTER_NOAPI(NULL)
 
     /* Sanity checks */
-    assert(type >= 1 && (int)type < H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g));
+    assert(type >= 1 && (int)type < H5TS_ATOMIC_LOAD(int, &H5I_next_type_g));
 
     /* Verify that the type of the ID is correct */
     if (type != H5I_TYPE(id))
@@ -1045,7 +1040,7 @@ H5I_release(void *obj, H5I_type_t type)
 
     FUNC_ENTER_NOAPI(FAIL)
 
-    assert(type >= 1 && (int)type < H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g));
+    assert(type >= 1 && (int)type < H5TS_ATOMIC_LOAD(int, &H5I_next_type_g));
 
     /* Acquire shared access for the type */
     if (H5I__type_info_rdlock(type) < 0)
@@ -1100,7 +1095,7 @@ H5I_get_type(hid_t id)
     if (id > 0)
         ret_value = H5I_TYPE(id);
 
-    assert(ret_value >= H5I_BADID && (int)ret_value < H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g));
+    assert(ret_value >= H5I_BADID && (int)ret_value < H5TS_ATOMIC_LOAD(int, &H5I_next_type_g));
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -1334,7 +1329,7 @@ H5I_remove(hid_t id)
 
     /* Check arguments */
     type = H5I_TYPE(id);
-    if (type <= H5I_BADID || (int)type >= H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g))
+    if (type <= H5I_BADID || (int)type >= H5TS_ATOMIC_LOAD(int, &H5I_next_type_g))
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, NULL, "invalid type number");
 
     /* Acquire exclusive access for the type */
@@ -1800,7 +1795,7 @@ H5I__inc_type_ref(H5I_type_t type)
     FUNC_ENTER_PACKAGE
 
     /* Sanity check */
-    assert(type > 0 && (int)type < H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g));
+    assert(type > 0 && (int)type < H5TS_ATOMIC_LOAD(int, &H5I_next_type_g));
 
     /* Acquire exclusive access for the type */
     if (H5I__type_info_wrlock(type) < 0)
@@ -1851,7 +1846,7 @@ H5I_dec_type_ref(H5I_type_t type)
 
     FUNC_ENTER_NOAPI((-1))
 
-    if (type <= H5I_BADID || (int)type >= H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g))
+    if (type <= H5I_BADID || (int)type >= H5TS_ATOMIC_LOAD(int, &H5I_next_type_g))
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, (-1), "invalid type number");
 
     /* Acquire exclusive access for the type */
@@ -2018,7 +2013,7 @@ H5I_iterate(H5I_type_t type, H5I_search_func_t func, void *udata, bool app_ref)
     FUNC_ENTER_NOAPI(FAIL)
 
     /* Check arguments */
-    if (type <= H5I_BADID || (int)type >= H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g))
+    if (type <= H5I_BADID || (int)type >= H5TS_ATOMIC_LOAD(int, &H5I_next_type_g))
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, FAIL, "invalid type number");
 
     /* Acquire exclusive access for the type */
@@ -2199,7 +2194,7 @@ H5I__find_id_with_type(hid_t id, H5I_id_info_t **out_id_info, H5I_lock_mode_t id
 
     /* Check arguments */
     type = H5I_TYPE(id);
-    if (type <= H5I_BADID || (int)type >= H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g))
+    if (type <= H5I_BADID || (int)type >= H5TS_ATOMIC_LOAD(int, &H5I_next_type_g))
         HGOTO_ERROR(H5E_ID, H5E_BADGROUP, FAIL, "invalid type");
 
     /* Acquire shared access for the type */
@@ -2420,7 +2415,7 @@ H5I__id_exists(hid_t id, bool *exists)
 
     /* Check arguments */
     type = H5I_TYPE(id);
-    if (type <= H5I_BADID || (int)type >= H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g)) {
+    if (type <= H5I_BADID || (int)type >= H5TS_ATOMIC_LOAD(int, &H5I_next_type_g)) {
         *exists = false;
         HGOTO_DONE(SUCCEED);
     }
@@ -2583,7 +2578,7 @@ H5I__is_id_valid(hid_t id, bool *is_valid)
 
     /* Check arguments */
     type = H5I_TYPE(id);
-    if (type <= H5I_BADID || (int)type >= H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g)) {
+    if (type <= H5I_BADID || (int)type >= H5TS_ATOMIC_LOAD(int, &H5I_next_type_g)) {
         *is_valid = false;
         HGOTO_DONE(SUCCEED);
     }

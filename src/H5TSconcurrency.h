@@ -36,30 +36,18 @@
 
 #ifdef H5_HAVE_CONCURRENCY
 
-/************************* */
-/* Types in the C Standard */
-/************************* */
-#define H5TS_ATOMIC_LOAD_INT(obj) H5TS_atomic_load_int(obj)
-
-#define H5TS_ATOMIC_INIT_SIZE_T(obj, desired)  H5TS_atomic_init_size_t(obj, desired)
-#define H5TS_ATOMIC_LOAD_SIZE_T(obj)           H5TS_atomic_load_size_t(obj)
-#define H5TS_ATOMIC_STORE_SIZE_T(obj, desired) H5TS_atomic_store_size_t(obj, desired)
-#define H5TS_ATOMIC_FETCH_ADD_SIZE_T(obj, arg) H5TS_atomic_fetch_add_size_t(obj, arg)
-#define H5TS_ATOMIC_FETCH_SUB_SIZE_T(obj, arg) H5TS_atomic_fetch_sub_size_t(obj, arg)
-#define H5TS_ATOMIC_DESTROY_SIZE_T(obj)        H5TS_atomic_destroy_size_t(obj)
-
-/*******************************/
-/* Types not in the C Standard */
-/*******************************/
-
 /* Declarations of variables of this type */
-#define H5TS_ATOMIC_TYPE(type) H5_GLUE3(H5TS_atomic_, type, _t)
+#define H5TS_ATOMIC_TYPE(type) H5_GLUE3(H5TS_concur_patomic_, type, _t)
 
 #if defined(H5_HAVE_STDATOMIC_H) && !defined(__cplusplus)
 
 /* Typedef for variables of this type */
 /* (Only needed once per type, in source file or header) */
-#define H5TS_DEF_ATOMIC_TYPE(type) typedef _Atomic type H5TS_ATOMIC_TYPE(type);
+/* (Supress warning about _Atomic from GCC) */
+#define H5TS_DEF_ATOMIC_TYPE(type) \
+H5_GCC_DIAG_OFF("c99-c11-compat") \
+typedef _Atomic type H5TS_ATOMIC_TYPE(type); \
+H5_GCC_DIAG_ON("c99-c11-compat")
 
 /* Operations on the type */
 #define H5TS_ATOMIC_INIT(type, obj, desired)  atomic_init(obj, desired)
@@ -174,25 +162,8 @@
 
 #else /* H5_HAVE_CONCURRENCY */
 
-/************************* */
-/* Types in the C Standard */
-/************************* */
-
-#define H5TS_ATOMIC_LOAD_INT(obj) *(obj)
-
-#define H5TS_ATOMIC_INIT_SIZE_T(obj, desired)  *(obj) = (desired)
-#define H5TS_ATOMIC_LOAD_SIZE_T(obj)           *(obj)
-#define H5TS_ATOMIC_STORE_SIZE_T(obj, desired) *(obj) = (desired)
-#define H5TS_ATOMIC_FETCH_ADD_SIZE_T(obj, arg) *(obj) += (arg)
-#define H5TS_ATOMIC_FETCH_SUB_SIZE_T(obj, arg) *(obj) -= (arg)
-#define H5TS_ATOMIC_DESTROY_SIZE_T(obj)        /* */
-
-/*******************************/
-/* Types not in the C Standard */
-/*******************************/
-
 /* Declarations of variables of this type */
-#define H5TS_ATOMIC_TYPE(type)                 H5_GLUE3(H5TS_atomic_, type, _t)
+#define H5TS_ATOMIC_TYPE(type)                 H5_GLUE3(H5TS_concur_atomic_, type, _t)
 
 /* Typedef for variables of this type */
 /* (Only needed once per type, in source file or header) */

@@ -146,7 +146,7 @@ H5Itype_exists(H5I_type_t type)
     /* Validate parameter */
     if (H5I_IS_LIB_TYPE(type))
         HGOTO_ERROR(H5E_ID, H5E_BADGROUP, FAIL, "cannot call public function on library type");
-    if (type <= H5I_BADID || (int)type >= H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g))
+    if (type <= H5I_BADID || (int)type >= H5TS_ATOMIC_LOAD(int, &H5I_next_type_g))
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, FAIL, "invalid type number");
 
     /* Check for valid type */
@@ -184,7 +184,7 @@ H5Inmembers(H5I_type_t type, hsize_t *num_members)
      * the private interface handle it, because the public interface throws
      * an error when the supplied type does not exist.
      */
-    if (type <= H5I_BADID || (int)type >= H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g))
+    if (type <= H5I_BADID || (int)type >= H5TS_ATOMIC_LOAD(int, &H5I_next_type_g))
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, FAIL, "invalid type number");
     if ((is_valid = H5I__is_type_valid(type)) < 0)
         HGOTO_ERROR(H5E_ID, H5E_CANTGET, FAIL, "can't check if ID is valid");
@@ -343,7 +343,7 @@ H5Iobject_verify(hid_t id, H5I_type_t type)
     /* Validate parameters */
     if (H5I_IS_LIB_TYPE(type))
         HGOTO_ERROR(H5E_ID, H5E_BADGROUP, NULL, "cannot call public function on library type");
-    if (type < 1 || (int)type >= H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g))
+    if (type < 1 || (int)type >= H5TS_ATOMIC_LOAD(int, &H5I_next_type_g))
         HGOTO_ERROR(H5E_ID, H5E_BADGROUP, NULL, "identifier has invalid type");
 
     ret_value = H5I_object_verify(id, type);
@@ -376,7 +376,7 @@ H5Iget_type(hid_t id)
 
     ret_value = H5I_get_type(id);
 
-    if (ret_value <= H5I_BADID || (int)ret_value >= H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g) ||
+    if (ret_value <= H5I_BADID || (int)ret_value >= H5TS_ATOMIC_LOAD(int, &H5I_next_type_g) ||
         NULL == H5I_object(id))
         HGOTO_DONE(H5I_BADID);
 
@@ -522,7 +522,7 @@ H5Iinc_type_ref(H5I_type_t type)
     FUNC_ENTER_API((-1))
 
     /* Check arguments */
-    if (type <= 0 || (int)type >= H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g))
+    if (type <= 0 || (int)type >= H5TS_ATOMIC_LOAD(int, &H5I_next_type_g))
         HGOTO_ERROR(H5E_ID, H5E_BADID, (-1), "invalid ID type");
     if (H5I_IS_LIB_TYPE(type))
         HGOTO_ERROR(H5E_ID, H5E_BADGROUP, (-1), "cannot call public function on library type");
@@ -593,7 +593,7 @@ H5Iget_type_ref(H5I_type_t type)
     FUNC_ENTER_API((-1))
 
     /* Check arguments */
-    if (type <= 0 || (int)type >= H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g))
+    if (type <= 0 || (int)type >= H5TS_ATOMIC_LOAD(int, &H5I_next_type_g))
         HGOTO_ERROR(H5E_ID, H5E_BADID, (-1), "invalid ID type");
     if (H5I_IS_LIB_TYPE(type))
         HGOTO_ERROR(H5E_ID, H5E_BADGROUP, (-1), "cannot call public function on library type");
