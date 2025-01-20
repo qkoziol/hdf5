@@ -44,10 +44,10 @@
 /* Typedef for variables of this type */
 /* (Only needed once per type, in source file or header) */
 /* (Supress warning about _Atomic from GCC) */
-#define H5TS_DEF_ATOMIC_TYPE(type) \
-H5_GCC_DIAG_OFF("c99-c11-compat") \
-typedef _Atomic type H5TS_ATOMIC_TYPE(type); \
-H5_GCC_DIAG_ON("c99-c11-compat")
+#define H5TS_DEF_ATOMIC_TYPE(type)                                                                           \
+    H5_GCC_DIAG_OFF("c99-c11-compat")                                                                        \
+    typedef _Atomic type H5TS_ATOMIC_TYPE(type);                                                             \
+    H5_GCC_DIAG_ON("c99-c11-compat")
 
 /* Operations on the type */
 #define H5TS_ATOMIC_INIT(type, obj, desired)  atomic_init(obj, desired)
@@ -163,19 +163,19 @@ H5_GCC_DIAG_ON("c99-c11-compat")
 #else /* H5_HAVE_CONCURRENCY */
 
 /* Declarations of variables of this type */
-#define H5TS_ATOMIC_TYPE(type)                 H5_GLUE3(H5TS_concur_atomic_, type, _t)
+#define H5TS_ATOMIC_TYPE(type)                H5_GLUE3(H5TS_concur_atomic_, type, _t)
 
 /* Typedef for variables of this type */
 /* (Only needed once per type, in source file or header) */
-#define H5TS_DEF_ATOMIC_TYPE(type)             typedef type H5TS_ATOMIC_TYPE(type);
+#define H5TS_DEF_ATOMIC_TYPE(type)            typedef type H5TS_ATOMIC_TYPE(type);
 
 /* Operations on the type */
-#define H5TS_ATOMIC_INIT(type, obj, desired)   *(obj) = (desired)
-#define H5TS_ATOMIC_LOAD(type, obj)            *(obj)
-#define H5TS_ATOMIC_STORE(type, obj, desired)  *(obj) = (desired)
-#define H5TS_ATOMIC_FETCH_ADD(type, obj, arg)  *(obj) += (arg)
-#define H5TS_ATOMIC_FETCH_SUB(type, obj, arg)  *(obj) -= (arg)
-#define H5TS_ATOMIC_DESTROY(type, obj)         /* */
+#define H5TS_ATOMIC_INIT(type, obj, desired)  *(obj) = (desired)
+#define H5TS_ATOMIC_LOAD(type, obj)           *(obj)
+#define H5TS_ATOMIC_STORE(type, obj, desired) *(obj) = (desired)
+#define H5TS_ATOMIC_FETCH_ADD(type, obj, arg) *(obj) += (arg)
+#define H5TS_ATOMIC_FETCH_SUB(type, obj, arg) *(obj) -= (arg)
+#define H5TS_ATOMIC_DESTROY(type, obj)        /* */
 
 #endif /* H5_HAVE_CONCURRENCY */
 

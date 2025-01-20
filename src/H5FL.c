@@ -78,7 +78,7 @@ H5TS_DEF_ATOMIC_TYPE(size_t)
  *  Default limits on how much memory can accumulate on each free list before
  *  it is garbage collected.
  */
-static bool               H5TS_limits_init = false;
+static bool H5TS_limits_init = false;
 static H5TS_ATOMIC_TYPE(size_t) H5FL_reg_glb_mem_lim;
 static H5TS_ATOMIC_TYPE(size_t) H5FL_reg_lst_mem_lim;
 static H5TS_ATOMIC_TYPE(size_t) H5FL_arr_glb_mem_lim;
@@ -91,9 +91,9 @@ static H5TS_ATOMIC_TYPE(size_t) H5FL_fac_lst_mem_lim;
 /* The garbage collection head for regular free lists */
 typedef struct H5FL_reg_gc_list_t {
 #ifdef H5_HAVE_CONCURRENCY
-    bool               init;      /* Whether the mutex has been initialized */
-    H5TS_dlftt_mutex_t mutex;     /* Guard access to the list of free lists */
-#endif                            /* H5_HAVE_CONCURRENCY */
+    bool               init;            /* Whether the mutex has been initialized */
+    H5TS_dlftt_mutex_t mutex;           /* Guard access to the list of free lists */
+#endif                                  /* H5_HAVE_CONCURRENCY */
     H5TS_ATOMIC_TYPE(size_t) mem_freed; /* Amount of free memory on list */
 
     H5FL_reg_head_t *first; /* Pointer to the first node in the list of things to garbage collect */
@@ -105,9 +105,9 @@ static H5FL_reg_gc_list_t H5FL_reg_gc_head;
 /* The garbage collection head for array free lists */
 typedef struct H5FL_arr_gc_list_t {
 #ifdef H5_HAVE_CONCURRENCY
-    bool               init;      /* Whether the mutex has been initialized */
-    H5TS_dlftt_mutex_t mutex;     /* Guard access to the list of free lists */
-#endif                            /* H5_HAVE_CONCURRENCY */
+    bool               init;            /* Whether the mutex has been initialized */
+    H5TS_dlftt_mutex_t mutex;           /* Guard access to the list of free lists */
+#endif                                  /* H5_HAVE_CONCURRENCY */
     H5TS_ATOMIC_TYPE(size_t) mem_freed; /* Amount of free memory on list */
 
     H5FL_arr_head_t *first; /* Pointer to the first node in the list of things to garbage collect */
@@ -119,9 +119,9 @@ static H5FL_arr_gc_list_t H5FL_arr_gc_head;
 /* The garbage collection head for blocks */
 typedef struct H5FL_blk_gc_list_t {
 #ifdef H5_HAVE_CONCURRENCY
-    bool               init;      /* Whether the mutex has been initialized */
-    H5TS_dlftt_mutex_t mutex;     /* Guard access to the list of free lists */
-#endif                            /* H5_HAVE_CONCURRENCY */
+    bool               init;            /* Whether the mutex has been initialized */
+    H5TS_dlftt_mutex_t mutex;           /* Guard access to the list of free lists */
+#endif                                  /* H5_HAVE_CONCURRENCY */
     H5TS_ATOMIC_TYPE(size_t) mem_freed; /* Amount of free memory on list */
 
     H5FL_blk_head_t *first; /* Pointer to the first node in the list of things to garbage collect */
@@ -151,9 +151,9 @@ struct H5FL_fac_head_t {
 /* The garbage collection head for factory free lists */
 typedef struct H5FL_fac_gc_list_t {
 #ifdef H5_HAVE_CONCURRENCY
-    bool               init;      /* Whether the mutex has been initialized */
-    H5TS_dlftt_mutex_t mutex;     /* Guard access to this free list */
-#endif                            /* H5_HAVE_CONCURRENCY */
+    bool               init;            /* Whether the mutex has been initialized */
+    H5TS_dlftt_mutex_t mutex;           /* Guard access to this free list */
+#endif                                  /* H5_HAVE_CONCURRENCY */
     H5TS_ATOMIC_TYPE(size_t) mem_freed; /* Amount of free memory on list */
 
     H5FL_fac_head_t *first; /* Pointer to the first node in the list of things to garbage collect */
@@ -207,7 +207,7 @@ H5FL_init(void)
 
 #ifdef H5_HAVE_CONCURRENCY
     FUNC_ENTER_NOAPI(FAIL)
-#else /* H5_HAVE_CONCURRENCY */
+#else  /* H5_HAVE_CONCURRENCY */
     FUNC_ENTER_NOAPI_NOERR
 #endif /* H5_HAVE_CONCURRENCY */
 
@@ -475,7 +475,8 @@ H5FL_reg_free(H5FL_reg_head_t *head, void *obj)
             HGOTO_ERROR(H5E_RESOURCE, H5E_CANTGC, NULL, "garbage collection failed during free");
 
     /* Then check the global amount memory on regular free lists */
-    if (H5TS_ATOMIC_LOAD(size_t, &H5FL_reg_gc_head.mem_freed) > H5TS_ATOMIC_LOAD(size_t, &H5FL_reg_glb_mem_lim))
+    if (H5TS_ATOMIC_LOAD(size_t, &H5FL_reg_gc_head.mem_freed) >
+        H5TS_ATOMIC_LOAD(size_t, &H5FL_reg_glb_mem_lim))
         /* It's possible that 2+ threads could race and garbage collect, but */
         /* that's OK, on the rare occasions it happens */
         if (H5FL__reg_gc() < 0)
@@ -1235,7 +1236,8 @@ H5FL_blk_free(H5FL_blk_head_t *head, void *block)
             HGOTO_ERROR(H5E_RESOURCE, H5E_CANTGC, NULL, "garbage collection failed during free");
 
     /* Then check the global amount memory on block free lists */
-    if (H5TS_ATOMIC_LOAD(size_t, &H5FL_blk_gc_head.mem_freed) > H5TS_ATOMIC_LOAD(size_t, &H5FL_blk_glb_mem_lim))
+    if (H5TS_ATOMIC_LOAD(size_t, &H5FL_blk_gc_head.mem_freed) >
+        H5TS_ATOMIC_LOAD(size_t, &H5FL_blk_glb_mem_lim))
         /* It's possible that 2+ threads could race and garbage collect, but */
         /* that's OK, on the rare occasions it happens */
         if (H5FL__blk_gc() < 0)
@@ -1665,7 +1667,8 @@ H5FL_arr_free(H5FL_arr_head_t *head, void *obj)
             HGOTO_ERROR(H5E_RESOURCE, H5E_CANTGC, NULL, "garbage collection failed during free");
 
     /* Then check the global amount memory on array free lists */
-    if (H5TS_ATOMIC_LOAD(size_t, &H5FL_arr_gc_head.mem_freed) > H5TS_ATOMIC_LOAD(size_t, &H5FL_arr_glb_mem_lim))
+    if (H5TS_ATOMIC_LOAD(size_t, &H5FL_arr_gc_head.mem_freed) >
+        H5TS_ATOMIC_LOAD(size_t, &H5FL_arr_glb_mem_lim))
         /* It's possible that 2+ threads could race and garbage collect, but */
         /* that's OK, on the rare occasions it happens */
         if (H5FL__arr_gc() < 0)
@@ -2310,7 +2313,8 @@ H5FL_fac_free(H5FL_fac_head_t *head, void *obj)
             HGOTO_ERROR(H5E_RESOURCE, H5E_CANTGC, NULL, "garbage collection failed during free");
 
     /* Then check the global amount memory on factory free lists */
-    if (H5TS_ATOMIC_LOAD(size_t, &H5FL_fac_gc_head.mem_freed) > H5TS_ATOMIC_LOAD(size_t, &H5FL_fac_glb_mem_lim))
+    if (H5TS_ATOMIC_LOAD(size_t, &H5FL_fac_gc_head.mem_freed) >
+        H5TS_ATOMIC_LOAD(size_t, &H5FL_fac_glb_mem_lim))
         /* It's possible that 2+ threads could race and garbage collect, but */
         /* that's OK, on the rare occasions it happens */
         if (H5FL__fac_gc() < 0)
