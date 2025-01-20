@@ -59,7 +59,7 @@ static void H5__debug_mask(const char *);
 #ifdef H5_HAVE_PARALLEL
 static int H5__mpi_delete_cb(MPI_Comm comm, int keyval, void *attr_val, int *flag);
 #endif /*H5_HAVE_PARALLEL*/
-static herr_t H5_check_version(unsigned majnum, unsigned minnum, unsigned relnum);
+static herr_t H5_check_version(bool is_api, unsigned majnum, unsigned minnum, unsigned relnum);
 
 /*********************/
 /* Package Variables */
@@ -147,7 +147,7 @@ H5_init_library(void)
 
     /* Check library version */
     /* (Will abort() on failure) */
-    H5_check_version(H5_VERS_MAJOR, H5_VERS_MINOR, H5_VERS_RELEASE);
+    H5_check_version(false, H5_VERS_MAJOR, H5_VERS_MINOR, H5_VERS_RELEASE);
 
     /* Set the 'library initialized' flag as early as possible, to avoid
      * possible re-entrancy.
@@ -833,7 +833,7 @@ done:
     "settings such as 'LD_LIBRARY_PATH'.\n"
 
 static herr_t
-H5_check_version(unsigned majnum, unsigned minnum, unsigned relnum)
+H5_check_version(bool is_api, unsigned majnum, unsigned minnum, unsigned relnum)
 {
     char                lib_str[256];
     char                substr[]                 = H5_VERS_SUBRELEASE;
@@ -845,8 +845,8 @@ H5_check_version(unsigned majnum, unsigned minnum, unsigned relnum)
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
-    /* Don't check again, if we already have */
-    if (checked)
+    /* Unless explicitly called from the API routine, don't check twice */
+    if (!is_api && checked)
         HGOTO_DONE(SUCCEED);
 
     {
@@ -980,7 +980,7 @@ H5check_version(unsigned majnum, unsigned minnum, unsigned relnum)
 
     /* Call internal routine */
     /* (Will abort() on failure) */
-    H5_check_version(majnum, minnum, relnum);
+    H5_check_version(true, majnum, minnum, relnum);
 
     FUNC_LEAVE_API_NOERR(ret_value)
 } /* end H5check_version() */
