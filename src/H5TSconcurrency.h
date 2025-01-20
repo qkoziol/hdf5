@@ -65,7 +65,7 @@
         type         value;                                                                                  \
     } H5TS_ATOMIC_TYPE(type);                                                                                \
                                                                                                              \
-    static inline void H5_GLUE(H5TS_concur_atomic_init_, type)(H5TS_ATOMIC_TYPE(type) * obj, type desired)          \
+    static inline void H5_GLUE(H5TS_concur_atomic_init_, type)(H5TS_ATOMIC_TYPE(type) * obj, type desired)   \
     {                                                                                                        \
         /* FUNC_ENTER_NOAPI_NAMECHECK_ONLY */                                                                \
                                                                                                              \
@@ -78,7 +78,7 @@
         /* FUNC_LEAVE_NOAPI_VOID_NAMECHECK_ONLY */                                                           \
     }                                                                                                        \
                                                                                                              \
-    static inline type H5_GLUE(H5TS_concur_atomic_load_, type)(H5TS_ATOMIC_TYPE(type) * obj)                        \
+    static inline type H5_GLUE(H5TS_concur_atomic_load_, type)(H5TS_ATOMIC_TYPE(type) * obj)                 \
     {                                                                                                        \
         type ret_value;                                                                                      \
                                                                                                              \
@@ -94,7 +94,7 @@
         return ret_value;                                                                                    \
     }                                                                                                        \
                                                                                                              \
-    static inline void H5_GLUE(H5TS_concur_atomic_store_, type)(H5TS_ATOMIC_TYPE(type) * obj, type desired)         \
+    static inline void H5_GLUE(H5TS_concur_atomic_store_, type)(H5TS_ATOMIC_TYPE(type) * obj, type desired)  \
     {                                                                                                        \
         /* Lock mutex that protects the "atomic" value */                                                    \
         H5TS_mutex_lock(&obj->mutex);                                                                        \
@@ -106,7 +106,7 @@
         H5TS_mutex_unlock(&obj->mutex);                                                                      \
     }                                                                                                        \
                                                                                                              \
-    static inline type H5_GLUE(H5TS_concur_atomic_fetch_add_, type)(H5TS_ATOMIC_TYPE(type) * obj, type arg)         \
+    static inline type H5_GLUE(H5TS_concur_atomic_fetch_add_, type)(H5TS_ATOMIC_TYPE(type) * obj, type arg)  \
     {                                                                                                        \
         type ret_value;                                                                                      \
                                                                                                              \
@@ -125,7 +125,7 @@
         return ret_value;                                                                                    \
     }                                                                                                        \
                                                                                                              \
-    static inline type H5_GLUE(H5TS_concur_atomic_fetch_sub_, type)(H5TS_ATOMIC_TYPE(type) * obj, type arg)         \
+    static inline type H5_GLUE(H5TS_concur_atomic_fetch_sub_, type)(H5TS_ATOMIC_TYPE(type) * obj, type arg)  \
     {                                                                                                        \
         type ret_value;                                                                                      \
                                                                                                              \
@@ -144,7 +144,7 @@
         return ret_value;                                                                                    \
     }                                                                                                        \
                                                                                                              \
-    static inline void H5_GLUE(H5TS_concur_atomic_destroy_, type)(H5TS_ATOMIC_TYPE(type) * obj)                     \
+    static inline void H5_GLUE(H5TS_concur_atomic_destroy_, type)(H5TS_ATOMIC_TYPE(type) * obj)              \
     {                                                                                                        \
         /* Destroy mutex that protects the "atomic" value */                                                 \
         H5TS_mutex_destroy(&obj->mutex);                                                                     \
