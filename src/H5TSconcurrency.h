@@ -1,4 +1,3 @@
-#define H5TS_atomic_init_int(obj, desired) atomic_init((obj), (desired))
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * Copyright by The HDF Group.                                               *
  * All rights reserved.                                                      *
@@ -37,7 +36,7 @@
 #ifdef H5_HAVE_CONCURRENCY
 
 /* Declarations of variables of this type */
-#define H5TS_ATOMIC_TYPE(type) H5_GLUE3(H5TS_concur_patomic_, type, _t)
+#define H5TS_ATOMIC_TYPE(type) H5_GLUE3(H5TS_concur_atomic_, type, _t)
 
 #if defined(H5_HAVE_STDATOMIC_H) && !defined(__cplusplus)
 
@@ -66,7 +65,7 @@
         type         value;                                                                                  \
     } H5TS_ATOMIC_TYPE(type);                                                                                \
                                                                                                              \
-    static inline void H5_GLUE(H5TS_atomic_init_, type)(H5TS_ATOMIC_TYPE(type) * obj, type desired)          \
+    static inline void H5_GLUE(H5TS_concur_atomic_init_, type)(H5TS_ATOMIC_TYPE(type) * obj, type desired)          \
     {                                                                                                        \
         /* FUNC_ENTER_NOAPI_NAMECHECK_ONLY */                                                                \
                                                                                                              \
@@ -79,7 +78,7 @@
         /* FUNC_LEAVE_NOAPI_VOID_NAMECHECK_ONLY */                                                           \
     }                                                                                                        \
                                                                                                              \
-    static inline type H5_GLUE(H5TS_atomic_load_, type)(H5TS_ATOMIC_TYPE(type) * obj)                        \
+    static inline type H5_GLUE(H5TS_concur_atomic_load_, type)(H5TS_ATOMIC_TYPE(type) * obj)                        \
     {                                                                                                        \
         type ret_value;                                                                                      \
                                                                                                              \
@@ -95,7 +94,7 @@
         return ret_value;                                                                                    \
     }                                                                                                        \
                                                                                                              \
-    static inline void H5_GLUE(H5TS_atomic_store_, type)(H5TS_ATOMIC_TYPE(type) * obj, type desired)         \
+    static inline void H5_GLUE(H5TS_concur_atomic_store_, type)(H5TS_ATOMIC_TYPE(type) * obj, type desired)         \
     {                                                                                                        \
         /* Lock mutex that protects the "atomic" value */                                                    \
         H5TS_mutex_lock(&obj->mutex);                                                                        \
@@ -107,7 +106,7 @@
         H5TS_mutex_unlock(&obj->mutex);                                                                      \
     }                                                                                                        \
                                                                                                              \
-    static inline type H5_GLUE(H5TS_atomic_fetch_add_, type)(H5TS_ATOMIC_TYPE(type) * obj, type arg)         \
+    static inline type H5_GLUE(H5TS_concur_atomic_fetch_add_, type)(H5TS_ATOMIC_TYPE(type) * obj, type arg)         \
     {                                                                                                        \
         type ret_value;                                                                                      \
                                                                                                              \
@@ -126,7 +125,7 @@
         return ret_value;                                                                                    \
     }                                                                                                        \
                                                                                                              \
-    static inline type H5_GLUE(H5TS_atomic_fetch_sub_, type)(H5TS_ATOMIC_TYPE(type) * obj, type arg)         \
+    static inline type H5_GLUE(H5TS_concur_atomic_fetch_sub_, type)(H5TS_ATOMIC_TYPE(type) * obj, type arg)         \
     {                                                                                                        \
         type ret_value;                                                                                      \
                                                                                                              \
@@ -145,19 +144,19 @@
         return ret_value;                                                                                    \
     }                                                                                                        \
                                                                                                              \
-    static inline void H5_GLUE(H5TS_atomic_destroy_, type)(H5TS_ATOMIC_TYPE(type) * obj)                     \
+    static inline void H5_GLUE(H5TS_concur_atomic_destroy_, type)(H5TS_ATOMIC_TYPE(type) * obj)                     \
     {                                                                                                        \
         /* Destroy mutex that protects the "atomic" value */                                                 \
         H5TS_mutex_destroy(&obj->mutex);                                                                     \
     }
 
 /* Operations on the type */
-#define H5TS_ATOMIC_INIT(type, obj, desired)  H5_GLUE(H5TS_atomic_init_, type)(obj, desired)
-#define H5TS_ATOMIC_LOAD(type, obj)           H5_GLUE(H5TS_atomic_load_, type)(obj)
-#define H5TS_ATOMIC_STORE(type, obj, desired) H5_GLUE(H5TS_atomic_store_, type)(obj, desired)
-#define H5TS_ATOMIC_FETCH_ADD(type, obj, arg) H5_GLUE(H5TS_atomic_fetch_add_, type)(obj, arg)
-#define H5TS_ATOMIC_FETCH_SUB(type, obj, arg) H5_GLUE(H5TS_atomic_fetch_sub_, type)(obj, arg)
-#define H5TS_ATOMIC_DESTROY(type, obj)        H5_GLUE(H5TS_atomic_destroy_, type)(obj)
+#define H5TS_ATOMIC_INIT(type, obj, desired)  H5_GLUE(H5TS_concur_atomic_init_, type)(obj, desired)
+#define H5TS_ATOMIC_LOAD(type, obj)           H5_GLUE(H5TS_concur_atomic_load_, type)(obj)
+#define H5TS_ATOMIC_STORE(type, obj, desired) H5_GLUE(H5TS_concur_atomic_store_, type)(obj, desired)
+#define H5TS_ATOMIC_FETCH_ADD(type, obj, arg) H5_GLUE(H5TS_concur_atomic_fetch_add_, type)(obj, arg)
+#define H5TS_ATOMIC_FETCH_SUB(type, obj, arg) H5_GLUE(H5TS_concur_atomic_fetch_sub_, type)(obj, arg)
+#define H5TS_ATOMIC_DESTROY(type, obj)        H5_GLUE(H5TS_concur_atomic_destroy_, type)(obj)
 #endif /* defined(H5_HAVE_STDATOMIC_H) && !defined(__cplusplus) */
 
 #else /* H5_HAVE_CONCURRENCY */
