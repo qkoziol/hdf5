@@ -78,6 +78,9 @@ H5TS__pthread_first_thread_init(void)
     /* Initialize H5TS package */
     H5TS__init_package();
 
+    /* Initialize library */
+    H5_init_library();
+
     FUNC_LEAVE_NOAPI_VOID_NAMECHECK_ONLY
 } /* end H5TS__pthread_first_thread_init() */
 #endif /* H5_HAVE_THREADSAFE_API */

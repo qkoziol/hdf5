@@ -85,6 +85,10 @@ H5TS__win32_process_enter(PINIT_ONCE InitOnce, PVOID Parameter, PVOID *lpContex)
     if (H5_UNLIKELY(H5TS__init_package() < 0))
         HGOTO_DONE(FALSE);
 
+    /* Initialize library */
+    if (H5_UNLIKELY(H5_init_library() < 0))
+        HGOTO_DONE(FALSE);
+
 done:
     FUNC_LEAVE_NOAPI_NAMECHECK_ONLY(ret_value)
 } /* H5TS__win32_process_enter() */
