@@ -59,7 +59,7 @@ static void H5__debug_mask(const char *);
 #ifdef H5_HAVE_PARALLEL
 static int H5__mpi_delete_cb(MPI_Comm comm, int keyval, void *attr_val, int *flag);
 #endif /*H5_HAVE_PARALLEL*/
-static herr_t H5_check_version(bool is_api, unsigned majnum, unsigned minnum, unsigned relnum);
+static herr_t H5__check_version(bool is_api, unsigned majnum, unsigned minnum, unsigned relnum);
 
 /*********************/
 /* Package Variables */
@@ -147,7 +147,7 @@ H5_init_library(void)
 
     /* Check library version */
     /* (Will abort() on failure) */
-    H5_check_version(false, H5_VERS_MAJOR, H5_VERS_MINOR, H5_VERS_RELEASE);
+    H5__check_version(false, H5_VERS_MAJOR, H5_VERS_MINOR, H5_VERS_RELEASE);
 
     /* Set the 'library initialized' flag as early as possible, to avoid
      * possible re-entrancy.
@@ -833,7 +833,7 @@ done:
     "settings such as 'LD_LIBRARY_PATH'.\n"
 
 static herr_t
-H5_check_version(bool is_api, unsigned majnum, unsigned minnum, unsigned relnum)
+H5__check_version(bool is_api, unsigned majnum, unsigned minnum, unsigned relnum)
 {
     char                lib_str[256];
     char                substr[]                 = H5_VERS_SUBRELEASE;
@@ -843,7 +843,7 @@ H5_check_version(bool is_api, unsigned majnum, unsigned minnum, unsigned relnum)
     static const char  *release_mismatch_warning = RELEASE_MISMATCH_WARNING;
     herr_t              ret_value                = SUCCEED; /* Return value */
 
-    FUNC_ENTER_NOAPI_NOINIT_NOERR
+    FUNC_ENTER_PACKAGE_NAMECHECK_ONLY                                                                    \
 
     /* Unless explicitly called from the API routine, don't check twice */
     if (!is_api && checked)
@@ -968,21 +968,19 @@ H5_check_version(bool is_api, unsigned majnum, unsigned minnum, unsigned relnum)
     }
 
 done:
-    FUNC_LEAVE_NOAPI(ret_value)
+    FUNC_LEAVE_NOAPI_NAMECHECK_ONLY(ret_value)                                                           \
 } /* end H5__check_version() */
 
 herr_t
 H5check_version(unsigned majnum, unsigned minnum, unsigned relnum)
 {
-    herr_t ret_value = SUCCEED; /* Return value */
-
-    FUNC_ENTER_API_NOINIT_NOERR
+    FUNC_ENTER_API_NAMECHECK_ONLY                                                                        \
 
     /* Call internal routine */
     /* (Will abort() on failure) */
-    H5_check_version(true, majnum, minnum, relnum);
+    H5__check_version(true, majnum, minnum, relnum);
 
-    FUNC_LEAVE_API_NOERR(ret_value)
+    FUNC_LEAVE_API_NAMECHECK_ONLY(SUCCEED)                                                             \
 } /* end H5check_version() */
 
 /*-------------------------------------------------------------------------
