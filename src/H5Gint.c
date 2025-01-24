@@ -1346,8 +1346,8 @@ H5G_get_create_plist(const H5G_t *grp)
 
 done:
     if (ret_value < 0)
-        if (new_plist && H5P_close(new_plist) < 0)
-            HDONE_ERROR(H5E_SYM, H5E_CANTCLOSEOBJ, H5I_INVALID_HID, "can't free");
+        if (new_plist && H5P_release(new_plist) < 0)
+            HDONE_ERROR(H5E_SYM, H5E_CANTCLOSEOBJ, H5I_INVALID_HID, "can't free property list");
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5G_get_create_plist() */

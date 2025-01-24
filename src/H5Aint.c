@@ -1120,6 +1120,10 @@ H5A__get_create_plist(H5A_t *attr)
     ret_value = H5P_PLIST_ID(new_plist);
 
 done:
+    if (ret_value < 0)
+        if (new_plist && H5P_release(new_plist) < 0)
+            HDONE_ERROR(H5E_ATTR, H5E_CANTCLOSEOBJ, H5I_INVALID_HID, "can't free property list");
+
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5A__get_create_plist() */
 

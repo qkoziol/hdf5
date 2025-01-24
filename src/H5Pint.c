@@ -979,7 +979,7 @@ H5P_copy_plist(const H5P_genplist_t *old_plist, bool app_ref)
     H5P_genplist_t *new_plist = NULL; /* New property list generated from copy */
     H5P_genprop_t  *tmp;              /* Temporary pointer to properties */
     H5P_genprop_t  *new_prop;         /* New property created for copy */
-    hid_t           new_plist_id;     /* Property list ID of new list created */
+    hid_t           new_plist_id = H5I_INVALID_HID;     /* Property list ID of new list created */
     H5SL_node_t    *curr_node;        /* Current node in skip list */
     H5SL_t         *seen = NULL;      /* Skip list containing properties already seen */
     ssize_t         nprops;           /* Number of properties in list */
@@ -1168,11 +1168,8 @@ H5P_copy_plist(const H5P_genplist_t *old_plist, bool app_ref)
                         (tclass->copy_func)(new_plist_id, old_plist->plist_id, old_plist->pclass->copy_data);
                 }
             H5_AFTER_USER_CB(NULL)
-            if (status < 0) {
-                /* Delete ID, ignore return value */
-                H5I_remove(new_plist_id);
+            if (status < 0)
                 HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, NULL, "Can't initialize property");
-            } /* end if */
         }     /* end if */
 
         /* Go up to parent class */
@@ -1188,10 +1185,19 @@ H5P_copy_plist(const H5P_genplist_t *old_plist, bool app_ref)
 done:
     /* Release the list of 'seen' properties */
     if (seen != NULL)
-        H5SL_close(seen);
+        if (H5SL_close(seen) < 0)
+            HDONE_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, NULL, "can't free skip list");
 
-    if (NULL == ret_value && new_plist)
-        H5P_close(new_plist);
+    if (NULL == ret_value)
+        if (new_plist)
+            if (new_plist_id > 0) {
+                if (H5P_release(new_plist) < 0)
+                    HDONE_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, NULL, "can't free property list");
+            }
+            else {
+                if (H5P_close(new_plist) < 0)
+                    HDONE_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, NULL, "can't free property list");
+            }
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5P_copy_plist() */
@@ -1236,8 +1242,9 @@ H5P_copy_plist_id(const H5P_genplist_t *old_plist, bool app_ref)
     ret_value = new_plist->plist_id;
 
 done:
-    if (H5I_INVALID_HID == ret_value && new_plist)
-        H5P_close(new_plist);
+    if (ret_value < 0)
+        if (new_plist && H5P_release(new_plist) < 0)
+            HDONE_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, H5I_INVALID_HID, "can't free property list");
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5P_copy_plist_id() */

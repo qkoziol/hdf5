@@ -499,8 +499,8 @@ done:
         HDONE_ERROR(H5E_FILE, H5E_CANTCLOSEOBJ, H5I_INVALID_HID, "can't close copy of driver info");
 
     if (ret_value < 0)
-        if (new_plist && H5P_close(new_plist) < 0)
-            HDONE_ERROR(H5E_FILE, H5E_CANTCLOSEOBJ, H5I_INVALID_HID, "can't free");
+        if (new_plist && H5P_release(new_plist) < 0)
+            HDONE_ERROR(H5E_FILE, H5E_CANTCLOSEOBJ, H5I_INVALID_HID, "can't free property list");
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5F_get_access_plist() */
