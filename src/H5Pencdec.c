@@ -714,13 +714,13 @@ done:
 H5P_genplist_t *
 H5P__decode(const void *buf)
 {
-    H5P_genplist_t  *plist = NULL;                     /* Property list to decode into */
+    H5P_genplist_t  *plist     = NULL;                 /* Property list to decode into */
     void            *value_buf = NULL;                 /* Pointer to buffer to use when decoding values */
     const uint8_t   *p         = (const uint8_t *)buf; /* Current pointer into buffer */
     H5P_plist_type_t type;                             /* Type of encoded property list */
     size_t           value_buf_size = 0;               /* Size of current value buffer */
     uint8_t          vers;                             /* Version of encoded property list */
-    H5P_genplist_t  *ret_value = NULL;      /* Return value */
+    H5P_genplist_t  *ret_value = NULL;                 /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -731,7 +731,8 @@ H5P__decode(const void *buf)
     /* Get the version number of the encoded property list */
     vers = (uint8_t)*p++;
     if ((uint8_t)H5P_ENCODE_VERS != vers)
-        HGOTO_ERROR(H5E_PLIST, H5E_VERSION, NULL, "bad version # of encoded information, expected %u, got %u", (unsigned)H5P_ENCODE_VERS, (unsigned)vers);
+        HGOTO_ERROR(H5E_PLIST, H5E_VERSION, NULL, "bad version # of encoded information, expected %u, got %u",
+                    (unsigned)H5P_ENCODE_VERS, (unsigned)vers);
 
     /* Get the type of the property list */
     type = (H5P_plist_type_t)*p++;
@@ -777,7 +778,8 @@ H5P__decode(const void *buf)
                 }
             H5_AFTER_USER_CB(NULL)
             if (status < 0)
-                HGOTO_ERROR(H5E_PLIST, H5E_CANTDECODE, NULL, "property decoding routine failed, property: '%s'", name);
+                HGOTO_ERROR(H5E_PLIST, H5E_CANTDECODE, NULL,
+                            "property decoding routine failed, property: '%s'", name);
         } /* end if */
         else
             HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, NULL, "no decode callback for property: '%s'", name);
@@ -798,7 +800,8 @@ done:
     /* Cleanup on error */
     if (NULL == ret_value)
         if (plist && H5P_release(plist) < 0)
-            HDONE_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, NULL, "unable to close partially initialized property list");
+            HDONE_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, NULL,
+                        "unable to close partially initialized property list");
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5P__decode() */

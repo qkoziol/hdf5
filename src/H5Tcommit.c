@@ -778,7 +778,8 @@ H5Tget_create_plist(hid_t dtype_id)
 
         /* Create the property list object to return */
         if (NULL == (tcpl_plist = H5P_new_plist_of_type(H5P_TYPE_DATATYPE_CREATE, true)))
-            HGOTO_ERROR(H5E_DATATYPE, H5E_CANTCREATE, H5I_INVALID_HID, "unable to create datatype creation property list");
+            HGOTO_ERROR(H5E_DATATYPE, H5E_CANTCREATE, H5I_INVALID_HID,
+                        "unable to create datatype creation property list");
 
         /* Set return value */
         ret_value = H5P_PLIST_ID(tcpl_plist);

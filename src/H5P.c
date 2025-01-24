@@ -862,7 +862,7 @@ hid_t
 H5Pdecode(const void *buf)
 {
     H5P_genplist_t *plist;                       /* Property list created */
-    hid_t ret_value = H5I_INVALID_HID; /* Return value */
+    hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 

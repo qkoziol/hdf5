@@ -408,10 +408,10 @@ H5P__lacc_elink_fapl_dec(const void **_pp, void *_value)
     non_default_fapl = (bool)*(*pp)++;
 
     if (non_default_fapl) {
-        H5P_genplist_t *plist;                       /* Property list created */
-        size_t   fapl_size = 0; /* Encoded size of property list */
-        unsigned enc_size;
-        uint64_t enc_value;
+        H5P_genplist_t *plist;         /* Property list created */
+        size_t          fapl_size = 0; /* Encoded size of property list */
+        unsigned        enc_size;
+        uint64_t        enc_value;
 
         /* Decode the plist length */
         enc_size = *(*pp)++;

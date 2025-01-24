@@ -467,8 +467,8 @@ done:
 static H5D_shared_t *
 H5D__new(H5P_genplist_t *dcpl_plist, hid_t dapl_id, bool creating, bool vl_type)
 {
-    H5D_shared_t   *new_dset = NULL;  /* New dataset object */
-    H5D_shared_t   *ret_value = NULL; /* Return value */
+    H5D_shared_t *new_dset  = NULL; /* New dataset object */
+    H5D_shared_t *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -484,9 +484,8 @@ H5D__new(H5P_genplist_t *dcpl_plist, hid_t dapl_id, bool creating, bool vl_type)
      */
     if (!vl_type && creating && H5P_PLIST_IS_DEFAULT(dcpl_plist))
         new_dset->dcpl_plist = dcpl_plist;
-    else
-        if (NULL == (new_dset->dcpl_plist = H5P_copy_plist(dcpl_plist, false)))
-            HGOTO_ERROR(H5E_DATASET, H5E_CANTCOPY, NULL, "can't copy dataset creation property list");
+    else if (NULL == (new_dset->dcpl_plist = H5P_copy_plist(dcpl_plist, false)))
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTCOPY, NULL, "can't copy dataset creation property list");
 
     if (!vl_type && creating && dapl_id == H5P_DATASET_ACCESS_DEFAULT) {
         if (H5I_inc_ref(dapl_id, false) < 0)
@@ -494,7 +493,7 @@ H5D__new(H5P_genplist_t *dcpl_plist, hid_t dapl_id, bool creating, bool vl_type)
         new_dset->dapl_id = dapl_id;
     } /* end if */
     else {
-        H5P_genplist_t *plist;            /* Property list created */
+        H5P_genplist_t *plist; /* Property list created */
 
         /* Get the property list */
         if (NULL == (plist = (H5P_genplist_t *)H5I_object(dapl_id)))
@@ -509,8 +508,10 @@ H5D__new(H5P_genplist_t *dcpl_plist, hid_t dapl_id, bool creating, bool vl_type)
 done:
     if (ret_value == NULL)
         if (new_dset != NULL) {
-            if (new_dset->dcpl_plist && !H5P_PLIST_IS_DEFAULT(new_dset->dcpl_plist) && H5P_release(new_dset->dcpl_plist) < 0)
-                HDONE_ERROR(H5E_DATASET, H5E_CANTCLOSEOBJ, NULL, "can't close dataset creation property list");
+            if (new_dset->dcpl_plist && !H5P_PLIST_IS_DEFAULT(new_dset->dcpl_plist) &&
+                H5P_release(new_dset->dcpl_plist) < 0)
+                HDONE_ERROR(H5E_DATASET, H5E_CANTCLOSEOBJ, NULL,
+                            "can't close dataset creation property list");
             if (new_dset->dapl_id != 0 && H5I_dec_ref(new_dset->dapl_id) < 0)
                 HDONE_ERROR(H5E_DATASET, H5E_CANTDEC, NULL, "can't decrement temporary datatype ID");
             new_dset = H5FL_FREE(H5D_shared_t, new_dset);
@@ -1167,9 +1168,9 @@ done:
 H5D_t *
 H5D__create(H5F_t *file, hid_t type_id, const H5S_t *space, hid_t dcpl_id, hid_t dapl_id)
 {
-    H5T_t          *type          = NULL; /* Datatype for dataset (VOL pointer) */
-    H5T_t          *dt            = NULL; /* Datatype for dataset (non-VOL pointer) */
-    H5D_t          *new_dset      = NULL;
+    H5T_t          *type     = NULL; /* Datatype for dataset (VOL pointer) */
+    H5T_t          *dt       = NULL; /* Datatype for dataset (non-VOL pointer) */
+    H5D_t          *new_dset = NULL;
     H5P_genplist_t *dcpl_plist;            /* Dataset creation roperty list */
     bool            has_vl_type   = false; /* Flag to indicate a VL-type for dataset */
     bool            layout_init   = false; /* Flag to indicate that chunk information was initialized */
@@ -1400,8 +1401,10 @@ done:
                         HDONE_ERROR(H5E_DATASET, H5E_CANTDELETE, NULL, "unable to delete object header");
                 } /* end if */
             }     /* end if */
-            if (new_dset->shared->dcpl_plist && !H5P_PLIST_IS_DEFAULT(new_dset->shared->dcpl_plist) && H5P_release(new_dset->shared->dcpl_plist) < 0)
-                HDONE_ERROR(H5E_DATASET, H5E_CANTCLOSEOBJ, NULL, "unable to close copy of dataset creation property list");
+            if (new_dset->shared->dcpl_plist && !H5P_PLIST_IS_DEFAULT(new_dset->shared->dcpl_plist) &&
+                H5P_release(new_dset->shared->dcpl_plist) < 0)
+                HDONE_ERROR(H5E_DATASET, H5E_CANTCLOSEOBJ, NULL,
+                            "unable to close copy of dataset creation property list");
             if (new_dset->shared->dapl_id != 0 && H5I_dec_ref(new_dset->shared->dapl_id) < 0)
                 HDONE_ERROR(H5E_DATASET, H5E_CANTDEC, NULL, "unable to decrement ref count on property list");
             new_dset->shared->extfile_prefix = (char *)H5MM_xfree(new_dset->shared->extfile_prefix);
@@ -1694,7 +1697,7 @@ done:
 static herr_t
 H5D__open_oid(H5D_t *dataset, hid_t dapl_id)
 {
-    H5P_genplist_t *dcpl_plist;            /* Dataset creation roperty list */
+    H5P_genplist_t *dcpl_plist;                /* Dataset creation roperty list */
     H5O_fill_t     *fill_prop = NULL;          /* Pointer to dataset's fill value info */
     unsigned        alloc_time_state;          /* Allocation time state */
     htri_t          msg_exists;                /* Whether a particular type of message exists */
@@ -2038,11 +2041,10 @@ H5D_close(H5D_t *dataset)
         /* Release datatype, dataspace, and creation and access property lists -- there isn't
          * much we can do if one of these fails, so we just continue.
          */
-        free_failed |=
-            (H5I_dec_ref(dataset->shared->type_id) < 0) || (H5S_close(dataset->shared->space) < 0) ||
-            (H5I_dec_ref(dataset->shared->dapl_id) < 0);
+        free_failed |= (H5I_dec_ref(dataset->shared->type_id) < 0) ||
+                       (H5S_close(dataset->shared->space) < 0) || (H5I_dec_ref(dataset->shared->dapl_id) < 0);
         free_failed |= !H5P_PLIST_IS_DEFAULT(dataset->shared->dcpl_plist) &&
-            (H5P_release(dataset->shared->dcpl_plist) < 0);
+                       (H5P_release(dataset->shared->dcpl_plist) < 0);
 
         /* Remove the dataset from the list of opened objects in the file */
         if (H5FO_top_decr(dataset->oloc.file, dataset->oloc.addr) < 0)

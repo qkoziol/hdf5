@@ -1289,13 +1289,14 @@ H5G_get_create_plist(const H5G_t *grp)
     htri_t          ginfo_exists;
     htri_t          linfo_exists;
     htri_t          pline_exists;
-    hid_t           ret_value   = H5I_INVALID_HID;
+    hid_t           ret_value = H5I_INVALID_HID;
 
     FUNC_ENTER_NOAPI(H5I_INVALID_HID)
 
     /* Create the property list object to return */
     if (NULL == (new_plist = H5P_new_plist_of_type(H5P_TYPE_GROUP_CREATE, true)))
-        HGOTO_ERROR(H5E_SYM, H5E_CANTCREATE, H5I_INVALID_HID, "unable to create group creation property list");
+        HGOTO_ERROR(H5E_SYM, H5E_CANTCREATE, H5I_INVALID_HID,
+                    "unable to create group creation property list");
 
     /* Retrieve any object creation properties */
     if (H5O_get_create_plist(&grp->oloc, new_plist) < 0)

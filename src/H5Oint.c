@@ -289,7 +289,7 @@ herr_t
 H5O_create_id(H5F_t *f, size_t size_hint, size_t initial_rc, hid_t ocpl_id, H5O_loc_t *loc /*out*/)
 {
     H5P_genplist_t *oc_plist;
-    herr_t ret_value = SUCCEED;
+    herr_t          ret_value = SUCCEED;
 
     FUNC_ENTER_NOAPI(FAIL)
 
@@ -366,9 +366,9 @@ done:
 H5O_t *
 H5O_create_ohdr(H5F_t *f, H5P_genplist_t *oc_plist)
 {
-    H5O_t          *oh = NULL; /* Object header in Freelist */
-    uint8_t         oh_flags;  /* Initial status flags */
-    H5O_t          *ret_value = NULL;
+    H5O_t  *oh = NULL; /* Object header in Freelist */
+    uint8_t oh_flags;  /* Initial status flags */
+    H5O_t  *ret_value = NULL;
 
     FUNC_ENTER_NOAPI(NULL)
 
@@ -421,12 +421,13 @@ done:
  *-----------------------------------------------------------------------------
  */
 herr_t
-H5O_apply_ohdr(H5F_t *f, H5O_t *oh, H5P_genplist_t *oc_plist, size_t size_hint, size_t initial_rc, H5O_loc_t *loc_out)
+H5O_apply_ohdr(H5F_t *f, H5O_t *oh, H5P_genplist_t *oc_plist, size_t size_hint, size_t initial_rc,
+               H5O_loc_t *loc_out)
 {
-    haddr_t         oh_addr;
-    size_t          oh_size;
-    unsigned        insert_flags = H5AC__NO_FLAGS_SET;
-    herr_t          ret_value    = SUCCEED;
+    haddr_t  oh_addr;
+    size_t   oh_size;
+    unsigned insert_flags = H5AC__NO_FLAGS_SET;
+    herr_t   ret_value    = SUCCEED;
 
     FUNC_ENTER_NOAPI(FAIL)
 

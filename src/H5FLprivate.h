@@ -330,13 +330,12 @@ typedef struct H5FL_fac_head_t {
     H5TS_dlftt_mutex_t mutex; /* Guard access to this factory */
 #endif                        /* H5_HAVE_CONCURRENCY */
 
-    unsigned         allocated;   /* Number of blocks allocated */
-    unsigned         onlist;      /* Number of blocks on free list */
-    size_t           size;        /* Size of the blocks in the list */
-    H5FL_fac_node_t *list;        /* List of free blocks */
+    unsigned                allocated;   /* Number of blocks allocated */
+    unsigned                onlist;      /* Number of blocks on free list */
+    size_t                  size;        /* Size of the blocks in the list */
+    H5FL_fac_node_t        *list;        /* List of free blocks */
     struct H5FL_fac_head_t *next, *prev; /* Next & previous factory nodes in list */
 } H5FL_fac_head_t;
-
 
 /*
  * Macros for defining & using free list factories

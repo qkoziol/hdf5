@@ -1110,7 +1110,8 @@ H5A__get_create_plist(H5A_t *attr)
 
     /* Create the property list object to return */
     if (NULL == (new_plist = H5P_new_plist_of_type(H5P_TYPE_ATTRIBUTE_CREATE, true)))
-        HGOTO_ERROR(H5E_ATTR, H5E_CANTCREATE, H5I_INVALID_HID, "unable to create attribute creation property list");
+        HGOTO_ERROR(H5E_ATTR, H5E_CANTCREATE, H5I_INVALID_HID,
+                    "unable to create attribute creation property list");
 
     /* Set the character encoding on the new property list */
     if (H5P_set(new_plist, H5P_STRCRT_CHAR_ENCODING_NAME, &(attr->shared->encoding)) < 0)

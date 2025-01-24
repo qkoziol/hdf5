@@ -385,7 +385,8 @@ H5F_get_access_plist(H5F_t *f, bool app_ref)
 
     /* Copy properties of the file access property list */
     if (H5P_set(new_plist, H5F_ACS_META_CACHE_INIT_CONFIG_NAME, &(f->shared->mdc_initCacheCfg)) < 0)
-        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID, "can't set initial metadata cache resize config.");
+        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID,
+                    "can't set initial metadata cache resize config.");
     if (H5P_set(new_plist, H5F_ACS_DATA_CACHE_NUM_SLOTS_NAME, &(f->shared->rdcc_nslots)) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID, "can't set data cache number of slots");
     if (H5P_set(new_plist, H5F_ACS_DATA_CACHE_BYTE_SIZE_NAME, &(f->shared->rdcc_nbytes)) < 0)
@@ -405,13 +406,16 @@ H5F_get_access_plist(H5F_t *f, bool app_ref)
     if (H5P_set(new_plist, H5F_ACS_SDATA_BLOCK_SIZE_NAME, &(f->shared->sdata_aggr.alloc_size)) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID, "can't set 'small data' cache size");
     if (H5P_set(new_plist, H5F_ACS_LIBVER_LOW_BOUND_NAME, &f->shared->low_bound) < 0)
-        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID, "can't set 'low' bound for library format versions");
+        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID,
+                    "can't set 'low' bound for library format versions");
     if (H5P_set(new_plist, H5F_ACS_LIBVER_HIGH_BOUND_NAME, &f->shared->high_bound) < 0)
-        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID, "can't set 'high' bound for library format versions");
+        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID,
+                    "can't set 'high' bound for library format versions");
     if (H5P_set(new_plist, H5F_ACS_USE_FILE_LOCKING_NAME, &f->shared->use_file_locking) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID, "can't set file locking property");
     if (H5P_set(new_plist, H5F_ACS_IGNORE_DISABLED_FILE_LOCKS_NAME, &f->shared->ignore_disabled_locks) < 0)
-        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID, "can't set 'ignore disabled file locks' property");
+        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID,
+                    "can't set 'ignore disabled file locks' property");
     if (H5P_set(new_plist, H5F_ACS_METADATA_READ_ATTEMPTS_NAME, &(f->shared->read_attempts)) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID, "can't set 'read attempts' flag");
     if (H5P_set(new_plist, H5F_ACS_OBJECT_FLUSH_CB_NAME, &(f->shared->object_flush)) < 0)
@@ -424,10 +428,14 @@ H5F_get_access_plist(H5F_t *f, bool app_ref)
     if (f->shared->page_buf != NULL) {
         if (H5P_set(new_plist, H5F_ACS_PAGE_BUFFER_SIZE_NAME, &(f->shared->page_buf->max_size)) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID, "can't set page buffer size");
-        if (H5P_set(new_plist, H5F_ACS_PAGE_BUFFER_MIN_META_PERC_NAME, &(f->shared->page_buf->min_meta_perc)) < 0)
-            HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID, "can't set minimum metadata fraction of page buffer");
-        if (H5P_set(new_plist, H5F_ACS_PAGE_BUFFER_MIN_RAW_PERC_NAME, &(f->shared->page_buf->min_raw_perc)) < 0)
-            HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID, "can't set minimum raw data fraction of page buffer");
+        if (H5P_set(new_plist, H5F_ACS_PAGE_BUFFER_MIN_META_PERC_NAME,
+                    &(f->shared->page_buf->min_meta_perc)) < 0)
+            HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID,
+                        "can't set minimum metadata fraction of page buffer");
+        if (H5P_set(new_plist, H5F_ACS_PAGE_BUFFER_MIN_RAW_PERC_NAME, &(f->shared->page_buf->min_raw_perc)) <
+            0)
+            HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID,
+                        "can't set minimum raw data fraction of page buffer");
     } /* end if */
 #ifdef H5_HAVE_PARALLEL
     if (H5P_set(new_plist, H5_COLL_MD_READ_FLAG_NAME, &(f->shared->coll_md_read)) < 0)
@@ -451,8 +459,10 @@ H5F_get_access_plist(H5F_t *f, bool app_ref)
             HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID, "can't set MPI info");
     }
 #endif /* H5_HAVE_PARALLEL */
-    if (H5P_set(new_plist, H5F_ACS_META_CACHE_INIT_IMAGE_CONFIG_NAME, &(f->shared->mdc_initCacheImageCfg)) < 0)
-        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID, "can't set initial metadata cache resize config.");
+    if (H5P_set(new_plist, H5F_ACS_META_CACHE_INIT_IMAGE_CONFIG_NAME, &(f->shared->mdc_initCacheImageCfg)) <
+        0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID,
+                    "can't set initial metadata cache resize config.");
     if (H5P_set(new_plist, H5F_ACS_RFIC_FLAGS_NAME, &(f->shared->rfic_flags)) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID, "can't set RFIC flags value");
 
