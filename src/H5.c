@@ -843,7 +843,7 @@ H5__check_version(bool is_api, unsigned majnum, unsigned minnum, unsigned relnum
     static const char  *release_mismatch_warning = RELEASE_MISMATCH_WARNING;
     herr_t              ret_value                = SUCCEED; /* Return value */
 
-    FUNC_ENTER_PACKAGE_NAMECHECK_ONLY                                                                    \
+    FUNC_ENTER_PACKAGE_NAMECHECK_ONLY
 
     /* Unless explicitly called from the API routine, don't check twice */
     if (!is_api && checked)
@@ -968,19 +968,19 @@ H5__check_version(bool is_api, unsigned majnum, unsigned minnum, unsigned relnum
     }
 
 done:
-    FUNC_LEAVE_NOAPI_NAMECHECK_ONLY(ret_value)                                                           \
+    FUNC_LEAVE_NOAPI_NAMECHECK_ONLY(ret_value)
 } /* end H5__check_version() */
 
 herr_t
 H5check_version(unsigned majnum, unsigned minnum, unsigned relnum)
 {
-    FUNC_ENTER_API_NAMECHECK_ONLY                                                                        \
+    FUNC_ENTER_API_NAMECHECK_ONLY
 
     /* Call internal routine */
     /* (Will abort() on failure) */
     H5__check_version(true, majnum, minnum, relnum);
 
-    FUNC_LEAVE_API_NAMECHECK_ONLY(SUCCEED)                                                             \
+    FUNC_LEAVE_API_NAMECHECK_ONLY(SUCCEED)
 } /* end H5check_version() */
 
 /*-------------------------------------------------------------------------
