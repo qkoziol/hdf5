@@ -975,15 +975,15 @@ done:
 H5P_genplist_t *
 H5P_copy_plist(const H5P_genplist_t *old_plist, bool app_ref)
 {
-    H5P_genclass_t *tclass;           /* Temporary class pointer */
-    H5P_genplist_t *new_plist = NULL; /* New property list generated from copy */
-    H5P_genprop_t  *tmp;              /* Temporary pointer to properties */
-    H5P_genprop_t  *new_prop;         /* New property created for copy */
-    hid_t           new_plist_id = H5I_INVALID_HID;     /* Property list ID of new list created */
-    H5SL_node_t    *curr_node;        /* Current node in skip list */
-    H5SL_t         *seen = NULL;      /* Skip list containing properties already seen */
-    ssize_t         nprops;           /* Number of properties in list */
-    size_t          nseen;            /* Number of items 'seen' */
+    H5P_genclass_t *tclass;                         /* Temporary class pointer */
+    H5P_genplist_t *new_plist = NULL;               /* New property list generated from copy */
+    H5P_genprop_t  *tmp;                            /* Temporary pointer to properties */
+    H5P_genprop_t  *new_prop;                       /* New property created for copy */
+    hid_t           new_plist_id = H5I_INVALID_HID; /* Property list ID of new list created */
+    H5SL_node_t    *curr_node;                      /* Current node in skip list */
+    H5SL_t         *seen = NULL;                    /* Skip list containing properties already seen */
+    ssize_t         nprops;                         /* Number of properties in list */
+    size_t          nseen;                          /* Number of items 'seen' */
     bool            has_parent_class; /* Flag to indicate that this property list's class has a parent */
     H5P_genplist_t *ret_value = NULL; /* Return value */
 
@@ -1170,7 +1170,7 @@ H5P_copy_plist(const H5P_genplist_t *old_plist, bool app_ref)
             H5_AFTER_USER_CB(NULL)
             if (status < 0)
                 HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, NULL, "Can't initialize property");
-        }     /* end if */
+        } /* end if */
 
         /* Go up to parent class */
         tclass = tclass->parent;
