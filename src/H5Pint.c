@@ -1189,7 +1189,7 @@ done:
             HDONE_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, NULL, "can't free skip list");
 
     if (NULL == ret_value)
-        if (new_plist)
+        if (new_plist) {
             if (new_plist_id > 0) {
                 if (H5P_release(new_plist) < 0)
                     HDONE_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, NULL, "can't free property list");
@@ -1198,6 +1198,7 @@ done:
                 if (H5P_close(new_plist) < 0)
                     HDONE_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, NULL, "can't free property list");
             }
+        }
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5P_copy_plist() */
