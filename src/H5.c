@@ -514,14 +514,14 @@ H5dont_atexit(void)
 {
     herr_t ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT_NOERR
+    FUNC_ENTER_API_NAMECHECK_ONLY                                                                        \
 
     if (H5_dont_atexit_g)
         ret_value = FAIL;
     else
         H5_dont_atexit_g = true;
 
-    FUNC_LEAVE_API_NOERR(ret_value)
+    FUNC_LEAVE_API_NAMECHECK_ONLY(ret_value)                                                             \
 } /* end H5dont_atexit() */
 
 /*-------------------------------------------------------------------------

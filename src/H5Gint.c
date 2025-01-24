@@ -1284,24 +1284,18 @@ done:
 hid_t
 H5G_get_create_plist(const H5G_t *grp)
 {
+    H5P_genplist_t *new_plist = NULL;
     H5O_linfo_t     linfo; /* Link info message            */
     htri_t          ginfo_exists;
     htri_t          linfo_exists;
     htri_t          pline_exists;
-    H5P_genplist_t *gcpl_plist;
-    H5P_genplist_t *new_plist;
-    hid_t           new_gcpl_id = H5I_INVALID_HID;
     hid_t           ret_value   = H5I_INVALID_HID;
 
     FUNC_ENTER_NOAPI(H5I_INVALID_HID)
 
-    /* Copy the default group creation property list */
-    if (NULL == (gcpl_plist = (H5P_genplist_t *)H5I_object(H5P_LST_GROUP_CREATE_ID_g)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "can't get default group creation property list");
-    if ((new_gcpl_id = H5P_copy_plist(gcpl_plist, true)) < 0)
-        HGOTO_ERROR(H5E_SYM, H5E_CANTGET, H5I_INVALID_HID, "unable to copy the creation property list");
-    if (NULL == (new_plist = (H5P_genplist_t *)H5I_object(new_gcpl_id)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "can't get property list");
+    /* Create the property list object to return */
+    if (NULL == (new_plist = H5P_new_plist_of_type(H5P_TYPE_GROUP_CREATE, true)))
+        HGOTO_ERROR(H5E_SYM, H5E_CANTCREATE, H5I_INVALID_HID, "unable to create group creation property list");
 
     /* Retrieve any object creation properties */
     if (H5O_get_create_plist(&grp->oloc, new_plist) < 0)
@@ -1347,14 +1341,12 @@ H5G_get_create_plist(const H5G_t *grp)
     } /* end if */
 
     /* Set the return value */
-    ret_value = new_gcpl_id;
+    ret_value = H5P_PLIST_ID(new_plist);
 
 done:
-    if (ret_value < 0) {
-        if (new_gcpl_id > 0)
-            if (H5I_dec_app_ref(new_gcpl_id) < 0)
-                HDONE_ERROR(H5E_SYM, H5E_CANTDEC, H5I_INVALID_HID, "can't free");
-    } /* end if */
+    if (ret_value < 0)
+        if (new_plist && H5P_close(new_plist) < 0)
+            HDONE_ERROR(H5E_SYM, H5E_CANTCLOSEOBJ, H5I_INVALID_HID, "can't free");
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5G_get_create_plist() */

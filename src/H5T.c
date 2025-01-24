@@ -2042,20 +2042,6 @@ H5T__init_package(void)
     if (status < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINIT, FAIL, "unable to register conversion function(s)");
 
-    /* Register datatype creation property class properties here.  See similar
-     * code in H5D__init_package(), etc. for example.
-     */
-
-    /* Only register the default property list if it hasn't been created yet */
-    if (H5P_LST_DATATYPE_CREATE_ID_g == (-1)) {
-        /* ========== Datatype Creation Property Class Initialization ============*/
-        assert(H5P_CLS_DATATYPE_CREATE_g != NULL);
-
-        /* Register the default datatype creation property list */
-        if ((H5P_LST_DATATYPE_CREATE_ID_g = H5P_create_id(H5P_CLS_DATATYPE_CREATE_g, false)) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, FAIL, "can't insert property into class");
-    } /* end if */
-
     /* Mark "top" of interface as initialized, too */
     H5T_top_package_initialize_s = true;
 

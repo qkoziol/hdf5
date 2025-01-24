@@ -116,7 +116,7 @@ H5F__super_ext_create(H5F_t *f, H5O_loc_t *ext_ptr)
          * extension.
          */
         H5O_loc_reset(ext_ptr);
-        if (H5O_create(f, (size_t)0, (size_t)1, H5P_GROUP_CREATE_DEFAULT, ext_ptr) < 0)
+        if (H5O_create_id(f, (size_t)0, (size_t)1, H5P_GROUP_CREATE_DEFAULT, ext_ptr) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTCREATE, FAIL, "unable to create superblock extension");
 
         /* Record the address of the superblock extension */

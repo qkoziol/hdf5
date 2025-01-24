@@ -979,7 +979,7 @@ done:
 /*-------------------------------------------------------------------------
  * Function:    H5FD__copy_plist
  *
- * Purpose:     Sanity-wrapped H5P_copy_plist() for each channel.
+ * Purpose:     Sanity-wrapped H5P_copy_plist_id() for each channel.
  *              Utility function for operation in multiple locations.
  *
  * Return:      Non-negative on success/Negative on failure
@@ -1001,7 +1001,7 @@ H5FD__copy_plist(hid_t fapl_id, hid_t *id)
     if (NULL == (plist = (H5P_genplist_t *)H5I_object(fapl_id)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "unable to get property list");
 
-    if (H5I_INVALID_HID == (*id = H5P_copy_plist(plist, false)))
+    if (H5I_INVALID_HID == (*id = H5P_copy_plist_id(plist, false)))
         HGOTO_ERROR(H5E_VFL, H5E_BADTYPE, FAIL, "unable to copy file access property list");
 
 done:

@@ -35,9 +35,11 @@ typedef struct H5P_genplist_t H5P_genplist_t;
 /* If the module using this macro is allowed access to the private variables, access them directly */
 #ifdef H5P_MODULE
 #define H5P_PLIST_ID(P) ((P)->plist_id)
+#define H5P_PLIST_IS_DEFAULT(P) ((P)->is_default)
 #define H5P_CLASS(P)    ((P)->pclass)
 #else /* H5P_MODULE */
 #define H5P_PLIST_ID(P) (H5P_get_plist_id(P))
+#define H5P_PLIST_IS_DEFAULT(P) (H5P_is_default_plist(P))
 #define H5P_CLASS(P)    (H5P_get_class(P))
 #endif /* H5P_MODULE */
 
@@ -162,8 +164,9 @@ H5_DLL herr_t H5P_init_phase2(void);
 
 /* Internal versions of API routines */
 H5_DLL herr_t H5P_close(H5P_genplist_t *plist);
-H5_DLL hid_t  H5P_create_id(H5P_genclass_t *pclass, bool app_ref);
-H5_DLL hid_t  H5P_copy_plist(const H5P_genplist_t *old_plist, bool app_ref);
+H5_DLL herr_t H5P_release(H5P_genplist_t *plist);
+H5_DLL hid_t  H5P_copy_plist_id(const H5P_genplist_t *old_plist, bool app_ref);
+H5_DLL H5P_genplist_t *H5P_copy_plist(const H5P_genplist_t *old_plist, bool app_ref);
 H5_DLL herr_t H5P_get(H5P_genplist_t *plist, const char *name, void *value);
 H5_DLL herr_t H5P_set(H5P_genplist_t *plist, const char *name, const void *value);
 H5_DLL herr_t H5P_peek(H5P_genplist_t *plist, const char *name, void *value);
@@ -179,6 +182,7 @@ H5_DLL htri_t H5P_class_isa(const H5P_genclass_t *pclass1, const H5P_genclass_t 
 H5_DLL char  *H5P_get_class_name(H5P_genclass_t *pclass) H5_ATTR_MALLOC;
 
 /* Internal helper routines */
+H5_DLL H5P_genplist_t *H5P_new_plist_of_type(H5P_plist_type_t type, bool app_ref);
 H5_DLL herr_t      H5P_get_nprops_pclass(const H5P_genclass_t *pclass, size_t *nprops, bool recurse);
 H5_DLL hid_t       H5P_peek_driver(H5P_genplist_t *plist);
 H5_DLL const void *H5P_peek_driver_info(H5P_genplist_t *plist);
@@ -201,10 +205,11 @@ H5_DLL herr_t H5P_get_filter_by_id(H5P_genplist_t *plist, H5Z_filter_t id, unsig
                                    size_t *cd_nelmts, unsigned cd_values[], size_t namelen, char name[],
                                    unsigned *filter_config);
 H5_DLL htri_t H5P_filter_in_pline(H5P_genplist_t *plist, H5Z_filter_t id);
-H5_DLL bool   H5P_is_default_plist(hid_t plist_id);
+H5_DLL htri_t H5P_isa_type(const H5P_genplist_t *plist, H5P_plist_type_t type);
 
 /* Query internal fields of the property list struct */
 H5_DLL hid_t           H5P_get_plist_id(const H5P_genplist_t *plist);
+H5_DLL bool            H5P_is_default_plist(const H5P_genplist_t *plist);
 H5_DLL H5P_genclass_t *H5P_get_class(const H5P_genplist_t *plist);
 
 /* *SPECIAL* Don't make more of these! -QAK */

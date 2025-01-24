@@ -93,10 +93,10 @@ test_cont(char *filename, hid_t fapl)
         goto error;
     } /* end if */
 
-    if (H5O_create(f, (size_t)H5O_MIN_SIZE, (size_t)0, H5P_GROUP_CREATE_DEFAULT, &oh_locA /*out*/) < 0)
+    if (H5O_create_id(f, (size_t)H5O_MIN_SIZE, (size_t)0, H5P_GROUP_CREATE_DEFAULT, &oh_locA /*out*/) < 0)
         FAIL_STACK_ERROR;
 
-    if (H5O_create(f, (size_t)H5O_MIN_SIZE, (size_t)0, H5P_GROUP_CREATE_DEFAULT, &oh_locB /*out*/) < 0)
+    if (H5O_create_id(f, (size_t)H5O_MIN_SIZE, (size_t)0, H5P_GROUP_CREATE_DEFAULT, &oh_locB /*out*/) < 0)
         FAIL_STACK_ERROR;
 
     time_new = 11111111;
@@ -228,7 +228,7 @@ test_ohdr_cache(char *filename, hid_t fapl)
 
     /* Create an object header */
     memset(&oh_loc, 0, sizeof(oh_loc));
-    if (H5O_create(f, (size_t)2048, (size_t)1, H5P_GROUP_CREATE_DEFAULT, &oh_loc /*out*/) < 0)
+    if (H5O_create_id(f, (size_t)2048, (size_t)1, H5P_GROUP_CREATE_DEFAULT, &oh_loc /*out*/) < 0)
         FAIL_STACK_ERROR;
 
     /* Query object header information */
@@ -1899,7 +1899,7 @@ main(void)
              */
             TESTING("object header creation");
             memset(&oh_loc, 0, sizeof(oh_loc));
-            if (H5O_create(f, (size_t)64, (size_t)0, H5P_GROUP_CREATE_DEFAULT, &oh_loc /*out*/) < 0)
+            if (H5O_create_id(f, (size_t)64, (size_t)0, H5P_GROUP_CREATE_DEFAULT, &oh_loc /*out*/) < 0)
                 FAIL_STACK_ERROR;
             PASSED();
 

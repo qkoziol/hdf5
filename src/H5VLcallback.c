@@ -3768,7 +3768,7 @@ H5VL__file_open_find_connector_cb(H5PL_type_t H5_ATTR_UNUSED plugin_type,
     /* Setup FAPL with registered VOL connector */
     if (NULL == (fapl_plist = H5I_object_verify(udata->fapl_id, H5I_GENPROP_LST)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5_ITER_ERROR, "not a property list");
-    if ((fapl_id = H5P_copy_plist(fapl_plist, true)) < 0)
+    if ((fapl_id = H5P_copy_plist_id(fapl_plist, true)) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTCOPY, H5_ITER_ERROR, "can't copy fapl");
     if (NULL == (fapl_plist_copy = H5I_object_verify(fapl_id, H5I_GENPROP_LST)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5_ITER_ERROR, "not a property list");

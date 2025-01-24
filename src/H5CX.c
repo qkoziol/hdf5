@@ -601,7 +601,7 @@ H5CX_retrieve_state(H5CX_state_t **api_state)
         H5CX_RETRIEVE_PLIST(dcpl, FAIL)
 
         /* Copy the DCPL ID */
-        if (((*api_state)->dcpl_id = H5P_copy_plist((H5P_genplist_t *)(*head)->ctx.dcpl, false)) < 0)
+        if (((*api_state)->dcpl_id = H5P_copy_plist_id((H5P_genplist_t *)(*head)->ctx.dcpl, false)) < 0)
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy property list");
     } /* end if */
     else
@@ -613,7 +613,7 @@ H5CX_retrieve_state(H5CX_state_t **api_state)
         H5CX_RETRIEVE_PLIST(dxpl, FAIL)
 
         /* Copy the DXPL ID */
-        if (((*api_state)->dxpl_id = H5P_copy_plist((H5P_genplist_t *)(*head)->ctx.dxpl, false)) < 0)
+        if (((*api_state)->dxpl_id = H5P_copy_plist_id((H5P_genplist_t *)(*head)->ctx.dxpl, false)) < 0)
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy property list");
     } /* end if */
     else
@@ -625,7 +625,7 @@ H5CX_retrieve_state(H5CX_state_t **api_state)
         H5CX_RETRIEVE_PLIST(lapl, FAIL)
 
         /* Copy the LAPL ID */
-        if (((*api_state)->lapl_id = H5P_copy_plist((H5P_genplist_t *)(*head)->ctx.lapl, false)) < 0)
+        if (((*api_state)->lapl_id = H5P_copy_plist_id((H5P_genplist_t *)(*head)->ctx.lapl, false)) < 0)
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy property list");
     } /* end if */
     else
@@ -637,7 +637,7 @@ H5CX_retrieve_state(H5CX_state_t **api_state)
         H5CX_RETRIEVE_PLIST(lcpl, FAIL)
 
         /* Copy the LCPL ID */
-        if (((*api_state)->lcpl_id = H5P_copy_plist((H5P_genplist_t *)(*head)->ctx.lcpl, false)) < 0)
+        if (((*api_state)->lcpl_id = H5P_copy_plist_id((H5P_genplist_t *)(*head)->ctx.lcpl, false)) < 0)
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy property list");
     } /* end if */
     else

@@ -261,7 +261,7 @@ H5P__lacc_elink_fapl_set(hid_t H5_ATTR_UNUSED prop_id, const char H5_ATTR_UNUSED
 
         if (NULL == (l_fapl_plist = (H5P_genplist_t *)H5P_object_verify(l_fapl_id, H5P_FILE_ACCESS, true)))
             HGOTO_ERROR(H5E_PLIST, H5E_BADTYPE, FAIL, "can't get property list");
-        if (((*(hid_t *)value) = H5P_copy_plist(l_fapl_plist, false)) < 0)
+        if (((*(hid_t *)value) = H5P_copy_plist_id(l_fapl_plist, false)) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTCOPY, FAIL, "unable to copy file access property list");
     } /* end if */
 
@@ -300,7 +300,7 @@ H5P__lacc_elink_fapl_get(hid_t H5_ATTR_UNUSED prop_id, const char H5_ATTR_UNUSED
 
         if (NULL == (l_fapl_plist = (H5P_genplist_t *)H5P_object_verify(l_fapl_id, H5P_FILE_ACCESS, true)))
             HGOTO_ERROR(H5E_PLIST, H5E_BADTYPE, FAIL, "can't get property list");
-        if (((*(hid_t *)value) = H5P_copy_plist(l_fapl_plist, false)) < 0)
+        if (((*(hid_t *)value) = H5P_copy_plist_id(l_fapl_plist, false)) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTCOPY, FAIL, "unable to copy file access property list");
     } /* end if */
 
@@ -408,6 +408,7 @@ H5P__lacc_elink_fapl_dec(const void **_pp, void *_value)
     non_default_fapl = (bool)*(*pp)++;
 
     if (non_default_fapl) {
+        H5P_genplist_t *plist;                       /* Property list created */
         size_t   fapl_size = 0; /* Encoded size of property list */
         unsigned enc_size;
         uint64_t enc_value;
@@ -419,8 +420,9 @@ H5P__lacc_elink_fapl_dec(const void **_pp, void *_value)
         fapl_size = (size_t)enc_value;
 
         /* Decode the property list */
-        if ((*elink_fapl = H5P__decode(*pp)) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTDECODE, FAIL, "can't decode property");
+        if (NULL == (plist = H5P__decode(*pp)))
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTDECODE, FAIL, "can't decode property list");
+        *elink_fapl = plist->plist_id;
 
         *pp += fapl_size;
     } /* end if */
@@ -494,7 +496,7 @@ H5P__lacc_elink_fapl_copy(const char H5_ATTR_UNUSED *name, size_t H5_ATTR_UNUSED
 
         if (NULL == (l_fapl_plist = (H5P_genplist_t *)H5P_object_verify(l_fapl_id, H5P_FILE_ACCESS, true)))
             HGOTO_ERROR(H5E_PLIST, H5E_BADTYPE, FAIL, "can't get property list");
-        if (((*(hid_t *)value) = H5P_copy_plist(l_fapl_plist, false)) < 0)
+        if (((*(hid_t *)value) = H5P_copy_plist_id(l_fapl_plist, false)) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTCOPY, FAIL, "unable to copy file access property list");
     } /* end if */
 

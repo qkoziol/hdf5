@@ -110,6 +110,7 @@ struct H5P_genplist_t {
     hid_t           plist_id;   /* Copy of the property list ID (for use in close callback) */
     size_t          nprops;     /* Number of properties in this list */
     bool            class_init; /* Whether the class initialization callback finished successfully */
+    bool            is_default; /* Whether this property list is the default list for the class */
     H5SL_t         *del;        /* Skip list containing names of deleted properties */
     H5SL_t         *props;      /* Skip list containing properties modified from the parent class */
 };
@@ -151,6 +152,7 @@ H5_DLL herr_t H5P__access_class(H5P_genclass_t *pclass, H5P_class_mod_t mod);
 H5_DLL herr_t H5P__class_get(const H5P_genclass_t *pclass, const char *name, void *value);
 H5_DLL herr_t H5P__class_set(const H5P_genclass_t *pclass, const char *name, const void *value);
 H5_DLL htri_t H5P__exist_pclass(H5P_genclass_t *pclass, const char *name);
+H5_DLL H5P_genplist_t *H5P__create(H5P_genclass_t *pclass, bool app_ref);
 H5_DLL herr_t H5P__get_size_plist(const H5P_genplist_t *plist, const char *name, size_t *size);
 H5_DLL herr_t H5P__get_size_pclass(H5P_genclass_t *pclass, const char *name, size_t *size);
 H5_DLL herr_t H5P__get_nprops_plist(const H5P_genplist_t *plist, size_t *nprops);
@@ -168,11 +170,10 @@ H5_DLL H5P_genclass_t *H5P__open_class_path(const char *path);
 H5_DLL H5P_genclass_t *H5P__get_class_parent(const H5P_genclass_t *pclass);
 H5_DLL herr_t          H5P__close_class(H5P_genclass_t *pclass);
 H5_DLL H5P_genprop_t  *H5P__find_prop_plist(const H5P_genplist_t *plist, const char *name);
-H5_DLL hid_t           H5P__new_plist_of_type(H5P_plist_type_t type);
 
 /* Encode/decode routines */
 H5_DLL herr_t H5P__encode(const H5P_genplist_t *plist, bool enc_all_prop, void *buf, size_t *nalloc);
-H5_DLL hid_t  H5P__decode(const void *buf);
+H5_DLL H5P_genplist_t *H5P__decode(const void *buf);
 H5_DLL herr_t H5P__encode_hsize_t(const void *value, void **_pp, size_t *size);
 H5_DLL herr_t H5P__encode_size_t(const void *value, void **_pp, size_t *size);
 H5_DLL herr_t H5P__encode_unsigned(const void *value, void **_pp, size_t *size);

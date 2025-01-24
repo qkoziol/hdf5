@@ -898,10 +898,11 @@ struct H5P_genplist_t;
 
 /* Object header routines */
 H5_DLL herr_t H5O_init(void);
-H5_DLL herr_t H5O_create(H5F_t *f, size_t size_hint, size_t initial_rc, hid_t ocpl_id,
+H5_DLL herr_t H5O_create(H5F_t *f, size_t size_hint, size_t initial_rc, H5P_genplist_t *oc_plist, H5O_loc_t *loc /*out*/);
+H5_DLL herr_t H5O_create_id(H5F_t *f, size_t size_hint, size_t initial_rc, hid_t ocpl_id,
                          H5O_loc_t *loc /*out*/);
-H5_DLL H5O_t *H5O_create_ohdr(H5F_t *f, hid_t ocpl_id);
-H5_DLL herr_t H5O_apply_ohdr(H5F_t *f, H5O_t *oh, hid_t ocpl_id, size_t size_hint, size_t initial_rc,
+H5_DLL H5O_t *H5O_create_ohdr(H5F_t *f, H5P_genplist_t *ocpl_plist);
+H5_DLL herr_t H5O_apply_ohdr(H5F_t *f, H5O_t *oh, H5P_genplist_t *ocpl_plist, size_t size_hint, size_t initial_rc,
                              H5O_loc_t *loc_out);
 H5_DLL herr_t H5O_open(H5O_loc_t *loc);
 H5_DLL void  *H5O_open_by_loc(const H5G_loc_t *obj_loc, H5I_type_t *opened_type /*out*/);
