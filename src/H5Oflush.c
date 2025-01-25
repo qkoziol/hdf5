@@ -348,8 +348,8 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5O_refresh_metadata_reopen(hid_t oid, H5P_genplist_t *apl_plist, H5G_loc_t *obj_loc, H5VL_connector_t *vol_connector,
-                            bool start_swmr)
+H5O_refresh_metadata_reopen(hid_t oid, H5P_genplist_t *apl_plist, H5G_loc_t *obj_loc,
+                            H5VL_connector_t *vol_connector, bool start_swmr)
 {
     void      *object = NULL;       /* Object for this operation */
     H5I_type_t type;                /* Type of object for the ID */
@@ -399,8 +399,7 @@ H5O_refresh_metadata_reopen(hid_t oid, H5P_genplist_t *apl_plist, H5G_loc_t *obj
             if (!start_swmr) /* No need to handle multiple opens when H5Fstart_swmr_write() */
                 if (H5D_mult_refresh_reopen((H5D_t *)object) < 0)
                     HGOTO_ERROR(H5E_OHDR, H5E_CANTOPENOBJ, FAIL, "unable to finish refresh for dataset");
-        }
-            break;
+        } break;
 
         case H5I_MAP:
             HGOTO_ERROR(H5E_OHDR, H5E_BADTYPE, FAIL, "maps not supported in native VOL connector");

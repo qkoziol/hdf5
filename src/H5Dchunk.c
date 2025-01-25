@@ -880,7 +880,7 @@ H5D__chunk_init(H5F_t *f, const H5D_t *const dset)
 {
     H5D_chk_idx_info_t idx_info;                            /* Chunked index info */
     H5D_rdcc_t        *rdcc = &(dset->shared->cache.chunk); /* Convenience pointer to dataset's chunk cache */
-    H5O_storage_chunk_t *sc        = &(dset->shared->layout.storage.u.chunk);
+    H5O_storage_chunk_t *sc = &(dset->shared->layout.storage.u.chunk);
     bool                 idx_init  = false;
     herr_t               ret_value = SUCCEED; /* Return value */
 

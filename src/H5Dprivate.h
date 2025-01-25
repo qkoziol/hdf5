@@ -168,17 +168,17 @@ typedef struct H5D_append_flush_t {
 /* Library Private Prototypes */
 /******************************/
 
-H5_DLL herr_t      H5D_init(void);
-H5_DLL H5D_t      *H5D_open(const H5G_loc_t *loc, H5P_genplist_t *dapl_plist);
-H5_DLL herr_t      H5D_close(H5D_t *dataset);
-H5_DLL herr_t      H5D_mult_refresh_close(hid_t dset_id);
-H5_DLL herr_t      H5D_mult_refresh_reopen(H5D_t *dataset);
-H5_DLL H5O_loc_t  *H5D_oloc(H5D_t *dataset);
-H5_DLL H5G_name_t *H5D_nameof(H5D_t *dataset);
-H5_DLL herr_t      H5D_flush_all(H5F_t *f);
-H5_DLL hid_t       H5D_get_create_plist(const H5D_t *dset);
+H5_DLL herr_t          H5D_init(void);
+H5_DLL H5D_t          *H5D_open(const H5G_loc_t *loc, H5P_genplist_t *dapl_plist);
+H5_DLL herr_t          H5D_close(H5D_t *dataset);
+H5_DLL herr_t          H5D_mult_refresh_close(hid_t dset_id);
+H5_DLL herr_t          H5D_mult_refresh_reopen(H5D_t *dataset);
+H5_DLL H5O_loc_t      *H5D_oloc(H5D_t *dataset);
+H5_DLL H5G_name_t     *H5D_nameof(H5D_t *dataset);
+H5_DLL herr_t          H5D_flush_all(H5F_t *f);
+H5_DLL hid_t           H5D_get_create_plist(const H5D_t *dset);
 H5_DLL H5P_genplist_t *H5D_get_access_plist(const H5D_t *dset);
-H5_DLL hid_t       H5D_get_dcpl_id(const H5D_obj_create_t *d);
+H5_DLL hid_t           H5D_get_dcpl_id(const H5D_obj_create_t *d);
 
 /* Functions that operate on chunked storage */
 H5_DLL herr_t H5D_chunk_idx_reset(H5O_storage_chunk_t *storage, bool reset_addr);

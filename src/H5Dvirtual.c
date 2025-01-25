@@ -547,12 +547,12 @@ H5D__virtual_copy_layout(H5O_layout_t *layout)
 
     /* Save original entry list and top-level property lists and reset in layout
      * so the originals aren't closed on error */
-    orig_source_fapl  = virt->source_fapl;
-    virt->source_fapl = H5I_INVALID_HID;
+    orig_source_fapl        = virt->source_fapl;
+    virt->source_fapl       = H5I_INVALID_HID;
     orig_source_dapl_plist  = virt->source_dapl_plist;
     virt->source_dapl_plist = NULL;
-    orig_list         = virt->list;
-    virt->list        = NULL;
+    orig_list               = virt->list;
+    virt->list              = NULL;
 
     /* Copy entry list */
     if (virt->list_nused > 0) {
@@ -651,7 +651,7 @@ H5D__virtual_copy_layout(H5O_layout_t *layout)
 
     /* Copy property lists */
     if (orig_source_fapl >= 0) {
-        H5P_genplist_t            *plist;
+        H5P_genplist_t *plist;
 
         if (NULL == (plist = (H5P_genplist_t *)H5I_object_verify(orig_source_fapl, H5I_GENPROP_LST)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
@@ -904,7 +904,9 @@ H5D__virtual_open_source_dset(const H5D_t *vdset, H5O_storage_virtual_ent_t *vir
         /* Dataset exists */
         if (exists) {
             /* Try opening the source dataset */
-            if (NULL == (source_dset->dset = H5D__open_name(&src_root_loc, source_dset->dset_name, vdset->shared->layout.storage.u.virt.source_dapl_plist)))
+            if (NULL ==
+                (source_dset->dset = H5D__open_name(&src_root_loc, source_dset->dset_name,
+                                                    vdset->shared->layout.storage.u.virt.source_dapl_plist)))
                 HGOTO_ERROR(H5E_DATASET, H5E_CANTOPENOBJ, FAIL, "unable to open source dataset");
 
             /* Dataset exists */
