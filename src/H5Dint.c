@@ -1162,8 +1162,8 @@ H5D__create(H5F_t *file, hid_t type_id, const H5S_t *space, hid_t dcpl_id, hid_t
     H5T_t          *type     = NULL; /* Datatype for dataset (VOL pointer) */
     H5T_t          *dt       = NULL; /* Datatype for dataset (non-VOL pointer) */
     H5D_t          *new_dset = NULL;
-    H5P_genplist_t *dcpl_plist;            /* Dataset creation roperty list */
-    H5P_genplist_t *dapl_plist;            /* Dataset access roperty list */
+    H5P_genplist_t *dcpl_plist;            /* Dataset creation property list */
+    H5P_genplist_t *dapl_plist;            /* Dataset access property list */
     bool            has_vl_type   = false; /* Flag to indicate a VL-type for dataset */
     bool            layout_init   = false; /* Flag to indicate that chunk information was initialized */
     bool            layout_copied = false; /* Flag to indicate that layout message was copied */
@@ -1687,7 +1687,7 @@ done:
 static herr_t
 H5D__open_oid(H5D_t *dataset, H5P_genplist_t *dapl_plist)
 {
-    H5P_genplist_t *dcpl_plist;                /* Dataset creation roperty list */
+    H5P_genplist_t *dcpl_plist;                /* Dataset creation property list */
     H5O_fill_t     *fill_prop = NULL;          /* Pointer to dataset's fill value info */
     unsigned        alloc_time_state;          /* Allocation time state */
     htri_t          msg_exists;                /* Whether a particular type of message exists */
