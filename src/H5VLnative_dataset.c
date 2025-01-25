@@ -319,7 +319,7 @@ H5VL__native_dataset_open(void *obj, const H5VL_loc_params_t *loc_params, const 
                           hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
     H5D_t          *dset = NULL;
-    H5P_genplist_t *dapl_plist; /* Dataset access roperty list */
+    H5P_genplist_t *dapl_plist; /* Dataset access property list */
     H5G_loc_t       loc;        /* Object location of group */
     void           *ret_value = NULL;
 
