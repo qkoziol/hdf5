@@ -79,6 +79,8 @@
 /********************/
 
 /* Layout operation callbacks */
+static herr_t H5D__virtual_init(H5F_t *f, const H5D_t *dset);
+static bool   H5D__virtual_is_space_alloc(const H5O_storage_t *storage);
 static bool   H5D__virtual_is_data_cached(const H5D_shared_t *shared_dset);
 static herr_t H5D__virtual_io_init(H5D_io_info_t *io_info, H5D_dset_io_info_t *dinfo);
 static herr_t H5D__virtual_read(H5D_io_info_t *io_info, H5D_dset_io_info_t *dinfo);
@@ -534,8 +536,7 @@ H5D__virtual_copy_layout(H5O_layout_t *layout)
     H5O_storage_virtual_ent_t *orig_list = NULL;
     H5O_storage_virtual_t     *virt      = &layout->storage.u.virt;
     hid_t                      orig_source_fapl;
-    hid_t                      orig_source_dapl;
-    H5P_genplist_t            *plist;
+    H5P_genplist_t            *orig_source_dapl_plist;
     size_t                     i;
     herr_t                     ret_value = SUCCEED;
 
@@ -547,9 +548,9 @@ H5D__virtual_copy_layout(H5O_layout_t *layout)
     /* Save original entry list and top-level property lists and reset in layout
      * so the originals aren't closed on error */
     orig_source_fapl  = virt->source_fapl;
-    virt->source_fapl = -1;
-    orig_source_dapl  = virt->source_dapl;
-    virt->source_dapl = -1;
+    virt->source_fapl = H5I_INVALID_HID;
+    orig_source_dapl_plist  = virt->source_dapl_plist;
+    virt->source_dapl_plist = NULL;
     orig_list         = virt->list;
     virt->list        = NULL;
 
@@ -563,8 +564,7 @@ H5D__virtual_copy_layout(H5O_layout_t *layout)
                         "unable to allocate memory for virtual dataset entry list");
         virt->list_nalloc = virt->list_nused;
 
-        /* Copy the list entries, though set source_dset.dset and sub_dset to
-         * NULL */
+        /* Copy the list entries, but set source_dset.dset and sub_dset to NULL */
         for (i = 0; i < virt->list_nused; i++) {
             H5O_storage_virtual_ent_t *ent = &virt->list[i];
 
@@ -651,17 +651,16 @@ H5D__virtual_copy_layout(H5O_layout_t *layout)
 
     /* Copy property lists */
     if (orig_source_fapl >= 0) {
+        H5P_genplist_t            *plist;
+
         if (NULL == (plist = (H5P_genplist_t *)H5I_object_verify(orig_source_fapl, H5I_GENPROP_LST)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
         if ((virt->source_fapl = H5P_copy_plist_id(plist, false)) < 0)
             HGOTO_ERROR(H5E_DATASET, H5E_CANTCOPY, FAIL, "can't copy fapl");
     } /* end if */
-    if (orig_source_dapl >= 0) {
-        if (NULL == (plist = (H5P_genplist_t *)H5I_object_verify(orig_source_dapl, H5I_GENPROP_LST)))
-            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
-        if ((virt->source_dapl = H5P_copy_plist_id(plist, false)) < 0)
+    if (orig_source_dapl_plist)
+        if (NULL == (virt->source_dapl_plist = H5P_copy_plist(orig_source_dapl_plist, false)))
             HGOTO_ERROR(H5E_DATASET, H5E_CANTCOPY, FAIL, "can't copy dapl");
-    } /* end if */
 
     /* New layout is not fully initialized */
     virt->init = false;
@@ -743,10 +742,10 @@ H5D__virtual_reset_layout(H5O_layout_t *layout)
             HDONE_ERROR(H5E_DATASET, H5E_CANTFREE, FAIL, "can't close source fapl");
         virt->source_fapl = -1;
     }
-    if (virt->source_dapl >= 0) {
-        if (H5I_dec_ref(virt->source_dapl) < 0)
-            HDONE_ERROR(H5E_DATASET, H5E_CANTFREE, FAIL, "can't close source dapl");
-        virt->source_dapl = -1;
+    if (virt->source_dapl_plist) {
+        if (H5P_release(virt->source_dapl_plist) < 0)
+            HDONE_ERROR(H5E_DATASET, H5E_CANTCLOSEOBJ, FAIL, "can't close source dapl");
+        virt->source_dapl_plist = NULL;
     }
 
     /* The list is no longer initialized */
@@ -905,9 +904,7 @@ H5D__virtual_open_source_dset(const H5D_t *vdset, H5O_storage_virtual_ent_t *vir
         /* Dataset exists */
         if (exists) {
             /* Try opening the source dataset */
-            if (NULL ==
-                (source_dset->dset = H5D__open_name(&src_root_loc, source_dset->dset_name,
-                                                    vdset->shared->layout.storage.u.virt.source_dapl)))
+            if (NULL == (source_dset->dset = H5D__open_name(&src_root_loc, source_dset->dset_name, vdset->shared->layout.storage.u.virt.source_dapl_plist)))
                 HGOTO_ERROR(H5E_DATASET, H5E_CANTOPENOBJ, FAIL, "unable to open source dataset");
 
             /* Dataset exists */
@@ -2128,11 +2125,10 @@ done:
  *
  *-------------------------------------------------------------------------
  */
-herr_t
-H5D__virtual_init(H5F_t *f, const H5D_t *dset, hid_t dapl_id)
+static herr_t
+H5D__virtual_init(H5F_t *f, const H5D_t *dset)
 {
     H5O_storage_virtual_t *storage;                      /* Convenience pointer */
-    H5P_genplist_t        *dapl;                         /* Data access property list object pointer */
     hssize_t               old_offset[H5O_LAYOUT_NDIMS]; /* Old selection offset (unused) */
     size_t                 i;                            /* Local index variables */
     herr_t                 ret_value = SUCCEED;          /* Return value */
@@ -2176,17 +2172,13 @@ H5D__virtual_init(H5F_t *f, const H5D_t *dset, hid_t dapl_id)
             HGOTO_ERROR(H5E_DATASET, H5E_BADSELECT, FAIL, "unable to normalize dataspace by offset");
     } /* end for */
 
-    /* Get dataset access property list */
-    if (NULL == (dapl = (H5P_genplist_t *)H5I_object(dapl_id)))
-        HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for dapl ID");
-
     /* Get view option */
-    if (H5P_get(dapl, H5D_ACS_VDS_VIEW_NAME, &storage->view) < 0)
+    if (H5P_get(dset->shared->dapl_plist, H5D_ACS_VDS_VIEW_NAME, &storage->view) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get virtual view option");
 
     /* Get printf gap if view is H5D_VDS_LAST_AVAILABLE, otherwise set to 0 */
     if (storage->view == H5D_VDS_LAST_AVAILABLE) {
-        if (H5P_get(dapl, H5D_ACS_VDS_PRINTF_GAP_NAME, &storage->printf_gap) < 0)
+        if (H5P_get(dset->shared->dapl_plist, H5D_ACS_VDS_PRINTF_GAP_NAME, &storage->printf_gap) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get virtual printf gap");
     } /* end if */
     else
@@ -2226,8 +2218,8 @@ H5D__virtual_init(H5F_t *f, const H5D_t *dset, hid_t dapl_id)
 #endif /* NDEBUG */
 
     /* Copy DAPL to layout */
-    if (storage->source_dapl <= 0)
-        if ((storage->source_dapl = H5P_copy_plist_id(dapl, false)) < 0)
+    if (NULL == storage->source_dapl_plist)
+        if (NULL == (storage->source_dapl_plist = H5P_copy_plist(dset->shared->dapl_plist, false)))
             HGOTO_ERROR(H5E_DATASET, H5E_CANTCOPY, FAIL, "can't copy dapl");
 
     /* Mark layout as not fully initialized (must be done prior to I/O for
@@ -2249,7 +2241,7 @@ done:
  *
  *-------------------------------------------------------------------------
  */
-bool
+static bool
 H5D__virtual_is_space_alloc(const H5O_storage_t H5_ATTR_UNUSED *storage)
 {
     bool ret_value = false; /* Return value */

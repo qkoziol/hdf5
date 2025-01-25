@@ -578,7 +578,7 @@ typedef struct H5O_storage_virtual_t {
     hsize_t printf_gap; /* Maximum number of sequential missing source datasets before terminating the search
                            for more */
     hid_t source_fapl;  /* FAPL to use to open source files */
-    hid_t source_dapl;  /* DAPL to use to open source datasets */
+    H5P_genplist_t  *source_dapl_plist; /* DAPL to use to open source datasets */
     bool  init;         /* Whether all information has been completely initialized */
 } H5O_storage_virtual_t;
 
@@ -983,7 +983,7 @@ H5_DLL herr_t H5O_msg_get_flags(const H5O_loc_t *loc, unsigned type_id, uint8_t 
 H5_DLL herr_t H5O_flush(H5O_loc_t *oloc, hid_t obj_id);
 H5_DLL herr_t H5O_flush_common(H5O_loc_t *oloc, hid_t obj_id);
 H5_DLL herr_t H5O_refresh_metadata(H5O_loc_t *oloc, hid_t oid);
-H5_DLL herr_t H5O_refresh_metadata_reopen(hid_t oid, hid_t apl_id, H5G_loc_t *obj_loc,
+H5_DLL herr_t H5O_refresh_metadata_reopen(hid_t oid, H5P_genplist_t *apl_plist, H5G_loc_t *obj_loc,
                                           H5VL_connector_t *connector, bool start_swmr);
 
 /* Object copying routines */

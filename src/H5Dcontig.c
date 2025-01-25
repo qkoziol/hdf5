@@ -84,7 +84,7 @@ typedef struct H5D_contig_writevv_ud_t {
 
 /* Layout operation callbacks */
 static herr_t  H5D__contig_construct(H5F_t *f, H5D_t *dset);
-static herr_t  H5D__contig_init(H5F_t *f, const H5D_t *dset, hid_t dapl_id);
+static herr_t  H5D__contig_init(H5F_t *f, const H5D_t *dset);
 static herr_t  H5D__contig_io_init(H5D_io_info_t *io_info, H5D_dset_io_info_t *dinfo);
 static herr_t  H5D__contig_mdio_init(H5D_io_info_t *io_info, H5D_dset_io_info_t *dinfo);
 static ssize_t H5D__contig_readvv(const H5D_io_info_t *io_info, const H5D_dset_io_info_t *dinfo,
@@ -497,7 +497,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5D__contig_init(H5F_t *f, const H5D_t *dset, hid_t H5_ATTR_UNUSED dapl_id)
+H5D__contig_init(H5F_t *f, const H5D_t *dset)
 {
     size_t tmp_sieve_buf_size;  /* Temporary holder for sieve buffer size */
     herr_t ret_value = SUCCEED; /* Return value */

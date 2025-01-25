@@ -141,7 +141,7 @@ typedef struct H5D_shared_t H5D_shared_t;
 
 /* Function pointers for I/O on particular types of dataset layouts */
 typedef herr_t (*H5D_layout_construct_func_t)(H5F_t *f, H5D_t *dset);
-typedef herr_t (*H5D_layout_init_func_t)(H5F_t *f, const H5D_t *dset, hid_t dapl_id);
+typedef herr_t (*H5D_layout_init_func_t)(H5F_t *f, const H5D_t *dset);
 typedef bool (*H5D_layout_is_space_alloc_func_t)(const H5O_storage_t *storage);
 typedef bool (*H5D_layout_is_data_cached_func_t)(const H5D_shared_t *shared_dset);
 typedef herr_t (*H5D_layout_io_init_func_t)(struct H5D_io_info_t *io_info, struct H5D_dset_io_info_t *dinfo);
@@ -537,7 +537,7 @@ struct H5D_shared_t {
     H5T_t           *type;            /* Datatype for this dataset     */
     H5S_t           *space;           /* Dataspace of this dataset    */
     H5P_genplist_t  *dcpl_plist;      /* Dataset creation property list */
-    hid_t            dapl_id;         /* Dataset access property id */
+    H5P_genplist_t  *dapl_plist;      /* Dataset access property list */
     H5D_dcpl_cache_t dcpl_cache;      /* Cached DCPL values */
     H5O_layout_t     layout;          /* Data layout                  */
     bool             checked_filters; /* true if dataset passes can_apply check */
@@ -642,7 +642,7 @@ H5_DLLVAR const unsigned H5O_layout_ver_bounds[H5F_LIBVER_NBOUNDS + 1];
 H5_DLL H5D_t  *H5D__create(H5F_t *file, hid_t type_id, const H5S_t *space, hid_t dcpl_id, hid_t dapl_id);
 H5_DLL H5D_t  *H5D__create_named(const H5G_loc_t *loc, const char *name, hid_t type_id, const H5S_t *space,
                                  hid_t lcpl_id, hid_t dcpl_id, hid_t dapl_id);
-H5_DLL H5D_t  *H5D__open_name(const H5G_loc_t *loc, const char *name, hid_t dapl_id);
+H5_DLL H5D_t  *H5D__open_name(const H5G_loc_t *loc, const char *name, H5P_genplist_t *dapl_plist);
 H5_DLL hid_t   H5D__get_space(const H5D_t *dset);
 H5_DLL hid_t   H5D__get_type(const H5D_t *dset);
 H5_DLL herr_t  H5D__get_space_status(const H5D_t *dset, H5D_space_status_t *allocation);
@@ -698,8 +698,8 @@ H5_DLL size_t H5D__layout_meta_size(const H5F_t *f, const H5O_layout_t *layout, 
 H5_DLL herr_t H5D__layout_set_version(H5F_t *f, H5O_layout_t *layout);
 H5_DLL herr_t H5D__layout_set_latest_indexing(H5O_layout_t *layout, const H5S_t *space,
                                               const H5D_dcpl_cache_t *dcpl_cache);
-H5_DLL herr_t H5D__layout_oh_create(H5F_t *file, H5O_t *oh, H5D_t *dset, hid_t dapl_id);
-H5_DLL herr_t H5D__layout_oh_read(H5D_t *dset, hid_t dapl_id, H5P_genplist_t *plist);
+H5_DLL herr_t H5D__layout_oh_create(H5F_t *file, H5O_t *oh, H5D_t *dset);
+H5_DLL herr_t H5D__layout_oh_read(H5D_t *dset);
 H5_DLL herr_t H5D__layout_oh_write(const H5D_t *dataset, H5O_t *oh, unsigned update_flags);
 
 /* Functions that operate on contiguous storage */
@@ -771,8 +771,6 @@ H5_DLL herr_t H5D__virtual_set_extent_unlim(const H5D_t *dset);
 H5_DLL herr_t H5D__virtual_reset_layout(H5O_layout_t *layout);
 H5_DLL herr_t H5D__virtual_delete(H5F_t *f, H5O_storage_t *storage);
 H5_DLL herr_t H5D__virtual_copy(H5F_t *f_src, H5O_layout_t *layout_dst);
-H5_DLL herr_t H5D__virtual_init(H5F_t *f, const H5D_t *dset, hid_t dapl_id);
-H5_DLL bool   H5D__virtual_is_space_alloc(const H5O_storage_t *storage);
 H5_DLL herr_t H5D__virtual_hold_source_dset_files(const H5D_t *dset, H5D_virtual_held_file_t **head);
 H5_DLL herr_t H5D__virtual_refresh_source_dsets(H5D_t *dset);
 H5_DLL herr_t H5D__virtual_release_source_dset_files(H5D_virtual_held_file_t *head);

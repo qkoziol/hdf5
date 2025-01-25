@@ -547,7 +547,7 @@ H5O__layout_decode(H5F_t *f, H5O_t H5_ATTR_UNUSED *open_oh, unsigned H5_ATTR_UNU
                 mesg->storage.u.virt.view        = H5D_VDS_ERROR;
                 mesg->storage.u.virt.printf_gap  = HSIZE_UNDEF;
                 mesg->storage.u.virt.source_fapl = -1;
-                mesg->storage.u.virt.source_dapl = -1;
+                mesg->storage.u.virt.source_dapl_plist = NULL;
                 mesg->storage.u.virt.init        = false;
 
                 /* Decode heap block if it exists */

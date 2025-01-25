@@ -436,7 +436,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5D__layout_oh_create(H5F_t *file, H5O_t *oh, H5D_t *dset, hid_t dapl_id)
+H5D__layout_oh_create(H5F_t *file, H5O_t *oh, H5D_t *dset)
 {
     H5O_layout_t     *layout;                /* Dataset's layout information */
     const H5O_fill_t *fill_prop;             /* Pointer to dataset's fill value information */
@@ -466,7 +466,7 @@ H5D__layout_oh_create(H5F_t *file, H5O_t *oh, H5D_t *dset, hid_t dapl_id)
     } /* end if */
 
     /* Initialize the layout information for the new dataset */
-    if (dset->shared->layout.ops->init && (dset->shared->layout.ops->init)(file, dset, dapl_id) < 0)
+    if (dset->shared->layout.ops->init && (dset->shared->layout.ops->init)(file, dset) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, FAIL, "unable to initialize layout information");
 
     /* Indicate that the layout information was initialized */
@@ -568,7 +568,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5D__layout_oh_read(H5D_t *dataset, hid_t dapl_id, H5P_genplist_t *plist)
+H5D__layout_oh_read(H5D_t *dataset)
 {
     htri_t msg_exists;              /* Whether a particular type of message exists */
     bool   pline_copied  = false;   /* Flag to indicate that dcpl_cache.pline's message was copied */
@@ -580,7 +580,6 @@ H5D__layout_oh_read(H5D_t *dataset, hid_t dapl_id, H5P_genplist_t *plist)
 
     /* Sanity checking */
     assert(dataset);
-    assert(plist);
 
     /* Get the optional filters message */
     if ((msg_exists = H5O_msg_exists(&(dataset->oloc), H5O_PLINE_ID)) < 0)
@@ -591,7 +590,7 @@ H5D__layout_oh_read(H5D_t *dataset, hid_t dapl_id, H5P_genplist_t *plist)
             HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't retrieve message");
         pline_copied = true;
         /* Set the I/O pipeline info in the property list */
-        if (H5P_set(plist, H5O_CRT_PIPELINE_NAME, &dataset->shared->dcpl_cache.pline) < 0)
+        if (H5P_set(dataset->shared->dcpl_plist, H5O_CRT_PIPELINE_NAME, &dataset->shared->dcpl_cache.pline) < 0)
             HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "can't set pipeline");
     } /* end if */
 
@@ -615,7 +614,7 @@ H5D__layout_oh_read(H5D_t *dataset, hid_t dapl_id, H5P_genplist_t *plist)
         efl_copied = true;
 
         /* Set the EFL info in the property list */
-        if (H5P_set(plist, H5D_CRT_EXT_FILE_LIST_NAME, &dataset->shared->dcpl_cache.efl) < 0)
+        if (H5P_set(dataset->shared->dcpl_plist, H5D_CRT_EXT_FILE_LIST_NAME, &dataset->shared->dcpl_cache.efl) < 0)
             HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "can't set external file list");
 
         /* Set the dataset's I/O operations */
@@ -627,7 +626,7 @@ H5D__layout_oh_read(H5D_t *dataset, hid_t dapl_id, H5P_genplist_t *plist)
 
     /* Initialize the layout information for the dataset */
     if (dataset->shared->layout.ops->init &&
-        (dataset->shared->layout.ops->init)(dataset->oloc.file, dataset, dapl_id) < 0)
+        (dataset->shared->layout.ops->init)(dataset->oloc.file, dataset) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, FAIL, "unable to initialize layout information");
 
     /* Adjust chunk dimensions to omit datatype size (in last dimension) for creation property */
@@ -635,7 +634,7 @@ H5D__layout_oh_read(H5D_t *dataset, hid_t dapl_id, H5P_genplist_t *plist)
         dataset->shared->layout.u.chunk.ndims--;
 
     /* Copy layout to the DCPL */
-    if (H5P_set(plist, H5D_CRT_LAYOUT_NAME, &dataset->shared->layout) < 0)
+    if (H5P_set(dataset->shared->dcpl_plist, H5D_CRT_LAYOUT_NAME, &dataset->shared->layout) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "can't set layout");
 
     /* Set chunk sizes */

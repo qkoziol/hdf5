@@ -263,7 +263,7 @@ typedef struct H5D_chunk_iter_ud_t {
 
 /* Chunked layout operation callbacks */
 static herr_t H5D__chunk_construct(H5F_t *f, H5D_t *dset);
-static herr_t H5D__chunk_init(H5F_t *f, const H5D_t *dset, hid_t dapl_id);
+static herr_t H5D__chunk_init(H5F_t *f, const H5D_t *dset);
 static herr_t H5D__chunk_io_init(H5D_io_info_t *io_info, H5D_dset_io_info_t *dinfo);
 static herr_t H5D__chunk_io_init_selections(H5D_io_info_t *io_info, H5D_dset_io_info_t *dinfo);
 static herr_t H5D__chunk_mdio_init(H5D_io_info_t *io_info, H5D_dset_io_info_t *dinfo);
@@ -876,11 +876,10 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5D__chunk_init(H5F_t *f, const H5D_t *const dset, hid_t dapl_id)
+H5D__chunk_init(H5F_t *f, const H5D_t *const dset)
 {
     H5D_chk_idx_info_t idx_info;                            /* Chunked index info */
     H5D_rdcc_t        *rdcc = &(dset->shared->cache.chunk); /* Convenience pointer to dataset's chunk cache */
-    H5P_genplist_t    *dapl;                                /* Data access property list object pointer */
     H5O_storage_chunk_t *sc        = &(dset->shared->layout.storage.u.chunk);
     bool                 idx_init  = false;
     herr_t               ret_value = SUCCEED; /* Return value */
@@ -892,21 +891,18 @@ H5D__chunk_init(H5F_t *f, const H5D_t *const dset, hid_t dapl_id)
     assert(dset);
     H5D_CHUNK_STORAGE_INDEX_CHK(sc);
 
-    if (NULL == (dapl = (H5P_genplist_t *)H5I_object(dapl_id)))
-        HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for fapl ID");
-
     /* Use the properties in dapl_id if they have been set, otherwise use the properties from the file */
-    if (H5P_get(dapl, H5D_ACS_DATA_CACHE_NUM_SLOTS_NAME, &rdcc->nslots) < 0)
+    if (H5P_get(dset->shared->dapl_plist, H5D_ACS_DATA_CACHE_NUM_SLOTS_NAME, &rdcc->nslots) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get data cache number of slots");
     if (rdcc->nslots == H5D_CHUNK_CACHE_NSLOTS_DEFAULT)
         rdcc->nslots = H5F_RDCC_NSLOTS(f);
 
-    if (H5P_get(dapl, H5D_ACS_DATA_CACHE_BYTE_SIZE_NAME, &rdcc->nbytes_max) < 0)
+    if (H5P_get(dset->shared->dapl_plist, H5D_ACS_DATA_CACHE_BYTE_SIZE_NAME, &rdcc->nbytes_max) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get data cache byte size");
     if (rdcc->nbytes_max == H5D_CHUNK_CACHE_NBYTES_DEFAULT)
         rdcc->nbytes_max = H5F_RDCC_NBYTES(f);
 
-    if (H5P_get(dapl, H5D_ACS_PREEMPT_READ_CHUNKS_NAME, &rdcc->w0) < 0)
+    if (H5P_get(dset->shared->dapl_plist, H5D_ACS_PREEMPT_READ_CHUNKS_NAME, &rdcc->w0) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get preempt read chunks");
     if (rdcc->w0 < 0)
         rdcc->w0 = H5F_RDCC_W0(f);

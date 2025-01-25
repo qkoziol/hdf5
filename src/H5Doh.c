@@ -197,14 +197,13 @@ static void *
 H5O__dset_open(const H5G_loc_t *obj_loc, H5I_type_t *opened_type)
 {
     H5D_t *dset = NULL;      /* Dataset opened */
-    hid_t  dapl_id;          /* dapl to use to open this dataset */
+    H5P_genplist_t *dapl_plist; /* Pointer to the DAPL */
+    hid_t  dapl_id;          /* DAPL to use to open this dataset */
     void  *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
     assert(obj_loc);
-
-    *opened_type = H5I_DATASET;
 
     /* Get the LAPL (which is a superclass of DAPLs) from the API context, but
      * if it's the default link access property list or a custom link access
@@ -230,8 +229,12 @@ H5O__dset_open(const H5G_loc_t *obj_loc, H5I_type_t *opened_type)
     } /* end else */
 
     /* Open the dataset */
-    if (NULL == (dset = H5D_open(obj_loc, dapl_id)))
+    if (NULL == (dapl_plist = H5I_object(dapl_id)))
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, NULL, "can't get property list");
+    if (NULL == (dset = H5D_open(obj_loc, dapl_plist)))
         HGOTO_ERROR(H5E_DATASET, H5E_CANTOPENOBJ, NULL, "unable to open dataset");
+
+    *opened_type = H5I_DATASET;
 
     ret_value = (void *)dset;
 

@@ -962,32 +962,6 @@ H5CX_set_lcpl(hid_t lcpl_id)
 } /* end H5CX_set_lcpl() */
 
 /*-------------------------------------------------------------------------
- * Function:    H5CX_set_lapl
- *
- * Purpose:     Sets the LAPL for the current API call context.
- *
- * Return:      <none>
- *
- *-------------------------------------------------------------------------
- */
-void
-H5CX_set_lapl(hid_t lapl_id)
-{
-    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
-
-    FUNC_ENTER_NOAPI_NOINIT_NOERR
-
-    /* Sanity check */
-    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
-    assert(head && *head);
-
-    /* Set the API context's LAPL to a new value */
-    (*head)->ctx.lapl_id = lapl_id;
-
-    FUNC_LEAVE_NOAPI_VOID
-} /* end H5CX_set_lapl() */
-
-/*-------------------------------------------------------------------------
  * Function:    H5CX_set_apl
  *
  * Purpose:     Validaties an access property list, and sanity checking &
