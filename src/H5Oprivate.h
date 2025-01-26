@@ -894,11 +894,10 @@ typedef struct {
 } H5O_obj_create_t;
 
 /* Forward declarations for prototype arguments */
-struct H5P_genplist_t;
 
 /* Object header routines */
 H5_DLL herr_t H5O_init(void);
-H5_DLL herr_t H5O_create(H5F_t *f, size_t size_hint, size_t initial_rc, H5P_genplist_t *oc_plist,
+H5_DLL herr_t H5O_create(H5F_t *f, size_t size_hint, size_t initial_rc, H5P_genplist_t *ocpl,
                          H5O_loc_t *loc /*out*/);
 H5_DLL herr_t H5O_create_id(H5F_t *f, size_t size_hint, size_t initial_rc, hid_t ocpl_id,
                             H5O_loc_t *loc /*out*/);
@@ -924,7 +923,7 @@ H5_DLL herr_t  H5O_get_hdr_info(const H5O_loc_t *oloc, H5O_hdr_info_t *hdr);
 H5_DLL herr_t  H5O_get_info(const H5O_loc_t *oloc, H5O_info2_t *oinfo, unsigned fields);
 H5_DLL herr_t  H5O_get_native_info(const H5O_loc_t *oloc, H5O_native_info_t *oinfo, unsigned fields);
 H5_DLL herr_t  H5O_obj_type(const H5O_loc_t *loc, H5O_type_t *obj_type);
-H5_DLL herr_t  H5O_get_create_plist(const H5O_loc_t *loc, struct H5P_genplist_t *oc_plist);
+H5_DLL herr_t  H5O_get_create_plist(const H5O_loc_t *loc, H5P_genplist_t *ocpl);
 H5_DLL void   *H5O_open_name(const H5G_loc_t *loc, const char *name, H5I_type_t *opened_type /*out*/);
 H5_DLL herr_t  H5O_get_nlinks(const H5O_loc_t *loc, hsize_t *nlinks);
 H5_DLL void   *H5O_obj_create(H5F_t *f, H5O_type_t obj_type, void *crt_info, H5G_loc_t *obj_loc);

@@ -267,7 +267,7 @@ H5CX__init_package(void)
     H5P_genplist_t *dx_plist;            /* Data transfer property list */
     H5P_genplist_t *lc_plist;            /* Link creation property list */
     H5P_genplist_t *la_plist;            /* Link access property list */
-    H5P_genplist_t *dc_plist;            /* Dataset creation property list */
+    H5P_genplist_t *dcpl;                /* Dataset creation property list */
     H5P_genplist_t *da_plist;            /* Dataset access property list */
     H5P_genplist_t *fa_plist;            /* File access property list */
     herr_t          ret_value = SUCCEED; /* Return value */
@@ -413,15 +413,15 @@ H5CX__init_package(void)
     /* Get the default DCPL cache information */
 
     /* Get the default dataset creation property list */
-    if (NULL == (dc_plist = (H5P_genplist_t *)H5I_object(H5P_DATASET_CREATE_DEFAULT)))
+    if (NULL == (dcpl = (H5P_genplist_t *)H5I_object(H5P_DATASET_CREATE_DEFAULT)))
         HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "not a dataset create property list");
 
     /* Get flag to indicate whether to minimize dataset object header */
-    if (H5P_get(dc_plist, H5D_CRT_MIN_DSET_HDR_SIZE_NAME, &H5CX_def_dcpl_cache.do_min_dset_ohdr) < 0)
+    if (H5P_get(dcpl, H5D_CRT_MIN_DSET_HDR_SIZE_NAME, &H5CX_def_dcpl_cache.do_min_dset_ohdr) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve dataset minimize flag");
 
     /* Get object header flags */
-    if (H5P_get(dc_plist, H5O_CRT_OHDR_FLAGS_NAME, &H5CX_def_dcpl_cache.ohdr_flags) < 0)
+    if (H5P_get(dcpl, H5O_CRT_OHDR_FLAGS_NAME, &H5CX_def_dcpl_cache.ohdr_flags) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve object header flags");
 
     /* Reset the "default DAPL cache" information */
