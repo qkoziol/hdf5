@@ -2033,8 +2033,8 @@ H5D_close(H5D_t *dataset)
         free_failed |= (H5S_close(dataset->shared->space) < 0);
         free_failed |= !H5P_PLIST_IS_DEFAULT(dataset->shared->dapl_plist) &&
                        (H5P_release(dataset->shared->dapl_plist) < 0);
-        free_failed |= !H5P_PLIST_IS_DEFAULT(dataset->shared->dcpl) &&
-                       (H5P_release(dataset->shared->dcpl) < 0);
+        free_failed |=
+            !H5P_PLIST_IS_DEFAULT(dataset->shared->dcpl) && (H5P_release(dataset->shared->dcpl) < 0);
 
         /* Remove the dataset from the list of opened objects in the file */
         if (H5FO_top_decr(dataset->oloc.file, dataset->oloc.addr) < 0)
