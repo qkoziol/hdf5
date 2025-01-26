@@ -49,7 +49,7 @@ enum H5Z_scaleoffset_t {
 static htri_t                 H5Z__can_apply_scaleoffset(hid_t dcpl_id, hid_t type_id, hid_t space_id);
 static enum H5Z_scaleoffset_t H5Z__scaleoffset_get_type(unsigned dtype_class, unsigned dtype_size,
                                                         unsigned dtype_sign);
-static herr_t                 H5Z__scaleoffset_set_parms_fillval(H5P_genplist_t *dcpl_plist, H5T_t *type,
+static herr_t                 H5Z__scaleoffset_set_parms_fillval(H5P_genplist_t *dcpl, H5T_t *type,
                                                                  enum H5Z_scaleoffset_t scale_type, unsigned cd_values[],
                                                                  int need_convert);
 static herr_t                 H5Z__set_local_scaleoffset(hid_t dcpl_id, hid_t type_id, hid_t space_id);
@@ -195,12 +195,12 @@ H5Z_class2_t H5Z_SCALEOFFSET[1] = {{
     }
 
 /* Set the fill value parameter in cd_values[] for unsigned integer type */
-#define H5Z_scaleoffset_set_filval_1(type, dcpl_plist, dt, cd_values, need_convert)                          \
+#define H5Z_scaleoffset_set_filval_1(type, dcpl, dt, cd_values, need_convert)                          \
     do {                                                                                                     \
         type fill_val;                                                                                       \
                                                                                                              \
         /* Get dataset fill value */                                                                         \
-        if (H5P_get_fill_value(dcpl_plist, dt, &fill_val) < 0)                                               \
+        if (H5P_get_fill_value(dcpl, dt, &fill_val) < 0)                                               \
             HGOTO_ERROR(H5E_PLINE, H5E_CANTGET, FAIL, "unable to get fill value");                           \
                                                                                                              \
         if (need_convert)                                                                                    \
@@ -210,12 +210,12 @@ H5Z_class2_t H5Z_SCALEOFFSET[1] = {{
     } while (0)
 
 /* Set the fill value parameter in cd_values[] for signed integer type */
-#define H5Z_scaleoffset_set_filval_2(type, dcpl_plist, dt, cd_values, need_convert)                          \
+#define H5Z_scaleoffset_set_filval_2(type, dcpl, dt, cd_values, need_convert)                          \
     do {                                                                                                     \
         type fill_val;                                                                                       \
                                                                                                              \
         /* Get dataset fill value */                                                                         \
-        if (H5P_get_fill_value(dcpl_plist, dt, &fill_val) < 0)                                               \
+        if (H5P_get_fill_value(dcpl, dt, &fill_val) < 0)                                               \
             HGOTO_ERROR(H5E_PLINE, H5E_CANTGET, FAIL, "unable to get fill value");                           \
                                                                                                              \
         if (need_convert)                                                                                    \
@@ -225,12 +225,12 @@ H5Z_class2_t H5Z_SCALEOFFSET[1] = {{
     } while (0)
 
 /* Set the fill value parameter in cd_values[] for character integer type */
-#define H5Z_scaleoffset_set_filval_3(type, dcpl_plist, dt, cd_values, need_convert)                          \
+#define H5Z_scaleoffset_set_filval_3(type, dcpl, dt, cd_values, need_convert)                          \
     do {                                                                                                     \
         type fill_val;                                                                                       \
                                                                                                              \
         /* Get dataset fill value */                                                                         \
-        if (H5P_get_fill_value(dcpl_plist, dt, &fill_val) < 0)                                               \
+        if (H5P_get_fill_value(dcpl, dt, &fill_val) < 0)                                               \
             HGOTO_ERROR(H5E_PLINE, H5E_CANTGET, FAIL, "unable to get fill value");                           \
                                                                                                              \
         /* Store the fill value as the last entry in cd_values[] */                                          \
@@ -238,12 +238,12 @@ H5Z_class2_t H5Z_SCALEOFFSET[1] = {{
     } while (0)
 
 /* Set the fill value parameter in cd_values[] for floating-point type */
-#define H5Z_scaleoffset_set_filval_4(type, dcpl_plist, dt, cd_values, need_convert)                          \
+#define H5Z_scaleoffset_set_filval_4(type, dcpl, dt, cd_values, need_convert)                          \
     do {                                                                                                     \
         type fill_val;                                                                                       \
                                                                                                              \
         /* Get dataset fill value */                                                                         \
-        if (H5P_get_fill_value(dcpl_plist, dt, &fill_val) < 0)                                               \
+        if (H5P_get_fill_value(dcpl, dt, &fill_val) < 0)                                               \
             HGOTO_ERROR(H5E_PLINE, H5E_CANTGET, FAIL, "unable to get fill value");                           \
                                                                                                              \
         if (need_convert)                                                                                    \
@@ -870,7 +870,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5Z__scaleoffset_set_parms_fillval(H5P_genplist_t *dcpl_plist, H5T_t *type, enum H5Z_scaleoffset_t scale_type,
+H5Z__scaleoffset_set_parms_fillval(H5P_genplist_t *dcpl, H5T_t *type, enum H5Z_scaleoffset_t scale_type,
                                    unsigned cd_values[], int need_convert)
 {
     herr_t ret_value = SUCCEED; /* Return value */
@@ -878,29 +878,29 @@ H5Z__scaleoffset_set_parms_fillval(H5P_genplist_t *dcpl_plist, H5T_t *type, enum
     FUNC_ENTER_PACKAGE
 
     if (scale_type == t_uchar)
-        H5Z_scaleoffset_set_filval_3(unsigned char, dcpl_plist, type, cd_values, need_convert);
+        H5Z_scaleoffset_set_filval_3(unsigned char, dcpl, type, cd_values, need_convert);
     else if (scale_type == t_ushort)
-        H5Z_scaleoffset_set_filval_1(unsigned short, dcpl_plist, type, cd_values, need_convert);
+        H5Z_scaleoffset_set_filval_1(unsigned short, dcpl, type, cd_values, need_convert);
     else if (scale_type == t_uint)
-        H5Z_scaleoffset_set_filval_1(unsigned int, dcpl_plist, type, cd_values, need_convert);
+        H5Z_scaleoffset_set_filval_1(unsigned int, dcpl, type, cd_values, need_convert);
     else if (scale_type == t_ulong)
-        H5Z_scaleoffset_set_filval_1(unsigned long, dcpl_plist, type, cd_values, need_convert);
+        H5Z_scaleoffset_set_filval_1(unsigned long, dcpl, type, cd_values, need_convert);
     else if (scale_type == t_ulong_long)
-        H5Z_scaleoffset_set_filval_1(unsigned long long, dcpl_plist, type, cd_values, need_convert);
+        H5Z_scaleoffset_set_filval_1(unsigned long long, dcpl, type, cd_values, need_convert);
     else if (scale_type == t_schar)
-        H5Z_scaleoffset_set_filval_3(signed char, dcpl_plist, type, cd_values, need_convertd);
+        H5Z_scaleoffset_set_filval_3(signed char, dcpl, type, cd_values, need_convertd);
     else if (scale_type == t_short)
-        H5Z_scaleoffset_set_filval_2(short, dcpl_plist, type, cd_values, need_convert);
+        H5Z_scaleoffset_set_filval_2(short, dcpl, type, cd_values, need_convert);
     else if (scale_type == t_int)
-        H5Z_scaleoffset_set_filval_2(int, dcpl_plist, type, cd_values, need_convert);
+        H5Z_scaleoffset_set_filval_2(int, dcpl, type, cd_values, need_convert);
     else if (scale_type == t_long)
-        H5Z_scaleoffset_set_filval_2(long, dcpl_plist, type, cd_values, need_convert);
+        H5Z_scaleoffset_set_filval_2(long, dcpl, type, cd_values, need_convert);
     else if (scale_type == t_long_long)
-        H5Z_scaleoffset_set_filval_2(long long, dcpl_plist, type, cd_values, need_convert);
+        H5Z_scaleoffset_set_filval_2(long long, dcpl, type, cd_values, need_convert);
     else if (scale_type == t_float)
-        H5Z_scaleoffset_set_filval_4(float, dcpl_plist, type, cd_values, need_convert);
+        H5Z_scaleoffset_set_filval_4(float, dcpl, type, cd_values, need_convert);
     else if (scale_type == t_double)
-        H5Z_scaleoffset_set_filval_4(double, dcpl_plist, type, cd_values, need_convert);
+        H5Z_scaleoffset_set_filval_4(double, dcpl, type, cd_values, need_convert);
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -920,7 +920,7 @@ done:
 static herr_t
 H5Z__set_local_scaleoffset(hid_t dcpl_id, hid_t type_id, hid_t space_id)
 {
-    H5P_genplist_t        *dcpl_plist;                              /* Property list pointer */
+    H5P_genplist_t        *dcpl;                              /* Property list pointer */
     H5T_t                 *type;                                    /* Datatype */
     const H5S_t           *ds;                                      /* Dataspace */
     unsigned               flags;                                   /* Filter flags */
@@ -938,7 +938,7 @@ H5Z__set_local_scaleoffset(hid_t dcpl_id, hid_t type_id, hid_t space_id)
     FUNC_ENTER_PACKAGE
 
     /* Get the plist structure */
-    if (NULL == (dcpl_plist = H5P_object_verify(dcpl_id, H5P_DATASET_CREATE, false)))
+    if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_DATASET_CREATE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get datatype */
@@ -949,7 +949,7 @@ H5Z__set_local_scaleoffset(hid_t dcpl_id, hid_t type_id, hid_t space_id)
     memset(cd_values, 0, sizeof(cd_values));
 
     /* Get the filter's current parameters */
-    if (H5P_get_filter_by_id(dcpl_plist, H5Z_FILTER_SCALEOFFSET, &flags, &cd_nelmts, cd_values, (size_t)0,
+    if (H5P_get_filter_by_id(dcpl, H5Z_FILTER_SCALEOFFSET, &flags, &cd_nelmts, cd_values, (size_t)0,
                              NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLINE, H5E_CANTGET, FAIL, "can't get scaleoffset parameters");
 
@@ -1047,7 +1047,7 @@ H5Z__set_local_scaleoffset(hid_t dcpl_id, hid_t type_id, hid_t space_id)
     } /* end switch */
 
     /* Check whether fill value is defined for dataset */
-    if (H5P_fill_value_defined(dcpl_plist, &status) < 0)
+    if (H5P_fill_value_defined(dcpl, &status) < 0)
         HGOTO_ERROR(H5E_PLINE, H5E_CANTGET, FAIL, "unable to determine if fill value is defined");
 
     /* Set local parameter for availability of fill value */
@@ -1069,12 +1069,12 @@ H5Z__set_local_scaleoffset(hid_t dcpl_id, hid_t type_id, hid_t space_id)
             HGOTO_ERROR(H5E_PLINE, H5E_BADTYPE, FAIL, "cannot use C integer datatype for cast");
 
         /* Get dataset fill value and store in cd_values[] */
-        if (H5Z__scaleoffset_set_parms_fillval(dcpl_plist, type, scale_type, cd_values, need_convert) < 0)
+        if (H5Z__scaleoffset_set_parms_fillval(dcpl, type, scale_type, cd_values, need_convert) < 0)
             HGOTO_ERROR(H5E_PLINE, H5E_CANTSET, FAIL, "unable to set fill value");
     } /* end else */
 
     /* Modify the filter's parameters for this dataset */
-    if (H5P_modify_filter(dcpl_plist, H5Z_FILTER_SCALEOFFSET, flags, (size_t)H5Z_SCALEOFFSET_TOTAL_NPARMS,
+    if (H5P_modify_filter(dcpl, H5Z_FILTER_SCALEOFFSET, flags, (size_t)H5Z_SCALEOFFSET_TOTAL_NPARMS,
                           cd_values) < 0)
         HGOTO_ERROR(H5E_PLINE, H5E_CANTSET, FAIL, "can't set local scaleoffset parameters");
 

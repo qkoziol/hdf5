@@ -112,7 +112,7 @@ done:
 static herr_t
 H5Z__set_local_szip(hid_t dcpl_id, hid_t type_id, hid_t space_id)
 {
-    H5P_genplist_t *dcpl_plist;                       /* Property list pointer */
+    H5P_genplist_t *dcpl;                       /* Property list pointer */
     const H5T_t    *type;                             /* Datatype */
     const H5S_t    *ds;                               /* Dataspace */
     unsigned        flags;                            /* Filter flags */
@@ -130,7 +130,7 @@ H5Z__set_local_szip(hid_t dcpl_id, hid_t type_id, hid_t space_id)
     FUNC_ENTER_PACKAGE
 
     /* Get the plist structure */
-    if (NULL == (dcpl_plist = H5P_object_verify(dcpl_id, H5P_DATASET_CREATE, false)))
+    if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_DATASET_CREATE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get datatype */
@@ -138,7 +138,7 @@ H5Z__set_local_szip(hid_t dcpl_id, hid_t type_id, hid_t space_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a datatype");
 
     /* Get the filter's current parameters */
-    if (H5P_get_filter_by_id(dcpl_plist, H5Z_FILTER_SZIP, &flags, &cd_nelmts, cd_values, 0, NULL, NULL) < 0)
+    if (H5P_get_filter_by_id(dcpl, H5Z_FILTER_SZIP, &flags, &cd_nelmts, cd_values, 0, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLINE, H5E_CANTGET, FAIL, "can't get szip parameters");
 
     /* Get datatype's size, for checking the "bits-per-pixel" */
@@ -229,7 +229,7 @@ H5Z__set_local_szip(hid_t dcpl_id, hid_t type_id, hid_t space_id)
     } /* end switch */
 
     /* Modify the filter's parameters for this dataset */
-    if (H5P_modify_filter(dcpl_plist, H5Z_FILTER_SZIP, flags, H5Z_SZIP_TOTAL_NPARMS, cd_values) < 0)
+    if (H5P_modify_filter(dcpl, H5Z_FILTER_SZIP, flags, H5Z_SZIP_TOTAL_NPARMS, cd_values) < 0)
         HGOTO_ERROR(H5E_PLINE, H5E_CANTSET, FAIL, "can't set local szip parameters");
 
 done:

@@ -770,11 +770,11 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5Z__prelude_callback(const H5O_pline_t *pline, const H5P_genplist_t *dcpl_plist, hid_t type_id,
+H5Z__prelude_callback(const H5O_pline_t *pline, const H5P_genplist_t *dcpl, hid_t type_id,
                       hid_t space_id, H5Z_prelude_type_t prelude_type)
 {
     H5Z_class2_t *fclass; /* Individual filter information */
-    hid_t         dcpl_id = (dcpl_plist ? H5P_PLIST_ID(dcpl_plist) : (hid_t)H5I_INVALID_HID);
+    hid_t         dcpl_id = (dcpl ? H5P_PLIST_ID(dcpl) : (hid_t)H5I_INVALID_HID);
     size_t        u;                /* Local index variable */
     htri_t        ret_value = true; /* Return value */
 
@@ -863,7 +863,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5Z__prepare_prelude_callback_dcpl(H5P_genplist_t *dcpl_plist, hid_t type_id, H5Z_prelude_type_t prelude_type)
+H5Z__prepare_prelude_callback_dcpl(H5P_genplist_t *dcpl, hid_t type_id, H5Z_prelude_type_t prelude_type)
 {
     hid_t  space_id  = -1;      /* ID for dataspace describing chunk */
     herr_t ret_value = SUCCEED; /* Return value */
@@ -873,11 +873,11 @@ H5Z__prepare_prelude_callback_dcpl(H5P_genplist_t *dcpl_plist, hid_t type_id, H5
     assert(H5I_DATATYPE == H5I_get_type(type_id));
 
     /* Check if the property list is non-default */
-    if (!H5P_PLIST_IS_DEFAULT(dcpl_plist)) {
+    if (!H5P_PLIST_IS_DEFAULT(dcpl)) {
         H5O_layout_t dcpl_layout;
 
         /* Peek at the layout information */
-        if (H5P_peek(dcpl_plist, H5D_CRT_LAYOUT_NAME, &dcpl_layout) < 0)
+        if (H5P_peek(dcpl, H5D_CRT_LAYOUT_NAME, &dcpl_layout) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't retrieve layout");
 
         /* Check if the dataset is chunked */
@@ -885,7 +885,7 @@ H5Z__prepare_prelude_callback_dcpl(H5P_genplist_t *dcpl_plist, hid_t type_id, H5
             H5O_pline_t dcpl_pline; /* Object's I/O pipeline information */
 
             /* Get I/O pipeline information */
-            if (H5P_peek(dcpl_plist, H5O_CRT_PIPELINE_NAME, &dcpl_pline) < 0)
+            if (H5P_peek(dcpl, H5O_CRT_PIPELINE_NAME, &dcpl_pline) < 0)
                 HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't retrieve pipeline filter");
 
             /* Check if the chunks have filters */
@@ -907,7 +907,7 @@ H5Z__prepare_prelude_callback_dcpl(H5P_genplist_t *dcpl_plist, hid_t type_id, H5
                 }
 
                 /* Make the callbacks */
-                if (H5Z__prelude_callback(&dcpl_pline, dcpl_plist, type_id, space_id, prelude_type) < 0)
+                if (H5Z__prelude_callback(&dcpl_pline, dcpl, type_id, space_id, prelude_type) < 0)
                     HGOTO_ERROR(H5E_PLINE, H5E_CANAPPLY, FAIL, "unable to apply filter");
             }
         }
@@ -936,14 +936,14 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Z_can_apply(H5P_genplist_t *dcpl_plist, hid_t type_id)
+H5Z_can_apply(H5P_genplist_t *dcpl, hid_t type_id)
 {
     herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
     /* Make "can apply" callbacks for filters in pipeline */
-    if (H5Z__prepare_prelude_callback_dcpl(dcpl_plist, type_id, H5Z_PRELUDE_CAN_APPLY) < 0)
+    if (H5Z__prepare_prelude_callback_dcpl(dcpl, type_id, H5Z_PRELUDE_CAN_APPLY) < 0)
         HGOTO_ERROR(H5E_PLINE, H5E_CANAPPLY, FAIL, "unable to apply filter");
 
 done:
@@ -966,14 +966,14 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Z_set_local(H5P_genplist_t *dcpl_plist, hid_t type_id)
+H5Z_set_local(H5P_genplist_t *dcpl, hid_t type_id)
 {
     herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
     /* Make "set local" callbacks for filters in pipeline */
-    if (H5Z__prepare_prelude_callback_dcpl(dcpl_plist, type_id, H5Z_PRELUDE_SET_LOCAL) < 0)
+    if (H5Z__prepare_prelude_callback_dcpl(dcpl, type_id, H5Z_PRELUDE_SET_LOCAL) < 0)
         HGOTO_ERROR(H5E_PLINE, H5E_SETLOCAL, FAIL, "local filter parameters not set");
 
 done:
@@ -1061,7 +1061,7 @@ done:
  *-------------------------------------------------------------------------
  */
 htri_t
-H5Z_ignore_filters(H5P_genplist_t *dc_plist, const H5T_t *type, const H5S_t *space)
+H5Z_ignore_filters(H5P_genplist_t *dcpl, const H5T_t *type, const H5S_t *space)
 {
     H5O_pline_t pline;                   /* Object's I/O pipeline information */
     H5S_class_t space_class;             /* To check class of space */
@@ -1072,7 +1072,7 @@ H5Z_ignore_filters(H5P_genplist_t *dc_plist, const H5T_t *type, const H5S_t *spa
     FUNC_ENTER_NOAPI(FAIL)
 
     /* Get pipeline information */
-    if (H5P_peek(dc_plist, H5O_CRT_PIPELINE_NAME, &pline) < 0)
+    if (H5P_peek(dcpl, H5O_CRT_PIPELINE_NAME, &pline) < 0)
         HGOTO_ERROR(H5E_PLINE, H5E_CANTGET, FAIL, "can't retrieve pipeline filter");
 
     /* Get datatype and dataspace classes for quick access */
