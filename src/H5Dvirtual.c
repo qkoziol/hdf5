@@ -2175,12 +2175,12 @@ H5D__virtual_init(H5F_t *f, const H5D_t *dset)
     } /* end for */
 
     /* Get view option */
-    if (H5P_get(dset->shared->dapl_plist, H5D_ACS_VDS_VIEW_NAME, &storage->view) < 0)
+    if (H5P_get(dset->shared->dapl, H5D_ACS_VDS_VIEW_NAME, &storage->view) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get virtual view option");
 
     /* Get printf gap if view is H5D_VDS_LAST_AVAILABLE, otherwise set to 0 */
     if (storage->view == H5D_VDS_LAST_AVAILABLE) {
-        if (H5P_get(dset->shared->dapl_plist, H5D_ACS_VDS_PRINTF_GAP_NAME, &storage->printf_gap) < 0)
+        if (H5P_get(dset->shared->dapl, H5D_ACS_VDS_PRINTF_GAP_NAME, &storage->printf_gap) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get virtual printf gap");
     } /* end if */
     else
@@ -2221,7 +2221,7 @@ H5D__virtual_init(H5F_t *f, const H5D_t *dset)
 
     /* Copy DAPL to layout */
     if (NULL == storage->source_dapl_plist)
-        if (NULL == (storage->source_dapl_plist = H5P_copy_plist(dset->shared->dapl_plist, false)))
+        if (NULL == (storage->source_dapl_plist = H5P_copy_plist(dset->shared->dapl, false)))
             HGOTO_ERROR(H5E_DATASET, H5E_CANTCOPY, FAIL, "can't copy dapl");
 
     /* Mark layout as not fully initialized (must be done prior to I/O for

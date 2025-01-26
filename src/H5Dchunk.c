@@ -892,17 +892,17 @@ H5D__chunk_init(H5F_t *f, const H5D_t *const dset)
     H5D_CHUNK_STORAGE_INDEX_CHK(sc);
 
     /* Use the properties in dapl_id if they have been set, otherwise use the properties from the file */
-    if (H5P_get(dset->shared->dapl_plist, H5D_ACS_DATA_CACHE_NUM_SLOTS_NAME, &rdcc->nslots) < 0)
+    if (H5P_get(dset->shared->dapl, H5D_ACS_DATA_CACHE_NUM_SLOTS_NAME, &rdcc->nslots) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get data cache number of slots");
     if (rdcc->nslots == H5D_CHUNK_CACHE_NSLOTS_DEFAULT)
         rdcc->nslots = H5F_RDCC_NSLOTS(f);
 
-    if (H5P_get(dset->shared->dapl_plist, H5D_ACS_DATA_CACHE_BYTE_SIZE_NAME, &rdcc->nbytes_max) < 0)
+    if (H5P_get(dset->shared->dapl, H5D_ACS_DATA_CACHE_BYTE_SIZE_NAME, &rdcc->nbytes_max) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get data cache byte size");
     if (rdcc->nbytes_max == H5D_CHUNK_CACHE_NBYTES_DEFAULT)
         rdcc->nbytes_max = H5F_RDCC_NBYTES(f);
 
-    if (H5P_get(dset->shared->dapl_plist, H5D_ACS_PREEMPT_READ_CHUNKS_NAME, &rdcc->w0) < 0)
+    if (H5P_get(dset->shared->dapl, H5D_ACS_PREEMPT_READ_CHUNKS_NAME, &rdcc->w0) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get preempt read chunks");
     if (rdcc->w0 < 0)
         rdcc->w0 = H5F_RDCC_W0(f);

@@ -169,7 +169,7 @@ typedef struct H5D_append_flush_t {
 /******************************/
 
 H5_DLL herr_t          H5D_init(void);
-H5_DLL H5D_t          *H5D_open(const H5G_loc_t *loc, H5P_genplist_t *dapl_plist);
+H5_DLL H5D_t          *H5D_open(const H5G_loc_t *loc, H5P_genplist_t *dapl);
 H5_DLL herr_t          H5D_close(H5D_t *dataset);
 H5_DLL herr_t          H5D_mult_refresh_close(hid_t dset_id);
 H5_DLL herr_t          H5D_mult_refresh_reopen(H5D_t *dataset);
