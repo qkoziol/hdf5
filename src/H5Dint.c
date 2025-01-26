@@ -500,8 +500,7 @@ done:
             if (new_dset->dcpl && !H5P_PLIST_IS_DEFAULT(new_dset->dcpl) && H5P_release(new_dset->dcpl) < 0)
                 HDONE_ERROR(H5E_DATASET, H5E_CANTCLOSEOBJ, NULL,
                             "can't close dataset creation property list");
-            if (new_dset->dapl && !H5P_PLIST_IS_DEFAULT(new_dset->dapl) &&
-                H5P_release(new_dset->dapl) < 0)
+            if (new_dset->dapl && !H5P_PLIST_IS_DEFAULT(new_dset->dapl) && H5P_release(new_dset->dapl) < 0)
                 HDONE_ERROR(H5E_DATASET, H5E_CANTCLOSEOBJ, NULL, "can't close dataset access property list");
             new_dset = H5FL_FREE(H5D_shared_t, new_dset);
         } /* end if */
@@ -1161,7 +1160,7 @@ H5D__create(H5F_t *file, hid_t type_id, const H5S_t *space, hid_t dcpl_id, hid_t
     H5T_t          *dt       = NULL; /* Datatype for dataset (non-VOL pointer) */
     H5D_t          *new_dset = NULL;
     H5P_genplist_t *dcpl;                  /* Dataset creation property list */
-    H5P_genplist_t *dapl;            /* Dataset access property list */
+    H5P_genplist_t *dapl;                  /* Dataset access property list */
     bool            has_vl_type   = false; /* Flag to indicate a VL-type for dataset */
     bool            layout_init   = false; /* Flag to indicate that chunk information was initialized */
     bool            layout_copied = false; /* Flag to indicate that layout message was copied */
@@ -2031,8 +2030,8 @@ H5D_close(H5D_t *dataset)
          */
         free_failed |= (H5I_dec_ref(dataset->shared->type_id) < 0);
         free_failed |= (H5S_close(dataset->shared->space) < 0);
-        free_failed |= !H5P_PLIST_IS_DEFAULT(dataset->shared->dapl) &&
-                       (H5P_release(dataset->shared->dapl) < 0);
+        free_failed |=
+            !H5P_PLIST_IS_DEFAULT(dataset->shared->dapl) && (H5P_release(dataset->shared->dapl) < 0);
         free_failed |=
             !H5P_PLIST_IS_DEFAULT(dataset->shared->dcpl) && (H5P_release(dataset->shared->dcpl) < 0);
 

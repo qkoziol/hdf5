@@ -537,7 +537,7 @@ struct H5D_shared_t {
     H5T_t           *type;            /* Datatype for this dataset     */
     H5S_t           *space;           /* Dataspace of this dataset    */
     H5P_genplist_t  *dcpl;            /* Dataset creation property list */
-    H5P_genplist_t  *dapl;      /* Dataset access property list */
+    H5P_genplist_t  *dapl;            /* Dataset access property list */
     H5D_dcpl_cache_t dcpl_cache;      /* Cached DCPL values */
     H5O_layout_t     layout;          /* Data layout                  */
     bool             checked_filters; /* true if dataset passes can_apply check */

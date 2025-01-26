@@ -197,7 +197,7 @@ static void *
 H5O__dset_open(const H5G_loc_t *obj_loc, H5I_type_t *opened_type)
 {
     H5D_t          *dset = NULL;      /* Dataset opened */
-    H5P_genplist_t *dapl;       /* Pointer to the DAPL */
+    H5P_genplist_t *dapl;             /* Pointer to the DAPL */
     hid_t           dapl_id;          /* DAPL to use to open this dataset */
     void           *ret_value = NULL; /* Return value */
 
