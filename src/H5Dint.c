@@ -508,8 +508,7 @@ H5D__new(H5P_genplist_t *dcpl, hid_t dapl_id, bool creating, bool vl_type)
 done:
     if (ret_value == NULL)
         if (new_dset != NULL) {
-            if (new_dset->dcpl && !H5P_PLIST_IS_DEFAULT(new_dset->dcpl) &&
-                H5P_release(new_dset->dcpl) < 0)
+            if (new_dset->dcpl && !H5P_PLIST_IS_DEFAULT(new_dset->dcpl) && H5P_release(new_dset->dcpl) < 0)
                 HDONE_ERROR(H5E_DATASET, H5E_CANTCLOSEOBJ, NULL,
                             "can't close dataset creation property list");
             if (new_dset->dapl_id != 0 && H5I_dec_ref(new_dset->dapl_id) < 0)
@@ -1171,7 +1170,7 @@ H5D__create(H5F_t *file, hid_t type_id, const H5S_t *space, hid_t dcpl_id, hid_t
     H5T_t          *type     = NULL; /* Datatype for dataset (VOL pointer) */
     H5T_t          *dt       = NULL; /* Datatype for dataset (non-VOL pointer) */
     H5D_t          *new_dset = NULL;
-    H5P_genplist_t *dcpl;            /* Dataset creation property list */
+    H5P_genplist_t *dcpl;                  /* Dataset creation property list */
     bool            has_vl_type   = false; /* Flag to indicate a VL-type for dataset */
     bool            layout_init   = false; /* Flag to indicate that chunk information was initialized */
     bool            layout_copied = false; /* Flag to indicate that layout message was copied */
@@ -1697,7 +1696,7 @@ done:
 static herr_t
 H5D__open_oid(H5D_t *dataset, hid_t dapl_id)
 {
-    H5P_genplist_t *dcpl;                /* Dataset creation property list */
+    H5P_genplist_t *dcpl;                      /* Dataset creation property list */
     H5O_fill_t     *fill_prop = NULL;          /* Pointer to dataset's fill value info */
     unsigned        alloc_time_state;          /* Allocation time state */
     htri_t          msg_exists;                /* Whether a particular type of message exists */
@@ -2043,8 +2042,8 @@ H5D_close(H5D_t *dataset)
          */
         free_failed |= (H5I_dec_ref(dataset->shared->type_id) < 0) ||
                        (H5S_close(dataset->shared->space) < 0) || (H5I_dec_ref(dataset->shared->dapl_id) < 0);
-        free_failed |= !H5P_PLIST_IS_DEFAULT(dataset->shared->dcpl) &&
-                       (H5P_release(dataset->shared->dcpl) < 0);
+        free_failed |=
+            !H5P_PLIST_IS_DEFAULT(dataset->shared->dcpl) && (H5P_release(dataset->shared->dcpl) < 0);
 
         /* Remove the dataset from the list of opened objects in the file */
         if (H5FO_top_decr(dataset->oloc.file, dataset->oloc.addr) < 0)

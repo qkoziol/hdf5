@@ -751,7 +751,7 @@ done:
 static herr_t
 H5Z__set_local_nbit(hid_t dcpl_id, hid_t type_id, hid_t space_id)
 {
-    H5P_genplist_t *dcpl;                       /* Property list pointer */
+    H5P_genplist_t *dcpl;                             /* Property list pointer */
     const H5T_t    *type;                             /* Datatype */
     const H5S_t    *ds;                               /* Dataspace */
     unsigned        flags;                            /* Filter flags */
@@ -829,8 +829,7 @@ H5Z__set_local_nbit(hid_t dcpl_id, hid_t type_id, hid_t space_id)
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get the filter's current parameters */
-    if (H5P_get_filter_by_id(dcpl, H5Z_FILTER_NBIT, &flags, &cd_nelmts, cd_values, (size_t)0, NULL,
-                             NULL) < 0)
+    if (H5P_get_filter_by_id(dcpl, H5Z_FILTER_NBIT, &flags, &cd_nelmts, cd_values, (size_t)0, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLINE, H5E_CANTGET, FAIL, "can't get nbit parameters");
 
     /* Get dataspace */

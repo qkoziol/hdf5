@@ -112,7 +112,7 @@ done:
 static herr_t
 H5Z__set_local_szip(hid_t dcpl_id, hid_t type_id, hid_t space_id)
 {
-    H5P_genplist_t *dcpl;                       /* Property list pointer */
+    H5P_genplist_t *dcpl;                             /* Property list pointer */
     const H5T_t    *type;                             /* Datatype */
     const H5S_t    *ds;                               /* Dataspace */
     unsigned        flags;                            /* Filter flags */

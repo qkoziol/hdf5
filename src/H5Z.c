@@ -770,8 +770,8 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5Z__prelude_callback(const H5O_pline_t *pline, const H5P_genplist_t *dcpl, hid_t type_id,
-                      hid_t space_id, H5Z_prelude_type_t prelude_type)
+H5Z__prelude_callback(const H5O_pline_t *pline, const H5P_genplist_t *dcpl, hid_t type_id, hid_t space_id,
+                      H5Z_prelude_type_t prelude_type)
 {
     H5Z_class2_t *fclass; /* Individual filter information */
     hid_t         dcpl_id = (dcpl ? H5P_PLIST_ID(dcpl) : (hid_t)H5I_INVALID_HID);
