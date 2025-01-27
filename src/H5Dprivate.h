@@ -125,7 +125,7 @@
 #define H5D_VIRTUAL_DEF_LIST_SIZE 8
 
 #ifdef H5D_MODULE
-#define H5D_OBJ_ID(D) (((H5D_obj_create_t *)(D))->dcpl_id)
+#define H5D_OBJ_ID(D) (H5P_PLIST_ID(((H5D_obj_create_t *)(D))->dcpl))
 #else /* H5D_MODULE */
 #define H5D_OBJ_ID(D) (H5D_get_dcpl_id(D))
 #endif
