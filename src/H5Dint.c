@@ -3584,39 +3584,34 @@ done:
  *
  * Purpose:  Private function for H5Dget_create_plist
  *
- * Return:   Success:    ID for a copy of the dataset creation
- *                property list.  The template should be
- *                released by calling H5P_close().
- *           Failure:    FAIL
+ * Return:   Success:    Pointer to a copy of the dataset access property list.
+ *           Failure:    NULL
  *-------------------------------------------------------------------------
  */
-hid_t
+H5P_genplist_t *
 H5D_get_create_plist(const H5D_t *dset)
 {
-    H5P_genplist_t *new_plist;         /* Copy of dataset's DCPL */
+    H5P_genplist_t *new_plist = NULL;         /* Copy of dataset's DCPL */
     H5O_layout_t    copied_layout;     /* Layout to tweak */
     H5O_fill_t      copied_fill = {0}; /* Fill value to tweak */
     H5O_efl_t       copied_efl;        /* External file list to tweak */
     H5T_t          *dst_type    = NULL;
     H5T_t          *tmp_type    = NULL;
-    hid_t           new_dcpl_id = FAIL;
-    hid_t           ret_value   = H5I_INVALID_HID; /* Return value */
+    H5P_genplist_t *ret_value = NULL; /* Return value */
 
-    FUNC_ENTER_NOAPI(FAIL)
+    FUNC_ENTER_NOAPI(NULL)
 
     /* Copy the creation property list */
-    if ((new_dcpl_id = H5P_copy_plist_id(dset->shared->dcpl, true)) < 0)
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "unable to copy the creation property list");
-    if (NULL == (new_plist = (H5P_genplist_t *)H5I_object(new_dcpl_id)))
-        HGOTO_ERROR(H5E_DATASET, H5E_BADTYPE, FAIL, "can't get property list");
+    if (NULL == (new_plist = H5P_copy_plist(dset->shared->dcpl, true)))
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTCOPY, NULL, "unable to copy the creation property list");
 
     /* Retrieve any object creation properties */
     if (H5O_get_create_plist(&dset->oloc, new_plist) < 0)
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get object creation info");
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, NULL, "can't get object creation info");
 
     /* Get the layout property */
     if (H5P_peek(new_plist, H5D_CRT_LAYOUT_NAME, &copied_layout) < 0)
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get layout");
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, NULL, "can't get layout");
 
     /* Reset layout values set when dataset is created */
     copied_layout.ops = NULL;
@@ -3639,7 +3634,7 @@ H5D_get_create_plist(const H5D_t *dset)
             if (copied_layout.storage.u.chunk.ops)
                 /* Reset address and pointer of the array struct for the chunked storage index */
                 if (H5D_chunk_idx_reset(&copied_layout.storage.u.chunk, true) < 0)
-                    HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, FAIL,
+                    HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, NULL,
                                 "unable to reset chunked storage index in dest");
 
             /* Reset chunk index ops */
@@ -3659,11 +3654,11 @@ H5D_get_create_plist(const H5D_t *dset)
 
     /* Set back the (possibly modified) layout property to property list */
     if (H5P_poke(new_plist, H5D_CRT_LAYOUT_NAME, &copied_layout) < 0)
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "unable to set layout");
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, NULL, "unable to set layout");
 
     /* Get the fill value property */
     if (H5P_peek(new_plist, H5D_CRT_FILL_VALUE_NAME, &copied_fill) < 0)
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get fill value");
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, NULL, "can't get fill value");
 
     /* Check if there is a fill value, but no type yet */
     if (copied_fill.buf != NULL && copied_fill.type == NULL) {
@@ -3671,11 +3666,11 @@ H5D_get_create_plist(const H5D_t *dset)
 
         /* Copy the dataset type into the fill value message */
         if (NULL == (copied_fill.type = H5T_copy(dset->shared->type, H5T_COPY_TRANSIENT)))
-            HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, FAIL, "unable to copy dataset datatype for fill value");
+            HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, NULL, "unable to copy dataset datatype for fill value");
 
         /* Set up type conversion function */
         if (NULL == (tpath = H5T_path_find(dset->shared->type, copied_fill.type)))
-            HGOTO_ERROR(H5E_DATASET, H5E_UNSUPPORTED, FAIL,
+            HGOTO_ERROR(H5E_DATASET, H5E_UNSUPPORTED, NULL,
                         "unable to convert between src and dest data types");
 
         /* Convert disk form of fill value into memory form */
@@ -3687,21 +3682,21 @@ H5D_get_create_plist(const H5D_t *dset)
             if (H5T_detect_class(dst_type, H5T_VLEN, false) > 0 ||
                 H5T_detect_class(dst_type, H5T_REFERENCE, false) > 0) {
                 if (NULL == (tmp_type = H5T_copy(dst_type, H5T_COPY_TRANSIENT)))
-                    HGOTO_ERROR(H5E_DATASET, H5E_CANTCOPY, FAIL, "unable to copy fill value datatype");
+                    HGOTO_ERROR(H5E_DATASET, H5E_CANTCOPY, NULL, "unable to copy fill value datatype");
                 dst_type = tmp_type;
             }
 
             /* Allocate a background buffer */
             bkg_size = MAX(H5T_GET_SIZE(copied_fill.type), H5T_GET_SIZE(dset->shared->type));
             if (H5T_path_bkg(tpath) && NULL == (bkg_buf = H5FL_BLK_CALLOC(type_conv, bkg_size)))
-                HGOTO_ERROR(H5E_DATASET, H5E_CANTALLOC, FAIL, "memory allocation failed");
+                HGOTO_ERROR(H5E_DATASET, H5E_CANTALLOC, NULL, "memory allocation failed");
 
             /* Convert fill value */
             if (H5T_convert(tpath, dset->shared->type, dst_type, (size_t)1, (size_t)0, (size_t)0,
                             copied_fill.buf, bkg_buf) < 0) {
                 if (bkg_buf)
                     bkg_buf = H5FL_BLK_FREE(type_conv, bkg_buf);
-                HGOTO_ERROR(H5E_DATASET, H5E_CANTCONVERT, FAIL, "datatype conversion failed");
+                HGOTO_ERROR(H5E_DATASET, H5E_CANTCONVERT, NULL, "datatype conversion failed");
             } /* end if */
 
             /* Release local resources */
@@ -3712,11 +3707,11 @@ H5D_get_create_plist(const H5D_t *dset)
 
     /* Set back the (possibly modified) fill value property to property list */
     if (H5P_poke(new_plist, H5D_CRT_FILL_VALUE_NAME, &copied_fill) < 0)
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "unable to set fill value");
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, NULL, "unable to set fill value");
 
     /* Get the fill value property */
     if (H5P_peek(new_plist, H5D_CRT_EXT_FILE_LIST_NAME, &copied_efl) < 0)
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get external file list");
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, NULL, "can't get external file list");
 
     /* Reset efl name_offset and heap_addr, these are the values when the dataset is created */
     if (copied_efl.slot) {
@@ -3729,22 +3724,21 @@ H5D_get_create_plist(const H5D_t *dset)
 
     /* Set back the (possibly modified) external file list property to property list */
     if (H5P_poke(new_plist, H5D_CRT_EXT_FILE_LIST_NAME, &copied_efl) < 0)
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "unable to set external file list");
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, NULL, "unable to set external file list");
 
     /* Set the return value */
-    ret_value = new_dcpl_id;
+    ret_value = new_plist;
 
 done:
     if (tmp_type && (H5T_close(tmp_type) < 0))
-        HDONE_ERROR(H5E_DATASET, H5E_CANTCLOSEOBJ, FAIL, "unable to close temporary datatype");
+        HDONE_ERROR(H5E_DATASET, H5E_CANTCLOSEOBJ, NULL, "unable to close temporary datatype");
 
-    if (ret_value < 0) {
-        if (new_dcpl_id > 0)
-            if (H5I_dec_app_ref(new_dcpl_id) < 0)
-                HDONE_ERROR(H5E_DATASET, H5E_CANTDEC, FAIL, "unable to close temporary object");
+    if (NULL == ret_value) {
+        if (new_plist && H5P_release(new_plist) < 0)
+            HDONE_ERROR(H5E_DATASET, H5E_CANTCLOSEOBJ, NULL, "can't close dataset creation property list");
 
         if (copied_fill.type && (H5T_close_real(copied_fill.type) < 0))
-            HDONE_ERROR(H5E_DATASET, H5E_CANTFREE, FAIL, "Can't free temporary datatype");
+            HDONE_ERROR(H5E_DATASET, H5E_CANTFREE, NULL, "Can't free temporary datatype");
     }
 
     FUNC_LEAVE_NOAPI(ret_value)
