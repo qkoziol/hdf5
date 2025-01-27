@@ -485,8 +485,11 @@ H5VL__native_dataset_get(void *obj, H5VL_dataset_get_args_t *args, hid_t H5_ATTR
 
         /* H5Dget_create_plist */
         case H5VL_DATASET_GET_DCPL: {
-            if ((args->args.get_dcpl.dcpl_id = H5D_get_create_plist(dset)) < 0)
+            H5P_genplist_t *dcpl;
+
+            if (NULL == (dcpl = H5D_get_create_plist(dset)))
                 HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get creation property list for dataset");
+            args->args.get_dcpl.dcpl_id = H5P_PLIST_ID(dcpl);
 
             break;
         }
