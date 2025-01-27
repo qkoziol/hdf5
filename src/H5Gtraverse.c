@@ -460,6 +460,7 @@ done:
 static herr_t
 H5G__traverse_real(const H5G_loc_t *_loc, const char *name, unsigned target, H5G_traverse_t op, void *op_data)
 {
+    H5P_genplist_t *def_gcpl;        /* Default group creation property list */
     H5G_loc_t     loc;                    /* Location of start object     */
     H5O_loc_t     grp_oloc;               /* Object loc. for current group */
     H5G_name_t    grp_path;               /* Path for current group	*/
@@ -535,6 +536,10 @@ H5G__traverse_real(const H5G_loc_t *_loc, const char *name, unsigned target, H5G
     /* Get a pointer to a buffer that's large enough  */
     if (NULL == (comp = (char *)H5WB_actual(wb, (strlen(name) + 1))))
         HGOTO_ERROR(H5E_SYM, H5E_NOSPACE, FAIL, "can't get actual buffer");
+
+    /* Get pointer to default group creation property list */
+    if (NULL == (def_gcpl = H5I_object(H5P_LST_GROUP_CREATE_ID_g)))
+        HGOTO_ERROR(H5E_SYM, H5E_CANTGET, FAIL, "can't get default group creation property list");
 
     /* Traverse the path */
     while ((name = H5G__component(name, &nchars)) && *name) {
@@ -689,13 +694,13 @@ H5G__traverse_real(const H5G_loc_t *_loc, const char *name, unsigned target, H5G
                     pline = &def_pline;
 
                 /* Create the intermediate group */
-                gcrt_info.gcpl_id = H5P_GROUP_CREATE_DEFAULT;
+                gcrt_info.gcpl = def_gcpl;
                 /* Propagate the object creation properties when creating intermedidate groups */
                 if ((target & H5G_CRT_OBJ) && (ocrt_info = H5L_OCRT_INFO(op_data)) != NULL) {
                     if (ocrt_info->obj_type == H5O_TYPE_GROUP)
-                        gcrt_info.gcpl_id = H5G_OBJ_ID(ocrt_info->crt_info);
+                        gcrt_info.gcpl = H5G_OBJ_PLIST(ocrt_info->crt_info);
                     else if (ocrt_info->obj_type == H5O_TYPE_DATASET)
-                        gcrt_info.gcpl_id = H5D_OBJ_ID(ocrt_info->crt_info);
+                        gcrt_info.gcpl = H5D_OBJ_PLIST(ocrt_info->crt_info);
                 }
 
                 gcrt_info.cache_type = H5G_NOTHING_CACHED;

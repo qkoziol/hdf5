@@ -155,7 +155,7 @@ H5Gcreate1(hid_t loc_id, const char *name, size_t size_hint)
     void             *grp = NULL; /* New group created */
     H5VL_object_t    *vol_obj;    /* Object of loc_id */
     H5VL_loc_params_t loc_params;
-    hid_t             tmp_gcpl  = H5I_INVALID_HID; /* Temporary group creation property list */
+    H5P_genplist_t *tmp_gcpl = NULL; /* Temporary group creation property list */
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -169,31 +169,24 @@ H5Gcreate1(hid_t loc_id, const char *name, size_t size_hint)
     /* Check if we need to create a non-standard GCPL */
     if (size_hint > 0) {
         H5O_ginfo_t     ginfo;    /* Group info property */
-        H5P_genplist_t *gc_plist; /* Property list created */
 
-        /* Get the default property list */
-        if (NULL == (gc_plist = (H5P_genplist_t *)H5I_object(H5P_GROUP_CREATE_DEFAULT)))
-            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a property list");
-
-        /* Make a copy of the default property list */
-        if ((tmp_gcpl = H5P_copy_plist_id(gc_plist, false)) < 0)
-            HGOTO_ERROR(H5E_SYM, H5E_CANTGET, H5I_INVALID_HID, "unable to copy the creation property list");
-
-        /* Get pointer to the copied property list */
-        if (NULL == (gc_plist = (H5P_genplist_t *)H5I_object(tmp_gcpl)))
-            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a property list");
+        /* Get a copy of the default property list */
+        if (NULL == (tmp_gcpl = H5P_new_plist_of_type(H5P_TYPE_GROUP_CREATE, false)))
+            HGOTO_ERROR(H5E_SYM, H5E_CANTCREATE, H5I_INVALID_HID, "unable to create group creation property list");
 
         /* Get the group info property */
-        if (H5P_get(gc_plist, H5G_CRT_GROUP_INFO_NAME, &ginfo) < 0)
+        if (H5P_get(tmp_gcpl, H5G_CRT_GROUP_INFO_NAME, &ginfo) < 0)
             HGOTO_ERROR(H5E_SYM, H5E_CANTGET, H5I_INVALID_HID, "can't get group info");
 
         /* Set the non-default local heap size hint */
         H5_CHECKED_ASSIGN(ginfo.lheap_size_hint, uint32_t, size_hint, size_t);
-        if (H5P_set(gc_plist, H5G_CRT_GROUP_INFO_NAME, &ginfo) < 0)
+        if (H5P_set(tmp_gcpl, H5G_CRT_GROUP_INFO_NAME, &ginfo) < 0)
             HGOTO_ERROR(H5E_SYM, H5E_CANTSET, H5I_INVALID_HID, "can't set group info");
     }
-    else
-        tmp_gcpl = H5P_GROUP_CREATE_DEFAULT;
+    else {
+        if (NULL == (tmp_gcpl = H5I_object(H5P_LST_GROUP_CREATE_ID_g)))
+            HGOTO_ERROR(H5E_SYM, H5E_CANTGET, H5I_INVALID_HID, "can't get default group creation property list");
+    }
 
     /* Set up collective metadata if appropriate */
     if (H5CX_set_loc(loc_id) < 0)
@@ -208,8 +201,7 @@ H5Gcreate1(hid_t loc_id, const char *name, size_t size_hint)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "invalid location identifier");
 
     /* Create the group */
-    if (NULL ==
-        (grp = H5VL_group_create(vol_obj, &loc_params, name, H5P_LINK_CREATE_DEFAULT, tmp_gcpl,
+    if (NULL == (grp = H5VL_group_create(vol_obj, &loc_params, name, H5P_LINK_CREATE_DEFAULT, H5P_PLIST_ID(tmp_gcpl),
                                  H5P_GROUP_ACCESS_DEFAULT, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_SYM, H5E_CANTINIT, H5I_INVALID_HID, "unable to create group");
 
@@ -218,9 +210,9 @@ H5Gcreate1(hid_t loc_id, const char *name, size_t size_hint)
         HGOTO_ERROR(H5E_SYM, H5E_CANTREGISTER, H5I_INVALID_HID, "unable to register group");
 
 done:
-    if (H5I_INVALID_HID != tmp_gcpl && tmp_gcpl != H5P_GROUP_CREATE_DEFAULT)
-        if (H5I_dec_ref(tmp_gcpl) < 0)
-            HDONE_ERROR(H5E_SYM, H5E_CLOSEERROR, H5I_INVALID_HID, "unable to release property list");
+    if (tmp_gcpl && !H5P_PLIST_IS_DEFAULT(tmp_gcpl))
+        if (H5P_release(tmp_gcpl) < 0)
+            HDONE_ERROR(H5E_SYM, H5E_CANTCLOSEOBJ, H5I_INVALID_HID, "can't close group creation property list");
 
     if (H5I_INVALID_HID == ret_value)
         if (grp && H5VL_group_close(vol_obj, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)

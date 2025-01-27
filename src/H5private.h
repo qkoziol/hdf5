@@ -338,6 +338,7 @@
  * H5_GCC_CLANG_DIAG_OFF("type-limits")/H5_GCC_CLANG_DIAG_ON("type-limits")
  */
 /* clang-format off */
+H5_GCC_CLANG_DIAG_OFF("strict-overflow")
 #define H5_IS_BUFFER_OVERFLOW(ptr, size, buffer_end)                                                         \
     (                                                                                                        \
       /* Trivial case */                                                                                     \
@@ -351,6 +352,7 @@
         ((size_t)(size) > (size_t)((((const uint8_t *)buffer_end) - ((const uint8_t *)ptr)) + 1))            \
       )                                                                                                      \
     )
+H5_GCC_CLANG_DIAG_ON("strict-overflow")
 /* clang-format on */
 
 /* Variant of H5_IS_BUFFER_OVERFLOW, used with functions such as H5Tdecode()

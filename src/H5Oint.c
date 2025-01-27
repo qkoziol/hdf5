@@ -270,46 +270,6 @@ done:
 } /* end H5O__set_version() */
 
 /*-------------------------------------------------------------------------
- * Function:    H5O_create_id
- *
- * Purpose:    Creates a new object header. Allocates space for it and
- *              then calls an initialization function. The object header
- *              is opened for write access and should eventually be
- *              closed by calling H5O_close().
- *
- * Return:    Success:    Non-negative, the ENT argument contains
- *                information about the object header,
- *                including its address.
- *
- *        Failure:    Negative
- *
- *-------------------------------------------------------------------------
- */
-herr_t
-H5O_create_id(H5F_t *f, size_t size_hint, size_t initial_rc, hid_t ocpl_id, H5O_loc_t *loc /*out*/)
-{
-    H5P_genplist_t *ocpl;
-    herr_t          ret_value = SUCCEED;
-
-    FUNC_ENTER_NOAPI(FAIL)
-
-    assert(f);
-    assert(loc);
-    assert(true == H5P_isa_class(ocpl_id, H5P_OBJECT_CREATE));
-
-    /* Get the property list */
-    if (NULL == (ocpl = H5I_object(ocpl_id)))
-        HGOTO_ERROR(H5E_OHDR, H5E_BADTYPE, FAIL, "not a property list");
-
-    /* Create object header */
-    if (H5O_create(f, size_hint, initial_rc, ocpl, loc) < 0)
-        HGOTO_ERROR(H5E_OHDR, H5E_CANTCREATE, FAIL, "can't create object header");
-
-done:
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5O_create_id() */
-
-/*-------------------------------------------------------------------------
  * Function:    H5O_create
  *
  * Purpose:    Creates a new object header. Allocates space for it and

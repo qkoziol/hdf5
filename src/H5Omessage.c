@@ -1249,10 +1249,9 @@ done:
  *-------------------------------------------------------------------------
  */
 size_t
-H5O_msg_size_f(const H5F_t *f, hid_t ocpl_id, unsigned type_id, const void *mesg, size_t extra_raw)
+H5O_msg_size_f(const H5F_t *f, H5P_genplist_t *ocpl, unsigned type_id, const void *mesg, size_t extra_raw)
 {
     const H5O_msg_class_t *type;          /* Actual H5O class type for the ID */
-    H5P_genplist_t        *ocpl;          /* Object Creation Property list */
     uint8_t                oh_flags;      /* Object header status flags */
     size_t                 ret_value = 0; /* Return value */
 
@@ -1265,10 +1264,6 @@ H5O_msg_size_f(const H5F_t *f, hid_t ocpl_id, unsigned type_id, const void *mesg
     assert(type->raw_size);
     assert(f);
     assert(mesg);
-
-    /* Get the property list */
-    if (NULL == (ocpl = (H5P_genplist_t *)H5I_object(ocpl_id)))
-        HGOTO_ERROR(H5E_PLIST, H5E_BADTYPE, 0, "not a property list");
 
     /* Get any object header status flags set by properties */
     if (H5P_get(ocpl, H5O_CRT_OHDR_FLAGS_NAME, &oh_flags) < 0)
@@ -1285,8 +1280,7 @@ H5O_msg_size_f(const H5F_t *f, hid_t ocpl_id, unsigned type_id, const void *mesg
     ret_value = (size_t)H5O_ALIGN_F(f, ret_value);
 
     /* Add space for message header */
-    ret_value += (size_t)H5O_SIZEOF_MSGHDR_F(
-        f, (H5F_STORE_MSG_CRT_IDX(f) || oh_flags & H5O_HDR_ATTR_CRT_ORDER_TRACKED));
+    ret_value += (size_t)H5O_SIZEOF_MSGHDR_F(f, (H5F_STORE_MSG_CRT_IDX(f) || oh_flags & H5O_HDR_ATTR_CRT_ORDER_TRACKED));
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)

@@ -899,10 +899,8 @@ typedef struct {
 H5_DLL herr_t H5O_init(void);
 H5_DLL herr_t H5O_create(H5F_t *f, size_t size_hint, size_t initial_rc, H5P_genplist_t *ocpl,
                          H5O_loc_t *loc /*out*/);
-H5_DLL herr_t H5O_create_id(H5F_t *f, size_t size_hint, size_t initial_rc, hid_t ocpl_id,
-                            H5O_loc_t *loc /*out*/);
-H5_DLL H5O_t *H5O_create_ohdr(H5F_t *f, H5P_genplist_t *ocpl_plist);
-H5_DLL herr_t H5O_apply_ohdr(H5F_t *f, H5O_t *oh, H5P_genplist_t *ocpl_plist, size_t size_hint,
+H5_DLL H5O_t *H5O_create_ohdr(H5F_t *f, H5P_genplist_t *ocpl);
+H5_DLL herr_t H5O_apply_ohdr(H5F_t *f, H5O_t *oh, H5P_genplist_t *ocpl, size_t size_hint,
                              size_t initial_rc, H5O_loc_t *loc_out);
 H5_DLL herr_t H5O_open(H5O_loc_t *loc);
 H5_DLL void  *H5O_open_by_loc(const H5G_loc_t *obj_loc, H5I_type_t *opened_type /*out*/);
@@ -961,7 +959,7 @@ H5_DLL herr_t H5O_msg_remove_op(const H5O_loc_t *loc, unsigned type_id, int sequ
 H5_DLL herr_t H5O_msg_iterate(const H5O_loc_t *loc, unsigned type_id, const H5O_mesg_operator_t *op,
                               void *op_data);
 H5_DLL size_t H5O_msg_raw_size(const H5F_t *f, unsigned type_id, bool disable_shared, const void *mesg);
-H5_DLL size_t H5O_msg_size_f(const H5F_t *f, hid_t ocpl_id, unsigned type_id, const void *mesg,
+H5_DLL size_t H5O_msg_size_f(const H5F_t *f, H5P_genplist_t *ocpl, unsigned type_id, const void *mesg,
                              size_t extra_raw);
 H5_DLL size_t H5O_msg_size_oh(const H5F_t *f, const H5O_t *oh, unsigned type_id, const void *mesg,
                               size_t extra_raw);

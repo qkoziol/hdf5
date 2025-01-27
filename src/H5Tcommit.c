@@ -164,8 +164,7 @@ H5Tcommit2(hid_t loc_id, const char *name, hid_t type_id, hid_t lcpl_id, hid_t t
     FUNC_ENTER_API(FAIL)
 
     /* Commit the dataset synchronously */
-    if ((ret_value = H5T__commit_api_common(loc_id, name, type_id, lcpl_id, tcpl_id, tapl_id, NULL, NULL)) <
-        0)
+    if ((ret_value = H5T__commit_api_common(loc_id, name, type_id, lcpl_id, tcpl_id, tapl_id, NULL, NULL)) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTOPENOBJ, FAIL, "unable to commit datatype synchronously");
 
 done:
@@ -197,8 +196,7 @@ H5Tcommit_async(const char *app_file, const char *app_func, unsigned app_line, h
         token_ptr = &token;
 
     /* Commit the datatype asynchronously */
-    if ((ret_value = H5T__commit_api_common(loc_id, name, type_id, lcpl_id, tcpl_id, tapl_id, token_ptr,
-                                            &vol_obj)) < 0)
+    if ((ret_value = H5T__commit_api_common(loc_id, name, type_id, lcpl_id, tcpl_id, tapl_id, token_ptr, &vol_obj)) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTOPENOBJ, FAIL, "unable to commit datatype asynchronously");
 
     /* If a token was created, add the token to the event set */
@@ -224,7 +222,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5T__commit_named(const H5G_loc_t *loc, const char *name, H5T_t *dt, hid_t lcpl_id, hid_t tcpl_id)
+H5T__commit_named(const H5G_loc_t *loc, const char *name, H5T_t *dt, hid_t lcpl_id, H5P_genplist_t *tcpl)
 {
     H5O_obj_create_t ocrt_info;           /* Information for object creation */
     H5T_obj_create_t tcrt_info;           /* Information for named datatype creation */
@@ -238,14 +236,14 @@ H5T__commit_named(const H5G_loc_t *loc, const char *name, H5T_t *dt, hid_t lcpl_
     assert(name && *name);
     assert(dt);
     assert(lcpl_id != H5P_DEFAULT);
-    assert(tcpl_id != H5P_DEFAULT);
+    assert(tcpl);
 
     /* Record the type's state so that we can revert to it if linking fails */
     old_state = dt->shared->state;
 
     /* Set up named datatype creation info */
     tcrt_info.dt      = dt;
-    tcrt_info.tcpl_id = tcpl_id;
+    tcrt_info.tcpl = tcpl;
 
     /* Set up object creation information */
     ocrt_info.obj_type = H5O_TYPE_NAMED_DATATYPE;
@@ -372,7 +370,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5T__commit_anon(H5F_t *file, H5T_t *type, hid_t tcpl_id)
+H5T__commit_anon(H5F_t *file, H5T_t *type, H5P_genplist_t *tcpl)
 {
     H5O_loc_t *oloc;                /* Object location for datatype */
     herr_t     ret_value = SUCCEED; /* Return value */
@@ -382,10 +380,10 @@ H5T__commit_anon(H5F_t *file, H5T_t *type, hid_t tcpl_id)
     /* Sanity checks */
     assert(file);
     assert(type);
-    assert(tcpl_id != H5P_DEFAULT);
+    assert(tcpl);
 
     /* Commit the type */
-    if (H5T__commit(file, type, tcpl_id) < 0)
+    if (H5T__commit(file, type, tcpl) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINIT, FAIL, "unable to commit datatype");
 
     /* Release the datatype's object header */
@@ -413,7 +411,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5T__commit(H5F_t *file, H5T_t *type, hid_t tcpl_id)
+H5T__commit(H5F_t *file, H5T_t *type, H5P_genplist_t *tcpl)
 {
     H5O_t     *oh = NULL;            /* Pointer to actual object header */
     H5O_loc_t  temp_oloc;            /* Temporary object header location */
@@ -427,7 +425,7 @@ H5T__commit(H5F_t *file, H5T_t *type, hid_t tcpl_id)
 
     assert(file);
     assert(type);
-    assert(tcpl_id != H5P_DEFAULT);
+    assert(tcpl);
 
     /* Check if we are allowed to write to this file */
     if (0 == (H5F_INTENT(file) & H5F_ACC_RDWR))
@@ -465,14 +463,14 @@ H5T__commit(H5F_t *file, H5T_t *type, hid_t tcpl_id)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "can't set version of datatype");
 
     /* Calculate message size information, for creating object header */
-    dtype_size = H5O_msg_size_f(file, tcpl_id, H5O_DTYPE_ID, type, (size_t)0);
+    dtype_size = H5O_msg_size_f(file, tcpl, H5O_DTYPE_ID, type, (size_t)0);
     assert(dtype_size);
 
     /*
      * Create the object header and open it for write access. Insert the data
      * type message and then give the object header a name.
      */
-    if (H5O_create_id(file, dtype_size, (size_t)1, tcpl_id, &temp_oloc) < 0)
+    if (H5O_create(file, dtype_size, (size_t)1, tcpl, &temp_oloc) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINIT, FAIL, "unable to create datatype object header");
     ohdr_created = true;
 
@@ -774,15 +772,14 @@ H5Tget_create_plist(hid_t dtype_id)
      * creation property list and return that.
      */
     if (false == is_named) {
-        H5P_genplist_t *tcpl_plist = NULL;
+        H5P_genplist_t *tcpl;
 
         /* Create the property list object to return */
-        if (NULL == (tcpl_plist = H5P_new_plist_of_type(H5P_TYPE_DATATYPE_CREATE, true)))
-            HGOTO_ERROR(H5E_DATATYPE, H5E_CANTCREATE, H5I_INVALID_HID,
-                        "unable to create datatype creation property list");
+        if (NULL == (tcpl = H5P_new_plist_of_type(H5P_TYPE_DATATYPE_CREATE, true)))
+            HGOTO_ERROR(H5E_DATATYPE, H5E_CANTCREATE, H5I_INVALID_HID, "unable to create datatype creation property list");
 
         /* Set return value */
-        ret_value = H5P_PLIST_ID(tcpl_plist);
+        ret_value = H5P_PLIST_ID(tcpl);
     } /* end if */
     /* If the datatype is committed, retrieve further information */
     else {
@@ -899,21 +896,16 @@ done:
  * Note:        There are no datatype creation properties currently, just
  *              object creation ones.
  *
- * Return:      Success:    ID for a copy of the datatype creation
- *                          property list.  The property list ID should be
- *                          released by calling H5Pclose().
- *
- *              Failure:    H5I_INVALID_HID
+ * Return:   Success:    Pointer to a copy of the dataset access property list.
+ *           Failure:    NULL
  *
  *-------------------------------------------------------------------------
  */
-hid_t
+H5P_genplist_t *
 H5T__get_create_plist(const H5T_t *type)
 {
-    H5P_genplist_t *tcpl_plist;                    /* Existing datatype creation propertty list */
     H5P_genplist_t *new_plist;                     /* New datatype creation property list */
-    hid_t           new_tcpl_id = FAIL;            /* New datatype creation property list */
-    hid_t           ret_value   = H5I_INVALID_HID; /* Return value */
+    H5P_genplist_t *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -921,27 +913,20 @@ H5T__get_create_plist(const H5T_t *type)
     assert(type);
 
     /* Copy the default datatype creation property list */
-    if (NULL == (tcpl_plist = (H5P_genplist_t *)H5I_object(H5P_LST_DATATYPE_CREATE_ID_g)))
-        HGOTO_ERROR(H5E_DATATYPE, H5E_BADTYPE, H5I_INVALID_HID, "can't get default creation property list");
-    if ((new_tcpl_id = H5P_copy_plist_id(tcpl_plist, true)) < 0)
-        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTGET, H5I_INVALID_HID, "unable to copy the creation property list");
-
-    /* Get property list object for new TCPL */
-    if (NULL == (new_plist = (H5P_genplist_t *)H5I_object(new_tcpl_id)))
-        HGOTO_ERROR(H5E_DATATYPE, H5E_BADTYPE, H5I_INVALID_HID, "can't get property list");
+    if (NULL == (new_plist = H5P_new_plist_of_type(H5P_TYPE_DATATYPE_CREATE, true)))
+        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTCOPY, NULL, "can't copy default datatype creation property list");
 
     /* Retrieve any object creation properties */
     if (H5O_get_create_plist(&type->oloc, new_plist) < 0)
-        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTGET, H5I_INVALID_HID, "can't get object creation info");
+        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTGET, NULL, "can't get object creation info");
 
     /* Set the return value */
-    ret_value = new_tcpl_id;
+    ret_value = new_plist;
 
 done:
-    if (ret_value < 0)
-        if (new_tcpl_id > 0)
-            if (H5I_dec_app_ref(new_tcpl_id) < 0)
-                HDONE_ERROR(H5E_DATATYPE, H5E_CANTDEC, H5I_INVALID_HID, "unable to close temporary object");
+    if (NULL == ret_value)
+        if (new_plist && H5P_release(new_plist) < 0)
+            HDONE_ERROR(H5E_DATASET, H5E_CANTCLOSEOBJ, NULL, "can't close datatype creation property list");
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5T__get_create_plist() */
