@@ -268,7 +268,7 @@ H5CX__init_package(void)
     H5P_genplist_t *lc_plist;            /* Link creation property list */
     H5P_genplist_t *la_plist;            /* Link access property list */
     H5P_genplist_t *dcpl;                /* Dataset creation property list */
-    H5P_genplist_t *da_plist;            /* Dataset access property list */
+    H5P_genplist_t *dapl;            /* Dataset access property list */
     H5P_genplist_t *fa_plist;            /* File access property list */
     herr_t          ret_value = SUCCEED; /* Return value */
 
@@ -430,15 +430,15 @@ H5CX__init_package(void)
     /* Get the default DAPL cache information */
 
     /* Get the default dataset access property list */
-    if (NULL == (da_plist = (H5P_genplist_t *)H5I_object(H5P_DATASET_ACCESS_DEFAULT)))
+    if (NULL == (dapl = (H5P_genplist_t *)H5I_object(H5P_DATASET_ACCESS_DEFAULT)))
         HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "not a dataset create property list");
 
     /* Get the prefix for the external file */
-    if (H5P_peek(da_plist, H5D_ACS_EFILE_PREFIX_NAME, &H5CX_def_dapl_cache.extfile_prefix) < 0)
+    if (H5P_peek(dapl, H5D_ACS_EFILE_PREFIX_NAME, &H5CX_def_dapl_cache.extfile_prefix) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve prefix for external file");
 
     /* Get the prefix for the VDS file */
-    if (H5P_peek(da_plist, H5D_ACS_VDS_PREFIX_NAME, &H5CX_def_dapl_cache.vds_prefix) < 0)
+    if (H5P_peek(dapl, H5D_ACS_VDS_PREFIX_NAME, &H5CX_def_dapl_cache.vds_prefix) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve prefix for VDS");
 
     /* Reset the "default FAPL cache" information */
