@@ -547,12 +547,12 @@ H5D__virtual_copy_layout(H5O_layout_t *layout)
 
     /* Save original entry list and top-level property lists and reset in layout
      * so the originals aren't closed on error */
-    orig_source_fapl_id        = virt->source_fapl_id;
-    virt->source_fapl_id       = H5I_INVALID_HID;
-    orig_source_dapl= virt->source_dapl;
-    virt->source_dapl = NULL;
-    orig_list               = virt->list;
-    virt->list              = NULL;
+    orig_source_fapl_id  = virt->source_fapl_id;
+    virt->source_fapl_id = H5I_INVALID_HID;
+    orig_source_dapl     = virt->source_dapl;
+    virt->source_dapl    = NULL;
+    orig_list            = virt->list;
+    virt->list           = NULL;
 
     /* Copy entry list */
     if (virt->list_nused > 0) {
@@ -2221,7 +2221,7 @@ H5D__virtual_init(H5F_t *f, const H5D_t *dset)
 
     /* Copy DAPL to layout */
     if (NULL == storage->source_dapl)
-        if (NULL == (storage->source_dapl= H5P_copy_plist(dset->shared->dapl, false)))
+        if (NULL == (storage->source_dapl = H5P_copy_plist(dset->shared->dapl, false)))
             HGOTO_ERROR(H5E_DATASET, H5E_CANTCOPY, FAIL, "can't copy dapl");
 
     /* Mark layout as not fully initialized (must be done prior to I/O for
