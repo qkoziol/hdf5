@@ -68,15 +68,15 @@ static const char *FILENAME[] = {"ohdr", "ohdr_min_a", "ohdr_min_b", NULL};
 static herr_t
 test_cont(char *filename, hid_t fapl)
 {
-    hid_t          file = H5I_INVALID_HID;
-    H5F_t         *f    = NULL;
-    H5P_genplist_t *def_gcpl;        /* Default group creation property list */
-    H5O_hdr_info_t hdr_info;
-    H5O_loc_t      oh_locA, oh_locB;
-    time_t         time_new;
-    const char    *short_name = "T";
-    const char    *long_name  = "This is the message";
-    size_t         nchunks;
+    hid_t           file = H5I_INVALID_HID;
+    H5F_t          *f    = NULL;
+    H5P_genplist_t *def_gcpl; /* Default group creation property list */
+    H5O_hdr_info_t  hdr_info;
+    H5O_loc_t       oh_locA, oh_locB;
+    time_t          time_new;
+    const char     *short_name = "T";
+    const char     *long_name  = "This is the message";
+    size_t          nchunks;
 
     TESTING("object header continuation block");
 
@@ -190,7 +190,7 @@ test_ohdr_cache(char *filename, hid_t fapl)
     hid_t               my_fapl;                              /* FAPL ID */
     H5AC_cache_config_t mdc_config;                           /* Metadata cache configuration info */
     H5F_t              *f = NULL;                             /* File handle */
-    H5P_genplist_t *def_gcpl;        /* Default group creation property list */
+    H5P_genplist_t     *def_gcpl;                             /* Default group creation property list */
     H5HL_t             *lheap, *lheap2, *lheap3;              /* Pointer to local heaps */
     haddr_t             lheap_addr, lheap_addr2, lheap_addr3; /* Local heap addresses */
     H5O_loc_t           oh_loc;                               /* Object header location */
@@ -1834,21 +1834,21 @@ error:
 int
 main(void)
 {
-    hid_t          fapl = H5I_INVALID_HID;
-    hid_t          file = H5I_INVALID_HID;
-    H5F_t         *f    = NULL;
+    hid_t           fapl = H5I_INVALID_HID;
+    hid_t           file = H5I_INVALID_HID;
+    H5F_t          *f    = NULL;
     H5P_genplist_t *def_gcpl;        /* Default group creation property list */
-    const char    *driver_name;     /* File driver value from environment */
-    bool           single_file_vfd; /* Whether VFD used stores data in a single file */
-    char           filename[1024];
-    H5O_hdr_info_t hdr_info;  /* Object info */
-    H5O_loc_t      oh_loc;    /* Object header locations */
-    H5F_libver_t   low, high; /* File format bounds */
-    time_t         time_new, ro;
-    int            i;                            /* Local index variable */
-    H5CX_node_t    api_ctx        = {{0}, NULL}; /* API context node to push */
-    bool           api_ctx_pushed = false;       /* Whether API context pushed */
-    herr_t         ret;                          /* Generic return value */
+    const char     *driver_name;     /* File driver value from environment */
+    bool            single_file_vfd; /* Whether VFD used stores data in a single file */
+    char            filename[1024];
+    H5O_hdr_info_t  hdr_info;  /* Object info */
+    H5O_loc_t       oh_loc;    /* Object header locations */
+    H5F_libver_t    low, high; /* File format bounds */
+    time_t          time_new, ro;
+    int             i;                            /* Local index variable */
+    H5CX_node_t     api_ctx        = {{0}, NULL}; /* API context node to push */
+    bool            api_ctx_pushed = false;       /* Whether API context pushed */
+    herr_t          ret;                          /* Generic return value */
 
     /* Get the VFD to use */
     driver_name = h5_get_test_driver_name();

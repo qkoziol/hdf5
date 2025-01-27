@@ -107,7 +107,7 @@ H5F__super_ext_create(H5F_t *f, H5O_loc_t *ext_ptr)
     else if (H5_addr_defined(f->shared->sblock->ext_addr))
         HGOTO_ERROR(H5E_FILE, H5E_CANTCREATE, FAIL, "superblock extension already exists?!?!");
     else {
-        H5P_genplist_t *def_gcpl;        /* Default group creation property list */
+        H5P_genplist_t *def_gcpl; /* Default group creation property list */
 
         /* The superblock extension isn't actually a group, but the
          * default group creation list should work fine.

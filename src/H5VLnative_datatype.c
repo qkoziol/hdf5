@@ -73,11 +73,11 @@ H5VL__native_datatype_commit(void *obj, const H5VL_loc_params_t *loc_params, con
                              hid_t lcpl_id, hid_t tcpl_id, hid_t H5_ATTR_UNUSED tapl_id,
                              hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
-    H5G_loc_t loc;              /* Location to commit datatype */
-    H5T_t    *dt;               /* Datatype for ID */
-    H5T_t    *type      = NULL; /* copy of the original type which will be committed */
-    H5P_genplist_t *tcpl;        /* Datatype creation property list */
-    void     *ret_value = NULL; /* Return value */
+    H5G_loc_t       loc;              /* Location to commit datatype */
+    H5T_t          *dt;               /* Datatype for ID */
+    H5T_t          *type = NULL;      /* copy of the original type which will be committed */
+    H5P_genplist_t *tcpl;             /* Datatype creation property list */
+    void           *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE
 

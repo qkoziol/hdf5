@@ -72,10 +72,10 @@ H5VL__native_group_create(void *obj, const H5VL_loc_params_t *loc_params, const 
                           hid_t gcpl_id, hid_t H5_ATTR_UNUSED gapl_id, hid_t H5_ATTR_UNUSED dxpl_id,
                           void H5_ATTR_UNUSED **req)
 {
-    H5G_loc_t loc;        /* Location to create group     */
-    H5G_t    *grp = NULL; /* New group created            */
-    H5P_genplist_t *gcpl;        /* Group creation property list */
-    void     *ret_value;
+    H5G_loc_t       loc;        /* Location to create group     */
+    H5G_t          *grp = NULL; /* New group created            */
+    H5P_genplist_t *gcpl;       /* Group creation property list */
+    void           *ret_value;
 
     FUNC_ENTER_PACKAGE
 
@@ -90,7 +90,7 @@ H5VL__native_group_create(void *obj, const H5VL_loc_params_t *loc_params, const 
         H5G_obj_create_t gcrt_info; /* Information for group creation */
 
         /* Set up group creation info */
-        gcrt_info.gcpl    = gcpl;
+        gcrt_info.gcpl       = gcpl;
         gcrt_info.cache_type = H5G_NOTHING_CACHED;
         memset(&gcrt_info.cache, 0, sizeof(gcrt_info.cache));
 

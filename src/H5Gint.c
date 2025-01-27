@@ -306,7 +306,7 @@ H5G__create_named(const H5G_loc_t *loc, const char *name, hid_t lcpl_id, H5P_gen
     assert(gcpl);
 
     /* Set up group creation info */
-    gcrt_info.gcpl    = gcpl;
+    gcrt_info.gcpl       = gcpl;
     gcrt_info.cache_type = H5G_NOTHING_CACHED;
     memset(&gcrt_info.cache, 0, sizeof(gcrt_info.cache));
 
@@ -344,9 +344,9 @@ done:
 H5G_t *
 H5G__create(H5F_t *file, H5G_obj_create_t *gcrt_info)
 {
-    H5G_t   *grp       = NULL; /*new group			*/
-    bool oloc_init = false;    /* Flag to indicate that the group object location was created successfully */
-    H5G_t   *ret_value = NULL; /* Return value */
+    H5G_t *grp       = NULL;  /*new group			*/
+    bool   oloc_init = false; /* Flag to indicate that the group object location was created successfully */
+    H5G_t *ret_value = NULL;  /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -1286,7 +1286,7 @@ H5G_get_create_plist(const H5G_t *grp)
     htri_t          ginfo_exists;
     htri_t          linfo_exists;
     htri_t          pline_exists;
-    H5P_genplist_t *ret_value = NULL;   /* Return value */
+    H5P_genplist_t *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_NOAPI(NULL)
 

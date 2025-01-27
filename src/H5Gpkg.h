@@ -282,7 +282,7 @@ typedef struct H5G_bt2_ud_ins_t {
 
 /* Typedef for group creation operation */
 struct H5G_obj_create_t {
-    H5P_genplist_t *gcpl;    /* Group creation property list */
+    H5P_genplist_t  *gcpl;       /* Group creation property list */
     H5G_cache_type_t cache_type; /* Type of symbol table entry cache */
     H5G_cache_t      cache;      /* Cached data for symbol table entry */
 };

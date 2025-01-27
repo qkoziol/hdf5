@@ -460,25 +460,25 @@ done:
 static herr_t
 H5G__traverse_real(const H5G_loc_t *_loc, const char *name, unsigned target, H5G_traverse_t op, void *op_data)
 {
-    H5P_genplist_t *def_gcpl;        /* Default group creation property list */
-    H5G_loc_t     loc;                    /* Location of start object     */
-    H5O_loc_t     grp_oloc;               /* Object loc. for current group */
-    H5G_name_t    grp_path;               /* Path for current group	*/
-    H5G_loc_t     grp_loc;                /* Location of group            */
-    H5O_loc_t     obj_oloc;               /* Object found			*/
-    H5G_name_t    obj_path;               /* Path for object found	*/
-    H5G_loc_t     obj_loc;                /* Location of object           */
-    size_t        nchars;                 /* component name length	*/
-    H5O_link_t    lnk;                    /* Link information for object  */
-    bool          link_valid    = false;  /* Flag to indicate that the link information is valid */
-    bool          obj_loc_valid = false;  /* Flag to indicate that the object location is valid */
-    H5G_own_loc_t own_loc = H5G_OWN_NONE; /* Enum to indicate whether callback took ownership of locations*/
-    bool          group_copy = false;     /* Flag to indicate that the group entry is copied */
-    char          comp_buf[1024];         /* Temporary buffer for path components */
-    char         *comp;                   /* Pointer to buffer for path components */
-    H5WB_t       *wb        = NULL;       /* Wrapped buffer for temporary buffer */
-    bool          last_comp = false; /* Flag to indicate that a component is the last component in the name */
-    herr_t        ret_value = SUCCEED; /* Return value */
+    H5P_genplist_t *def_gcpl;               /* Default group creation property list */
+    H5G_loc_t       loc;                    /* Location of start object     */
+    H5O_loc_t       grp_oloc;               /* Object loc. for current group */
+    H5G_name_t      grp_path;               /* Path for current group	*/
+    H5G_loc_t       grp_loc;                /* Location of group            */
+    H5O_loc_t       obj_oloc;               /* Object found			*/
+    H5G_name_t      obj_path;               /* Path for object found	*/
+    H5G_loc_t       obj_loc;                /* Location of object           */
+    size_t          nchars;                 /* component name length	*/
+    H5O_link_t      lnk;                    /* Link information for object  */
+    bool            link_valid    = false;  /* Flag to indicate that the link information is valid */
+    bool            obj_loc_valid = false;  /* Flag to indicate that the object location is valid */
+    H5G_own_loc_t   own_loc = H5G_OWN_NONE; /* Enum to indicate whether callback took ownership of locations*/
+    bool            group_copy = false;     /* Flag to indicate that the group entry is copied */
+    char            comp_buf[1024];         /* Temporary buffer for path components */
+    char           *comp;                   /* Pointer to buffer for path components */
+    H5WB_t         *wb = NULL;              /* Wrapped buffer for temporary buffer */
+    bool   last_comp   = false;   /* Flag to indicate that a component is the last component in the name */
+    herr_t ret_value   = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 

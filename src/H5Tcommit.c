@@ -164,7 +164,8 @@ H5Tcommit2(hid_t loc_id, const char *name, hid_t type_id, hid_t lcpl_id, hid_t t
     FUNC_ENTER_API(FAIL)
 
     /* Commit the dataset synchronously */
-    if ((ret_value = H5T__commit_api_common(loc_id, name, type_id, lcpl_id, tcpl_id, tapl_id, NULL, NULL)) < 0)
+    if ((ret_value = H5T__commit_api_common(loc_id, name, type_id, lcpl_id, tcpl_id, tapl_id, NULL, NULL)) <
+        0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTOPENOBJ, FAIL, "unable to commit datatype synchronously");
 
 done:
@@ -196,7 +197,8 @@ H5Tcommit_async(const char *app_file, const char *app_func, unsigned app_line, h
         token_ptr = &token;
 
     /* Commit the datatype asynchronously */
-    if ((ret_value = H5T__commit_api_common(loc_id, name, type_id, lcpl_id, tcpl_id, tapl_id, token_ptr, &vol_obj)) < 0)
+    if ((ret_value = H5T__commit_api_common(loc_id, name, type_id, lcpl_id, tcpl_id, tapl_id, token_ptr,
+                                            &vol_obj)) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTOPENOBJ, FAIL, "unable to commit datatype asynchronously");
 
     /* If a token was created, add the token to the event set */
@@ -242,7 +244,7 @@ H5T__commit_named(const H5G_loc_t *loc, const char *name, H5T_t *dt, hid_t lcpl_
     old_state = dt->shared->state;
 
     /* Set up named datatype creation info */
-    tcrt_info.dt      = dt;
+    tcrt_info.dt   = dt;
     tcrt_info.tcpl = tcpl;
 
     /* Set up object creation information */
@@ -776,7 +778,8 @@ H5Tget_create_plist(hid_t dtype_id)
 
         /* Create the property list object to return */
         if (NULL == (tcpl = H5P_new_plist_of_type(H5P_TYPE_DATATYPE_CREATE, true)))
-            HGOTO_ERROR(H5E_DATATYPE, H5E_CANTCREATE, H5I_INVALID_HID, "unable to create datatype creation property list");
+            HGOTO_ERROR(H5E_DATATYPE, H5E_CANTCREATE, H5I_INVALID_HID,
+                        "unable to create datatype creation property list");
 
         /* Set return value */
         ret_value = H5P_PLIST_ID(tcpl);
@@ -904,7 +907,7 @@ done:
 H5P_genplist_t *
 H5T__get_create_plist(const H5T_t *type)
 {
-    H5P_genplist_t *new_plist;                     /* New datatype creation property list */
+    H5P_genplist_t *new_plist;        /* New datatype creation property list */
     H5P_genplist_t *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE

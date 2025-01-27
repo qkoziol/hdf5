@@ -3802,10 +3802,10 @@ H5T_decode(size_t buf_size, const unsigned char *buf)
     if (*buf++ != H5O_DTYPE_ID)
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADMESG, NULL, "not an encoded datatype");
 
-H5_GCC_CLANG_DIAG_OFF("strict-overflow")
+    H5_GCC_CLANG_DIAG_OFF("strict-overflow")
     if (buf_size != SIZE_MAX && H5_IS_BUFFER_OVERFLOW(buf, 1, buf + buf_size - 1))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADMESG, NULL, "buffer too small to be datatype message");
-H5_GCC_CLANG_DIAG_ON("strict-overflow")
+    H5_GCC_CLANG_DIAG_ON("strict-overflow")
 
     /* Decode the version of the datatype information */
     if (*buf++ != H5T_ENCODE_VERSION)
