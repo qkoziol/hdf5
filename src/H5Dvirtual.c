@@ -535,8 +535,8 @@ H5D__virtual_copy_layout(H5O_layout_t *layout)
 {
     H5O_storage_virtual_ent_t *orig_list = NULL;
     H5O_storage_virtual_t     *virt      = &layout->storage.u.virt;
-    hid_t                      orig_source_fapl;
-    H5P_genplist_t            *orig_source_dapl_plist;
+    hid_t                      orig_source_fapl_id;
+    H5P_genplist_t            *orig_source_dapl;
     size_t                     i;
     herr_t                     ret_value = SUCCEED;
 
@@ -547,10 +547,10 @@ H5D__virtual_copy_layout(H5O_layout_t *layout)
 
     /* Save original entry list and top-level property lists and reset in layout
      * so the originals aren't closed on error */
-    orig_source_fapl        = virt->source_fapl;
-    virt->source_fapl       = H5I_INVALID_HID;
-    orig_source_dapl_plist  = virt->source_dapl_plist;
-    virt->source_dapl_plist = NULL;
+    orig_source_fapl_id        = virt->source_fapl_id;
+    virt->source_fapl_id       = H5I_INVALID_HID;
+    orig_source_dapl= virt->source_dapl;
+    virt->source_dapl = NULL;
     orig_list               = virt->list;
     virt->list              = NULL;
 
@@ -650,16 +650,16 @@ H5D__virtual_copy_layout(H5O_layout_t *layout)
     } /* end else */
 
     /* Copy property lists */
-    if (orig_source_fapl >= 0) {
+    if (orig_source_fapl_id >= 0) {
         H5P_genplist_t *plist;
 
-        if (NULL == (plist = (H5P_genplist_t *)H5I_object_verify(orig_source_fapl, H5I_GENPROP_LST)))
+        if (NULL == (plist = (H5P_genplist_t *)H5I_object_verify(orig_source_fapl_id, H5I_GENPROP_LST)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
-        if ((virt->source_fapl = H5P_copy_plist_id(plist, false)) < 0)
+        if ((virt->source_fapl_id = H5P_copy_plist_id(plist, false)) < 0)
             HGOTO_ERROR(H5E_DATASET, H5E_CANTCOPY, FAIL, "can't copy fapl");
     } /* end if */
-    if (orig_source_dapl_plist)
-        if (NULL == (virt->source_dapl_plist = H5P_copy_plist(orig_source_dapl_plist, false)))
+    if (orig_source_dapl)
+        if (NULL == (virt->source_dapl = H5P_copy_plist(orig_source_dapl, false)))
             HGOTO_ERROR(H5E_DATASET, H5E_CANTCOPY, FAIL, "can't copy dapl");
 
     /* New layout is not fully initialized */
@@ -737,15 +737,15 @@ H5D__virtual_reset_layout(H5O_layout_t *layout)
     (void)memset(virt->min_dims, 0, sizeof(virt->min_dims));
 
     /* Close access property lists */
-    if (virt->source_fapl >= 0) {
-        if (H5I_dec_ref(virt->source_fapl) < 0)
+    if (virt->source_fapl_id >= 0) {
+        if (H5I_dec_ref(virt->source_fapl_id) < 0)
             HDONE_ERROR(H5E_DATASET, H5E_CANTFREE, FAIL, "can't close source fapl");
-        virt->source_fapl = -1;
+        virt->source_fapl_id = H5I_INVALID_HID;
     }
-    if (virt->source_dapl_plist) {
-        if (H5P_release(virt->source_dapl_plist) < 0)
+    if (virt->source_dapl) {
+        if (H5P_release(virt->source_dapl) < 0)
             HDONE_ERROR(H5E_DATASET, H5E_CANTCLOSEOBJ, FAIL, "can't close source dapl");
-        virt->source_dapl_plist = NULL;
+        virt->source_dapl = NULL;
     }
 
     /* The list is no longer initialized */
@@ -876,7 +876,7 @@ H5D__virtual_open_source_dset(const H5D_t *vdset, H5O_storage_virtual_ent_t *vir
         /* Try opening the file */
         if (H5F_prefix_open_file(true, &src_file, vdset->oloc.file, H5F_PREFIX_VDS, vdset->shared->vds_prefix,
                                  source_dset->file_name, intent,
-                                 vdset->shared->layout.storage.u.virt.source_fapl) < 0)
+                                 vdset->shared->layout.storage.u.virt.source_fapl_id) < 0)
             HGOTO_ERROR(H5E_DATASET, H5E_CANTOPENFILE, FAIL, "can't try opening file");
 
         /* If we opened the source file here, we should close it when leaving */
@@ -906,7 +906,7 @@ H5D__virtual_open_source_dset(const H5D_t *vdset, H5O_storage_virtual_ent_t *vir
             /* Try opening the source dataset */
             if (NULL ==
                 (source_dset->dset = H5D__open_name(&src_root_loc, source_dset->dset_name,
-                                                    vdset->shared->layout.storage.u.virt.source_dapl_plist)))
+                                                    vdset->shared->layout.storage.u.virt.source_dapl)))
                 HGOTO_ERROR(H5E_DATASET, H5E_CANTOPENOBJ, FAIL, "unable to open source dataset");
 
             /* Dataset exists */
@@ -2187,15 +2187,15 @@ H5D__virtual_init(H5F_t *f, const H5D_t *dset)
         storage->printf_gap = (hsize_t)0;
 
     /* Retrieve VDS file FAPL to layout */
-    if (storage->source_fapl <= 0) {
+    if (storage->source_fapl_id <= 0) {
         H5P_genplist_t    *source_fapl  = NULL;           /* Source file FAPL */
         H5F_close_degree_t close_degree = H5F_CLOSE_WEAK; /* Close degree for source files */
 
-        if ((storage->source_fapl = H5F_get_access_plist(f, false)) < 0)
+        if ((storage->source_fapl_id = H5F_get_access_plist(f, false)) < 0)
             HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get fapl");
 
         /* Get property list pointer */
-        if (NULL == (source_fapl = (H5P_genplist_t *)H5I_object(storage->source_fapl)))
+        if (NULL == (source_fapl = (H5P_genplist_t *)H5I_object(storage->source_fapl_id)))
             HGOTO_ERROR(H5E_PLIST, H5E_BADTYPE, H5I_INVALID_HID, "not a property list");
 
         /* Source files must always be opened with H5F_CLOSE_WEAK close degree */
@@ -2208,7 +2208,7 @@ H5D__virtual_init(H5F_t *f, const H5D_t *dset)
         H5F_close_degree_t close_degree;       /* Close degree for source files */
 
         /* Get property list pointer */
-        if (NULL == (source_fapl = (H5P_genplist_t *)H5I_object(storage->source_fapl)))
+        if (NULL == (source_fapl = (H5P_genplist_t *)H5I_object(storage->source_fapl_id)))
             HGOTO_ERROR(H5E_PLIST, H5E_BADTYPE, H5I_INVALID_HID, "not a property list");
 
         /* Verify H5F_CLOSE_WEAK close degree is set */
@@ -2220,8 +2220,8 @@ H5D__virtual_init(H5F_t *f, const H5D_t *dset)
 #endif /* NDEBUG */
 
     /* Copy DAPL to layout */
-    if (NULL == storage->source_dapl_plist)
-        if (NULL == (storage->source_dapl_plist = H5P_copy_plist(dset->shared->dapl, false)))
+    if (NULL == storage->source_dapl)
+        if (NULL == (storage->source_dapl= H5P_copy_plist(dset->shared->dapl, false)))
             HGOTO_ERROR(H5E_DATASET, H5E_CANTCOPY, FAIL, "can't copy dapl");
 
     /* Mark layout as not fully initialized (must be done prior to I/O for
