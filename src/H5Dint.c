@@ -385,7 +385,7 @@ H5D__create_named(const H5G_loc_t *loc, const char *name, hid_t type_id, const H
     /* Set up dataset creation info */
     dcrt_info.type_id = type_id;
     dcrt_info.space   = space;
-    dcrt_info.dcpl = dcpl;
+    dcrt_info.dcpl    = dcpl;
     dcrt_info.dapl_id = dapl_id;
 
     /* Set up object creation information */
@@ -1167,17 +1167,17 @@ done:
 H5D_t *
 H5D__create(H5F_t *file, hid_t type_id, const H5S_t *space, H5P_genplist_t *dcpl, hid_t dapl_id)
 {
-    H5T_t          *type     = NULL; /* Datatype for dataset (VOL pointer) */
-    H5T_t          *dt       = NULL; /* Datatype for dataset (non-VOL pointer) */
-    H5D_t          *new_dset = NULL;
-    bool            has_vl_type   = false; /* Flag to indicate a VL-type for dataset */
-    bool            layout_init   = false; /* Flag to indicate that chunk information was initialized */
-    bool            layout_copied = false; /* Flag to indicate that layout message was copied */
-    bool            fill_copied   = false; /* Flag to indicate that fill-value message was copied */
-    bool            pline_copied  = false; /* Flag to indicate that pipeline message was copied */
-    bool            efl_copied    = false; /* Flag to indicate that external file list message was copied */
-    H5G_loc_t       dset_loc;              /* Dataset location */
-    H5D_t          *ret_value = NULL;      /* Return value */
+    H5T_t    *type          = NULL; /* Datatype for dataset (VOL pointer) */
+    H5T_t    *dt            = NULL; /* Datatype for dataset (non-VOL pointer) */
+    H5D_t    *new_dset      = NULL;
+    bool      has_vl_type   = false; /* Flag to indicate a VL-type for dataset */
+    bool      layout_init   = false; /* Flag to indicate that chunk information was initialized */
+    bool      layout_copied = false; /* Flag to indicate that layout message was copied */
+    bool      fill_copied   = false; /* Flag to indicate that fill-value message was copied */
+    bool      pline_copied  = false; /* Flag to indicate that pipeline message was copied */
+    bool      efl_copied    = false; /* Flag to indicate that external file list message was copied */
+    H5G_loc_t dset_loc;              /* Dataset location */
+    H5D_t    *ret_value = NULL;      /* Return value */
 
     FUNC_ENTER_PACKAGE
 
