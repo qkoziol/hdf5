@@ -364,7 +364,7 @@ done:
  */
 H5D_t *
 H5D__create_named(const H5G_loc_t *loc, const char *name, hid_t type_id, const H5S_t *space, hid_t lcpl_id,
-                  H5P_genplist_t *dcpl, hid_t dapl_id)
+                  H5P_genplist_t *dcpl, H5P_genplist_t *dapl)
 {
     H5O_obj_create_t ocrt_info;        /* Information for object creation */
     H5D_obj_create_t dcrt_info;        /* Information for dataset creation */
@@ -379,13 +379,13 @@ H5D__create_named(const H5G_loc_t *loc, const char *name, hid_t type_id, const H
     assert(space);
     assert(lcpl_id != H5P_DEFAULT);
     assert(dcpl);
-    assert(dapl_id != H5P_DEFAULT);
+    assert(dapl);
 
     /* Set up dataset creation info */
     dcrt_info.type_id = type_id;
     dcrt_info.space   = space;
     dcrt_info.dcpl    = dcpl;
-    dcrt_info.dapl_id = dapl_id;
+    dcrt_info.dapl = dapl;
 
     /* Set up object creation information */
     ocrt_info.obj_type = H5O_TYPE_DATASET;
@@ -1154,12 +1154,11 @@ done:
  *-------------------------------------------------------------------------
  */
 H5D_t *
-H5D__create(H5F_t *file, hid_t type_id, const H5S_t *space, H5P_genplist_t *dcpl, hid_t dapl_id)
+H5D__create(H5F_t *file, hid_t type_id, const H5S_t *space, H5P_genplist_t *dcpl, H5P_genplist_t *dapl)
 {
     H5T_t          *type     = NULL; /* Datatype for dataset (VOL pointer) */
     H5T_t          *dt       = NULL; /* Datatype for dataset (non-VOL pointer) */
     H5D_t          *new_dset = NULL;
-    H5P_genplist_t *dapl;                  /* Dataset access property list */
     bool            has_vl_type   = false; /* Flag to indicate a VL-type for dataset */
     bool            layout_init   = false; /* Flag to indicate that chunk information was initialized */
     bool            layout_copied = false; /* Flag to indicate that layout message was copied */
@@ -1206,8 +1205,6 @@ H5D__create(H5F_t *file, hid_t type_id, const H5S_t *space, H5P_genplist_t *dcpl
     H5G_loc_reset(&dset_loc);
 
     /* Initialize the shared dataset info */
-    if (NULL == (dapl = H5I_object(dapl_id)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a property list");
     if (NULL == (new_dset->shared = H5D__new(dcpl, dapl, true, has_vl_type)))
         HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, NULL, "can't initialize dataset object");
 
