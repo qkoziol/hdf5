@@ -258,7 +258,7 @@ H5VL__native_dataset_create(void *obj, const H5VL_loc_params_t *loc_params, cons
     H5D_t          *dset = NULL; /* New dataset's info */
     const H5S_t    *space;       /* Dataspace for dataset */
     H5P_genplist_t *dcpl;        /* Dataset creation property list */
-    H5P_genplist_t *dapl; /* Dataset access property list */
+    H5P_genplist_t *dapl;        /* Dataset access property list */
     void           *ret_value;
 
     FUNC_ENTER_PACKAGE
