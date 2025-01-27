@@ -384,7 +384,7 @@ H5D__create_named(const H5G_loc_t *loc, const char *name, hid_t type_id, const H
     /* Set up dataset creation info */
     dcrt_info.type_id = type_id;
     dcrt_info.space   = space;
-    dcrt_info.dcpl = dcpl;
+    dcrt_info.dcpl    = dcpl;
     dcrt_info.dapl_id = dapl_id;
 
     /* Set up object creation information */
