@@ -283,8 +283,12 @@ H5VL__native_dataset_create(void *obj, const H5VL_loc_params_t *loc_params, cons
     } /* end if */
     /* H5Dcreate2 */
     else {
+        H5P_genplist_t *lcpl;       /* Link creation property list */
+
         /* Create the new dataset & get its ID */
-        if (NULL == (dset = H5D__create_named(&loc, name, type_id, space, lcpl_id, dcpl, dapl)))
+        if (NULL == (lcpl = H5I_object(lcpl_id)))
+            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a property list");
+        if (NULL == (dset = H5D__create_named(&loc, name, type_id, space, lcpl, dcpl, dapl)))
             HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, NULL, "unable to create dataset");
     } /* end else */
 

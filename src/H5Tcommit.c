@@ -224,7 +224,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5T__commit_named(const H5G_loc_t *loc, const char *name, H5T_t *dt, hid_t lcpl_id, H5P_genplist_t *tcpl)
+H5T__commit_named(const H5G_loc_t *loc, const char *name, H5T_t *dt, H5P_genplist_t *lcpl, H5P_genplist_t *tcpl)
 {
     H5O_obj_create_t ocrt_info;           /* Information for object creation */
     H5T_obj_create_t tcrt_info;           /* Information for named datatype creation */
@@ -237,7 +237,7 @@ H5T__commit_named(const H5G_loc_t *loc, const char *name, H5T_t *dt, hid_t lcpl_
     assert(loc);
     assert(name && *name);
     assert(dt);
-    assert(lcpl_id != H5P_DEFAULT);
+    assert(lcpl);
     assert(tcpl);
 
     /* Record the type's state so that we can revert to it if linking fails */
@@ -253,7 +253,7 @@ H5T__commit_named(const H5G_loc_t *loc, const char *name, H5T_t *dt, hid_t lcpl_
     ocrt_info.new_obj  = NULL;
 
     /* Create the new named datatype and link it to its parent group */
-    if (H5L_link_object(loc, name, &ocrt_info, lcpl_id) < 0)
+    if (H5L_link_object(loc, name, &ocrt_info, lcpl) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINIT, FAIL, "unable to create and link to named datatype");
     assert(ocrt_info.new_obj);
 
