@@ -3584,7 +3584,7 @@ done:
  *
  * Purpose:  Private function for H5Dget_create_plist
  *
- * Return:   Success:    Pointer to a copy of the dataset access property list.
+ * Return:   Success:    Pointer to a copy of the dataset creation property list.
  *           Failure:    NULL
  *-------------------------------------------------------------------------
  */
