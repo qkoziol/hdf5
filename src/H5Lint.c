@@ -93,7 +93,7 @@ typedef struct {
 /* User data for path traversal callback to creating a link */
 struct H5L_trav_cr_t {
     H5F_t            *file;      /* Pointer to the file */
-    H5P_genplist_t   *lcpl;  /* Link creation property list */
+    H5P_genplist_t   *lcpl;      /* Link creation property list */
     H5G_name_t       *path;      /* Path to object being linked */
     H5O_obj_create_t *ocrt_info; /* Pointer to object creation info */
     H5O_link_t       *lnk;       /* Pointer to link information to insert */
@@ -139,7 +139,8 @@ static int    H5L__find_class_idx(H5L_type_t id);
 static herr_t H5L__link_cb(H5G_loc_t *grp_loc /*in*/, const char *name, const H5O_link_t *lnk,
                            H5G_loc_t *obj_loc, void *_udata /*in,out*/, H5G_own_loc_t *own_loc /*out*/);
 static herr_t H5L__create_real(const H5G_loc_t *link_loc, const char *link_name, H5G_name_t *obj_path,
-                               H5F_t *obj_file, H5O_link_t *lnk, H5O_obj_create_t *ocrt_info, H5P_genplist_t *lcpl);
+                               H5F_t *obj_file, H5O_link_t *lnk, H5O_obj_create_t *ocrt_info,
+                               H5P_genplist_t *lcpl);
 static herr_t H5L__get_val_real(const H5O_link_t *lnk, void *buf, size_t size);
 static herr_t H5L__get_val_cb(H5G_loc_t *grp_loc /*in*/, const char *name, const H5O_link_t *lnk,
                               H5G_loc_t *obj_loc, void *_udata /*in,out*/, H5G_own_loc_t *own_loc /*out*/);
@@ -497,7 +498,8 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5L_link_object(const H5G_loc_t *new_loc, const char *new_name, H5O_obj_create_t *ocrt_info, H5P_genplist_t *lcpl)
+H5L_link_object(const H5G_loc_t *new_loc, const char *new_name, H5O_obj_create_t *ocrt_info,
+                H5P_genplist_t *lcpl)
 {
     H5O_link_t lnk;                 /* Link to insert */
     herr_t     ret_value = SUCCEED; /* Return value */
@@ -708,10 +710,10 @@ static herr_t
 H5L__create_real(const H5G_loc_t *link_loc, const char *link_name, H5G_name_t *obj_path, H5F_t *obj_file,
                  H5O_link_t *lnk, H5O_obj_create_t *ocrt_info, H5P_genplist_t *lcpl)
 {
-    char           *norm_link_name = NULL;              /* Pointer to normalized link name */
-    unsigned        target_flags   = H5G_TARGET_NORMAL; /* Flags to pass to group traversal function */
-    H5L_trav_cr_t   udata;                              /* User data for callback */
-    herr_t          ret_value = SUCCEED;                /* Return value */
+    char         *norm_link_name = NULL;              /* Pointer to normalized link name */
+    unsigned      target_flags   = H5G_TARGET_NORMAL; /* Flags to pass to group traversal function */
+    H5L_trav_cr_t udata;                              /* User data for callback */
+    herr_t        ret_value = SUCCEED;                /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -753,7 +755,7 @@ H5L__create_real(const H5G_loc_t *link_loc, const char *link_name, H5G_name_t *o
      * inserting it in the callback.
      */
     udata.file      = obj_file;
-    udata.lcpl  = lcpl;
+    udata.lcpl      = lcpl;
     udata.path      = obj_path;
     udata.ocrt_info = ocrt_info;
     udata.lnk       = lnk;
@@ -849,7 +851,8 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5L__create_soft(const char *target_path, const H5G_loc_t *link_loc, const char *link_name, H5P_genplist_t *lcpl)
+H5L__create_soft(const char *target_path, const H5G_loc_t *link_loc, const char *link_name,
+                 H5P_genplist_t *lcpl)
 {
     char      *norm_target = NULL;  /* Pointer to normalized current name */
     H5O_link_t lnk;                 /* Link to insert */
@@ -1567,10 +1570,10 @@ herr_t
 H5L__move(const H5G_loc_t *src_loc, const char *src_name, const H5G_loc_t *dst_loc, const char *dst_name,
           bool copy_flag, H5P_genplist_t *lcpl)
 {
-    unsigned        dst_target_flags = H5G_TARGET_NORMAL;
-    H5T_cset_t      char_encoding    = H5F_DEFAULT_CSET; /* Character encoding for link */
-    H5L_trav_mv_t   udata;                               /* User data for traversal */
-    herr_t          ret_value = SUCCEED;                 /* Return value */
+    unsigned      dst_target_flags = H5G_TARGET_NORMAL;
+    H5T_cset_t    char_encoding    = H5F_DEFAULT_CSET; /* Character encoding for link */
+    H5L_trav_mv_t udata;                               /* User data for traversal */
+    herr_t        ret_value = SUCCEED;                 /* Return value */
 
     FUNC_ENTER_PACKAGE
 

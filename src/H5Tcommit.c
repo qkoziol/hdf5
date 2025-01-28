@@ -224,7 +224,8 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5T__commit_named(const H5G_loc_t *loc, const char *name, H5T_t *dt, H5P_genplist_t *lcpl, H5P_genplist_t *tcpl)
+H5T__commit_named(const H5G_loc_t *loc, const char *name, H5T_t *dt, H5P_genplist_t *lcpl,
+                  H5P_genplist_t *tcpl)
 {
     H5O_obj_create_t ocrt_info;           /* Information for object creation */
     H5T_obj_create_t tcrt_info;           /* Information for named datatype creation */

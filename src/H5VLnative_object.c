@@ -138,10 +138,10 @@ H5VL__native_object_copy(void *src_obj, const H5VL_loc_params_t *loc_params1, co
                          hid_t ocpypl_id, hid_t lcpl_id, hid_t H5_ATTR_UNUSED dxpl_id,
                          void H5_ATTR_UNUSED **req)
 {
-    H5G_loc_t src_loc; /* Source object group location */
-    H5G_loc_t dst_loc; /* Destination group location */
-    H5P_genplist_t *lcpl;       /* Link creation property list */
-    herr_t    ret_value = FAIL;
+    H5G_loc_t       src_loc; /* Source object group location */
+    H5G_loc_t       dst_loc; /* Destination group location */
+    H5P_genplist_t *lcpl;    /* Link creation property list */
+    herr_t          ret_value = FAIL;
 
     FUNC_ENTER_PACKAGE
 

@@ -112,7 +112,7 @@ H5VL__native_datatype_commit(void *obj, const H5VL_loc_params_t *loc_params, con
 
     /* Commit the datatype */
     if (NULL != name) {
-        H5P_genplist_t *lcpl;       /* Link creation property list */
+        H5P_genplist_t *lcpl; /* Link creation property list */
 
         /* H5Tcommit */
         if (NULL == (lcpl = H5I_object(lcpl_id)))

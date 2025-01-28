@@ -474,11 +474,11 @@ H5_DLL herr_t H5T__visit(H5T_t *dt, unsigned visit_flags, H5T_operator_t op, voi
 H5_DLL herr_t H5T__upgrade_version(H5T_t *dt, unsigned new_version);
 
 /* Committed / named datatype routines */
-H5_DLL herr_t          H5T__commit_anon(H5F_t *file, H5T_t *type, H5P_genplist_t *tcpl);
-H5_DLL herr_t          H5T__commit(H5F_t *file, H5T_t *type, H5P_genplist_t *tcpl);
-H5_DLL herr_t          H5T__commit_named(const H5G_loc_t *loc, const char *name, H5T_t *dt, H5P_genplist_t *lcpl,
-                                         H5P_genplist_t *tcpl);
-H5_DLL H5T_t          *H5T__open_name(const H5G_loc_t *loc, const char *name);
+H5_DLL herr_t H5T__commit_anon(H5F_t *file, H5T_t *type, H5P_genplist_t *tcpl);
+H5_DLL herr_t H5T__commit(H5F_t *file, H5T_t *type, H5P_genplist_t *tcpl);
+H5_DLL herr_t H5T__commit_named(const H5G_loc_t *loc, const char *name, H5T_t *dt, H5P_genplist_t *lcpl,
+                                H5P_genplist_t *tcpl);
+H5_DLL H5T_t *H5T__open_name(const H5G_loc_t *loc, const char *name);
 H5_DLL H5P_genplist_t *H5T__get_create_plist(const H5T_t *type);
 
 /* Bit twiddling functions */

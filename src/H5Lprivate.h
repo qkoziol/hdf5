@@ -75,7 +75,8 @@ typedef struct H5L_trav_cr_t H5L_trav_cr_t;
 
 /* General operations on links */
 H5_DLL herr_t H5L_init(void);
-H5_DLL herr_t H5L_link(const H5G_loc_t *new_loc, const char *new_name, H5G_loc_t *obj_loc, H5P_genplist_t *lcpl);
+H5_DLL herr_t H5L_link(const H5G_loc_t *new_loc, const char *new_name, H5G_loc_t *obj_loc,
+                       H5P_genplist_t *lcpl);
 H5_DLL herr_t H5L_link_object(const H5G_loc_t *new_loc, const char *new_name, H5O_obj_create_t *ocrt_info,
                               H5P_genplist_t *lcpl);
 H5_DLL herr_t H5L_exists_tolerant(const H5G_loc_t *loc, const char *name, bool *exists);

@@ -931,7 +931,8 @@ H5O__copy_free_addrmap_cb(void *_item, void H5_ATTR_UNUSED *key, void H5_ATTR_UN
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5O__copy_header(const H5O_loc_t *oloc_src, H5O_loc_t *oloc_dst /*out */, hid_t ocpypl_id, H5P_genplist_t *lcpl)
+H5O__copy_header(const H5O_loc_t *oloc_src, H5O_loc_t *oloc_dst /*out */, hid_t ocpypl_id,
+                 H5P_genplist_t *lcpl)
 {
     H5O_copy_t                   cpy_info;       /* Information for copying object */
     H5P_genplist_t              *ocpy_plist;     /* Object copy property list created */
@@ -1025,7 +1026,8 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5O__copy_obj(H5G_loc_t *src_loc, H5G_loc_t *dst_loc, const char *dst_name, hid_t ocpypl_id, H5P_genplist_t *lcpl)
+H5O__copy_obj(H5G_loc_t *src_loc, H5G_loc_t *dst_loc, const char *dst_name, hid_t ocpypl_id,
+              H5P_genplist_t *lcpl)
 {
     H5G_name_t new_path;                 /* Copied object group hier. path */
     H5O_loc_t  new_oloc;                 /* Copied object object location */

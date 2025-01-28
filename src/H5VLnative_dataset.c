@@ -283,7 +283,7 @@ H5VL__native_dataset_create(void *obj, const H5VL_loc_params_t *loc_params, cons
     } /* end if */
     /* H5Dcreate2 */
     else {
-        H5P_genplist_t *lcpl;       /* Link creation property list */
+        H5P_genplist_t *lcpl; /* Link creation property list */
 
         /* Create the new dataset & get its ID */
         if (NULL == (lcpl = H5I_object(lcpl_id)))
