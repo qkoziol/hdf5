@@ -78,7 +78,7 @@ static herr_t H5F__get_objects(const H5F_t *f, unsigned types, size_t max_index,
 static int    H5F__get_objects_cb(void *obj_ptr, hid_t obj_id, void *key);
 static herr_t H5F__build_name(const char *prefix, const char *file_name, char **full_name /*out*/);
 static char  *H5F__getenv_prefix_name(char **env_prefix /*in,out*/);
-static H5F_t *H5F__new(H5F_shared_t *shared, unsigned flags, hid_t fcpl_id, hid_t fapl_id, H5FD_t *lf);
+static H5F_t *H5F__new(H5F_shared_t *shared, unsigned flags, H5P_genplist_t *fcpl, hid_t fapl_id, H5FD_t *lf);
 static herr_t H5F__check_if_using_file_locks(H5P_genplist_t *fapl, bool *use_file_locking,
                                              bool *ignore_disabled_locks);
 static herr_t H5F__dest(H5F_t *f, bool flush, bool free_on_failure);
@@ -859,6 +859,7 @@ H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_op
                      const char *prop_prefix, const char *file_name, unsigned file_intent, hid_t fapl_id)
 {
     H5F_t     *src_file         = NULL; /* Source file */
+    H5P_genplist_t *fcpl;                      /* File creation property list */
     H5F_efc_t *efc              = NULL; /* External file cache */
     char      *full_name        = NULL; /* File name with prefix */
     char      *actual_file_name = NULL; /* File's actual name */
@@ -883,10 +884,14 @@ H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_op
         HGOTO_ERROR(H5E_FILE, H5E_CANTALLOC, FAIL, "memory allocation failed");
     temp_file_name_len = strlen(temp_file_name);
 
+    /* Get the default file creation property list */
+    if (NULL == (fcpl = H5I_object(H5P_FILE_CREATE_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get default file creation property list");
+
     /* Target file_name is an absolute pathname: see RM for detailed description */
     if (H5_CHECK_ABSOLUTE(file_name) || H5_CHECK_ABS_PATH(file_name)) {
         /* Try opening file */
-        if (H5F__efc_open(true, efc, &src_file, file_name, file_intent, H5P_FILE_CREATE_DEFAULT, fapl_id) < 0)
+        if (H5F__efc_open(true, efc, &src_file, file_name, file_intent, fcpl, fapl_id) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, FAIL, "can't try opening file");
 
         /* Adjust temporary file name if file not opened */
@@ -907,7 +912,7 @@ H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_op
     }     /* end if */
     else if (H5_CHECK_ABS_DRIVE(file_name)) {
         /* Try opening file */
-        if (H5F__efc_open(true, efc, &src_file, file_name, file_intent, H5P_FILE_CREATE_DEFAULT, fapl_id) < 0)
+        if (H5F__efc_open(true, efc, &src_file, file_name, file_intent, fcpl, fapl_id) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, FAIL, "can't try opening file");
 
         /* Adjust temporary file name if file not opened */
@@ -950,8 +955,7 @@ H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_op
                     } /* end if */
 
                     /* Try opening file */
-                    if (H5F__efc_open(true, efc, &src_file, full_name, file_intent, H5P_FILE_CREATE_DEFAULT,
-                                      fapl_id) < 0)
+                    if (H5F__efc_open(true, efc, &src_file, full_name, file_intent, fcpl, fapl_id) < 0)
                         HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, FAIL, "can't try opening file");
 
                     /* Release copy of file name */
@@ -974,7 +978,7 @@ H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_op
             HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't prepend prefix to filename");
 
         /* Try opening file */
-        if (H5F__efc_open(true, efc, &src_file, full_name, file_intent, H5P_FILE_CREATE_DEFAULT, fapl_id) < 0)
+        if (H5F__efc_open(true, efc, &src_file, full_name, file_intent, fcpl, fapl_id) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, FAIL, "can't try opening file");
 
         /* Release name */
@@ -991,8 +995,7 @@ H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_op
                 HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't prepend prefix to filename");
 
             /* Try opening file */
-            if (H5F__efc_open(true, efc, &src_file, full_name, file_intent, H5P_FILE_CREATE_DEFAULT,
-                              fapl_id) < 0)
+            if (H5F__efc_open(true, efc, &src_file, full_name, file_intent, fcpl, fapl_id) < 0)
                 HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, FAIL, "can't try opening file");
 
             /* Release name */
@@ -1003,8 +1006,7 @@ H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_op
     /* Try the relative file_name stored in temp_file_name */
     if (src_file == NULL) {
         /* Try opening file */
-        if (H5F__efc_open(true, efc, &src_file, temp_file_name, file_intent, H5P_FILE_CREATE_DEFAULT,
-                          fapl_id) < 0)
+        if (H5F__efc_open(true, efc, &src_file, temp_file_name, file_intent, fcpl, fapl_id) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, FAIL, "can't try opening file");
     } /* end if */
 
@@ -1028,7 +1030,7 @@ H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_op
         actual_file_name = (char *)H5MM_xfree(actual_file_name);
 
         /* Try opening with the resolved name */
-        if (H5F__efc_open(true, efc, &src_file, full_name, file_intent, H5P_FILE_CREATE_DEFAULT, fapl_id) < 0)
+        if (H5F__efc_open(true, efc, &src_file, full_name, file_intent, fcpl, fapl_id) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, FAIL, "can't try opening file");
 
         /* Release name */
@@ -1131,7 +1133,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static H5F_t *
-H5F__new(H5F_shared_t *shared, unsigned flags, hid_t fcpl_id, hid_t fapl_id, H5FD_t *lf)
+H5F__new(H5F_shared_t *shared, unsigned flags, H5P_genplist_t *fcpl, hid_t fapl_id, H5FD_t *lf)
 {
     H5F_t *f         = NULL;
     H5F_t *ret_value = NULL;
@@ -1182,25 +1184,24 @@ H5F__new(H5F_shared_t *shared, unsigned flags, hid_t fcpl_id, hid_t fapl_id, H5F
          * new file handle. We do this early because some values might need
          * to change as the file is being opened.
          */
-        if (NULL == (plist = (H5P_genplist_t *)H5I_object(fcpl_id)))
-            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not property list");
-        f->shared->fcpl_id = H5P_copy_plist_id(plist, false);
+        if (NULL == (f->shared->fcpl = H5P_copy_plist(fcpl, false)))
+            HGOTO_ERROR(H5E_FILE, H5E_CANTCOPY, NULL, "unable to copy the creation property list");
 
         /* Get the FCPL values to cache */
-        if (H5P_get(plist, H5F_CRT_ADDR_BYTE_NUM_NAME, &f->shared->sizeof_addr) < 0)
+        if (H5P_get(fcpl, H5F_CRT_ADDR_BYTE_NUM_NAME, &f->shared->sizeof_addr) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, NULL, "can't get byte number for address");
-        if (H5P_get(plist, H5F_CRT_OBJ_BYTE_NUM_NAME, &f->shared->sizeof_size) < 0)
+        if (H5P_get(fcpl, H5F_CRT_OBJ_BYTE_NUM_NAME, &f->shared->sizeof_size) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, NULL, "can't get byte number for object size");
-        if (H5P_get(plist, H5F_CRT_SHMSG_NINDEXES_NAME, &f->shared->sohm_nindexes) < 0)
+        if (H5P_get(fcpl, H5F_CRT_SHMSG_NINDEXES_NAME, &f->shared->sohm_nindexes) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, NULL, "can't get number of SOHM indexes");
         assert(f->shared->sohm_nindexes < 255);
-        if (H5P_get(plist, H5F_CRT_FILE_SPACE_STRATEGY_NAME, &f->shared->fs_strategy) < 0)
+        if (H5P_get(fcpl, H5F_CRT_FILE_SPACE_STRATEGY_NAME, &f->shared->fs_strategy) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, NULL, "can't get file space strategy");
-        if (H5P_get(plist, H5F_CRT_FREE_SPACE_PERSIST_NAME, &f->shared->fs_persist) < 0)
+        if (H5P_get(fcpl, H5F_CRT_FREE_SPACE_PERSIST_NAME, &f->shared->fs_persist) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, NULL, "can't get file space persisting status");
-        if (H5P_get(plist, H5F_CRT_FREE_SPACE_THRESHOLD_NAME, &f->shared->fs_threshold) < 0)
+        if (H5P_get(fcpl, H5F_CRT_FREE_SPACE_THRESHOLD_NAME, &f->shared->fs_threshold) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, NULL, "can't get free-space section threshold");
-        if (H5P_get(plist, H5F_CRT_FILE_SPACE_PAGE_SIZE_NAME, &f->shared->fs_page_size) < 0)
+        if (H5P_get(fcpl, H5F_CRT_FILE_SPACE_PAGE_SIZE_NAME, &f->shared->fs_page_size) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, NULL, "can't get file space page size");
         assert(f->shared->fs_page_size >= H5F_FILE_SPACE_PAGE_SIZE_MIN);
 
@@ -1379,9 +1380,9 @@ done:
             if (f->shared->efc)
                 if (H5F__efc_destroy(f->shared->efc) < 0)
                     HDONE_ERROR(H5E_FILE, H5E_CANTRELEASE, NULL, "can't destroy external file cache");
-            if (f->shared->fcpl_id > 0)
-                if (H5I_dec_ref(f->shared->fcpl_id) < 0)
-                    HDONE_ERROR(H5E_FILE, H5E_CANTDEC, NULL, "can't close property list");
+            if (f->shared->fcpl && !H5P_PLIST_IS_DEFAULT(f->shared->fcpl))
+                if (H5P_release(f->shared->fcpl) < 0)
+                    HDONE_ERROR(H5E_FILE, H5E_CANTCLOSEOBJ, NULL, "can't close property list");
 
             f->shared = H5FL_FREE(H5F_shared_t, f->shared);
         }
@@ -1603,12 +1604,10 @@ H5F__dest(H5F_t *f, bool flush, bool free_on_failure)
             HDONE_ERROR(H5E_FILE, H5E_CANTRELEASE, FAIL, "problems closing file");
 
         /* Destroy file creation properties */
-        if (H5I_GENPROP_LST != H5I_get_type(f->shared->fcpl_id))
-            /* Push error, but keep going*/
-            HDONE_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a property list");
-        if (H5I_dec_ref(f->shared->fcpl_id) < 0)
-            /* Push error, but keep going*/
-            HDONE_ERROR(H5E_FILE, H5E_CANTDEC, FAIL, "can't close property list");
+        if (!H5P_PLIST_IS_DEFAULT(f->shared->fcpl))
+            if (H5P_release(f->shared->fcpl) < 0)
+                /* Push error, but keep going*/
+                HDONE_ERROR(H5E_FILE, H5E_CANTCLOSEOBJ, FAIL, "can't close property list");
 
         /* Clean up the cached VOL connector ID & info */
         if (f->shared->vol_info)
@@ -1826,7 +1825,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, hid_t fcpl_id, hid_t fapl_id)
+H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist_t *fcpl, hid_t fapl_id)
 {
     H5F_t             *file   = NULL; /*the success return value      */
     H5F_shared_t      *shared = NULL; /*shared part of `file'         */
@@ -1965,7 +1964,7 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, hid_t fcpl_i
                         "SWMR read access flag not the same for file that is already open");
 
         /* Allocate new "high-level" file struct */
-        if ((file = H5F__new(shared, flags, fcpl_id, fapl_id, NULL)) == NULL)
+        if (NULL == (file = H5F__new(shared, flags, fcpl, fapl_id, NULL)))
             HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, FAIL, "unable to create new file object");
     } /* end if */
     else {
@@ -1995,7 +1994,7 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, hid_t fcpl_i
             } /* end if */
 
         /* Create the 'top' file structure */
-        if (NULL == (file = H5F__new(NULL, flags, fcpl_id, fapl_id, lf))) {
+        if (NULL == (file = H5F__new(NULL, flags, fcpl, fapl_id, lf))) {
             /* If this is the only time the file has been opened and the struct
              * returned is NULL, H5FD_close() will never be called via H5F__dest()
              * so we have to close lf here before heading to the error handling.
@@ -2710,11 +2709,14 @@ H5F_t *
 H5F__reopen(H5F_t *f)
 {
     H5F_t *ret_value = NULL; /* Return value */
+    H5P_genplist_t *fcpl;                      /* File creation property list */
 
     FUNC_ENTER_PACKAGE
 
     /* Get a new "top level" file struct, sharing the same "low level" file struct */
-    if (NULL == (ret_value = H5F__new(f->shared, 0, H5P_FILE_CREATE_DEFAULT, H5P_FILE_ACCESS_DEFAULT, NULL)))
+    if (NULL == (fcpl = H5I_object(H5P_FILE_CREATE_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_CANTGET, NULL, "can't get default file creation property list");
+    if (NULL == (ret_value = H5F__new(f->shared, 0, fcpl, H5P_FILE_ACCESS_DEFAULT, NULL)))
         HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, NULL, "unable to reopen file");
 
     /* Duplicate old file's names */

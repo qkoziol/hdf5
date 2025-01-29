@@ -349,27 +349,6 @@ H5F_get_read_attempts(const H5F_t *f)
 } /* end H5F_get_read_attempts() */
 
 /*-------------------------------------------------------------------------
- * Function: H5F_get_fcpl
- *
- * Purpose:  Retrieve the value of a file's FCPL.
- *
- * Return:   Success:    The FCPL for the file.
- *           Failure:    ? (should not happen)
- *-------------------------------------------------------------------------
- */
-hid_t
-H5F_get_fcpl(const H5F_t *f)
-{
-    /* Use FUNC_ENTER_NOAPI_NOINIT_NOERR here to avoid performance issues */
-    FUNC_ENTER_NOAPI_NOINIT_NOERR
-
-    assert(f);
-    assert(f->shared);
-
-    FUNC_LEAVE_NOAPI(f->shared->fcpl_id)
-} /* end H5F_get_fcpl() */
-
-/*-------------------------------------------------------------------------
  * Function: H5F_sizeof_addr
  *
  * Purpose:  Quick and dirty routine to retrieve the size of the file's size

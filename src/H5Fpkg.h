@@ -287,7 +287,7 @@ struct H5F_shared_t {
     bool start_mdc_log_on_access;                    /* set when mdc logging should  */
                                                      /* begin on file access/create          */
     char              *mdc_log_location;             /* location of mdc log               */
-    hid_t              fcpl_id;                      /* File creation property list ID 	*/
+    H5P_genplist_t *fcpl;                            /* File creation property list */
     H5F_close_degree_t fc_degree;                    /* File close behavior degree	*/
     bool     evict_on_close; /* If the file's objects should be evicted from the metadata cache on close */
     size_t   rdcc_nslots;    /* Size of raw data chunk cache (slots)	*/
@@ -460,7 +460,7 @@ H5_DLL herr_t H5F__set_mpi_atomicity(H5F_t *file, bool flag);
 /* External file cache routines */
 H5_DLL H5F_efc_t *H5F__efc_create(unsigned max_nfiles);
 H5_DLL herr_t     H5F__efc_open(bool try, H5F_efc_t *efc, H5F_t **file, const char *name, unsigned flags,
-                                hid_t fcpl_id, hid_t fapl_id);
+                                H5P_genplist_t *fcpl, hid_t fapl_id);
 H5_DLL unsigned   H5F__efc_max_nfiles(H5F_efc_t *efc);
 H5_DLL herr_t     H5F__efc_release(H5F_efc_t *efc);
 H5_DLL herr_t     H5F__efc_destroy(H5F_efc_t *efc);

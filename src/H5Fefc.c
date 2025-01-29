@@ -62,7 +62,7 @@ struct H5F_efc_t {
 };
 
 /* Private prototypes */
-static herr_t H5F__efc_open_file(bool try, H5F_t **file, const char *name, unsigned flags, hid_t fcpl_id,
+static herr_t H5F__efc_open_file(bool try, H5F_t **file, const char *name, unsigned flags, H5P_genplist_t *fcpl,
                                  hid_t fapl_id);
 static herr_t H5F__efc_release_real(H5F_efc_t *efc);
 static herr_t H5F__efc_remove_ent(H5F_efc_t *efc, H5F_efc_ent_t *ent);
@@ -131,7 +131,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5F__efc_open_file(bool try, H5F_t **_file, const char *name, unsigned flags, hid_t fcpl_id, hid_t fapl_id)
+H5F__efc_open_file(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist_t *fcpl, hid_t fapl_id)
 {
     H5F_t *file      = NULL;    /* File opened */
     herr_t ret_value = SUCCEED; /* Return value */
@@ -142,7 +142,7 @@ H5F__efc_open_file(bool try, H5F_t **_file, const char *name, unsigned flags, hi
     *_file = NULL;
 
     /* Open the file */
-    if (H5F_open(try, &file, name, flags, fcpl_id, fapl_id) < 0)
+    if (H5F_open(try, &file, name, flags, fcpl, fapl_id) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, FAIL, "can't open file");
 
     /* Check if file was not opened */
@@ -195,7 +195,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5F__efc_open(bool try, H5F_efc_t *efc, H5F_t **_file, const char *name, unsigned flags, hid_t fcpl_id,
+H5F__efc_open(bool try, H5F_efc_t *efc, H5F_t **_file, const char *name, unsigned flags, H5P_genplist_t *fcpl,
               hid_t fapl_id)
 {
     H5F_efc_ent_t        *ent       = NULL;    /* Entry for target file in efc */
@@ -229,7 +229,7 @@ H5F__efc_open(bool try, H5F_efc_t *efc, H5F_t **_file, const char *name, unsigne
      * support this so clients do not have to make 2 different calls depending
      * on the state of the efc. */
     if (!efc) {
-        if (H5F__efc_open_file(try, _file, name, flags, fcpl_id, fapl_id) < 0)
+        if (H5F__efc_open_file(try, _file, name, flags, fcpl, fapl_id) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, FAIL, "can't try opening file");
 
         /* Check if file was not opened */
@@ -302,7 +302,7 @@ H5F__efc_open(bool try, H5F_efc_t *efc, H5F_t **_file, const char *name, unsigne
             } /* end if */
             else {
                 /* Cannot cache file, just try opening file and return */
-                if (H5F__efc_open_file(try, _file, name, flags, fcpl_id, fapl_id) < 0)
+                if (H5F__efc_open_file(try, _file, name, flags, fcpl, fapl_id) < 0)
                     HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, FAIL, "can't try opening file");
 
                 /* Check if file was not opened */
@@ -323,7 +323,7 @@ H5F__efc_open(bool try, H5F_efc_t *efc, H5F_t **_file, const char *name, unsigne
         ent->name = NULL;
 
         /* Try opening the file */
-        if (H5F__efc_open_file(try, &ent->file, name, flags, fcpl_id, fapl_id) < 0)
+        if (H5F__efc_open_file(try, &ent->file, name, flags, fcpl, fapl_id) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, FAIL, "can't try opening file");
 
         /* Check if file was actually opened */

@@ -312,7 +312,6 @@ H5F__super_read(H5F_t *f, H5P_genplist_t *fa_plist, bool initial_read)
     H5AC_ring_t               orig_ring = H5AC_RING_INV;
     H5F_super_t              *sblock    = NULL; /* Superblock structure */
     H5F_superblock_cache_ud_t udata;            /* User data for cache callbacks */
-    H5P_genplist_t           *c_plist;          /* File creation property list  */
     H5FD_t                   *file;             /* File driver pointer */
     unsigned sblock_flags = H5AC__NO_FLAGS_SET; /* flags used in superblock unprotect call      */
     haddr_t  super_addr   = HADDR_UNDEF;        /* Absolute address of superblock */
@@ -410,10 +409,6 @@ H5F__super_read(H5F_t *f, H5P_genplist_t *fa_plist, bool initial_read)
     if (!(H5F_INTENT(f) & H5F_ACC_RDWR))
         rw_flags |= H5AC__READ_ONLY_FLAG;
 
-    /* Get the shared file creation property list */
-    if (NULL == (c_plist = (H5P_genplist_t *)H5I_object(f->shared->fcpl_id)))
-        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "can't get property list");
-
     /* Make certain we can read the fixed-size portion of the superblock */
     if (H5F__set_eoa(f, H5FD_MEM_SUPER, (haddr_t)H5F_SUPERBLOCK_SPEC_READ_SIZE) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "set end of space allocation request failed");
@@ -422,7 +417,7 @@ H5F__super_read(H5F_t *f, H5P_genplist_t *fa_plist, bool initial_read)
     udata.f               = f;
     udata.ignore_drvrinfo = H5F_HAS_FEATURE(f, H5FD_FEAT_IGNORE_DRVRINFO);
     udata.sym_leaf_k      = 0;
-    if (H5P_get(c_plist, H5F_CRT_BTREE_RANK_NAME, udata.btree_k) < 0)
+    if (H5P_get(f->shared->fcpl, H5F_CRT_BTREE_RANK_NAME, udata.btree_k) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to get rank for btree internal nodes");
     udata.stored_eof       = HADDR_UNDEF;
     udata.drvrinfo_removed = false;
@@ -494,11 +489,11 @@ H5F__super_read(H5F_t *f, H5P_genplist_t *fa_plist, bool initial_read)
     } /* end if */
 
     /* Set information in the file's creation property list */
-    if (H5P_set(c_plist, H5F_CRT_SUPER_VERS_NAME, &sblock->super_vers) < 0)
+    if (H5P_set(f->shared->fcpl, H5F_CRT_SUPER_VERS_NAME, &sblock->super_vers) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "unable to set superblock version");
-    if (H5P_set(c_plist, H5F_CRT_ADDR_BYTE_NUM_NAME, &sblock->sizeof_addr) < 0)
+    if (H5P_set(f->shared->fcpl, H5F_CRT_ADDR_BYTE_NUM_NAME, &sblock->sizeof_addr) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "unable to set byte number in an address");
-    if (H5P_set(c_plist, H5F_CRT_OBJ_BYTE_NUM_NAME, &sblock->sizeof_size) < 0)
+    if (H5P_set(f->shared->fcpl, H5F_CRT_OBJ_BYTE_NUM_NAME, &sblock->sizeof_size) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "unable to set byte number for object size");
 
     /* Handle the B-tree 'K' values */
@@ -507,21 +502,21 @@ H5F__super_read(H5F_t *f, H5P_genplist_t *fa_plist, bool initial_read)
         assert(udata.sym_leaf_k != 0);
 
         /* Set the symbol table internal node 'K' value */
-        if (H5P_set(c_plist, H5F_CRT_SYM_LEAF_NAME, &udata.sym_leaf_k) < 0)
+        if (H5P_set(f->shared->fcpl, H5F_CRT_SYM_LEAF_NAME, &udata.sym_leaf_k) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "unable to set rank for symbol table leaf nodes");
         sblock->sym_leaf_k = udata.sym_leaf_k;
 
         /* Set the B-tree internal node values, etc */
-        if (H5P_set(c_plist, H5F_CRT_BTREE_RANK_NAME, udata.btree_k) < 0)
+        if (H5P_set(f->shared->fcpl, H5F_CRT_BTREE_RANK_NAME, udata.btree_k) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "unable to set rank for btree internal nodes");
         H5MM_memcpy(sblock->btree_k, udata.btree_k, sizeof(unsigned) * (size_t)H5B_NUM_BTREE_ID);
     } /* end if */
     else {
         /* Get the (default) B-tree internal node values, etc */
         /* (Note: these may be reset in a superblock extension) */
-        if (H5P_get(c_plist, H5F_CRT_BTREE_RANK_NAME, sblock->btree_k) < 0)
+        if (H5P_get(f->shared->fcpl, H5F_CRT_BTREE_RANK_NAME, sblock->btree_k) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to get rank for btree internal nodes");
-        if (H5P_get(c_plist, H5F_CRT_SYM_LEAF_NAME, &sblock->sym_leaf_k) < 0)
+        if (H5P_get(f->shared->fcpl, H5F_CRT_SYM_LEAF_NAME, &sblock->sym_leaf_k) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to get rank for btree internal nodes");
     } /* end else */
 
@@ -529,7 +524,7 @@ H5F__super_read(H5F_t *f, H5P_genplist_t *fa_plist, bool initial_read)
      * The user-defined data is the area of the file before the base
      * address.
      */
-    if (H5P_set(c_plist, H5F_CRT_USER_BLOCK_NAME, &sblock->base_addr) < 0)
+    if (H5P_set(f->shared->fcpl, H5F_CRT_USER_BLOCK_NAME, &sblock->base_addr) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "unable to set userblock size");
 
     /*
@@ -696,7 +691,7 @@ H5F__super_read(H5F_t *f, H5P_genplist_t *fa_plist, bool initial_read)
         }     /* end if */
 
         /* Read in the shared OH message information if there is any */
-        if (H5SM_get_info(&ext_loc, c_plist) < 0)
+        if (H5SM_get_info(&ext_loc, f->shared->fcpl) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to read SOHM table information");
 
         /* Check for the extension having a 'v1 B-tree "K"' message */
@@ -713,9 +708,9 @@ H5F__super_read(H5F_t *f, H5P_genplist_t *fa_plist, bool initial_read)
             sblock->sym_leaf_k            = btreek.sym_leaf_k;
 
             /* Set non-default v1 B-tree 'K' values in the property list */
-            if (H5P_set(c_plist, H5F_CRT_BTREE_RANK_NAME, btreek.btree_k) < 0)
+            if (H5P_set(f->shared->fcpl, H5F_CRT_BTREE_RANK_NAME, btreek.btree_k) < 0)
                 HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "unable to set rank for btree internal nodes");
-            if (H5P_set(c_plist, H5F_CRT_SYM_LEAF_NAME, &btreek.sym_leaf_k) < 0)
+            if (H5P_set(f->shared->fcpl, H5F_CRT_SYM_LEAF_NAME, &btreek.sym_leaf_k) < 0)
                 HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "unable to set rank for symbol table leaf nodes");
         } /* end if */
 
@@ -759,21 +754,21 @@ H5F__super_read(H5F_t *f, H5P_genplist_t *fa_plist, bool initial_read)
                     f->shared->fs_strategy = fsinfo.strategy;
 
                     /* Set non-default strategy in the property list */
-                    if (H5P_set(c_plist, H5F_CRT_FILE_SPACE_STRATEGY_NAME, &fsinfo.strategy) < 0)
+                    if (H5P_set(f->shared->fcpl, H5F_CRT_FILE_SPACE_STRATEGY_NAME, &fsinfo.strategy) < 0)
                         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "unable to set file space strategy");
                 } /* end if */
                 if (f->shared->fs_persist != fsinfo.persist) {
                     f->shared->fs_persist = fsinfo.persist;
 
                     /* Set non-default strategy in the property list */
-                    if (H5P_set(c_plist, H5F_CRT_FREE_SPACE_PERSIST_NAME, &fsinfo.persist) < 0)
+                    if (H5P_set(f->shared->fcpl, H5F_CRT_FREE_SPACE_PERSIST_NAME, &fsinfo.persist) < 0)
                         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "unable to set file space strategy");
                 } /* end if */
                 if (f->shared->fs_threshold != fsinfo.threshold) {
                     f->shared->fs_threshold = fsinfo.threshold;
 
                     /* Set non-default threshold in the property list */
-                    if (H5P_set(c_plist, H5F_CRT_FREE_SPACE_THRESHOLD_NAME, &fsinfo.threshold) < 0)
+                    if (H5P_set(f->shared->fcpl, H5F_CRT_FREE_SPACE_THRESHOLD_NAME, &fsinfo.threshold) < 0)
                         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "unable to set file space strategy");
                 } /* end if */
 
@@ -786,7 +781,7 @@ H5F__super_read(H5F_t *f, H5P_genplist_t *fa_plist, bool initial_read)
                     f->shared->fs_page_size = fsinfo.page_size;
 
                     /* Set file space page size in the property list */
-                    if (H5P_set(c_plist, H5F_CRT_FILE_SPACE_PAGE_SIZE_NAME, &fsinfo.page_size) < 0)
+                    if (H5P_set(f->shared->fcpl, H5F_CRT_FILE_SPACE_PAGE_SIZE_NAME, &fsinfo.page_size) < 0)
                         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "unable to set file space page size");
                 } /* end if */
                 if (f->shared->pgend_meta_thres != fsinfo.pgend_meta_thres)
@@ -1054,7 +1049,6 @@ H5F__super_init(H5F_t *f)
     H5O_drvinfo_t *drvinfo = NULL;  /* Driver info */
     bool           drvinfo_in_cache =
         false;             /* Whether the driver info block has been inserted into the metadata cache */
-    H5P_genplist_t *plist; /* File creation property list                */
     H5AC_ring_t     orig_ring = H5AC_RING_INV;
     hsize_t         userblock_size;      /* Size of userblock, in bytes                */
     hsize_t         superblock_size = 0; /* Size of superblock, in bytes               */
@@ -1079,16 +1073,12 @@ H5F__super_init(H5F_t *f)
     sblock->driver_addr = HADDR_UNDEF;
     sblock->root_addr   = HADDR_UNDEF;
 
-    /* Get the shared file creation property list */
-    if (NULL == (plist = (H5P_genplist_t *)H5I_object(f->shared->fcpl_id)))
-        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a property list");
-
     /* Initialize sym_leaf_k */
-    if (H5P_get(plist, H5F_CRT_SYM_LEAF_NAME, &sblock->sym_leaf_k) < 0)
+    if (H5P_get(f->shared->fcpl, H5F_CRT_SYM_LEAF_NAME, &sblock->sym_leaf_k) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get byte number for object size");
 
     /* Initialize btree_k */
-    if (H5P_get(plist, H5F_CRT_BTREE_RANK_NAME, &sblock->btree_k[0]) < 0)
+    if (H5P_get(f->shared->fcpl, H5F_CRT_BTREE_RANK_NAME, &sblock->btree_k[0]) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to get rank for btree internal nodes");
 
     /* Check for non-default free-space settings */
@@ -1161,11 +1151,7 @@ H5F__super_init(H5F_t *f)
 
     /* If a newer superblock version is required, set it here */
     if (super_vers != HDF5_SUPERBLOCK_VERSION_DEF) {
-        H5P_genplist_t *c_plist; /* Property list */
-
-        if (NULL == (c_plist = (H5P_genplist_t *)H5I_object(f->shared->fcpl_id)))
-            HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not property list");
-        if (H5P_set(c_plist, H5F_CRT_SUPER_VERS_NAME, &super_vers) < 0)
+        if (H5P_set(f->shared->fcpl, H5F_CRT_SUPER_VERS_NAME, &super_vers) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "unable to set superblock version");
     } /* end if */
 
@@ -1178,7 +1164,7 @@ H5F__super_init(H5F_t *f)
      * base address is set to the same thing as the superblock for
      * now.
      */
-    if (H5P_get(plist, H5F_CRT_USER_BLOCK_NAME, &userblock_size) < 0)
+    if (H5P_get(f->shared->fcpl, H5F_CRT_USER_BLOCK_NAME, &userblock_size) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to get userblock size");
 
     /* Sanity check the userblock size vs. the file's allocation alignment */
@@ -1319,7 +1305,7 @@ H5F__super_init(H5F_t *f)
          */
         if (f->shared->sohm_nindexes > 0) {
             /* Initialize the shared message code & write the SOHM message to the extension */
-            if (H5SM_init(f, plist, &ext_loc) < 0)
+            if (H5SM_init(f, f->shared->fcpl, &ext_loc) < 0)
                 HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, FAIL, "unable to create SOHM table");
         }
 
