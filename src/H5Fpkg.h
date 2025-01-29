@@ -287,7 +287,7 @@ struct H5F_shared_t {
     bool start_mdc_log_on_access;                    /* set when mdc logging should  */
                                                      /* begin on file access/create          */
     char              *mdc_log_location;             /* location of mdc log               */
-    H5P_genplist_t *fcpl;                            /* File creation property list */
+    H5P_genplist_t    *fcpl;                         /* File creation property list */
     H5F_close_degree_t fc_degree;                    /* File close behavior degree	*/
     bool     evict_on_close; /* If the file's objects should be evicted from the metadata cache on close */
     size_t   rdcc_nslots;    /* Size of raw data chunk cache (slots)	*/

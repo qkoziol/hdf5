@@ -858,14 +858,14 @@ herr_t
 H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_open_t prefix_type,
                      const char *prop_prefix, const char *file_name, unsigned file_intent, hid_t fapl_id)
 {
-    H5F_t     *src_file         = NULL; /* Source file */
-    H5P_genplist_t *fcpl;                      /* File creation property list */
-    H5F_efc_t *efc              = NULL; /* External file cache */
-    char      *full_name        = NULL; /* File name with prefix */
-    char      *actual_file_name = NULL; /* File's actual name */
-    char      *temp_file_name   = NULL; /* Temporary pointer to file name */
-    size_t     temp_file_name_len;      /* Length of temporary file name */
-    herr_t     ret_value = SUCCEED;     /* Return value */
+    H5F_t          *src_file = NULL;         /* Source file */
+    H5P_genplist_t *fcpl;                    /* File creation property list */
+    H5F_efc_t      *efc              = NULL; /* External file cache */
+    char           *full_name        = NULL; /* File name with prefix */
+    char           *actual_file_name = NULL; /* File's actual name */
+    char           *temp_file_name   = NULL; /* Temporary pointer to file name */
+    size_t          temp_file_name_len;      /* Length of temporary file name */
+    herr_t          ret_value = SUCCEED;     /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
@@ -2708,8 +2708,8 @@ done:
 H5F_t *
 H5F__reopen(H5F_t *f)
 {
-    H5F_t *ret_value = NULL; /* Return value */
-    H5P_genplist_t *fcpl;                      /* File creation property list */
+    H5F_t          *ret_value = NULL; /* Return value */
+    H5P_genplist_t *fcpl;             /* File creation property list */
 
     FUNC_ENTER_PACKAGE
 

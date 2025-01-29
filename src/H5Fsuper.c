@@ -1048,18 +1048,18 @@ H5F__super_init(H5F_t *f)
     bool sblock_in_cache   = false; /* Whether the superblock has been inserted into the metadata cache */
     H5O_drvinfo_t *drvinfo = NULL;  /* Driver info */
     bool           drvinfo_in_cache =
-        false;             /* Whether the driver info block has been inserted into the metadata cache */
-    H5AC_ring_t     orig_ring = H5AC_RING_INV;
-    hsize_t         userblock_size;      /* Size of userblock, in bytes                */
-    hsize_t         superblock_size = 0; /* Size of superblock, in bytes               */
-    haddr_t         superblock_addr = HADDR_UNDEF;
-    size_t          driver_size;                              /* Size of driver info block (bytes)          */
-    unsigned        super_vers = HDF5_SUPERBLOCK_VERSION_DEF; /* Superblock version for file */
-    H5O_loc_t       ext_loc;                                  /* Superblock extension object location */
-    bool            need_ext;                                 /* Whether the superblock extension is needed */
-    bool            ext_created    = false;                   /* Whether the extension has been created */
-    bool   non_default_fs_settings = false;   /* Whether the file has non-default free-space settings */
-    herr_t ret_value               = SUCCEED; /* Return Value                              */
+        false; /* Whether the driver info block has been inserted into the metadata cache */
+    H5AC_ring_t orig_ring = H5AC_RING_INV;
+    hsize_t     userblock_size;      /* Size of userblock, in bytes                */
+    hsize_t     superblock_size = 0; /* Size of superblock, in bytes               */
+    haddr_t     superblock_addr = HADDR_UNDEF;
+    size_t      driver_size;                              /* Size of driver info block (bytes)          */
+    unsigned    super_vers = HDF5_SUPERBLOCK_VERSION_DEF; /* Superblock version for file */
+    H5O_loc_t   ext_loc;                                  /* Superblock extension object location */
+    bool        need_ext;                                 /* Whether the superblock extension is needed */
+    bool        ext_created             = false;          /* Whether the extension has been created */
+    bool        non_default_fs_settings = false;   /* Whether the file has non-default free-space settings */
+    herr_t      ret_value               = SUCCEED; /* Return Value                              */
 
     FUNC_ENTER_PACKAGE_TAG(H5AC__SUPERBLOCK_TAG)
 

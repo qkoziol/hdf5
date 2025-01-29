@@ -76,9 +76,9 @@ void *
 H5VL__native_file_create(const char *name, unsigned flags, hid_t fcpl_id, hid_t fapl_id,
                          hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
-    H5F_t *new_file  = NULL;
-    H5P_genplist_t *fcpl;        /* File creation property list */
-    void  *ret_value = NULL;
+    H5F_t          *new_file = NULL;
+    H5P_genplist_t *fcpl; /* File creation property list */
+    void           *ret_value = NULL;
 
     FUNC_ENTER_PACKAGE
 
@@ -121,9 +121,9 @@ void *
 H5VL__native_file_open(const char *name, unsigned flags, hid_t fapl_id, hid_t H5_ATTR_UNUSED dxpl_id,
                        void H5_ATTR_UNUSED **req)
 {
-    H5F_t *new_file  = NULL;
-    H5P_genplist_t *fcpl;                      /* File creation property list */
-    void  *ret_value = NULL;
+    H5F_t          *new_file = NULL;
+    H5P_genplist_t *fcpl; /* File creation property list */
+    void           *ret_value = NULL;
 
     FUNC_ENTER_PACKAGE
 
