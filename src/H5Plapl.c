@@ -852,9 +852,9 @@ H5P__lacc_elink_pref_close(const char H5_ATTR_UNUSED *name, size_t H5_ATTR_UNUSE
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pset_nlinks(hid_t plist_id, size_t nlinks)
+H5Pset_nlinks(hid_t lapl_id, size_t nlinks)
 {
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *lapl;               /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -863,11 +863,11 @@ H5Pset_nlinks(hid_t plist_id, size_t nlinks)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "number of links must be positive");
 
     /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_LINK_ACCESS, false)))
+    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_LINK_ACCESS, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set number of links */
-    if (H5P_set(plist, H5L_ACS_NLINKS_NAME, &nlinks) < 0)
+    if (H5P_set(lapl, H5L_ACS_NLINKS_NAME, &nlinks) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set nlink info");
 
 done:
@@ -888,9 +888,9 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pget_nlinks(hid_t plist_id, size_t *nlinks /*out*/)
+H5Pget_nlinks(hid_t lapl_id, size_t *nlinks /*out*/)
 {
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *lapl;               /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -899,11 +899,11 @@ H5Pget_nlinks(hid_t plist_id, size_t *nlinks /*out*/)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid pointer passed in");
 
     /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_LINK_ACCESS, true)))
+    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get the current number of links */
-    if (H5P_get(plist, H5L_ACS_NLINKS_NAME, nlinks) < 0)
+    if (H5P_get(lapl, H5L_ACS_NLINKS_NAME, nlinks) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get number of links");
 
 done:
@@ -922,19 +922,19 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pset_elink_prefix(hid_t plist_id, const char *prefix)
+H5Pset_elink_prefix(hid_t lapl_id, const char *prefix)
 {
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *lapl;               /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_LINK_ACCESS, false)))
+    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_LINK_ACCESS, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set prefix */
-    if (H5P_set(plist, H5L_ACS_ELINK_PREFIX_NAME, &prefix) < 0)
+    if (H5P_set(lapl, H5L_ACS_ELINK_PREFIX_NAME, &prefix) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set prefix info");
 
 done:
@@ -955,9 +955,9 @@ done:
  *-------------------------------------------------------------------------
  */
 ssize_t
-H5Pget_elink_prefix(hid_t plist_id, char *prefix /*out*/, size_t size)
+H5Pget_elink_prefix(hid_t lapl_id, char *prefix /*out*/, size_t size)
 {
-    H5P_genplist_t *plist;     /* Property list pointer */
+    H5P_genplist_t *lapl;     /* Property list pointer */
     char           *my_prefix; /* Library's copy of the prefix */
     size_t          len;       /* Length of prefix string */
     ssize_t         ret_value; /* Return value */
@@ -965,11 +965,11 @@ H5Pget_elink_prefix(hid_t plist_id, char *prefix /*out*/, size_t size)
     FUNC_ENTER_API(FAIL)
 
     /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_LINK_ACCESS, true)))
+    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get the current prefix */
-    if (H5P_peek(plist, H5L_ACS_ELINK_PREFIX_NAME, &my_prefix) < 0)
+    if (H5P_peek(lapl, H5L_ACS_ELINK_PREFIX_NAME, &my_prefix) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get external link prefix");
 
     /* Check for prefix being set */
@@ -1004,17 +1004,17 @@ done:
 herr_t
 H5Pset_elink_fapl(hid_t lapl_id, hid_t fapl_id)
 {
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *lapl;               /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Check arguments */
-    if (NULL == (plist = H5P_object_verify(lapl_id, H5P_LINK_ACCESS, false)))
+    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_LINK_ACCESS, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a link access property list");
 
     /* Set the file access property list for the link access */
-    if (H5P_set(plist, H5L_ACS_ELINK_FAPL_NAME, &fapl_id) < 0)
+    if (H5P_set(lapl, H5L_ACS_ELINK_FAPL_NAME, &fapl_id) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set fapl for link");
 
 done:
@@ -1034,16 +1034,16 @@ done:
 hid_t
 H5Pget_elink_fapl(hid_t lapl_id)
 {
-    H5P_genplist_t *plist;     /* Property list pointer */
+    H5P_genplist_t *lapl;     /* Property list pointer */
     hid_t           ret_value; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(lapl_id, H5P_LINK_ACCESS, true)))
+    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
-    if (H5P_get(plist, H5L_ACS_ELINK_FAPL_NAME, &ret_value) < 0)
+    if (H5P_get(lapl, H5L_ACS_ELINK_FAPL_NAME, &ret_value) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, H5I_INVALID_HID, "can't get fapl for links");
 
 done:
@@ -1064,7 +1064,7 @@ done:
 herr_t
 H5Pset_elink_acc_flags(hid_t lapl_id, unsigned flags)
 {
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *lapl;               /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1076,11 +1076,11 @@ H5Pset_elink_acc_flags(hid_t lapl_id, unsigned flags)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid file open flags");
 
     /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(lapl_id, H5P_LINK_ACCESS, false)))
+    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_LINK_ACCESS, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set flags */
-    if (H5P_set(plist, H5L_ACS_ELINK_FLAGS_NAME, &flags) < 0)
+    if (H5P_set(lapl, H5L_ACS_ELINK_FLAGS_NAME, &flags) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set access flags");
 
 done:
@@ -1100,18 +1100,18 @@ done:
 herr_t
 H5Pget_elink_acc_flags(hid_t lapl_id, unsigned *flags /*out*/)
 {
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *lapl;               /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(lapl_id, H5P_LINK_ACCESS, true)))
+    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get flags */
     if (flags)
-        if (H5P_get(plist, H5L_ACS_ELINK_FLAGS_NAME, flags) < 0)
+        if (H5P_get(lapl, H5L_ACS_ELINK_FLAGS_NAME, flags) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, 0, "can't get access flags");
 
 done:
@@ -1132,7 +1132,7 @@ done:
 herr_t
 H5Pset_elink_cb(hid_t lapl_id, H5L_elink_traverse_t func, void *op_data)
 {
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *lapl;               /* Property list pointer */
     H5L_elink_cb_t  cb_info;             /* Callback info struct */
     herr_t          ret_value = SUCCEED; /* Return value */
 
@@ -1144,7 +1144,7 @@ H5Pset_elink_cb(hid_t lapl_id, H5L_elink_traverse_t func, void *op_data)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "callback is NULL while user data is not");
 
     /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(lapl_id, H5P_LINK_ACCESS, false)))
+    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_LINK_ACCESS, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Populate the callback info struct */
@@ -1152,7 +1152,7 @@ H5Pset_elink_cb(hid_t lapl_id, H5L_elink_traverse_t func, void *op_data)
     cb_info.user_data = op_data;
 
     /* Set callback info */
-    if (H5P_set(plist, H5L_ACS_ELINK_CB_NAME, &cb_info) < 0)
+    if (H5P_set(lapl, H5L_ACS_ELINK_CB_NAME, &cb_info) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set callback info");
 
 done:
@@ -1172,18 +1172,18 @@ done:
 herr_t
 H5Pget_elink_cb(hid_t lapl_id, H5L_elink_traverse_t *func /*out*/, void **op_data /*out*/)
 {
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *lapl;               /* Property list pointer */
     H5L_elink_cb_t  cb_info;             /* Callback info struct */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(lapl_id, H5P_LINK_ACCESS, true)))
+    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get callback_info */
-    if (H5P_get(plist, H5L_ACS_ELINK_CB_NAME, &cb_info) < 0)
+    if (H5P_get(lapl, H5L_ACS_ELINK_CB_NAME, &cb_info) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get callback info");
 
     if (func)
