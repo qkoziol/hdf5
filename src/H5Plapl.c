@@ -854,7 +854,7 @@ H5P__lacc_elink_pref_close(const char H5_ATTR_UNUSED *name, size_t H5_ATTR_UNUSE
 herr_t
 H5Pset_nlinks(hid_t lapl_id, size_t nlinks)
 {
-    H5P_genplist_t *lapl;               /* Property list pointer */
+    H5P_genplist_t *lapl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -890,7 +890,7 @@ done:
 herr_t
 H5Pget_nlinks(hid_t lapl_id, size_t *nlinks /*out*/)
 {
-    H5P_genplist_t *lapl;               /* Property list pointer */
+    H5P_genplist_t *lapl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -924,7 +924,7 @@ done:
 herr_t
 H5Pset_elink_prefix(hid_t lapl_id, const char *prefix)
 {
-    H5P_genplist_t *lapl;               /* Property list pointer */
+    H5P_genplist_t *lapl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -957,7 +957,7 @@ done:
 ssize_t
 H5Pget_elink_prefix(hid_t lapl_id, char *prefix /*out*/, size_t size)
 {
-    H5P_genplist_t *lapl;     /* Property list pointer */
+    H5P_genplist_t *lapl;      /* Property list pointer */
     char           *my_prefix; /* Library's copy of the prefix */
     size_t          len;       /* Length of prefix string */
     ssize_t         ret_value; /* Return value */
@@ -1004,7 +1004,7 @@ done:
 herr_t
 H5Pset_elink_fapl(hid_t lapl_id, hid_t fapl_id)
 {
-    H5P_genplist_t *lapl;               /* Property list pointer */
+    H5P_genplist_t *lapl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1034,7 +1034,7 @@ done:
 hid_t
 H5Pget_elink_fapl(hid_t lapl_id)
 {
-    H5P_genplist_t *lapl;     /* Property list pointer */
+    H5P_genplist_t *lapl;      /* Property list pointer */
     hid_t           ret_value; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -1064,7 +1064,7 @@ done:
 herr_t
 H5Pset_elink_acc_flags(hid_t lapl_id, unsigned flags)
 {
-    H5P_genplist_t *lapl;               /* Property list pointer */
+    H5P_genplist_t *lapl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1100,7 +1100,7 @@ done:
 herr_t
 H5Pget_elink_acc_flags(hid_t lapl_id, unsigned *flags /*out*/)
 {
-    H5P_genplist_t *lapl;               /* Property list pointer */
+    H5P_genplist_t *lapl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1132,7 +1132,7 @@ done:
 herr_t
 H5Pset_elink_cb(hid_t lapl_id, H5L_elink_traverse_t func, void *op_data)
 {
-    H5P_genplist_t *lapl;               /* Property list pointer */
+    H5P_genplist_t *lapl;                /* Property list pointer */
     H5L_elink_cb_t  cb_info;             /* Callback info struct */
     herr_t          ret_value = SUCCEED; /* Return value */
 
@@ -1172,7 +1172,7 @@ done:
 herr_t
 H5Pget_elink_cb(hid_t lapl_id, H5L_elink_traverse_t *func /*out*/, void **op_data /*out*/)
 {
-    H5P_genplist_t *lapl;               /* Property list pointer */
+    H5P_genplist_t *lapl;                /* Property list pointer */
     H5L_elink_cb_t  cb_info;             /* Callback info struct */
     herr_t          ret_value = SUCCEED; /* Return value */
 

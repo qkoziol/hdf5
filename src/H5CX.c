@@ -266,7 +266,7 @@ H5CX__init_package(void)
 {
     H5P_genplist_t *dx_plist;            /* Data transfer property list */
     H5P_genplist_t *lcpl;                /* Link creation property list */
-    H5P_genplist_t *lapl;            /* Link access property list */
+    H5P_genplist_t *lapl;                /* Link access property list */
     H5P_genplist_t *dcpl;                /* Dataset creation property list */
     H5P_genplist_t *dapl;                /* Dataset access property list */
     H5P_genplist_t *fa_plist;            /* File access property list */
