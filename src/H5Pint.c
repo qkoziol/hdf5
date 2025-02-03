@@ -4241,9 +4241,9 @@ done:
     Internal routine to query whether a property list is a certain class and
         retrieve the property list object associated with it.
  USAGE
-    void *H5P_object_verify(plist_id, pclass_id, allow_default)
+    void *H5P_object_verify(plist_id, type, allow_default)
         hid_t plist_id;         IN: Property list to query
-        hid_t pclass_id;        IN: Property class to query
+        H5P_plist_type_t type;  IN: Type of property list
         bool  allow_default;    IN: Whether to consider the default property lists valid
  RETURNS
     Success: valid pointer to a property list object
@@ -4255,7 +4255,7 @@ done:
  GLOBAL VARIABLES
  COMMENTS, BUGS, ASSUMPTIONS
     This function is special in that it is an internal library function, but
-    accepts hid_t's as parameters.  Since it is used in basically the same way
+    accepts an hid_t as a parameter.  Since it is used in basically the same way
     as the H5I functions, this should be OK.  Don't make more library functions
     which accept hid_t's without thorough discussion. -QAK
 
@@ -4264,20 +4264,20 @@ done:
  REVISION LOG
 --------------------------------------------------------------------------*/
 H5P_genplist_t *
-H5P_object_verify(hid_t plist_id, hid_t pclass_id, bool allow_default)
+H5P_object_verify(hid_t plist_id, H5P_plist_type_t type, bool allow_default)
 {
     H5P_genplist_t *plist;            /* Property list for ID */
     H5P_genplist_t *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_NOAPI(NULL)
 
-    /* Compare the property list's class against the other class */
-    if (H5P_isa_class(plist_id, pclass_id) != true)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTCOMPARE, NULL, "property list is not a member of the class");
-
     /* Get the plist structure */
-    if (NULL == (plist = (H5P_genplist_t *)H5I_object(plist_id)))
+    if (NULL == (plist = H5I_object(plist_id)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, NULL, "can't find object for ID");
+
+    /* Compare the property list's class against the other class */
+    if (H5P_isa_type(plist, type) != true)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTCOMPARE, NULL, "property list is not a member of the class");
 
     if (!allow_default && plist->is_default)
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, NULL, "property list is a default list");
