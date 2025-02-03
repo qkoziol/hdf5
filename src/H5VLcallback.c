@@ -90,7 +90,7 @@ static herr_t H5VL__attr_optional(void *obj, const H5VL_class_t *cls, H5VL_optio
 static herr_t H5VL__attr_close(void *obj, const H5VL_class_t *cls, hid_t dxpl_id, void **req);
 static void  *H5VL__dataset_create(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_class_t *cls,
                                    const char *name, hid_t lcpl_id, hid_t type_id, hid_t space_id,
-                                   hid_t dcpl_id, hid_t dapl_id, hid_t dxpl_id, void **req);
+                                   H5P_genplist_t *dcpl, hid_t dapl_id, hid_t dxpl_id, void **req);
 static void  *H5VL__dataset_open(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_class_t *cls,
                                  const char *name, hid_t dapl_id, hid_t dxpl_id, void **req);
 static herr_t H5VL__dataset_read(size_t count, void *obj[], const H5VL_class_t *cls, hid_t mem_type_id[],
@@ -1924,7 +1924,7 @@ done:
  */
 static void *
 H5VL__dataset_create(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_class_t *cls,
-                     const char *name, hid_t lcpl_id, hid_t type_id, hid_t space_id, hid_t dcpl_id,
+                     const char *name, hid_t lcpl_id, hid_t type_id, hid_t space_id, H5P_genplist_t *dcpl,
                      hid_t dapl_id, hid_t dxpl_id, void **req)
 {
     void *ret_value = NULL; /* Return value */
@@ -1939,8 +1939,7 @@ H5VL__dataset_create(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_
     H5_BEFORE_USER_CB(NULL)
         {
             /* Call the corresponding VOL callback */
-            ret_value = (cls->dataset_cls.create)(obj, loc_params, name, lcpl_id, type_id, space_id, dcpl_id,
-                                                  dapl_id, dxpl_id, req);
+            ret_value = (cls->dataset_cls.create)(obj, loc_params, name, lcpl_id, type_id, space_id, H5P_PLIST_ID(dcpl), dapl_id, dxpl_id, req);
         }
     H5_AFTER_USER_CB(NULL)
     if (NULL == ret_value)
@@ -1962,7 +1961,7 @@ done:
  */
 void *
 H5VL_dataset_create(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, const char *name,
-                    hid_t lcpl_id, hid_t type_id, hid_t space_id, hid_t dcpl_id, hid_t dapl_id, hid_t dxpl_id,
+                    hid_t lcpl_id, hid_t type_id, hid_t space_id, H5P_genplist_t *dcpl, hid_t dapl_id, hid_t dxpl_id,
                     void **req)
 {
     bool  vol_wrapper_set = false; /* Whether the VOL object wrapping context was set up */
@@ -1976,9 +1975,7 @@ H5VL_dataset_create(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_p
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (NULL ==
-        (ret_value = H5VL__dataset_create(vol_obj->data, loc_params, vol_obj->connector->cls, name, lcpl_id,
-                                          type_id, space_id, dcpl_id, dapl_id, dxpl_id, req)))
+    if (NULL == (ret_value = H5VL__dataset_create(vol_obj->data, loc_params, vol_obj->connector->cls, name, lcpl_id, type_id, space_id, dcpl, dapl_id, dxpl_id, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, NULL, "dataset create failed");
 
 done:
@@ -2005,19 +2002,21 @@ H5VLdataset_create(void *obj, const H5VL_loc_params_t *loc_params, hid_t connect
                    void **req /*out*/)
 {
     H5VL_connector_t *connector;        /* VOL connector */
+    H5P_genplist_t *dcpl;        /* Dataset creation property list */
     void             *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_API_NOINIT
 
-    /* Check args and get connector pointer */
+    /* Check args and pointers */
     if (NULL == obj)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, NULL, "invalid object");
     if (NULL == (connector = H5I_object_verify(connector_id, H5I_VOL)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a VOL connector ID");
+    if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, true)))
+        HGOTO_ERROR(H5E_ID, H5E_BADID, NULL, "can't find object for ID");
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__dataset_create(obj, loc_params, connector->cls, name, lcpl_id, type_id,
-                                                  space_id, dcpl_id, dapl_id, dxpl_id, req)))
+    if (NULL == (ret_value = H5VL__dataset_create(obj, loc_params, connector->cls, name, lcpl_id, type_id, space_id, dcpl, dapl_id, dxpl_id, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, NULL, "unable to create dataset");
 
 done:
