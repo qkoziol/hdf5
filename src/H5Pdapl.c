@@ -758,7 +758,7 @@ H5P__dapl_efile_pref_close(const char H5_ATTR_UNUSED *name, size_t H5_ATTR_UNUSE
 herr_t
 H5Pset_chunk_cache(hid_t dapl_id, size_t rdcc_nslots, size_t rdcc_nbytes, double rdcc_w0)
 {
-    H5P_genplist_t *dapl;               /* Property list pointer */
+    H5P_genplist_t *dapl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -804,8 +804,8 @@ herr_t
 H5Pget_chunk_cache(hid_t dapl_id, size_t *rdcc_nslots /*out*/, size_t *rdcc_nbytes /*out*/,
                    double *rdcc_w0 /*out*/)
 {
-    H5P_genplist_t *dapl;               /* Property list pointer */
-    H5P_genplist_t *def_fapl;           /* Default file access property list */
+    H5P_genplist_t *dapl;                /* Property list pointer */
+    H5P_genplist_t *def_fapl;            /* Default file access property list */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1066,7 +1066,7 @@ H5P__decode_chunk_cache_nbytes(const void **_pp, void *_value)
 herr_t
 H5Pset_virtual_view(hid_t dapl_id, H5D_vds_view_t view)
 {
-    H5P_genplist_t *dapl;               /* Property list pointer */
+    H5P_genplist_t *dapl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1101,7 +1101,7 @@ done:
 herr_t
 H5Pget_virtual_view(hid_t dapl_id, H5D_vds_view_t *view /*out*/)
 {
-    H5P_genplist_t *dapl;               /* Property list pointer */
+    H5P_genplist_t *dapl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1206,7 +1206,7 @@ H5P__dacc_vds_view_dec(const void **_pp, void *_value)
 herr_t
 H5Pset_virtual_printf_gap(hid_t dapl_id, hsize_t gap_size)
 {
-    H5P_genplist_t *dapl;               /* Property list pointer */
+    H5P_genplist_t *dapl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1242,7 +1242,7 @@ done:
 herr_t
 H5Pget_virtual_printf_gap(hid_t dapl_id, hsize_t *gap_size /*out*/)
 {
-    H5P_genplist_t *dapl;               /* Property list pointer */
+    H5P_genplist_t *dapl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1276,10 +1276,9 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pset_append_flush(hid_t dapl_id, unsigned ndims, const hsize_t *boundary, H5D_append_cb_t func,
-                    void *udata)
+H5Pset_append_flush(hid_t dapl_id, unsigned ndims, const hsize_t *boundary, H5D_append_cb_t func, void *udata)
 {
-    H5P_genplist_t    *dapl;               /* Property list pointer */
+    H5P_genplist_t    *dapl;                /* Property list pointer */
     H5D_append_flush_t info;                /* Property for append flush parameters */
     unsigned           u;                   /* Local index variable */
     herr_t             ret_value = SUCCEED; /* Return value */
@@ -1391,7 +1390,7 @@ done:
 herr_t
 H5Pset_efile_prefix(hid_t dapl_id, const char *prefix)
 {
-    H5P_genplist_t *dapl;               /* Property list pointer */
+    H5P_genplist_t *dapl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1421,7 +1420,7 @@ done:
 ssize_t
 H5Pget_efile_prefix(hid_t dapl_id, char *prefix /*out*/, size_t size)
 {
-    H5P_genplist_t *dapl;     /* Property list pointer */
+    H5P_genplist_t *dapl;      /* Property list pointer */
     char           *my_prefix; /* Library's copy of the prefix */
     size_t          len;       /* Length of prefix string */
     ssize_t         ret_value; /* Return value */
@@ -1477,7 +1476,7 @@ done:
 herr_t
 H5Pset_virtual_prefix(hid_t dapl_id, const char *prefix)
 {
-    H5P_genplist_t *dapl;               /* Property list pointer */
+    H5P_genplist_t *dapl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1509,7 +1508,7 @@ done:
 ssize_t
 H5Pget_virtual_prefix(hid_t dapl_id, char *prefix /*out*/, size_t size)
 {
-    H5P_genplist_t *dapl;     /* Property list pointer */
+    H5P_genplist_t *dapl;      /* Property list pointer */
     char           *my_prefix; /* Library's copy of the prefix */
     size_t          len;       /* Length of prefix string */
     ssize_t         ret_value; /* Return value */
