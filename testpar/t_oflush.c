@@ -84,7 +84,7 @@ test_oflush(void *params)
     H5Dclose(dataset);
 
     /* Create a group */
-    gid = H5Gcreate(file, "group", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    gid = H5Gcreate2(file, "group", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     VRFY((gid >= 0), "group creation succeeded");
 
     /* Make sure H5Oflush fails with group */

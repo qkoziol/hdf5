@@ -105,9 +105,9 @@
 /********************/
 
 /* Helper routines for sync/async API calls */
-static hid_t  H5G__create_api_common(hid_t loc_id, const char *name, hid_t lcpl_id, hid_t gcpl_id,
-                                     hid_t gapl_id, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
-static hid_t  H5G__open_api_common(hid_t loc_id, const char *name, hid_t gapl_id, void **token_ptr,
+static hid_t  H5G__create_api_common(hid_t loc_id, const char *name, hid_t lcpl_id, H5P_genplist_t *gcpl,
+                                     H5P_genplist_t *gapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static hid_t  H5G__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *gapl, void **token_ptr,
                                    H5VL_object_t **_vol_obj_ptr);
 static herr_t H5G__get_info_api_common(hid_t loc_id, H5G_info_t *group_info /*out*/, void **token_ptr,
                                        H5VL_object_t **_vol_obj_ptr);
@@ -141,10 +141,11 @@ static herr_t H5G__get_info_by_idx_api_common(hid_t loc_id, const char *group_na
  *-------------------------------------------------------------------------
  */
 static hid_t
-H5G__create_api_common(hid_t loc_id, const char *name, hid_t lcpl_id, hid_t gcpl_id, hid_t gapl_id,
+H5G__create_api_common(hid_t loc_id, const char *name, hid_t lcpl_id, H5P_genplist_t *gcpl, H5P_genplist_t *gapl,
                        void **token_ptr, H5VL_object_t **_vol_obj_ptr)
 {
     void           *grp         = NULL; /* Structure for new group */
+    hid_t gapl_id;              /* ID for group access property list */
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
         (_vol_obj_ptr ? _vol_obj_ptr : &tmp_vol_obj); /* Ptr to object ptr for loc_id */
@@ -160,6 +161,7 @@ H5G__create_api_common(hid_t loc_id, const char *name, hid_t lcpl_id, hid_t gcpl
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, H5I_INVALID_HID, "name parameter cannot be an empty string");
 
     /* Set up object access arguments */
+    gapl_id = H5P_PLIST_ID(gapl);
     if (H5VL_setup_acc_args(loc_id, H5P_CLS_GACC, true, &gapl_id, vol_obj_ptr, &loc_params) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTSET, H5I_INVALID_HID, "can't set object access arguments");
 
@@ -169,18 +171,11 @@ H5G__create_api_common(hid_t loc_id, const char *name, hid_t lcpl_id, hid_t gcpl
     else if (true != H5P_isa_class(lcpl_id, H5P_LINK_CREATE))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a link creation property list");
 
-    /* Check group creation property list */
-    if (H5P_DEFAULT == gcpl_id)
-        gcpl_id = H5P_GROUP_CREATE_DEFAULT;
-    else if (true != H5P_isa_class(gcpl_id, H5P_GROUP_CREATE))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a group creation property list");
-
     /* Set the LCPL for the API context */
     H5CX_set_lcpl(lcpl_id);
 
     /* Create the group */
-    if (NULL == (grp = H5VL_group_create(*vol_obj_ptr, &loc_params, name, lcpl_id, gcpl_id, gapl_id,
-                                         H5P_DATASET_XFER_DEFAULT, token_ptr)))
+    if (NULL == (grp = H5VL_group_create(*vol_obj_ptr, &loc_params, name, lcpl_id, gcpl, gapl, H5P_DATASET_XFER_DEFAULT, token_ptr)))
         HGOTO_ERROR(H5E_SYM, H5E_CANTINIT, H5I_INVALID_HID, "unable to create group");
 
     /* Get an ID for the group */
@@ -221,12 +216,26 @@ done:
 hid_t
 H5Gcreate2(hid_t loc_id, const char *name, hid_t lcpl_id, hid_t gcpl_id, hid_t gapl_id)
 {
+    H5P_genplist_t *gcpl;                        /* Group creation property list */
+    H5P_genplist_t   *gapl;             /* Group access property list */
     hid_t ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
+    /* Check group creation property list */
+    if (H5P_DEFAULT == gcpl_id)
+        gcpl_id = H5P_GROUP_CREATE_DEFAULT;
+    if (NULL == (gcpl = H5P_object_verify(gcpl_id, H5P_TYPE_GROUP_CREATE, true)))
+        HGOTO_ERROR(H5E_SYM, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+
+    /* Check group access property list */
+    if (H5P_DEFAULT == gapl_id)
+        gapl_id = H5P_GROUP_ACCESS_DEFAULT;
+    if (NULL == (gapl = H5P_object_verify(gapl_id, H5P_TYPE_GROUP_ACCESS, true)))
+        HGOTO_ERROR(H5E_SYM, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+
     /* Create the group synchronously */
-    if ((ret_value = H5G__create_api_common(loc_id, name, lcpl_id, gcpl_id, gapl_id, NULL, NULL)) < 0)
+    if ((ret_value = H5G__create_api_common(loc_id, name, lcpl_id, gcpl, gapl, NULL, NULL)) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTCREATE, H5I_INVALID_HID, "unable to synchronously create group");
 
 done:
@@ -248,6 +257,8 @@ H5Gcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
                 hid_t lcpl_id, hid_t gcpl_id, hid_t gapl_id, hid_t es_id)
 {
     H5VL_object_t *vol_obj   = NULL;            /* Object for loc_id */
+    H5P_genplist_t *gcpl;                        /* Group creation property list */
+    H5P_genplist_t   *gapl;             /* Group access property list */
     void          *token     = NULL;            /* Request token for async operation        */
     void         **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     hid_t          ret_value = H5I_INVALID_HID; /* Return value */
@@ -258,9 +269,20 @@ H5Gcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
+    /* Check group creation property list */
+    if (H5P_DEFAULT == gcpl_id)
+        gcpl_id = H5P_GROUP_CREATE_DEFAULT;
+    if (NULL == (gcpl = H5P_object_verify(gcpl_id, H5P_TYPE_GROUP_CREATE, true)))
+        HGOTO_ERROR(H5E_SYM, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+
+    /* Check group access property list */
+    if (H5P_DEFAULT == gapl_id)
+        gapl_id = H5P_GROUP_ACCESS_DEFAULT;
+    if (NULL == (gapl = H5P_object_verify(gapl_id, H5P_TYPE_GROUP_ACCESS, true)))
+        HGOTO_ERROR(H5E_SYM, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+
     /* Create the group asynchronously */
-    if ((ret_value = H5G__create_api_common(loc_id, name, lcpl_id, gcpl_id, gapl_id, token_ptr, &vol_obj)) <
-        0)
+    if ((ret_value = H5G__create_api_common(loc_id, name, lcpl_id, gcpl, gapl, token_ptr, &vol_obj)) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTCREATE, H5I_INVALID_HID, "unable to asynchronously create group");
 
     /* If a token was created, add the token to the event set */
@@ -314,6 +336,8 @@ hid_t
 H5Gcreate_anon(hid_t loc_id, hid_t gcpl_id, hid_t gapl_id)
 {
     void             *grp     = NULL;              /* Structure for new group */
+    H5P_genplist_t *gcpl;                        /* Group creation property list */
+    H5P_genplist_t   *gapl;             /* Group access property list */
     H5VL_object_t    *vol_obj = NULL;              /* Object for loc_id */
     H5VL_loc_params_t loc_params;                  /* Location parameters for object access */
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */
@@ -323,13 +347,13 @@ H5Gcreate_anon(hid_t loc_id, hid_t gcpl_id, hid_t gapl_id)
     /* Check group property list */
     if (H5P_DEFAULT == gcpl_id)
         gcpl_id = H5P_GROUP_CREATE_DEFAULT;
-    else if (true != H5P_isa_class(gcpl_id, H5P_GROUP_CREATE))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not group create property list");
+    if (NULL == (gcpl = H5P_object_verify(gcpl_id, H5P_TYPE_GROUP_CREATE, true)))
+        HGOTO_ERROR(H5E_SYM, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     if (H5P_DEFAULT == gapl_id)
         gapl_id = H5P_GROUP_ACCESS_DEFAULT;
-    else if (true != H5P_isa_class(gapl_id, H5P_GROUP_ACCESS))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not group access property list");
+    if (NULL == (gapl = H5P_object_verify(gapl_id, H5P_TYPE_GROUP_ACCESS, true)))
+        HGOTO_ERROR(H5E_SYM, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
     if (H5CX_set_apl(&gapl_id, H5P_CLS_GACC, loc_id, true) < 0)
@@ -344,8 +368,7 @@ H5Gcreate_anon(hid_t loc_id, hid_t gcpl_id, hid_t gapl_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "invalid location identifier");
 
     /* Create the group */
-    if (NULL == (grp = H5VL_group_create(vol_obj, &loc_params, NULL, H5P_LINK_CREATE_DEFAULT, gcpl_id,
-                                         gapl_id, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL)))
+    if (NULL == (grp = H5VL_group_create(vol_obj, &loc_params, NULL, H5P_LINK_CREATE_DEFAULT, gcpl, gapl, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_SYM, H5E_CANTINIT, H5I_INVALID_HID, "unable to create group");
 
     /* Get an ID for the group */
@@ -372,10 +395,11 @@ done:
  *-------------------------------------------------------------------------
  */
 static hid_t
-H5G__open_api_common(hid_t loc_id, const char *name, hid_t gapl_id, void **token_ptr,
+H5G__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *gapl, void **token_ptr,
                      H5VL_object_t **_vol_obj_ptr)
 {
     void           *grp         = NULL; /* Group opened */
+    hid_t gapl_id;              /* ID for group access property list */
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
         (_vol_obj_ptr ? _vol_obj_ptr : &tmp_vol_obj); /* Ptr to object ptr for loc_id */
@@ -391,11 +415,11 @@ H5G__open_api_common(hid_t loc_id, const char *name, hid_t gapl_id, void **token
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, H5I_INVALID_HID, "name parameter cannot be an empty string");
 
     /* Set up object access arguments */
+    gapl_id = H5P_PLIST_ID(gapl);
     if (H5VL_setup_acc_args(loc_id, H5P_CLS_GACC, false, &gapl_id, vol_obj_ptr, &loc_params) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTSET, H5I_INVALID_HID, "can't set object access arguments");
 
-    if (NULL == (grp = H5VL_group_open(*vol_obj_ptr, &loc_params, name, gapl_id, H5P_DATASET_XFER_DEFAULT,
-                                       token_ptr)))
+    if (NULL == (grp = H5VL_group_open(*vol_obj_ptr, &loc_params, name, gapl, H5P_DATASET_XFER_DEFAULT, token_ptr)))
         HGOTO_ERROR(H5E_SYM, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open group");
 
     /* Register an ID for the group */
@@ -428,12 +452,19 @@ done:
 hid_t
 H5Gopen2(hid_t loc_id, const char *name, hid_t gapl_id)
 {
+    H5P_genplist_t   *gapl;             /* Group access property list */
     hid_t ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
+    /* Check group access property list */
+    if (H5P_DEFAULT == gapl_id)
+        gapl_id = H5P_GROUP_ACCESS_DEFAULT;
+    if (NULL == (gapl = H5P_object_verify(gapl_id, H5P_TYPE_GROUP_ACCESS, true)))
+        HGOTO_ERROR(H5E_SYM, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+
     /* Open the group synchronously */
-    if ((ret_value = H5G__open_api_common(loc_id, name, gapl_id, NULL, NULL)) < 0)
+    if ((ret_value = H5G__open_api_common(loc_id, name, gapl, NULL, NULL)) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTCREATE, H5I_INVALID_HID, "unable to synchronously open group");
 
 done:
@@ -455,18 +486,25 @@ H5Gopen_async(const char *app_file, const char *app_func, unsigned app_line, hid
               hid_t gapl_id, hid_t es_id)
 {
     H5VL_object_t *vol_obj   = NULL;            /* Object for loc_id */
+    H5P_genplist_t   *gapl;             /* Group access property list */
     void          *token     = NULL;            /* Request token for async operation        */
     void         **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     hid_t          ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
+    /* Check group access property list */
+    if (H5P_DEFAULT == gapl_id)
+        gapl_id = H5P_GROUP_ACCESS_DEFAULT;
+    if (NULL == (gapl = H5P_object_verify(gapl_id, H5P_TYPE_GROUP_ACCESS, true)))
+        HGOTO_ERROR(H5E_SYM, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Open the group asynchronously */
-    if ((ret_value = H5G__open_api_common(loc_id, name, gapl_id, token_ptr, &vol_obj)) < 0)
+    if ((ret_value = H5G__open_api_common(loc_id, name, gapl, token_ptr, &vol_obj)) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTCREATE, H5I_INVALID_HID, "unable to asynchronously open group");
 
     /* If a token was created, add the token to the event set */
