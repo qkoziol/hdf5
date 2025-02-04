@@ -153,6 +153,7 @@ hid_t
 H5Gcreate1(hid_t loc_id, const char *name, size_t size_hint)
 {
     void             *grp = NULL; /* New group created */
+    H5P_genplist_t   *def_gapl;   /* Group access property list */
     H5VL_object_t    *vol_obj;    /* Object of loc_id */
     H5VL_loc_params_t loc_params;
     H5P_genplist_t   *tmp_gcpl  = NULL;            /* Temporary group creation property list */
@@ -190,6 +191,10 @@ H5Gcreate1(hid_t loc_id, const char *name, size_t size_hint)
                         "can't get default group creation property list");
     }
 
+    /* Get default group access property list */
+    if (NULL == (def_gapl = H5I_object(H5P_GROUP_ACCESS_DEFAULT)))
+        HGOTO_ERROR(H5E_SYM, H5E_CANTGET, H5I_INVALID_HID, "can't find object for ID");
+
     /* Set up collective metadata if appropriate */
     if (H5CX_set_loc(loc_id) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTSET, H5I_INVALID_HID, "can't set collective metadata read info");
@@ -203,9 +208,8 @@ H5Gcreate1(hid_t loc_id, const char *name, size_t size_hint)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "invalid location identifier");
 
     /* Create the group */
-    if (NULL ==
-        (grp = H5VL_group_create(vol_obj, &loc_params, name, H5P_LINK_CREATE_DEFAULT, H5P_PLIST_ID(tmp_gcpl),
-                                 H5P_GROUP_ACCESS_DEFAULT, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL)))
+    if (NULL == (grp = H5VL_group_create(vol_obj, &loc_params, name, H5P_LINK_CREATE_DEFAULT, tmp_gcpl,
+                                         def_gapl, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_SYM, H5E_CANTINIT, H5I_INVALID_HID, "unable to create group");
 
     /* Get an ID for the group */
@@ -242,7 +246,8 @@ done:
 hid_t
 H5Gopen1(hid_t loc_id, const char *name)
 {
-    void             *grp     = NULL; /* Group opened */
+    void             *grp = NULL;     /* Group opened */
+    H5P_genplist_t   *def_gapl;       /* Group access property list */
     H5VL_object_t    *vol_obj = NULL; /* Object of loc_id */
     H5VL_loc_params_t loc_params;
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */
@@ -253,6 +258,10 @@ H5Gopen1(hid_t loc_id, const char *name)
     if (!name || !*name)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, H5I_INVALID_HID, "no name");
 
+    /* Get default group access property list */
+    if (NULL == (def_gapl = H5I_object(H5P_GROUP_ACCESS_DEFAULT)))
+        HGOTO_ERROR(H5E_SYM, H5E_CANTGET, H5I_INVALID_HID, "can't find object for ID");
+
     /* Set location parameters */
     loc_params.type     = H5VL_OBJECT_BY_SELF;
     loc_params.obj_type = H5I_get_type(loc_id);
@@ -262,8 +271,8 @@ H5Gopen1(hid_t loc_id, const char *name)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "invalid location identifier");
 
     /* Open the group */
-    if (NULL == (grp = H5VL_group_open(vol_obj, &loc_params, name, H5P_GROUP_ACCESS_DEFAULT,
-                                       H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL)))
+    if (NULL == (grp = H5VL_group_open(vol_obj, &loc_params, name, def_gapl, H5P_DATASET_XFER_DEFAULT,
+                                       H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_SYM, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open group");
 
     /* Get an ID for the group */
