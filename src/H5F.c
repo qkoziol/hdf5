@@ -1216,7 +1216,7 @@ H5Fmount(hid_t loc_id, const char *name, hid_t child_id, hid_t plist_id)
      *  'loc_id', because the 'mount' operation is a group specific operation.
      */
     if (H5I_FILE == loc_type) {
-        H5P_genplist_t   *def_gapl;             /* Group access property list */
+        H5P_genplist_t   *def_gapl;   /* Group access property list */
         H5VL_object_t    *vol_obj;    /* Object for loc_id (file) */
         H5VL_loc_params_t loc_params; /* Location parameters for object access */
 
@@ -1233,7 +1233,8 @@ H5Fmount(hid_t loc_id, const char *name, hid_t child_id, hid_t plist_id)
         loc_params.obj_type = loc_type;
 
         /* Open the root group object */
-        if (NULL == (grp = H5VL_group_open(vol_obj, &loc_params, "/", def_gapl, H5P_DATASET_XFER_DEFAULT, NULL)))
+        if (NULL ==
+            (grp = H5VL_group_open(vol_obj, &loc_params, "/", def_gapl, H5P_DATASET_XFER_DEFAULT, NULL)))
             HGOTO_ERROR(H5E_FILE, H5E_CANTOPENOBJ, FAIL, "unable to open group");
 
         /* Create a VOL object for the root group */
@@ -1330,7 +1331,7 @@ H5Funmount(hid_t loc_id, const char *name)
      *  'loc_id', because the 'mount' operation is a group specific operation.
      */
     if (H5I_FILE == loc_type) {
-        H5P_genplist_t   *def_gapl;             /* Group access property list */
+        H5P_genplist_t   *def_gapl;   /* Group access property list */
         H5VL_object_t    *vol_obj;    /* Object for loc_id (file) */
         H5VL_loc_params_t loc_params; /* Location parameters for object access */
 
@@ -1347,7 +1348,8 @@ H5Funmount(hid_t loc_id, const char *name)
         loc_params.obj_type = loc_type;
 
         /* Open the root group object */
-        if (NULL == (grp = H5VL_group_open(vol_obj, &loc_params, "/", def_gapl, H5P_DATASET_XFER_DEFAULT, NULL)))
+        if (NULL ==
+            (grp = H5VL_group_open(vol_obj, &loc_params, "/", def_gapl, H5P_DATASET_XFER_DEFAULT, NULL)))
             HGOTO_ERROR(H5E_FILE, H5E_CANTOPENOBJ, FAIL, "unable to open group");
 
         /* Create a VOL object for the root group */

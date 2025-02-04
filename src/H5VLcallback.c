@@ -132,8 +132,8 @@ static herr_t H5VL__file_optional(void *obj, const H5VL_class_t *cls, H5VL_optio
                                   hid_t dxpl_id, void **req);
 static herr_t H5VL__file_close(void *obj, const H5VL_class_t *cls, hid_t dxpl_id, void **req);
 static void  *H5VL__group_create(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_class_t *cls,
-                                 const char *name, hid_t lcpl_id, H5P_genplist_t *gcpl, H5P_genplist_t *gapl, hid_t dxpl_id,
-                                 void **req);
+                                 const char *name, hid_t lcpl_id, H5P_genplist_t *gcpl, H5P_genplist_t *gapl,
+                                 hid_t dxpl_id, void **req);
 static void  *H5VL__group_open(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_class_t *cls,
                                const char *name, H5P_genplist_t *gapl, hid_t dxpl_id, void **req);
 static herr_t H5VL__group_get(void *obj, const H5VL_class_t *cls, H5VL_group_get_args_t *args, hid_t dxpl_id,
@@ -2879,8 +2879,8 @@ done:
  */
 static void *
 H5VL__datatype_commit(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_class_t *cls,
-                      const char *name, hid_t type_id, hid_t lcpl_id, H5P_genplist_t *tcpl, H5P_genplist_t *tapl,
-                      hid_t dxpl_id, void **req)
+                      const char *name, hid_t type_id, hid_t lcpl_id, H5P_genplist_t *tcpl,
+                      H5P_genplist_t *tapl, hid_t dxpl_id, void **req)
 {
     void *ret_value = NULL; /* Return value */
 
@@ -2894,7 +2894,8 @@ H5VL__datatype_commit(void *obj, const H5VL_loc_params_t *loc_params, const H5VL
     H5_BEFORE_USER_CB(NULL)
         {
             /* Call the corresponding VOL callback */
-            ret_value = (cls->datatype_cls.commit)(obj, loc_params, name, type_id, lcpl_id, H5P_PLIST_ID(tcpl), H5P_PLIST_ID(tapl), dxpl_id, req);
+            ret_value = (cls->datatype_cls.commit)(obj, loc_params, name, type_id, lcpl_id,
+                                                   H5P_PLIST_ID(tcpl), H5P_PLIST_ID(tapl), dxpl_id, req);
         }
     H5_AFTER_USER_CB(NULL)
     if (NULL == ret_value)
@@ -2916,7 +2917,8 @@ done:
  */
 void *
 H5VL_datatype_commit(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, const char *name,
-                     hid_t type_id, hid_t lcpl_id, H5P_genplist_t *tcpl, H5P_genplist_t *tapl, hid_t dxpl_id, void **req)
+                     hid_t type_id, hid_t lcpl_id, H5P_genplist_t *tcpl, H5P_genplist_t *tapl, hid_t dxpl_id,
+                     void **req)
 {
     bool  vol_wrapper_set = false; /* Whether the VOL object wrapping context was set up */
     void *ret_value       = NULL;  /* Return value */
@@ -2929,7 +2931,8 @@ H5VL_datatype_commit(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__datatype_commit(vol_obj->data, loc_params, vol_obj->connector->cls, name, type_id, lcpl_id, tcpl, tapl, dxpl_id, req)))
+    if (NULL == (ret_value = H5VL__datatype_commit(vol_obj->data, loc_params, vol_obj->connector->cls, name,
+                                                   type_id, lcpl_id, tcpl, tapl, dxpl_id, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, NULL, "datatype commit failed");
 
 done:
@@ -2973,7 +2976,8 @@ H5VLdatatype_commit(void *obj, const H5VL_loc_params_t *loc_params, hid_t connec
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, NULL, "can't find object for ID");
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__datatype_commit(obj, loc_params, connector->cls, name, type_id, lcpl_id, tcpl, tapl, dxpl_id, req)))
+    if (NULL == (ret_value = H5VL__datatype_commit(obj, loc_params, connector->cls, name, type_id, lcpl_id,
+                                                   tcpl, tapl, dxpl_id, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, NULL, "unable to commit datatype");
 
 done:
@@ -3041,7 +3045,8 @@ H5VL_datatype_open(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_pa
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__datatype_open(vol_obj->data, loc_params, vol_obj->connector->cls, name, tapl, dxpl_id, req)))
+    if (NULL == (ret_value = H5VL__datatype_open(vol_obj->data, loc_params, vol_obj->connector->cls, name,
+                                                 tapl, dxpl_id, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPENOBJ, NULL, "datatype open failed");
 
 done:
@@ -4437,7 +4442,8 @@ H5VL__group_create(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_cl
     H5_BEFORE_USER_CB(NULL)
         {
             /* Call the corresponding VOL callback */
-            ret_value = (cls->group_cls.create)(obj, loc_params, name, lcpl_id, H5P_PLIST_ID(gcpl), H5P_PLIST_ID(gapl), dxpl_id, req);
+            ret_value = (cls->group_cls.create)(obj, loc_params, name, lcpl_id, H5P_PLIST_ID(gcpl),
+                                                H5P_PLIST_ID(gapl), dxpl_id, req);
         }
     H5_AFTER_USER_CB(NULL)
     if (NULL == ret_value)
@@ -4472,7 +4478,8 @@ H5VL_group_create(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_par
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__group_create(vol_obj->data, loc_params, vol_obj->connector->cls, name, lcpl_id, gcpl, gapl, dxpl_id, req)))
+    if (NULL == (ret_value = H5VL__group_create(vol_obj->data, loc_params, vol_obj->connector->cls, name,
+                                                lcpl_id, gcpl, gapl, dxpl_id, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, NULL, "group create failed");
 
 done:
@@ -4515,7 +4522,8 @@ H5VLgroup_create(void *obj, const H5VL_loc_params_t *loc_params, hid_t connector
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, NULL, "can't find object for ID");
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__group_create(obj, loc_params, connector->cls, name, lcpl_id, gcpl, gapl, dxpl_id, req)))
+    if (NULL == (ret_value = H5VL__group_create(obj, loc_params, connector->cls, name, lcpl_id, gcpl, gapl,
+                                                dxpl_id, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, NULL, "unable to create group");
 
 done:
@@ -4583,7 +4591,8 @@ H5VL_group_open(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_param
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__group_open(vol_obj->data, loc_params, vol_obj->connector->cls, name, gapl, dxpl_id, req)))
+    if (NULL == (ret_value = H5VL__group_open(vol_obj->data, loc_params, vol_obj->connector->cls, name, gapl,
+                                              dxpl_id, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPENOBJ, NULL, "group open failed");
 
 done:
