@@ -118,8 +118,8 @@ static herr_t H5VL__datatype_specific(void *obj, const H5VL_class_t *cls, H5VL_d
 static herr_t H5VL__datatype_optional(void *obj, const H5VL_class_t *cls, H5VL_optional_args_t *args,
                                       hid_t dxpl_id, void **req);
 static herr_t H5VL__datatype_close(void *obj, const H5VL_class_t *cls, hid_t dxpl_id, void **req);
-static void  *H5VL__file_create(const H5VL_class_t *cls, const char *name, unsigned flags, H5P_genplist_t *fcpl,
-                                hid_t fapl_id, hid_t dxpl_id, void **req);
+static void  *H5VL__file_create(const H5VL_class_t *cls, const char *name, unsigned flags,
+                                H5P_genplist_t *fcpl, hid_t fapl_id, hid_t dxpl_id, void **req);
 static void  *H5VL__file_open(const H5VL_class_t *cls, const char *name, unsigned flags, hid_t fapl_id,
                               hid_t dxpl_id, void **req);
 static herr_t H5VL__file_open_find_connector_cb(H5PL_type_t plugin_type, const void *plugin_info,
@@ -3619,8 +3619,8 @@ done:
  *-------------------------------------------------------------------------
  */
 static void *
-H5VL__file_create(const H5VL_class_t *cls, const char *name, unsigned flags, H5P_genplist_t *fcpl, hid_t fapl_id,
-                  hid_t dxpl_id, void **req)
+H5VL__file_create(const H5VL_class_t *cls, const char *name, unsigned flags, H5P_genplist_t *fcpl,
+                  hid_t fapl_id, hid_t dxpl_id, void **req)
 {
     void *ret_value = NULL; /* Return value */
 
@@ -3687,8 +3687,8 @@ void *
 H5VLfile_create(const char *name, unsigned flags, hid_t fcpl_id, hid_t fapl_id, hid_t dxpl_id,
                 void **req /*out*/)
 {
-    H5P_genplist_t       *fcpl;            /* File creation property list pointer */
-    H5P_genplist_t       *fapl;            /* File access property list pointer */
+    H5P_genplist_t       *fcpl;             /* File creation property list pointer */
+    H5P_genplist_t       *fapl;             /* File access property list pointer */
     H5VL_connector_prop_t connector_prop;   /* Property for VOL connector ID & info */
     void                 *ret_value = NULL; /* Return value */
 
@@ -3705,7 +3705,8 @@ H5VLfile_create(const char *name, unsigned flags, hid_t fcpl_id, hid_t fapl_id, 
         HGOTO_ERROR(H5E_VOL, H5E_CANTGET, NULL, "can't get VOL connector info");
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__file_create(connector_prop.connector->cls, name, flags, fcpl, fapl_id, dxpl_id, req)))
+    if (NULL == (ret_value = H5VL__file_create(connector_prop.connector->cls, name, flags, fcpl, fapl_id,
+                                               dxpl_id, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, NULL, "unable to create file");
 
 done:

@@ -69,10 +69,10 @@ static int H5F__get_all_ids_cb(void H5_ATTR_UNUSED *obj_ptr, hid_t obj_id, void 
 
 /* Helper routines for sync/async API calls */
 static herr_t H5F__post_open_api_common(H5VL_object_t *vol_obj, void **token_ptr);
-static hid_t  H5F__create_api_common(const char *filename, unsigned flags, H5P_genplist_t *fcpl, hid_t fapl_id,
-                                     void **token_ptr);
-static hid_t  H5F__open_api_common(const char *filename, unsigned flags, hid_t fapl_id, void **token_ptr);
-static hid_t  H5F__reopen_api_common(hid_t file_id, void **token_ptr);
+static hid_t H5F__create_api_common(const char *filename, unsigned flags, H5P_genplist_t *fcpl, hid_t fapl_id,
+                                    void **token_ptr);
+static hid_t H5F__open_api_common(const char *filename, unsigned flags, hid_t fapl_id, void **token_ptr);
+static hid_t H5F__reopen_api_common(hid_t file_id, void **token_ptr);
 static herr_t H5F__flush_api_common(hid_t object_id, H5F_scope_t scope, void **token_ptr,
                                     H5VL_object_t **_vol_obj_ptr);
 
@@ -543,7 +543,8 @@ done:
  *-------------------------------------------------------------------------
  */
 static hid_t
-H5F__create_api_common(const char *filename, unsigned flags, H5P_genplist_t *fcpl, hid_t fapl_id, void **token_ptr)
+H5F__create_api_common(const char *filename, unsigned flags, H5P_genplist_t *fcpl, hid_t fapl_id,
+                       void **token_ptr)
 {
     void                 *new_file = NULL;             /* File struct for new file                 */
     H5P_genplist_t       *plist;                       /* Property list pointer                    */
@@ -631,9 +632,9 @@ done:
 hid_t
 H5Fcreate(const char *filename, unsigned flags, hid_t fcpl_id, hid_t fapl_id)
 {
-    H5VL_object_t *vol_obj   = NULL;            /* File object */
-    H5P_genplist_t       *fcpl;            /* File creation property list pointer */
-    hid_t          ret_value = H5I_INVALID_HID; /* Return value */
+    H5VL_object_t  *vol_obj = NULL;              /* File object */
+    H5P_genplist_t *fcpl;                        /* File creation property list pointer */
+    hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
@@ -674,11 +675,11 @@ hid_t
 H5Fcreate_async(const char *app_file, const char *app_func, unsigned app_line, const char *filename,
                 unsigned flags, hid_t fcpl_id, hid_t fapl_id, hid_t es_id)
 {
-    H5VL_object_t *vol_obj   = NULL;            /* File object */
-    H5P_genplist_t       *fcpl;            /* File creation property list pointer */
-    void          *token     = NULL;            /* Request token for async operation        */
-    void         **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    hid_t          ret_value = H5I_INVALID_HID; /* Return value */
+    H5VL_object_t  *vol_obj = NULL;              /* File object */
+    H5P_genplist_t *fcpl;                        /* File creation property list pointer */
+    void           *token     = NULL;            /* Request token for async operation        */
+    void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
+    hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
