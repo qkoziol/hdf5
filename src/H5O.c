@@ -64,8 +64,8 @@ static herr_t H5O__get_info_by_name_api_common(hid_t loc_id, const char *name, H
                                                unsigned fields, hid_t lapl_id, void **token_ptr,
                                                H5VL_object_t **_vol_obj_ptr);
 static herr_t H5O__copy_api_common(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id,
-                                   const char *dst_name, hid_t ocpypl_id, H5P_genplist_t *lcpl, void **token_ptr,
-                                   H5VL_object_t **_vol_obj_ptr);
+                                   const char *dst_name, hid_t ocpypl_id, H5P_genplist_t *lcpl,
+                                   void **token_ptr, H5VL_object_t **_vol_obj_ptr);
 static herr_t H5O__flush_api_common(hid_t obj_id, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
 static herr_t H5O__refresh_api_common(hid_t oid, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
 static htri_t H5O__close_check_type(hid_t object_id);
@@ -433,7 +433,8 @@ H5O__copy_api_common(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, c
     loc_params2.obj_type = H5I_get_type(dst_loc_id);
 
     /* Copy the object */
-    if (H5VL_object_copy(vol_obj1, &loc_params1, src_name, *vol_obj_ptr, &loc_params2, dst_name, ocpypl_id, lcpl, H5P_DATASET_XFER_DEFAULT, token_ptr) < 0)
+    if (H5VL_object_copy(vol_obj1, &loc_params1, src_name, *vol_obj_ptr, &loc_params2, dst_name, ocpypl_id,
+                         lcpl, H5P_DATASET_XFER_DEFAULT, token_ptr) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTCOPY, FAIL, "unable to copy object");
 
 done:
@@ -519,7 +520,7 @@ H5Ocopy(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *ds
         hid_t lcpl_id)
 {
     H5P_genplist_t *lcpl;                /* Link creation property list */
-    herr_t ret_value = SUCCEED; /* Return value */
+    herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -554,11 +555,11 @@ H5Ocopy_async(const char *app_file, const char *app_func, unsigned app_line, hid
               const char *src_name, hid_t dst_loc_id, const char *dst_name, hid_t ocpypl_id, hid_t lcpl_id,
               hid_t es_id)
 {
-    H5VL_object_t *vol_obj   = NULL;            /* Object for loc_id */
-    H5P_genplist_t *lcpl;                /* Link creation property list */
-    void          *token     = NULL;            /* Request token for async operation        */
-    void         **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    herr_t         ret_value = SUCCEED;         /* Return value */
+    H5VL_object_t  *vol_obj = NULL;              /* Object for loc_id */
+    H5P_genplist_t *lcpl;                        /* Link creation property list */
+    void           *token     = NULL;            /* Request token for async operation        */
+    void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
+    herr_t          ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -576,7 +577,8 @@ H5Ocopy_async(const char *app_file, const char *app_func, unsigned app_line, hid
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* To copy an object asynchronously */
-    if (H5O__copy_api_common(src_loc_id, src_name, dst_loc_id, dst_name, ocpypl_id, lcpl, token_ptr, &vol_obj) < 0)
+    if (H5O__copy_api_common(src_loc_id, src_name, dst_loc_id, dst_name, ocpypl_id, lcpl, token_ptr,
+                             &vol_obj) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTCOPY, FAIL, "unable to asynchronously copy object");
 
     /* If a token was created, add the token to the event set */
@@ -816,7 +818,7 @@ H5Olink(hid_t obj_id, hid_t new_loc_id, const char *new_name, hid_t lcpl_id, hid
 {
     H5VL_object_t          *vol_obj1 = NULL; /* object of obj_id */
     H5VL_object_t          *vol_obj2 = NULL; /* object of new_loc_id */
-    H5P_genplist_t *lcpl;                /* Link creation property list */
+    H5P_genplist_t         *lcpl;            /* Link creation property list */
     H5VL_link_create_args_t vol_cb_args;     /* Arguments to VOL callback */
     H5VL_loc_params_t       new_loc_params;
     herr_t                  ret_value = SUCCEED; /* Return value */
@@ -882,7 +884,8 @@ H5Olink(hid_t obj_id, hid_t new_loc_id, const char *new_name, hid_t lcpl_id, hid
     vol_cb_args.args.hard.curr_loc_params.obj_type = H5I_get_type(obj_id);
 
     /* Create a link to the object */
-    if (H5VL_link_create(&vol_cb_args, vol_obj2, &new_loc_params, lcpl, lapl_id, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_link_create(&vol_cb_args, vol_obj2, &new_loc_params, lcpl, lapl_id, H5P_DATASET_XFER_DEFAULT,
+                         H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTCREATE, FAIL, "unable to create link");
 
 done:

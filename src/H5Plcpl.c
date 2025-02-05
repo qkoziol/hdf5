@@ -135,7 +135,7 @@ done:
 herr_t
 H5Pset_create_intermediate_group(hid_t lcpl_id, unsigned crt_intmd_group)
 {
-    H5P_genplist_t *lcpl;               /* Property list pointer */
+    H5P_genplist_t *lcpl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -166,7 +166,7 @@ done:
 herr_t
 H5Pget_create_intermediate_group(hid_t lcpl_id, unsigned *crt_intmd_group /*out*/)
 {
-    H5P_genplist_t *lcpl;               /* Property list pointer */
+    H5P_genplist_t *lcpl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)

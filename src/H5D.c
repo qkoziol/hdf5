@@ -117,7 +117,8 @@ H5D__create_api_common(hid_t loc_id, const char *name, hid_t type_id, hid_t spac
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, H5I_INVALID_HID, "can't set object access arguments");
 
     /* Create the dataset */
-    if (NULL == (dset = H5VL_dataset_create(*vol_obj_ptr, &loc_params, name, lcpl, type_id, space_id, dcpl, dapl, H5P_DATASET_XFER_DEFAULT, token_ptr)))
+    if (NULL == (dset = H5VL_dataset_create(*vol_obj_ptr, &loc_params, name, lcpl, type_id, space_id, dcpl,
+                                            dapl, H5P_DATASET_XFER_DEFAULT, token_ptr)))
         HGOTO_ERROR(H5E_DATASET, H5E_CANTCREATE, H5I_INVALID_HID, "unable to create dataset");
 
     /* Get an ID for the dataset */
@@ -194,7 +195,8 @@ H5Dcreate2(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t 
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Create the dataset synchronously */
-    if ((ret_value = H5D__create_api_common(loc_id, name, type_id, space_id, lcpl, dcpl, dapl, NULL, NULL)) < 0)
+    if ((ret_value = H5D__create_api_common(loc_id, name, type_id, space_id, lcpl, dcpl, dapl, NULL, NULL)) <
+        0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTCREATE, H5I_INVALID_HID, "unable to synchronously create dataset");
 
 done:
@@ -254,7 +256,8 @@ H5Dcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Create the dataset asynchronously */
-    if ((ret_value = H5D__create_api_common(loc_id, name, type_id, space_id, lcpl, dcpl, dapl, token_ptr, &vol_obj)) < 0)
+    if ((ret_value = H5D__create_api_common(loc_id, name, type_id, space_id, lcpl, dcpl, dapl, token_ptr,
+                                            &vol_obj)) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTCREATE, H5I_INVALID_HID, "unable to asynchronously create dataset");
 
     /* If a token was created, add the token to the event set */
@@ -354,7 +357,8 @@ H5Dcreate_anon(hid_t loc_id, hid_t type_id, hid_t space_id, hid_t dcpl_id, hid_t
     loc_params.obj_type = H5I_get_type(loc_id);
 
     /* Create the dataset */
-    if (NULL == (dset = H5VL_dataset_create(vol_obj, &loc_params, NULL, def_lcpl, type_id, space_id, dcpl, dapl, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL)))
+    if (NULL == (dset = H5VL_dataset_create(vol_obj, &loc_params, NULL, def_lcpl, type_id, space_id, dcpl,
+                                            dapl, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, H5I_INVALID_HID, "unable to create dataset");
 
     /* Get an ID for the dataset */

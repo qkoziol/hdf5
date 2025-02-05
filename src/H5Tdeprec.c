@@ -135,7 +135,8 @@ H5Tcommit1(hid_t loc_id, const char *name, hid_t type_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid object identifier");
 
     /* Commit the datatype */
-    if (NULL == (data = H5VL_datatype_commit(vol_obj, &loc_params, name, type_id, def_lcpl, def_tcpl, def_tapl, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL)))
+    if (NULL == (data = H5VL_datatype_commit(vol_obj, &loc_params, name, type_id, def_lcpl, def_tcpl,
+                                             def_tapl, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINIT, FAIL, "unable to commit datatype");
 
     /* Set up VOL object */

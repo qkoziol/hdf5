@@ -107,8 +107,8 @@ static herr_t H5VL__dataset_optional(void *obj, const H5VL_class_t *cls, H5VL_op
                                      hid_t dxpl_id, void **req);
 static herr_t H5VL__dataset_close(void *obj, const H5VL_class_t *cls, hid_t dxpl_id, void **req);
 static void  *H5VL__datatype_commit(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_class_t *cls,
-                                    const char *name, hid_t type_id, H5P_genplist_t *lcpl, H5P_genplist_t *tcpl,
-                                    H5P_genplist_t *tapl, hid_t dxpl_id, void **req);
+                                    const char *name, hid_t type_id, H5P_genplist_t *lcpl,
+                                    H5P_genplist_t *tcpl, H5P_genplist_t *tapl, hid_t dxpl_id, void **req);
 static void  *H5VL__datatype_open(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_class_t *cls,
                                   const char *name, H5P_genplist_t *tapl, hid_t dxpl_id, void **req);
 static herr_t H5VL__datatype_get(void *obj, const H5VL_class_t *cls, H5VL_datatype_get_args_t *args,
@@ -132,8 +132,8 @@ static herr_t H5VL__file_optional(void *obj, const H5VL_class_t *cls, H5VL_optio
                                   hid_t dxpl_id, void **req);
 static herr_t H5VL__file_close(void *obj, const H5VL_class_t *cls, hid_t dxpl_id, void **req);
 static void  *H5VL__group_create(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_class_t *cls,
-                                 const char *name, H5P_genplist_t *lcpl, H5P_genplist_t *gcpl, H5P_genplist_t *gapl,
-                                 hid_t dxpl_id, void **req);
+                                 const char *name, H5P_genplist_t *lcpl, H5P_genplist_t *gcpl,
+                                 H5P_genplist_t *gapl, hid_t dxpl_id, void **req);
 static void  *H5VL__group_open(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_class_t *cls,
                                const char *name, H5P_genplist_t *gapl, hid_t dxpl_id, void **req);
 static herr_t H5VL__group_get(void *obj, const H5VL_class_t *cls, H5VL_group_get_args_t *args, hid_t dxpl_id,
@@ -147,11 +147,11 @@ static herr_t H5VL__link_create(H5VL_link_create_args_t *args, void *obj, const 
                                 const H5VL_class_t *cls, H5P_genplist_t *lcpl, hid_t lapl_id, hid_t dxpl_id,
                                 void **req);
 static herr_t H5VL__link_copy(void *src_obj, const H5VL_loc_params_t *loc_params1, void *dst_obj,
-                              const H5VL_loc_params_t *loc_params2, const H5VL_class_t *cls, H5P_genplist_t *lcpl,
-                              hid_t lapl_id, hid_t dxpl_id, void **req);
+                              const H5VL_loc_params_t *loc_params2, const H5VL_class_t *cls,
+                              H5P_genplist_t *lcpl, hid_t lapl_id, hid_t dxpl_id, void **req);
 static herr_t H5VL__link_move(void *src_obj, const H5VL_loc_params_t *loc_params1, void *dst_obj,
-                              const H5VL_loc_params_t *loc_params2, const H5VL_class_t *cls, H5P_genplist_t *lcpl,
-                              hid_t lapl_id, hid_t dxpl_id, void **req);
+                              const H5VL_loc_params_t *loc_params2, const H5VL_class_t *cls,
+                              H5P_genplist_t *lcpl, hid_t lapl_id, hid_t dxpl_id, void **req);
 static herr_t H5VL__link_get(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_class_t *cls,
                              H5VL_link_get_args_t *args, hid_t dxpl_id, void **req);
 static herr_t H5VL__link_specific(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_class_t *cls,
@@ -1924,8 +1924,8 @@ done:
  */
 static void *
 H5VL__dataset_create(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_class_t *cls,
-                     const char *name, H5P_genplist_t *lcpl, hid_t type_id, hid_t space_id, H5P_genplist_t *dcpl,
-                     H5P_genplist_t *dapl, hid_t dxpl_id, void **req)
+                     const char *name, H5P_genplist_t *lcpl, hid_t type_id, hid_t space_id,
+                     H5P_genplist_t *dcpl, H5P_genplist_t *dapl, hid_t dxpl_id, void **req)
 {
     void *ret_value = NULL; /* Return value */
 
@@ -1939,8 +1939,9 @@ H5VL__dataset_create(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_
     H5_BEFORE_USER_CB(NULL)
         {
             /* Call the corresponding VOL callback */
-            ret_value = (cls->dataset_cls.create)(obj, loc_params, name, H5P_PLIST_ID(lcpl), type_id, space_id,
-                                                  H5P_PLIST_ID(dcpl), H5P_PLIST_ID(dapl), dxpl_id, req);
+            ret_value =
+                (cls->dataset_cls.create)(obj, loc_params, name, H5P_PLIST_ID(lcpl), type_id, space_id,
+                                          H5P_PLIST_ID(dcpl), H5P_PLIST_ID(dapl), dxpl_id, req);
         }
     H5_AFTER_USER_CB(NULL)
     if (NULL == ret_value)
@@ -1962,8 +1963,8 @@ done:
  */
 void *
 H5VL_dataset_create(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, const char *name,
-                    H5P_genplist_t *lcpl, hid_t type_id, hid_t space_id, H5P_genplist_t *dcpl, H5P_genplist_t *dapl,
-                    hid_t dxpl_id, void **req)
+                    H5P_genplist_t *lcpl, hid_t type_id, hid_t space_id, H5P_genplist_t *dcpl,
+                    H5P_genplist_t *dapl, hid_t dxpl_id, void **req)
 {
     bool  vol_wrapper_set = false; /* Whether the VOL object wrapping context was set up */
     void *ret_value       = NULL;  /* Return value */
@@ -1976,7 +1977,8 @@ H5VL_dataset_create(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_p
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__dataset_create(vol_obj->data, loc_params, vol_obj->connector->cls, name, lcpl, type_id, space_id, dcpl, dapl, dxpl_id, req)))
+    if (NULL == (ret_value = H5VL__dataset_create(vol_obj->data, loc_params, vol_obj->connector->cls, name,
+                                                  lcpl, type_id, space_id, dcpl, dapl, dxpl_id, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, NULL, "dataset create failed");
 
 done:
@@ -2023,7 +2025,8 @@ H5VLdataset_create(void *obj, const H5VL_loc_params_t *loc_params, hid_t connect
         HGOTO_ERROR(H5E_VOL, H5E_BADID, NULL, "can't find object for ID");
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__dataset_create(obj, loc_params, connector->cls, name, lcpl, type_id, space_id, dcpl, dapl, dxpl_id, req)))
+    if (NULL == (ret_value = H5VL__dataset_create(obj, loc_params, connector->cls, name, lcpl, type_id,
+                                                  space_id, dcpl, dapl, dxpl_id, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, NULL, "unable to create dataset");
 
 done:
@@ -2918,8 +2921,8 @@ done:
  */
 void *
 H5VL_datatype_commit(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, const char *name,
-                     hid_t type_id, H5P_genplist_t *lcpl, H5P_genplist_t *tcpl, H5P_genplist_t *tapl, hid_t dxpl_id,
-                     void **req)
+                     hid_t type_id, H5P_genplist_t *lcpl, H5P_genplist_t *tcpl, H5P_genplist_t *tapl,
+                     hid_t dxpl_id, void **req)
 {
     bool  vol_wrapper_set = false; /* Whether the VOL object wrapping context was set up */
     void *ret_value       = NULL;  /* Return value */
@@ -2932,7 +2935,8 @@ H5VL_datatype_commit(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__datatype_commit(vol_obj->data, loc_params, vol_obj->connector->cls, name, type_id, lcpl, tcpl, tapl, dxpl_id, req)))
+    if (NULL == (ret_value = H5VL__datatype_commit(vol_obj->data, loc_params, vol_obj->connector->cls, name,
+                                                   type_id, lcpl, tcpl, tapl, dxpl_id, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, NULL, "datatype commit failed");
 
 done:
@@ -2979,7 +2983,8 @@ H5VLdatatype_commit(void *obj, const H5VL_loc_params_t *loc_params, hid_t connec
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, NULL, "can't find object for ID");
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__datatype_commit(obj, loc_params, connector->cls, name, type_id, lcpl, tcpl, tapl, dxpl_id, req)))
+    if (NULL == (ret_value = H5VL__datatype_commit(obj, loc_params, connector->cls, name, type_id, lcpl, tcpl,
+                                                   tapl, dxpl_id, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, NULL, "unable to commit datatype");
 
 done:
@@ -4430,7 +4435,8 @@ done:
  */
 static void *
 H5VL__group_create(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_class_t *cls, const char *name,
-                   H5P_genplist_t *lcpl, H5P_genplist_t *gcpl, H5P_genplist_t *gapl, hid_t dxpl_id, void **req)
+                   H5P_genplist_t *lcpl, H5P_genplist_t *gcpl, H5P_genplist_t *gapl, hid_t dxpl_id,
+                   void **req)
 {
     void *ret_value = NULL; /* Return value */
 
@@ -4444,7 +4450,8 @@ H5VL__group_create(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_cl
     H5_BEFORE_USER_CB(NULL)
         {
             /* Call the corresponding VOL callback */
-            ret_value = (cls->group_cls.create)(obj, loc_params, name, H5P_PLIST_ID(lcpl), H5P_PLIST_ID(gcpl), H5P_PLIST_ID(gapl), dxpl_id, req);
+            ret_value = (cls->group_cls.create)(obj, loc_params, name, H5P_PLIST_ID(lcpl), H5P_PLIST_ID(gcpl),
+                                                H5P_PLIST_ID(gapl), dxpl_id, req);
         }
     H5_AFTER_USER_CB(NULL)
     if (NULL == ret_value)
@@ -4479,7 +4486,8 @@ H5VL_group_create(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_par
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__group_create(vol_obj->data, loc_params, vol_obj->connector->cls, name, lcpl, gcpl, gapl, dxpl_id, req)))
+    if (NULL == (ret_value = H5VL__group_create(vol_obj->data, loc_params, vol_obj->connector->cls, name,
+                                                lcpl, gcpl, gapl, dxpl_id, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, NULL, "group create failed");
 
 done:
@@ -4525,7 +4533,8 @@ H5VLgroup_create(void *obj, const H5VL_loc_params_t *loc_params, hid_t connector
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, NULL, "can't find object for ID");
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__group_create(obj, loc_params, connector->cls, name, lcpl, gcpl, gapl, dxpl_id, req)))
+    if (NULL == (ret_value = H5VL__group_create(obj, loc_params, connector->cls, name, lcpl, gcpl, gapl,
+                                                dxpl_id, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, NULL, "unable to create group");
 
 done:
@@ -5130,7 +5139,8 @@ H5VL__link_create(H5VL_link_create_args_t *args, void *obj, const H5VL_loc_param
     H5_BEFORE_USER_CB(FAIL)
         {
             /* Call the corresponding VOL callback */
-            ret_value = (cls->link_cls.create)(args, obj, loc_params, H5P_PLIST_ID(lcpl), lapl_id, dxpl_id, req);
+            ret_value =
+                (cls->link_cls.create)(args, obj, loc_params, H5P_PLIST_ID(lcpl), lapl_id, dxpl_id, req);
         }
     H5_AFTER_USER_CB(FAIL)
     if (ret_value < 0)
@@ -5152,7 +5162,8 @@ done:
  */
 herr_t
 H5VL_link_create(H5VL_link_create_args_t *args, const H5VL_object_t *vol_obj,
-                 const H5VL_loc_params_t *loc_params, H5P_genplist_t *lcpl, hid_t lapl_id, hid_t dxpl_id, void **req)
+                 const H5VL_loc_params_t *loc_params, H5P_genplist_t *lcpl, hid_t lapl_id, hid_t dxpl_id,
+                 void **req)
 {
     H5VL_object_t tmp_vol_obj;               /* Temporary VOL object */
     bool          vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
@@ -5175,7 +5186,8 @@ H5VL_link_create(H5VL_link_create_args_t *args, const H5VL_object_t *vol_obj,
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__link_create(args, vol_obj->data, loc_params, vol_obj->connector->cls, lcpl, lapl_id, dxpl_id, req) < 0)
+    if (H5VL__link_create(args, vol_obj->data, loc_params, vol_obj->connector->cls, lcpl, lapl_id, dxpl_id,
+                          req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, FAIL, "link create failed");
 
 done:
@@ -5203,7 +5215,7 @@ H5VLlink_create(H5VL_link_create_args_t *args, void *obj, const H5VL_loc_params_
                 hid_t connector_id, hid_t lcpl_id, hid_t lapl_id, hid_t dxpl_id, void **req /*out*/)
 {
     H5VL_connector_t *connector;           /* VOL connector */
-    H5P_genplist_t   *lcpl;             /* Link creation property list */
+    H5P_genplist_t   *lcpl;                /* Link creation property list */
     herr_t            ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API_NOINIT
@@ -5234,8 +5246,8 @@ done:
  */
 static herr_t
 H5VL__link_copy(void *src_obj, const H5VL_loc_params_t *loc_params1, void *dst_obj,
-                const H5VL_loc_params_t *loc_params2, const H5VL_class_t *cls, H5P_genplist_t *lcpl, hid_t lapl_id,
-                hid_t dxpl_id, void **req)
+                const H5VL_loc_params_t *loc_params2, const H5VL_class_t *cls, H5P_genplist_t *lcpl,
+                hid_t lapl_id, hid_t dxpl_id, void **req)
 {
     herr_t ret_value = SUCCEED; /* Return value */
 
@@ -5249,7 +5261,8 @@ H5VL__link_copy(void *src_obj, const H5VL_loc_params_t *loc_params1, void *dst_o
     H5_BEFORE_USER_CB(FAIL)
         {
             /* Call the corresponding VOL callback */
-            ret_value = (cls->link_cls.copy)(src_obj, loc_params1, dst_obj, loc_params2, H5P_PLIST_ID(lcpl), lapl_id, dxpl_id, req);
+            ret_value = (cls->link_cls.copy)(src_obj, loc_params1, dst_obj, loc_params2, H5P_PLIST_ID(lcpl),
+                                             lapl_id, dxpl_id, req);
         }
     H5_AFTER_USER_CB(FAIL)
     if (ret_value < 0)
@@ -5287,7 +5300,8 @@ H5VL_link_copy(const H5VL_object_t *src_vol_obj, const H5VL_loc_params_t *loc_pa
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__link_copy(src_vol_obj->data, loc_params1, (dst_vol_obj ? dst_vol_obj->data : NULL), loc_params2, vol_obj->connector->cls, lcpl, lapl_id, dxpl_id, req) < 0)
+    if (H5VL__link_copy(src_vol_obj->data, loc_params1, (dst_vol_obj ? dst_vol_obj->data : NULL), loc_params2,
+                        vol_obj->connector->cls, lcpl, lapl_id, dxpl_id, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTCOPY, FAIL, "link copy failed");
 
 done:
@@ -5316,7 +5330,7 @@ H5VLlink_copy(void *src_obj, const H5VL_loc_params_t *loc_params1, void *dst_obj
               hid_t dxpl_id, void **req /*out*/)
 {
     H5VL_connector_t *connector;           /* VOL connector */
-    H5P_genplist_t   *lcpl;             /* Link creation property list */
+    H5P_genplist_t   *lcpl;                /* Link creation property list */
     herr_t            ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API_NOINIT
@@ -5328,7 +5342,8 @@ H5VLlink_copy(void *src_obj, const H5VL_loc_params_t *loc_params1, void *dst_obj
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__link_copy(src_obj, loc_params1, dst_obj, loc_params2, connector->cls, lcpl, lapl_id, dxpl_id, req) < 0)
+    if (H5VL__link_copy(src_obj, loc_params1, dst_obj, loc_params2, connector->cls, lcpl, lapl_id, dxpl_id,
+                        req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTCOPY, FAIL, "unable to copy object");
 
 done:
@@ -5347,8 +5362,8 @@ done:
  */
 static herr_t
 H5VL__link_move(void *src_obj, const H5VL_loc_params_t *loc_params1, void *dst_obj,
-                const H5VL_loc_params_t *loc_params2, const H5VL_class_t *cls, H5P_genplist_t *lcpl, hid_t lapl_id,
-                hid_t dxpl_id, void **req)
+                const H5VL_loc_params_t *loc_params2, const H5VL_class_t *cls, H5P_genplist_t *lcpl,
+                hid_t lapl_id, hid_t dxpl_id, void **req)
 {
     herr_t ret_value = SUCCEED; /* Return value */
 
@@ -5362,7 +5377,8 @@ H5VL__link_move(void *src_obj, const H5VL_loc_params_t *loc_params1, void *dst_o
     H5_BEFORE_USER_CB(FAIL)
         {
             /* Call the corresponding VOL callback */
-            ret_value = (cls->link_cls.move)(src_obj, loc_params1, dst_obj, loc_params2, H5P_PLIST_ID(lcpl), lapl_id, dxpl_id, req);
+            ret_value = (cls->link_cls.move)(src_obj, loc_params1, dst_obj, loc_params2, H5P_PLIST_ID(lcpl),
+                                             lapl_id, dxpl_id, req);
         }
     H5_AFTER_USER_CB(FAIL)
     if (ret_value < 0)
@@ -5404,7 +5420,8 @@ H5VL_link_move(const H5VL_object_t *src_vol_obj, const H5VL_loc_params_t *loc_pa
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__link_move(src_vol_obj->data, loc_params1, (dst_vol_obj ? dst_vol_obj->data : NULL), loc_params2, vol_obj->connector->cls, lcpl, lapl_id, dxpl_id, req) < 0)
+    if (H5VL__link_move(src_vol_obj->data, loc_params1, (dst_vol_obj ? dst_vol_obj->data : NULL), loc_params2,
+                        vol_obj->connector->cls, lcpl, lapl_id, dxpl_id, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTMOVE, FAIL, "link move failed");
 
 done:
@@ -5433,7 +5450,7 @@ H5VLlink_move(void *src_obj, const H5VL_loc_params_t *loc_params1, void *dst_obj
               hid_t dxpl_id, void **req /*out*/)
 {
     H5VL_connector_t *connector;           /* VOL connector */
-    H5P_genplist_t   *lcpl;             /* Link creation property list */
+    H5P_genplist_t   *lcpl;                /* Link creation property list */
     herr_t            ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API_NOINIT
@@ -5445,7 +5462,8 @@ H5VLlink_move(void *src_obj, const H5VL_loc_params_t *loc_params1, void *dst_obj
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__link_move(src_obj, loc_params1, dst_obj, loc_params2, connector->cls, lcpl, lapl_id, dxpl_id, req) < 0)
+    if (H5VL__link_move(src_obj, loc_params1, dst_obj, loc_params2, connector->cls, lcpl, lapl_id, dxpl_id,
+                        req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTMOVE, FAIL, "unable to move object");
 
 done:
@@ -5963,7 +5981,8 @@ H5VL__object_copy(void *src_obj, const H5VL_loc_params_t *src_loc_params, const 
     H5_BEFORE_USER_CB(FAIL)
         {
             /* Call the corresponding VOL callback */
-            ret_value = (cls->object_cls.copy)(src_obj, src_loc_params, src_name, dst_obj, dst_loc_params, dst_name, ocpypl_id, H5P_PLIST_ID(lcpl), dxpl_id, req);
+            ret_value = (cls->object_cls.copy)(src_obj, src_loc_params, src_name, dst_obj, dst_loc_params,
+                                               dst_name, ocpypl_id, H5P_PLIST_ID(lcpl), dxpl_id, req);
         }
     H5_AFTER_USER_CB(FAIL)
     if (ret_value < 0)
@@ -6004,7 +6023,8 @@ H5VL_object_copy(const H5VL_object_t *src_obj, const H5VL_loc_params_t *src_loc_
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__object_copy(src_obj->data, src_loc_params, src_name, dst_obj->data, dst_loc_params, dst_name, src_obj->connector->cls, ocpypl_id, lcpl, dxpl_id, req) < 0)
+    if (H5VL__object_copy(src_obj->data, src_loc_params, src_name, dst_obj->data, dst_loc_params, dst_name,
+                          src_obj->connector->cls, ocpypl_id, lcpl, dxpl_id, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTCOPY, FAIL, "object copy failed");
 
 done:
@@ -6031,7 +6051,7 @@ H5VLobject_copy(void *src_obj, const H5VL_loc_params_t *src_loc_params, const ch
                 hid_t ocpypl_id, hid_t lcpl_id, hid_t dxpl_id, void **req /*out*/)
 {
     H5VL_connector_t *connector;           /* VOL connector */
-    H5P_genplist_t   *lcpl;             /* Link creation property list */
+    H5P_genplist_t   *lcpl;                /* Link creation property list */
     herr_t            ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API_NOINIT
@@ -6045,7 +6065,8 @@ H5VLobject_copy(void *src_obj, const H5VL_loc_params_t *src_loc_params, const ch
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__object_copy(src_obj, src_loc_params, src_name, dst_obj, dst_loc_params, dst_name, connector->cls, ocpypl_id, lcpl, dxpl_id, req) < 0)
+    if (H5VL__object_copy(src_obj, src_loc_params, src_name, dst_obj, dst_loc_params, dst_name,
+                          connector->cls, ocpypl_id, lcpl, dxpl_id, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTCOPY, FAIL, "unable to copy object");
 
 done:

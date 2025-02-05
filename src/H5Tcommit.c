@@ -87,8 +87,9 @@ static herr_t H5T_destruct_datatype(void *datatype, H5VL_connector_t *vol_connec
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5T__commit_api_common(hid_t loc_id, const char *name, hid_t type_id, H5P_genplist_t *lcpl, H5P_genplist_t *tcpl,
-                       H5P_genplist_t *tapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
+H5T__commit_api_common(hid_t loc_id, const char *name, hid_t type_id, H5P_genplist_t *lcpl,
+                       H5P_genplist_t *tcpl, H5P_genplist_t *tapl, void **token_ptr,
+                       H5VL_object_t **_vol_obj_ptr)
 {
     void           *data = NULL;        /* VOL-managed datatype data */
     hid_t           tapl_id;            /* ID for datatype access property list */
@@ -118,7 +119,8 @@ H5T__commit_api_common(hid_t loc_id, const char *name, hid_t type_id, H5P_genpli
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set object access arguments");
 
     /* Commit the type */
-    if (NULL == (data = H5VL_datatype_commit(*vol_obj_ptr, &loc_params, name, type_id, lcpl, tcpl, tapl, H5P_DATASET_XFER_DEFAULT, token_ptr)))
+    if (NULL == (data = H5VL_datatype_commit(*vol_obj_ptr, &loc_params, name, type_id, lcpl, tcpl, tapl,
+                                             H5P_DATASET_XFER_DEFAULT, token_ptr)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINIT, FAIL, "unable to commit datatype");
 
     /* Set up VOL object */
@@ -191,7 +193,7 @@ H5Tcommit_async(const char *app_file, const char *app_func, unsigned app_line, h
                 hid_t type_id, hid_t lcpl_id, hid_t tcpl_id, hid_t tapl_id, hid_t es_id)
 {
     H5VL_object_t  *vol_obj = NULL;              /* Object for loc_id */
-    H5P_genplist_t *lcpl;                /* Link creation property list */
+    H5P_genplist_t *lcpl;                        /* Link creation property list */
     H5P_genplist_t *tcpl;                        /* Datatype creation property list */
     H5P_genplist_t *tapl;                        /* Datatype access property list */
     void           *token     = NULL;            /* Request token for async operation        */
@@ -222,7 +224,8 @@ H5Tcommit_async(const char *app_file, const char *app_func, unsigned app_line, h
         token_ptr = &token;
 
     /* Commit the datatype asynchronously */
-    if ((ret_value = H5T__commit_api_common(loc_id, name, type_id, lcpl, tcpl, tapl, token_ptr, &vol_obj)) < 0)
+    if ((ret_value = H5T__commit_api_common(loc_id, name, type_id, lcpl, tcpl, tapl, token_ptr, &vol_obj)) <
+        0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTOPENOBJ, FAIL, "unable to commit datatype asynchronously");
 
     /* If a token was created, add the token to the event set */
@@ -376,7 +379,8 @@ H5Tcommit_anon(hid_t loc_id, hid_t type_id, hid_t tcpl_id, hid_t tapl_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid file identifier");
 
     /* Commit the datatype */
-    if (NULL == (dt = H5VL_datatype_commit(vol_obj, &loc_params, NULL, type_id, def_lcpl, tcpl, tapl, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL)))
+    if (NULL == (dt = H5VL_datatype_commit(vol_obj, &loc_params, NULL, type_id, def_lcpl, tcpl, tapl,
+                                           H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINIT, FAIL, "unable to commit datatype");
 
     /* Setup VOL object */
