@@ -44,10 +44,10 @@
 /********************/
 
 static herr_t H5L__create_soft_api_common(const char *link_target, hid_t link_loc_id, const char *link_name,
-                                          hid_t lcpl_id, hid_t lapl_id, void **token_ptr,
+                                          H5P_genplist_t *lcpl, hid_t lapl_id, void **token_ptr,
                                           H5VL_object_t **_vol_obj_ptr);
 static herr_t H5L__create_hard_api_common(hid_t cur_loc_id, const char *cur_name, hid_t new_loc_id,
-                                          const char *new_name, hid_t lcpl_id, hid_t lapl_id,
+                                          const char *new_name, H5P_genplist_t *lcpl, hid_t lapl_id,
                                           void **token_ptr, H5VL_connector_t **conn);
 static herr_t H5L__delete_api_common(hid_t loc_id, const char *name, hid_t lapl_id, void **token_ptr,
                                      H5VL_object_t **_vol_obj_ptr);
@@ -94,6 +94,7 @@ H5Lmove(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *ds
     H5VL_object_t    *vol_obj2 = NULL; /* Object of dst_id */
     H5VL_loc_params_t loc_params1;
     H5VL_loc_params_t loc_params2;
+    H5P_genplist_t   *lcpl; /* Link creation property list */
     H5I_type_t        src_id_type = H5I_BADID, dst_id_type = H5I_BADID;
     herr_t            ret_value = SUCCEED; /* Return value */
 
@@ -121,12 +122,11 @@ H5Lmove(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *ds
     if (!(H5I_GROUP == dst_id_type || H5I_FILE == dst_id_type))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid group (or file) ID, dst_loc_id");
 
-    if (lcpl_id != H5P_DEFAULT && (true != H5P_isa_class(lcpl_id, H5P_LINK_CREATE)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a link creation property list");
-
     /* Check the link create property list */
     if (H5P_DEFAULT == lcpl_id)
         lcpl_id = H5P_LINK_CREATE_DEFAULT;
+    if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
+        HGOTO_ERROR(H5E_LINK, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Set the LCPL for the API context */
     H5CX_set_lcpl(lcpl_id);
@@ -168,7 +168,7 @@ H5Lmove(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *ds
     }
 
     /* Move the link */
-    if (H5VL_link_move(vol_obj1, &loc_params1, vol_obj2, &loc_params2, lcpl_id, lapl_id,
+    if (H5VL_link_move(vol_obj1, &loc_params1, vol_obj2, &loc_params2, lcpl, lapl_id,
                        H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTMOVE, FAIL, "unable to move link");
 
@@ -195,6 +195,7 @@ H5Lcopy(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *ds
     H5VL_loc_params_t loc_params1;
     H5VL_object_t    *vol_obj2 = NULL; /* Object of dst_id */
     H5VL_loc_params_t loc_params2;
+    H5P_genplist_t   *lcpl; /* Link creation property list */
     H5I_type_t        src_id_type = H5I_BADID, dst_id_type = H5I_BADID;
     herr_t            ret_value = SUCCEED; /* Return value */
 
@@ -207,8 +208,6 @@ H5Lcopy(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *ds
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "no current name specified");
     if (!dst_name || !*dst_name)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "no destination name specified");
-    if (lcpl_id != H5P_DEFAULT && (true != H5P_isa_class(lcpl_id, H5P_LINK_CREATE)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a link creation property list");
 
     /* reset an ID in the case of H5L_SAME_LOC */
     if (src_loc_id == H5L_SAME_LOC)
@@ -227,6 +226,8 @@ H5Lcopy(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *ds
     /* Check the link create property list */
     if (H5P_DEFAULT == lcpl_id)
         lcpl_id = H5P_LINK_CREATE_DEFAULT;
+    if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
+        HGOTO_ERROR(H5E_LINK, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Set the LCPL for the API context */
     H5CX_set_lcpl(lcpl_id);
@@ -269,7 +270,7 @@ H5Lcopy(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *ds
     } /* end if */
 
     /* Copy the link */
-    if (H5VL_link_copy(vol_obj1, &loc_params1, vol_obj2, &loc_params2, lcpl_id, lapl_id,
+    if (H5VL_link_copy(vol_obj1, &loc_params1, vol_obj2, &loc_params2, lcpl, lapl_id,
                        H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTMOVE, FAIL, "unable to copy link");
 
@@ -287,8 +288,9 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5L__create_soft_api_common(const char *link_target, hid_t link_loc_id, const char *link_name, hid_t lcpl_id,
-                            hid_t lapl_id, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
+H5L__create_soft_api_common(const char *link_target, hid_t link_loc_id, const char *link_name,
+                            H5P_genplist_t *lcpl, hid_t lapl_id, void **token_ptr,
+                            H5VL_object_t **_vol_obj_ptr)
 {
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
@@ -306,16 +308,7 @@ H5L__create_soft_api_common(const char *link_target, hid_t link_loc_id, const ch
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "link_target parameter cannot be NULL");
     if (!*link_target)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "link_target parameter cannot be an empty string");
-    if (lcpl_id != H5P_DEFAULT && (true != H5P_isa_class(lcpl_id, H5P_LINK_CREATE)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a link creation property list");
     /* link_name is verified in H5VL_setup_name_args() */
-
-    /* Get the link creation property list */
-    if (H5P_DEFAULT == lcpl_id)
-        lcpl_id = H5P_LINK_CREATE_DEFAULT;
-
-    /* Set the LCPL for the API context */
-    H5CX_set_lcpl(lcpl_id);
 
     /* Verify access property list and set up collective metadata if appropriate */
     if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, link_loc_id, true) < 0)
@@ -330,7 +323,7 @@ H5L__create_soft_api_common(const char *link_target, hid_t link_loc_id, const ch
     vol_cb_args.args.soft.target = link_target;
 
     /* Create the link */
-    if (H5VL_link_create(&vol_cb_args, *vol_obj_ptr, &loc_params, lcpl_id, lapl_id, H5P_DATASET_XFER_DEFAULT,
+    if (H5VL_link_create(&vol_cb_args, *vol_obj_ptr, &loc_params, lcpl, lapl_id, H5P_DATASET_XFER_DEFAULT,
                          token_ptr) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTCREATE, FAIL, "unable to create soft link");
 
@@ -357,12 +350,22 @@ herr_t
 H5Lcreate_soft(const char *link_target, hid_t link_loc_id, const char *link_name, hid_t lcpl_id,
                hid_t lapl_id)
 {
-    herr_t ret_value = SUCCEED; /* Return value */
+    H5P_genplist_t *lcpl;                /* Link creation property list */
+    herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
+    /* Get the link creation property list */
+    if (H5P_DEFAULT == lcpl_id)
+        lcpl_id = H5P_LINK_CREATE_DEFAULT;
+    if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
+        HGOTO_ERROR(H5E_LINK, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+
+    /* Set the LCPL for the API context */
+    H5CX_set_lcpl(lcpl_id);
+
     /* Creates a soft link synchronously */
-    if (H5L__create_soft_api_common(link_target, link_loc_id, link_name, lcpl_id, lapl_id, NULL, NULL) < 0)
+    if (H5L__create_soft_api_common(link_target, link_loc_id, link_name, lcpl, lapl_id, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTCREATE, FAIL, "unable to synchronously create soft link");
 
 done:
@@ -382,20 +385,30 @@ herr_t
 H5Lcreate_soft_async(const char *app_file, const char *app_func, unsigned app_line, const char *link_target,
                      hid_t link_loc_id, const char *link_name, hid_t lcpl_id, hid_t lapl_id, hid_t es_id)
 {
-    H5VL_object_t *vol_obj   = NULL;            /* Object for loc_id */
-    void          *token     = NULL;            /* Request token for async operation        */
-    void         **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    herr_t         ret_value = SUCCEED;         /* Return value */
+    H5VL_object_t  *vol_obj = NULL;              /* Object for loc_id */
+    H5P_genplist_t *lcpl;                        /* Link creation property list */
+    void           *token     = NULL;            /* Request token for async operation        */
+    void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
+    herr_t          ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API(FAIL)
+
+    /* Get the link creation property list */
+    if (H5P_DEFAULT == lcpl_id)
+        lcpl_id = H5P_LINK_CREATE_DEFAULT;
+    if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
+        HGOTO_ERROR(H5E_LINK, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+
+    /* Set the LCPL for the API context */
+    H5CX_set_lcpl(lcpl_id);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Creates a soft link asynchronously */
-    if (H5L__create_soft_api_common(link_target, link_loc_id, link_name, lcpl_id, lapl_id, token_ptr,
-                                    &vol_obj) < 0)
+    if (H5L__create_soft_api_common(link_target, link_loc_id, link_name, lcpl, lapl_id, token_ptr, &vol_obj) <
+        0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTCREATE, FAIL, "unable to asynchronously create soft link");
 
     /* If a token was created, add the token to the event set */
@@ -421,7 +434,8 @@ done:
  */
 static herr_t
 H5L__create_hard_api_common(hid_t cur_loc_id, const char *cur_name, hid_t link_loc_id, const char *link_name,
-                            hid_t lcpl_id, hid_t lapl_id, void **token_ptr, H5VL_connector_t **connector)
+                            H5P_genplist_t *lcpl, hid_t lapl_id, void **token_ptr,
+                            H5VL_connector_t **connector)
 {
     H5VL_object_t          *curr_vol_obj = NULL; /* Object of cur_loc_id */
     H5VL_object_t          *link_vol_obj = NULL; /* Object of link_loc_id */
@@ -442,15 +456,6 @@ H5L__create_hard_api_common(hid_t cur_loc_id, const char *cur_name, hid_t link_l
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "new_name parameter cannot be NULL");
     if (!*link_name)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "new_name parameter cannot be an empty string");
-    if (lcpl_id != H5P_DEFAULT && (true != H5P_isa_class(lcpl_id, H5P_LINK_CREATE)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a link creation property list");
-
-    /* Check the link create property list */
-    if (H5P_DEFAULT == lcpl_id)
-        lcpl_id = H5P_LINK_CREATE_DEFAULT;
-
-    /* Set the LCPL for the API context */
-    H5CX_set_lcpl(lcpl_id);
 
     /* Verify access property list and set up collective metadata if appropriate */
     if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, cur_loc_id, true) < 0)
@@ -494,8 +499,8 @@ H5L__create_hard_api_common(hid_t cur_loc_id, const char *cur_name, hid_t link_l
     vol_cb_args.args.hard.curr_loc_params.loc_data.loc_by_name.lapl_id = lapl_id;
 
     /* Create the link */
-    if (H5VL_link_create(&vol_cb_args, (link_vol_obj ? link_vol_obj : curr_vol_obj), &link_loc_params,
-                         lcpl_id, lapl_id, H5P_DATASET_XFER_DEFAULT, token_ptr) < 0)
+    if (H5VL_link_create(&vol_cb_args, (link_vol_obj ? link_vol_obj : curr_vol_obj), &link_loc_params, lcpl,
+                         lapl_id, H5P_DATASET_XFER_DEFAULT, token_ptr) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTCREATE, FAIL, "unable to create hard link");
 
     /* Set the connector to use for async operations */
@@ -523,13 +528,23 @@ herr_t
 H5Lcreate_hard(hid_t cur_loc_id, const char *cur_name, hid_t new_loc_id, const char *new_name, hid_t lcpl_id,
                hid_t lapl_id)
 {
-    herr_t ret_value = SUCCEED; /* Return value */
+    H5P_genplist_t *lcpl;                /* Link creation property list */
+    herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
+    /* Get the link creation property list */
+    if (H5P_DEFAULT == lcpl_id)
+        lcpl_id = H5P_LINK_CREATE_DEFAULT;
+    if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
+        HGOTO_ERROR(H5E_LINK, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+
+    /* Set the LCPL for the API context */
+    H5CX_set_lcpl(lcpl_id);
+
     /* Creates a hard link synchronously */
-    if (H5L__create_hard_api_common(cur_loc_id, cur_name, new_loc_id, new_name, lcpl_id, lapl_id, NULL,
-                                    NULL) < 0)
+    if (H5L__create_hard_api_common(cur_loc_id, cur_name, new_loc_id, new_name, lcpl, lapl_id, NULL, NULL) <
+        0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTCREATE, FAIL, "unable to synchronously create hard link");
 
 done:
@@ -556,18 +571,28 @@ H5Lcreate_hard_async(const char *app_file, const char *app_func, unsigned app_li
                      hid_t lapl_id, hid_t es_id)
 {
     H5VL_connector_t *connector = NULL;            /* Connector for operation */
+    H5P_genplist_t   *lcpl;                        /* Link creation property list */
     void             *token     = NULL;            /* Request token for async operation        */
     void            **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     herr_t            ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
+    /* Get the link creation property list */
+    if (H5P_DEFAULT == lcpl_id)
+        lcpl_id = H5P_LINK_CREATE_DEFAULT;
+    if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
+        HGOTO_ERROR(H5E_LINK, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+
+    /* Set the LCPL for the API context */
+    H5CX_set_lcpl(lcpl_id);
+
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Creates a hard link asynchronously */
-    if (H5L__create_hard_api_common(cur_loc_id, cur_name, new_loc_id, new_name, lcpl_id, lapl_id, token_ptr,
+    if (H5L__create_hard_api_common(cur_loc_id, cur_name, new_loc_id, new_name, lcpl, lapl_id, token_ptr,
                                     &connector) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTCREATE, FAIL, "unable to asynchronously create hard link");
     assert(connector);
@@ -606,6 +631,7 @@ H5Lcreate_external(const char *file_name, const char *obj_name, hid_t link_loc_i
                    hid_t lcpl_id, hid_t lapl_id)
 {
     H5VL_object_t          *vol_obj = NULL;       /* Object of loc_id */
+    H5P_genplist_t         *lcpl;                 /* Link creation property list */
     H5VL_link_create_args_t vol_cb_args;          /* Arguments to VOL callback */
     H5VL_loc_params_t       loc_params;           /* Location parameters for object access */
     char                   *norm_obj_name = NULL; /* Pointer to normalized current name */
@@ -629,6 +655,8 @@ H5Lcreate_external(const char *file_name, const char *obj_name, hid_t link_loc_i
     /* Get the link creation property list */
     if (H5P_DEFAULT == lcpl_id)
         lcpl_id = H5P_LINK_CREATE_DEFAULT;
+    if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
+        HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set the LCPL for the API context */
     H5CX_set_lcpl(lcpl_id);
@@ -671,7 +699,7 @@ H5Lcreate_external(const char *file_name, const char *obj_name, hid_t link_loc_i
     vol_cb_args.args.ud.buf_size = buf_size;
 
     /* Create an external link */
-    if (H5VL_link_create(&vol_cb_args, vol_obj, &loc_params, lcpl_id, lapl_id, H5P_DATASET_XFER_DEFAULT,
+    if (H5VL_link_create(&vol_cb_args, vol_obj, &loc_params, lcpl, lapl_id, H5P_DATASET_XFER_DEFAULT,
                          H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTINIT, FAIL, "unable to create external link");
 
@@ -708,6 +736,7 @@ H5Lcreate_ud(hid_t link_loc_id, const char *link_name, H5L_type_t link_type, con
              size_t udata_size, hid_t lcpl_id, hid_t lapl_id)
 {
     H5VL_object_t          *vol_obj = NULL;      /* Object of loc_id */
+    H5P_genplist_t         *lcpl;                /* Link creation property list */
     H5VL_link_create_args_t vol_cb_args;         /* Arguments to VOL callback */
     H5VL_loc_params_t       loc_params;          /* Location parameters for object access */
     herr_t                  ret_value = SUCCEED; /* Return value */
@@ -725,6 +754,8 @@ H5Lcreate_ud(hid_t link_loc_id, const char *link_name, H5L_type_t link_type, con
     /* Get the link creation property list */
     if (H5P_DEFAULT == lcpl_id)
         lcpl_id = H5P_LINK_CREATE_DEFAULT;
+    if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
+        HGOTO_ERROR(H5E_LINK, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Set the LCPL for the API context */
     H5CX_set_lcpl(lcpl_id);
@@ -749,7 +780,7 @@ H5Lcreate_ud(hid_t link_loc_id, const char *link_name, H5L_type_t link_type, con
     vol_cb_args.args.ud.buf_size = udata_size;
 
     /* Create user-defined link */
-    if (H5VL_link_create(&vol_cb_args, vol_obj, &loc_params, lcpl_id, lapl_id, H5P_DATASET_XFER_DEFAULT,
+    if (H5VL_link_create(&vol_cb_args, vol_obj, &loc_params, lcpl, lapl_id, H5P_DATASET_XFER_DEFAULT,
                          H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTINIT, FAIL, "unable to create link");
 

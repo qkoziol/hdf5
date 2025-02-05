@@ -758,7 +758,7 @@ H5P__dapl_efile_pref_close(const char H5_ATTR_UNUSED *name, size_t H5_ATTR_UNUSE
 herr_t
 H5Pset_chunk_cache(hid_t dapl_id, size_t rdcc_nslots, size_t rdcc_nbytes, double rdcc_w0)
 {
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *dapl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -770,16 +770,16 @@ H5Pset_chunk_cache(hid_t dapl_id, size_t rdcc_nslots, size_t rdcc_nbytes, double
             H5E_ARGS, H5E_BADVALUE, FAIL,
             "raw data cache w0 value must be between 0.0 and 1.0 inclusive, or H5D_CHUNK_CACHE_W0_DEFAULT");
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(dapl_id, H5P_DATASET_ACCESS, false)))
+    /* Get the pointer to the property list */
+    if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set sizes */
-    if (H5P_set(plist, H5D_ACS_DATA_CACHE_NUM_SLOTS_NAME, &rdcc_nslots) < 0)
+    if (H5P_set(dapl, H5D_ACS_DATA_CACHE_NUM_SLOTS_NAME, &rdcc_nslots) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set data cache number of chunks");
-    if (H5P_set(plist, H5D_ACS_DATA_CACHE_BYTE_SIZE_NAME, &rdcc_nbytes) < 0)
+    if (H5P_set(dapl, H5D_ACS_DATA_CACHE_BYTE_SIZE_NAME, &rdcc_nbytes) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set data cache byte size");
-    if (H5P_set(plist, H5D_ACS_PREEMPT_READ_CHUNKS_NAME, &rdcc_w0) < 0)
+    if (H5P_set(dapl, H5D_ACS_PREEMPT_READ_CHUNKS_NAME, &rdcc_w0) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set preempt read chunks");
 
 done:
@@ -804,41 +804,41 @@ herr_t
 H5Pget_chunk_cache(hid_t dapl_id, size_t *rdcc_nslots /*out*/, size_t *rdcc_nbytes /*out*/,
                    double *rdcc_w0 /*out*/)
 {
-    H5P_genplist_t *plist;               /* Property list pointer */
-    H5P_genplist_t *def_plist;           /* Default file access property list */
+    H5P_genplist_t *dapl;                /* Property list pointer */
+    H5P_genplist_t *def_fapl;            /* Default file access property list */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(dapl_id, H5P_DATASET_ACCESS, true)))
+    /* Get the pointer to the property list */
+    if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
-    /* Get default file access plist */
-    if (NULL == (def_plist = (H5P_genplist_t *)H5I_object(H5P_FILE_ACCESS_DEFAULT)))
+    /* Get default file access property list */
+    if (NULL == (def_fapl = (H5P_genplist_t *)H5I_object(H5P_FILE_ACCESS_DEFAULT)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for default fapl ID");
 
     /* Get the properties.  If a property is set to the default value, the value
      * from the default fapl is used. */
     if (rdcc_nslots) {
-        if (H5P_get(plist, H5D_ACS_DATA_CACHE_NUM_SLOTS_NAME, rdcc_nslots) < 0)
+        if (H5P_get(dapl, H5D_ACS_DATA_CACHE_NUM_SLOTS_NAME, rdcc_nslots) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get data cache number of slots");
         if (*rdcc_nslots == H5D_CHUNK_CACHE_NSLOTS_DEFAULT)
-            if (H5P_get(def_plist, H5F_ACS_DATA_CACHE_NUM_SLOTS_NAME, rdcc_nslots) < 0)
+            if (H5P_get(def_fapl, H5F_ACS_DATA_CACHE_NUM_SLOTS_NAME, rdcc_nslots) < 0)
                 HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get default data cache number of slots");
     } /* end if */
     if (rdcc_nbytes) {
-        if (H5P_get(plist, H5D_ACS_DATA_CACHE_BYTE_SIZE_NAME, rdcc_nbytes) < 0)
+        if (H5P_get(dapl, H5D_ACS_DATA_CACHE_BYTE_SIZE_NAME, rdcc_nbytes) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get data cache byte size");
         if (*rdcc_nbytes == H5D_CHUNK_CACHE_NBYTES_DEFAULT)
-            if (H5P_get(def_plist, H5F_ACS_DATA_CACHE_BYTE_SIZE_NAME, rdcc_nbytes) < 0)
+            if (H5P_get(def_fapl, H5F_ACS_DATA_CACHE_BYTE_SIZE_NAME, rdcc_nbytes) < 0)
                 HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get default data cache byte size");
     } /* end if */
     if (rdcc_w0) {
-        if (H5P_get(plist, H5D_ACS_PREEMPT_READ_CHUNKS_NAME, rdcc_w0) < 0)
+        if (H5P_get(dapl, H5D_ACS_PREEMPT_READ_CHUNKS_NAME, rdcc_w0) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get preempt read chunks");
         if (*rdcc_w0 < 0)
-            if (H5P_get(def_plist, H5F_ACS_PREEMPT_READ_CHUNKS_NAME, rdcc_w0) < 0)
+            if (H5P_get(def_fapl, H5F_ACS_PREEMPT_READ_CHUNKS_NAME, rdcc_w0) < 0)
                 HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get default preempt read chunks");
     } /* end if */
 
@@ -1064,9 +1064,9 @@ H5P__decode_chunk_cache_nbytes(const void **_pp, void *_value)
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pset_virtual_view(hid_t plist_id, H5D_vds_view_t view)
+H5Pset_virtual_view(hid_t dapl_id, H5D_vds_view_t view)
 {
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *dapl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1075,12 +1075,12 @@ H5Pset_virtual_view(hid_t plist_id, H5D_vds_view_t view)
     if ((view != H5D_VDS_FIRST_MISSING) && (view != H5D_VDS_LAST_AVAILABLE))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "not a valid bounds option");
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_ACCESS, false)))
+    /* Get the pointer to the property list */
+    if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Update property list */
-    if (H5P_set(plist, H5D_ACS_VDS_VIEW_NAME, &view) < 0)
+    if (H5P_set(dapl, H5D_ACS_VDS_VIEW_NAME, &view) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "unable to set value");
 
 done:
@@ -1099,20 +1099,20 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pget_virtual_view(hid_t plist_id, H5D_vds_view_t *view /*out*/)
+H5Pget_virtual_view(hid_t dapl_id, H5D_vds_view_t *view /*out*/)
 {
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *dapl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_ACCESS, true)))
+    /* Get the pointer to the property list */
+    if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get value from property list */
     if (view)
-        if (H5P_get(plist, H5D_ACS_VDS_VIEW_NAME, view) < 0)
+        if (H5P_get(dapl, H5D_ACS_VDS_VIEW_NAME, view) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "unable to get value");
 
 done:
@@ -1204,9 +1204,9 @@ H5P__dacc_vds_view_dec(const void **_pp, void *_value)
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pset_virtual_printf_gap(hid_t plist_id, hsize_t gap_size)
+H5Pset_virtual_printf_gap(hid_t dapl_id, hsize_t gap_size)
 {
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *dapl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1215,12 +1215,12 @@ H5Pset_virtual_printf_gap(hid_t plist_id, hsize_t gap_size)
     if (gap_size == HSIZE_UNDEF)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "not a valid printf gap size");
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_ACCESS, false)))
+    /* Get the pointer to the property list */
+    if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Update property list */
-    if (H5P_set(plist, H5D_ACS_VDS_PRINTF_GAP_NAME, &gap_size) < 0)
+    if (H5P_set(dapl, H5D_ACS_VDS_PRINTF_GAP_NAME, &gap_size) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "unable to set value");
 
 done:
@@ -1240,20 +1240,20 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pget_virtual_printf_gap(hid_t plist_id, hsize_t *gap_size /*out*/)
+H5Pget_virtual_printf_gap(hid_t dapl_id, hsize_t *gap_size /*out*/)
 {
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *dapl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_ACCESS, true)))
+    /* Get the pointer to the property list */
+    if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get value from property list */
     if (gap_size)
-        if (H5P_get(plist, H5D_ACS_VDS_PRINTF_GAP_NAME, gap_size) < 0)
+        if (H5P_get(dapl, H5D_ACS_VDS_PRINTF_GAP_NAME, gap_size) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "unable to get value");
 
 done:
@@ -1276,10 +1276,9 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pset_append_flush(hid_t plist_id, unsigned ndims, const hsize_t *boundary, H5D_append_cb_t func,
-                    void *udata)
+H5Pset_append_flush(hid_t dapl_id, unsigned ndims, const hsize_t *boundary, H5D_append_cb_t func, void *udata)
 {
-    H5P_genplist_t    *plist;               /* Property list pointer */
+    H5P_genplist_t    *dapl;                /* Property list pointer */
     H5D_append_flush_t info;                /* Property for append flush parameters */
     unsigned           u;                   /* Local index variable */
     herr_t             ret_value = SUCCEED; /* Return value */
@@ -1299,8 +1298,8 @@ H5Pset_append_flush(hid_t plist_id, unsigned ndims, const hsize_t *boundary, H5D
     if (!func && udata)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "callback is NULL while user data is not");
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_ACCESS, false)))
+    /* Get the pointer to the property list */
+    if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set up values */
@@ -1317,7 +1316,7 @@ H5Pset_append_flush(hid_t plist_id, unsigned ndims, const hsize_t *boundary, H5D
     }                                   /* end for */
 
     /* Set values */
-    if (H5P_set(plist, H5D_ACS_APPEND_FLUSH_NAME, &info) < 0)
+    if (H5P_set(dapl, H5D_ACS_APPEND_FLUSH_NAME, &info) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set append flush");
 
 done:
@@ -1337,22 +1336,22 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pget_append_flush(hid_t plist_id, unsigned ndims, hsize_t boundary[], H5D_append_cb_t *func /*out*/,
+H5Pget_append_flush(hid_t dapl_id, unsigned ndims, hsize_t boundary[], H5D_append_cb_t *func /*out*/,
                     void **udata /*out*/)
 {
-    H5P_genplist_t    *plist; /* property list pointer */
+    H5P_genplist_t    *dapl; /* property list pointer */
     H5D_append_flush_t info;
     unsigned           u;                   /* local index variable */
     herr_t             ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_ACCESS, true)))
+    /* Get the pointer to the property list */
+    if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Retrieve info for append flush */
-    if (H5P_get(plist, H5D_ACS_APPEND_FLUSH_NAME, &info) < 0)
+    if (H5P_get(dapl, H5D_ACS_APPEND_FLUSH_NAME, &info) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get object flush callback");
 
     /* Assign return values */
@@ -1389,19 +1388,19 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pset_efile_prefix(hid_t plist_id, const char *prefix)
+H5Pset_efile_prefix(hid_t dapl_id, const char *prefix)
 {
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *dapl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_ACCESS, false)))
+    /* Get the pointer to the property list */
+    if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set prefix */
-    if (H5P_set(plist, H5D_ACS_EFILE_PREFIX_NAME, &prefix) < 0)
+    if (H5P_set(dapl, H5D_ACS_EFILE_PREFIX_NAME, &prefix) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set prefix info");
 
 done:
@@ -1419,21 +1418,21 @@ done:
  *-------------------------------------------------------------------------
  */
 ssize_t
-H5Pget_efile_prefix(hid_t plist_id, char *prefix /*out*/, size_t size)
+H5Pget_efile_prefix(hid_t dapl_id, char *prefix /*out*/, size_t size)
 {
-    H5P_genplist_t *plist;     /* Property list pointer */
+    H5P_genplist_t *dapl;      /* Property list pointer */
     char           *my_prefix; /* Library's copy of the prefix */
     size_t          len;       /* Length of prefix string */
     ssize_t         ret_value; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_ACCESS, true)))
+    /* Get the pointer to the property list */
+    if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get the current prefix */
-    if (H5P_peek(plist, H5D_ACS_EFILE_PREFIX_NAME, &my_prefix) < 0)
+    if (H5P_peek(dapl, H5D_ACS_EFILE_PREFIX_NAME, &my_prefix) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get external file prefix");
 
     /* Check for prefix being set */
@@ -1475,19 +1474,19 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pset_virtual_prefix(hid_t plist_id, const char *prefix)
+H5Pset_virtual_prefix(hid_t dapl_id, const char *prefix)
 {
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *dapl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_ACCESS, false)))
+    /* Get the pointer to the property list */
+    if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set prefix */
-    if (H5P_set(plist, H5D_ACS_VDS_PREFIX_NAME, &prefix) < 0)
+    if (H5P_set(dapl, H5D_ACS_VDS_PREFIX_NAME, &prefix) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set prefix info");
 
 done:
@@ -1507,21 +1506,21 @@ done:
  *-------------------------------------------------------------------------
  */
 ssize_t
-H5Pget_virtual_prefix(hid_t plist_id, char *prefix /*out*/, size_t size)
+H5Pget_virtual_prefix(hid_t dapl_id, char *prefix /*out*/, size_t size)
 {
-    H5P_genplist_t *plist;     /* Property list pointer */
+    H5P_genplist_t *dapl;      /* Property list pointer */
     char           *my_prefix; /* Library's copy of the prefix */
     size_t          len;       /* Length of prefix string */
     ssize_t         ret_value; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_ACCESS, true)))
+    /* Get the pointer to the property list */
+    if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get the current prefix */
-    if (H5P_peek(plist, H5D_ACS_VDS_PREFIX_NAME, &my_prefix) < 0)
+    if (H5P_peek(dapl, H5D_ACS_VDS_PREFIX_NAME, &my_prefix) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get vds file prefix");
 
     /* Check for prefix being set */

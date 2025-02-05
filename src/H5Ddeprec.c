@@ -97,7 +97,10 @@
 hid_t
 H5Dcreate1(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t dcpl_id)
 {
-    void             *dset    = NULL; /* dset object from VOL connector */
+    void             *dset = NULL;    /* dset object from VOL connector */
+    H5P_genplist_t   *def_lcpl;       /* Default link creation property list */
+    H5P_genplist_t   *dcpl;           /* Dataset creation property list */
+    H5P_genplist_t   *def_dapl;       /* Default dataset access property list */
     H5VL_object_t    *vol_obj = NULL; /* object of loc_id */
     H5VL_loc_params_t loc_params;
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */
@@ -114,13 +117,22 @@ H5Dcreate1(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t 
     if (H5CX_set_loc(loc_id) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, H5I_INVALID_HID, "can't set collective metadata read");
 
+    /* Get default link creation property list */
+    if (NULL == (def_lcpl = H5I_object(H5P_LINK_CREATE_DEFAULT)))
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, H5I_INVALID_HID, "can't find object for ID");
+
+    /* Get the pointer to the dataset create property list */
     if (H5P_DEFAULT == dcpl_id)
         dcpl_id = H5P_DATASET_CREATE_DEFAULT;
-    else if (true != H5P_isa_class(dcpl_id, H5P_DATASET_CREATE))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not dataset create property list ID");
+    if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, true)))
+        HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Set the DCPL for the API context */
     H5CX_set_dcpl(dcpl_id);
+
+    /* Get a pointer to the default DAPL */
+    if (NULL == (def_dapl = H5I_object(H5P_DATASET_ACCESS_DEFAULT)))
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, H5I_INVALID_HID, "can't get default DAPL");
 
     /* Set location parameters */
     loc_params.type     = H5VL_OBJECT_BY_SELF;
@@ -131,9 +143,8 @@ H5Dcreate1(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t 
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "invalid location identifier");
 
     /* Create the dataset */
-    if (NULL == (dset = H5VL_dataset_create(vol_obj, &loc_params, name, H5P_LINK_CREATE_DEFAULT, type_id,
-                                            space_id, dcpl_id, H5P_DATASET_ACCESS_DEFAULT,
-                                            H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL)))
+    if (NULL == (dset = H5VL_dataset_create(vol_obj, &loc_params, name, def_lcpl, type_id, space_id, dcpl,
+                                            def_dapl, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, H5I_INVALID_HID, "unable to create dataset");
 
     /* Register the new dataset to get an ID for it */
@@ -165,7 +176,8 @@ done:
 hid_t
 H5Dopen1(hid_t loc_id, const char *name)
 {
-    void             *dset    = NULL; /* dset object from VOL connector */
+    void             *dset = NULL;    /* dset object from VOL connector */
+    H5P_genplist_t   *def_dapl;       /* Default dataset access property list */
     H5VL_object_t    *vol_obj = NULL; /* object of loc_id */
     H5VL_loc_params_t loc_params;
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */
@@ -178,6 +190,10 @@ H5Dopen1(hid_t loc_id, const char *name)
     if (!*name)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, H5I_INVALID_HID, "name parameter cannot be an empty string");
 
+    /* Get a pointer to the default DAPL */
+    if (NULL == (def_dapl = H5I_object(H5P_DATASET_ACCESS_DEFAULT)))
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, H5I_INVALID_HID, "can't get default DAPL");
+
     /* Set location parameters */
     loc_params.type     = H5VL_OBJECT_BY_SELF;
     loc_params.obj_type = H5I_get_type(loc_id);
@@ -187,8 +203,8 @@ H5Dopen1(hid_t loc_id, const char *name)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "invalid location identifier");
 
     /* Open the dataset */
-    if (NULL == (dset = H5VL_dataset_open(vol_obj, &loc_params, name, H5P_DATASET_ACCESS_DEFAULT,
-                                          H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL)))
+    if (NULL == (dset = H5VL_dataset_open(vol_obj, &loc_params, name, def_dapl, H5P_DATASET_XFER_DEFAULT,
+                                          H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_DATASET, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open dataset");
 
     /* Get an ID for the dataset */

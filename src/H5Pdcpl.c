@@ -206,7 +206,7 @@
 /********************/
 
 /* General routines */
-static herr_t H5P__set_layout(H5P_genplist_t *plist, const H5O_layout_t *layout);
+static herr_t H5P__set_layout(H5P_genplist_t *dcpl, const H5O_layout_t *layout);
 
 /* Property class callbacks */
 static herr_t H5P__dcrt_reg_prop(H5P_genclass_t *pclass);
@@ -1747,7 +1747,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5P__set_layout(H5P_genplist_t *plist, const H5O_layout_t *layout)
+H5P__set_layout(H5P_genplist_t *dcpl, const H5O_layout_t *layout)
 {
     unsigned alloc_time_state;    /* State of allocation time property */
     herr_t   ret_value = SUCCEED; /* return value */
@@ -1755,7 +1755,7 @@ H5P__set_layout(H5P_genplist_t *plist, const H5O_layout_t *layout)
     FUNC_ENTER_PACKAGE
 
     /* Get the allocation time state */
-    if (H5P_get(plist, H5D_CRT_ALLOC_TIME_STATE_NAME, &alloc_time_state) < 0)
+    if (H5P_get(dcpl, H5D_CRT_ALLOC_TIME_STATE_NAME, &alloc_time_state) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get space allocation time state");
 
     /* If we still have the "default" allocation time, change it according to the new layout */
@@ -1763,7 +1763,7 @@ H5P__set_layout(H5P_genplist_t *plist, const H5O_layout_t *layout)
         H5O_fill_t fill; /* Fill value */
 
         /* Get current fill value info */
-        if (H5P_peek(plist, H5D_CRT_FILL_VALUE_NAME, &fill) < 0)
+        if (H5P_peek(dcpl, H5D_CRT_FILL_VALUE_NAME, &fill) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get fill value");
 
         /* Set the default based on layout */
@@ -1788,12 +1788,12 @@ H5P__set_layout(H5P_genplist_t *plist, const H5O_layout_t *layout)
         } /* end switch */
 
         /* Set updated fill value info */
-        if (H5P_poke(plist, H5D_CRT_FILL_VALUE_NAME, &fill) < 0)
+        if (H5P_poke(dcpl, H5D_CRT_FILL_VALUE_NAME, &fill) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set space allocation time");
     } /* end if */
 
     /* Set layout value */
-    if (H5P_set(plist, H5D_CRT_LAYOUT_NAME, layout) < 0)
+    if (H5P_set(dcpl, H5D_CRT_LAYOUT_NAME, layout) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, FAIL, "can't set layout");
 
 done:
@@ -1810,9 +1810,9 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pset_layout(hid_t plist_id, H5D_layout_t layout_type)
+H5Pset_layout(hid_t dcpl_id, H5D_layout_t layout_type)
 {
-    H5P_genplist_t     *plist;               /* Property list pointer */
+    H5P_genplist_t     *dcpl;                /* Property list pointer */
     const H5O_layout_t *layout;              /* Pointer to default layout information for type specified */
     herr_t              ret_value = SUCCEED; /* Return value */
 
@@ -1822,8 +1822,8 @@ H5Pset_layout(hid_t plist_id, H5D_layout_t layout_type)
     if (layout_type < 0 || layout_type >= H5D_NLAYOUTS)
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, FAIL, "raw data layout method is not valid");
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_CREATE, false)))
+    /* Get the pointer to the property list */
+    if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get pointer to correct default layout */
@@ -1851,7 +1851,7 @@ H5Pset_layout(hid_t plist_id, H5D_layout_t layout_type)
     } /* end switch */
 
     /* Set value */
-    if (H5P__set_layout(plist, layout) < 0)
+    if (H5P__set_layout(dcpl, layout) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, FAIL, "can't set layout");
 
 done:
@@ -1870,20 +1870,20 @@ done:
  *-------------------------------------------------------------------------
  */
 H5D_layout_t
-H5Pget_layout(hid_t plist_id)
+H5Pget_layout(hid_t dcpl_id)
 {
-    H5P_genplist_t *plist;     /* Property list pointer */
+    H5P_genplist_t *dcpl;      /* Property list pointer */
     H5O_layout_t    layout;    /* Layout property */
     H5D_layout_t    ret_value; /* Return value */
 
     FUNC_ENTER_API(H5D_LAYOUT_ERROR)
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_CREATE, true)))
+    /* Get the pointer to the property list */
+    if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, H5D_LAYOUT_ERROR, "can't find object for ID");
 
     /* Peek at layout property */
-    if (H5P_peek(plist, H5D_CRT_LAYOUT_NAME, &layout) < 0)
+    if (H5P_peek(dcpl, H5D_CRT_LAYOUT_NAME, &layout) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, H5D_LAYOUT_ERROR, "can't get layout");
 
     /* Set return value */
@@ -1908,9 +1908,9 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pset_chunk(hid_t plist_id, int ndims, const hsize_t dim[/*ndims*/])
+H5Pset_chunk(hid_t dcpl_id, int ndims, const hsize_t dim[/*ndims*/])
 {
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *dcpl;                /* Property list pointer */
     H5O_layout_t    chunk_layout;        /* Layout information for setting chunk info */
     uint64_t        chunk_nelmts;        /* Number of elements in chunk */
     unsigned        u;                   /* Local index variable */
@@ -1941,13 +1941,13 @@ H5Pset_chunk(hid_t plist_id, int ndims, const hsize_t dim[/*ndims*/])
         chunk_layout.u.chunk.dim[u] = (uint32_t)dim[u]; /* Store user's chunk dimensions */
     }                                                   /* end for */
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_CREATE, false)))
+    /* Get the pointer to the property list */
+    if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set chunk information in property list */
     chunk_layout.u.chunk.ndims = (unsigned)ndims;
-    if (H5P__set_layout(plist, &chunk_layout) < 0)
+    if (H5P__set_layout(dcpl, &chunk_layout) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set layout");
 
 done:
@@ -1969,20 +1969,20 @@ done:
  *-------------------------------------------------------------------------
  */
 int
-H5Pget_chunk(hid_t plist_id, int max_ndims, hsize_t dim[] /*out*/)
+H5Pget_chunk(hid_t dcpl_id, int max_ndims, hsize_t dim[] /*out*/)
 {
-    H5P_genplist_t *plist;     /* Property list pointer */
+    H5P_genplist_t *dcpl;      /* Property list pointer */
     H5O_layout_t    layout;    /* Layout information */
     int             ret_value; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_CREATE, true)))
+    /* Get the pointer to the property list */
+    if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Peek at the layout property */
-    if (H5P_peek(plist, H5D_CRT_LAYOUT_NAME, &layout) < 0)
+    if (H5P_peek(dcpl, H5D_CRT_LAYOUT_NAME, &layout) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "can't get layout");
     if (H5D_CHUNKED != layout.type)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "not a chunked storage layout");
@@ -2023,7 +2023,7 @@ herr_t
 H5Pset_virtual(hid_t dcpl_id, hid_t vspace_id, const char *src_file_name, const char *src_dset_name,
                hid_t src_space_id)
 {
-    H5P_genplist_t            *plist = NULL;               /* Property list pointer */
+    H5P_genplist_t            *dcpl = NULL;                /* Property list pointer */
     H5O_layout_t               virtual_layout;             /* Layout information for setting virtual info */
     H5S_t                     *vspace;                     /* Virtual dataset space selection */
     H5S_t                     *src_space;                  /* Source dataset space selection */
@@ -2049,12 +2049,12 @@ H5Pset_virtual(hid_t dcpl_id, hid_t vspace_id, const char *src_file_name, const 
     if (H5D_virtual_check_mapping_pre(vspace, src_space, H5O_VIRTUAL_STATUS_USER) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "invalid mapping selections");
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(dcpl_id, H5P_DATASET_CREATE, false)))
+    /* Get the pointer to the property list */
+    if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get the current layout */
-    if (H5P_peek(plist, H5D_CRT_LAYOUT_NAME, &virtual_layout) < 0)
+    if (H5P_peek(dcpl, H5D_CRT_LAYOUT_NAME, &virtual_layout) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get layout");
     retrieved_layout = true;
 
@@ -2143,7 +2143,7 @@ done:
     /* Set VDS layout information in property list */
     /* (Even on failure, so there's not a mangled layout struct in the list) */
     if (retrieved_layout) {
-        if (H5P_poke(plist, H5D_CRT_LAYOUT_NAME, &virtual_layout) < 0) {
+        if (H5P_poke(dcpl, H5D_CRT_LAYOUT_NAME, &virtual_layout) < 0) {
             HDONE_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set layout");
             if (old_list != virtual_layout.storage.u.virt.list)
                 free_list = true;
@@ -2192,19 +2192,19 @@ done:
 herr_t
 H5Pget_virtual_count(hid_t dcpl_id, size_t *count /*out*/)
 {
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *dcpl;                /* Property list pointer */
     H5O_layout_t    layout;              /* Layout information */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     if (count) {
-        /* Get the plist structure */
-        if (NULL == (plist = H5P_object_verify(dcpl_id, H5P_DATASET_CREATE, true)))
+        /* Get the pointer to the property list */
+        if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, true)))
             HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
         /* Retrieve the layout property */
-        if (H5P_peek(plist, H5D_CRT_LAYOUT_NAME, &layout) < 0)
+        if (H5P_peek(dcpl, H5D_CRT_LAYOUT_NAME, &layout) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "can't get layout");
         if (H5D_VIRTUAL != layout.type)
             HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "not a virtual storage layout");
@@ -2233,19 +2233,19 @@ done:
 hid_t
 H5Pget_virtual_vspace(hid_t dcpl_id, size_t idx)
 {
-    H5P_genplist_t *plist;        /* Property list pointer */
+    H5P_genplist_t *dcpl;         /* Property list pointer */
     H5O_layout_t    layout;       /* Layout information */
     H5S_t          *space = NULL; /* Dataspace pointer */
     hid_t           ret_value;    /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(dcpl_id, H5P_DATASET_CREATE, true)))
+    /* Get the pointer to the property list */
+    if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Retrieve the layout property */
-    if (H5P_peek(plist, H5D_CRT_LAYOUT_NAME, &layout) < 0)
+    if (H5P_peek(dcpl, H5D_CRT_LAYOUT_NAME, &layout) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "can't get layout");
     if (H5D_VIRTUAL != layout.type)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "not a virtual storage layout");
@@ -2286,19 +2286,19 @@ done:
 hid_t
 H5Pget_virtual_srcspace(hid_t dcpl_id, size_t idx)
 {
-    H5P_genplist_t *plist;            /* Property list pointer */
+    H5P_genplist_t *dcpl;             /* Property list pointer */
     H5O_layout_t    layout;           /* Layout information */
     H5S_t          *space     = NULL; /* Dataspace pointer */
     hid_t           ret_value = FAIL; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(dcpl_id, H5P_DATASET_CREATE, true)))
+    /* Get the pointer to the property list */
+    if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Retrieve the layout property */
-    if (H5P_peek(plist, H5D_CRT_LAYOUT_NAME, &layout) < 0)
+    if (H5P_peek(dcpl, H5D_CRT_LAYOUT_NAME, &layout) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "can't get layout");
     if (H5D_VIRTUAL != layout.type)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "not a virtual storage layout");
@@ -2386,18 +2386,18 @@ done:
 ssize_t
 H5Pget_virtual_filename(hid_t dcpl_id, size_t idx, char *name /*out*/, size_t size)
 {
-    H5P_genplist_t *plist;     /* Property list pointer */
+    H5P_genplist_t *dcpl;      /* Property list pointer */
     H5O_layout_t    layout;    /* Layout information */
     ssize_t         ret_value; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(dcpl_id, H5P_DATASET_CREATE, true)))
+    /* Get the pointer to the property list */
+    if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Retrieve the layout property */
-    if (H5P_peek(plist, H5D_CRT_LAYOUT_NAME, &layout) < 0)
+    if (H5P_peek(dcpl, H5D_CRT_LAYOUT_NAME, &layout) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "can't get layout");
     if (H5D_VIRTUAL != layout.type)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "not a virtual storage layout");
@@ -2443,18 +2443,18 @@ done:
 ssize_t
 H5Pget_virtual_dsetname(hid_t dcpl_id, size_t idx, char *name /*out*/, size_t size)
 {
-    H5P_genplist_t *plist;     /* Property list pointer */
+    H5P_genplist_t *dcpl;      /* Property list pointer */
     H5O_layout_t    layout;    /* Layout information */
     ssize_t         ret_value; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(dcpl_id, H5P_DATASET_CREATE, true)))
+    /* Get the pointer to the property list */
+    if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Retrieve the layout property */
-    if (H5P_peek(plist, H5D_CRT_LAYOUT_NAME, &layout) < 0)
+    if (H5P_peek(dcpl, H5D_CRT_LAYOUT_NAME, &layout) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "can't get layout");
     if (H5D_VIRTUAL != layout.type)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "not a virtual storage layout");
@@ -2483,9 +2483,9 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pset_chunk_opts(hid_t plist_id, unsigned options)
+H5Pset_chunk_opts(hid_t dcpl_id, unsigned options)
 {
-    H5P_genplist_t *plist;                  /* Property list pointer */
+    H5P_genplist_t *dcpl;                   /* Property list pointer */
     H5O_layout_t    layout;                 /* Layout information for setting chunk info */
     uint8_t         layout_flags = 0;       /* "options" translated into layout message flags format */
     herr_t          ret_value    = SUCCEED; /* Return value */
@@ -2496,12 +2496,12 @@ H5Pset_chunk_opts(hid_t plist_id, unsigned options)
     if (options & ~(H5D_CHUNK_DONT_FILTER_PARTIAL_CHUNKS))
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, FAIL, "unknown chunk options");
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_CREATE, false)))
+    /* Get the pointer to the property list */
+    if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Retrieve the layout property */
-    if (H5P_peek(plist, H5D_CRT_LAYOUT_NAME, &layout) < 0)
+    if (H5P_peek(dcpl, H5D_CRT_LAYOUT_NAME, &layout) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "can't get layout");
     if (H5D_CHUNKED != layout.type)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "not a chunked storage layout");
@@ -2518,7 +2518,7 @@ H5Pset_chunk_opts(hid_t plist_id, unsigned options)
         layout.version = H5O_LAYOUT_VERSION_4;
 
     /* Set layout value */
-    if (H5P_poke(plist, H5D_CRT_LAYOUT_NAME, &layout) < 0)
+    if (H5P_poke(dcpl, H5D_CRT_LAYOUT_NAME, &layout) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, FAIL, "can't set layout");
 
 done:
@@ -2535,20 +2535,20 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pget_chunk_opts(hid_t plist_id, unsigned *options /*out*/)
+H5Pget_chunk_opts(hid_t dcpl_id, unsigned *options /*out*/)
 {
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *dcpl;                /* Property list pointer */
     H5O_layout_t    layout;              /* Layout information for setting chunk info */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_CREATE, true)))
+    /* Get the pointer to the property list */
+    if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Retrieve the layout property */
-    if (H5P_peek(plist, H5D_CRT_LAYOUT_NAME, &layout) < 0)
+    if (H5P_peek(dcpl, H5D_CRT_LAYOUT_NAME, &layout) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "can't get layout");
     if (H5D_CHUNKED != layout.type)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "not a chunked storage layout");
@@ -2586,12 +2586,12 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pset_external(hid_t plist_id, const char *name, HDoff_t offset, hsize_t size)
+H5Pset_external(hid_t dcpl_id, const char *name, HDoff_t offset, hsize_t size)
 {
     size_t          idx;
     hsize_t         total, tmp;
     H5O_efl_t       efl;
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *dcpl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2602,11 +2602,11 @@ H5Pset_external(hid_t plist_id, const char *name, HDoff_t offset, hsize_t size)
     if (offset < 0)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "negative external file offset");
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_CREATE, false)))
+    /* Get the pointer to the property list */
+    if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
-    if (H5P_peek(plist, H5D_CRT_EXT_FILE_LIST_NAME, &efl) < 0)
+    if (H5P_peek(dcpl, H5D_CRT_EXT_FILE_LIST_NAME, &efl) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get external file list");
     if (efl.nused > 0 && H5O_EFL_UNLIMITED == efl.slot[efl.nused - 1].size)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "previous file size is unlimited");
@@ -2637,7 +2637,7 @@ H5Pset_external(hid_t plist_id, const char *name, HDoff_t offset, hsize_t size)
     efl.slot[idx].size        = size;
     efl.nused++;
 
-    if (H5P_poke(plist, H5D_CRT_EXT_FILE_LIST_NAME, &efl) < 0)
+    if (H5P_poke(dcpl, H5D_CRT_EXT_FILE_LIST_NAME, &efl) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set external file list");
 
 done:
@@ -2656,20 +2656,20 @@ done:
  *-------------------------------------------------------------------------
  */
 int
-H5Pget_external_count(hid_t plist_id)
+H5Pget_external_count(hid_t dcpl_id)
 {
     H5O_efl_t       efl;
-    H5P_genplist_t *plist;     /* Property list pointer */
+    H5P_genplist_t *dcpl;      /* Property list pointer */
     int             ret_value; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_CREATE, true)))
+    /* Get the pointer to the property list */
+    if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get value */
-    if (H5P_peek(plist, H5D_CRT_EXT_FILE_LIST_NAME, &efl) < 0)
+    if (H5P_peek(dcpl, H5D_CRT_EXT_FILE_LIST_NAME, &efl) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get external file list");
 
     /* Set return value */
@@ -2701,21 +2701,21 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pget_external(hid_t plist_id, unsigned idx, size_t name_size, char *name /*out*/, HDoff_t *offset /*out*/,
+H5Pget_external(hid_t dcpl_id, unsigned idx, size_t name_size, char *name /*out*/, HDoff_t *offset /*out*/,
                 hsize_t *size /*out*/)
 {
     H5O_efl_t       efl;
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *dcpl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_CREATE, true)))
+    /* Get the pointer to the property list */
+    if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get value */
-    if (H5P_peek(plist, H5D_CRT_EXT_FILE_LIST_NAME, &efl) < 0)
+    if (H5P_peek(dcpl, H5D_CRT_EXT_FILE_LIST_NAME, &efl) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get external file list");
 
     if (idx >= efl.nused)
@@ -2747,10 +2747,10 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pset_szip(hid_t plist_id, unsigned options_mask, unsigned pixels_per_block)
+H5Pset_szip(hid_t dcpl_id, unsigned options_mask, unsigned pixels_per_block)
 {
     H5O_pline_t     pline;
-    H5P_genplist_t *plist;        /* Property list pointer */
+    H5P_genplist_t *dcpl;         /* Property list pointer */
     unsigned        cd_values[2]; /* Filter parameters */
     unsigned int    config_flags;
     herr_t          ret_value = SUCCEED; /* Return value */
@@ -2769,8 +2769,8 @@ H5Pset_szip(hid_t plist_id, unsigned options_mask, unsigned pixels_per_block)
     if (pixels_per_block > H5_SZIP_MAX_PIXELS_PER_BLOCK)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "pixels_per_block is too large");
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_CREATE, false)))
+    /* Get the pointer to the property list */
+    if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Always set K13 compression (and un-set CHIP compression) */
@@ -2789,11 +2789,11 @@ H5Pset_szip(hid_t plist_id, unsigned options_mask, unsigned pixels_per_block)
     cd_values[1] = pixels_per_block;
 
     /* Add the filter */
-    if (H5P_peek(plist, H5O_CRT_PIPELINE_NAME, &pline) < 0)
+    if (H5P_peek(dcpl, H5O_CRT_PIPELINE_NAME, &pline) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get pipeline");
     if (H5Z_append(&pline, H5Z_FILTER_SZIP, H5Z_FLAG_OPTIONAL, (size_t)2, cd_values) < 0)
         HGOTO_ERROR(H5E_PLINE, H5E_CANTINIT, FAIL, "unable to add szip filter to pipeline");
-    if (H5P_poke(plist, H5O_CRT_PIPELINE_NAME, &pline) < 0)
+    if (H5P_poke(dcpl, H5O_CRT_PIPELINE_NAME, &pline) < 0)
         HGOTO_ERROR(H5E_PLINE, H5E_CANTINIT, FAIL, "unable to set pipeline");
 
 done:
@@ -2812,28 +2812,24 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pset_shuffle(hid_t plist_id)
+H5Pset_shuffle(hid_t dcpl_id)
 {
     H5O_pline_t     pline;
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *dcpl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Check arguments */
-    if (true != H5P_isa_class(plist_id, H5P_DATASET_CREATE))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a dataset creation property list");
-
-    /* Get the plist structure */
-    if (NULL == (plist = (H5P_genplist_t *)H5I_object(plist_id)))
+    /* Get the pointer to the property list */
+    if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Add the filter */
-    if (H5P_peek(plist, H5O_CRT_PIPELINE_NAME, &pline) < 0)
+    if (H5P_peek(dcpl, H5O_CRT_PIPELINE_NAME, &pline) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get pipeline");
     if (H5Z_append(&pline, H5Z_FILTER_SHUFFLE, H5Z_FLAG_OPTIONAL, (size_t)0, NULL) < 0)
         HGOTO_ERROR(H5E_PLINE, H5E_CANTINIT, FAIL, "unable to shuffle the data");
-    if (H5P_poke(plist, H5O_CRT_PIPELINE_NAME, &pline) < 0)
+    if (H5P_poke(dcpl, H5O_CRT_PIPELINE_NAME, &pline) < 0)
         HGOTO_ERROR(H5E_PLINE, H5E_CANTINIT, FAIL, "unable to set pipeline");
 
 done:
@@ -2850,28 +2846,24 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pset_nbit(hid_t plist_id)
+H5Pset_nbit(hid_t dcpl_id)
 {
     H5O_pline_t     pline;
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *dcpl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Check arguments */
-    if (true != H5P_isa_class(plist_id, H5P_DATASET_CREATE))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a dataset creation property list");
-
-    /* Get the plist structure */
-    if (NULL == (plist = (H5P_genplist_t *)H5I_object(plist_id)))
+    /* Get the pointer to the property list */
+    if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Add the nbit filter */
-    if (H5P_peek(plist, H5O_CRT_PIPELINE_NAME, &pline) < 0)
+    if (H5P_peek(dcpl, H5O_CRT_PIPELINE_NAME, &pline) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get pipeline");
     if (H5Z_append(&pline, H5Z_FILTER_NBIT, H5Z_FLAG_OPTIONAL, (size_t)0, NULL) < 0)
         HGOTO_ERROR(H5E_PLINE, H5E_CANTINIT, FAIL, "unable to add nbit filter to pipeline");
-    if (H5P_poke(plist, H5O_CRT_PIPELINE_NAME, &pline) < 0)
+    if (H5P_poke(dcpl, H5O_CRT_PIPELINE_NAME, &pline) < 0)
         HGOTO_ERROR(H5E_PLINE, H5E_CANTINIT, FAIL, "unable to set pipeline");
 
 done:
@@ -2904,26 +2896,23 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pset_scaleoffset(hid_t plist_id, H5Z_SO_scale_type_t scale_type, int scale_factor)
+H5Pset_scaleoffset(hid_t dcpl_id, H5Z_SO_scale_type_t scale_type, int scale_factor)
 {
     H5O_pline_t     pline;
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *dcpl;                /* Property list pointer */
     unsigned        cd_values[2];        /* Filter parameters */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Check arguments */
-    if (true != H5P_isa_class(plist_id, H5P_DATASET_CREATE))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a dataset creation property list");
-
     if (scale_factor < 0)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "scale factor must be >= 0");
     if (scale_type != H5Z_SO_FLOAT_DSCALE && scale_type != H5Z_SO_FLOAT_ESCALE && scale_type != H5Z_SO_INT)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid scale type");
 
-    /* Get the plist structure */
-    if (NULL == (plist = (H5P_genplist_t *)H5I_object(plist_id)))
+    /* Get the pointer to the property list */
+    if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set parameters for the filter
@@ -2938,11 +2927,11 @@ H5Pset_scaleoffset(hid_t plist_id, H5Z_SO_scale_type_t scale_type, int scale_fac
     cd_values[1] = (unsigned)scale_factor;
 
     /* Add the scaleoffset filter */
-    if (H5P_peek(plist, H5O_CRT_PIPELINE_NAME, &pline) < 0)
+    if (H5P_peek(dcpl, H5O_CRT_PIPELINE_NAME, &pline) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get pipeline");
     if (H5Z_append(&pline, H5Z_FILTER_SCALEOFFSET, H5Z_FLAG_OPTIONAL, (size_t)2, cd_values) < 0)
         HGOTO_ERROR(H5E_PLINE, H5E_CANTINIT, FAIL, "unable to add scaleoffset filter to pipeline");
-    if (H5P_poke(plist, H5O_CRT_PIPELINE_NAME, &pline) < 0)
+    if (H5P_poke(dcpl, H5O_CRT_PIPELINE_NAME, &pline) < 0)
         HGOTO_ERROR(H5E_PLINE, H5E_CANTINIT, FAIL, "unable to set pipeline");
 
 done:
@@ -2964,20 +2953,20 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pset_fill_value(hid_t plist_id, hid_t type_id, const void *value)
+H5Pset_fill_value(hid_t dcpl_id, hid_t type_id, const void *value)
 {
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *dcpl;                /* Property list pointer */
     H5O_fill_t      fill;                /* Fill value to modify */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_CREATE, false)))
+    /* Get the pointer to the property list */
+    if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get the current fill value */
-    if (H5P_peek(plist, H5D_CRT_FILL_VALUE_NAME, &fill) < 0)
+    if (H5P_peek(dcpl, H5D_CRT_FILL_VALUE_NAME, &fill) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get fill value");
 
     /* Release the dynamic fill value components */
@@ -3028,7 +3017,7 @@ H5Pset_fill_value(hid_t plist_id, hid_t type_id, const void *value)
         fill.size = (-1);
 
     /* Update fill value in property list */
-    if (H5P_poke(plist, H5D_CRT_FILL_VALUE_NAME, &fill) < 0)
+    if (H5P_poke(dcpl, H5D_CRT_FILL_VALUE_NAME, &fill) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't set fill value");
 
 done:
@@ -3049,7 +3038,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5P_get_fill_value(H5P_genplist_t *plist, const H5T_t *type, void *value /*out*/)
+H5P_get_fill_value(H5P_genplist_t *dcpl, const H5T_t *type, void *value /*out*/)
 {
     H5O_fill_t  fill;                /* Fill value to retrieve */
     H5T_path_t *tpath;               /*type conversion info	*/
@@ -3067,7 +3056,7 @@ H5P_get_fill_value(H5P_genplist_t *plist, const H5T_t *type, void *value /*out*/
      * datatype conversion might not have resulted in zero.  If fill value
      * is undefined, also return error.
      */
-    if (H5P_peek(plist, H5D_CRT_FILL_VALUE_NAME, &fill) < 0)
+    if (H5P_peek(dcpl, H5D_CRT_FILL_VALUE_NAME, &fill) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get fill value");
     if (fill.size == -1)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "fill value is undefined");
@@ -3141,9 +3130,9 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pget_fill_value(hid_t plist_id, hid_t type_id, void *value /*out*/)
+H5Pget_fill_value(hid_t dcpl_id, hid_t type_id, void *value /*out*/)
 {
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *dcpl;                /* Property list pointer */
     H5T_t          *type;                /* Datatype		*/
     herr_t          ret_value = SUCCEED; /* Return value */
 
@@ -3155,12 +3144,12 @@ H5Pget_fill_value(hid_t plist_id, hid_t type_id, void *value /*out*/)
     if (!value)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "no fill value output buffer");
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_CREATE, true)))
+    /* Get the pointer to the property list */
+    if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get the fill value */
-    if (H5P_get_fill_value(plist, type, value) < 0)
+    if (H5P_get_fill_value(dcpl, type, value) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get fill value");
 
 done:
@@ -3214,7 +3203,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5P_fill_value_defined(H5P_genplist_t *plist, H5D_fill_value_t *status)
+H5P_fill_value_defined(H5P_genplist_t *dcpl, H5D_fill_value_t *status)
 {
     H5O_fill_t fill; /* Fill value to query */
     herr_t     ret_value = SUCCEED;
@@ -3224,7 +3213,7 @@ H5P_fill_value_defined(H5P_genplist_t *plist, H5D_fill_value_t *status)
     assert(status);
 
     /* Get the fill value struct */
-    if (H5P_peek(plist, H5D_CRT_FILL_VALUE_NAME, &fill) < 0)
+    if (H5P_peek(dcpl, H5D_CRT_FILL_VALUE_NAME, &fill) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get fill value");
 
     /* Get the fill-value status */
@@ -3245,21 +3234,21 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pfill_value_defined(hid_t plist_id, H5D_fill_value_t *status)
+H5Pfill_value_defined(hid_t dcpl_id, H5D_fill_value_t *status)
 {
-    H5P_genplist_t *plist; /* Property list to query */
+    H5P_genplist_t *dcpl; /* Property list to query */
     herr_t          ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
 
     assert(status);
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_CREATE, true)))
+    /* Get the pointer to the property list */
+    if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get the fill-value status */
-    if (H5P_fill_value_defined(plist, status) < 0)
+    if (H5P_fill_value_defined(dcpl, status) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "can't check fill value status");
 
 done:
@@ -3278,9 +3267,9 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pset_alloc_time(hid_t plist_id, H5D_alloc_time_t alloc_time)
+H5Pset_alloc_time(hid_t dcpl_id, H5D_alloc_time_t alloc_time)
 {
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *dcpl;                /* Property list pointer */
     H5O_fill_t      fill;                /* Fill value property to modify */
     unsigned        alloc_time_state;    /* State of allocation time property */
     herr_t          ret_value = SUCCEED; /* return value 	 */
@@ -3292,7 +3281,7 @@ H5Pset_alloc_time(hid_t plist_id, H5D_alloc_time_t alloc_time)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid allocation time setting");
 
     /* Get the property list structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_CREATE, false)))
+    if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Check for resetting to default for layout type */
@@ -3300,7 +3289,7 @@ H5Pset_alloc_time(hid_t plist_id, H5D_alloc_time_t alloc_time)
         H5O_layout_t layout; /* Type of storage layout */
 
         /* Peek at the storage layout */
-        if (H5P_peek(plist, H5D_CRT_LAYOUT_NAME, &layout) < 0)
+        if (H5P_peek(dcpl, H5D_CRT_LAYOUT_NAME, &layout) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get layout");
 
         /* Set the default based on layout */
@@ -3335,16 +3324,16 @@ H5Pset_alloc_time(hid_t plist_id, H5D_alloc_time_t alloc_time)
         alloc_time_state = 0;
 
     /* Retrieve previous fill value settings */
-    if (H5P_peek(plist, H5D_CRT_FILL_VALUE_NAME, &fill) < 0)
+    if (H5P_peek(dcpl, H5D_CRT_FILL_VALUE_NAME, &fill) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get fill value");
 
     /* Update property value */
     fill.alloc_time = alloc_time;
 
     /* Set values */
-    if (H5P_poke(plist, H5D_CRT_FILL_VALUE_NAME, &fill) < 0)
+    if (H5P_poke(dcpl, H5D_CRT_FILL_VALUE_NAME, &fill) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set fill value");
-    if (H5P_set(plist, H5D_CRT_ALLOC_TIME_STATE_NAME, &alloc_time_state) < 0)
+    if (H5P_set(dcpl, H5D_CRT_ALLOC_TIME_STATE_NAME, &alloc_time_state) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set space allocation time");
 
 done:
@@ -3363,7 +3352,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pget_alloc_time(hid_t plist_id, H5D_alloc_time_t *alloc_time /*out*/)
+H5Pget_alloc_time(hid_t dcpl_id, H5D_alloc_time_t *alloc_time /*out*/)
 {
     herr_t ret_value = SUCCEED; /* return value          */
 
@@ -3371,15 +3360,15 @@ H5Pget_alloc_time(hid_t plist_id, H5D_alloc_time_t *alloc_time /*out*/)
 
     /* Get values */
     if (alloc_time) {
-        H5P_genplist_t *plist; /* Property list pointer */
-        H5O_fill_t      fill;  /* Fill value property to query */
+        H5P_genplist_t *dcpl; /* Property list pointer */
+        H5O_fill_t      fill; /* Fill value property to query */
 
         /* Get the property list structure */
-        if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_CREATE, true)))
+        if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, true)))
             HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
         /* Retrieve fill value settings */
-        if (H5P_peek(plist, H5D_CRT_FILL_VALUE_NAME, &fill) < 0)
+        if (H5P_peek(dcpl, H5D_CRT_FILL_VALUE_NAME, &fill) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get fill value");
 
         /* Set user's value */
@@ -3401,9 +3390,9 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pset_fill_time(hid_t plist_id, H5D_fill_time_t fill_time)
+H5Pset_fill_time(hid_t dcpl_id, H5D_fill_time_t fill_time)
 {
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *dcpl;                /* Property list pointer */
     H5O_fill_t      fill;                /* Fill value property to modify */
     herr_t          ret_value = SUCCEED; /* return value          */
 
@@ -3414,18 +3403,18 @@ H5Pset_fill_time(hid_t plist_id, H5D_fill_time_t fill_time)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid fill time setting");
 
     /* Get the property list structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_CREATE, false)))
+    if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Retrieve previous fill value settings */
-    if (H5P_peek(plist, H5D_CRT_FILL_VALUE_NAME, &fill) < 0)
+    if (H5P_peek(dcpl, H5D_CRT_FILL_VALUE_NAME, &fill) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get fill value");
 
     /* Update property value */
     fill.fill_time = fill_time;
 
     /* Set values */
-    if (H5P_poke(plist, H5D_CRT_FILL_VALUE_NAME, &fill) < 0)
+    if (H5P_poke(dcpl, H5D_CRT_FILL_VALUE_NAME, &fill) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set fill value");
 
 done:
@@ -3443,7 +3432,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pget_fill_time(hid_t plist_id, H5D_fill_time_t *fill_time /*out*/)
+H5Pget_fill_time(hid_t dcpl_id, H5D_fill_time_t *fill_time /*out*/)
 {
     herr_t ret_value = SUCCEED; /* return value          */
 
@@ -3451,15 +3440,15 @@ H5Pget_fill_time(hid_t plist_id, H5D_fill_time_t *fill_time /*out*/)
 
     /* Set values */
     if (fill_time) {
-        H5P_genplist_t *plist; /* Property list pointer */
-        H5O_fill_t      fill;  /* Fill value property to query */
+        H5P_genplist_t *dcpl; /* Property list pointer */
+        H5O_fill_t      fill; /* Fill value property to query */
 
         /* Get the property list structure */
-        if (NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_CREATE, true)))
+        if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, true)))
             HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
         /* Retrieve fill value settings */
-        if (H5P_peek(plist, H5D_CRT_FILL_VALUE_NAME, &fill) < 0)
+        if (H5P_peek(dcpl, H5D_CRT_FILL_VALUE_NAME, &fill) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get fill value");
 
         /* Set user's value */
@@ -3471,17 +3460,12 @@ done:
 } /* end H5Pget_fill_time() */
 
 /*-----------------------------------------------------------------------------
- * Function: H5Pget_dset_no_attrs_hint
+ * Function:    H5Pget_dset_no_attrs_hint
  *
- * Purpose:
+ * Purpose:     Access the flag for whether or not datasets created by the given
+ *              dcpl will be created with a "minimized" object header.
  *
- *     Access the flag for whether or not datasets created by the given dcpl
- *     will be created with a "minimized" object header.
- *
- * Return:
- *
- *     Failure: Negative value (FAIL)
- *     Success: Non-negative value (SUCCEED)
+ * Return:      Non-negative on success/Negative on failure
  *
  *-----------------------------------------------------------------------------
  */
@@ -3489,7 +3473,7 @@ herr_t
 H5Pget_dset_no_attrs_hint(hid_t dcpl_id, hbool_t *minimize /*out*/)
 {
     bool            setting   = false;
-    H5P_genplist_t *plist     = NULL;
+    H5P_genplist_t *dcpl      = NULL;
     herr_t          ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
@@ -3497,11 +3481,10 @@ H5Pget_dset_no_attrs_hint(hid_t dcpl_id, hbool_t *minimize /*out*/)
     if (NULL == minimize)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "receiving pointer cannot be NULL");
 
-    plist = H5P_object_verify(dcpl_id, H5P_DATASET_CREATE, true);
-    if (NULL == plist)
+    if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
-    if (H5P_peek(plist, H5D_CRT_MIN_DSET_HDR_SIZE_NAME, &setting) < 0)
+    if (H5P_peek(dcpl, H5D_CRT_MIN_DSET_HDR_SIZE_NAME, &setting) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get dset oh minimize flag value");
 
     *minimize = setting;
@@ -3511,37 +3494,27 @@ done:
 } /* H5Pget_dset_no_attrs_hint() */
 
 /*-----------------------------------------------------------------------------
- * Function: H5Pset_dset_no_attrs_hint
+ * Function:    H5Pset_dset_no_attrs_hint
  *
- * Purpose:
+ * Purpose:     Set the dcpl to minimize (or explicitly to not minimized)
+ *              dataset object headers upon creation.
  *
- *     Set the dcpl to minimize (or explicitly to not minimized) dataset object
- *     headers upon creation.
- *
- * Return:
- *
- *     Failure: Negative value (FAIL)
- *     Success: Non-negative value (SUCCEED)
+ * Return:      Non-negative on success/Negative on failure
  *
  *-----------------------------------------------------------------------------
  */
 herr_t
 H5Pset_dset_no_attrs_hint(hid_t dcpl_id, hbool_t minimize)
 {
-    H5P_genplist_t *plist     = NULL;
-    bool            prev_set  = false;
+    H5P_genplist_t *dcpl      = NULL;
     herr_t          ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
 
-    plist = H5P_object_verify(dcpl_id, H5P_DATASET_CREATE, false);
-    if (NULL == plist)
+    if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
-    if (H5P_peek(plist, H5D_CRT_MIN_DSET_HDR_SIZE_NAME, &prev_set) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get extant dset oh minimize flag value");
-
-    if (H5P_poke(plist, H5D_CRT_MIN_DSET_HDR_SIZE_NAME, &minimize) < 0)
+    if (H5P_poke(dcpl, H5D_CRT_MIN_DSET_HDR_SIZE_NAME, &minimize) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't get dset oh minimize flag value");
 
 done:
