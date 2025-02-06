@@ -123,7 +123,7 @@ hid_t H5FD_ONION_id_g = H5I_INVALID_HID;
 typedef struct H5FD_onion_t {
     H5FD_t                 pub;
     H5FD_onion_fapl_info_t fa;
-    H5P_genplist_t *backing_fapl;
+    H5P_genplist_t        *backing_fapl;
     bool                   is_open_rw;
     bool                   align_history_on_pages;
 
@@ -171,9 +171,10 @@ static herr_t  H5FD__onion_write(H5FD_t *, H5FD_mem_t, hid_t, haddr_t, size_t, c
 static herr_t  H5FD__onion_ctl(H5FD_t *_file, uint64_t op_code, uint64_t flags,
                                const void H5_ATTR_UNUSED *input, void H5_ATTR_UNUSED **output);
 
-static herr_t H5FD__onion_fapl_info_dup(H5FD_onion_fapl_info_t *dst_fa, const H5FD_onion_fapl_info_t *src_fa, bool is_api);
-static herr_t  H5FD__onion_open_rw(H5FD_onion_t *, unsigned int, haddr_t, bool new_open);
-static herr_t  H5FD__get_onion_revision_count(H5FD_t *file, uint64_t *revision_count);
+static herr_t H5FD__onion_fapl_info_dup(H5FD_onion_fapl_info_t *dst_fa, const H5FD_onion_fapl_info_t *src_fa,
+                                        bool is_api);
+static herr_t H5FD__onion_open_rw(H5FD_onion_t *, unsigned int, haddr_t, bool new_open);
+static herr_t H5FD__get_onion_revision_count(H5FD_t *file, uint64_t *revision_count);
 
 /* Temporary */
 H5_DLL herr_t H5FD__onion_write_final_history(H5FD_onion_t *file);
@@ -275,13 +276,12 @@ H5FD__onion_unregister(void)
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5FD__onion_fapl_info_dup(H5FD_onion_fapl_info_t *dst_fa, const H5FD_onion_fapl_info_t *src_fa,
-    bool is_api)
+H5FD__onion_fapl_info_dup(H5FD_onion_fapl_info_t *dst_fa, const H5FD_onion_fapl_info_t *src_fa, bool is_api)
 {
-    hid_t src_fapl_id;                          /* ID for the source FAPL */
-    H5P_genplist_t *src_fapl = NULL;                    /* Pointer to the src FAPL */
-    bool fapl_copied = false;                   /* Flag to indicate that the FAPL was copied */
-    herr_t                ret_value = SUCCEED;
+    hid_t           src_fapl_id;         /* ID for the source FAPL */
+    H5P_genplist_t *src_fapl    = NULL;  /* Pointer to the src FAPL */
+    bool            fapl_copied = false; /* Flag to indicate that the FAPL was copied */
+    herr_t          ret_value   = SUCCEED;
 
     FUNC_ENTER_PACKAGE
 
@@ -329,7 +329,7 @@ herr_t
 H5Pget_fapl_onion(hid_t fapl_id, H5FD_onion_fapl_info_t *fa_out)
 {
     const H5FD_onion_fapl_info_t *info_ptr  = NULL;
-    H5P_genplist_t               *fapl     = NULL;
+    H5P_genplist_t               *fapl      = NULL;
     herr_t                        ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
@@ -505,7 +505,7 @@ static void *
 H5FD__onion_fapl_get(H5FD_t *_file)
 {
     H5FD_onion_t *file      = (H5FD_onion_t *)_file;
-    void            *ret_value = NULL;
+    void         *ret_value = NULL;
 
     FUNC_ENTER_PACKAGE
 
@@ -532,9 +532,9 @@ done:
 static void *
 H5FD__onion_fapl_copy(const void *_old_fa)
 {
-    const H5FD_onion_fapl_info_t *old_fa = (const H5FD_onion_fapl_info_t *)_old_fa;
-    H5FD_onion_fapl_info_t       *new_fa = NULL;
-    void                       *ret_value  = NULL;
+    const H5FD_onion_fapl_info_t *old_fa    = (const H5FD_onion_fapl_info_t *)_old_fa;
+    H5FD_onion_fapl_info_t       *new_fa    = NULL;
+    void                         *ret_value = NULL;
 
     FUNC_ENTER_PACKAGE
 
@@ -570,8 +570,8 @@ done:
 static herr_t
 H5FD__onion_fapl_free(void *_fa)
 {
-    H5FD_onion_fapl_info_t *fa    = (H5FD_onion_fapl_info_t *)_fa;
-    herr_t                ret_value = SUCCEED;
+    H5FD_onion_fapl_info_t *fa        = (H5FD_onion_fapl_info_t *)_fa;
+    herr_t                  ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
 
@@ -823,12 +823,12 @@ static herr_t
 H5FD__onion_create_truncate_onion(H5FD_onion_t *file, const char *filename, const char *name_onion,
                                   const char *recovery_file_nameery, unsigned int flags, haddr_t maxaddr)
 {
-    H5FD_onion_header_t          *hdr             = NULL;
-    H5FD_onion_history_t         *history         = NULL;
-    H5FD_onion_revision_record_t *rec             = NULL;
-    unsigned char                *buf             = NULL;
-    size_t                        size            = 0;
-    herr_t                        ret_value       = SUCCEED;
+    H5FD_onion_header_t          *hdr       = NULL;
+    H5FD_onion_history_t         *history   = NULL;
+    H5FD_onion_revision_record_t *rec       = NULL;
+    unsigned char                *buf       = NULL;
+    size_t                        size      = 0;
+    herr_t                        ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
 
@@ -1032,7 +1032,7 @@ done:
 static H5FD_t *
 H5FD__onion_open(const char *filename, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
 {
-    H5P_genplist_t               *fapl                 = NULL;
+    H5P_genplist_t               *fapl                  = NULL;
     H5FD_onion_t                 *file                  = NULL;
     const H5FD_onion_fapl_info_t *fa                    = NULL;
     H5FD_onion_fapl_info_t       *new_fa                = NULL;
@@ -1135,7 +1135,8 @@ H5FD__onion_open(const char *filename, unsigned flags, hid_t fapl_id, haddr_t ma
         }
 
         /* Truncate and create everything as necessary */
-        if (H5FD__onion_create_truncate_onion(file, filename, name_onion, file->recovery_file_name, flags, maxaddr) < 0)
+        if (H5FD__onion_create_truncate_onion(file, filename, name_onion, file->recovery_file_name, flags,
+                                              maxaddr) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTCREATE, NULL, "unable to create/truncate onionized files");
         file->is_open_rw = true;
     }
@@ -1185,12 +1186,14 @@ H5FD__onion_open(const char *filename, unsigned flags, hid_t fapl_id, haddr_t ma
 
                 /* Create backing files for onion history */
                 if (H5FD_open(false, &file->onion_file, name_onion,
-                              (H5F_ACC_RDWR | H5F_ACC_CREAT | H5F_ACC_TRUNC), file->backing_fapl, maxaddr) < 0)
+                              (H5F_ACC_RDWR | H5F_ACC_CREAT | H5F_ACC_TRUNC), file->backing_fapl,
+                              maxaddr) < 0)
                     HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL, "cannot open the backing onion file");
 
                 /* Write history header with "no" history */
                 hdr->history_size = H5FD_ONION_ENCODED_SIZE_HISTORY; /* record for later use */
-                hdr->history_addr = H5FD_ONION_ENCODED_SIZE_HEADER + 1; /* TODO: comment these 2 or do some other way */
+                hdr->history_addr =
+                    H5FD_ONION_ENCODED_SIZE_HEADER + 1; /* TODO: comment these 2 or do some other way */
                 head_buf = H5MM_malloc(H5FD_ONION_ENCODED_SIZE_HEADER);
                 if (NULL == head_buf)
                     HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "can't allocate buffer");
@@ -1211,7 +1214,8 @@ H5FD__onion_open(const char *filename, unsigned flags, hid_t fapl_id, haddr_t ma
                     HGOTO_ERROR(H5E_VFL, H5E_CANTSET, NULL, "can't extend EOA");
 
                 if (H5FD_write(file->onion_file, H5FD_MEM_DRAW, 0, saved_size, head_buf) < 0)
-                    HGOTO_ERROR(H5E_VFL, H5E_WRITEERROR, NULL, "cannot write header to the backing onion file");
+                    HGOTO_ERROR(H5E_VFL, H5E_WRITEERROR, NULL,
+                                "cannot write header to the backing onion file");
 
                 file->onion_eof = (haddr_t)saved_size;
                 if (true == file->align_history_on_pages)
@@ -1223,7 +1227,8 @@ H5FD__onion_open(const char *filename, unsigned flags, hid_t fapl_id, haddr_t ma
 
                 /* Write nascent history (with no revisions) to the backing onion file */
                 if (H5FD_write(file->onion_file, H5FD_MEM_DRAW, saved_size + 1, size, hist_buf) < 0)
-                    HGOTO_ERROR(H5E_VFL, H5E_WRITEERROR, NULL, "cannot write history to the backing onion file");
+                    HGOTO_ERROR(H5E_VFL, H5E_WRITEERROR, NULL,
+                                "cannot write history to the backing onion file");
 
                 file->header.history_size = size; /* record for later use */
 
@@ -1369,7 +1374,8 @@ H5FD__onion_open_rw(H5FD_onion_t *file, unsigned int flags, haddr_t maxaddr, boo
         HGOTO_ERROR(H5E_VFL, H5E_UNSUPPORTED, FAIL, "can't write-open write-locked file");
 
     /* Copy history to recovery file */
-    if (H5FD_open(false, &file->recovery_file, file->recovery_file_name, (flags | H5F_ACC_CREAT | H5F_ACC_TRUNC), file->backing_fapl, maxaddr) < 0)
+    if (H5FD_open(false, &file->recovery_file, file->recovery_file_name,
+                  (flags | H5F_ACC_CREAT | H5F_ACC_TRUNC), file->backing_fapl, maxaddr) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, FAIL, "unable to create recovery file");
 
     if (0 == (size = H5FD__onion_write_history(&file->history, file->recovery_file, 0, 0)))
@@ -1751,7 +1757,7 @@ done:
 herr_t
 H5FDonion_get_revision_count(const char *filename, hid_t fapl_id, uint64_t *revision_count /*out*/)
 {
-    H5P_genplist_t *fapl     = NULL;
+    H5P_genplist_t *fapl      = NULL;
     H5FD_t         *file      = NULL;
     herr_t          ret_value = SUCCEED;
 

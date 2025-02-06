@@ -224,7 +224,7 @@ static int
 H5FD__copy_plist(hid_t fapl_id, hid_t *id_out_ptr)
 {
     int             ret_value = 0;
-    H5P_genplist_t *fapl = NULL;
+    H5P_genplist_t *fapl      = NULL;
 
     FUNC_ENTER_PACKAGE
 
@@ -255,8 +255,8 @@ done:
 herr_t
 H5Pset_fapl_splitter(hid_t fapl_id, H5FD_splitter_vfd_config_t *vfd_config)
 {
-    H5P_genplist_t       *fapl = NULL;
-    H5FD_splitter_fapl_t *fa = NULL;
+    H5P_genplist_t       *fapl      = NULL;
+    H5FD_splitter_fapl_t *fa        = NULL;
     herr_t                ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
@@ -300,10 +300,10 @@ done:
 herr_t
 H5Pget_fapl_splitter(hid_t fapl_id, H5FD_splitter_vfd_config_t *config /*out*/)
 {
-    const H5FD_splitter_fapl_t *fa     = NULL;
-    H5FD_splitter_fapl_t       *def_fa = NULL;
-    H5P_genplist_t             *fapl    = NULL;
-    herr_t                      ret_value    = SUCCEED;
+    const H5FD_splitter_fapl_t *fa        = NULL;
+    H5FD_splitter_fapl_t       *def_fa    = NULL;
+    H5P_genplist_t             *fapl      = NULL;
+    herr_t                      ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
 
@@ -397,7 +397,7 @@ H5FD__splitter_populate_config(H5FD_splitter_vfd_config_t *vfd_config, H5FD_spli
     if (H5P_DEFAULT != vfd_config->wo_fapl_id) {
         H5FD_class_t      *wo_driver = NULL;
         H5FD_driver_prop_t wo_driver_prop;
-        H5P_genplist_t    *wo_fapl    = NULL;
+        H5P_genplist_t    *wo_fapl         = NULL;
         unsigned long      wo_driver_flags = 0;
 
         if (NULL == (wo_fapl = H5I_object(vfd_config->wo_fapl_id)))
@@ -674,9 +674,9 @@ done:
 static void *
 H5FD__splitter_fapl_copy(const void *_old_fa)
 {
-    const H5FD_splitter_fapl_t *old_fa = (const H5FD_splitter_fapl_t *)_old_fa;
-    H5FD_splitter_fapl_t       *new_fa = NULL;
-    void                       *ret_value  = NULL;
+    const H5FD_splitter_fapl_t *old_fa    = (const H5FD_splitter_fapl_t *)_old_fa;
+    H5FD_splitter_fapl_t       *new_fa    = NULL;
+    void                       *ret_value = NULL;
 
     FUNC_ENTER_PACKAGE
 
@@ -754,13 +754,13 @@ done:
 static H5FD_t *
 H5FD__splitter_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
 {
-    H5FD_splitter_t            *file     = NULL; /* Splitter VFD info */
-    const H5FD_splitter_fapl_t *fa     = NULL; /* Driver-specific property list */
-    H5FD_splitter_fapl_t       *def_fa = NULL;
-    H5P_genplist_t             *fapl    = NULL;
-    H5P_genplist_t             *rw_fapl = NULL;
-    H5P_genplist_t             *wo_fapl = NULL;
-    H5FD_t                     *ret_value    = NULL;
+    H5FD_splitter_t            *file      = NULL; /* Splitter VFD info */
+    const H5FD_splitter_fapl_t *fa        = NULL; /* Driver-specific property list */
+    H5FD_splitter_fapl_t       *def_fa    = NULL;
+    H5P_genplist_t             *fapl      = NULL;
+    H5P_genplist_t             *rw_fapl   = NULL;
+    H5P_genplist_t             *wo_fapl   = NULL;
+    H5FD_t                     *ret_value = NULL;
 
     FUNC_ENTER_PACKAGE
 
@@ -1172,8 +1172,8 @@ H5FD__splitter_cmp(const H5FD_t *_f1, const H5FD_t *_f2)
 static herr_t
 H5FD__splitter_get_handle(H5FD_t *_file, hid_t H5_ATTR_UNUSED fapl, void **file_handle)
 {
-    H5FD_splitter_t *file      = (H5FD_splitter_t *)_file;
-    H5P_genplist_t             *rw_fapl;
+    H5FD_splitter_t *file = (H5FD_splitter_t *)_file;
+    H5P_genplist_t  *rw_fapl;
     herr_t           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -1383,7 +1383,8 @@ H5FD__splitter_alloc(H5FD_t *_file, H5FD_mem_t type, hid_t dxpl_id, hsize_t size
         HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, HADDR_UNDEF, "unable to allocate for R/W file");
 
     if (H5FDalloc(file->wo_file, type, dxpl_id, size) == HADDR_UNDEF)
-        H5FD_SPLITTER_WO_ERROR(file, __func__, H5E_VFL, H5E_CANTINIT, HADDR_UNDEF, "unable to alloc for W/O file")
+        H5FD_SPLITTER_WO_ERROR(file, __func__, H5E_VFL, H5E_CANTINIT, HADDR_UNDEF,
+                               "unable to alloc for W/O file")
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -1491,14 +1492,17 @@ H5FD__splitter_delete(const char *filename, hid_t fapl_id)
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
         if (NULL == (fa = (const H5FD_splitter_fapl_t *)H5P_peek_driver_info(fapl))) {
             if (NULL == (def_fa = H5FL_CALLOC(H5FD_splitter_fapl_t)))
-                HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "unable to allocate file access property list struct");
+                HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL,
+                            "unable to allocate file access property list struct");
             if (H5FD__splitter_populate_config(NULL, def_fa) < 0)
                 HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't initialize driver configuration info");
 
             /* If W/O path is not set, use base filename with '_wo' suffix */
             if (*def_fa->wo_path == '\0')
-                if (H5FD__splitter_get_default_wo_path(def_fa->wo_path, H5FD_SPLITTER_PATH_MAX + 1, filename) < 0)
-                    HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't generate default filename for W/O channel");
+                if (H5FD__splitter_get_default_wo_path(def_fa->wo_path, H5FD_SPLITTER_PATH_MAX + 1,
+                                                       filename) < 0)
+                    HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL,
+                                "can't generate default filename for W/O channel");
 
             fa = def_fa;
         }

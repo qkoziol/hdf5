@@ -111,7 +111,7 @@ H5L__extern_traverse(const char H5_ATTR_UNUSED *link_name, hid_t cur_group, cons
     H5I_type_t         opened_type;                  /* ID type of external link's object */
     char              *parent_group_name = NULL;     /* Temporary pointer to group name */
     char               local_group_name[H5L_EXT_TRAVERSE_BUF_SIZE]; /* Local buffer to hold group name */
-    H5P_genplist_t    *fapl = NULL;                                    /* File access property list pointer */
+    H5P_genplist_t    *fapl         = NULL;                         /* File access property list pointer */
     H5F_close_degree_t fc_degree    = H5F_CLOSE_WEAK;               /* File close degree for target file */
     char              *elink_prefix = NULL;                         /* Pointer to elink prefix */
     hid_t              ret_value    = H5I_INVALID_HID;              /* Return value */
@@ -146,7 +146,8 @@ H5L__extern_traverse(const char H5_ATTR_UNUSED *link_name, hid_t cur_group, cons
         HGOTO_ERROR(H5E_LINK, H5E_CANTGET, H5I_INVALID_HID, "can't get fapl for links");
     if (fapl_id == H5P_DEFAULT) {
         if (NULL == (fapl = H5F_get_access_plist(loc.oloc->file, false)))
-            HGOTO_ERROR(H5E_LINK, H5E_CANTGET, H5I_INVALID_HID, "can't get parent's file access property list");
+            HGOTO_ERROR(H5E_LINK, H5E_CANTGET, H5I_INVALID_HID,
+                        "can't get parent's file access property list");
     }
     else {
         if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
@@ -218,8 +219,10 @@ H5L__extern_traverse(const char H5_ATTR_UNUSED *link_name, hid_t cur_group, cons
         HGOTO_ERROR(H5E_LINK, H5E_CANTGET, H5I_INVALID_HID, "can't get external link prefix");
 
     /* Search for the target file */
-    if (H5F_prefix_open_file(false, &ext_file, loc.oloc->file, H5F_PREFIX_ELINK, elink_prefix, file_name, intent, fapl) < 0)
-        HGOTO_ERROR(H5E_LINK, H5E_CANTOPENFILE, H5I_INVALID_HID, "unable to open external file, external link file name = '%s'", file_name);
+    if (H5F_prefix_open_file(false, &ext_file, loc.oloc->file, H5F_PREFIX_ELINK, elink_prefix, file_name,
+                             intent, fapl) < 0)
+        HGOTO_ERROR(H5E_LINK, H5E_CANTOPENFILE, H5I_INVALID_HID,
+                    "unable to open external file, external link file name = '%s'", file_name);
 
     /* Retrieve the "group location" for the file's root group */
     if (H5G_root_loc(ext_file, &root_loc) < 0)
@@ -240,7 +243,8 @@ done:
     /* XXX (VOL MERGE): Probably also want to consider closing ext_obj here on failures */
     /* Release resources */
     if (fapl && H5P_release(fapl) < 0)
-        HDONE_ERROR(H5E_ID, H5E_CANTRELEASE, H5I_INVALID_HID, "unable to close copy of file access property list");
+        HDONE_ERROR(H5E_ID, H5E_CANTRELEASE, H5I_INVALID_HID,
+                    "unable to close copy of file access property list");
     if (ext_file && H5F_efc_close(loc.oloc->file, ext_file) < 0)
         HDONE_ERROR(H5E_LINK, H5E_CANTCLOSEFILE, H5I_INVALID_HID, "problem closing external file");
     if (parent_group_name && parent_group_name != local_group_name)

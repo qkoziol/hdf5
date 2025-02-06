@@ -563,7 +563,8 @@ H5P__init_package(void)
 
                     /* Create the default property list for the new class*/
                     if (NULL == (def_plist = H5P__create(*lib_class->pclass, true, false)))
-                        HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, FAIL, "can't create default property list for class");
+                        HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, FAIL,
+                                    "can't create default property list for class");
 
                     /* Set the ID for the default property list for the new class*/
                     *lib_class->def_plist_id = def_plist->plist_id;
@@ -1148,7 +1149,7 @@ H5P_copy_plist(const H5P_genplist_t *old_plist, bool app_ref)
                 /* Get the next property node in the skip list */
                 curr_node = H5SL_next(curr_node);
             } /* end while */
-        } /* end if */
+        }     /* end if */
         if (tclass->nprops > 0) {
             /* Walk through the properties in the old class */
             curr_node = H5SL_first(tclass->props, H5SL_LOCK_SHARED);
@@ -2967,7 +2968,7 @@ H5P__do_prop(H5P_genplist_t *plist, const char *name, H5P_do_plist_op_t plist_op
                     /* Leave */
                     break;
                 } /* end if */
-            } /* end if */
+            }     /* end if */
             if (tclass->nprops > 0) {
                 /* Find the property in the class */
                 if (NULL != (prop = (H5P_genprop_t *)H5SL_search(tclass->props, name))) {
@@ -5510,7 +5511,7 @@ H5P_close(H5P_genplist_t *plist)
          * Remove properties up through list of parent classes also,
          * making property 'close' callbacks along the way.
          */
-        tclass           = plist->pclass;
+        tclass = plist->pclass;
         while (tclass != NULL) {
             if (tclass->nprops > 0) {
                 /* Walk through the properties in the class */
@@ -5550,7 +5551,8 @@ H5P_close(H5P_genplist_t *plist)
                         /* Add property name to "seen" list, if we have other classes to work on */
                         if (tclass->parent != NULL && tclass->parent->nprops > 0) {
                             if (H5SL_insert(seen, tmp->name, tmp->name, false) < 0)
-                                HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into seen skip list");
+                                HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL,
+                                            "can't insert property into seen skip list");
                             nseen++;
                         } /* end if */
                     }     /* end if */
@@ -5563,7 +5565,7 @@ H5P_close(H5P_genplist_t *plist)
             /* Go up to parent class */
             tclass = tclass->parent;
         } /* end while */
-    } /* end if */
+    }     /* end if */
 
     /* If this is a default property list, reset the class's default pointer */
     if (plist->is_default)
@@ -5996,4 +5998,3 @@ H5P_get_class(const H5P_genplist_t *plist)
 
     FUNC_LEAVE_NOAPI(plist->pclass)
 } /* end H5P_get_class() */
-

@@ -295,7 +295,7 @@ H5FD__ros3_init(void)
 herr_t
 H5Pset_fapl_ros3(hid_t fapl_id, const H5FD_ros3_fapl_t *fa)
 {
-    H5P_genplist_t *fapl     = NULL; /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL; /* Property list pointer */
     herr_t          ret_value = FAIL;
 
     FUNC_ENTER_API(FAIL)
@@ -356,7 +356,7 @@ herr_t
 H5Pget_fapl_ros3(hid_t fapl_id, H5FD_ros3_fapl_t *fa_dst /*out*/)
 {
     const H5FD_ros3_fapl_t *fa_src    = NULL;
-    H5P_genplist_t         *fapl     = NULL;
+    H5P_genplist_t         *fapl      = NULL;
     herr_t                  ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
@@ -702,7 +702,7 @@ H5FD__ros3_open(const char *url, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
     H5FD_ros3_t            *file       = NULL;
     s3r_t                  *handle     = NULL;
     const H5FD_ros3_fapl_t *fa         = NULL;
-    H5P_genplist_t         *fapl      = NULL;
+    H5P_genplist_t         *fapl       = NULL;
     char                   *fapl_token = NULL;
     H5FD_t                 *ret_value  = NULL;
 

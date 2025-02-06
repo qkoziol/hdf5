@@ -491,29 +491,30 @@ typedef enum H5F_prefix_open_t {
 
 /* Private functions */
 H5_DLL herr_t H5F_init(void);
-H5_DLL herr_t H5F_open(bool attempt, H5F_t **file, const char *name, unsigned flags, H5P_genplist_t *fcpl, H5P_genplist_t *fapl);
+H5_DLL herr_t H5F_open(bool attempt, H5F_t **file, const char *name, unsigned flags, H5P_genplist_t *fcpl,
+                       H5P_genplist_t *fapl);
 H5_DLL herr_t H5F_try_close(H5F_t *f, bool *was_closed /*out*/);
 H5_DLL hid_t  H5F_get_file_id(H5VL_object_t *vol_obj, H5I_type_t obj_type, bool app_ref);
 
 /* Functions that retrieve values from the file struct */
-H5_DLL H5F_libver_t  H5F_get_low_bound(const H5F_t *f);
-H5_DLL H5F_libver_t  H5F_get_high_bound(const H5F_t *f);
-H5_DLL unsigned      H5F_shared_get_intent(const H5F_shared_t *f);
-H5_DLL unsigned      H5F_get_intent(const H5F_t *f);
-H5_DLL char         *H5F_get_open_name(const H5F_t *f);
-H5_DLL char         *H5F_get_actual_name(const H5F_t *f);
-H5_DLL char         *H5F_get_extpath(const H5F_t *f);
-H5_DLL H5F_shared_t *H5F_get_shared(const H5F_t *f);
-H5_DLL bool          H5F_same_shared(const H5F_t *f1, const H5F_t *f2);
-H5_DLL unsigned      H5F_get_nopen_objs(const H5F_t *f);
-H5_DLL unsigned      H5F_incr_nopen_objs(H5F_t *f);
-H5_DLL unsigned      H5F_decr_nopen_objs(H5F_t *f);
-H5_DLL bool          H5F_file_id_exists(const H5F_t *f);
-H5_DLL H5F_t        *H5F_get_parent(const H5F_t *f);
-H5_DLL unsigned      H5F_get_nmounts(const H5F_t *f);
-H5_DLL unsigned      H5F_get_read_attempts(const H5F_t *f);
+H5_DLL H5F_libver_t    H5F_get_low_bound(const H5F_t *f);
+H5_DLL H5F_libver_t    H5F_get_high_bound(const H5F_t *f);
+H5_DLL unsigned        H5F_shared_get_intent(const H5F_shared_t *f);
+H5_DLL unsigned        H5F_get_intent(const H5F_t *f);
+H5_DLL char           *H5F_get_open_name(const H5F_t *f);
+H5_DLL char           *H5F_get_actual_name(const H5F_t *f);
+H5_DLL char           *H5F_get_extpath(const H5F_t *f);
+H5_DLL H5F_shared_t   *H5F_get_shared(const H5F_t *f);
+H5_DLL bool            H5F_same_shared(const H5F_t *f1, const H5F_t *f2);
+H5_DLL unsigned        H5F_get_nopen_objs(const H5F_t *f);
+H5_DLL unsigned        H5F_incr_nopen_objs(H5F_t *f);
+H5_DLL unsigned        H5F_decr_nopen_objs(H5F_t *f);
+H5_DLL bool            H5F_file_id_exists(const H5F_t *f);
+H5_DLL H5F_t          *H5F_get_parent(const H5F_t *f);
+H5_DLL unsigned        H5F_get_nmounts(const H5F_t *f);
+H5_DLL unsigned        H5F_get_read_attempts(const H5F_t *f);
 H5_DLL H5P_genplist_t *H5F_get_access_plist(H5F_t *f, bool app_ref);
-H5_DLL hid_t         H5F_get_id(H5F_t *file);
+H5_DLL hid_t           H5F_get_id(H5F_t *file);
 H5_DLL herr_t  H5F_get_obj_count(const H5F_t *f, unsigned types, bool app_ref, size_t *obj_id_count_ptr);
 H5_DLL herr_t  H5F_get_obj_ids(const H5F_t *f, unsigned types, size_t max_objs, hid_t *oid_list, bool app_ref,
                                size_t *obj_id_count_ptr);

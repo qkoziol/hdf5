@@ -324,8 +324,8 @@ static herr_t
 H5P__lacc_elink_fapl_enc(const void *value, void **_pp, size_t *size)
 {
     const hid_t    *elink_fapl_id = (const hid_t *)value; /* Property to encode */
-    uint8_t       **pp         = (uint8_t **)_pp;
-    H5P_genplist_t *fapl;                 /* Pointer to property list */
+    uint8_t       **pp            = (uint8_t **)_pp;
+    H5P_genplist_t *fapl;                       /* Pointer to property list */
     bool            non_default_fapl = false;   /* Whether the FAPL is non-default */
     size_t          fapl_size        = 0;       /* FAPL's encoded size */
     herr_t          ret_value        = SUCCEED; /* Return value */
@@ -392,7 +392,7 @@ static herr_t
 H5P__lacc_elink_fapl_dec(const void **_pp, void *_value)
 {
     hid_t          *elink_fapl_id = (hid_t *)_value; /* The elink FAPL value */
-    const uint8_t **pp         = (const uint8_t **)_pp;
+    const uint8_t **pp            = (const uint8_t **)_pp;
     bool            non_default_fapl;    /* Whether the FAPL is non-default */
     herr_t          ret_value = SUCCEED; /* Return value */
 
@@ -408,7 +408,7 @@ H5P__lacc_elink_fapl_dec(const void **_pp, void *_value)
     non_default_fapl = (bool)*(*pp)++;
 
     if (non_default_fapl) {
-        H5P_genplist_t *fapl;         /* Property list created */
+        H5P_genplist_t *fapl;          /* Property list created */
         size_t          fapl_size = 0; /* Encoded size of property list */
         unsigned        enc_size;
         uint64_t        enc_value;

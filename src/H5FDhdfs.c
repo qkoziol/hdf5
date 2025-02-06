@@ -568,7 +568,7 @@ done:
 herr_t
 H5Pset_fapl_hdfs(hid_t fapl_id, H5FD_hdfs_fapl_t *fa)
 {
-    H5P_genplist_t *fapl     = NULL; /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL; /* Property list pointer */
     herr_t          ret_value = FAIL;
 
     FUNC_ENTER_API(FAIL)
@@ -579,7 +579,7 @@ H5Pset_fapl_hdfs(hid_t fapl_id, H5FD_hdfs_fapl_t *fa)
     fprintf(stdout, "called %s.\n", __func__);
 #endif
 
-    if (NULL == ( fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
     if (FAIL == H5FD__hdfs_validate_config(fa))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid hdfs config");
@@ -606,7 +606,7 @@ herr_t
 H5Pget_fapl_hdfs(hid_t fapl_id, H5FD_hdfs_fapl_t *fa_dst /*out*/)
 {
     const H5FD_hdfs_fapl_t *fa_src    = NULL;
-    H5P_genplist_t         *fapl     = NULL;
+    H5P_genplist_t         *fapl      = NULL;
     herr_t                  ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)

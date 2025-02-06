@@ -487,7 +487,7 @@ herr_t
 H5FD__subfiling_open_stub_file(const char *name, unsigned flags, MPI_Comm file_comm, H5FD_t **file_ptr,
                                uint64_t *file_id)
 {
-    H5P_genplist_t *fapl         = NULL;
+    H5P_genplist_t *fapl          = NULL;
     uint64_t        stub_file_id  = UINT64_MAX;
     bool            bcasted_inode = false;
     H5FD_t         *stub_file     = NULL;

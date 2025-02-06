@@ -78,7 +78,8 @@ static herr_t H5F__get_objects(const H5F_t *f, unsigned types, size_t max_index,
 static int    H5F__get_objects_cb(void *obj_ptr, hid_t obj_id, void *key);
 static herr_t H5F__build_name(const char *prefix, const char *file_name, char **full_name /*out*/);
 static char  *H5F__getenv_prefix_name(char **env_prefix /*in,out*/);
-static H5F_t *H5F__new(H5F_shared_t *shared, unsigned flags, H5P_genplist_t *fcpl, H5P_genplist_t *fapl, H5FD_t *lf);
+static H5F_t *H5F__new(H5F_shared_t *shared, unsigned flags, H5P_genplist_t *fcpl, H5P_genplist_t *fapl,
+                       H5FD_t *lf);
 static herr_t H5F__check_if_using_file_locks(H5P_genplist_t *fapl, bool *use_file_locking,
                                              bool *ignore_disabled_locks);
 static herr_t H5F__dest(H5F_t *f, bool flush, bool free_on_failure);
@@ -372,7 +373,7 @@ H5F_get_access_plist(H5F_t *f, bool app_ref)
     bool                  driver_prop_copied = false; /* Whether the driver property has been set up */
     H5VL_connector_prop_t connector_prop;             /* Property for VOL connector ID & info */
     unsigned              efc_size  = 0;
-    H5P_genplist_t *ret_value = NULL; /* Return value */
+    H5P_genplist_t       *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_NOAPI(NULL)
 
@@ -424,9 +425,11 @@ H5F_get_access_plist(H5F_t *f, bool app_ref)
     if (f->shared->page_buf != NULL) {
         if (H5P_set(new_plist, H5F_ACS_PAGE_BUFFER_SIZE_NAME, &(f->shared->page_buf->max_size)) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTSET, NULL, "can't set page buffer size");
-        if (H5P_set(new_plist, H5F_ACS_PAGE_BUFFER_MIN_META_PERC_NAME, &(f->shared->page_buf->min_meta_perc)) < 0)
+        if (H5P_set(new_plist, H5F_ACS_PAGE_BUFFER_MIN_META_PERC_NAME,
+                    &(f->shared->page_buf->min_meta_perc)) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTSET, NULL, "can't set minimum metadata fraction of page buffer");
-        if (H5P_set(new_plist, H5F_ACS_PAGE_BUFFER_MIN_RAW_PERC_NAME, &(f->shared->page_buf->min_raw_perc)) < 0)
+        if (H5P_set(new_plist, H5F_ACS_PAGE_BUFFER_MIN_RAW_PERC_NAME, &(f->shared->page_buf->min_raw_perc)) <
+            0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTSET, NULL, "can't set minimum raw data fraction of page buffer");
     } /* end if */
 #ifdef H5_HAVE_PARALLEL
@@ -451,7 +454,8 @@ H5F_get_access_plist(H5F_t *f, bool app_ref)
             HGOTO_ERROR(H5E_FILE, H5E_CANTSET, NULL, "can't set MPI info");
     }
 #endif /* H5_HAVE_PARALLEL */
-    if (H5P_set(new_plist, H5F_ACS_META_CACHE_INIT_IMAGE_CONFIG_NAME, &(f->shared->mdc_initCacheImageCfg)) < 0)
+    if (H5P_set(new_plist, H5F_ACS_META_CACHE_INIT_IMAGE_CONFIG_NAME, &(f->shared->mdc_initCacheImageCfg)) <
+        0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, NULL, "can't set initial metadata cache resize config.");
     if (H5P_set(new_plist, H5F_ACS_RFIC_FLAGS_NAME, &(f->shared->rfic_flags)) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, NULL, "can't set RFIC flags value");
@@ -846,7 +850,8 @@ H5F__getenv_prefix_name(char **env_prefix /*in,out*/)
  */
 herr_t
 H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_open_t prefix_type,
-                     const char *prop_prefix, const char *file_name, unsigned file_intent, H5P_genplist_t *fapl)
+                     const char *prop_prefix, const char *file_name, unsigned file_intent,
+                     H5P_genplist_t *fapl)
 {
     H5F_t          *src_file = NULL;         /* Source file */
     H5P_genplist_t *fcpl;                    /* File creation property list */
@@ -1139,8 +1144,8 @@ H5F__new(H5F_shared_t *shared, unsigned flags, H5P_genplist_t *fcpl, H5P_genplis
         f->shared = shared;
     }
     else {
-        unsigned        efc_size; /* External file cache size */
-        size_t          u;        /* Local index variable */
+        unsigned efc_size; /* External file cache size */
+        size_t   u;        /* Local index variable */
 
         assert(lf != NULL);
         if (NULL == (f->shared = H5FL_CALLOC(H5F_shared_t)))
@@ -1258,7 +1263,8 @@ H5F__new(H5F_shared_t *shared, unsigned flags, H5P_genplist_t *fcpl, H5P_genplis
         /* Require the SWMR feature flag if SWMR I/O is desired */
         if (!H5F_HAS_FEATURE(f, H5FD_FEAT_SUPPORTS_SWMR_IO) &&
             (H5F_INTENT(f) & (H5F_ACC_SWMR_WRITE | H5F_ACC_SWMR_READ)))
-            HGOTO_ERROR(H5E_FILE, H5E_BADVALUE, NULL, "must use a SWMR-compatible VFD when SWMR is specified");
+            HGOTO_ERROR(H5E_FILE, H5E_BADVALUE, NULL,
+                        "must use a SWMR-compatible VFD when SWMR is specified");
 
         if (H5FD_get_fs_type_map(lf, f->shared->fs_type_map) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTGET, NULL, "can't get free space type mapping from VFD");
@@ -1314,7 +1320,8 @@ H5F__new(H5F_shared_t *shared, unsigned flags, H5P_genplist_t *fcpl, H5P_genplis
             if (mdc_log_location != NULL) {
                 size_t len = strlen(mdc_log_location);
                 if (NULL == (f->shared->mdc_log_location = (char *)H5MM_calloc((len + 1) * sizeof(char))))
-                    HGOTO_ERROR(H5E_RESOURCE, H5E_CANTALLOC, NULL, "can't allocate memory for mdc log file name");
+                    HGOTO_ERROR(H5E_RESOURCE, H5E_CANTALLOC, NULL,
+                                "can't allocate memory for mdc log file name");
                 strncpy(f->shared->mdc_log_location, mdc_log_location, len + 1);
                 f->shared->mdc_log_location[len] = '\0';
             }
@@ -1809,7 +1816,8 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist_t *fcpl, H5P_genplist_t *fapl)
+H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist_t *fcpl,
+         H5P_genplist_t *fapl)
 {
     H5F_t             *file   = NULL; /*the success return value      */
     H5F_shared_t      *shared = NULL; /*shared part of `file'         */
@@ -2833,10 +2841,10 @@ H5F__build_actual_name(const H5F_t *f, const H5P_genplist_t *fapl, const char *n
 
         /* Check for symbolic link */
         if (S_IFLNK == (lst.st_mode & S_IFMT)) {
-            int            *fd;            /* POSIX I/O file descriptor */
-            h5_stat_t       st;            /* Stat info from stat() call */
-            h5_stat_t       fst;           /* Stat info from fstat() call */
-            bool            want_posix_fd; /* Flag for retrieving file descriptor from VFD */
+            int      *fd;            /* POSIX I/O file descriptor */
+            h5_stat_t st;            /* Stat info from stat() call */
+            h5_stat_t fst;           /* Stat info from fstat() call */
+            bool      want_posix_fd; /* Flag for retrieving file descriptor from VFD */
 
             /* Allocate realname buffer */
             if (NULL == (realname = (char *)H5MM_calloc((size_t)PATH_MAX * sizeof(char))))
@@ -2859,7 +2867,8 @@ H5F__build_actual_name(const H5F_t *f, const H5P_genplist_t *fapl, const char *n
              */
             want_posix_fd = true;
             if (H5P_set(dup_fapl, H5F_ACS_WANT_POSIX_FD_NAME, &want_posix_fd) < 0)
-                HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set property for retrieving file descriptor");
+                HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL,
+                            "can't set property for retrieving file descriptor");
 
             /* Retrieve the file handle */
             if (H5F_get_vfd_handle(f, dup_fapl, (void **)&fd) < 0)

@@ -512,7 +512,7 @@ H5R__open_object_api_common(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t oapl_id, vo
 
     /* Retrieve loc_id from reference */
     if (H5I_INVALID_HID == (loc_id = H5R__get_loc_id((const H5R_ref_priv_t *)ref_ptr))) {
-        H5P_genplist_t       *rapl;           /* Property list for RAPL */
+        H5P_genplist_t *rapl; /* Property list for RAPL */
 
         /* Attempt to re-open file and pass RAPL as a FAPL */
         if (H5P_DEFAULT == rapl_id)
@@ -659,7 +659,7 @@ H5R__open_region_api_common(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t oapl_id, vo
 
     /* Retrieve loc_id from reference */
     if (H5I_INVALID_HID == (loc_id = H5R__get_loc_id((const H5R_ref_priv_t *)ref_ptr))) {
-        H5P_genplist_t       *rapl;           /* Property list for RAPL */
+        H5P_genplist_t *rapl; /* Property list for RAPL */
 
         /* Attempt to re-open file and pass RAPL as a FAPL */
         if (H5P_DEFAULT == rapl_id)
@@ -828,7 +828,7 @@ H5R__open_attr_api_common(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t aapl_id, void
 
     /* Retrieve loc_id from reference */
     if (H5I_INVALID_HID == (loc_id = H5R__get_loc_id((const H5R_ref_priv_t *)ref_ptr))) {
-        H5P_genplist_t       *rapl;           /* Property list for RAPL */
+        H5P_genplist_t *rapl; /* Property list for RAPL */
 
         /* Attempt to re-open file and pass RAPL as a FAPL */
         if (H5P_DEFAULT == rapl_id)
@@ -996,7 +996,7 @@ H5Rget_obj_type3(H5R_ref_t *ref_ptr, hid_t rapl_id, H5O_type_t *obj_type /*out*/
 
     /* Retrieve loc_id from reference */
     if (H5I_INVALID_HID == (loc_id = H5R__get_loc_id((const H5R_ref_priv_t *)ref_ptr))) {
-        H5P_genplist_t       *rapl;           /* Property list for RAPL */
+        H5P_genplist_t *rapl; /* Property list for RAPL */
 
         /* Attempt to re-open file and pass RAPL as a FAPL */
         if (H5P_DEFAULT == rapl_id)
@@ -1126,7 +1126,7 @@ H5Rget_obj_name(H5R_ref_t *ref_ptr, hid_t rapl_id, char *buf /*out*/, size_t siz
 
     /* Retrieve loc_id from reference */
     if (H5I_INVALID_HID == (loc_id = H5R__get_loc_id((const H5R_ref_priv_t *)ref_ptr))) {
-        H5P_genplist_t       *rapl;           /* Property list for RAPL */
+        H5P_genplist_t *rapl; /* Property list for RAPL */
 
         /* Attempt to re-open file and pass RAPL as a FAPL */
         if (H5P_DEFAULT == rapl_id)

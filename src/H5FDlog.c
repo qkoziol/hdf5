@@ -259,7 +259,7 @@ herr_t
 H5Pset_fapl_log(hid_t fapl_id, const char *logfile, unsigned long long flags, size_t buf_size)
 {
     H5FD_log_fapl_t fa;        /* File access property list information */
-    H5P_genplist_t *fapl;     /* Property list pointer */
+    H5P_genplist_t *fapl;      /* Property list pointer */
     herr_t          ret_value; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -407,7 +407,7 @@ H5FD__log_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
 {
     H5FD_log_t            *file = NULL;
     H5P_genplist_t        *fapl; /* Property list */
-    const H5FD_log_fapl_t *fa;    /* File access property list information */
+    const H5FD_log_fapl_t *fa;   /* File access property list information */
     H5FD_log_fapl_t        default_fa = H5FD_log_default_config_g;
     int                    fd         = -1; /* File descriptor */
     int                    o_flags;         /* Flags for open() call */
@@ -460,7 +460,8 @@ H5FD__log_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
     if ((fd = HDopen(name, o_flags, H5_POSIX_CREATE_MODE_RW)) < 0) {
         int myerrno = errno;
 
-        HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, NULL,
+        HGOTO_ERROR(
+            H5E_FILE, H5E_CANTOPENFILE, NULL,
             "unable to open file: name = '%s', errno = %d, error message = '%s', flags = %x, o_flags = %x",
             name, myerrno, strerror(myerrno), flags, (unsigned)o_flags);
     }

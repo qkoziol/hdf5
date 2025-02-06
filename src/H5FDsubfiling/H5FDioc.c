@@ -308,7 +308,7 @@ herr_t
 H5Pset_fapl_ioc(hid_t fapl_id, H5FD_ioc_config_t *vfd_config)
 {
     H5FD_ioc_config_t ioc_conf;
-    H5P_genplist_t   *fapl     = NULL;
+    H5P_genplist_t   *fapl      = NULL;
     herr_t            ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
@@ -354,7 +354,7 @@ herr_t
 H5Pget_fapl_ioc(hid_t fapl_id, H5FD_ioc_config_t *config_out)
 {
     const H5FD_ioc_config_t *config             = NULL;
-    H5P_genplist_t          *fapl              = NULL;
+    H5P_genplist_t          *fapl               = NULL;
     bool                     use_default_config = false;
     herr_t                   ret_value          = SUCCEED;
 

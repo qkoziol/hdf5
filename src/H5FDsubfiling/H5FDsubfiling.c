@@ -444,7 +444,7 @@ H5Pset_fapl_subfiling(hid_t fapl_id, const H5FD_subfiling_config_t *vfd_config)
 {
     H5FD_subfiling_config_t *subfiling_conf = NULL;
     H5P_genplist_t          *fapl           = NULL;
-    H5P_genplist_t          *ioc_fapl      = NULL;
+    H5P_genplist_t          *ioc_fapl       = NULL;
     MPI_Comm                 comm           = MPI_COMM_NULL;
     MPI_Info                 info           = MPI_INFO_NULL;
     herr_t                   ret_value      = SUCCEED;
@@ -524,7 +524,7 @@ herr_t
 H5Pget_fapl_subfiling(hid_t fapl_id, H5FD_subfiling_config_t *config_out)
 {
     const H5FD_subfiling_config_t *config             = NULL;
-    H5P_genplist_t                *fapl              = NULL;
+    H5P_genplist_t                *fapl               = NULL;
     bool                           use_default_config = false;
     herr_t                         ret_value          = SUCCEED;
 
@@ -567,7 +567,7 @@ done:
 static herr_t
 H5FD__subfiling_get_default_config(hid_t fapl_id, H5FD_subfiling_config_t *config_out)
 {
-    H5P_genplist_t *fapl; /* Property list pointer */
+    H5P_genplist_t *fapl;     /* Property list pointer */
     H5P_genplist_t *ioc_fapl; /* Property list pointer */
     MPI_Comm        comm = MPI_COMM_NULL;
     MPI_Info        info = MPI_INFO_NULL;
@@ -989,7 +989,7 @@ done:
 static herr_t
 H5FD__copy_plist(hid_t fapl_id, hid_t *id)
 {
-    H5P_genplist_t *fapl     = NULL;
+    H5P_genplist_t *fapl      = NULL;
     int             ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
@@ -1089,9 +1089,9 @@ H5FD__subfiling_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t ma
     H5FD_subfiling_t              *file   = NULL; /* Subfiling VFD info */
     const H5FD_subfiling_config_t *config = NULL; /* Driver-specific property list */
     H5FD_subfiling_config_t        default_config;
-    H5FD_class_t                  *driver = NULL; /* VFD for file */
-    H5P_genplist_t                *fapl  = NULL;
-    H5P_genplist_t                *ioc_fapl  = NULL;
+    H5FD_class_t                  *driver   = NULL; /* VFD for file */
+    H5P_genplist_t                *fapl     = NULL;
+    H5P_genplist_t                *ioc_fapl = NULL;
     H5FD_driver_prop_t             driver_prop; /* Property for driver ID & info */
     bool                           bcasted_eof = false;
     int64_t                        sf_eof      = -1;
@@ -1182,7 +1182,8 @@ H5FD__subfiling_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t ma
     if (NULL == (driver = (H5FD_class_t *)H5I_object(driver_prop.driver_id)))
         HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, NULL, "invalid driver ID in file access property list");
     if (driver->value != H5_VFD_IOC)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL, "unable to open file '%s' - only IOC VFD is currently supported for subfiles", name);
+        HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL,
+                    "unable to open file '%s' - only IOC VFD is currently supported for subfiles", name);
 
     /* Fully resolve the given filepath and get its dirname */
     if (H5FD__subfiling_resolve_pathname(name, file->comm, &file->file_path) < 0)
@@ -1194,7 +1195,8 @@ H5FD__subfiling_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t ma
      * Create/open the HDF5 stub file and get its inode value for
      * the internal mapping from file inode to subfiling context.
      */
-    if (H5FD__subfiling_open_stub_file(file->file_path, flags, file->comm, &file->stub_file, &file->file_id) < 0)
+    if (H5FD__subfiling_open_stub_file(file->file_path, flags, file->comm, &file->stub_file, &file->file_id) <
+        0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL, "can't open HDF5 stub file");
 
     /* Set stub file ID on IOC fapl so it can reuse on open */
@@ -1468,7 +1470,7 @@ static herr_t
 H5FD__subfiling_get_handle(H5FD_t *_file, hid_t H5_ATTR_UNUSED fapl, void **file_handle)
 {
     H5FD_subfiling_t *file      = (H5FD_subfiling_t *)_file;
-    H5P_genplist_t                *ioc_fapl  = NULL;
+    H5P_genplist_t   *ioc_fapl  = NULL;
     herr_t            ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
@@ -1773,7 +1775,7 @@ H5FD__subfiling_delete(const char *name, hid_t fapl_id)
 {
     const H5FD_subfiling_config_t *subfiling_config = NULL;
     H5FD_subfiling_config_t        default_config;
-    H5P_genplist_t                *fapl     = NULL;
+    H5P_genplist_t                *fapl      = NULL;
     H5P_genplist_t                *ioc_fapl  = NULL;
     herr_t                         ret_value = SUCCEED;
 

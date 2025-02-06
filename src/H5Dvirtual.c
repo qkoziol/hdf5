@@ -549,10 +549,10 @@ H5D__virtual_copy_layout(H5O_layout_t *layout)
      * so the originals aren't closed on error */
     orig_source_fapl  = virt->source_fapl;
     virt->source_fapl = NULL;
-    orig_source_dapl     = virt->source_dapl;
-    virt->source_dapl    = NULL;
-    orig_list            = virt->list;
-    virt->list           = NULL;
+    orig_source_dapl  = virt->source_dapl;
+    virt->source_dapl = NULL;
+    orig_list         = virt->list;
+    virt->list        = NULL;
 
     /* Copy entry list */
     if (virt->list_nused > 0) {
@@ -2195,7 +2195,7 @@ H5D__virtual_init(H5F_t *f, const H5D_t *dset)
     } /* end if */
 #ifndef NDEBUG
     else {
-        H5F_close_degree_t close_degree;       /* Close degree for source files */
+        H5F_close_degree_t close_degree; /* Close degree for source files */
 
         /* Verify H5F_CLOSE_WEAK close degree is set */
         if (H5P_get(storage->source_fapl, H5F_ACS_CLOSE_DEGREE_NAME, &close_degree) < 0)

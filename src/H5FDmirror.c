@@ -1237,7 +1237,7 @@ herr_t
 H5Pget_fapl_mirror(hid_t fapl_id, H5FD_mirror_fapl_t *fa_dst /*out*/)
 {
     const H5FD_mirror_fapl_t *fa_src    = NULL;
-    H5P_genplist_t           *fapl     = NULL;
+    H5P_genplist_t           *fapl      = NULL;
     herr_t                    ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
@@ -1276,7 +1276,7 @@ done:
 herr_t
 H5Pset_fapl_mirror(hid_t fapl_id, H5FD_mirror_fapl_t *fa)
 {
-    H5P_genplist_t *fapl     = NULL;
+    H5P_genplist_t *fapl      = NULL;
     herr_t          ret_value = FAIL;
 
     FUNC_ENTER_API(FAIL)

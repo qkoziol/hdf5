@@ -735,7 +735,8 @@ H5F__super_read(H5F_t *f, H5P_genplist_t *fapl, bool initial_read)
                  */
                 if (H5P_exist_plist(fapl, H5F_ACS_NULL_FSM_ADDR_NAME) > 0)
                     if (H5P_get(fapl, H5F_ACS_NULL_FSM_ADDR_NAME, &f->shared->null_fsm_addr) < 0)
-                        HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get clearance for persisting fsm addr");
+                        HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL,
+                                    "can't get clearance for persisting fsm addr");
 
                 /* Retrieve the 'file space info' structure */
                 if (NULL == H5O_msg_read(&ext_loc, H5O_FSINFO_ID, &fsinfo))
@@ -743,7 +744,8 @@ H5F__super_read(H5F_t *f, H5P_genplist_t *fapl, bool initial_read)
 
                 /* Version bounds check */
                 if (H5O_fsinfo_check_version(H5F_HIGH_BOUND(f), &fsinfo) < 0)
-                    HGOTO_ERROR(H5E_FILE, H5E_BADRANGE, FAIL, "File space info message's version out of bounds");
+                    HGOTO_ERROR(H5E_FILE, H5E_BADRANGE, FAIL,
+                                "File space info message's version out of bounds");
 
                 /* Update changed values */
                 if (f->shared->fs_version != fsinfo.version)

@@ -525,7 +525,7 @@ H5FD_class_t *
 H5FD_get_class(H5P_genplist_t *fapl)
 {
     H5FD_driver_prop_t driver_prop; /* Property for driver ID & info */
-    H5FD_class_t *ret_value = NULL;
+    H5FD_class_t      *ret_value = NULL;
 
     FUNC_ENTER_NOAPI(NULL)
 
@@ -837,7 +837,7 @@ H5FD_t *
 H5FDopen(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
 {
     H5P_genplist_t *fapl; /* File access property list */
-    H5FD_t *ret_value = NULL;
+    H5FD_t         *ret_value = NULL;
 
     FUNC_ENTER_API(NULL)
 
@@ -2827,7 +2827,7 @@ herr_t
 H5FDget_vfd_handle(H5FD_t *file, hid_t fapl_id, void **file_handle /*out*/)
 {
     H5P_genplist_t *fapl; /* File access property list */
-    herr_t ret_value = SUCCEED;
+    herr_t          ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
 
@@ -3008,7 +3008,7 @@ herr_t
 H5FDdelete(const char *filename, hid_t fapl_id)
 {
     H5P_genplist_t *fapl; /* File access property list */
-    herr_t ret_value = SUCCEED;
+    herr_t          ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
 

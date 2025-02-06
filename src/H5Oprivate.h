@@ -577,9 +577,9 @@ typedef struct H5O_storage_virtual_t {
             view; /* Method for calculating the extent of the virtual dataset with unlimited selections */
     hsize_t printf_gap; /* Maximum number of sequential missing source datasets before terminating the search
                            for more */
-    H5P_genplist_t *source_fapl;    /* FAPL to use to open source files */
-    H5P_genplist_t *source_dapl;    /* DAPL to use to open source datasets */
-    bool            init;           /* Whether all information has been completely initialized */
+    H5P_genplist_t *source_fapl; /* FAPL to use to open source files */
+    H5P_genplist_t *source_dapl; /* DAPL to use to open source datasets */
+    bool            init;        /* Whether all information has been completely initialized */
 } H5O_storage_virtual_t;
 
 typedef struct H5O_storage_t {

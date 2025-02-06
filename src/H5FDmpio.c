@@ -473,7 +473,7 @@ done:
 herr_t
 H5Pget_fapl_mpio(hid_t fapl_id, MPI_Comm *comm /*out*/, MPI_Info *info /*out*/)
 {
-    H5P_genplist_t *fapl;               /* Property list pointer */
+    H5P_genplist_t *fapl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -880,7 +880,7 @@ static H5FD_t *
 H5FD__mpio_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t H5_ATTR_UNUSED maxaddr)
 {
     H5FD_mpio_t    *file = NULL;          /* VFD File struct for new file */
-    H5P_genplist_t *fapl;                /* Property list pointer */
+    H5P_genplist_t *fapl;                 /* Property list pointer */
     MPI_Comm        comm = MPI_COMM_NULL; /* MPI Communicator, from plist */
     MPI_Info        info = MPI_INFO_NULL; /* MPI Info, from plist */
     MPI_Info        info_used;            /* MPI Info returned from MPI_File_open */

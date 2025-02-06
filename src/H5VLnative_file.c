@@ -77,8 +77,8 @@ H5VL__native_file_create(const char *name, unsigned flags, hid_t fcpl_id, hid_t 
                          hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
     H5F_t          *new_file = NULL;
-    H5P_genplist_t *fcpl; /* File creation property list */
-    H5P_genplist_t *fapl; /* File access property list */
+    H5P_genplist_t *fcpl;             /* File creation property list */
+    H5P_genplist_t *fapl;             /* File access property list */
     void           *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -125,8 +125,8 @@ H5VL__native_file_open(const char *name, unsigned flags, hid_t fapl_id, hid_t H5
                        void H5_ATTR_UNUSED **req)
 {
     H5F_t          *new_file = NULL;
-    H5P_genplist_t *fcpl; /* File creation property list */
-    H5P_genplist_t *fapl; /* File access property list */
+    H5P_genplist_t *fcpl;             /* File creation property list */
+    H5P_genplist_t *fapl;             /* File access property list */
     void           *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -357,7 +357,8 @@ H5VL__native_file_specific(void *obj, H5VL_file_specific_args_t *args, hid_t H5_
 
             if (NULL == (fapl = H5I_object(args->args.is_accessible.fapl_id)))
                 HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get file access property list");
-            if (H5F__is_hdf5(args->args.is_accessible.filename, fapl, args->args.is_accessible.accessible) < 0)
+            if (H5F__is_hdf5(args->args.is_accessible.filename, fapl, args->args.is_accessible.accessible) <
+                0)
                 HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "error in HDF5 file check");
 
             break;
@@ -514,7 +515,7 @@ H5VL__native_file_optional(void *obj, H5VL_optional_args_t *args, hid_t H5_ATTR_
         /* H5Fget_vfd_handle */
         case H5VL_NATIVE_FILE_GET_VFD_HANDLE: {
             H5VL_native_file_get_vfd_handle_t *gvh_args = &opt_args->get_vfd_handle;
-            H5P_genplist_t *fapl; /* File access property list */
+            H5P_genplist_t                    *fapl; /* File access property list */
 
             /* Retrieve the VFD handle for the file */
             if (NULL == (fapl = H5I_object(gvh_args->fapl_id)))

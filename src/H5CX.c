@@ -269,7 +269,7 @@ H5CX__init_package(void)
     H5P_genplist_t *lapl;                /* Link access property list */
     H5P_genplist_t *dcpl;                /* Dataset creation property list */
     H5P_genplist_t *dapl;                /* Dataset access property list */
-    H5P_genplist_t *fapl;            /* File access property list */
+    H5P_genplist_t *fapl;                /* File access property list */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE

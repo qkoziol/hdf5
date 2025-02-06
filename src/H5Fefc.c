@@ -131,7 +131,8 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5F__efc_open_file(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist_t *fcpl, H5P_genplist_t *fapl)
+H5F__efc_open_file(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist_t *fcpl,
+                   H5P_genplist_t *fapl)
 {
     H5F_t *file      = NULL;    /* File opened */
     herr_t ret_value = SUCCEED; /* Return value */
@@ -195,7 +196,8 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5F__efc_open(bool try, H5F_efc_t *efc, H5F_t **_file, const char *name, unsigned flags, H5P_genplist_t *fcpl, H5P_genplist_t *fapl)
+H5F__efc_open(bool try, H5F_efc_t *efc, H5F_t **_file, const char *name, unsigned flags, H5P_genplist_t *fcpl,
+              H5P_genplist_t *fapl)
 {
     H5F_efc_ent_t        *ent       = NULL;    /* Entry for target file in efc */
     bool                  open_file = false;   /* Whether ent->file needs to be closed in case of error */

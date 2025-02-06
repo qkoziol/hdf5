@@ -89,7 +89,7 @@
     {                                                                                                        \
         {HADDR_UNDEF, 0}, 0, NULL, 0, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,                       \
                                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},                      \
-            H5D_VDS_ERROR, HSIZE_UNDEF, NULL, NULL, false                                                      \
+            H5D_VDS_ERROR, HSIZE_UNDEF, NULL, NULL, false                                                    \
     }
 #define H5D_DEF_STORAGE_COMPACT                                                                              \
     {                                                                                                        \

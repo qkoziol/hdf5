@@ -254,7 +254,7 @@ H5FD__sec2_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr
     struct _BY_HANDLE_FILE_INFORMATION fileinfo;
 #endif
     h5_stat_t       sb;
-    H5P_genplist_t *fapl;            /* Property list pointer */
+    H5P_genplist_t *fapl;             /* Property list pointer */
     H5FD_t         *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE
