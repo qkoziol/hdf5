@@ -69,10 +69,9 @@ static int H5F__get_all_ids_cb(void H5_ATTR_UNUSED *obj_ptr, hid_t obj_id, void 
 
 /* Helper routines for sync/async API calls */
 static herr_t H5F__post_open_api_common(H5VL_object_t *vol_obj, void **token_ptr);
-static hid_t H5F__create_api_common(const char *filename, unsigned flags, H5P_genplist_t *fcpl, hid_t fapl_id,
-                                    void **token_ptr);
-static hid_t H5F__open_api_common(const char *filename, unsigned flags, hid_t fapl_id, void **token_ptr);
-static hid_t H5F__reopen_api_common(hid_t file_id, void **token_ptr);
+static hid_t  H5F__create_api_common(const char *filename, unsigned flags, H5P_genplist_t *fcpl, H5P_genplist_t *fapl, void **token_ptr);
+static hid_t  H5F__open_api_common(const char *filename, unsigned flags, H5P_genplist_t *fapl, void **token_ptr);
+static hid_t  H5F__reopen_api_common(hid_t file_id, void **token_ptr);
 static herr_t H5F__flush_api_common(hid_t object_id, H5F_scope_t scope, void **token_ptr,
                                     H5VL_object_t **_vol_obj_ptr);
 
@@ -432,6 +431,12 @@ H5Fget_vfd_handle(hid_t file_id, hid_t fapl_id, void **file_handle /*out*/)
     if (!file_handle)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid file handle pointer");
 
+    /* Check the file access property list */
+    if (H5P_DEFAULT == fapl_id)
+        fapl_id = H5P_FILE_ACCESS_DEFAULT;
+    else if (true != H5P_isa_class(fapl_id, H5P_FILE_ACCESS))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not file access property list");
+
     /* Get the file object */
     if (NULL == (vol_obj = H5VL_vol_object_verify(file_id, H5I_FILE)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid file identifier");
@@ -543,11 +548,10 @@ done:
  *-------------------------------------------------------------------------
  */
 static hid_t
-H5F__create_api_common(const char *filename, unsigned flags, H5P_genplist_t *fcpl, hid_t fapl_id,
-                       void **token_ptr)
+H5F__create_api_common(const char *filename, unsigned flags, H5P_genplist_t *fcpl, H5P_genplist_t *fapl, void **token_ptr)
 {
+    hid_t               fapl_id;                        /* ID for FAPL */
     void                 *new_file = NULL;             /* File struct for new file                 */
-    H5P_genplist_t       *plist;                       /* Property list pointer                    */
     H5VL_connector_prop_t connector_prop;              /* Property for VOL connector ID & info     */
     hid_t                 ret_value = H5I_INVALID_HID; /* Return value                             */
 
@@ -568,13 +572,12 @@ H5F__create_api_common(const char *filename, unsigned flags, H5P_genplist_t *fcp
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, H5I_INVALID_HID, "mutually exclusive flags for file creation");
 
     /* Verify access property list and set up collective metadata if appropriate */
+    fapl_id = H5P_PLIST_ID(fapl);
     if (H5CX_set_apl(&fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, true) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID, "can't set access property list info");
 
     /* Get the VOL info from the fapl */
-    if (NULL == (plist = (H5P_genplist_t *)H5I_object(fapl_id)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a file access property list");
-    if (H5P_peek(plist, H5F_ACS_VOL_CONN_NAME, &connector_prop) < 0)
+    if (H5P_peek(fapl, H5F_ACS_VOL_CONN_NAME, &connector_prop) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, H5I_INVALID_HID, "can't get VOL connector info");
 
     /* Stash a copy of the "top-level" connector property, before any pass-through
@@ -592,8 +595,7 @@ H5F__create_api_common(const char *filename, unsigned flags, H5P_genplist_t *fcp
     flags |= H5F_ACC_RDWR | H5F_ACC_CREAT;
 
     /* Create a new file or truncate an existing file through the VOL */
-    if (NULL == (new_file = H5VL_file_create(connector_prop.connector, filename, flags, fcpl, fapl_id,
-                                             H5P_DATASET_XFER_DEFAULT, token_ptr)))
+    if (NULL == (new_file = H5VL_file_create(connector_prop.connector, filename, flags, fcpl, fapl, H5P_DATASET_XFER_DEFAULT, token_ptr)))
         HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, H5I_INVALID_HID, "unable to create file");
 
     /* Get an ID for the file */
@@ -634,6 +636,7 @@ H5Fcreate(const char *filename, unsigned flags, hid_t fcpl_id, hid_t fapl_id)
 {
     H5VL_object_t  *vol_obj = NULL;              /* File object */
     H5P_genplist_t *fcpl;                        /* File creation property list pointer */
+    H5P_genplist_t       *fapl;            /* File access property list pointer */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -644,8 +647,14 @@ H5Fcreate(const char *filename, unsigned flags, hid_t fcpl_id, hid_t fapl_id)
     if (NULL == (fcpl = H5P_object_verify(fcpl_id, H5P_TYPE_FILE_CREATE, true)))
         HGOTO_ERROR(H5E_FILE, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
+    /* Get the pointer to the file access property list */
+    if (H5P_DEFAULT == fapl_id)
+        fapl_id = H5P_FILE_ACCESS_DEFAULT;
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a file access property list");
+
     /* Create the file synchronously */
-    if ((ret_value = H5F__create_api_common(filename, flags, fcpl, fapl_id, NULL)) < 0)
+    if ((ret_value = H5F__create_api_common(filename, flags, fcpl, fapl, NULL)) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTCREATE, H5I_INVALID_HID, "unable to synchronously create file");
 
     /* Get the file object */
@@ -677,6 +686,7 @@ H5Fcreate_async(const char *app_file, const char *app_func, unsigned app_line, c
 {
     H5VL_object_t  *vol_obj = NULL;              /* File object */
     H5P_genplist_t *fcpl;                        /* File creation property list pointer */
+    H5P_genplist_t       *fapl;            /* File access property list pointer */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
@@ -689,12 +699,18 @@ H5Fcreate_async(const char *app_file, const char *app_func, unsigned app_line, c
     if (NULL == (fcpl = H5P_object_verify(fcpl_id, H5P_TYPE_FILE_CREATE, true)))
         HGOTO_ERROR(H5E_FILE, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
+    /* Get the pointer to the file access property list */
+    if (H5P_DEFAULT == fapl_id)
+        fapl_id = H5P_FILE_ACCESS_DEFAULT;
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a file access property list");
+
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Create the file, possibly asynchronously */
-    if ((ret_value = H5F__create_api_common(filename, flags, fcpl, fapl_id, token_ptr)) < 0)
+    if ((ret_value = H5F__create_api_common(filename, flags, fcpl, fapl, token_ptr)) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTCREATE, H5I_INVALID_HID, "unable to asynchronously create file");
 
     /* Get the file object */
@@ -744,10 +760,10 @@ done:
  *-------------------------------------------------------------------------
  */
 static hid_t
-H5F__open_api_common(const char *filename, unsigned flags, hid_t fapl_id, void **token_ptr)
+H5F__open_api_common(const char *filename, unsigned flags, H5P_genplist_t *fapl, void **token_ptr)
 {
+    hid_t               fapl_id;                        /* ID for FAPL */
     void                 *new_file = NULL;             /* File struct for new file                 */
-    H5P_genplist_t       *plist;                       /* Property list pointer                    */
     H5VL_connector_prop_t connector_prop;              /* Property for VOL connector ID & info     */
     hid_t                 ret_value = H5I_INVALID_HID; /* Return value                             */
 
@@ -770,13 +786,12 @@ H5F__open_api_common(const char *filename, unsigned flags, hid_t fapl_id, void *
                     "SWMR read access on a file open for read-write access is not allowed");
 
     /* Verify access property list and set up collective metadata if appropriate */
+    fapl_id = H5P_PLIST_ID(fapl);
     if (H5CX_set_apl(&fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, true) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID, "can't set access property list info");
 
     /* Get the VOL info from the fapl */
-    if (NULL == (plist = (H5P_genplist_t *)H5I_object(fapl_id)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a file access property list");
-    if (H5P_peek(plist, H5F_ACS_VOL_CONN_NAME, &connector_prop) < 0)
+    if (H5P_peek(fapl, H5F_ACS_VOL_CONN_NAME, &connector_prop) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, H5I_INVALID_HID, "can't get VOL connector info");
 
     /* Stash a copy of the "top-level" connector property, before any pass-through
@@ -786,8 +801,7 @@ H5F__open_api_common(const char *filename, unsigned flags, hid_t fapl_id, void *
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID, "can't set VOL connector info in API context");
 
     /* Open the file through the VOL layer */
-    if (NULL == (new_file = H5VL_file_open(connector_prop.connector, filename, flags, fapl_id,
-                                           H5P_DATASET_XFER_DEFAULT, token_ptr)))
+    if (NULL == (new_file = H5VL_file_open(connector_prop.connector, filename, flags, fapl, H5P_DATASET_XFER_DEFAULT, token_ptr)))
         HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, H5I_INVALID_HID, "unable to open file");
 
     /* Get an ID for the file */
@@ -821,12 +835,17 @@ hid_t
 H5Fopen(const char *filename, unsigned flags, hid_t fapl_id)
 {
     H5VL_object_t *vol_obj   = NULL;            /* File object */
+    H5P_genplist_t       *fapl;            /* File access property list pointer */
     hid_t          ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Open the file synchronously */
-    if ((ret_value = H5F__open_api_common(filename, flags, fapl_id, NULL)) < 0)
+    if (H5P_DEFAULT == fapl_id)
+        fapl_id = H5P_FILE_ACCESS_DEFAULT;
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a file access property list");
+    if ((ret_value = H5F__open_api_common(filename, flags, fapl, NULL)) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, H5I_INVALID_HID, "unable to synchronously open file");
 
     /* Get the file object */
@@ -858,6 +877,7 @@ H5Fopen_async(const char *app_file, const char *app_func, unsigned app_line, con
               unsigned flags, hid_t fapl_id, hid_t es_id)
 {
     H5VL_object_t *vol_obj   = NULL;            /* File object */
+    H5P_genplist_t       *fapl;            /* File access property list pointer */
     void          *token     = NULL;            /* Request token for async operation        */
     void         **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     hid_t          ret_value = H5I_INVALID_HID; /* Return value */
@@ -869,7 +889,11 @@ H5Fopen_async(const char *app_file, const char *app_func, unsigned app_line, con
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Open the file, possibly asynchronously */
-    if ((ret_value = H5F__open_api_common(filename, flags, fapl_id, token_ptr)) < 0)
+    if (H5P_DEFAULT == fapl_id)
+        fapl_id = H5P_FILE_ACCESS_DEFAULT;
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a file access property list");
+    if ((ret_value = H5F__open_api_common(filename, flags, fapl, token_ptr)) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, H5I_INVALID_HID, "unable to asynchronously open file");
 
     /* Get the file object */
@@ -1125,7 +1149,7 @@ done:
 herr_t
 H5Fdelete(const char *filename, hid_t fapl_id)
 {
-    H5P_genplist_t           *plist;                 /* Property list pointer */
+    H5P_genplist_t           *fapl;                 /* Property list pointer */
     H5VL_connector_prop_t     connector_prop;        /* Property for VOL connector ID & info */
     H5VL_file_specific_args_t vol_cb_args;           /* Arguments to VOL callback */
     bool                      is_accessible = false; /* Whether file is accessible */
@@ -1142,9 +1166,9 @@ H5Fdelete(const char *filename, hid_t fapl_id)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Get the VOL info from the fapl */
-    if (NULL == (plist = (H5P_genplist_t *)H5I_object_verify(fapl_id, H5I_GENPROP_LST)))
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
-    if (H5P_peek(plist, H5F_ACS_VOL_CONN_NAME, &connector_prop) < 0)
+    if (H5P_peek(fapl, H5F_ACS_VOL_CONN_NAME, &connector_prop) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get VOL connector info");
 
     /* Stash a copy of the "top-level" connector property, before any pass-through

@@ -231,9 +231,6 @@ typedef struct H5FD_hdfs_t {
 } H5FD_hdfs_t;
 
 /* Prototypes */
-static void   *H5FD__hdfs_fapl_get(H5FD_t *_file);
-static void   *H5FD__hdfs_fapl_copy(const void *_old_fa);
-static herr_t  H5FD__hdfs_fapl_free(void *_fa);
 static H5FD_t *H5FD__hdfs_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr);
 static herr_t  H5FD__hdfs_close(H5FD_t *_file);
 static int     H5FD__hdfs_cmp(const H5FD_t *_f1, const H5FD_t *_f2);
@@ -261,9 +258,9 @@ static const H5FD_class_t H5FD_hdfs_g = {
     NULL,                     /* sb_encode            */
     NULL,                     /* sb_decode            */
     sizeof(H5FD_hdfs_fapl_t), /* fapl_size            */
-    H5FD__hdfs_fapl_get,      /* fapl_get             */
-    H5FD__hdfs_fapl_copy,     /* fapl_copy            */
-    H5FD__hdfs_fapl_free,     /* fapl_free            */
+    NULL,                     /* fapl_get             */
+    NULL,                     /* fapl_copy            */
+    NULL,                     /* fapl_free            */
     0,                        /* dxpl_size            */
     NULL,                     /* dxpl_copy            */
     NULL,                     /* dxpl_free            */
@@ -571,7 +568,7 @@ done:
 herr_t
 H5Pset_fapl_hdfs(hid_t fapl_id, H5FD_hdfs_fapl_t *fa)
 {
-    H5P_genplist_t *plist     = NULL; /* Property list pointer */
+    H5P_genplist_t *fapl     = NULL; /* Property list pointer */
     herr_t          ret_value = FAIL;
 
     FUNC_ENTER_API(FAIL)
@@ -582,13 +579,12 @@ H5Pset_fapl_hdfs(hid_t fapl_id, H5FD_hdfs_fapl_t *fa)
     fprintf(stdout, "called %s.\n", __func__);
 #endif
 
-    plist = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false);
-    if (plist == NULL)
+    if (NULL == ( fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
     if (FAIL == H5FD__hdfs_validate_config(fa))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid hdfs config");
 
-    ret_value = H5P_set_driver(plist, H5FD_HDFS, (void *)fa, NULL);
+    ret_value = H5P_set_driver(fapl, H5FD_HDFS, (void *)fa, NULL);
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -610,7 +606,7 @@ herr_t
 H5Pget_fapl_hdfs(hid_t fapl_id, H5FD_hdfs_fapl_t *fa_dst /*out*/)
 {
     const H5FD_hdfs_fapl_t *fa_src    = NULL;
-    H5P_genplist_t         *plist     = NULL;
+    H5P_genplist_t         *fapl     = NULL;
     herr_t                  ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
@@ -621,14 +617,13 @@ H5Pget_fapl_hdfs(hid_t fapl_id, H5FD_hdfs_fapl_t *fa_dst /*out*/)
 
     if (fa_dst == NULL)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "fa_dst ptr is NULL");
-    plist = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true);
-    if (plist == NULL)
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access list");
 
-    if (H5FD_HDFS != H5P_peek_driver(plist))
+    if (H5FD_HDFS != H5P_peek_driver(fapl))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "incorrect VFL driver");
 
-    fa_src = (const H5FD_hdfs_fapl_t *)H5P_peek_driver_info(plist);
+    fa_src = (const H5FD_hdfs_fapl_t *)H5P_peek_driver_info(fapl);
     if (fa_src == NULL)
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "bad VFL driver info");
 
@@ -638,100 +633,6 @@ H5Pget_fapl_hdfs(hid_t fapl_id, H5FD_hdfs_fapl_t *fa_dst /*out*/)
 done:
     FUNC_LEAVE_API(ret_value)
 } /* H5Pget_fapl_hdfs() */
-
-/*-------------------------------------------------------------------------
- * Function:    H5FD__hdfs_fapl_get
- *
- * Purpose:     Gets a file access property list which could be used to
- *              create an identical file.
- *
- * Return:      Success:        Ptr to new file access property list value.
- *
- *              Failure:        NULL
- *
- *-------------------------------------------------------------------------
- */
-static void *
-H5FD__hdfs_fapl_get(H5FD_t *_file)
-{
-    H5FD_hdfs_t      *file      = (H5FD_hdfs_t *)_file;
-    H5FD_hdfs_fapl_t *fa        = NULL;
-    void             *ret_value = NULL;
-
-    FUNC_ENTER_PACKAGE
-
-    fa = (H5FD_hdfs_fapl_t *)H5MM_calloc(sizeof(H5FD_hdfs_fapl_t));
-    if (fa == NULL)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "memory allocation failed");
-
-    /* Copy the fields of the structure */
-    H5MM_memcpy(fa, &(file->fa), sizeof(H5FD_hdfs_fapl_t));
-
-    ret_value = fa;
-
-done:
-    if (ret_value == NULL && fa != NULL)
-        H5MM_xfree(fa); /* clean up on error */
-
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* H5FD__hdfs_fapl_get() */
-
-/*-------------------------------------------------------------------------
- * Function:    H5FD__hdfs_fapl_copy
- *
- * Purpose:     Copies the hdfs-specific file access properties.
- *
- * Return:      Success:        Ptr to a new property list
- *
- *              Failure:        NULL
- *
- *-------------------------------------------------------------------------
- */
-static void *
-H5FD__hdfs_fapl_copy(const void *_old_fa)
-{
-    const H5FD_hdfs_fapl_t *old_fa    = (const H5FD_hdfs_fapl_t *)_old_fa;
-    H5FD_hdfs_fapl_t       *new_fa    = NULL;
-    void                   *ret_value = NULL;
-
-    FUNC_ENTER_PACKAGE
-
-    new_fa = (H5FD_hdfs_fapl_t *)H5MM_malloc(sizeof(H5FD_hdfs_fapl_t));
-    if (new_fa == NULL)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "memory allocation failed");
-
-    H5MM_memcpy(new_fa, old_fa, sizeof(H5FD_hdfs_fapl_t));
-    ret_value = new_fa;
-
-done:
-    if (ret_value == NULL && new_fa != NULL)
-        H5MM_xfree(new_fa); /* clean up on error */
-
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* H5FD__hdfs_fapl_copy() */
-
-/*-------------------------------------------------------------------------
- * Function:    H5FD__hdfs_fapl_free
- *
- * Purpose:     Frees the hdfs-specific file access properties.
- *
- * Return:      SUCCEED (cannot fail)
- *
- *-------------------------------------------------------------------------
- */
-static herr_t
-H5FD__hdfs_fapl_free(void *_fa)
-{
-    H5FD_hdfs_fapl_t *fa = (H5FD_hdfs_fapl_t *)_fa;
-
-    FUNC_ENTER_PACKAGE_NOERR
-
-    assert(fa != NULL); /* sanity check */
-
-    H5MM_xfree(fa);
-
-    FUNC_LEAVE_NOAPI(SUCCEED)
-} /* H5FD__hdfs_fapl_free() */
 
 #if HDFS_STATS
 /*----------------------------------------------------------------------------

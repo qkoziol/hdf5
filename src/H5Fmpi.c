@@ -401,7 +401,7 @@ H5F_mpi_retrieve_comm(hid_t loc_id, hid_t acspl_id, MPI_Comm *mpi_comm)
         if (H5P_peek(plist, H5F_ACS_FILE_DRV_NAME, &driver_prop) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get driver ID & info");
 
-        if (NULL == (driver_class = H5FD_get_class(driver_prop.driver_id)))
+        if (NULL == (driver_class = H5I_object(driver_prop.driver_id)))
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get driver class structure");
 
         if (H5FD_driver_query(driver_class, &driver_feat_flags) < 0)

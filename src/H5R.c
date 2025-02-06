@@ -512,8 +512,14 @@ H5R__open_object_api_common(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t oapl_id, vo
 
     /* Retrieve loc_id from reference */
     if (H5I_INVALID_HID == (loc_id = H5R__get_loc_id((const H5R_ref_priv_t *)ref_ptr))) {
-        /* Attempt to re-open file and pass rapl_id as a fapl_id */
-        if ((loc_id = H5R__reopen_file((H5R_ref_priv_t *)ref_ptr, rapl_id)) < 0)
+        H5P_genplist_t       *rapl;           /* Property list for RAPL */
+
+        /* Attempt to re-open file and pass RAPL as a FAPL */
+        if (H5P_DEFAULT == rapl_id)
+            rapl_id = H5P_REFERENCE_ACCESS_DEFAULT;
+        if (NULL == (rapl = H5I_object(rapl_id)))
+            HGOTO_ERROR(H5E_REFERENCE, H5E_BADTYPE, H5I_INVALID_HID, "not a file access property list");
+        if ((loc_id = H5R__reopen_file((H5R_ref_priv_t *)ref_ptr, rapl)) < 0)
             HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENFILE, H5I_INVALID_HID, "cannot re-open referenced file");
     }
 
@@ -653,8 +659,14 @@ H5R__open_region_api_common(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t oapl_id, vo
 
     /* Retrieve loc_id from reference */
     if (H5I_INVALID_HID == (loc_id = H5R__get_loc_id((const H5R_ref_priv_t *)ref_ptr))) {
-        /* Attempt to re-open file and pass rapl_id as a fapl_id */
-        if ((loc_id = H5R__reopen_file((H5R_ref_priv_t *)ref_ptr, rapl_id)) < 0)
+        H5P_genplist_t       *rapl;           /* Property list for RAPL */
+
+        /* Attempt to re-open file and pass RAPL as a FAPL */
+        if (H5P_DEFAULT == rapl_id)
+            rapl_id = H5P_REFERENCE_ACCESS_DEFAULT;
+        if (NULL == (rapl = H5I_object(rapl_id)))
+            HGOTO_ERROR(H5E_REFERENCE, H5E_BADTYPE, H5I_INVALID_HID, "not a file access property list");
+        if ((loc_id = H5R__reopen_file((H5R_ref_priv_t *)ref_ptr, rapl)) < 0)
             HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENFILE, H5I_INVALID_HID, "cannot re-open referenced file");
     }
 
@@ -816,8 +828,14 @@ H5R__open_attr_api_common(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t aapl_id, void
 
     /* Retrieve loc_id from reference */
     if (H5I_INVALID_HID == (loc_id = H5R__get_loc_id((const H5R_ref_priv_t *)ref_ptr))) {
-        /* Attempt to re-open file and pass rapl_id as a fapl_id */
-        if ((loc_id = H5R__reopen_file((H5R_ref_priv_t *)ref_ptr, rapl_id)) < 0)
+        H5P_genplist_t       *rapl;           /* Property list for RAPL */
+
+        /* Attempt to re-open file and pass RAPL as a FAPL */
+        if (H5P_DEFAULT == rapl_id)
+            rapl_id = H5P_REFERENCE_ACCESS_DEFAULT;
+        if (NULL == (rapl = H5I_object(rapl_id)))
+            HGOTO_ERROR(H5E_REFERENCE, H5E_BADTYPE, H5I_INVALID_HID, "not a file access property list");
+        if ((loc_id = H5R__reopen_file((H5R_ref_priv_t *)ref_ptr, rapl)) < 0)
             HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENFILE, H5I_INVALID_HID, "cannot re-open referenced file");
     }
 
@@ -977,10 +995,17 @@ H5Rget_obj_type3(H5R_ref_t *ref_ptr, hid_t rapl_id, H5O_type_t *obj_type /*out*/
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
 
     /* Retrieve loc_id from reference */
-    if (H5I_INVALID_HID == (loc_id = H5R__get_loc_id((const H5R_ref_priv_t *)ref_ptr)))
-        /* Attempt to re-open file and pass rapl_id as a fapl_id */
-        if ((loc_id = H5R__reopen_file((H5R_ref_priv_t *)ref_ptr, rapl_id)) < 0)
+    if (H5I_INVALID_HID == (loc_id = H5R__get_loc_id((const H5R_ref_priv_t *)ref_ptr))) {
+        H5P_genplist_t       *rapl;           /* Property list for RAPL */
+
+        /* Attempt to re-open file and pass RAPL as a FAPL */
+        if (H5P_DEFAULT == rapl_id)
+            rapl_id = H5P_REFERENCE_ACCESS_DEFAULT;
+        if (NULL == (rapl = H5I_object(rapl_id)))
+            HGOTO_ERROR(H5E_REFERENCE, H5E_BADTYPE, H5I_INVALID_HID, "not a file access property list");
+        if ((loc_id = H5R__reopen_file((H5R_ref_priv_t *)ref_ptr, rapl)) < 0)
             HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENFILE, FAIL, "cannot re-open referenced file");
+    }
 
     /* Get object token */
     if (H5R__get_obj_token((const H5R_ref_priv_t *)ref_ptr, &obj_token, NULL) < 0)
@@ -1100,10 +1125,17 @@ H5Rget_obj_name(H5R_ref_t *ref_ptr, hid_t rapl_id, char *buf /*out*/, size_t siz
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, (-1), "not a property list");
 
     /* Retrieve loc_id from reference */
-    if (H5I_INVALID_HID == (loc_id = H5R__get_loc_id((const H5R_ref_priv_t *)ref_ptr)))
-        /* Attempt to re-open file and pass rapl_id as a fapl_id */
-        if ((loc_id = H5R__reopen_file((H5R_ref_priv_t *)ref_ptr, rapl_id)) < 0)
+    if (H5I_INVALID_HID == (loc_id = H5R__get_loc_id((const H5R_ref_priv_t *)ref_ptr))) {
+        H5P_genplist_t       *rapl;           /* Property list for RAPL */
+
+        /* Attempt to re-open file and pass RAPL as a FAPL */
+        if (H5P_DEFAULT == rapl_id)
+            rapl_id = H5P_REFERENCE_ACCESS_DEFAULT;
+        if (NULL == (rapl = H5I_object(rapl_id)))
+            HGOTO_ERROR(H5E_REFERENCE, H5E_BADTYPE, (-1), "not a file access property list");
+        if ((loc_id = H5R__reopen_file((H5R_ref_priv_t *)ref_ptr, rapl)) < 0)
             HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENFILE, (-1), "cannot re-open referenced file");
+    }
 
     /* Get object token */
     if (H5R__get_obj_token((const H5R_ref_priv_t *)ref_ptr, &obj_token, NULL) < 0)

@@ -42,15 +42,15 @@
 herr_t
 H5Pset_fapl_windows(hid_t fapl_id)
 {
-    H5P_genplist_t *plist; /* Property list pointer */
+    H5P_genplist_t *fapl; /* Property list pointer */
     herr_t          ret_value;
 
     FUNC_ENTER_API(FAIL)
 
-    if (NULL == (plist = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
 
-    ret_value = H5P_set_driver(plist, H5FD_WINDOWS, NULL, NULL);
+    ret_value = H5P_set_driver(fapl, H5FD_WINDOWS, NULL, NULL);
 
 done:
     FUNC_LEAVE_API(ret_value)

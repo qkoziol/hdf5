@@ -950,7 +950,7 @@ H5F_shared_get_file_driver(const H5F_shared_t *f_sh, H5FD_t **file_handle)
  *-------------------------------------------------------------------------
  */
 herr_t
-H5F_get_vfd_handle(const H5F_t *file, hid_t fapl, void **file_handle)
+H5F_get_vfd_handle(const H5F_t *file, H5P_genplist_t *fapl, void **file_handle)
 {
     herr_t ret_value = SUCCEED; /* Return value */
 

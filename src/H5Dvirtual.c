@@ -535,7 +535,7 @@ H5D__virtual_copy_layout(H5O_layout_t *layout)
 {
     H5O_storage_virtual_ent_t *orig_list = NULL;
     H5O_storage_virtual_t     *virt      = &layout->storage.u.virt;
-    hid_t                      orig_source_fapl_id;
+    H5P_genplist_t            *orig_source_fapl;
     H5P_genplist_t            *orig_source_dapl;
     size_t                     i;
     herr_t                     ret_value = SUCCEED;
@@ -547,8 +547,8 @@ H5D__virtual_copy_layout(H5O_layout_t *layout)
 
     /* Save original entry list and top-level property lists and reset in layout
      * so the originals aren't closed on error */
-    orig_source_fapl_id  = virt->source_fapl_id;
-    virt->source_fapl_id = H5I_INVALID_HID;
+    orig_source_fapl  = virt->source_fapl;
+    virt->source_fapl = NULL;
     orig_source_dapl     = virt->source_dapl;
     virt->source_dapl    = NULL;
     orig_list            = virt->list;
@@ -650,14 +650,9 @@ H5D__virtual_copy_layout(H5O_layout_t *layout)
     } /* end else */
 
     /* Copy property lists */
-    if (orig_source_fapl_id >= 0) {
-        H5P_genplist_t *plist;
-
-        if (NULL == (plist = (H5P_genplist_t *)H5I_object_verify(orig_source_fapl_id, H5I_GENPROP_LST)))
-            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
-        if ((virt->source_fapl_id = H5P_copy_plist_id(plist, false)) < 0)
+    if (orig_source_fapl)
+        if (NULL == (virt->source_fapl = H5P_copy_plist(orig_source_fapl, false)))
             HGOTO_ERROR(H5E_DATASET, H5E_CANTCOPY, FAIL, "can't copy fapl");
-    } /* end if */
     if (orig_source_dapl)
         if (NULL == (virt->source_dapl = H5P_copy_plist(orig_source_dapl, false)))
             HGOTO_ERROR(H5E_DATASET, H5E_CANTCOPY, FAIL, "can't copy dapl");
@@ -737,10 +732,10 @@ H5D__virtual_reset_layout(H5O_layout_t *layout)
     (void)memset(virt->min_dims, 0, sizeof(virt->min_dims));
 
     /* Close access property lists */
-    if (virt->source_fapl_id >= 0) {
-        if (H5I_dec_ref(virt->source_fapl_id) < 0)
-            HDONE_ERROR(H5E_DATASET, H5E_CANTFREE, FAIL, "can't close source fapl");
-        virt->source_fapl_id = H5I_INVALID_HID;
+    if (virt->source_fapl) {
+        if (H5P_release(virt->source_fapl) < 0)
+            HDONE_ERROR(H5E_DATASET, H5E_CANTCLOSEOBJ, FAIL, "can't close source fapl");
+        virt->source_fapl = NULL;
     }
     if (virt->source_dapl) {
         if (H5P_release(virt->source_dapl) < 0)
@@ -876,7 +871,7 @@ H5D__virtual_open_source_dset(const H5D_t *vdset, H5O_storage_virtual_ent_t *vir
         /* Try opening the file */
         if (H5F_prefix_open_file(true, &src_file, vdset->oloc.file, H5F_PREFIX_VDS, vdset->shared->vds_prefix,
                                  source_dset->file_name, intent,
-                                 vdset->shared->layout.storage.u.virt.source_fapl_id) < 0)
+                                 vdset->shared->layout.storage.u.virt.source_fapl) < 0)
             HGOTO_ERROR(H5E_DATASET, H5E_CANTOPENFILE, FAIL, "can't try opening file");
 
         /* If we opened the source file here, we should close it when leaving */
@@ -2187,32 +2182,23 @@ H5D__virtual_init(H5F_t *f, const H5D_t *dset)
         storage->printf_gap = (hsize_t)0;
 
     /* Retrieve VDS file FAPL to layout */
-    if (storage->source_fapl_id <= 0) {
-        H5P_genplist_t    *source_fapl  = NULL;           /* Source file FAPL */
+    if (NULL == storage->source_fapl) {
         H5F_close_degree_t close_degree = H5F_CLOSE_WEAK; /* Close degree for source files */
 
-        if ((storage->source_fapl_id = H5F_get_access_plist(f, false)) < 0)
+        /* Get a copy of the FAPL, to open source files with */
+        if (NULL == (storage->source_fapl = H5F_get_access_plist(f, false)))
             HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get fapl");
 
-        /* Get property list pointer */
-        if (NULL == (source_fapl = (H5P_genplist_t *)H5I_object(storage->source_fapl_id)))
-            HGOTO_ERROR(H5E_PLIST, H5E_BADTYPE, H5I_INVALID_HID, "not a property list");
-
         /* Source files must always be opened with H5F_CLOSE_WEAK close degree */
-        if (H5P_set(source_fapl, H5F_ACS_CLOSE_DEGREE_NAME, &close_degree) < 0)
+        if (H5P_set(storage->source_fapl, H5F_ACS_CLOSE_DEGREE_NAME, &close_degree) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set file close degree");
     } /* end if */
 #ifndef NDEBUG
     else {
-        H5P_genplist_t    *source_fapl = NULL; /* Source file FAPL */
         H5F_close_degree_t close_degree;       /* Close degree for source files */
 
-        /* Get property list pointer */
-        if (NULL == (source_fapl = (H5P_genplist_t *)H5I_object(storage->source_fapl_id)))
-            HGOTO_ERROR(H5E_PLIST, H5E_BADTYPE, H5I_INVALID_HID, "not a property list");
-
         /* Verify H5F_CLOSE_WEAK close degree is set */
-        if (H5P_get(source_fapl, H5F_ACS_CLOSE_DEGREE_NAME, &close_degree) < 0)
+        if (H5P_get(storage->source_fapl, H5F_ACS_CLOSE_DEGREE_NAME, &close_degree) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get file close degree");
 
         assert(close_degree == H5F_CLOSE_WEAK);

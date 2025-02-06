@@ -419,7 +419,7 @@ H5FD__mpio_term(void)
 herr_t
 H5Pset_fapl_mpio(hid_t fapl_id, MPI_Comm comm, MPI_Info info)
 {
-    H5P_genplist_t *plist; /* Property list pointer */
+    H5P_genplist_t *fapl; /* Property list pointer */
     herr_t          ret_value;
 
     FUNC_ENTER_API(FAIL)
@@ -427,7 +427,7 @@ H5Pset_fapl_mpio(hid_t fapl_id, MPI_Comm comm, MPI_Info info)
     /* Check arguments */
     if (fapl_id == H5P_DEFAULT)
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "can't set values in default property list");
-    if (NULL == (plist = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADTYPE, FAIL, "not a file access list");
     if (MPI_COMM_NULL == comm)
         HGOTO_ERROR(H5E_PLIST, H5E_BADTYPE, FAIL, "MPI_COMM_NULL is not a valid communicator");
@@ -438,13 +438,13 @@ H5Pset_fapl_mpio(hid_t fapl_id, MPI_Comm comm, MPI_Info info)
             HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, FAIL, "can't initialize driver");
 
     /* Set the MPI communicator and info object */
-    if (H5P_set(plist, H5F_ACS_MPI_PARAMS_COMM_NAME, &comm) < 0)
+    if (H5P_set(fapl, H5F_ACS_MPI_PARAMS_COMM_NAME, &comm) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set MPI communicator");
-    if (H5P_set(plist, H5F_ACS_MPI_PARAMS_INFO_NAME, &info) < 0)
+    if (H5P_set(fapl, H5F_ACS_MPI_PARAMS_INFO_NAME, &info) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set MPI info object");
 
     /* duplication is done during driver setting. */
-    ret_value = H5P_set_driver(plist, H5FD_MPIO, NULL, NULL);
+    ret_value = H5P_set_driver(fapl, H5FD_MPIO, NULL, NULL);
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -473,7 +473,7 @@ done:
 herr_t
 H5Pget_fapl_mpio(hid_t fapl_id, MPI_Comm *comm /*out*/, MPI_Info *info /*out*/)
 {
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *fapl;               /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -485,9 +485,9 @@ H5Pget_fapl_mpio(hid_t fapl_id, MPI_Comm *comm /*out*/, MPI_Info *info /*out*/)
         *info = MPI_INFO_NULL;
 
     /* Check arguments */
-    if (NULL == (plist = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADTYPE, FAIL, "not a file access list");
-    if (H5FD_MPIO != H5P_peek_driver(plist))
+    if (H5FD_MPIO != H5P_peek_driver(fapl))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "VFL driver is not MPI-I/O");
 
     /* Initialize driver, if it's not yet */
@@ -497,10 +497,10 @@ H5Pget_fapl_mpio(hid_t fapl_id, MPI_Comm *comm /*out*/, MPI_Info *info /*out*/)
 
     /* Get the MPI communicator and info object */
     if (comm)
-        if (H5P_get(plist, H5F_ACS_MPI_PARAMS_COMM_NAME, comm) < 0)
+        if (H5P_get(fapl, H5F_ACS_MPI_PARAMS_COMM_NAME, comm) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get MPI communicator");
     if (info)
-        if (H5P_get(plist, H5F_ACS_MPI_PARAMS_INFO_NAME, info) < 0)
+        if (H5P_get(fapl, H5F_ACS_MPI_PARAMS_INFO_NAME, info) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get MPI info object");
 
 done:
@@ -880,7 +880,7 @@ static H5FD_t *
 H5FD__mpio_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t H5_ATTR_UNUSED maxaddr)
 {
     H5FD_mpio_t    *file = NULL;          /* VFD File struct for new file */
-    H5P_genplist_t *plist;                /* Property list pointer */
+    H5P_genplist_t *fapl;                /* Property list pointer */
     MPI_Comm        comm = MPI_COMM_NULL; /* MPI Communicator, from plist */
     MPI_Info        info = MPI_INFO_NULL; /* MPI Info, from plist */
     MPI_Info        info_used;            /* MPI Info returned from MPI_File_open */
@@ -904,17 +904,16 @@ H5FD__mpio_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t H5_ATTR
             HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, NULL, "can't initialize driver");
 
     /* Get a pointer to the fapl */
-    if (NULL == (plist = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file access property list");
 
-    if (H5FD_mpi_self_initialized_s) {
+    if (H5FD_mpi_self_initialized_s)
         comm = MPI_COMM_WORLD;
-    }
     else {
         /* Get the MPI communicator and info object from the property list */
-        if (H5P_get(plist, H5F_ACS_MPI_PARAMS_COMM_NAME, &comm) < 0)
+        if (H5P_get(fapl, H5F_ACS_MPI_PARAMS_COMM_NAME, &comm) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get MPI communicator");
-        if (H5P_get(plist, H5F_ACS_MPI_PARAMS_INFO_NAME, &info) < 0)
+        if (H5P_get(fapl, H5F_ACS_MPI_PARAMS_INFO_NAME, &info) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get MPI info object");
     }
 
@@ -1000,7 +999,7 @@ H5FD__mpio_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t H5_ATTR
                 HMPI_GOTO_ERROR(NULL, "MPI_Info_free failed", mpi_code)
         }
         /* Add info to the file access property list */
-        if (H5P_set(plist, H5F_ACS_MPI_PARAMS_INFO_NAME, &info) < 0)
+        if (H5P_set(fapl, H5F_ACS_MPI_PARAMS_INFO_NAME, &info) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTSET, NULL, "can't set MPI info object");
     }
 
@@ -3806,7 +3805,7 @@ done:
 static herr_t
 H5FD__mpio_delete(const char *filename, hid_t fapl_id)
 {
-    H5P_genplist_t *plist; /* Property list pointer */
+    H5P_genplist_t *fapl; /* Property list pointer */
     MPI_Comm        comm     = MPI_COMM_NULL;
     MPI_Info        info     = MPI_INFO_NULL;
     int             mpi_rank = INT_MAX;
@@ -3822,18 +3821,17 @@ H5FD__mpio_delete(const char *filename, hid_t fapl_id)
         if (H5FD__mpio_init() < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, FAIL, "can't initialize driver");
 
-    if (NULL == (plist = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
-    assert(H5FD_MPIO == H5P_peek_driver(plist));
+    assert(H5FD_MPIO == H5P_peek_driver(fapl));
 
-    if (H5FD_mpi_self_initialized_s) {
+    if (H5FD_mpi_self_initialized_s)
         comm = MPI_COMM_WORLD;
-    }
     else {
         /* Get the MPI communicator and info from the fapl */
-        if (H5P_get(plist, H5F_ACS_MPI_PARAMS_INFO_NAME, &info) < 0)
+        if (H5P_get(fapl, H5F_ACS_MPI_PARAMS_INFO_NAME, &info) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get MPI info object");
-        if (H5P_get(plist, H5F_ACS_MPI_PARAMS_COMM_NAME, &comm) < 0)
+        if (H5P_get(fapl, H5F_ACS_MPI_PARAMS_COMM_NAME, &comm) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get MPI communicator");
     }
 

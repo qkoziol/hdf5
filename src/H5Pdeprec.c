@@ -53,7 +53,9 @@
 /********************/
 /* Local Prototypes */
 /********************/
+#ifndef H5_NO_DEPRECATED_SYMBOLS
 static herr_t H5P__get_file_space(H5P_genplist_t *plist, H5F_file_space_type_t *strategy, hsize_t *threshold);
+#endif /* H5_NO_DEPRECATED_SYMBOLS */
 
 /*********************/
 /* Package Variables */

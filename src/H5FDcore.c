@@ -133,9 +133,9 @@ static haddr_t H5FD__core_get_eoa(const H5FD_t *_file, H5FD_mem_t type);
 static herr_t  H5FD__core_set_eoa(H5FD_t *_file, H5FD_mem_t type, haddr_t addr);
 static haddr_t H5FD__core_get_eof(const H5FD_t *_file, H5FD_mem_t type);
 static herr_t  H5FD__core_get_handle(H5FD_t *_file, hid_t fapl, void **file_handle);
-static herr_t  H5FD__core_read(H5FD_t *_file, H5FD_mem_t type, hid_t fapl_id, haddr_t addr, size_t size,
+static herr_t  H5FD__core_read(H5FD_t *_file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, size_t size,
                                void *buf);
-static herr_t  H5FD__core_write(H5FD_t *_file, H5FD_mem_t type, hid_t fapl_id, haddr_t addr, size_t size,
+static herr_t  H5FD__core_write(H5FD_t *_file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, size_t size,
                                 const void *buf);
 static herr_t  H5FD__core_flush(H5FD_t *_file, hid_t dxpl_id, bool closing);
 static herr_t  H5FD__core_truncate(H5FD_t *_file, hid_t dxpl_id, bool closing);
@@ -494,9 +494,9 @@ H5FD__core_unregister(void)
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pset_core_write_tracking(hid_t plist_id, hbool_t is_enabled, size_t page_size)
+H5Pset_core_write_tracking(hid_t fapl_id, hbool_t is_enabled, size_t page_size)
 {
-    H5P_genplist_t         *plist;               /* Property list pointer */
+    H5P_genplist_t         *fapl;               /* Property list pointer */
     H5FD_core_fapl_t        fa;                  /* Core VFD info */
     const H5FD_core_fapl_t *old_fa;              /* Old core VFD info */
     herr_t                  ret_value = SUCCEED; /* Return value */
@@ -507,12 +507,12 @@ H5Pset_core_write_tracking(hid_t plist_id, hbool_t is_enabled, size_t page_size)
     if (page_size == 0)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "page_size cannot be zero");
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_TYPE_FILE_ACCESS, false)))
+    /* Get the property list */
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
-    if (H5FD_CORE != H5P_peek_driver(plist))
+    if (H5FD_CORE != H5P_peek_driver(fapl))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "incorrect VFL driver");
-    if (NULL == (old_fa = (const H5FD_core_fapl_t *)H5P_peek_driver_info(plist)))
+    if (NULL == (old_fa = (const H5FD_core_fapl_t *)H5P_peek_driver_info(fapl)))
         old_fa = H5FD__core_get_default_config();
 
     /* Set VFD info values */
@@ -523,7 +523,7 @@ H5Pset_core_write_tracking(hid_t plist_id, hbool_t is_enabled, size_t page_size)
     fa.page_size      = page_size;
 
     /* Set the property values & the driver for the FAPL */
-    if (H5P_set_driver(plist, H5FD_CORE, &fa, NULL) < 0)
+    if (H5P_set_driver(fapl, H5FD_CORE, &fa, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set core VFD as driver");
 
 done:
@@ -541,20 +541,20 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pget_core_write_tracking(hid_t plist_id, hbool_t *is_enabled /*out*/, size_t *page_size /*out*/)
+H5Pget_core_write_tracking(hid_t fapl_id, hbool_t *is_enabled /*out*/, size_t *page_size /*out*/)
 {
-    H5P_genplist_t         *plist;               /* Property list pointer */
+    H5P_genplist_t         *fapl;               /* Property list pointer */
     const H5FD_core_fapl_t *fa;                  /* Core VFD info */
     herr_t                  ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_TYPE_FILE_ACCESS, true)))
+    /* Get the property list */
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
-    if (H5FD_CORE != H5P_peek_driver(plist))
+    if (H5FD_CORE != H5P_peek_driver(fapl))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "incorrect VFL driver");
-    if (NULL == (fa = (const H5FD_core_fapl_t *)H5P_peek_driver_info(plist)))
+    if (NULL == (fa = (const H5FD_core_fapl_t *)H5P_peek_driver_info(fapl)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "bad VFL driver info");
 
     /* Get values */
@@ -581,14 +581,14 @@ done:
 herr_t
 H5Pset_fapl_core(hid_t fapl_id, size_t increment, hbool_t backing_store)
 {
-    H5P_genplist_t  *plist;               /* Property list pointer */
+    H5P_genplist_t  *fapl;               /* Property list pointer */
     H5FD_core_fapl_t fa;                  /* Core VFD info */
     herr_t           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Check argument */
-    if (NULL == (plist = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
 
     /* Set VFD info values */
@@ -599,7 +599,7 @@ H5Pset_fapl_core(hid_t fapl_id, size_t increment, hbool_t backing_store)
     fa.page_size      = H5FD_CORE_WRITE_TRACKING_PAGE_SIZE;
 
     /* Set the property values & the driver for the FAPL */
-    if (H5P_set_driver(plist, H5FD_CORE, &fa, NULL) < 0)
+    if (H5P_set_driver(fapl, H5FD_CORE, &fa, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set core VFD as driver");
 
 done:
@@ -618,17 +618,17 @@ done:
 herr_t
 H5Pget_fapl_core(hid_t fapl_id, size_t *increment /*out*/, hbool_t *backing_store /*out*/)
 {
-    H5P_genplist_t         *plist;               /* Property list pointer */
+    H5P_genplist_t         *fapl;               /* Property list pointer */
     const H5FD_core_fapl_t *fa;                  /* Core VFD info */
     herr_t                  ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
-    if (NULL == (plist = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
-    if (H5FD_CORE != H5P_peek_driver(plist))
+    if (H5FD_CORE != H5P_peek_driver(fapl))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "incorrect VFL driver");
-    if (NULL == (fa = (const H5FD_core_fapl_t *)H5P_peek_driver_info(plist)))
+    if (NULL == (fa = (const H5FD_core_fapl_t *)H5P_peek_driver_info(fapl)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "bad VFL driver info");
 
     if (increment)
@@ -692,7 +692,7 @@ H5FD__core_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr
     int                     o_flags;
     H5FD_core_t            *file = NULL;
     const H5FD_core_fapl_t *fa   = NULL;
-    H5P_genplist_t         *plist; /* Property list pointer */
+    H5P_genplist_t         *fapl; /* Property list pointer */
 #ifdef H5_HAVE_WIN32_API
     struct _BY_HANDLE_FILE_INFORMATION fileinfo;
 #endif
@@ -711,9 +711,9 @@ H5FD__core_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr
     if (CORE_ADDR_OVERFLOW(maxaddr))
         HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, NULL, "maxaddr overflow");
     assert(H5P_DEFAULT != fapl_id);
-    if (NULL == (plist = (H5P_genplist_t *)H5I_object(fapl_id)))
+    if (NULL == (fapl = (H5P_genplist_t *)H5I_object(fapl_id)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file access property list");
-    if (NULL == (fa = (const H5FD_core_fapl_t *)H5P_peek_driver_info(plist)))
+    if (NULL == (fa = (const H5FD_core_fapl_t *)H5P_peek_driver_info(fapl)))
         fa = H5FD__core_get_default_config();
 
     /* Build the open flags */
@@ -726,7 +726,7 @@ H5FD__core_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr
         o_flags |= O_EXCL;
 
     /* Retrieve initial file image info */
-    if (H5P_peek(plist, H5F_ACS_FILE_IMAGE_INFO_NAME, &file_image_info) < 0)
+    if (H5P_peek(fapl, H5F_ACS_FILE_IMAGE_INFO_NAME, &file_image_info) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, NULL, "can't get initial file image info");
 
     /* If the file image exists and this is an open, make sure the file doesn't exist */
@@ -787,7 +787,7 @@ H5FD__core_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr
         file->ignore_disabled_file_locks = H5FD_ignore_disabled_file_locks_p;
     else {
         /* Use the value in the property list */
-        if (H5P_get(plist, H5F_ACS_IGNORE_DISABLED_FILE_LOCKS_NAME, &file->ignore_disabled_file_locks) < 0)
+        if (H5P_get(fapl, H5F_ACS_IGNORE_DISABLED_FILE_LOCKS_NAME, &file->ignore_disabled_file_locks) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get ignore disabled file locks property");
     }
 
@@ -1218,7 +1218,7 @@ H5FD__core_get_eof(const H5FD_t *_file, H5FD_mem_t H5_ATTR_UNUSED type)
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5FD__core_get_handle(H5FD_t *_file, hid_t fapl, void **file_handle)
+H5FD__core_get_handle(H5FD_t *_file, hid_t fapl_id, void **file_handle)
 {
     H5FD_core_t *file      = (H5FD_core_t *)_file; /* core VFD info */
     herr_t       ret_value = SUCCEED;              /* Return value */
@@ -1230,22 +1230,22 @@ H5FD__core_get_handle(H5FD_t *_file, hid_t fapl, void **file_handle)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "file handle not valid");
 
     /* Check for non-default FAPL */
-    if (H5P_FILE_ACCESS_DEFAULT != fapl && H5P_DEFAULT != fapl) {
-        H5P_genplist_t *plist; /* Property list pointer */
+    if (H5P_FILE_ACCESS_DEFAULT != fapl_id && H5P_DEFAULT != fapl_id) {
+        H5P_genplist_t *fapl; /* Property list pointer */
 
         /* Get the FAPL */
-        if (NULL == (plist = (H5P_genplist_t *)H5I_object(fapl)))
+        if (NULL == (fapl = (H5P_genplist_t *)H5I_object(fapl_id)))
             HGOTO_ERROR(H5E_VFL, H5E_BADTYPE, FAIL, "not a file access property list");
 
         /* Check if private property for retrieving the backing store POSIX
          * file descriptor is set.  (This should not be set except within the
          * library)  QAK - 2009/12/04
          */
-        if (H5P_exist_plist(plist, H5F_ACS_WANT_POSIX_FD_NAME) > 0) {
+        if (H5P_exist_plist(fapl, H5F_ACS_WANT_POSIX_FD_NAME) > 0) {
             bool want_posix_fd; /* Setting for retrieving file descriptor from core VFD */
 
             /* Get property */
-            if (H5P_get(plist, H5F_ACS_WANT_POSIX_FD_NAME, &want_posix_fd) < 0)
+            if (H5P_get(fapl, H5F_ACS_WANT_POSIX_FD_NAME, &want_posix_fd) < 0)
                 HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get property of retrieving file descriptor");
 
             /* If property is set, pass back the file descriptor instead of the memory address */
@@ -1689,16 +1689,16 @@ static herr_t
 H5FD__core_delete(const char *filename, hid_t fapl_id)
 {
     const H5FD_core_fapl_t *fa = NULL;
-    H5P_genplist_t         *plist;               /* Property list pointer */
+    H5P_genplist_t         *fapl;               /* Property list pointer */
     herr_t                  ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
     assert(filename);
 
-    if (NULL == (plist = (H5P_genplist_t *)H5I_object(fapl_id)))
+    if (NULL == (fapl = (H5P_genplist_t *)H5I_object(fapl_id)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
-    if (NULL == (fa = (const H5FD_core_fapl_t *)H5P_peek_driver_info(plist)))
+    if (NULL == (fa = (const H5FD_core_fapl_t *)H5P_peek_driver_info(fapl)))
         fa = H5FD__core_get_default_config();
 
     if (fa->backing_store)

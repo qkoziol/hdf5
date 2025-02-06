@@ -86,14 +86,13 @@ struct H5P_genclass_t {
     char                  *name;   /* Name of property list class */
     H5P_plist_type_t       type;   /* Type of property */
     size_t                 nprops; /* Number of properties in class */
-    unsigned
-        plists; /* Number of property lists that have been created since the last modification to the class */
+    unsigned plists; /* Number of property lists that have been created since the last modification to the class */
     unsigned classes; /* Number of classes that have been derived since the last modification to the class */
     unsigned ref_count; /* Number of outstanding ID's open on this class object */
-    bool     deleted;  /* Whether this class has been deleted and is waiting for dependent classes & proplists
-                             to close */
+    bool     deleted;  /* Whether this class has been deleted and is waiting for dependent classes & proplists to close */
     unsigned revision; /* Revision number of a particular class (global) */
     H5SL_t  *props;    /* Skip list containing properties */
+    H5P_genplist_t *def_plist;  /* Pointer to a default property list for the class */
 
     /* Callback function pointers & info */
     H5P_cls_create_func_t create_func; /* Function to call when a property list is created */
@@ -152,7 +151,7 @@ H5_DLL herr_t H5P__access_class(H5P_genclass_t *pclass, H5P_class_mod_t mod);
 H5_DLL herr_t H5P__class_get(const H5P_genclass_t *pclass, const char *name, void *value);
 H5_DLL herr_t H5P__class_set(const H5P_genclass_t *pclass, const char *name, const void *value);
 H5_DLL htri_t H5P__exist_pclass(H5P_genclass_t *pclass, const char *name);
-H5_DLL H5P_genplist_t *H5P__create(H5P_genclass_t *pclass, bool app_ref);
+H5_DLL H5P_genplist_t *H5P__create(H5P_genclass_t *pclass, bool is_default, bool app_ref);
 H5_DLL herr_t          H5P__get_size_plist(const H5P_genplist_t *plist, const char *name, size_t *size);
 H5_DLL herr_t          H5P__get_size_pclass(H5P_genclass_t *pclass, const char *name, size_t *size);
 H5_DLL herr_t          H5P__get_nprops_plist(const H5P_genplist_t *plist, size_t *nprops);
