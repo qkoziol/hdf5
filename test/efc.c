@@ -42,7 +42,7 @@ static char *filename[N_FILENAMES];
 static unsigned
 test_single(H5P_genplist_t *fcpl, hid_t fapl_id)
 {
-    H5P_genplist_t *fapl;         /* File access roperty list pointer for FAPL */
+    H5P_genplist_t *fapl;         /* File access property list pointer for FAPL */
     H5F_t          *f0    = NULL; /* Parent file containing EFC */
     H5F_t          *f1    = NULL; /* Child file */
     H5F_t          *f2    = NULL; /* Child file */
@@ -468,7 +468,7 @@ error:
 static unsigned
 test_graph_nocycle(H5P_genplist_t *fcpl, hid_t fapl_id)
 {
-    H5P_genplist_t *fapl;         /* File access roperty list pointer for FAPL */
+    H5P_genplist_t *fapl;         /* File access property list pointer for FAPL */
     H5F_t          *f0    = NULL; /* Parent file containing EFC */
     H5F_t          *f1    = NULL; /* Child file */
     H5F_t          *f2    = NULL; /* Child file */
@@ -792,7 +792,7 @@ error:
 static unsigned
 test_graph_cycle(H5P_genplist_t *fcpl, hid_t fapl_id)
 {
-    H5P_genplist_t *fapl;         /* File access roperty list pointer for FAPL */
+    H5P_genplist_t *fapl;         /* File access property list pointer for FAPL */
     H5F_t          *f0    = NULL; /* File */
     H5F_t          *f1    = NULL; /* File */
     H5F_t          *f2    = NULL; /* File */

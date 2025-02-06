@@ -1103,7 +1103,7 @@ H5P_copy_plist(const H5P_genplist_t *old_plist, bool app_ref)
     while (tclass) {
         /* If the old property list is a default list, make certain to copy any
          * changed properties from the class' default property list (if any),
-         * since they are not propogated down to default property lists further
+         * since they are not propagated down to default property lists further
          * down the class hierarchy.
          */
         if (old_plist->is_default && tclass->def_plist && old_plist != tclass->def_plist) {
