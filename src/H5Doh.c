@@ -198,7 +198,7 @@ H5O__dset_open(const H5G_loc_t *obj_loc, H5I_type_t *opened_type)
 {
     H5D_t          *dset = NULL;      /* Dataset opened */
     H5P_genplist_t *dapl;             /* Pointer to the DAPL */
-    hid_t           dapl_id;          /* DAPL to use to open this dataset */
+    htri_t          is_lapl, is_dapl; /* Class of LAPL from API context */
     void           *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -211,26 +211,21 @@ H5O__dset_open(const H5G_loc_t *obj_loc, H5I_type_t *opened_type)
      * dataset access property list instead.  (Since LAPLs don't have the
      * additional properties that DAPLs have)
      */
-    dapl_id = H5CX_get_lapl();
-    if (dapl_id == H5P_LINK_ACCESS_DEFAULT)
-        dapl_id = H5P_DATASET_ACCESS_DEFAULT;
-    else {
-        htri_t is_lapl, is_dapl; /* Class of LAPL from API context */
+    if (NULL == (dapl = H5I_object(H5CX_get_lapl())))
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, NULL, "can't get property list");
 
-        /* Check class of LAPL from API context */
-        if ((is_lapl = H5P_isa_class(dapl_id, H5P_LINK_ACCESS)) < 0)
-            HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, NULL, "unable to get LAPL status");
-        if ((is_dapl = H5P_isa_class(dapl_id, H5P_DATASET_ACCESS)) < 0)
-            HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, NULL, "unable to get DAPL status");
+    /* Check class of LAPL from API context */
+    if ((is_lapl = H5P_isa_type(dapl, H5P_TYPE_LINK_ACCESS)) < 0)
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, NULL, "unable to get LAPL status");
+    if ((is_dapl = H5P_isa_type(dapl, H5P_TYPE_DATASET_ACCESS)) < 0)
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, NULL, "unable to get DAPL status");
 
-        /* Switch to default DAPL if not an actual DAPL in the API context */
-        if (!is_dapl && is_lapl)
-            dapl_id = H5P_DATASET_ACCESS_DEFAULT;
-    } /* end else */
+    /* Switch to default DAPL if not an actual DAPL in the API context */
+    if (!is_dapl && is_lapl)
+        if (NULL == (dapl = H5I_object(H5P_DATASET_ACCESS_DEFAULT)))
+            HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, NULL, "can't get property list");
 
     /* Open the dataset */
-    if (NULL == (dapl = H5I_object(dapl_id)))
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, NULL, "can't get property list");
     if (NULL == (dset = H5D_open(obj_loc, dapl)))
         HGOTO_ERROR(H5E_DATASET, H5E_CANTOPENOBJ, NULL, "unable to open dataset");
 
