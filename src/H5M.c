@@ -249,8 +249,9 @@ done:
  *-------------------------------------------------------------------------
  */
 static hid_t
-H5M__create_api_common(hid_t loc_id, const char *name, hid_t key_type_id, hid_t val_type_id, H5P_genplist_t *lcpl,
-                       hid_t mcpl_id, hid_t mapl_id, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
+H5M__create_api_common(hid_t loc_id, const char *name, hid_t key_type_id, hid_t val_type_id,
+                       H5P_genplist_t *lcpl, hid_t mcpl_id, hid_t mapl_id, void **token_ptr,
+                       H5VL_object_t **_vol_obj_ptr)
 {
     void           *map         = NULL; /* New map's info */
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
@@ -333,7 +334,7 @@ H5Mcreate(hid_t loc_id, const char *name, hid_t key_type_id, hid_t val_type_id, 
           hid_t mapl_id)
 {
     H5P_genplist_t *lcpl;                        /* Link creation property list */
-    hid_t ret_value = H5I_INVALID_HID; /* Return value */
+    hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
@@ -344,7 +345,8 @@ H5Mcreate(hid_t loc_id, const char *name, hid_t key_type_id, hid_t val_type_id, 
         HGOTO_ERROR(H5E_MAP, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Create the map synchronously */
-    if ((ret_value = H5M__create_api_common(loc_id, name, key_type_id, val_type_id, lcpl, mcpl_id, mapl_id, NULL, NULL)) < 0)
+    if ((ret_value = H5M__create_api_common(loc_id, name, key_type_id, val_type_id, lcpl, mcpl_id, mapl_id,
+                                            NULL, NULL)) < 0)
         HGOTO_ERROR(H5E_MAP, H5E_CANTCREATE, H5I_INVALID_HID, "unable to create map synchronously");
 
 done:
@@ -367,11 +369,11 @@ H5Mcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
                 hid_t key_type_id, hid_t val_type_id, hid_t lcpl_id, hid_t mcpl_id, hid_t mapl_id,
                 hid_t es_id)
 {
-    H5VL_object_t *vol_obj   = NULL;            /* Object for loc_id */
+    H5VL_object_t  *vol_obj = NULL;              /* Object for loc_id */
     H5P_genplist_t *lcpl;                        /* Link creation property list */
-    void          *token     = NULL;            /* Request token for async operation        */
-    void         **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    hid_t          ret_value = H5I_INVALID_HID; /* Return value */
+    void           *token     = NULL;            /* Request token for async operation        */
+    void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
+    hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
@@ -386,7 +388,8 @@ H5Mcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
         token_ptr = &token;
 
     /* Create the map asynchronously */
-    if ((ret_value = H5M__create_api_common(loc_id, name, key_type_id, val_type_id, lcpl, mcpl_id, mapl_id, token_ptr, &vol_obj)) < 0)
+    if ((ret_value = H5M__create_api_common(loc_id, name, key_type_id, val_type_id, lcpl, mcpl_id, mapl_id,
+                                            token_ptr, &vol_obj)) < 0)
         HGOTO_ERROR(H5E_MAP, H5E_CANTCREATE, H5I_INVALID_HID, "unable to create map asynchronously");
 
     /* If a token was created, add the token to the event set */
