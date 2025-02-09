@@ -55,13 +55,12 @@
 /********************/
 
 /* Helper routines for sync/async API calls */
-static hid_t  H5O__open_api_common(hid_t loc_id, const char *name, hid_t lapl_id, void **token_ptr,
-                                   H5VL_object_t **_vol_obj_ptr);
+static hid_t  H5O__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *lapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
 static hid_t  H5O__open_by_idx_api_common(hid_t loc_id, const char *group_name, H5_index_t idx_type,
-                                          H5_iter_order_t order, hsize_t n, hid_t lapl_id, void **token_ptr,
+                                          H5_iter_order_t order, hsize_t n, H5P_genplist_t *lapl, void **token_ptr,
                                           H5VL_object_t **_vol_obj_ptr);
 static herr_t H5O__get_info_by_name_api_common(hid_t loc_id, const char *name, H5O_info2_t *oinfo /*out*/,
-                                               unsigned fields, hid_t lapl_id, void **token_ptr,
+                                               unsigned fields, H5P_genplist_t *lapl, void **token_ptr,
                                                H5VL_object_t **_vol_obj_ptr);
 static herr_t H5O__copy_api_common(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id,
                                    const char *dst_name, hid_t ocpypl_id, H5P_genplist_t *lcpl,
@@ -93,8 +92,7 @@ static htri_t H5O__close_check_type(hid_t object_id);
  *-------------------------------------------------------------------------
  */
 static hid_t
-H5O__open_api_common(hid_t loc_id, const char *name, hid_t lapl_id, void **token_ptr,
-                     H5VL_object_t **_vol_obj_ptr)
+H5O__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *lapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
 {
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
@@ -110,7 +108,7 @@ H5O__open_api_common(hid_t loc_id, const char *name, hid_t lapl_id, void **token
 
     /* name is checked in this H5VL_setup_name_args() */
     /* Set up object access arguments */
-    if (H5VL_setup_name_args(loc_id, name, false, lapl_id, vol_obj_ptr, &loc_params) < 0)
+    if (H5VL_setup_name_args(loc_id, name, false, lapl, vol_obj_ptr, &loc_params) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTSET, H5I_INVALID_HID, "can't set object access arguments");
 
     /* Open the object */
@@ -149,12 +147,19 @@ done:
 hid_t
 H5Oopen(hid_t loc_id, const char *name, hid_t lapl_id)
 {
+    H5P_genplist_t   *lapl;                /* Link access property list */
     hid_t ret_value = H5I_INVALID_HID;
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
+    /* Get the link access property list */
+    if (H5P_DEFAULT == lapl_id)
+        lapl_id = H5P_LINK_ACCESS_DEFAULT;
+    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
+        HGOTO_ERROR(H5E_OHDR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+
     /* Open the object synchronously */
-    if ((ret_value = H5O__open_api_common(loc_id, name, lapl_id, NULL, NULL)) < 0)
+    if ((ret_value = H5O__open_api_common(loc_id, name, lapl, NULL, NULL)) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to synchronously open object");
 
 done:
@@ -176,18 +181,25 @@ H5Oopen_async(const char *app_file, const char *app_func, unsigned app_line, hid
               hid_t lapl_id, hid_t es_id)
 {
     H5VL_object_t *vol_obj   = NULL;            /* Object for loc_id */
+    H5P_genplist_t   *lapl;                /* Link access property list */
     void          *token     = NULL;            /* Request token for async operation        */
     void         **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     hid_t          ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
+    /* Get the link access property list */
+    if (H5P_DEFAULT == lapl_id)
+        lapl_id = H5P_LINK_ACCESS_DEFAULT;
+    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
+        HGOTO_ERROR(H5E_OHDR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Open the object asynchronously */
-    if ((ret_value = H5O__open_api_common(loc_id, name, lapl_id, token_ptr, &vol_obj)) < 0)
+    if ((ret_value = H5O__open_api_common(loc_id, name, lapl, token_ptr, &vol_obj)) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to asynchronously open object");
 
     /* If a token was created, add the token to the event set */
@@ -217,7 +229,7 @@ done:
  */
 static hid_t
 H5O__open_by_idx_api_common(hid_t loc_id, const char *group_name, H5_index_t idx_type, H5_iter_order_t order,
-                            hsize_t n, hid_t lapl_id, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
+                            hsize_t n, H5P_genplist_t *lapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
 {
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
@@ -232,9 +244,8 @@ H5O__open_by_idx_api_common(hid_t loc_id, const char *group_name, H5_index_t idx
     /* Check args */
     /* group_name, idx_type, order are checked in H5VL_setup_idx-args() */
     /* Set up object access arguments */
-    if (H5VL_setup_idx_args(loc_id, group_name, idx_type, order, n, false, lapl_id, vol_obj_ptr,
-                            &loc_params) < 0)
-        HGOTO_ERROR(H5E_LINK, H5E_CANTSET, H5I_INVALID_HID, "can't set object access arguments");
+    if (H5VL_setup_idx_args(loc_id, group_name, idx_type, order, n, false, lapl, vol_obj_ptr, &loc_params) < 0)
+        HGOTO_ERROR(H5E_OHDR, H5E_CANTSET, H5I_INVALID_HID, "can't set object access arguments");
 
     /* Open the object */
     if (NULL == (opened_obj = H5VL_object_open(*vol_obj_ptr, &loc_params, &opened_type,
@@ -273,13 +284,19 @@ hid_t
 H5Oopen_by_idx(hid_t loc_id, const char *group_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t n,
                hid_t lapl_id)
 {
+    H5P_genplist_t   *lapl;                /* Link access property list */
     hid_t ret_value = H5I_INVALID_HID;
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
+    /* Get the link access property list */
+    if (H5P_DEFAULT == lapl_id)
+        lapl_id = H5P_LINK_ACCESS_DEFAULT;
+    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
+        HGOTO_ERROR(H5E_OHDR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+
     /* Open the object synchronously */
-    if ((ret_value =
-             H5O__open_by_idx_api_common(loc_id, group_name, idx_type, order, n, lapl_id, NULL, NULL)) < 0)
+    if ((ret_value = H5O__open_by_idx_api_common(loc_id, group_name, idx_type, order, n, lapl, NULL, NULL)) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to synchronously open object");
 
 done:
@@ -302,19 +319,25 @@ H5Oopen_by_idx_async(const char *app_file, const char *app_func, unsigned app_li
                      hid_t lapl_id, hid_t es_id)
 {
     H5VL_object_t *vol_obj   = NULL;            /* Object for loc_id */
+    H5P_genplist_t   *lapl;                /* Link access property list */
     void          *token     = NULL;            /* Request token for async operation        */
     void         **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     hid_t          ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
+    /* Get the link access property list */
+    if (H5P_DEFAULT == lapl_id)
+        lapl_id = H5P_LINK_ACCESS_DEFAULT;
+    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
+        HGOTO_ERROR(H5E_OHDR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Open the object asynchronously */
-    if ((ret_value = H5O__open_by_idx_api_common(loc_id, group_name, idx_type, order, n, lapl_id, token_ptr,
-                                                 &vol_obj)) < 0)
+    if ((ret_value = H5O__open_by_idx_api_common(loc_id, group_name, idx_type, order, n, lapl, token_ptr, &vol_obj)) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to asynchronously open object");
 
     /* If a token was created, add the token to the event set */
@@ -819,6 +842,7 @@ H5Olink(hid_t obj_id, hid_t new_loc_id, const char *new_name, hid_t lcpl_id, hid
     H5VL_object_t          *vol_obj1 = NULL; /* object of obj_id */
     H5VL_object_t          *vol_obj2 = NULL; /* object of new_loc_id */
     H5P_genplist_t         *lcpl;            /* Link creation property list */
+    H5P_genplist_t   *lapl;                /* Link access property list */
     H5VL_link_create_args_t vol_cb_args;     /* Arguments to VOL callback */
     H5VL_loc_params_t       new_loc_params;
     herr_t                  ret_value = SUCCEED; /* Return value */
@@ -845,6 +869,12 @@ H5Olink(hid_t obj_id, hid_t new_loc_id, const char *new_name, hid_t lcpl_id, hid
 
     /* Set the LCPL for the API context */
     H5CX_set_lcpl(lcpl_id);
+
+    /* Get the link access property list */
+    if (H5P_DEFAULT == lapl_id)
+        lapl_id = H5P_LINK_ACCESS_DEFAULT;
+    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
+        HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
     if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, obj_id, true) < 0)
@@ -884,8 +914,7 @@ H5Olink(hid_t obj_id, hid_t new_loc_id, const char *new_name, hid_t lcpl_id, hid
     vol_cb_args.args.hard.curr_loc_params.obj_type = H5I_get_type(obj_id);
 
     /* Create a link to the object */
-    if (H5VL_link_create(&vol_cb_args, vol_obj2, &new_loc_params, lcpl, lapl_id, H5P_DATASET_XFER_DEFAULT,
-                         H5_REQUEST_NULL) < 0)
+    if (H5VL_link_create(&vol_cb_args, vol_obj2, &new_loc_params, lcpl, lapl, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTCREATE, FAIL, "unable to create link");
 
 done:
@@ -1109,7 +1138,7 @@ done:
  */
 static herr_t
 H5O__get_info_by_name_api_common(hid_t loc_id, const char *name, H5O_info2_t *oinfo /*out*/, unsigned fields,
-                                 hid_t lapl_id, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
+                                 H5P_genplist_t *lapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
 {
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
@@ -1128,7 +1157,7 @@ H5O__get_info_by_name_api_common(hid_t loc_id, const char *name, H5O_info2_t *oi
 
     /* "name" is checked in H5VL_setup_name_args() */
     /* Set up object access arguments */
-    if (H5VL_setup_name_args(loc_id, name, false, lapl_id, vol_obj_ptr, &loc_params) < 0)
+    if (H5VL_setup_name_args(loc_id, name, false, lapl, vol_obj_ptr, &loc_params) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTSET, FAIL, "can't set object access arguments");
 
     /* Set up VOL callback arguments */
@@ -1157,12 +1186,19 @@ herr_t
 H5Oget_info_by_name3(hid_t loc_id, const char *name, H5O_info2_t *oinfo /*out*/, unsigned fields,
                      hid_t lapl_id)
 {
+    H5P_genplist_t   *lapl;                /* Link access property list */
     herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
+    /* Get the link access property list */
+    if (H5P_DEFAULT == lapl_id)
+        lapl_id = H5P_LINK_ACCESS_DEFAULT;
+    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
+        HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "can't find object for ID");
+
     /* Retrieve object information synchronously */
-    if (H5O__get_info_by_name_api_common(loc_id, name, oinfo, fields, lapl_id, NULL, NULL) < 0)
+    if (H5O__get_info_by_name_api_common(loc_id, name, oinfo, fields, lapl, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, FAIL, "can't synchronously retrieve object info");
 
 done:
@@ -1184,18 +1220,25 @@ H5Oget_info_by_name_async(const char *app_file, const char *app_func, unsigned a
                           hid_t es_id)
 {
     H5VL_object_t *vol_obj   = NULL;            /* Object for loc_id */
+    H5P_genplist_t   *lapl;                /* Link access property list */
     void          *token     = NULL;            /* Request token for async operation */
     void         **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation */
     herr_t         ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
+    /* Get the link access property list */
+    if (H5P_DEFAULT == lapl_id)
+        lapl_id = H5P_LINK_ACCESS_DEFAULT;
+    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
+        HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "can't find object for ID");
+
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Retrieve group information asynchronously */
-    if (H5O__get_info_by_name_api_common(loc_id, name, oinfo, fields, lapl_id, token_ptr, &vol_obj) < 0)
+    if (H5O__get_info_by_name_api_common(loc_id, name, oinfo, fields, lapl, token_ptr, &vol_obj) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, FAIL, "can't asynchronously retrieve object info");
 
     /* If a token was created, add the token to the event set */
