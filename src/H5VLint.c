@@ -2740,7 +2740,7 @@ herr_t
 H5VL_setup_name_args(hid_t loc_id, const char *name, bool is_collective, H5P_genplist_t *lapl,
                      H5VL_object_t **vol_obj, H5VL_loc_params_t *loc_params)
 {
-    hid_t           lapl_id;            /* ID for link access property list */
+    hid_t  lapl_id;             /* ID for link access property list */
     herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
@@ -2785,9 +2785,10 @@ done:
  */
 herr_t
 H5VL_setup_idx_args(hid_t loc_id, const char *name, H5_index_t idx_type, H5_iter_order_t order, hsize_t n,
-                    bool is_collective, H5P_genplist_t *lapl, H5VL_object_t **vol_obj, H5VL_loc_params_t *loc_params)
+                    bool is_collective, H5P_genplist_t *lapl, H5VL_object_t **vol_obj,
+                    H5VL_loc_params_t *loc_params)
 {
-    hid_t           lapl_id;            /* ID for link access property list */
+    hid_t  lapl_id;             /* ID for link access property list */
     herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)

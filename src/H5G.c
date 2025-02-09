@@ -113,10 +113,12 @@ static hid_t  H5G__open_api_common(hid_t loc_id, const char *name, H5P_genplist_
 static herr_t H5G__get_info_api_common(hid_t loc_id, H5G_info_t *group_info /*out*/, void **token_ptr,
                                        H5VL_object_t **_vol_obj_ptr);
 static herr_t H5G__get_info_by_name_api_common(hid_t loc_id, const char *name, H5G_info_t *group_info /*out*/,
-                                               H5P_genplist_t *lapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+                                               H5P_genplist_t *lapl, void **token_ptr,
+                                               H5VL_object_t **_vol_obj_ptr);
 static herr_t H5G__get_info_by_idx_api_common(hid_t loc_id, const char *group_name, H5_index_t idx_type,
-                                              H5_iter_order_t order, hsize_t n, H5G_info_t *group_info /*out*/, H5P_genplist_t *lapl, void **token_ptr,
-                                              H5VL_object_t **_vol_obj_ptr);
+                                              H5_iter_order_t order, hsize_t n,
+                                              H5G_info_t *group_info /*out*/, H5P_genplist_t *lapl,
+                                              void **token_ptr, H5VL_object_t **_vol_obj_ptr);
 
 /*********************/
 /* Package Variables */
@@ -718,7 +720,8 @@ H5G__get_info_by_name_api_common(hid_t loc_id, const char *name, H5G_info_t *gro
 
     /* Set up VOL callback & object access arguments */
     vol_cb_args.op_type = H5VL_GROUP_GET_INFO;
-    if (H5VL_setup_name_args(loc_id, name, false, lapl, vol_obj_ptr, &vol_cb_args.args.get_info.loc_params) < 0)
+    if (H5VL_setup_name_args(loc_id, name, false, lapl, vol_obj_ptr, &vol_cb_args.args.get_info.loc_params) <
+        0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTSET, FAIL, "can't set object access arguments");
     vol_cb_args.args.get_info.ginfo = group_info;
 
@@ -743,8 +746,8 @@ done:
 herr_t
 H5Gget_info_by_name(hid_t loc_id, const char *name, H5G_info_t *group_info /*out*/, hid_t lapl_id)
 {
-    H5P_genplist_t   *lapl; /* Link access property list */
-    herr_t ret_value = SUCCEED; /* Return value */
+    H5P_genplist_t *lapl;                /* Link access property list */
+    herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -775,11 +778,11 @@ herr_t
 H5Gget_info_by_name_async(const char *app_file, const char *app_func, unsigned app_line, hid_t loc_id,
                           const char *name, H5G_info_t *group_info /*out*/, hid_t lapl_id, hid_t es_id)
 {
-    H5VL_object_t *vol_obj   = NULL;            /* Object for loc_id */
-    void          *token     = NULL;            /* Request token for async operation        */
-    void         **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    H5P_genplist_t   *lapl; /* Link access property list */
-    herr_t         ret_value = SUCCEED;         /* Return value */
+    H5VL_object_t  *vol_obj   = NULL;            /* Object for loc_id */
+    void           *token     = NULL;            /* Request token for async operation        */
+    void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
+    H5P_genplist_t *lapl;                        /* Link access property list */
+    herr_t          ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -838,7 +841,8 @@ H5G__get_info_by_idx_api_common(hid_t loc_id, const char *group_name, H5_index_t
 
     /* Set up VOL callback & object access arguments */
     vol_cb_args.op_type = H5VL_GROUP_GET_INFO;
-    if (H5VL_setup_idx_args(loc_id, group_name, idx_type, order, n, false, lapl, vol_obj_ptr, &vol_cb_args.args.get_info.loc_params) < 0)
+    if (H5VL_setup_idx_args(loc_id, group_name, idx_type, order, n, false, lapl, vol_obj_ptr,
+                            &vol_cb_args.args.get_info.loc_params) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTSET, FAIL, "can't set object access arguments");
     vol_cb_args.args.get_info.ginfo = group_info;
 
@@ -864,8 +868,8 @@ herr_t
 H5Gget_info_by_idx(hid_t loc_id, const char *group_name, H5_index_t idx_type, H5_iter_order_t order,
                    hsize_t n, H5G_info_t *group_info /*out*/, hid_t lapl_id)
 {
-    H5P_genplist_t   *lapl; /* Link access property list */
-    herr_t ret_value = SUCCEED; /* Return value */
+    H5P_genplist_t *lapl;                /* Link access property list */
+    herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -876,7 +880,8 @@ H5Gget_info_by_idx(hid_t loc_id, const char *group_name, H5_index_t idx_type, H5
         HGOTO_ERROR(H5E_SYM, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Retrieve group information synchronously */
-    if (H5G__get_info_by_idx_api_common(loc_id, group_name, idx_type, order, n, group_info, lapl, NULL, NULL) < 0)
+    if (H5G__get_info_by_idx_api_common(loc_id, group_name, idx_type, order, n, group_info, lapl, NULL,
+                                        NULL) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTGET, FAIL, "can't synchronously retrieve group info");
 
 done:
@@ -897,11 +902,11 @@ H5Gget_info_by_idx_async(const char *app_file, const char *app_func, unsigned ap
                          const char *group_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t n,
                          H5G_info_t *group_info /*out*/, hid_t lapl_id, hid_t es_id)
 {
-    H5VL_object_t *vol_obj   = NULL;            /* Object for loc_id */
-    void          *token     = NULL;            /* Request token for async operation        */
-    void         **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    H5P_genplist_t   *lapl; /* Link access property list */
-    herr_t         ret_value = SUCCEED;         /* Return value */
+    H5VL_object_t  *vol_obj   = NULL;            /* Object for loc_id */
+    void           *token     = NULL;            /* Request token for async operation        */
+    void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
+    H5P_genplist_t *lapl;                        /* Link access property list */
+    herr_t          ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -916,7 +921,8 @@ H5Gget_info_by_idx_async(const char *app_file, const char *app_func, unsigned ap
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Retrieve group information asynchronously */
-    if (H5G__get_info_by_idx_api_common(loc_id, group_name, idx_type, order, n, group_info, lapl, token_ptr, &vol_obj) < 0)
+    if (H5G__get_info_by_idx_api_common(loc_id, group_name, idx_type, order, n, group_info, lapl, token_ptr,
+                                        &vol_obj) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTGET, FAIL, "can't asynchronously retrieve group info");
 
     /* If a token was created, add the token to the event set */

@@ -144,8 +144,8 @@ static herr_t H5VL__group_optional(void *obj, const H5VL_class_t *cls, H5VL_opti
                                    hid_t dxpl_id, void **req);
 static herr_t H5VL__group_close(void *obj, const H5VL_class_t *cls, hid_t dxpl_id, void **req);
 static herr_t H5VL__link_create(H5VL_link_create_args_t *args, void *obj, const H5VL_loc_params_t *loc_params,
-                                const H5VL_class_t *cls, H5P_genplist_t *lcpl, H5P_genplist_t *lapl, hid_t dxpl_id,
-                                void **req);
+                                const H5VL_class_t *cls, H5P_genplist_t *lcpl, H5P_genplist_t *lapl,
+                                hid_t dxpl_id, void **req);
 static herr_t H5VL__link_copy(void *src_obj, const H5VL_loc_params_t *loc_params1, void *dst_obj,
                               const H5VL_loc_params_t *loc_params2, const H5VL_class_t *cls,
                               H5P_genplist_t *lcpl, H5P_genplist_t *lapl, hid_t dxpl_id, void **req);
@@ -5125,7 +5125,8 @@ done:
  */
 static herr_t
 H5VL__link_create(H5VL_link_create_args_t *args, void *obj, const H5VL_loc_params_t *loc_params,
-                  const H5VL_class_t *cls, H5P_genplist_t *lcpl, H5P_genplist_t *lapl, hid_t dxpl_id, void **req)
+                  const H5VL_class_t *cls, H5P_genplist_t *lcpl, H5P_genplist_t *lapl, hid_t dxpl_id,
+                  void **req)
 {
     herr_t ret_value = SUCCEED; /* Return value */
 
@@ -5139,7 +5140,8 @@ H5VL__link_create(H5VL_link_create_args_t *args, void *obj, const H5VL_loc_param
     H5_BEFORE_USER_CB(FAIL)
         {
             /* Call the corresponding VOL callback */
-            ret_value = (cls->link_cls.create)(args, obj, loc_params, H5P_PLIST_ID(lcpl), H5P_PLIST_ID(lapl), dxpl_id, req);
+            ret_value = (cls->link_cls.create)(args, obj, loc_params, H5P_PLIST_ID(lcpl), H5P_PLIST_ID(lapl),
+                                               dxpl_id, req);
         }
     H5_AFTER_USER_CB(FAIL)
     if (ret_value < 0)
@@ -5161,8 +5163,8 @@ done:
  */
 herr_t
 H5VL_link_create(H5VL_link_create_args_t *args, const H5VL_object_t *vol_obj,
-                 const H5VL_loc_params_t *loc_params, H5P_genplist_t *lcpl, H5P_genplist_t *lapl, hid_t dxpl_id,
-                 void **req)
+                 const H5VL_loc_params_t *loc_params, H5P_genplist_t *lcpl, H5P_genplist_t *lapl,
+                 hid_t dxpl_id, void **req)
 {
     H5VL_object_t tmp_vol_obj;               /* Temporary VOL object */
     bool          vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
@@ -5185,7 +5187,8 @@ H5VL_link_create(H5VL_link_create_args_t *args, const H5VL_object_t *vol_obj,
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__link_create(args, vol_obj->data, loc_params, vol_obj->connector->cls, lcpl, lapl, dxpl_id, req) < 0)
+    if (H5VL__link_create(args, vol_obj->data, loc_params, vol_obj->connector->cls, lcpl, lapl, dxpl_id,
+                          req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, FAIL, "link create failed");
 
 done:
@@ -5346,7 +5349,8 @@ H5VLlink_copy(void *src_obj, const H5VL_loc_params_t *loc_params1, void *dst_obj
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__link_copy(src_obj, loc_params1, dst_obj, loc_params2, connector->cls, lcpl, lapl, dxpl_id, req) < 0)
+    if (H5VL__link_copy(src_obj, loc_params1, dst_obj, loc_params2, connector->cls, lcpl, lapl, dxpl_id,
+                        req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTCOPY, FAIL, "unable to copy object");
 
 done:
@@ -5423,7 +5427,8 @@ H5VL_link_move(const H5VL_object_t *src_vol_obj, const H5VL_loc_params_t *loc_pa
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__link_move(src_vol_obj->data, loc_params1, (dst_vol_obj ? dst_vol_obj->data : NULL), loc_params2, vol_obj->connector->cls, lcpl, lapl, dxpl_id, req) < 0)
+    if (H5VL__link_move(src_vol_obj->data, loc_params1, (dst_vol_obj ? dst_vol_obj->data : NULL), loc_params2,
+                        vol_obj->connector->cls, lcpl, lapl, dxpl_id, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTMOVE, FAIL, "link move failed");
 
 done:
@@ -5467,7 +5472,8 @@ H5VLlink_move(void *src_obj, const H5VL_loc_params_t *loc_params1, void *dst_obj
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__link_move(src_obj, loc_params1, dst_obj, loc_params2, connector->cls, lcpl, lapl, dxpl_id, req) < 0)
+    if (H5VL__link_move(src_obj, loc_params1, dst_obj, loc_params2, connector->cls, lcpl, lapl, dxpl_id,
+                        req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTMOVE, FAIL, "unable to move object");
 
 done:
@@ -5812,8 +5818,8 @@ H5VLlink_optional_op(const char *app_file, const char *app_func, unsigned app_li
     void             *token     = NULL;            /* Request token for async operation        */
     void            **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     bool              vol_wrapper_set = false;     /* Whether the VOL object wrapping context was set up */
-    H5P_genplist_t   *lapl; /* Link access property list */
-    herr_t            ret_value       = SUCCEED;   /* Return value */
+    H5P_genplist_t   *lapl;                        /* Link access property list */
+    herr_t            ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -5840,7 +5846,8 @@ H5VLlink_optional_op(const char *app_file, const char *app_func, unsigned app_li
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__link_optional(vol_obj->data, &loc_params, vol_obj->connector->cls, args, dxpl_id, token_ptr) < 0)
+    if (H5VL__link_optional(vol_obj->data, &loc_params, vol_obj->connector->cls, args, dxpl_id, token_ptr) <
+        0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "unable to execute link optional callback");
 
     /* If a token was created, add the token to the event set */
@@ -6422,8 +6429,8 @@ H5VLobject_optional_op(const char *app_file, const char *app_func, unsigned app_
     void             *token     = NULL;            /* Request token for async operation        */
     void            **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     bool              vol_wrapper_set = false;     /* Whether the VOL object wrapping context was set up */
-    H5P_genplist_t   *lapl; /* Link access property list */
-    herr_t            ret_value       = SUCCEED;   /* Return value */
+    H5P_genplist_t   *lapl;                        /* Link access property list */
+    herr_t            ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API(FAIL)
 

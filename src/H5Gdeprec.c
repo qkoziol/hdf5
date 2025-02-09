@@ -352,7 +352,8 @@ H5Glink(hid_t cur_loc_id, H5G_link_t type, const char *cur_name, const char *new
         vol_cb_args.args.hard.curr_loc_params.loc_data.loc_by_name.lapl_id = H5P_PLIST_ID(def_lapl);
 
         /* Create the link through the VOL */
-        if (H5VL_link_create(&vol_cb_args, vol_obj, &new_loc_params, def_lcpl, def_lapl, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+        if (H5VL_link_create(&vol_cb_args, vol_obj, &new_loc_params, def_lcpl, def_lapl,
+                             H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
             HGOTO_ERROR(H5E_SYM, H5E_CANTINIT, FAIL, "unable to create link");
     } /* end if */
     else if (type == H5L_TYPE_SOFT) {
@@ -374,7 +375,8 @@ H5Glink(hid_t cur_loc_id, H5G_link_t type, const char *cur_name, const char *new
         vol_cb_args.args.soft.target = cur_name;
 
         /* Create the link through the VOL */
-        if (H5VL_link_create(&vol_cb_args, vol_obj, &loc_params, def_lcpl, def_lapl, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+        if (H5VL_link_create(&vol_cb_args, vol_obj, &loc_params, def_lcpl, def_lapl, H5P_DATASET_XFER_DEFAULT,
+                             H5_REQUEST_NULL) < 0)
             HGOTO_ERROR(H5E_SYM, H5E_CANTINIT, FAIL, "unable to create link");
     } /* end else-if */
     else
@@ -447,7 +449,8 @@ H5Glink2(hid_t cur_loc_id, const char *cur_name, H5G_link_t type, hid_t new_loc_
         vol_cb_args.args.hard.curr_loc_params.loc_data.loc_by_name.lapl_id = H5P_PLIST_ID(def_lapl);
 
         /* Create the link through the VOL */
-        if (H5VL_link_create(&vol_cb_args, vol_obj2, &new_loc_params, def_lcpl, def_lapl, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+        if (H5VL_link_create(&vol_cb_args, vol_obj2, &new_loc_params, def_lcpl, def_lapl,
+                             H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
             HGOTO_ERROR(H5E_SYM, H5E_CANTINIT, FAIL, "unable to create link");
     } /* end if */
     else if (type == H5L_TYPE_SOFT) {
@@ -474,7 +477,8 @@ H5Glink2(hid_t cur_loc_id, const char *cur_name, H5G_link_t type, hid_t new_loc_
         vol_cb_args.args.soft.target = cur_name;
 
         /* Create the link through the VOL */
-        if (H5VL_link_create(&vol_cb_args, vol_obj, &loc_params, def_lcpl, def_lapl, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+        if (H5VL_link_create(&vol_cb_args, vol_obj, &loc_params, def_lcpl, def_lapl, H5P_DATASET_XFER_DEFAULT,
+                             H5_REQUEST_NULL) < 0)
             HGOTO_ERROR(H5E_SYM, H5E_CANTINIT, FAIL, "unable to create link");
     } /* end else-if */
     else
@@ -529,7 +533,8 @@ H5Gmove(hid_t src_loc_id, const char *src_name, const char *dst_name)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid location identifier");
 
     /* Move the link */
-    if (H5VL_link_move(vol_obj, &loc_params1, NULL, &loc_params2, def_lcpl, def_lapl, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_link_move(vol_obj, &loc_params1, NULL, &loc_params2, def_lcpl, def_lapl,
+                       H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTMOVE, FAIL, "couldn't move link");
 
 done:
