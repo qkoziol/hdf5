@@ -325,7 +325,7 @@ H5Glink(hid_t cur_loc_id, H5G_link_t type, const char *cur_name, const char *new
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTGET, FAIL, "can't find object for ID");
 
     /* Get default link access property list */
-    if (NULL == (def_lapl = H5I_object(H5P_LINK_CREATE_DEFAULT)))
+    if (NULL == (def_lapl = H5I_object(H5P_LINK_ACCESS_DEFAULT)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTGET, FAIL, "can't find object for ID");
 
     /* Create link */
@@ -419,7 +419,7 @@ H5Glink2(hid_t cur_loc_id, const char *cur_name, H5G_link_t type, hid_t new_loc_
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTGET, FAIL, "can't find object for ID");
 
     /* Get default link access property list */
-    if (NULL == (def_lapl = H5I_object(H5P_LINK_CREATE_DEFAULT)))
+    if (NULL == (def_lapl = H5I_object(H5P_LINK_ACCESS_DEFAULT)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTGET, FAIL, "can't find object for ID");
 
     /* Create the appropriate kind of link */
