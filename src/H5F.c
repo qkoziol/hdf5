@@ -1171,6 +1171,8 @@ H5Fdelete(const char *filename, hid_t fapl_id)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Get the VOL info from the fapl */
+    if (H5P_DEFAULT == fapl_id)
+        fapl_id = H5P_FILE_ACCESS_DEFAULT;
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
     if (H5P_peek(fapl, H5F_ACS_VOL_CONN_NAME, &connector_prop) < 0)

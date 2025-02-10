@@ -1349,10 +1349,9 @@ H5P_set_driver_by_value(H5P_genplist_t *fapl, H5FD_class_value_t driver_value, c
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set driver info");
 
 done:
-    if (ret_value < 0) {
+    if (ret_value < 0)
         if (new_driver_id >= 0 && H5I_dec_app_ref(new_driver_id) < 0)
             HDONE_ERROR(H5E_PLIST, H5E_CANTDEC, FAIL, "can't decrement count on VFD ID");
-    }
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5P_set_driver_by_value() */
@@ -5969,7 +5968,7 @@ H5Pget_vol_info(hid_t fapl_id, void **vol_info /*out*/)
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
 
-    if (*vol_info) {
+    if (vol_info) {
         void                 *new_connector_info = NULL; /* Copy of connector info */
         H5VL_connector_prop_t connector_prop;            /* Property for VOL connector ID & info */
 
