@@ -31,6 +31,20 @@
 /* The driver identification number, initialized at runtime */
 hid_t H5FD_ONION_id_g = H5I_INVALID_HID;
 
+/* Driver-specific file access properties */
+/* (Identical to the H5FD_onion_fapl_info_t struct, but uses a pointer instead
+ *      of an ID for the backing FAPL; also doesn't have the version field)
+ */
+typedef struct H5FD_onion_fapl_t {
+    H5P_genplist_t *backing_fapl;
+    uint32_t page_size;
+    H5FD_onion_target_file_constant_t store_target;
+    uint64_t revision_num;
+    uint8_t force_write_open;
+    uint8_t creation_flags;
+    char comment[H5FD_ONION_FAPL_INFO_COMMENT_MAX_LEN + 1];
+} H5FD_onion_fapl_t;
+
 /******************************************************************************
  *
  * Structure:   H5FD_onion_t
@@ -122,8 +136,7 @@ hid_t H5FD_ONION_id_g = H5I_INVALID_HID;
  */
 typedef struct H5FD_onion_t {
     H5FD_t                 pub;
-    H5FD_onion_fapl_info_t fa;
-    H5P_genplist_t        *backing_fapl;
+    H5FD_onion_fapl_t      fa;
     bool                   is_open_rw;
     bool                   align_history_on_pages;
 
@@ -149,8 +162,8 @@ typedef struct H5FD_onion_t {
 /* Declare a free list to manage the H5FD_onion_t struct */
 H5FL_DEFINE_STATIC(H5FD_onion_t);
 
-/* Declare a free list to manage the H5FD_onion_fapl_info_t struct */
-H5FL_DEFINE_STATIC(H5FD_onion_fapl_info_t);
+/* Declare a free list to manage the H5FD_onion_fapl_t struct */
+H5FL_DEFINE_STATIC(H5FD_onion_fapl_t);
 
 #define H5FD_CTL_GET_NUM_REVISIONS 20001
 
@@ -171,8 +184,7 @@ static herr_t  H5FD__onion_write(H5FD_t *, H5FD_mem_t, hid_t, haddr_t, size_t, c
 static herr_t  H5FD__onion_ctl(H5FD_t *_file, uint64_t op_code, uint64_t flags,
                                const void H5_ATTR_UNUSED *input, void H5_ATTR_UNUSED **output);
 
-static herr_t H5FD__onion_fapl_info_dup(H5FD_onion_fapl_info_t *dst_fa, const H5FD_onion_fapl_info_t *src_fa,
-                                        bool is_api);
+static herr_t H5FD__onion_fapl_info_dup(H5FD_onion_fapl_t *dst_fa, const H5FD_onion_fapl_t *src_fa);
 static herr_t H5FD__onion_open_rw(H5FD_onion_t *, unsigned int, haddr_t, bool new_open);
 static herr_t H5FD__get_onion_revision_count(H5FD_t *file, uint64_t *revision_count);
 
@@ -271,16 +283,13 @@ H5FD__onion_unregister(void)
  *
  * Purpose:     Duplicate the file access properties.
  *
- * Return:      Success:    Pointer to a new property list info structure.
- *              Failure:    NULL
+ * Return:      Success: Non-negative value (SUCCEED).
+ *              Failure: Negative value (FAIL).
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5FD__onion_fapl_info_dup(H5FD_onion_fapl_info_t *dst_fa, const H5FD_onion_fapl_info_t *src_fa, bool is_api)
+H5FD__onion_fapl_info_dup(H5FD_onion_fapl_t *dst_fa, const H5FD_onion_fapl_t *src_fa)
 {
-    hid_t           src_fapl_id;         /* ID for the source FAPL */
-    H5P_genplist_t *src_fapl    = NULL;  /* Pointer to the src FAPL */
-    bool            fapl_copied = false; /* Flag to indicate that the FAPL was copied */
     herr_t          ret_value   = SUCCEED;
 
     FUNC_ENTER_PACKAGE
@@ -290,28 +299,13 @@ H5FD__onion_fapl_info_dup(H5FD_onion_fapl_info_t *dst_fa, const H5FD_onion_fapl_
     assert(src_fa);
 
     /* Copy the atomic info */
-    H5MM_memcpy(dst_fa, src_fa, sizeof(H5FD_onion_fapl_info_t));
+    H5MM_memcpy(dst_fa, src_fa, sizeof(H5FD_onion_fapl_t));
 
     /* Copy backing store FAPL */
-    if (H5P_DEFAULT == src_fa->backing_fapl_id) {
-        if (is_api)
-            HGOTO_DONE(SUCCEED);
-        else
-            src_fapl_id = H5P_FILE_ACCESS_DEFAULT;
-    }
-    else
-        src_fapl_id = src_fa->backing_fapl_id;
-    if (NULL == (src_fapl = H5I_object(src_fapl_id)))
-        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "unable to get old backing store FAPL");
-    if ((dst_fa->backing_fapl_id = H5P_copy_plist_id(src_fapl, false)) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, FAIL, "unable to copy old file access property list");
-    fapl_copied = true;
+    if (NULL == (dst_fa->backing_fapl = H5P_copy_plist(src_fa->backing_fapl, false)))
+        HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, FAIL, "unable to copy file access property list");
 
 done:
-    if (ret_value < 0)
-        if (fapl_copied && H5I_dec_ref(dst_fa->backing_fapl_id) < 0)
-            HDONE_ERROR(H5E_VFL, H5E_CANTDEC, FAIL, "can't close backing store FAPL ID");
-
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FD__onion_fapl_info_dup() */
 
@@ -326,16 +320,16 @@ done:
  *-----------------------------------------------------------------------------
  */
 herr_t
-H5Pget_fapl_onion(hid_t fapl_id, H5FD_onion_fapl_info_t *fa_out)
+H5Pget_fapl_onion(hid_t fapl_id, H5FD_onion_fapl_info_t *info_out)
 {
-    const H5FD_onion_fapl_info_t *info_ptr  = NULL;
+    const H5FD_onion_fapl_t *fa;
     H5P_genplist_t               *fapl      = NULL;
     herr_t                        ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
 
     /* Check parameters */
-    if (NULL == fa_out)
+    if (NULL == info_out)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "NULL info-out pointer");
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "Not a valid FAPL ID");
@@ -343,10 +337,22 @@ H5Pget_fapl_onion(hid_t fapl_id, H5FD_onion_fapl_info_t *fa_out)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "Incorrect VFL driver");
 
     /* Copy the onion file access property */
-    if (NULL == (info_ptr = (const H5FD_onion_fapl_info_t *)H5P_peek_driver_info(fapl)))
+    if (NULL == (fa = H5P_peek_driver_info(fapl)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "bad VFL driver info");
-    if (H5FD__onion_fapl_info_dup(fa_out, info_ptr, true) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, FAIL, "unable to copy file access property");
+
+    /* Copy the atomic fields */
+    info_out->version = H5FD_ONION_FAPL_INFO_VERSION_CURR;
+    info_out->page_size = fa->page_size;
+    info_out->store_target = fa->store_target;
+    info_out->revision_num = fa->revision_num;
+    info_out->force_write_open = fa->force_write_open;
+    info_out->creation_flags = fa->creation_flags;
+    HDcompile_assert(sizeof(info_out->comment) == sizeof(fa->comment));
+    memcpy(info_out->comment, fa->comment, sizeof(info_out->comment));
+
+    /* Copy backing store FAPL */
+    if ((info_out->backing_fapl_id = H5P_copy_plist_id(fa->backing_fapl, true)) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, FAIL, "unable to copy file access property list");
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -365,10 +371,10 @@ done:
  *-----------------------------------------------------------------------------
  */
 herr_t
-H5Pset_fapl_onion(hid_t fapl_id, const H5FD_onion_fapl_info_t *fa)
+H5Pset_fapl_onion(hid_t fapl_id, const H5FD_onion_fapl_info_t *info)
 {
     H5P_genplist_t *fapl           = NULL;
-    H5P_genplist_t *backing_fapl   = NULL;
+    H5FD_onion_fapl_t fa;                       /* Temporary copy of driver info */
     hid_t           backing_vfd_id = H5I_INVALID_HID;
     herr_t          ret_value      = SUCCEED;
 
@@ -376,31 +382,40 @@ H5Pset_fapl_onion(hid_t fapl_id, const H5FD_onion_fapl_info_t *fa)
 
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "Not a valid FAPL ID");
-    if (NULL == fa)
+    if (NULL == info)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "NULL info pointer");
-    if (H5FD_ONION_FAPL_INFO_VERSION_CURR != fa->version)
+    if (H5FD_ONION_FAPL_INFO_VERSION_CURR != info->version)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid info version");
-    if (!POWER_OF_TWO(fa->page_size))
+    if (!POWER_OF_TWO(info->page_size))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid info page size");
-    if (fa->page_size < 1)
+    if (info->page_size < 1)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid info page size");
 
-    if (H5P_DEFAULT == fa->backing_fapl_id) {
-        if (NULL == (backing_fapl = H5P_object_verify(H5P_FILE_ACCESS_DEFAULT, H5P_TYPE_FILE_ACCESS, true)))
+    if (H5P_DEFAULT == info->backing_fapl_id) {
+        if (NULL == (fa.backing_fapl = H5P_object_verify(H5P_FILE_ACCESS_DEFAULT, H5P_TYPE_FILE_ACCESS, true)))
             HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "invalid backing fapl id");
     }
     else {
-        if (NULL == (backing_fapl = H5P_object_verify(fa->backing_fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+        if (NULL == (fa.backing_fapl = H5P_object_verify(info->backing_fapl_id, H5P_TYPE_FILE_ACCESS, true)))
             HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "invalid backing fapl id");
     }
 
     /* The only backing fapl that is currently supported is sec2 */
-    if ((backing_vfd_id = H5P_peek_driver(backing_fapl)) < 0)
+    if ((backing_vfd_id = H5P_peek_driver(fa.backing_fapl)) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "Can't get VFD from fapl");
     if (backing_vfd_id != H5FD_SEC2)
         HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "Onion VFD only supports sec2 backing store");
 
-    if (H5P_set_driver(fapl, H5FD_ONION, (const void *)fa, NULL) < 0)
+    /* Copy the atomic fields */
+    fa.page_size = info->page_size;
+    fa.store_target = info->store_target;
+    fa.revision_num = info->revision_num;
+    fa.force_write_open = info->force_write_open;
+    fa.creation_flags = info->creation_flags;
+    HDcompile_assert(sizeof(info->comment) == sizeof(fa.comment));
+    memcpy(fa.comment, info->comment, sizeof(fa.comment));
+
+    if (H5P_set_driver(fapl, H5FD_ONION, &fa, NULL) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "Can't set the onion VFD");
 
 done:
@@ -532,29 +547,29 @@ done:
 static void *
 H5FD__onion_fapl_copy(const void *_old_fa)
 {
-    const H5FD_onion_fapl_info_t *old_fa    = (const H5FD_onion_fapl_info_t *)_old_fa;
-    H5FD_onion_fapl_info_t       *new_fa    = NULL;
-    void                         *ret_value = NULL;
+    const H5FD_onion_fapl_t *old_fa    = (const H5FD_onion_fapl_t *)_old_fa;
+    H5FD_onion_fapl_t       *new_fa    = NULL;
+    void                    *ret_value = NULL;
 
     FUNC_ENTER_PACKAGE
 
     assert(old_fa);
 
     /* Allocate the new FAPL info */
-    if (NULL == (new_fa = H5FL_CALLOC(H5FD_onion_fapl_info_t)))
-        HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "unable to allocate log file FAPL");
+    if (NULL == (new_fa = H5FL_CALLOC(H5FD_onion_fapl_t)))
+        HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "unable to allocate onion file FAPL");
 
-    /* Copy the onion file access property */
-    if (H5FD__onion_fapl_info_dup(new_fa, old_fa, true) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, NULL, "unable to copy file access property");
+    /* Copy the driver info */
+    if (H5FD__onion_fapl_info_dup(new_fa, old_fa) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, NULL, "unable to copy driver info");
 
     /* Set return value */
-    ret_value = (void *)new_fa;
+    ret_value = new_fa;
 
 done:
     if (NULL == ret_value)
         if (new_fa && H5FD__onion_fapl_free(new_fa) < 0)
-            HDONE_ERROR(H5E_VFL, H5E_CANTRELEASE, NULL, "can't free FAPL property");
+            HDONE_ERROR(H5E_VFL, H5E_CANTRELEASE, NULL, "can't free driver info");
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FD__onion_fapl_copy() */
@@ -570,8 +585,8 @@ done:
 static herr_t
 H5FD__onion_fapl_free(void *_fa)
 {
-    H5FD_onion_fapl_info_t *fa        = (H5FD_onion_fapl_info_t *)_fa;
-    herr_t                  ret_value = SUCCEED;
+    H5FD_onion_fapl_t *fa        = (H5FD_onion_fapl_t *)_fa;
+    herr_t             ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
 
@@ -579,12 +594,12 @@ H5FD__onion_fapl_free(void *_fa)
     assert(fa);
 
     /* Release the backing store FAPL */
-    if (H5P_DEFAULT != fa->backing_fapl_id)
-        if (H5I_dec_ref(fa->backing_fapl_id) < 0)
-            HGOTO_ERROR(H5E_VFL, H5E_CANTDEC, FAIL, "can't close backing store FAPL ID");
+    if (fa->backing_fapl)
+        if (H5P_release(fa->backing_fapl) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "can't close backing store FAPL");
 
     /* Free the property */
-    fa = H5FL_FREE(H5FD_onion_fapl_info_t, fa);
+    fa = H5FL_FREE(H5FD_onion_fapl_t, fa);
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -731,7 +746,6 @@ H5FD__onion_close(H5FD_t *_file)
         HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "invalid history target");
 
 done:
-
     /* Destroy things as best we can, even if there were earlier errors */
     if (file->original_file)
         if (H5FD_close(file->original_file) < 0)
@@ -752,8 +766,8 @@ done:
             HDONE_ERROR(H5E_VFL, H5E_CANTRELEASE, FAIL, "can't close revision index");
 
     /* Release the backing store FAPL */
-    if (H5I_dec_ref(file->fa.backing_fapl_id) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTDEC, FAIL, "can't close backing store FAPL ID");
+    if (H5P_release(file->fa.backing_fapl) < 0)
+        HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "can't close backing store FAPL");
     H5MM_xfree(file->recovery_file_name);
     H5MM_xfree(file->history.record_locs);
     H5MM_xfree(file->curr_rev_record.comment);
@@ -845,11 +859,11 @@ H5FD__onion_create_truncate_onion(H5FD_onion_t *file, const char *filename, cons
     hdr->origin_eof = 0;
 
     /* Create backing files for onion history */
-    if (H5FD_open(false, &file->original_file, filename, flags, file->backing_fapl, maxaddr) < 0)
+    if (H5FD_open(false, &file->original_file, filename, flags, file->fa.backing_fapl, maxaddr) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, FAIL, "cannot open the backing file");
-    if (H5FD_open(false, &file->onion_file, name_onion, flags, file->backing_fapl, maxaddr) < 0)
+    if (H5FD_open(false, &file->onion_file, name_onion, flags, file->fa.backing_fapl, maxaddr) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, FAIL, "cannot open the backing onion file");
-    if (H5FD_open(false, &file->recovery_file, recovery_file_nameery, flags, file->backing_fapl, maxaddr) < 0)
+    if (H5FD_open(false, &file->recovery_file, recovery_file_nameery, flags, file->fa.backing_fapl, maxaddr) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, FAIL, "cannot open the backing file");
 
     /* Write "empty" .h5 file contents (signature ONIONEOF) */
@@ -903,23 +917,7 @@ done:
 } /* end H5FD__onion_create_truncate_onion() */
 
 static herr_t
-H5FD__onion_remove_unused_symbols(char *s)
-{
-    char *d = s;
-
-    FUNC_ENTER_PACKAGE_NOERR
-
-    do {
-        while (*d == '{' || *d == '}' || *d == ' ') {
-            ++d;
-        }
-    } while ((*s++ = *d++));
-
-    FUNC_LEAVE_NOAPI(SUCCEED)
-}
-
-static herr_t
-H5FD__onion_parse_config_str(const char *config_str, H5FD_onion_fapl_info_t *fa)
+H5FD__onion_parse_config_str(const char *config_str, H5FD_onion_fapl_t *fa)
 {
     char  *config_str_copy = NULL;
     herr_t ret_value       = SUCCEED;
@@ -930,8 +928,7 @@ H5FD__onion_parse_config_str(const char *config_str, H5FD_onion_fapl_info_t *fa)
         HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "configure string can't be empty");
 
     /* Initialize to the default values */
-    fa->version          = H5FD_ONION_FAPL_INFO_VERSION_CURR;
-    fa->backing_fapl_id  = H5P_DEFAULT;
+    fa->backing_fapl  = NULL;
     fa->page_size        = 4;
     fa->store_target     = H5FD_ONION_STORE_TARGET_ONION;
     fa->revision_num     = H5FD_ONION_FAPL_INFO_REVISION_ID_LATEST;
@@ -947,13 +944,18 @@ H5FD__onion_parse_config_str(const char *config_str, H5FD_onion_fapl_info_t *fa)
         fa->revision_num = (uint64_t)strtoull(config_str, NULL, 10);
     else {
         char *token1 = NULL, *token2 = NULL;
+        char *c, *d;
 
-        /* Duplicate the configure string since strtok will mess with it */
+        /* Duplicate the configure string since strtok will modify it */
         if (NULL == (config_str_copy = H5MM_strdup(config_str)))
             HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "can't duplicate configure string");
 
         /* Remove the curly brackets and space from the configure string */
-        H5FD__onion_remove_unused_symbols(config_str_copy);
+        c = d = config_str_copy;
+        do {
+            while (*c == '{' || *c == '}' || *c == ' ')
+                ++c;
+        } while ((*d++ = *c++));
 
         /* The configure string can't be empty after removing the curly brackets */
         if (!strcmp(config_str_copy, ""))
@@ -965,38 +967,38 @@ H5FD__onion_parse_config_str(const char *config_str, H5FD_onion_fapl_info_t *fa)
         do {
             if (token1 && token2) {
                 if (!strcmp(token1, "version")) {
-                    if (!strcmp(token2, "H5FD_ONION_FAPL_INFO_VERSION_CURR"))
-                        fa->version = H5FD_ONION_FAPL_INFO_VERSION_CURR;
+                    /* Ignored - no version field in internal driver info struct */
                 }
                 else if (!strcmp(token1, "backing_fapl_id")) {
+                    fa->backing_fapl = NULL;
+#if 0
+                    /* NOTE: This is broken; it's not possiple to pass in
+                     *      an ID with an environment variable.
+                     */
                     if (!strcmp(token2, "H5P_DEFAULT"))
                         fa->backing_fapl_id = H5P_DEFAULT;
                     else if (!strcmp(token2, "H5I_INVALID_HID"))
                         fa->backing_fapl_id = H5I_INVALID_HID;
                     else
                         fa->backing_fapl_id = strtoll(token2, NULL, 10);
+#endif
                 }
-                else if (!strcmp(token1, "page_size")) {
+                else if (!strcmp(token1, "page_size"))
                     fa->page_size = (uint32_t)strtoul(token2, NULL, 10);
-                }
                 else if (!strcmp(token1, "revision_num")) {
                     if (!strcmp(token2, "H5FD_ONION_FAPL_INFO_REVISION_ID_LATEST"))
                         fa->revision_num = H5FD_ONION_FAPL_INFO_REVISION_ID_LATEST;
                     else
                         fa->revision_num = (uint64_t)strtoull(token2, NULL, 10);
                 }
-                else if (!strcmp(token1, "force_write_open")) {
+                else if (!strcmp(token1, "force_write_open"))
                     fa->force_write_open = (uint8_t)strtoul(token2, NULL, 10);
-                }
-                else if (!strcmp(token1, "creation_flags")) {
+                else if (!strcmp(token1, "creation_flags"))
                     fa->creation_flags = (uint8_t)strtoul(token2, NULL, 10);
-                }
-                else if (!strcmp(token1, "comment")) {
+                else if (!strcmp(token1, "comment"))
                     strcpy(fa->comment, token2);
-                }
                 else
-                    HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "unknown token in the configure string: %s",
-                                token1);
+                    HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "unknown token in the configure string: %s", token1);
             }
 
             token1 = strtok(NULL, ":");
@@ -1004,15 +1006,10 @@ H5FD__onion_parse_config_str(const char *config_str, H5FD_onion_fapl_info_t *fa)
         } while (token1);
     }
 
-    if (H5P_DEFAULT == fa->backing_fapl_id || H5I_INVALID_HID == fa->backing_fapl_id) {
-        H5P_genplist_t *def_plist;
-
-        /* Create the new property list */
-        if (NULL == (def_plist = H5P_new_plist_of_type(H5P_TYPE_FILE_ACCESS, false)))
+    /* Copy the default property list */
+    if (NULL == fa->backing_fapl)
+        if (NULL == (fa->backing_fapl = H5P_new_plist_of_type(H5P_TYPE_FILE_ACCESS, false)))
             HGOTO_ERROR(H5E_VFL, H5E_CANTCREATE, FAIL, "unable to create file access property list");
-
-        fa->backing_fapl_id = H5P_PLIST_ID(def_plist);
-    }
 
 done:
     H5MM_free(config_str_copy);
@@ -1032,17 +1029,17 @@ done:
 static H5FD_t *
 H5FD__onion_open(const char *filename, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
 {
-    H5P_genplist_t               *fapl                  = NULL;
-    H5FD_onion_t                 *file                  = NULL;
-    const H5FD_onion_fapl_info_t *fa                    = NULL;
-    H5FD_onion_fapl_info_t       *new_fa                = NULL;
-    const char                   *config_str            = NULL;
-    double                        log2_page_size        = 0.0;
-    char                         *name_onion            = NULL;
-    char                         *recovery_file_nameery = NULL;
-    bool                          new_open              = false;
-    haddr_t                       canon_eof             = 0;
-    H5FD_t                       *ret_value             = NULL;
+    H5P_genplist_t          *fapl                  = NULL;
+    H5FD_onion_t            *file                  = NULL;
+    const H5FD_onion_fapl_t *fa                    = NULL;
+    H5FD_onion_fapl_t       *new_fa                = NULL;
+    const char              *config_str            = NULL;
+    double                   log2_page_size        = 0.0;
+    char                    *name_onion            = NULL;
+    char                    *recovery_file_nameery = NULL;
+    bool                     new_open              = false;
+    haddr_t                  canon_eof             = 0;
+    H5FD_t                  *ret_value             = NULL;
 
     FUNC_ENTER_PACKAGE
 
@@ -1059,8 +1056,7 @@ H5FD__onion_open(const char *filename, unsigned flags, hid_t fapl_id, haddr_t ma
      * H5Pset_driver_by_name(). When invoked by the former, there will be
      * driver info to peek at.
      */
-    fa = (const H5FD_onion_fapl_info_t *)H5P_peek_driver_info(fapl);
-
+    fa = H5P_peek_driver_info(fapl);
     if (NULL == fa) {
         if (NULL == (config_str = H5P_peek_driver_config_str(fapl)))
             HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, NULL, "missing VFL driver configure string");
@@ -1068,7 +1064,7 @@ H5FD__onion_open(const char *filename, unsigned flags, hid_t fapl_id, haddr_t ma
         /* Allocate a new onion fapl info struct and fill it from the
          * configuration string
          */
-        if (NULL == (new_fa = H5MM_calloc(sizeof(H5FD_onion_fapl_info_t))))
+        if (NULL == (new_fa = H5FL_CALLOC(H5FD_onion_fapl_t)))
             HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "can't allocate memory for onion fapl info struct");
         if (H5FD__onion_parse_config_str(config_str, new_fa) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, NULL, "failed to parse configure string");
@@ -1101,10 +1097,8 @@ H5FD__onion_open(const char *filename, unsigned flags, hid_t fapl_id, haddr_t ma
     /* Initialize file structure fields */
 
     /* Copy the onion file access property */
-    if (H5FD__onion_fapl_info_dup(&file->fa, fa, false) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, NULL, "unable to copy file access property");
-    if (NULL == (file->backing_fapl = H5I_object(file->fa.backing_fapl_id)))
-        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "invalid backing fapl id");
+    if (H5FD__onion_fapl_info_dup(&file->fa, fa) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, NULL, "unable to copy driver info");
 
     file->header.version   = H5FD_ONION_HEADER_VERSION_CURR;
     file->header.page_size = file->fa.page_size; /* guarded on FAPL-set */
@@ -1145,11 +1139,11 @@ H5FD__onion_open(const char *filename, unsigned flags, hid_t fapl_id, haddr_t ma
         /* Opening an existing onion file */
 
         /* Open the existing file using the specified fapl */
-        if (H5FD_open(false, &file->original_file, filename, flags, file->backing_fapl, maxaddr) < 0)
+        if (H5FD_open(false, &file->original_file, filename, flags, file->fa.backing_fapl, maxaddr) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL, "unable to open canonical file (does not exist?)");
 
         /* Try to open any existing onion file */
-        if (H5FD_open(true, &file->onion_file, name_onion, flags, file->backing_fapl, maxaddr) < 0)
+        if (H5FD_open(true, &file->onion_file, name_onion, flags, file->fa.backing_fapl, maxaddr) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL, "cannot try opening the backing onion file");
 
         /* If that didn't work, create a new onion file */
@@ -1185,24 +1179,19 @@ H5FD__onion_open(const char *filename, unsigned flags, hid_t fapl_id, haddr_t ma
                 file->logical_eof = canon_eof;
 
                 /* Create backing files for onion history */
-                if (H5FD_open(false, &file->onion_file, name_onion,
-                              (H5F_ACC_RDWR | H5F_ACC_CREAT | H5F_ACC_TRUNC), file->backing_fapl,
-                              maxaddr) < 0)
+                if (H5FD_open(false, &file->onion_file, name_onion, (H5F_ACC_RDWR | H5F_ACC_CREAT | H5F_ACC_TRUNC), file->fa.backing_fapl, maxaddr) < 0)
                     HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL, "cannot open the backing onion file");
 
                 /* Write history header with "no" history */
                 hdr->history_size = H5FD_ONION_ENCODED_SIZE_HISTORY; /* record for later use */
-                hdr->history_addr =
-                    H5FD_ONION_ENCODED_SIZE_HEADER + 1; /* TODO: comment these 2 or do some other way */
-                head_buf = H5MM_malloc(H5FD_ONION_ENCODED_SIZE_HEADER);
-                if (NULL == head_buf)
+                hdr->history_addr = H5FD_ONION_ENCODED_SIZE_HEADER + 1; /* TODO: comment these 2 or do some other way */
+                if (NULL == (head_buf = H5MM_malloc(H5FD_ONION_ENCODED_SIZE_HEADER)))
                     HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "can't allocate buffer");
                 size = H5FD__onion_header_encode(hdr, head_buf, &hdr->checksum);
                 if (H5FD_ONION_ENCODED_SIZE_HEADER != size)
                     HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, NULL, "can't encode history header");
 
-                hist_buf = H5MM_malloc(H5FD_ONION_ENCODED_SIZE_HISTORY);
-                if (NULL == hist_buf)
+                if (NULL == (hist_buf = H5MM_malloc(H5FD_ONION_ENCODED_SIZE_HISTORY)))
                     HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "can't allocate buffer");
                 saved_size                = size;
                 history->n_revisions      = 0;
@@ -1214,8 +1203,7 @@ H5FD__onion_open(const char *filename, unsigned flags, hid_t fapl_id, haddr_t ma
                     HGOTO_ERROR(H5E_VFL, H5E_CANTSET, NULL, "can't extend EOA");
 
                 if (H5FD_write(file->onion_file, H5FD_MEM_DRAW, 0, saved_size, head_buf) < 0)
-                    HGOTO_ERROR(H5E_VFL, H5E_WRITEERROR, NULL,
-                                "cannot write header to the backing onion file");
+                    HGOTO_ERROR(H5E_VFL, H5E_WRITEERROR, NULL, "cannot write header to the backing onion file");
 
                 file->onion_eof = (haddr_t)saved_size;
                 if (true == file->align_history_on_pages)
@@ -1227,8 +1215,7 @@ H5FD__onion_open(const char *filename, unsigned flags, hid_t fapl_id, haddr_t ma
 
                 /* Write nascent history (with no revisions) to the backing onion file */
                 if (H5FD_write(file->onion_file, H5FD_MEM_DRAW, saved_size + 1, size, hist_buf) < 0)
-                    HGOTO_ERROR(H5E_VFL, H5E_WRITEERROR, NULL,
-                                "cannot write history to the backing onion file");
+                    HGOTO_ERROR(H5E_VFL, H5E_WRITEERROR, NULL, "cannot write history to the backing onion file");
 
                 file->header.history_size = size; /* record for later use */
 
@@ -1313,9 +1300,8 @@ done:
     H5MM_xfree(recovery_file_nameery);
 
     if (config_str && new_fa)
-        if (fa && fa->backing_fapl_id)
-            if (H5I_dec_app_ref(fa->backing_fapl_id) < 0)
-                HDONE_ERROR(H5E_VFL, H5E_CANTDEC, NULL, "can't destroy backing FAPL");
+        if (H5FD__onion_fapl_free(new_fa) < 0)
+            HDONE_ERROR(H5E_VFL, H5E_CANTRELEASE, NULL, "can't free driver info");
 
     if ((NULL == ret_value) && file) {
         if (file->original_file)
@@ -1337,8 +1323,6 @@ done:
 
         H5FL_FREE(H5FD_onion_t, file);
     }
-
-    H5MM_xfree(new_fa);
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FD__onion_open() */
@@ -1374,8 +1358,7 @@ H5FD__onion_open_rw(H5FD_onion_t *file, unsigned int flags, haddr_t maxaddr, boo
         HGOTO_ERROR(H5E_VFL, H5E_UNSUPPORTED, FAIL, "can't write-open write-locked file");
 
     /* Copy history to recovery file */
-    if (H5FD_open(false, &file->recovery_file, file->recovery_file_name,
-                  (flags | H5F_ACC_CREAT | H5F_ACC_TRUNC), file->backing_fapl, maxaddr) < 0)
+    if (H5FD_open(false, &file->recovery_file, file->recovery_file_name, (flags | H5F_ACC_CREAT | H5F_ACC_TRUNC), file->fa.backing_fapl, maxaddr) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, FAIL, "unable to create recovery file");
 
     if (0 == (size = H5FD__onion_write_history(&file->history, file->recovery_file, 0, 0)))
@@ -1401,7 +1384,7 @@ H5FD__onion_open_rw(H5FD_onion_t *file, unsigned int flags, haddr_t maxaddr, boo
     file->is_open_rw = true;
 
 done:
-    if (FAIL == ret_value) {
+    if (ret_value < 0) {
         if (file->recovery_file != NULL) {
             if (H5FD_close(file->recovery_file) < 0)
                 HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEFILE, FAIL, "can't close recovery file");
@@ -1450,7 +1433,7 @@ H5FD__onion_read(H5FD_t *_file, H5FD_mem_t type, hid_t H5_ATTR_UNUSED dxpl_id, h
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "Read extends beyond addressed space");
 
     if (0 == len)
-        goto done;
+        HGOTO_DONE(SUCCEED);                                                                                 \
 
     page_size      = file->header.page_size;
     page_size_log2 = file->curr_rev_record.archival_index.page_size_log2;
@@ -1468,10 +1451,8 @@ H5FD__onion_read(H5FD_t *_file, H5FD_mem_t type, hid_t H5_ATTR_UNUSED dxpl_id, h
         if (0 == i) {
             page_gap_head = offset & (((uint32_t)1 << page_size_log2) - 1);
             /* Check if we need to add an additional page to make up for the page_gap_head */
-            if (page_gap_head > 0 &&
-                (page_gap_head + (bytes_to_read % page_size) > page_size || bytes_to_read % page_size == 0)) {
+            if (page_gap_head > 0 && (page_gap_head + (bytes_to_read % page_size) > page_size || bytes_to_read % page_size == 0))
                 n_pages++;
-            }
         }
 
         if (n_pages - 1 == i)
@@ -1502,9 +1483,8 @@ H5FD__onion_read(H5FD_t *_file, H5FD_mem_t type, hid_t H5_ATTR_UNUSED dxpl_id, h
             haddr_t read_size    = MIN(overlap_size, page_readsize);
 
             /* Get all original bytes in page range */
-            if ((read_size > 0) && H5FD_read(file->original_file, type, addr_start, read_size, buf_out) < 0) {
+            if (read_size > 0 && H5FD_read(file->original_file, type, addr_start, read_size, buf_out) < 0)
                 HGOTO_ERROR(H5E_VFL, H5E_READERROR, FAIL, "can't get original file data");
-            }
 
             /* Fill with 0s any gaps after end of original bytes
              * and before end of page.
@@ -1576,7 +1556,7 @@ H5FD__onion_write(H5FD_t *_file, H5FD_mem_t type, hid_t H5_ATTR_UNUSED dxpl_id, 
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "Write not allowed if file not opened in write mode");
 
     if (0 == len)
-        goto done;
+        HGOTO_DONE(SUCCEED);                                                                                 \
 
     page_size      = file->header.page_size;
     page_size_log2 = file->curr_rev_record.archival_index.page_size_log2;
@@ -1603,9 +1583,8 @@ H5FD__onion_write(H5FD_t *_file, H5FD_mem_t type, hid_t H5_ATTR_UNUSED dxpl_id, 
              * page to make up for the page_gap_head
              */
             if (page_gap_head > 0 && (page_gap_head + (bytes_to_write % page_size) > page_size ||
-                                      bytes_to_write % page_size == 0)) {
+                                      bytes_to_write % page_size == 0))
                 n_pages++;
-            }
         }
         if (n_pages - 1 == i)
             page_gap_tail = page_size - bytes_to_write - page_gap_head;
@@ -1646,10 +1625,8 @@ H5FD__onion_write(H5FD_t *_file, H5FD_mem_t type, hid_t H5_ATTR_UNUSED dxpl_id, 
                 haddr_t read_size    = MIN(overlap_size, page_size);
 
                 /* Get all original bytes in page range */
-                if ((read_size > 0) &&
-                    H5FD_read(file->original_file, type, addr_start, read_size, page_buf) < 0) {
+                if (read_size > 0 && H5FD_read(file->original_file, type, addr_start, read_size, page_buf) < 0)
                     HGOTO_ERROR(H5E_VFL, H5E_READERROR, FAIL, "can't get original file data");
-                }
 
                 /* Fill with 0s any gaps after end of original bytes
                  * or start of page and before start of new data.
