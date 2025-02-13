@@ -110,7 +110,7 @@ H5L__extern_traverse(const char H5_ATTR_UNUSED *link_name, hid_t cur_group, cons
     H5I_type_t         opened_type;                  /* ID type of external link's object */
     char              *parent_group_name = NULL;     /* Temporary pointer to group name */
     char               local_group_name[H5L_EXT_TRAVERSE_BUF_SIZE]; /* Local buffer to hold group name */
-    H5P_genplist_t    *fapl = NULL;                                 /* File access property list pointer */
+    H5P_genplist_t    *fapl         = NULL;                         /* File access property list pointer */
     H5F_close_degree_t fc_degree    = H5F_CLOSE_WEAK;               /* File close degree for target file */
     char              *elink_prefix = NULL;                         /* Pointer to elink prefix */
     hid_t              ret_value    = H5I_INVALID_HID;              /* Return value */
@@ -157,7 +157,8 @@ H5L__extern_traverse(const char H5_ATTR_UNUSED *link_name, hid_t cur_group, cons
         hid_t fapl_id;
 
         if ((fapl_id = H5F_get_access_plist(loc.oloc->file, false)) < 0)
-            HGOTO_ERROR(H5E_LINK, H5E_CANTGET, H5I_INVALID_HID, "can't get parent's file access property list");
+            HGOTO_ERROR(H5E_LINK, H5E_CANTGET, H5I_INVALID_HID,
+                        "can't get parent's file access property list");
 
         /* Get file access property list */
         if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))

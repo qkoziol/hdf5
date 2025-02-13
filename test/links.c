@@ -9602,8 +9602,8 @@ error:
 static int
 external_set_elink_fapl3(bool new_format)
 {
-    hid_t core_fapl = H5I_INVALID_HID, stdio_fapl = H5I_INVALID_HID;
-    hid_t lapl_id = H5I_INVALID_HID, new_lapl_id = H5I_INVALID_HID, l_fapl_id = H5I_INVALID_HID;
+    hid_t           core_fapl = H5I_INVALID_HID, stdio_fapl = H5I_INVALID_HID;
+    hid_t           lapl_id = H5I_INVALID_HID, new_lapl_id = H5I_INVALID_HID, l_fapl_id = H5I_INVALID_HID;
     H5P_genplist_t *out_fapl = NULL;
 
     if (new_format)

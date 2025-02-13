@@ -158,12 +158,17 @@ const H5P_libclass_t H5P_CLS_LACC[1] = {{
 
 /* Property value defaults */
 static const size_t H5L_def_nlinks_g = H5L_ACS_NLINKS_DEF; /* Default number of soft links to traverse */
-static const char  *H5L_def_elink_prefix_g = H5L_ACS_ELINK_PREFIX_DEF;                                     /* Default external link prefix string */
-static const H5P_genplist_t *H5L_def_fapl_g = H5L_ACS_ELINK_FAPL_DEF; /* Default FAPL for external link access */
-static const unsigned H5L_def_elink_flags_g = H5L_ACS_ELINK_FLAGS_DEF; /* Default file access flags for external link traversal */
-static const H5L_elink_cb_t H5L_def_elink_cb_g = H5L_ACS_ELINK_CB_DEF; /* Default external link traversal callback */
+static const char  *H5L_def_elink_prefix_g =
+    H5L_ACS_ELINK_PREFIX_DEF; /* Default external link prefix string */
+static const H5P_genplist_t *H5L_def_fapl_g =
+    H5L_ACS_ELINK_FAPL_DEF; /* Default FAPL for external link access */
+static const unsigned H5L_def_elink_flags_g =
+    H5L_ACS_ELINK_FLAGS_DEF; /* Default file access flags for external link traversal */
+static const H5L_elink_cb_t H5L_def_elink_cb_g =
+    H5L_ACS_ELINK_CB_DEF; /* Default external link traversal callback */
 #ifdef H5_HAVE_PARALLEL
-static const H5P_coll_md_read_flag_t H5L_def_coll_md_read_g = H5L_ACS_COLL_MD_READ_DEF; /* Default setting for the collective metedata read flag */
+static const H5P_coll_md_read_flag_t H5L_def_coll_md_read_g =
+    H5L_ACS_COLL_MD_READ_DEF; /* Default setting for the collective metedata read flag */
 #endif                        /* H5_HAVE_PARALLEL */
 
 /*-------------------------------------------------------------------------
@@ -240,8 +245,8 @@ static herr_t
 H5P__lacc_elink_fapl_set(hid_t H5_ATTR_UNUSED prop_id, const char H5_ATTR_UNUSED *name,
                          size_t H5_ATTR_UNUSED size, void *_value)
 {
-    H5P_genplist_t  *l_fapl = *(H5P_genplist_t **)_value;
-    herr_t ret_value = SUCCEED;
+    H5P_genplist_t *l_fapl    = *(H5P_genplist_t **)_value;
+    herr_t          ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
 
@@ -271,8 +276,8 @@ static herr_t
 H5P__lacc_elink_fapl_get(hid_t H5_ATTR_UNUSED prop_id, const char H5_ATTR_UNUSED *name,
                          size_t H5_ATTR_UNUSED size, void *_value)
 {
-    H5P_genplist_t  *l_fapl = *(H5P_genplist_t **)_value;
-    herr_t ret_value = SUCCEED;
+    H5P_genplist_t *l_fapl    = *(H5P_genplist_t **)_value;
+    herr_t          ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
 
@@ -303,11 +308,11 @@ done:
 static herr_t
 H5P__lacc_elink_fapl_enc(const void *_value, void **_pp, size_t *size)
 {
-    const H5P_genplist_t *elink_fapl = *(H5P_genplist_t * const *)_value; /* Property to encode */
-    uint8_t       **pp         = (uint8_t **)_pp;
-    bool            non_default_fapl = false;   /* Whether the FAPL is non-default */
-    size_t          elink_fapl_size        = 0;       /* FAPL's encoded size */
-    herr_t          ret_value        = SUCCEED; /* Return value */
+    const H5P_genplist_t *elink_fapl       = *(H5P_genplist_t *const *)_value; /* Property to encode */
+    uint8_t             **pp               = (uint8_t **)_pp;
+    bool                  non_default_fapl = false;   /* Whether the FAPL is non-default */
+    size_t                elink_fapl_size  = 0;       /* FAPL's encoded size */
+    herr_t                ret_value        = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -366,10 +371,10 @@ done:
 static herr_t
 H5P__lacc_elink_fapl_dec(const void **_pp, void *_value)
 {
-    H5P_genplist_t          **elink_fapl = (H5P_genplist_t **)_value; /* The elink FAPL value */
-    const uint8_t **pp         = (const uint8_t **)_pp;
-    bool            non_default_fapl;    /* Whether the FAPL is non-default */
-    herr_t          ret_value = SUCCEED; /* Return value */
+    H5P_genplist_t **elink_fapl = (H5P_genplist_t **)_value; /* The elink FAPL value */
+    const uint8_t  **pp         = (const uint8_t **)_pp;
+    bool             non_default_fapl;    /* Whether the FAPL is non-default */
+    herr_t           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -383,9 +388,9 @@ H5P__lacc_elink_fapl_dec(const void **_pp, void *_value)
     non_default_fapl = (bool)*(*pp)++;
 
     if (non_default_fapl) {
-        size_t          elink_fapl_size; /* Encoded size of property list */
-        unsigned        enc_size;
-        uint64_t        enc_value;
+        size_t   elink_fapl_size; /* Encoded size of property list */
+        unsigned enc_size;
+        uint64_t enc_value;
 
         /* Decode the FAPL length */
         enc_size = *(*pp)++;
@@ -420,8 +425,8 @@ static herr_t
 H5P__lacc_elink_fapl_del(hid_t H5_ATTR_UNUSED prop_id, const char H5_ATTR_UNUSED *name,
                          size_t H5_ATTR_UNUSED size, void *_value)
 {
-    H5P_genplist_t  *l_fapl = *(H5P_genplist_t * const *)_value;
-    herr_t ret_value = SUCCEED;
+    H5P_genplist_t *l_fapl    = *(H5P_genplist_t *const *)_value;
+    herr_t          ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
 
@@ -449,8 +454,8 @@ done:
 static herr_t
 H5P__lacc_elink_fapl_copy(const char H5_ATTR_UNUSED *name, size_t H5_ATTR_UNUSED size, void *_value)
 {
-    H5P_genplist_t *l_fapl = *(H5P_genplist_t **)_value;
-    herr_t ret_value = SUCCEED;
+    H5P_genplist_t *l_fapl    = *(H5P_genplist_t **)_value;
+    herr_t          ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
 
@@ -480,9 +485,9 @@ done:
 static int
 H5P__lacc_elink_fapl_cmp(const void *_value1, const void *_value2, size_t H5_ATTR_UNUSED size)
 {
-    const H5P_genplist_t *fapl1 = *(H5P_genplist_t * const *)_value1;
-    const H5P_genplist_t *fapl2 = *(H5P_genplist_t * const *)_value2;
-    int             ret_value = 0;
+    const H5P_genplist_t *fapl1     = *(H5P_genplist_t *const *)_value1;
+    const H5P_genplist_t *fapl2     = *(H5P_genplist_t *const *)_value2;
+    int                   ret_value = 0;
 
     FUNC_ENTER_PACKAGE_NOERR
 
@@ -517,8 +522,8 @@ done:
 static herr_t
 H5P__lacc_elink_fapl_close(const char H5_ATTR_UNUSED *name, size_t H5_ATTR_UNUSED size, void *_value)
 {
-    H5P_genplist_t *l_fapl = *(H5P_genplist_t **)_value;
-    herr_t ret_value = SUCCEED;
+    H5P_genplist_t *l_fapl    = *(H5P_genplist_t **)_value;
+    herr_t          ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
 
@@ -955,7 +960,7 @@ herr_t
 H5Pset_elink_fapl(hid_t lapl_id, hid_t fapl_id)
 {
     H5P_genplist_t *lapl;                /* LAPL pointer */
-    H5P_genplist_t *elink_fapl;                /* FAPL pointer */
+    H5P_genplist_t *elink_fapl;          /* FAPL pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -987,9 +992,9 @@ done:
 hid_t
 H5Pget_elink_fapl(hid_t lapl_id)
 {
-    H5P_genplist_t *lapl;                /* LAPL pointer */
-    H5P_genplist_t *elink_fapl;                /* FAPL pointer */
-    hid_t           ret_value; /* Return value */
+    H5P_genplist_t *lapl;       /* LAPL pointer */
+    H5P_genplist_t *elink_fapl; /* FAPL pointer */
+    hid_t           ret_value;  /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
