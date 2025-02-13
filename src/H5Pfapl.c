@@ -1262,10 +1262,9 @@ H5P_set_driver_by_name(H5P_genplist_t *fapl, const char *driver_name, const char
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set driver info");
 
 done:
-    if (ret_value < 0) {
+    if (ret_value < 0)
         if (new_driver_id >= 0 && H5I_dec_app_ref(new_driver_id) < 0)
             HDONE_ERROR(H5E_PLIST, H5E_CANTDEC, FAIL, "can't decrement count on VFD ID");
-    }
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5P_set_driver_by_name() */

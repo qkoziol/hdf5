@@ -41,6 +41,16 @@ static bool H5FD_subfiling_init_s = false;
 /* Whether the driver initialized MPI on its own */
 static bool H5FD_mpi_self_initialized_s = false;
 
+/* Driver-specific file access properties */
+/* (Identical to the H5FD_subfiling_config_t struct, but uses a pointer instead
+ *      of an ID for the IOC FAPL; also doesn't have the magid & version fields)
+ */
+typedef struct H5FD_subfiling_fapl_t {
+    H5P_genplist_t *ioc_fapl;           /* The FAPL setup with the stacked VFD to use for I/O concentrators */
+    bool     require_ioc;               /* Whether to use the IOC VFD (currently must always be true)       */
+    H5FD_subfiling_params_t shared_cfg; /* Subfiling/IOC parameters (stripe size, stripe count, etc.)       */
+} H5FD_subfiling_fapl_t;
+
 /* The description of a file belonging to this driver. The 'eoa' and 'eof'
  * determine the amount of hdf5 address space in use and the high-water mark
  * of the file (the current size of the underlying filesystem file). The
@@ -88,8 +98,8 @@ static bool H5FD_mpi_self_initialized_s = false;
  ***************************************************************************/
 
 typedef struct H5FD_subfiling_t {
-    H5FD_t                  pub; /* public stuff, must be first      */
-    H5FD_subfiling_config_t fa;  /* driver-specific file access properties */
+    H5FD_t                pub; /* public stuff, must be first      */
+    H5FD_subfiling_fapl_t fa;  /* driver-specific file access properties */
 
     /* MPI Info */
     MPI_Comm comm;
@@ -164,9 +174,10 @@ static herr_t  H5FD__subfiling_delete(const char *name, hid_t fapl);
 static herr_t  H5FD__subfiling_ctl(H5FD_t *_file, uint64_t op_code, uint64_t flags, const void *input,
                                    void **output);
 
-static herr_t H5FD__subfiling_get_default_config(hid_t fapl_id, H5FD_subfiling_config_t *config_out);
+static herr_t H5FD__subfiling_fapl_info_dup(H5FD_subfiling_fapl_t *dst_fa, const H5FD_subfiling_fapl_t *src_fa);
+static herr_t H5FD__subfiling_get_default_info(H5P_genplist_t *fapl, H5FD_subfiling_fapl_t *config_out);
 static herr_t H5FD__subfiling_validate_config(const H5FD_subfiling_config_t *fa);
-static herr_t H5FD__copy_plist(hid_t fapl_id, hid_t *id_out_ptr);
+static herr_t H5FD__subfiling_validate_info(const H5FD_subfiling_fapl_t *fa);
 
 static herr_t H5FD__subfiling_close_int(H5FD_subfiling_t *file);
 
@@ -265,6 +276,9 @@ static const H5FD_class_t H5FD_subfiling_g = {
 
 /* Declare a free list to manage the H5FD_subfiling_t struct */
 H5FL_DEFINE_STATIC(H5FD_subfiling_t);
+
+/* Declare a free list to manage the H5FD_subfiling_fapl_t struct */
+H5FL_DEFINE_STATIC(H5FD_subfiling_fapl_t);
 
 /*-------------------------------------------------------------------------
  * Function:    H5FD__subfiling_register
@@ -442,11 +456,11 @@ done:
 herr_t
 H5Pset_fapl_subfiling(hid_t fapl_id, const H5FD_subfiling_config_t *vfd_config)
 {
-    H5FD_subfiling_config_t *subfiling_conf = NULL;
+    H5FD_subfiling_fapl_t fa;
     H5P_genplist_t          *fapl           = NULL;
-    H5P_genplist_t          *ioc_fapl       = NULL;
     MPI_Comm                 comm           = MPI_COMM_NULL;
     MPI_Info                 info           = MPI_INFO_NULL;
+    bool free_comm = false;
     herr_t                   ret_value      = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
@@ -460,52 +474,56 @@ H5Pset_fapl_subfiling(hid_t fapl_id, const H5FD_subfiling_config_t *vfd_config)
             HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, FAIL, "can't initialize driver");
 
     if (vfd_config == NULL) {
-        if (NULL == (subfiling_conf = H5MM_calloc(sizeof(*subfiling_conf))))
-            HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "can't allocate subfiling VFD configuration");
-
         /* Get subfiling VFD defaults */
-        if (H5FD__subfiling_get_default_config(fapl_id, subfiling_conf) < 0)
+        if (H5FD__subfiling_get_default_info(fapl, &fa) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't get default subfiling VFD configuration");
+    }
+    else {
+        if (H5FD__subfiling_validate_config(vfd_config) < 0)
+            HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid subfiling VFD configuration");
 
-        vfd_config = subfiling_conf;
+        /* Reset driver info */
+        memset(&fa, 0, sizeof(fa));
+
+        /* Copy fields */
+        fa.require_ioc = vfd_config->require_ioc;
+        if (NULL == (fa.ioc_fapl = H5P_object_verify(vfd_config->ioc_fapl_id, H5P_TYPE_FILE_ACCESS, false)))
+            HGOTO_ERROR(H5E_VFL, H5E_BADTYPE, FAIL, "not a file access property list");
+
+        /* Check if any MPI parameters were set on the FAPL */
+        if (H5P_get(fapl, H5F_ACS_MPI_PARAMS_COMM_NAME, &comm) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get MPI communicator from fapl");
+        free_comm = true;
+        if (comm == MPI_COMM_NULL) {
+            comm = MPI_COMM_WORLD;
+            free_comm = false;
+        }
+        if (H5P_get(fapl, H5F_ACS_MPI_PARAMS_INFO_NAME, &info) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get MPI info from fapl");
+
+        /* Set MPI parameters on IOC FAPL */
+        if (H5P_set(fa.ioc_fapl, H5F_ACS_MPI_PARAMS_COMM_NAME, &comm) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set MPI communicator on fapl");
+        if (H5P_set(fa.ioc_fapl, H5F_ACS_MPI_PARAMS_INFO_NAME, &info) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set MPI info on fapl");
+
+        /* Set Subfiling configuration on IOC FAPL */
+        if (H5FD__subfiling_set_config_prop(fa.ioc_fapl, &vfd_config->shared_cfg) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set subfiling configuration on IOC FAPL");
     }
 
-    /* Check if any MPI parameters were set on the FAPL */
-    if (H5P_get(fapl, H5F_ACS_MPI_PARAMS_COMM_NAME, &comm) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get MPI communicator from fapl");
-    if (H5P_get(fapl, H5F_ACS_MPI_PARAMS_INFO_NAME, &info) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get MPI info from fapl");
-    if (comm == MPI_COMM_NULL)
-        comm = MPI_COMM_WORLD;
-
-    /* Set MPI parameters on IOC FAPL */
-    if (NULL == (ioc_fapl = H5P_object_verify(vfd_config->ioc_fapl_id, H5P_TYPE_FILE_ACCESS, false)))
-        HGOTO_ERROR(H5E_VFL, H5E_BADTYPE, FAIL, "not a file access property list");
-    if (H5P_set(ioc_fapl, H5F_ACS_MPI_PARAMS_COMM_NAME, &comm) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set MPI communicator on fapl");
-    if (H5P_set(ioc_fapl, H5F_ACS_MPI_PARAMS_INFO_NAME, &info) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set MPI info on fapl");
-
-    if (H5FD__subfiling_validate_config(vfd_config) < 0)
-        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid subfiling VFD configuration");
-
-    /* Set Subfiling configuration on IOC FAPL */
-    if (H5FD__subfiling_set_config_prop(ioc_fapl, &vfd_config->shared_cfg) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set subfiling configuration on IOC FAPL");
-
-    ret_value = H5P_set_driver(fapl, H5FD_SUBFILING, vfd_config, NULL);
+    if (H5P_set_driver(fapl, H5FD_SUBFILING, &fa, NULL) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set subfiling driver");
 
 done:
-    if (H5_mpi_comm_free(&comm) < 0)
+    if (free_comm && H5_mpi_comm_free(&comm) < 0)
         HDONE_ERROR(H5E_VFL, H5E_CANTFREE, FAIL, "can't free MPI Communicator");
     if (H5_mpi_info_free(&info) < 0)
         HDONE_ERROR(H5E_VFL, H5E_CANTFREE, FAIL, "can't free MPI Info object");
 
-    if (subfiling_conf) {
-        if (subfiling_conf->ioc_fapl_id >= 0 && H5I_dec_ref(subfiling_conf->ioc_fapl_id) < 0)
-            HDONE_ERROR(H5E_VFL, H5E_CANTDEC, FAIL, "can't close IOC FAPL");
-        H5MM_free(subfiling_conf);
-    }
+    if (NULL == vfd_config)
+        if (fa.ioc_fapl && H5P_release(fa.ioc_fapl) < 0)
+            HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "can't close IOC FAPL");
 
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_fapl_subfiling() */
@@ -523,10 +541,11 @@ done:
 herr_t
 H5Pget_fapl_subfiling(hid_t fapl_id, H5FD_subfiling_config_t *config_out)
 {
-    const H5FD_subfiling_config_t *config             = NULL;
-    H5P_genplist_t                *fapl               = NULL;
-    bool                           use_default_config = false;
-    herr_t                         ret_value          = SUCCEED;
+    H5P_genplist_t        *fapl;
+    H5FD_subfiling_fapl_t  default_fa;          /* Default driver info, if not set */
+    const H5FD_subfiling_fapl_t *fa;
+    bool                   use_default_config = false;
+    herr_t                 ret_value          = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
 
@@ -542,68 +561,108 @@ H5Pget_fapl_subfiling(hid_t fapl_id, H5FD_subfiling_config_t *config_out)
 
     if (H5FD_SUBFILING != H5P_peek_driver(fapl))
         use_default_config = true;
-    else {
-        if (NULL == (config = H5P_peek_driver_info(fapl)))
+    else
+        if (NULL == (fa = H5P_peek_driver_info(fapl)))
             use_default_config = true;
-    }
 
     if (use_default_config) {
-        if (H5FD__subfiling_get_default_config(fapl_id, config_out) < 0)
-            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get default Subfiling VFD configuration");
+        if (H5FD__subfiling_get_default_info(fapl, &default_fa) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get default subfiling driver info");
+        fa = &default_fa;
     }
-    else {
-        /* Copy the subfiling fapl data out */
-        H5MM_memcpy(config_out, config, sizeof(H5FD_subfiling_config_t));
 
-        /* Copy the driver info value */
-        if (H5FD__copy_plist(config->ioc_fapl_id, &(config_out->ioc_fapl_id)) < 0)
-            HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "can't copy IOC FAPL");
-    }
+    /* Copy fields */
+    config_out->magic = H5FD_SUBFILING_FAPL_MAGIC;
+    config_out->version = H5FD_SUBFILING_CURR_FAPL_VERSION;
+    config_out->require_ioc = fa->require_ioc;
+    if ((config_out->ioc_fapl_id = H5P_copy_plist_id(fa->ioc_fapl, true)) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, FAIL, "unable to copy file access property list");
+    memcpy(&config_out->shared_cfg, &fa->shared_cfg, sizeof(config_out->shared_cfg));
 
 done:
+    if (use_default_config && fa == &default_fa)
+        if (default_fa.ioc_fapl && H5P_release(default_fa.ioc_fapl) < 0)
+            HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "can't close FAPL");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_fapl_subfiling() */
 
+/*-------------------------------------------------------------------------
+ * Function:    H5FD__subfiling_fapl_info_dup
+ *
+ * Purpose:     Duplicate the file access properties.
+ *
+ * Return:      Success: Non-negative value (SUCCEED).
+ *              Failure: Negative value (FAIL).
+ *-------------------------------------------------------------------------
+ */
 static herr_t
-H5FD__subfiling_get_default_config(hid_t fapl_id, H5FD_subfiling_config_t *config_out)
+H5FD__subfiling_fapl_info_dup(H5FD_subfiling_fapl_t *dst_fa, const H5FD_subfiling_fapl_t *src_fa)
 {
-    H5P_genplist_t *fapl;     /* Property list pointer */
-    H5P_genplist_t *ioc_fapl; /* Property list pointer */
+    herr_t          ret_value   = SUCCEED;
+
+    FUNC_ENTER_PACKAGE
+
+    /* Sanity checks */
+    assert(dst_fa);
+    assert(src_fa);
+
+    /* Copy the atomic info */
+    H5MM_memcpy(dst_fa, src_fa, sizeof(H5FD_subfiling_fapl_t));
+
+    /* Copy IOC FAPL */
+    if (NULL == (dst_fa->ioc_fapl = H5P_copy_plist(src_fa->ioc_fapl, false)))
+        HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, FAIL, "unable to copy file access property list");
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5FD__subfiling_fapl_info_dup() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5FD__subfiling_get_default_info
+ *
+ * Purpose:     Duplicate the driver info properties.
+ *
+ * Return:      Success: Non-negative value (SUCCEED).
+ *              Failure: Negative value (FAIL).
+ *-------------------------------------------------------------------------
+ */
+static herr_t
+H5FD__subfiling_get_default_info(H5P_genplist_t *fapl, H5FD_subfiling_fapl_t *fa_out)
+{
     MPI_Comm        comm = MPI_COMM_NULL;
     MPI_Info        info = MPI_INFO_NULL;
-    char           *h5_require_ioc;
+    const char     *h5_require_ioc;
+    bool            free_comm = false;
     herr_t          ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
 
-    assert(config_out);
+    assert(fa_out);
 
-    memset(config_out, 0, sizeof(*config_out));
+    memset(fa_out, 0, sizeof(*fa_out));
 
-    config_out->magic       = H5FD_SUBFILING_FAPL_MAGIC;
-    config_out->version     = H5FD_SUBFILING_CURR_FAPL_VERSION;
-    config_out->ioc_fapl_id = H5I_INVALID_HID;
-    config_out->require_ioc = true;
+    fa_out->require_ioc = true;
 
-    config_out->shared_cfg.ioc_selection = SELECT_IOC_ONE_PER_NODE;
-    config_out->shared_cfg.stripe_size   = H5FD_SUBFILING_DEFAULT_STRIPE_SIZE;
-    config_out->shared_cfg.stripe_count  = H5FD_SUBFILING_DEFAULT_STRIPE_COUNT;
+    fa_out->shared_cfg.ioc_selection = SELECT_IOC_ONE_PER_NODE;
+    fa_out->shared_cfg.stripe_size   = H5FD_SUBFILING_DEFAULT_STRIPE_SIZE;
+    fa_out->shared_cfg.stripe_count  = H5FD_SUBFILING_DEFAULT_STRIPE_COUNT;
 
     if ((h5_require_ioc = getenv("H5_REQUIRE_IOC")) != NULL) {
         int value_check = atoi(h5_require_ioc);
         if (value_check == 0)
-            config_out->require_ioc = false;
+            fa_out->require_ioc = false;
     }
 
     /* Check if any MPI parameters were set on the FAPL */
-    if (NULL == (fapl = (H5P_genplist_t *)H5I_object(fapl_id)))
-        HGOTO_ERROR(H5E_VFL, H5E_BADID, FAIL, "can't find object for ID");
     if (H5P_get(fapl, H5F_ACS_MPI_PARAMS_COMM_NAME, &comm) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get MPI communicator from fapl");
+    free_comm = true;
     if (H5P_get(fapl, H5F_ACS_MPI_PARAMS_INFO_NAME, &info) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get MPI info from fapl");
     if (comm == MPI_COMM_NULL) {
         comm = MPI_COMM_WORLD;
+        free_comm = false;
 
         /* Set MPI_COMM_WORLD on FAPL if no MPI parameters were set */
         if (H5P_set(fapl, H5F_ACS_MPI_PARAMS_COMM_NAME, &comm) < 0)
@@ -613,43 +672,78 @@ H5FD__subfiling_get_default_config(hid_t fapl_id, H5FD_subfiling_config_t *confi
     }
 
     /* Create a default FAPL and choose an appropriate underlying driver */
-    if (H5FD__copy_plist(H5P_FILE_ACCESS_DEFAULT, &config_out->ioc_fapl_id) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTCREATE, FAIL, "can't create default FAPL");
-    if (NULL == (ioc_fapl = (H5P_genplist_t *)H5I_object(config_out->ioc_fapl_id)))
-        HGOTO_ERROR(H5E_VFL, H5E_BADID, FAIL, "can't find object for ID");
+    if (NULL == (fa_out->ioc_fapl = H5P_new_plist_of_type(H5P_TYPE_FILE_ACCESS, false)))
+        HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, FAIL, "can't copy default FAPL");
 
-    if (config_out->require_ioc) {
+    if (fa_out->require_ioc) {
         H5FD_ioc_config_t ioc_config;
 
-        if (H5P_set(ioc_fapl, H5F_ACS_MPI_PARAMS_COMM_NAME, &comm) < 0)
+        if (H5P_set(fa_out->ioc_fapl, H5F_ACS_MPI_PARAMS_COMM_NAME, &comm) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set MPI communicator");
-        if (H5P_set(ioc_fapl, H5F_ACS_MPI_PARAMS_INFO_NAME, &info) < 0)
+        if (H5P_set(fa_out->ioc_fapl, H5F_ACS_MPI_PARAMS_INFO_NAME, &info) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set MPI info object");
 
         if (H5FD__subfiling_get_default_ioc_config(&ioc_config) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get default IOC config");
-        if (H5P_set_driver(ioc_fapl, H5FD_IOC, &ioc_config, NULL) < 0)
+        if (H5P_set_driver(fa_out->ioc_fapl, H5FD_IOC, &ioc_config, NULL) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set IOC VFD on IOC FAPL");
     }
     else {
-        if (H5P_set_driver(ioc_fapl, H5FD_SEC2, NULL, NULL) < 0)
+        if (H5P_set_driver(fa_out->ioc_fapl, H5FD_SEC2, NULL, NULL) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set sec2 VFD on IOC FAPL");
     }
 
 done:
-    if (H5_mpi_comm_free(&comm) < 0)
+    if (free_comm && H5_mpi_comm_free(&comm) < 0)
         HDONE_ERROR(H5E_VFL, H5E_CANTFREE, FAIL, "can't free MPI Communicator");
     if (H5_mpi_info_free(&info) < 0)
         HDONE_ERROR(H5E_VFL, H5E_CANTFREE, FAIL, "can't free MPI Info object");
 
     if (ret_value < 0) {
-        if (config_out->ioc_fapl_id >= 0 && H5I_dec_ref(config_out->ioc_fapl_id) < 0)
-            HDONE_ERROR(H5E_VFL, H5E_CANTDEC, FAIL, "can't close FAPL");
-        config_out->ioc_fapl_id = H5I_INVALID_HID;
+        if (fa_out->ioc_fapl && H5P_release(fa_out->ioc_fapl) < 0)
+            HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "can't close FAPL");
+        fa_out->ioc_fapl = NULL;
     }
 
     FUNC_LEAVE_NOAPI(ret_value)
 }
+
+/*-------------------------------------------------------------------------
+ * Function:    H5FD__subfiling_validate_info()
+ *
+ * Purpose:     Test to see if the supplied instance of
+ *              H5FD_subfiling_fapl_t contains internally consistent data.
+ *              Return SUCCEED if so, and FAIL otherwise.
+ *
+ *              Note the difference between internally consistent and
+ *              correct.  As we will have to try to setup subfiling to
+ *              determine whether the supplied data is correct,
+ *              we will settle for internal consistency at this point
+ *
+ * Return:      SUCCEED if instance of H5FD_subfiling_fapl_t contains
+ *              internally consistent data, FAIL otherwise.
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t
+H5FD__subfiling_validate_info(const H5FD_subfiling_fapl_t *fa)
+{
+    herr_t ret_value = SUCCEED;
+
+    FUNC_ENTER_PACKAGE
+
+    assert(fa != NULL);
+
+    if (NULL == fa->ioc_fapl)
+        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid IOC FAPL ID");
+    if (!fa->require_ioc)
+        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "Subfiling VFD currently always requires IOC VFD to be used");
+    if (H5FD__subfiling_validate_config_params(&fa->shared_cfg) < 0)
+        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid subfiling configuration parameters");
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5FD__subfiling_validate_info() */
 
 /*-------------------------------------------------------------------------
  * Function:    H5FD__subfiling_validate_config()
@@ -684,8 +778,7 @@ H5FD__subfiling_validate_config(const H5FD_subfiling_config_t *fa)
     if (fa->ioc_fapl_id < 0)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid IOC FAPL ID");
     if (!fa->require_ioc)
-        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL,
-                    "Subfiling VFD currently always requires IOC VFD to be used");
+        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "Subfiling VFD currently always requires IOC VFD to be used");
     if (H5FD__subfiling_validate_config_params(&fa->shared_cfg) < 0)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid subfiling configuration parameters");
 
@@ -739,10 +832,9 @@ H5FD__subfiling_sb_size(H5FD_t *_file)
      */
     if (NULL == (sf_context = H5FD__subfiling_get_object(file->context_id)))
         file->fail_to_encode = true;
-    else {
+    else
         if (sf_context->config_file_prefix)
             ret_value += strlen(sf_context->config_file_prefix) + 1;
-    }
 
     /* Add superblock information from IOC file if necessary */
     if (file->sf_file) {
@@ -790,9 +882,7 @@ H5FD__subfiling_sb_encode(H5FD_t *_file, char *name, unsigned char *buf)
 
     /* Check if the "fail to encode flag" is set */
     if (file->fail_to_encode)
-        HGOTO_ERROR(
-            H5E_VFL, H5E_CANTENCODE, FAIL,
-            "can't encode subfiling driver info message - message was too large or internal error occurred");
+        HGOTO_ERROR(H5E_VFL, H5E_CANTENCODE, FAIL, "can't encode subfiling driver info message - message was too large or internal error occurred");
 
     if (NULL == (sf_context = H5FD__subfiling_get_object(file->context_id)))
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get subfiling context object");
@@ -802,10 +892,10 @@ H5FD__subfiling_sb_encode(H5FD_t *_file, char *name, unsigned char *buf)
     name[8] = '\0';
 
     /* Encode configuration structure magic number */
-    UINT32ENCODE(p, file->fa.magic);
+    UINT32ENCODE(p, H5FD_SUBFILING_FAPL_MAGIC);
 
     /* Encode configuration structure version number */
-    UINT32ENCODE(p, file->fa.version);
+    UINT32ENCODE(p, H5FD_SUBFILING_CURR_FAPL_VERSION);
 
     /* Encode "require IOC" field */
     tmp32 = (int32_t)file->fa.require_ioc;
@@ -858,6 +948,7 @@ H5FD__subfiling_sb_decode(H5FD_t *_file, const char *name, const unsigned char *
     H5FD_subfiling_t    *file       = (H5FD_subfiling_t *)_file;
     const uint8_t       *p          = (const uint8_t *)buf;
     uint64_t             tmpu64;
+    uint32_t             tmpu32;
     int64_t              tmp64;
     int32_t              tmp32;
     herr_t               ret_value = SUCCEED;
@@ -877,10 +968,14 @@ H5FD__subfiling_sb_decode(H5FD_t *_file, const char *name, const unsigned char *
         HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "invalid driver name in superblock");
 
     /* Decode configuration structure magic number */
-    UINT32DECODE(p, file->fa.magic);
+    UINT32DECODE(p, tmpu32);
+    if (tmpu32 != H5FD_SUBFILING_FAPL_MAGIC)
+        HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "invalid subfiling magic value");
 
     /* Decode configuration structure version number */
-    UINT32DECODE(p, file->fa.version);
+    UINT32DECODE(p, tmpu32);
+    if (tmpu32 != H5FD_SUBFILING_CURR_FAPL_VERSION)
+        HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "unknown subfiling version");
 
     /* Decode "require IOC" field */
     INT32DECODE(p, tmp32);
@@ -918,13 +1013,12 @@ H5FD__subfiling_sb_decode(H5FD_t *_file, const char *name, const unsigned char *
             HGOTO_ERROR(H5E_VFL, H5E_CANTDECODE, FAIL, "unable to decode IOC VFD's superblock information");
 
     /* Validate the decoded configuration */
-    if (H5FD__subfiling_validate_config(&file->fa) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "decoded subfiling configuration info is invalid");
+    if (H5FD__subfiling_validate_info(&file->fa) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "decoded subfiling driver info is invalid");
 
     if (file->fa.shared_cfg.stripe_size != sf_context->sf_stripe_size)
         HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL,
-                    "specified subfiling stripe size (%" PRId64
-                    ") doesn't match value stored in file (%" PRId64 ")",
+                    "specified subfiling stripe size (%" PRId64 ") doesn't match value stored in file (%" PRId64 ")",
                     sf_context->sf_stripe_size, file->fa.shared_cfg.stripe_size);
 
     if (file->fa.shared_cfg.stripe_count != sf_context->sf_num_subfiles)
@@ -951,60 +1045,17 @@ static void *
 H5FD__subfiling_fapl_get(H5FD_t *_file)
 {
     H5FD_subfiling_t        *file      = (H5FD_subfiling_t *)_file;
-    H5FD_subfiling_config_t *fa        = NULL;
     void                    *ret_value = NULL;
 
     FUNC_ENTER_PACKAGE
 
-    if (NULL == (fa = H5MM_calloc(sizeof(H5FD_subfiling_config_t))))
-        HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "memory allocation failed");
-
-    /* Copy the fields of the structure */
-    H5MM_memcpy(fa, &file->fa, sizeof(H5FD_subfiling_config_t));
-
-    /* Copy the driver info value */
-    if (H5FD__copy_plist(file->fa.ioc_fapl_id, &fa->ioc_fapl_id) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, NULL, "can't copy IOC FAPL");
-
-    /* Set return value */
-    ret_value = fa;
+    /* Call the FAPL info copy routine */
+    if (NULL == (ret_value = H5FD__subfiling_fapl_copy(&file->fa)))
+        HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, NULL, "unable to copy subfiling driver info");
 
 done:
-    if (ret_value == NULL)
-        if (fa != NULL)
-            H5MM_xfree(fa);
-
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FD__subfiling_fapl_get() */
-
-/*-------------------------------------------------------------------------
- * Function:    H5FD__copy_plist
- *
- * Purpose:     Sanity-wrapped H5P_copy_plist_id() for each channel.
- *              Utility function for operation in multiple locations.
- *
- * Return:      Non-negative on success/Negative on failure
- *-------------------------------------------------------------------------
- */
-static herr_t
-H5FD__copy_plist(hid_t fapl_id, hid_t *id)
-{
-    H5P_genplist_t *fapl      = NULL;
-    int             ret_value = SUCCEED;
-
-    FUNC_ENTER_PACKAGE
-
-    assert(id != NULL);
-
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "unable to get property list");
-
-    if (H5I_INVALID_HID == (*id = H5P_copy_plist_id(fapl, false)))
-        HGOTO_ERROR(H5E_VFL, H5E_BADTYPE, FAIL, "unable to copy file access property list");
-
-done:
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5FD__copy_plist() */
 
 /*-------------------------------------------------------------------------
  * Function:    H5FD__subfiling_fapl_copy
@@ -1019,26 +1070,27 @@ done:
 static void *
 H5FD__subfiling_fapl_copy(const void *_old_fa)
 {
-    const H5FD_subfiling_config_t *old_fa    = (const H5FD_subfiling_config_t *)_old_fa;
-    H5FD_subfiling_config_t       *new_fa    = NULL;
+    const H5FD_subfiling_fapl_t *old_fa    = (const H5FD_subfiling_fapl_t *)_old_fa;
+    H5FD_subfiling_fapl_t       *new_fa    = NULL;
     void                          *ret_value = NULL;
 
     FUNC_ENTER_PACKAGE
 
-    if (NULL == (new_fa = H5MM_malloc(sizeof(H5FD_subfiling_config_t))))
-        HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "memory allocation failed");
+    /* Allocate the new driver info */
+    if (NULL == (new_fa = H5FL_CALLOC(H5FD_subfiling_fapl_t)))
+        HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "unable to allocate subfiling driver info");
 
-    H5MM_memcpy(new_fa, old_fa, sizeof(H5FD_subfiling_config_t));
+    /* Copy the driver info */
+    if (H5FD__subfiling_fapl_info_dup(new_fa, old_fa) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, NULL, "unable to copy driver info");
 
-    if (H5FD__copy_plist(old_fa->ioc_fapl_id, &new_fa->ioc_fapl_id) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, NULL, "can't copy the IOC FAPL");
-
+    /* Set return value */
     ret_value = new_fa;
 
 done:
     if (ret_value == NULL)
-        if (new_fa != NULL)
-            H5MM_xfree(new_fa);
+        if (new_fa && H5FD__subfiling_fapl_free(new_fa) < 0)
+            HDONE_ERROR(H5E_VFL, H5E_CANTRELEASE, NULL, "can't free driver info");
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FD__subfiling_fapl_copy() */
@@ -1055,19 +1107,22 @@ done:
 static herr_t
 H5FD__subfiling_fapl_free(void *_fa)
 {
-    H5FD_subfiling_config_t *fa        = (H5FD_subfiling_config_t *)_fa;
+    H5FD_subfiling_fapl_t *fa        = (H5FD_subfiling_fapl_t *)_fa;
     herr_t                   ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
 
     assert(fa != NULL); /* sanity check */
 
-    if (fa->ioc_fapl_id >= 0 && H5I_dec_ref(fa->ioc_fapl_id) < 0)
-        HDONE_ERROR(H5E_VFL, H5E_CANTDEC, FAIL, "can't close IOC FAPL");
-    fa->ioc_fapl_id = H5I_INVALID_HID;
+    /* Release the IOC FAPL */
+    if (fa->ioc_fapl)
+        if (H5P_release(fa->ioc_fapl) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "can't close IOC FAPL");
 
-    H5MM_xfree(fa);
+    /* Free the property */
+    fa = H5FL_FREE(H5FD_subfiling_fapl_t, fa);
 
+done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FD__subfiling_fapl_free() */
 
@@ -1087,11 +1142,10 @@ static H5FD_t *
 H5FD__subfiling_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
 {
     H5FD_subfiling_t              *file   = NULL; /* Subfiling VFD info */
-    const H5FD_subfiling_config_t *config = NULL; /* Driver-specific property list */
-    H5FD_subfiling_config_t        default_config;
+    const H5FD_subfiling_fapl_t *fa = NULL; /* Driver-specific property list */
+    H5FD_subfiling_fapl_t  default_fa;          /* Default driver info, if not set */
     H5FD_class_t                  *driver   = NULL; /* VFD for file */
     H5P_genplist_t                *fapl     = NULL;
-    H5P_genplist_t                *ioc_fapl = NULL;
     H5FD_driver_prop_t             driver_prop; /* Property for driver ID & info */
     bool                           bcasted_eof = false;
     int64_t                        sf_eof      = -1;
@@ -1113,18 +1167,18 @@ H5FD__subfiling_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t ma
         if (H5FD__subfiling_init() < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, NULL, "can't initialize driver");
 
-    if (NULL == (file = (H5FD_subfiling_t *)H5FL_CALLOC(H5FD_subfiling_t)))
+    if (NULL == (file = H5FL_CALLOC(H5FD_subfiling_t)))
         HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "unable to allocate file struct");
     file->comm           = MPI_COMM_NULL;
     file->info           = MPI_INFO_NULL;
     file->file_id        = UINT64_MAX;
     file->context_id     = -1;
-    file->fa.ioc_fapl_id = H5I_INVALID_HID;
+    file->fa.ioc_fapl = NULL;
     file->ext_comm       = MPI_COMM_NULL;
     file->fail_to_encode = false;
 
     /* Get the driver-specific file access properties */
-    if (NULL == (fapl = (H5P_genplist_t *)H5I_object(fapl_id)))
+    if (NULL == (fapl = H5I_object(fapl_id)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file access property list");
 
     if (H5FD_mpi_self_initialized_s) {
@@ -1160,30 +1214,24 @@ H5FD__subfiling_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t ma
             HGOTO_ERROR(H5E_VFL, H5E_CANTSET, NULL, "can't set metadata cache initial config");
     }
 
-    config = H5P_peek_driver_info(fapl);
-    if (!config || (H5P_FILE_ACCESS_DEFAULT == fapl_id)) {
-        if (H5FD__subfiling_get_default_config(fapl_id, &default_config) < 0)
-            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get default subfiling VFD configuration");
-        config = &default_config;
+    fa = H5P_peek_driver_info(fapl);
+    if (!fa || H5P_PLIST_IS_DEFAULT(fapl)) {
+        if (H5FD__subfiling_get_default_info(fapl, &default_fa) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get default subfiling driver info");
+        fa = &default_fa;
     }
 
-    H5MM_memcpy(&file->fa, config, sizeof(H5FD_subfiling_config_t));
-    if (H5FD__copy_plist(config->ioc_fapl_id, &file->fa.ioc_fapl_id) < 0) {
-        file->fa.ioc_fapl_id = H5I_INVALID_HID;
-        HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, NULL, "can't copy FAPL");
-    }
+    /* Copy the driver info into the file's struct */
+    if (H5FD__subfiling_fapl_info_dup(&file->fa, fa) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, NULL, "unable to copy driver info");
 
-    /* Check the "native" driver (IOC/sec2/etc.) */
-    if (NULL == (ioc_fapl = H5I_object(file->fa.ioc_fapl_id)))
-        HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, NULL, "invalid IOC FAPL");
-
-    if (H5P_peek(ioc_fapl, H5F_ACS_FILE_DRV_NAME, &driver_prop) < 0)
+    /* Check for correct IOC driver */
+    if (H5P_peek(file->fa.ioc_fapl, H5F_ACS_FILE_DRV_NAME, &driver_prop) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get driver ID & info");
-    if (NULL == (driver = (H5FD_class_t *)H5I_object(driver_prop.driver_id)))
+    if (NULL == (driver = H5I_object(driver_prop.driver_id)))
         HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, NULL, "invalid driver ID in file access property list");
-    if (driver->value != H5_VFD_IOC)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL,
-                    "unable to open file '%s' - only IOC VFD is currently supported for subfiles", name);
+    if (H5_VFD_IOC != driver->value)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL, "unable to open file '%s' - only IOC VFD is currently supported for subfiles", name);
 
     /* Fully resolve the given filepath and get its dirname */
     if (H5FD__subfiling_resolve_pathname(name, file->comm, &file->file_path) < 0)
@@ -1195,16 +1243,15 @@ H5FD__subfiling_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t ma
      * Create/open the HDF5 stub file and get its inode value for
      * the internal mapping from file inode to subfiling context.
      */
-    if (H5FD__subfiling_open_stub_file(file->file_path, flags, file->comm, &file->stub_file, &file->file_id) <
-        0)
+    if (H5FD__subfiling_open_stub_file(file->file_path, flags, file->comm, &file->stub_file, &file->file_id) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL, "can't open HDF5 stub file");
 
     /* Set stub file ID on IOC fapl so it can reuse on open */
-    if (H5FD__subfiling_set_file_id_prop(ioc_fapl, file->file_id) < 0)
+    if (H5FD__subfiling_set_file_id_prop(file->fa.ioc_fapl, file->file_id) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, NULL, "can't set stub file ID on FAPL");
 
     /* Open the HDF5 file's subfiles */
-    if (H5FD_open(false, &file->sf_file, name, flags, ioc_fapl, HADDR_UNDEF) < 0)
+    if (H5FD_open(false, &file->sf_file, name, flags, file->fa.ioc_fapl, HADDR_UNDEF) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL, "unable to open IOC file");
 
     /* Get a copy of the context ID for later use */
@@ -1228,8 +1275,8 @@ H5FD__subfiling_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t ma
     ret_value = (H5FD_t *)file;
 
 done:
-    if (config == &default_config)
-        if (H5I_dec_ref(config->ioc_fapl_id) < 0)
+    if (fa == &default_fa)
+        if (H5P_release(fa->ioc_fapl) < 0)
             HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, NULL, "can't close IOC FAPL");
 
     if (NULL == ret_value)
@@ -1251,6 +1298,16 @@ done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FD__subfiling_open() */
 
+/*-------------------------------------------------------------------------
+ * Function:    H5FD__subfiling_close_int
+ *
+ * Purpose:     Internal routine to close a subfiling file
+ *
+ * Return:      Success:    SUCCEED
+ *              Failure:    FAIL
+ *
+ *-------------------------------------------------------------------------
+ */
 static herr_t
 H5FD__subfiling_close_int(H5FD_subfiling_t *file)
 {
@@ -1268,8 +1325,8 @@ H5FD__subfiling_close_int(H5FD_subfiling_t *file)
         HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEFILE, FAIL, "unable to close HDF5 stub file");
 
     /* If set, close the copy of the FAPL for the underlying VFD. */
-    if (file->fa.ioc_fapl_id >= 0 && H5I_dec_ref(file->fa.ioc_fapl_id) < 0)
-        HDONE_ERROR(H5E_VFL, H5E_CANTDEC, FAIL, "can't close IOC FAPL");
+    if (file->fa.ioc_fapl && H5P_release(file->fa.ioc_fapl) < 0)
+        HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "can't close IOC FAPL");
 
     if (MPI_SUCCESS != (mpi_code = MPI_Finalized(&mpi_finalized)))
         HMPI_DONE_ERROR(FAIL, "MPI_Finalized failed", mpi_code);
@@ -1470,7 +1527,6 @@ static herr_t
 H5FD__subfiling_get_handle(H5FD_t *_file, hid_t H5_ATTR_UNUSED fapl, void **file_handle)
 {
     H5FD_subfiling_t *file      = (H5FD_subfiling_t *)_file;
-    H5P_genplist_t   *ioc_fapl  = NULL;
     herr_t            ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
@@ -1478,9 +1534,7 @@ H5FD__subfiling_get_handle(H5FD_t *_file, hid_t H5_ATTR_UNUSED fapl, void **file
     if (!file_handle)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "file handle not valid");
 
-    if (NULL == (ioc_fapl = H5I_object(file->fa.ioc_fapl_id)))
-        HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "invalid IOC FAPL");
-    if (H5FD_get_vfd_handle(file->sf_file, ioc_fapl, file_handle) < 0)
+    if (H5FD_get_vfd_handle(file->sf_file, file->fa.ioc_fapl, file_handle) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get subfile handle");
 
 done:
@@ -1773,10 +1827,9 @@ done:
 static herr_t
 H5FD__subfiling_delete(const char *name, hid_t fapl_id)
 {
-    const H5FD_subfiling_config_t *subfiling_config = NULL;
-    H5FD_subfiling_config_t        default_config;
+    const H5FD_subfiling_fapl_t *subfiling_fa = NULL;
+    H5FD_subfiling_fapl_t        default_fa;
     H5P_genplist_t                *fapl      = NULL;
-    H5P_genplist_t                *ioc_fapl  = NULL;
     herr_t                         ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
@@ -1792,20 +1845,18 @@ H5FD__subfiling_delete(const char *name, hid_t fapl_id)
     if (H5FD_SUBFILING != H5P_peek_driver(fapl))
         HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "incorrect driver set on FAPL");
 
-    if (NULL == (subfiling_config = H5P_peek_driver_info(fapl))) {
-        if (H5FD__subfiling_get_default_config(fapl_id, &default_config) < 0)
-            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get default Subfiling VFD configuration");
-        subfiling_config = &default_config;
+    if (NULL == (subfiling_fa = H5P_peek_driver_info(fapl))) {
+        if (H5FD__subfiling_get_default_info(fapl, &default_fa) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get default subfiling driver info");
+        subfiling_fa = &default_fa;
     }
 
-    if (NULL == (ioc_fapl = H5I_object(subfiling_config->ioc_fapl_id)))
-        HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "invalid IOC FAPL");
-    if (H5FD_delete(name, ioc_fapl) < 0)
+    if (H5FD_delete(name, subfiling_fa->ioc_fapl) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTDELETE, FAIL, "unable to delete file");
 
 done:
-    if (subfiling_config == &default_config)
-        if (H5I_dec_ref(subfiling_config->ioc_fapl_id) < 0)
+    if (subfiling_fa == &default_fa)
+        if (H5P_release(subfiling_fa->ioc_fapl) < 0)
             HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "unable to close IOC FAPL");
 
     FUNC_LEAVE_NOAPI(ret_value)

@@ -528,9 +528,9 @@ H5FD__onion_fapl_get(H5FD_t *_file)
     /* Check arguments */
     assert(file);
 
-    /* Call the FAPL info dup routine */
+    /* Call the FAPL info copy routine */
     if (NULL == (ret_value = H5FD__onion_fapl_copy(&file->fa)))
-        HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, NULL, "unable to copy onion file FAPL");
+        HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, NULL, "unable to copy onion driver info");
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -556,9 +556,9 @@ H5FD__onion_fapl_copy(const void *_old_fa)
 
     assert(old_fa);
 
-    /* Allocate the new FAPL info */
+    /* Allocate the new driver info */
     if (NULL == (new_fa = H5FL_CALLOC(H5FD_onion_fapl_t)))
-        HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "unable to allocate onion file FAPL");
+        HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "unable to allocate onion driver info");
 
     /* Copy the driver info */
     if (H5FD__onion_fapl_info_dup(new_fa, old_fa) < 0)
