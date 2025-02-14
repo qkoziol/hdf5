@@ -9602,8 +9602,9 @@ error:
 static int
 external_set_elink_fapl3(bool new_format)
 {
-    hid_t core_fapl = H5I_INVALID_HID, stdio_fapl = H5I_INVALID_HID;
-    hid_t lapl_id = H5I_INVALID_HID, new_lapl_id = H5I_INVALID_HID, l_fapl = H5I_INVALID_HID, out_fapl;
+    hid_t           core_fapl = H5I_INVALID_HID, stdio_fapl = H5I_INVALID_HID;
+    hid_t           lapl_id = H5I_INVALID_HID, new_lapl_id = H5I_INVALID_HID, l_fapl_id = H5I_INVALID_HID;
+    H5P_genplist_t *out_fapl = NULL;
 
     if (new_format)
         TESTING("H5Pset/get_fapl() (w/new group format)");
@@ -9626,11 +9627,11 @@ external_set_elink_fapl3(bool new_format)
         TEST_ERROR;
 
     /* Verify that the driver for the link's fapl is the "stdio" driver */
-    if ((l_fapl = H5Pget_elink_fapl(lapl_id)) < 0)
+    if ((l_fapl_id = H5Pget_elink_fapl(lapl_id)) < 0)
         TEST_ERROR;
-    if (H5Pget_driver(l_fapl) != H5FD_STDIO)
+    if (H5Pget_driver(l_fapl_id) != H5FD_STDIO)
         TEST_ERROR;
-    if (H5Pclose(l_fapl) < 0)
+    if (H5Pclose(l_fapl_id) < 0)
         TEST_ERROR;
 
     /* Set file access property list for link access to use the "core" driver */
@@ -9642,32 +9643,33 @@ external_set_elink_fapl3(bool new_format)
         TEST_ERROR;
 
     /* get the fapl set in lapl_id */
-    if (H5Pget(lapl_id, "external link fapl", &out_fapl) < 0)
+    if (H5Pget(lapl_id, H5L_ACS_ELINK_FAPL_NAME, &out_fapl) < 0)
         TEST_ERROR;
     if (H5Pclose(lapl_id) < 0)
         TEST_ERROR;
 
     /* Try closing out_fapl, should succeed since H5Pget() should clone its fapl */
-    if (H5Pclose(out_fapl) < 0)
+    if (H5P_release(out_fapl) < 0)
         TEST_ERROR;
+    out_fapl = NULL;
 
     /* Verify that the driver for the copied link's fapl is the "core" driver */
-    if ((l_fapl = H5Pget_elink_fapl(new_lapl_id)) < 0)
+    if ((l_fapl_id = H5Pget_elink_fapl(new_lapl_id)) < 0)
         TEST_ERROR;
-    if (H5Pget_driver(l_fapl) != H5FD_CORE)
+    if (H5Pget_driver(l_fapl_id) != H5FD_CORE)
         TEST_ERROR;
 
     /* get the fapl set in new_lapl_id */
-    if (H5Pget(new_lapl_id, "external link fapl", &out_fapl) < 0)
+    if (H5Pget(new_lapl_id, H5L_ACS_ELINK_FAPL_NAME, &out_fapl) < 0)
         TEST_ERROR;
-    if (H5Premove(new_lapl_id, "external link fapl") < 0)
+    if (H5Premove(new_lapl_id, H5L_ACS_ELINK_FAPL_NAME) < 0)
         TEST_ERROR;
 
     /* Try closing out_fapl, should succeed since H5Pget() should clone its fapl */
-    if (H5Pclose(out_fapl) < 0)
+    if (H5P_release(out_fapl) < 0)
         TEST_ERROR;
 
-    if (H5Pclose(l_fapl) < 0)
+    if (H5Pclose(l_fapl_id) < 0)
         TEST_ERROR;
     if (H5Pclose(new_lapl_id) < 0)
         TEST_ERROR;
@@ -9682,7 +9684,7 @@ external_set_elink_fapl3(bool new_format)
 error:
     H5E_BEGIN_TRY
     {
-        H5Pclose(l_fapl);
+        H5Pclose(l_fapl_id);
         H5Pclose(lapl_id);
         H5Pclose(new_lapl_id);
         H5Pclose(core_fapl);
