@@ -74,11 +74,11 @@
 
 /* Driver-specific file access properties */
 typedef struct H5FD_multi_fapl_t {
-    H5FD_mem_t memb_map[H5FD_MEM_NTYPES];  /*memory usage map              */
+    H5FD_mem_t memb_map[H5FD_MEM_NTYPES];     /*memory usage map              */
     hid_t      memb_fapl_id[H5FD_MEM_NTYPES]; /*member access properties      */
-    char      *memb_name[H5FD_MEM_NTYPES]; /*name generators               */
-    haddr_t    memb_addr[H5FD_MEM_NTYPES]; /*starting addr per member      */
-    bool       relax;                      /*less stringent error checking */
+    char      *memb_name[H5FD_MEM_NTYPES];    /*name generators               */
+    haddr_t    memb_addr[H5FD_MEM_NTYPES];    /*starting addr per member      */
+    bool       relax;                         /*less stringent error checking */
 } H5FD_multi_fapl_t;
 
 /*
@@ -400,10 +400,10 @@ H5FD_split_populate_config(const char *meta_ext, hid_t meta_fapl_id, const char 
     /* Initialize */
     ALL_MEMBERS (mt) {
         /* Treat global heap as raw data, not metadata */
-        _memb_map[mt]  = ((mt == H5FD_MEM_DRAW || mt == H5FD_MEM_GHEAP) ? H5FD_MEM_DRAW : H5FD_MEM_SUPER);
+        _memb_map[mt]     = ((mt == H5FD_MEM_DRAW || mt == H5FD_MEM_GHEAP) ? H5FD_MEM_DRAW : H5FD_MEM_SUPER);
         _memb_fapl_id[mt] = H5P_DEFAULT;
-        _memb_name[mt] = NULL;
-        _memb_addr[mt] = HADDR_UNDEF;
+        _memb_name[mt]    = NULL;
+        _memb_addr[mt]    = HADDR_UNDEF;
     }
     END_MEMBERS
 
@@ -509,8 +509,9 @@ H5FD_split_populate_config(const char *meta_ext, hid_t meta_fapl_id, const char 
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5FD_multi_populate_config(const H5FD_mem_t *memb_map, const hid_t *memb_fapl_id, const char *const *memb_name,
-                           const haddr_t *memb_addr, bool relax, H5FD_multi_fapl_t *fa_out)
+H5FD_multi_populate_config(const H5FD_mem_t *memb_map, const hid_t *memb_fapl_id,
+                           const char *const *memb_name, const haddr_t *memb_addr, bool relax,
+                           H5FD_multi_fapl_t *fa_out)
 {
     static const char *letters = "Xsbrglo";
     static char        _memb_name_g[H5FD_MEM_NTYPES][16]; /* Static scratch buffer to store member names */
@@ -997,7 +998,7 @@ H5FD_multi_fapl_free(void *_fa)
 static H5FD_t *
 H5FD_multi_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
 {
-    H5FD_multi_t            *file       = NULL;
+    H5FD_multi_t            *file          = NULL;
     hid_t                    close_fapl_id = H5I_INVALID_HID;
     const H5FD_multi_fapl_t *fa;
     H5FD_mem_t               m;
