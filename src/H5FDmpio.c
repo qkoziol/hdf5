@@ -1100,7 +1100,7 @@ H5FD__mpio_close(H5FD_t *_file)
 
     /* Sanity checks */
     assert(file);
-    assert(H5FD_MPIO == file->pub.driver_id);
+    assert(H5_VFD_MPIO == file->pub.cls->value);
 
     /* MPI_File_close sets argument to MPI_FILE_NULL */
     if (MPI_SUCCESS != (mpi_code = MPI_File_close(&(file->f))))
@@ -1169,7 +1169,7 @@ H5FD__mpio_get_eoa(const H5FD_t *_file, H5FD_mem_t H5_ATTR_UNUSED type)
 
     /* Sanity checks */
     assert(file);
-    assert(H5FD_MPIO == file->pub.driver_id);
+    assert(H5_VFD_MPIO == file->pub.cls->value);
 
     FUNC_LEAVE_NOAPI(file->eoa)
 } /* end H5FD__mpio_get_eoa() */
@@ -1194,7 +1194,7 @@ H5FD__mpio_set_eoa(H5FD_t *_file, H5FD_mem_t H5_ATTR_UNUSED type, haddr_t addr)
 
     /* Sanity checks */
     assert(file);
-    assert(H5FD_MPIO == file->pub.driver_id);
+    assert(H5_VFD_MPIO == file->pub.cls->value);
 
     file->eoa = addr;
 
@@ -1233,7 +1233,7 @@ H5FD__mpio_get_eof(const H5FD_t *_file, H5FD_mem_t H5_ATTR_UNUSED type)
 
     /* Sanity checks */
     assert(file);
-    assert(H5FD_MPIO == file->pub.driver_id);
+    assert(H5_VFD_MPIO == file->pub.cls->value);
 
     FUNC_LEAVE_NOAPI(file->eof)
 } /* end H5FD__mpio_get_eof() */
@@ -1315,7 +1315,7 @@ H5FD__mpio_read(H5FD_t *_file, H5FD_mem_t H5_ATTR_UNUSED type, hid_t H5_ATTR_UNU
 
     /* Sanity checks */
     assert(file);
-    assert(H5FD_MPIO == file->pub.driver_id);
+    assert(H5_VFD_MPIO == file->pub.cls->value);
     assert(buf);
 
     /* Portably initialize MPI status variable */
@@ -1564,7 +1564,7 @@ H5FD__mpio_write(H5FD_t *_file, H5FD_mem_t type, hid_t H5_ATTR_UNUSED dxpl_id, h
 
     /* Sanity checks */
     assert(file);
-    assert(H5FD_MPIO == file->pub.driver_id);
+    assert(H5_VFD_MPIO == file->pub.cls->value);
     assert(buf);
 
     /* Verify that no data is written when between MPI_Barrier()s during file flush */
@@ -2152,7 +2152,7 @@ H5FD__mpio_read_vector(H5FD_t *_file, hid_t H5_ATTR_UNUSED dxpl_id, uint32_t cou
 
     /* Sanity checks */
     assert(file);
-    assert(H5FD_MPIO == file->pub.driver_id);
+    assert(H5_VFD_MPIO == file->pub.cls->value);
     assert((types) || (count == 0));
     assert((addrs) || (count == 0));
     assert((sizes) || (count == 0));
@@ -2516,7 +2516,7 @@ H5FD__mpio_write_vector(H5FD_t *_file, hid_t H5_ATTR_UNUSED dxpl_id, uint32_t co
 
     /* Sanity checks */
     assert(file);
-    assert(H5FD_MPIO == file->pub.driver_id);
+    assert(H5_VFD_MPIO == file->pub.cls->value);
     assert((types) || (count == 0));
     assert((addrs) || (count == 0));
     assert((sizes) || (count == 0));
@@ -3049,7 +3049,7 @@ H5FD__mpio_read_selection(H5FD_t *_file, H5FD_mem_t type, hid_t H5_ATTR_UNUSED d
 
     /* Sanity checks */
     assert(file);
-    assert(H5FD_MPIO == file->pub.driver_id);
+    assert(H5_VFD_MPIO == file->pub.cls->value);
     assert((count == 0) || (mem_space_ids));
     assert((count == 0) || (file_space_ids));
     assert((count == 0) || (offsets));
@@ -3402,7 +3402,7 @@ H5FD__mpio_write_selection(H5FD_t *_file, H5FD_mem_t type, hid_t H5_ATTR_UNUSED 
 
     /* Sanity checks */
     assert(file);
-    assert(H5FD_MPIO == file->pub.driver_id);
+    assert(H5_VFD_MPIO == file->pub.cls->value);
     assert((count == 0) || (mem_space_ids));
     assert((count == 0) || (file_space_ids));
     assert((count == 0) || (offsets));
@@ -3667,7 +3667,7 @@ H5FD__mpio_flush(H5FD_t *_file, hid_t H5_ATTR_UNUSED dxpl_id, bool closing)
 
     /* Sanity checks */
     assert(file);
-    assert(H5FD_MPIO == file->pub.driver_id);
+    assert(H5_VFD_MPIO == file->pub.cls->value);
 
     /* Only sync the file if we are not going to immediately close it */
     if (!closing)
@@ -3721,7 +3721,7 @@ H5FD__mpio_truncate(H5FD_t *_file, hid_t H5_ATTR_UNUSED dxpl_id, bool H5_ATTR_UN
 
     /* Sanity checks */
     assert(file);
-    assert(H5FD_MPIO == file->pub.driver_id);
+    assert(H5_VFD_MPIO == file->pub.cls->value);
 
     if (!H5_addr_eq(file->eoa, file->last_eoa)) {
         int        mpi_code; /* mpi return code */
@@ -3906,7 +3906,7 @@ H5FD__mpio_ctl(H5FD_t *_file, uint64_t op_code, uint64_t flags, const void H5_AT
 
     /* Sanity checks */
     assert(file);
-    assert(H5FD_MPIO == file->pub.driver_id);
+    assert(H5_VFD_MPIO == file->pub.cls->value);
 
     switch (op_code) {
 
