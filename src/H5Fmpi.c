@@ -391,7 +391,7 @@ H5F_mpi_retrieve_comm(hid_t loc_id, hid_t fapl_id, MPI_Comm *mpi_comm)
     /* otherwise, this is from H5Fopen or H5Fcreate and has to be collective */
     else {
         H5FD_driver_prop_t driver_prop; /* Property for driver ID & info */
-        H5P_genplist_t    *fapl;       /* Property list pointer */
+        H5P_genplist_t    *fapl;        /* Property list pointer */
         unsigned long      driver_feat_flags;
         H5FD_class_t      *driver_class = NULL;
 
