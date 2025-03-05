@@ -35,9 +35,6 @@
 /* Library Private Variables */
 /*****************************/
 
-/* subfiling VFD driver's ID */
-H5_DLLVAR hid_t H5FD_SUBFILING_id_g;
-
 /* The subfiling VFD driver */
 H5_DLLVAR H5FD_driver_t *H5FD_SUBFILING_driver_g;
 
