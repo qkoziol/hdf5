@@ -296,7 +296,8 @@ test_ros3_fapl_driver_flags(void)
     if (0 == (driver_flags & (H5FD_FEAT_DATA_SIEVE | H5FD_FEAT_DEFAULT_VFD_COMPATIBLE)))
         FAIL_PUTS_ERROR("ros3 VFD should support H5FD_FEAT_DATA_SIEVE & H5FD_FEAT_DEFAULT_VFD_COMPATIBLE");
     if ((H5FD_FEAT_DATA_SIEVE | H5FD_FEAT_DEFAULT_VFD_COMPATIBLE) != driver_flags)
-        FAIL_PUTS_ERROR("H5FD_FEAT_DATA_SIEVE & H5FD_FEAT_DEFAULT_VFD_COMPATIBLE should be the only supported flags");
+        FAIL_PUTS_ERROR(
+            "H5FD_FEAT_DATA_SIEVE & H5FD_FEAT_DEFAULT_VFD_COMPATIBLE should be the only supported flags");
 
     PASSED();
     return 0;
