@@ -148,6 +148,7 @@ H5FD_mpi_get_comm(H5FD_int_t *fh)
     uint64_t            flags     = H5FD_CTL_FAIL_IF_UNKNOWN_FLAG | H5FD_CTL_ROUTE_TO_TERMINAL_VFD_FLAG;
     MPI_Comm            comm      = MPI_COMM_NULL;
     void               *comm_ptr  = (void *)(&comm);
+    herr_t              status;
     MPI_Comm            ret_value = MPI_COMM_NULL;
 
     FUNC_ENTER_NOAPI(MPI_COMM_NULL)
@@ -168,10 +169,10 @@ H5FD_mpi_get_comm(H5FD_int_t *fh)
     H5_BEFORE_USER_CB(MPI_COMM_NULL)
         {
             /* Dispatch to driver */
-            ret_value = (cls->ctl)(file, H5FD_CTL_GET_MPI_COMMUNICATOR_OPCODE, flags, NULL, &comm_ptr);
+            status = (cls->ctl)(file, H5FD_CTL_GET_MPI_COMMUNICATOR_OPCODE, flags, NULL, &comm_ptr);
         }
     H5_AFTER_USER_CB(MPI_COMM_NULL)
-    if (ret_value < 0)
+    if (status < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, MPI_COMM_NULL, "driver get_comm request failed");
 
     if (comm == MPI_COMM_NULL)
@@ -201,6 +202,7 @@ H5FD_mpi_get_info(H5FD_int_t *fh)
     uint64_t            flags     = H5FD_CTL_FAIL_IF_UNKNOWN_FLAG | H5FD_CTL_ROUTE_TO_TERMINAL_VFD_FLAG;
     MPI_Info            info      = MPI_INFO_NULL;
     void               *info_ptr  = (void *)(&info);
+    herr_t              status;
     MPI_Info            ret_value = MPI_INFO_NULL;
 
     FUNC_ENTER_NOAPI(MPI_INFO_NULL)
@@ -221,10 +223,10 @@ H5FD_mpi_get_info(H5FD_int_t *fh)
     H5_BEFORE_USER_CB(MPI_INFO_NULL)
         {
             /* Dispatch to driver */
-            ret_value = (cls->ctl)(file, H5FD_CTL_GET_MPI_INFO_OPCODE, flags, NULL, &info_ptr);
+            status = (cls->ctl)(file, H5FD_CTL_GET_MPI_INFO_OPCODE, flags, NULL, &info_ptr);
         }
     H5_AFTER_USER_CB(MPI_INFO_NULL)
-    if (ret_value < 0)
+    if (status < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, MPI_INFO_NULL, "driver get_info request failed");
 
     if (info == MPI_INFO_NULL)
