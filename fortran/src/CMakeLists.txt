@@ -483,6 +483,7 @@ set (mod_export_files
     h5e.mod
     h5es.mod
     h5f.mod
+    h5fd.mod
     h5g.mod
     h5i.mod
     h5l.mod

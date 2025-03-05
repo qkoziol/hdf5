@@ -67,7 +67,7 @@ CONTAINS
     INTEGER(C_INT) :: are_same_c
 
     INTERFACE
-       INTEGER(C_INT) FUNCTION H5FDcmp_driver_cls(cmp_value, drvr_id1, drvr_id2) BIND(C, NAME='H5VLcmp_connector_cls')
+       INTEGER(C_INT) FUNCTION H5FDcmp_driver_cls(cmp_value, drvr_id1, drvr_id2) BIND(C, NAME='H5FDcmp_driver_cls')
          IMPORT :: HID_T, C_INT
          INTEGER(C_INT), INTENT(OUT) :: cmp_value
          INTEGER(HID_T), VALUE :: drvr_id1

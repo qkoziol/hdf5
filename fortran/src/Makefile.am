@@ -166,8 +166,8 @@ H5_gen.lo:           H5_gen.F90 H5f90global.lo H5Aff.lo H5Dff.lo H5Pff.lo
 HDF5.lo:             $(srcdir)/HDF5.F90 H5f90global.lo H5_ff.lo H5Aff.lo  \
                      H5Dff.lo \
 		     H5Eff.lo H5ESff.lo \
-		     H5Fff.lo H5Gff.lo H5Iff.lo H5Lff.lo \
+		     H5Fff.lo H5FDff.lo H5Gff.lo H5Iff.lo H5Lff.lo \
 	             H5Off.lo H5Pff.lo H5Rff.lo \
-                     H5Sff.lo H5Tff.lo H5Zff.lo H5_gen.lo
+                     H5Sff.lo H5Tff.lo H5VLff.lo H5Zff.lo H5_gen.lo
 
 include $(top_srcdir)/config/conclude_fc.am
