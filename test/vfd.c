@@ -2337,11 +2337,11 @@ test_ros3(void)
     if (H5FDdriver_query(driver_id, &driver_flags) < 0)
         TEST_ERROR;
 
-    if (!(driver_flags & H5FD_FEAT_DATA_SIEVE))
+    if (!(driver_flags & (H5FD_FEAT_DATA_SIEVE | H5FD_FEAT_DEFAULT_VFD_COMPATIBLE)))
         TEST_ERROR;
 
     /* Check for extra flags not accounted for above */
-    if (driver_flags != (H5FD_FEAT_DATA_SIEVE))
+    if (driver_flags != (H5FD_FEAT_DATA_SIEVE | H5FD_FEAT_DEFAULT_VFD_COMPATIBLE))
         TEST_ERROR;
 
     if (H5Idec_ref(driver_id) < 0)
