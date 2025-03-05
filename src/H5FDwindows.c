@@ -16,11 +16,11 @@
 
 #ifdef H5_HAVE_WINDOWS
 
-#include "H5Eprivate.h"  /* Error handling           */
-#include "H5FDpkg.h"     /* File drivers             */
-#include "H5FDsec2_private.h"     /* sec2 VFD driver */
-#include "H5FDwindows.h" /* Windows file driver      */
-#include "H5Pprivate.h"  /* Property lists           */
+#include "H5Eprivate.h"       /* Error handling           */
+#include "H5FDpkg.h"          /* File drivers             */
+#include "H5FDsec2_private.h" /* sec2 VFD driver */
+#include "H5FDwindows.h"      /* Windows file driver      */
+#include "H5Pprivate.h"       /* Property lists           */
 
 /*-------------------------------------------------------------------------
  * Function:    H5Pset_fapl_windows
