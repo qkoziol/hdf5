@@ -1059,7 +1059,7 @@ H5TEST_DLL herr_t h5_using_native_vol(hid_t fapl_id, hid_t obj_id, bool *is_nati
  *          VFD being used for testing, if the environment variable
  *          HDF5_DRIVER or HDF5_TEST_DRIVER has been set. If the value is not
  *          set for those variables, NULL is returned.  Preference is given
- *          to the HDF5_DRIVER enviroment variable, if both are set.
+ *          to the HDF5_DRIVER environment variable, if both are set.
  *
  */
 H5TEST_DLL const char *h5_get_test_driver_env(void);
