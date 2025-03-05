@@ -1053,7 +1053,7 @@ H5SL__close_common(H5SL_t *slist, H5SL_operator_t op, void *op_data)
 
     /* Destroy the atomic variables */
     H5TS_ATOMIC_DESTROY(H5SL_lock_mode_int_t, &slist->mode);
-    H5TS_ATOMIC_DESTROY(size_t, &slist->mode);
+    H5TS_ATOMIC_DESTROY(size_t, &slist->num_checked_out);
 
     /* Release header node */
     H5SL__dest_node(slist->header);
