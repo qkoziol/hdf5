@@ -632,7 +632,7 @@ H5Pget_fapl_hdfs(hid_t fapl_id, H5FD_hdfs_fapl_t *fa_dst /*out*/)
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access list");
 
-    if (H5FD_HDFS != H5P_peek_driver(fapl))
+    if (H5_VFD_HDFS != H5P_get_driver_value(fapl))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "incorrect VFL driver");
 
     fa_src = (const H5FD_hdfs_fapl_t *)H5P_peek_driver_info(fapl);

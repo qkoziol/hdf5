@@ -376,7 +376,7 @@ H5Pget_fapl_ros3(hid_t fapl_id, H5FD_ros3_fapl_t *fa_dst /*out*/)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "fa_dst is NULL");
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access list");
-    if (H5FD_ROS3 != H5P_peek_driver(fapl))
+    if (H5_VFD_ROS3 != H5P_get_driver_value(fapl))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "fapl not set to use the ros3 VFD");
 
     if (NULL == (fa_src = (const H5FD_ros3_fapl_t *)H5P_peek_driver_info(fapl)))
@@ -508,7 +508,7 @@ H5Pget_fapl_ros3_token(hid_t fapl_id, size_t size, char *token_dst /*out*/)
 
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADTYPE, FAIL, "not a file access property list");
-    if (H5FD_ROS3 != H5P_peek_driver(fapl))
+    if (H5_VFD_ROS3 != H5P_get_driver_value(fapl))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "incorrect VFL driver");
     if ((token_exists = H5P_exist_plist(fapl, ROS3_TOKEN_PROP_NAME)) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "failed to check if property token exists in plist");
@@ -658,7 +658,7 @@ H5Pset_fapl_ros3_token(hid_t fapl_id, const char *token)
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "can't set values in default property list");
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADTYPE, FAIL, "not a file access property list");
-    if (H5FD_ROS3 != H5P_peek_driver(fapl))
+    if (H5_VFD_ROS3 != H5P_get_driver_value(fapl))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "incorrect VFL driver");
     if (strlen(token) > H5FD_ROS3_MAX_SECRET_TOK_LEN)
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL,
