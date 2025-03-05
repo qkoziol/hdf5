@@ -1248,7 +1248,7 @@ do_cleanupfile(iotype iot, char *filename)
     char  *temp = NULL;
     size_t temp_sz;
     int    j;
-    hid_t  driver;
+    H5FD_class_value_t drvr_cls_value;
 
     temp_sz = (4096 + sizeof("-?.h5")) * sizeof(char);
     if (NULL == (temp = calloc(1, temp_sz)))
@@ -1265,9 +1265,9 @@ do_cleanupfile(iotype iot, char *filename)
                 break;
 
             case HDF5:
-                driver = H5Pget_driver(fapl);
+                drvr_cls_value = H5Pget_driver_cls_value(fapl);
 
-                if (driver == H5FD_FAMILY) {
+                if (drvr_cls_value == H5_VFD_FAMILY) {
                     for (j = 0; /*void*/; j++) {
                         H5_GCC_CLANG_DIAG_OFF("format-nonliteral")
                         snprintf(temp, temp_sz, filename, j);
@@ -1279,7 +1279,7 @@ do_cleanupfile(iotype iot, char *filename)
                         HDremove(temp);
                     }
                 }
-                else if (driver == H5FD_CORE) {
+                else if (drvr_cls_value == H5_VFD_CORE) {
                     bool backing; /* Whether the core file has backing store */
 
                     H5Pget_fapl_core(fapl, NULL, &backing);
@@ -1288,7 +1288,7 @@ do_cleanupfile(iotype iot, char *filename)
                     if (backing)
                         HDremove(filename);
                 }
-                else if (driver == H5FD_MULTI) {
+                else if (drvr_cls_value == H5_VFD_MULTI) {
                     H5FD_mem_t mt;
                     assert(strlen(multi_letters) == H5FD_MEM_NTYPES);
 

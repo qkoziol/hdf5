@@ -239,7 +239,7 @@ H5Pcreate(hid_t cls_id)
 
     /* Create the new property list */
     if (NULL == (plist = H5P__create(pclass, false, true)))
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTCREATE, H5I_INVALID_HID, "unable to decode property list");
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTCREATE, H5I_INVALID_HID, "unable to create property list");
 
     /* Set the return value */
     ret_value = plist->plist_id;

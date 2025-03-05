@@ -90,7 +90,6 @@ H5MF_aggr_vfd_alloc(H5F_t *f, H5FD_mem_t alloc_type, hsize_t size)
     /* check arguments */
     assert(f);
     assert(f->shared);
-    assert(f->shared->lf);
     assert(size > 0);
 
     /* Couldn't find anything from the free space manager, go allocate some */
@@ -376,7 +375,7 @@ H5MF__aggr_alloc(H5F_t *f, H5F_blk_aggr_t *aggr, H5F_blk_aggr_t *other_aggr, H5F
 
         /* Post-condition sanity check */
         if (H5F_ALIGNMENT(f) && size >= H5F_THRESHOLD(f))
-            assert(!((ret_value + H5FD_get_base_addr(f->shared->lf)) % H5F_ALIGNMENT(f)));
+            assert(!((ret_value + H5FD_get_base_addr(f->shared->fh)) % H5F_ALIGNMENT(f)));
 
 done:
 #ifdef H5MF_AGGR_DEBUG
@@ -756,7 +755,6 @@ done:
         /* Check args */
         assert(f);
         assert(f->shared);
-        assert(f->shared->lf);
 
         /* Retrieve metadata aggregator info, if available */
         if (H5MF__aggr_query(f, &(f->shared->meta_aggr), &ma_addr, &ma_size) < 0)
@@ -849,7 +847,6 @@ done:
 
         /* Sanity check */
         assert(f);
-        assert(f->shared->lf);
         assert(aggr);
         assert(H5_addr_defined(aggr->addr));
         assert(aggr->size > 0);

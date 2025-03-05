@@ -28,8 +28,8 @@
 #include "H5Dpkg.h"      /* Dataset functions			*/
 #include "H5Eprivate.h"  /* Error handling		  	*/
 #include "H5Fprivate.h"  /* Files				*/
-#include "H5FDprivate.h" /* File drivers				*/
-#include "H5FLprivate.h" /* Free Lists                           */
+#include "H5FDprivate.h" /* File drivers			*/
+#include "H5FLprivate.h" /* Free Lists                          */
 #include "H5Iprivate.h"  /* IDs			  		*/
 #include "H5MMprivate.h" /* Memory management			*/
 #include "H5Oprivate.h"  /* Object headers		  	*/
@@ -318,7 +318,7 @@ H5D__compact_iovv_memmanage_cb(hsize_t dst_off, hsize_t src_off, size_t len, voi
     H5D_compact_iovv_memmanage_ud_t *udata = (H5D_compact_iovv_memmanage_ud_t *)_udata;
     H5FD_ctl_memcpy_args_t           op_args;
     uint64_t                         op_flags;
-    H5FD_t                          *file_handle = NULL;
+    H5FD_int_t                      *file_handle = NULL;
     herr_t                           ret_value   = SUCCEED;
 
     FUNC_ENTER_PACKAGE

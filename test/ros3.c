@@ -289,6 +289,9 @@ test_ros3_fapl_driver_flags(void)
     if (H5FDdriver_query(driver_id, &driver_flags) < 0)
         TEST_ERROR;
 
+    if (H5Idec_ref(driver_id) < 0)
+        TEST_ERROR;
+
     /* Validate flags */
     if (0 == (driver_flags & H5FD_FEAT_DATA_SIEVE))
         FAIL_PUTS_ERROR("ros3 VFD should support H5FD_FEAT_DATA_SIEVE");

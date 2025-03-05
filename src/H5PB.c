@@ -653,7 +653,7 @@ H5PB_read(H5F_shared_t *f_sh, H5FD_mem_t type, haddr_t addr, size_t size, void *
 {
     H5PB_t       *page_buf;                        /* Page buffering info for this file */
     H5PB_entry_t *page_entry;                      /* Pointer to the corresponding page entry */
-    H5FD_t       *file;                            /* File driver pointer */
+    H5FD_int_t       *fh;                            /* File driver pointer */
     haddr_t       first_page_addr, last_page_addr; /* Addresses of the first and last pages covered by I/O */
     haddr_t       offset;
     haddr_t       search_addr;       /* Address of current page */
@@ -744,7 +744,7 @@ H5PB_read(H5F_shared_t *f_sh, H5FD_mem_t type, haddr_t addr, size_t size, void *
     } /* end else */
 
     /* Translate to file driver I/O info object */
-    file = f_sh->lf;
+    fh = f_sh->fh;
 
     /* Copy raw data from dirty pages into the read buffer if the read
        request spans pages in the page buffer*/
@@ -884,7 +884,7 @@ H5PB_read(H5F_shared_t *f_sh, H5FD_mem_t type, haddr_t addr, size_t size, void *
                         assert(0 == i);
 
                         /* read entire block from VFD and return */
-                        if (H5FD_read(file, type, addr, size, buf) < 0)
+                        if (H5FD_read(fh, type, addr, size, buf) < 0)
                             HGOTO_ERROR(H5E_PAGEBUF, H5E_READERROR, FAIL, "driver read request failed");
 
                         /* Break out of loop */
@@ -913,7 +913,7 @@ H5PB_read(H5F_shared_t *f_sh, H5FD_mem_t type, haddr_t addr, size_t size, void *
                     page_size = (size_t)(eoa - search_addr);
 
                 /* Read page from VFD */
-                if (H5FD_read(file, type, search_addr, page_size, new_page_buf) < 0)
+                if (H5FD_read(fh, type, search_addr, page_size, new_page_buf) < 0)
                     HGOTO_ERROR(H5E_PAGEBUF, H5E_READERROR, FAIL, "driver read request failed");
 
                 /* Copy the requested data from the page into the input buffer */
@@ -968,7 +968,7 @@ H5PB_write(H5F_shared_t *f_sh, H5FD_mem_t type, haddr_t addr, size_t size, const
 {
     H5PB_t       *page_buf;                        /* Page buffering info for this file */
     H5PB_entry_t *page_entry;                      /* Pointer to the corresponding page entry */
-    H5FD_t       *file;                            /* File driver pointer */
+    H5FD_int_t       *fh;                            /* File driver pointer */
     haddr_t       first_page_addr, last_page_addr; /* Addresses of the first and last pages covered by I/O */
     haddr_t       offset;
     haddr_t       search_addr;       /* Address of current page */
@@ -1066,7 +1066,7 @@ H5PB_write(H5F_shared_t *f_sh, H5FD_mem_t type, haddr_t addr, size_t size, const
     } /* end else */
 
     /* Translate to file driver I/O info object */
-    file = f_sh->lf;
+    fh = f_sh->fh;
 
     /* Check if existing pages for raw data need to be updated since raw data access is not atomic */
     if (H5FD_MEM_DRAW == type && size >= page_buf->page_size) {
@@ -1196,7 +1196,7 @@ H5PB_write(H5F_shared_t *f_sh, H5FD_mem_t type, haddr_t addr, size_t size, const
                         assert(0 == i);
 
                         /* Write to VFD and return */
-                        if (H5FD_write(file, type, addr, size, buf) < 0)
+                        if (H5FD_write(fh, type, addr, size, buf) < 0)
                             HGOTO_ERROR(H5E_PAGEBUF, H5E_WRITEERROR, FAIL, "driver write request failed");
 
                         /* Break out of loop */
@@ -1264,7 +1264,7 @@ H5PB_write(H5F_shared_t *f_sh, H5FD_mem_t type, haddr_t addr, size_t size, const
                      * that check.
                      */
                     if (!H5F_SHARED_HAS_FEATURE(f_sh, H5FD_FEAT_HAS_MPI))
-                        if (HADDR_UNDEF == (eof = H5FD_get_eof(f_sh->lf, H5FD_MEM_DEFAULT)))
+                        if (HADDR_UNDEF == (eof = H5FD_get_eof(fh, H5FD_MEM_DEFAULT)))
                             HGOTO_ERROR(H5E_PAGEBUF, H5E_CANTGET, FAIL, "driver get_eof request failed");
 
                     /* Adjust the read size to not go beyond the EOA */
@@ -1272,7 +1272,7 @@ H5PB_write(H5F_shared_t *f_sh, H5FD_mem_t type, haddr_t addr, size_t size, const
                         page_size = (size_t)(eoa - search_addr);
 
                     if (search_addr < eof) {
-                        if (H5FD_read(file, type, search_addr, page_size, new_page_buf) < 0)
+                        if (H5FD_read(fh, type, search_addr, page_size, new_page_buf) < 0)
                             HGOTO_ERROR(H5E_PAGEBUF, H5E_READERROR, FAIL, "driver read request failed");
 
                         /* Update statistics */
@@ -1545,17 +1545,17 @@ H5PB__write_entry(H5F_shared_t *f_sh, H5PB_entry_t *page_entry)
      * the EOA, then the entire page is discarded without writing.
      */
     if (page_entry->addr <= eoa) {
-        H5FD_t *file; /* File driver I/O info */
-        size_t  page_size = f_sh->page_buf->page_size;
+        H5FD_int_t *fh; /* File driver I/O info */
+        size_t     page_size = f_sh->page_buf->page_size;
 
         /* Adjust the page length if it exceeds the EOA */
         if ((page_entry->addr + page_size) > eoa)
             page_size = (size_t)(eoa - page_entry->addr);
 
         /* Translate to file driver I/O info object */
-        file = f_sh->lf;
+        fh = f_sh->fh;
 
-        if (H5FD_write(file, (H5FD_mem_t)page_entry->type, page_entry->addr, page_size,
+        if (H5FD_write(fh, (H5FD_mem_t)page_entry->type, page_entry->addr, page_size,
                        page_entry->page_buf_ptr) < 0)
             HGOTO_ERROR(H5E_PAGEBUF, H5E_WRITEERROR, FAIL, "file write failed");
     } /* end if */

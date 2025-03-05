@@ -39,7 +39,7 @@
 
 /* The driver identification number, initialized at runtime */
 hid_t H5FD_ROS3_id_g = H5I_INVALID_HID;
-
+H5FD_driver_t *H5FD_ROS3_driver_g = NULL;
 /* Flag to indicate whether global driver resources & settings have been
  *      initialized.
  */
@@ -229,9 +229,19 @@ H5FD__ros3_register(void)
 
     FUNC_ENTER_PACKAGE
 
-    if (H5I_VFL != H5I_get_type(H5FD_ROS3_id_g))
-        if ((H5FD_ROS3_id_g = H5FD_register(&H5FD_ros3_g, sizeof(H5FD_class_t), false)) < 0)
-            HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "unable to register ros3 driver");
+    /* Register the ros3 driver, if it isn't already */
+    if (NULL == H5FD_ROS3_driver_g)
+        if (NULL == (H5FD_ROS3_driver_g = H5FD__driver_register(&H5FD_ros3_g)))
+            HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "can't register ros3 driver");
+
+    /* Get ID for ros3 driver */
+    if (H5I_VFL != H5I_get_type(H5FD_ROS3_id_g)) {
+        if ((H5FD_ROS3_id_g = H5I_register(H5I_VFL, H5FD_ROS3_driver_g, false)) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "can't create ID for ros3 driver");
+
+        /* ID is holding a reference to the connector */
+        H5FD__driver_inc_rc(H5FD_ROS3_driver_g);
+    }
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -253,6 +263,7 @@ H5FD__ros3_unregister(void)
 
     /* Reset VFL ID */
     H5FD_ROS3_id_g = H5I_INVALID_HID;
+    H5FD_ROS3_driver_g = NULL;
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5FD__ros3_unregister() */
@@ -308,7 +319,7 @@ H5Pset_fapl_ros3(hid_t fapl_id, const H5FD_ros3_fapl_t *fa)
     if (H5FD__ros3_validate_config(fa) < 0)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid ros3 config");
 
-    ret_value = H5P_set_driver(fapl, H5FD_ROS3, (const void *)fa, NULL);
+    ret_value = H5P_set_driver(fapl, H5FD_ROS3_driver_g, (const void *)fa, NULL);
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -972,6 +983,8 @@ H5FD__ros3_query(const H5FD_t H5_ATTR_UNUSED *_file, unsigned long *flags)
         *flags = 0;
         /* OK to perform data sieving for faster raw data reads & writes */
         *flags |= H5FD_FEAT_DATA_SIEVE;
+        /* VFD accesses files which can be opened with the default VFD */
+        *flags |= H5FD_FEAT_DEFAULT_VFD_COMPATIBLE;
     }
 
     FUNC_LEAVE_NOAPI(SUCCEED)

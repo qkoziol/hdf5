@@ -1051,6 +1051,23 @@ H5TEST_DLL herr_t h5_using_native_vol(hid_t fapl_id, hid_t obj_id, bool *is_nati
  * --------------------------------------------------------------------------
  * \ingroup H5TEST
  *
+ * \brief Returns a pointer to the name of the VFD set in an env. var.
+ *
+ * \return A pointer to the name of the VFD set in an env. var.
+ *
+ * \details h5_get_test_driver_env() returns a pointer to the name of the
+ *          VFD being used for testing, if the environment variable
+ *          HDF5_DRIVER or HDF5_TEST_DRIVER has been set. If the value is not
+ *          set for those variables, NULL is returned.  Preference is given
+ *          to the HDF5_DRIVER enviroment variable, if both are set.
+ *
+ */
+H5TEST_DLL const char *h5_get_test_driver_env(void);
+
+/**
+ * --------------------------------------------------------------------------
+ * \ingroup H5TEST
+ *
  * \brief Returns a pointer to the name of the VFD being used for testing
  *
  * \return A pointer to the name of the VFD being used for testing

@@ -38,7 +38,7 @@
 /* Passthru VOL connector's class struct */
 H5_DLLVAR const H5VL_class_t H5VL_pass_through_g;
 
-/* The native VOL connector */
+/* The passthru VOL connector */
 H5_DLLVAR H5VL_connector_t *H5VL_PASSTHRU_conn_g;
 
 /******************************/

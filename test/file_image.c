@@ -690,7 +690,7 @@ test_get_file_image(const char *test_banner, const int file_name_num, hid_t fapl
     int       i;
     int       fd = -1;
     int       result;
-    hid_t     driver       = H5I_INVALID_HID;
+    H5FD_class_value_t driver_cls_value;
     hid_t     file_id      = H5I_INVALID_HID;
     hid_t     dset_id      = H5I_INVALID_HID;
     hid_t     space_id     = H5I_INVALID_HID;
@@ -710,10 +710,10 @@ test_get_file_image(const char *test_banner, const int file_name_num, hid_t fapl
     memset(&stat_buf, 0, sizeof(h5_stat_t));
 
     /* set flag if we are dealing with a family file */
-    driver = H5Pget_driver(fapl);
-    VERIFY(driver >= 0, "H5Pget_driver(fapl) failed");
+    driver_cls_value = H5Pget_driver_cls_value(fapl);
+    VERIFY(driver_cls_value >= 0, "H5Pget_driver_cls_value(fapl) failed");
 
-    if (driver == H5FD_FAMILY)
+    if (driver_cls_value == H5_VFD_FAMILY)
         is_family_file = true;
 
     /* setup the file name */

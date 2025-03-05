@@ -141,9 +141,6 @@ H5FL_DEFINE_STATIC(H5VL_wrap_ctx_t);
 /* List of currently active VOL connectors */
 static H5VL_connector_t *H5VL_conn_list_head_g = NULL;
 
-/* Default VOL connector */
-static H5VL_connector_prop_t H5VL_def_conn_s = {NULL, NULL};
-
 /*-------------------------------------------------------------------------
  * Function:    H5VL_init_phase1
  *
@@ -172,14 +169,44 @@ done:
 } /* end H5VL_init_phase1() */
 
 /*-------------------------------------------------------------------------
- * Function:    H5VL_init_phase2
+ * Function:	H5VL__init_package
  *
- * Purpose:     Finish initializing the interface from some other package.
- *
- * Note:	This is broken out as a separate routine to avoid a circular
- *		reference with the H5P package.
+ * Purpose:     Initialize interface-specific information
  *
  * Return:      Success:    Non-negative
+ *
+ *              Failure:    Negative
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5VL__init_package(void)
+{
+    herr_t ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_PACKAGE
+
+    /* Initialize the ID group for the VL IDs */
+    if (H5I_register_type(H5I_VOL_CLS) < 0)
+        HGOTO_ERROR(H5E_VOL, H5E_CANTINIT, FAIL, "unable to initialize H5VL interface");
+
+    /* Register internal VOL connectors */
+    if (H5VL__native_register() < 0)
+        HGOTO_ERROR(H5E_VOL, H5E_CANTINIT, FAIL, "unable to register native VOL connector");
+    if (H5VL__passthru_register() < 0)
+        HGOTO_ERROR(H5E_VOL, H5E_CANTINIT, FAIL, "unable to register passthru VOL connector");
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5VL__init_package() */
+
+/*-------------------------------------------------------------------------
+ * Function:	H5VL_init_phase2
+ *
+ * Purpose:     Initialize interface-specific information
+ *
+ * Return:      Success:    Non-negative
+ *
  *              Failure:    Negative
  *
  *-------------------------------------------------------------------------
@@ -205,16 +232,6 @@ H5VL_init_phase2(void)
     if (H5M_init() < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTINIT, FAIL, "unable to initialize map interface");
 
-    /* Register internal VOL connectors */
-    if (H5VL__native_register() < 0)
-        HGOTO_ERROR(H5E_VOL, H5E_CANTINIT, FAIL, "unable to register native VOL connector");
-    if (H5VL__passthru_register() < 0)
-        HGOTO_ERROR(H5E_VOL, H5E_CANTINIT, FAIL, "unable to register passthru VOL connector");
-
-    /* Sanity check default VOL connector */
-    assert(H5VL_def_conn_s.connector == NULL);
-    assert(H5VL_def_conn_s.connector_info == NULL);
-
     /* Set up the default VOL connector in the default FAPL */
     if (H5VL__set_def_conn() < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTSET, FAIL, "unable to set default VOL connector");
@@ -222,32 +239,6 @@ H5VL_init_phase2(void)
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5VL_init_phase2() */
-
-/*-------------------------------------------------------------------------
- * Function:	H5VL__init_package
- *
- * Purpose:     Initialize interface-specific information
- *
- * Return:      Success:    Non-negative
- *
- *              Failure:    Negative
- *
- *-------------------------------------------------------------------------
- */
-herr_t
-H5VL__init_package(void)
-{
-    herr_t ret_value = SUCCEED; /* Return value */
-
-    FUNC_ENTER_PACKAGE
-
-    /* Initialize the ID group for the VL IDs */
-    if (H5I_register_type(H5I_VOL_CLS) < 0)
-        HGOTO_ERROR(H5E_VOL, H5E_CANTINIT, FAIL, "unable to initialize H5VL interface");
-
-done:
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5VL__init_package() */
 
 /*-------------------------------------------------------------------------
  * Function:	H5VL_term_package
@@ -268,41 +259,32 @@ H5VL_term_package(void)
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
     if (H5_PKG_INIT_VAR) {
-        if (H5VL_def_conn_s.connector) {
-            /* Release the default VOL connector */
-            (void)H5VL_conn_prop_free(&H5VL_def_conn_s);
-            H5VL_def_conn_s.connector      = NULL;
-            H5VL_def_conn_s.connector_info = NULL;
+        if (H5I_nmembers(H5I_VOL) > 0) {
+            /* Unregister all VOL connectors */
+            (void)H5I_clear_type(H5I_VOL, true, false);
+
+            /* Reset internal VOL connectors' global vars */
+            (void)H5VL__native_unregister();
+            (void)H5VL__passthru_unregister();
+
             n++;
         } /* end if */
         else {
-            if (H5I_nmembers(H5I_VOL) > 0) {
-                /* Unregister all VOL connectors */
-                (void)H5I_clear_type(H5I_VOL, true, false);
-
-                /* Reset internal VOL connectors' global vars */
-                (void)H5VL__native_unregister();
-                (void)H5VL__passthru_unregister();
-
+            if (H5VL__num_opt_operation() > 0) {
+                /* Unregister all dynamically registered optional operations */
+                (void)H5VL__term_opt_operation();
                 n++;
             } /* end if */
             else {
-                if (H5VL__num_opt_operation() > 0) {
-                    /* Unregister all dynamically registered optional operations */
-                    (void)H5VL__term_opt_operation();
-                    n++;
-                } /* end if */
-                else {
-                    /* Destroy the VOL connector ID group */
-                    n += (H5I_dec_type_ref(H5I_VOL) > 0);
+                /* Destroy the VOL connector ID group */
+                n += (H5I_dec_type_ref(H5I_VOL) > 0);
 
-                    /* Mark interface as closed */
-                    if (0 == n)
-                        H5_PKG_INIT_VAR = false;
-                } /* end else */
-            }     /* end else */
-        }         /* end else */
-    }             /* end if */
+                /* Mark interface as closed */
+                if (0 == n)
+                    H5_PKG_INIT_VAR = false;
+            } /* end else */
+        } /* end else */
+    } /* end if */
 
     FUNC_LEAVE_NOAPI(n)
 } /* end H5VL_term_package() */
@@ -368,6 +350,7 @@ H5VL__set_def_conn(void)
 {
     H5P_genplist_t   *def_fapl;            /* Default file access property list */
     H5P_genclass_t   *def_fapclass;        /* Default file access property class */
+    H5VL_connector_prop_t def_vol_prop = {NULL, NULL}; /* VOL connector for default FAPL */
     const char       *env_var;             /* Environment variable for default VOL connector */
     char             *buf       = NULL;    /* Buffer for tokenizing string */
     H5VL_connector_t *connector = NULL;    /* VOL connector */
@@ -375,15 +358,6 @@ H5VL__set_def_conn(void)
     herr_t            ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
-
-    /* Reset default VOL connector, if it's set already */
-    /* (Can happen during testing -QAK) */
-    if (H5VL_def_conn_s.connector) {
-        /* Release the default VOL connector */
-        (void)H5VL_conn_prop_free(&H5VL_def_conn_s);
-        H5VL_def_conn_s.connector      = NULL;
-        H5VL_def_conn_s.connector_info = NULL;
-    } /* end if */
 
     /* Check for environment variable set */
     env_var = getenv(HDF5_VOL_CONNECTOR);
@@ -396,8 +370,7 @@ H5VL__set_def_conn(void)
 
         /* Duplicate the string to parse, as it is modified as we go */
         if (NULL == (buf = H5MM_strdup(env_var)))
-            HGOTO_ERROR(H5E_VOL, H5E_CANTALLOC, FAIL,
-                        "can't allocate memory for environment variable string");
+            HGOTO_ERROR(H5E_VOL, H5E_CANTALLOC, FAIL, "can't allocate memory for environment variable string");
 
         /* Get the first 'word' of the environment variable.
          * If it's nothing (environment variable was whitespace) return error.
@@ -410,77 +383,61 @@ H5VL__set_def_conn(void)
             HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "can't check if VOL connector already registered");
         else if (connector_is_registered) {
             /* Retrieve the ID of the already-registered VOL connector */
+            /* (Always includes the 'native' and 'pass_through' connectors that
+             *  ship with the library, so we don't need to check for them)
+             */
             if (NULL == (connector = H5VL__get_connector_by_name(tok)))
                 HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "can't get VOL connector ID");
         } /* end else-if */
         else {
-            /* Check for VOL connectors that ship with the library */
-            if (!strcmp(tok, "native")) {
-                connector = H5VL_NATIVE_conn_g;
-
-                /* Inc. refcount on connector object, so it can be uniformly released */
-                H5VL_conn_inc_rc(connector);
-            } /* end if */
-            else if (!strcmp(tok, "pass_through")) {
-                connector = H5VL_PASSTHRU_conn_g;
-
-                /* Inc. refcount on connector object, so it can be uniformly released */
-                H5VL_conn_inc_rc(connector);
-            } /* end else-if */
-            else {
-                /* Register the VOL connector */
-                /* (NOTE: No provisions for vipl_id currently) */
-                if (NULL == (connector = H5VL__register_connector_by_name(tok, H5P_VOL_INITIALIZE_DEFAULT)))
-                    HGOTO_ERROR(H5E_VOL, H5E_CANTREGISTER, FAIL, "can't register connector");
-            } /* end else */
+            /* Register the VOL connector */
+            /* (NOTE: No provisions for vipl_id currently) */
+            if (NULL == (connector = H5VL__register_connector_by_name(tok, H5P_VOL_INITIALIZE_DEFAULT)))
+                HGOTO_ERROR(H5E_VOL, H5E_CANTREGISTER, FAIL, "can't register connector");
         }     /* end else */
 
         /* Was there any connector info specified in the environment variable? */
         if (NULL != (tok = HDstrtok_r(NULL, "\n\r", &lasts)))
             if (H5VL__connector_str_to_info(tok, connector, &vol_info) < 0)
                 HGOTO_ERROR(H5E_VOL, H5E_CANTDECODE, FAIL, "can't deserialize connector info");
-
-        /* Set the default VOL connector */
-        H5VL_def_conn_s.connector      = connector;
-        H5VL_def_conn_s.connector_info = vol_info;
     } /* end if */
     else {
-        /* Set the default VOL connector */
-        H5VL_def_conn_s.connector      = H5_DEFAULT_VOL;
-        H5VL_def_conn_s.connector_info = NULL;
+        /* Use the default VOL connector */
+        connector = H5_DEFAULT_VOL;
 
         /* Increment the ref count on the default connector */
-        H5VL_conn_inc_rc(H5VL_def_conn_s.connector);
+        if (H5VL_conn_inc_rc(connector) < 0)
+            HGOTO_ERROR(H5E_VOL, H5E_CANTINC, FAIL, "can't increment ref count on VFD driver");
     } /* end else */
-
-    /* Get default file access pclass */
-    if (NULL == (def_fapclass = H5I_object(H5P_FILE_ACCESS)))
-        HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for default file access property class ID");
-
-    /* Change the default VOL for the default file access pclass */
-    if (H5P_reset_vol_class(def_fapclass, &H5VL_def_conn_s) < 0)
-        HGOTO_ERROR(H5E_VOL, H5E_CANTSET, FAIL,
-                    "can't set default VOL connector for default file access property class");
 
     /* Get default file access plist */
     if (NULL == (def_fapl = H5I_object(H5P_FILE_ACCESS_DEFAULT)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for default fapl ID");
 
     /* Change the default VOL for the default FAPL */
-    if (H5P_set_vol(def_fapl, H5VL_def_conn_s.connector, H5VL_def_conn_s.connector_info) < 0)
+    if (H5P_set_vol(def_fapl, connector, vol_info) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTSET, FAIL, "can't set default VOL connector for default FAPL");
 
+    /* Get the [updated] connector property to use for the class */
+    if (H5P_peek(def_fapl, H5F_ACS_VOL_CONN_NAME, &def_vol_prop) < 0)
+        HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "can't get VOL connector info");
+
+    /* Get default file access pclass */
+    if (NULL == (def_fapclass = H5I_object(H5P_FILE_ACCESS)))
+        HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for default file access property class ID");
+
+    /* Change the default VOL for the default file access pclass */
+    if (H5P_reset_vol_class(def_fapclass, &def_vol_prop) < 0)
+        HGOTO_ERROR(H5E_VOL, H5E_CANTSET, FAIL, "can't set default VOL connector for default file access property class");
+
 done:
-    /* Clean up on error */
-    if (ret_value < 0) {
-        if (vol_info)
-            if (H5VL_free_connector_info(connector, vol_info) < 0)
-                HDONE_ERROR(H5E_VOL, H5E_CANTRELEASE, FAIL, "can't free VOL connector info");
-        if (connector)
-            /* The H5VL_connector_t struct will be freed by this function */
-            if (H5VL_conn_dec_rc(connector) < 0)
-                HDONE_ERROR(H5E_VOL, H5E_CANTDEC, FAIL, "unable to unregister VOL connector");
-    } /* end if */
+    /* Release VOL connector used for default FAPL */
+    if (connector) {
+        if (vol_info && H5VL_free_connector_info(connector, vol_info) < 0)
+            HDONE_ERROR(H5E_VOL, H5E_CANTRELEASE, FAIL, "can't free VOL connector info");
+        if (H5VL_conn_dec_rc(connector) < 0)
+            HDONE_ERROR(H5E_VOL, H5E_CANTDEC, FAIL, "unable to release VOL connector");
+    }
 
     /* Clean up */
     H5MM_xfree(buf);
@@ -699,7 +656,7 @@ H5VL_conn_prop_cmp(int *cmp_value, const H5VL_connector_prop_t *prop1, const H5V
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5VL_conn_prop_same() */
+} /* end H5VL_conn_prop_cmp() */
 
 /*-------------------------------------------------------------------------
  * Function:    H5VL_conn_prop_free
@@ -2563,33 +2520,6 @@ done:
 } /* end H5VL_check_plugin_load() */
 
 /*-------------------------------------------------------------------------
- * Function:    H5VL__is_default_conn
- *
- * Purpose:     Check if the default connector will be used for a container.
- *
- * Return:      SUCCEED / FAIL
- *
- *-------------------------------------------------------------------------
- */
-void
-H5VL__is_default_conn(H5P_genplist_t *fapl, const H5VL_connector_t *connector, bool *is_default)
-{
-    FUNC_ENTER_PACKAGE_NOERR
-
-    /* Sanity checks */
-    assert(is_default);
-
-    /* Determine if the default VOL connector will be used, based on non-default
-     * values in the FAPL, connector ID, or the HDF5_VOL_CONNECTOR environment
-     * variable being set.
-     */
-    *is_default = (H5VL_def_conn_s.connector == H5_DEFAULT_VOL) &&
-                  (H5P_PLIST_IS_DEFAULT(fapl) || connector == H5_DEFAULT_VOL);
-
-    FUNC_LEAVE_NOAPI_VOID
-} /* end H5VL__is_default_conn() */
-
-/*-------------------------------------------------------------------------
  * Function:    H5VL_setup_args
  *
  * Purpose:     Set up arguments to access an object
@@ -2899,3 +2829,4 @@ H5VL_conn_prop_get_cap_flags(const H5VL_connector_prop_t *connector_prop, uint64
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5VL_conn_prop_get_cap_flags() */
+

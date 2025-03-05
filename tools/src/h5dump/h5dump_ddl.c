@@ -1186,7 +1186,7 @@ dump_fcpl(hid_t fid)
     H5F_info2_t           finfo;        /* file information */
 #ifdef SHOW_FILE_DRIVER
     hid_t fapl;      /* file access property list ID */
-    hid_t fdriver;   /* file driver */
+    H5FD_class_value_t drvr_cls_value;   /* file driver */
     char  dname[32]; /* buffer to store driver name */
 #endif
     unsigned sym_lk;    /* symbol table B-tree leaf 'K' value */
@@ -1216,7 +1216,7 @@ dump_fcpl(hid_t fid)
     H5Pclose(fcpl);
 #ifdef SHOW_FILE_DRIVER
     fapl    = h5_fileaccess();
-    fdriver = H5Pget_driver(fapl);
+    drvr_cls_value = H5Pget_driver_cls_value(fapl);
     H5Pclose(fapl);
 #endif
 
@@ -1244,23 +1244,23 @@ dump_fcpl(hid_t fid)
     PRINTSTREAM(rawoutstream, "%s %d\n", "BTREE_LEAF", sym_lk);
 
 #ifdef SHOW_FILE_DRIVER
-    if (H5FD_CORE == fdriver)
+    if (H5_VFD_CORE == drvr_cls_value)
         strcpy(dname, "H5FD_CORE");
 #ifdef H5_HAVE_DIRECT
-    else if (H5FD_DIRECT == fdriver)
+    else if (H5_VFD_DIRECT == drvr_cls_value)
         strcpy(dname, "H5FD_DIRECT");
 #endif
-    else if (H5FD_FAMILY == fdriver)
+    else if (H5_VFD_FAMILY == drvr_cls_value)
         strcpy(dname, "H5FD_FAMILY");
-    else if (H5FD_LOG == fdriver)
+    else if (H5_VFD_LOG == drvr_cls_value)
         strcpy(dname, "H5FD_LOG");
-    else if (H5FD_MPIO == fdriver)
+    else if (H5_VFD_MPIO == drvr_cls_value)
         strcpy(dname, "H5FD_MPIO");
-    else if (H5FD_MULTI == fdriver)
+    else if (H5_VFD_MULTI == drvr_cls_value)
         strcpy(dname, "H5FD_MULTI");
-    else if (H5FD_SEC2 == fdriver)
+    else if (H5_VFD_SEC2 == drvr_cls_value)
         strcpy(dname, "H5FD_SEC2");
-    else if (H5FD_STDIO == fdriver)
+    else if (H5_VFD_STDIO == drvr_cls_value)
         strcpy(dname, "H5FD_STDIO");
     else
         strcpy(dname, "Unknown driver");

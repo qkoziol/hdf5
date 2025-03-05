@@ -2867,8 +2867,12 @@ test_misc15(void)
     CHECK(ret, FAIL, "H5Fclose");
 
     /* Open the file & get it's FAPL again */
-    file = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
+    fapl = h5_fileaccess();
+    file = H5Fopen(filename, H5F_ACC_RDONLY, fapl);
     CHECK(file, FAIL, "H5Fopen");
+
+    ret = H5Pclose(fapl);
+    CHECK(ret, FAIL, "H5Pclose");
 
     fapl = H5Fget_access_plist(file);
     CHECK(fapl, FAIL, "H5Fget_access_plist");
@@ -2883,8 +2887,12 @@ test_misc15(void)
     ret = H5Pclose(fapl);
     CHECK(ret, FAIL, "H5Pclose");
 
-    file = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
+    fapl = h5_fileaccess();
+    file = H5Fopen(filename, H5F_ACC_RDONLY, fapl);
     CHECK(file, FAIL, "H5Fopen");
+
+    ret = H5Pclose(fapl);
+    CHECK(ret, FAIL, "H5Pclose");
 
     ret = H5Fclose(file);
     CHECK(ret, FAIL, "H5Fclose");
@@ -7192,11 +7200,7 @@ test_misc(void H5_ATTR_UNUSED *params)
     }
 
     test_misc14(); /* Test that deleted dataset's data is removed from sieve buffer correctly */
-
-    if (default_driver) {
-        test_misc15(); /* Test that checking a file's access property list more than once works */
-    }
-
+    test_misc15(); /* Test that checking a file's access property list more than once works */
     test_misc16(); /* Test array of fixed-length string */
     test_misc17(); /* Test array of ASCII character */
     test_misc18(); /* Test new object header information in H5O_info_t struct */

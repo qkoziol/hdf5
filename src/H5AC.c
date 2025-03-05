@@ -274,7 +274,7 @@ H5AC_create(const H5F_t *f, H5AC_cache_config_t *config_ptr, H5AC_cache_image_co
         HGOTO_ERROR(H5E_CACHE, H5E_BADVALUE, FAIL, "Bad cache image configuration");
 
 #ifdef H5_HAVE_PARALLEL
-    if (H5F_HAS_FEATURE(f, H5FD_FEAT_HAS_MPI)) {
+    if (H5F_has_feature(f, H5FD_FEAT_HAS_MPI)) {
         MPI_Comm mpi_comm;
         int      mpi_rank;
         int      mpi_size;

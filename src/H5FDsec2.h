@@ -19,6 +19,7 @@
 
 /* Public header files */
 #include "H5FDpublic.h" /* File drivers             */
+#include "H5api_adpt.h"
 
 /** ID for the sec2 VFD */
 #define H5FD_SEC2 (H5OPEN H5FD_SEC2_id_g)

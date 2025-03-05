@@ -3485,19 +3485,6 @@ H5_DLL herr_t H5Pget_core_write_tracking(hid_t fapl_id, hbool_t *is_enabled, siz
  *          driver associated with the file access property list or
  *          data transfer property list \p plist_id.
  *
- *          Valid driver identifiers distributed with HDF5 are listed and
- *          described in the following table.
- * <div>
- *          \snippet{doc} tables/fileDriverLists.dox supported_file_driver_table
- * </div>
- *
- *          This list does not include custom drivers that might be
- *          defined and registered by a user.
- *
- *          The returned driver identifier is only valid as long as the
- *          file driver remains registered.
- *
- *
  * \since 1.2.0
  *
  */
@@ -3570,6 +3557,27 @@ H5_DLL const void *H5Pget_driver_info(hid_t plist_id);
  *
  */
 H5_DLL ssize_t H5Pget_driver_config_str(hid_t fapl_id, char *config_buf, size_t buf_size);
+/**
+ * \ingroup FAPL
+ *
+ * \brief Returns low-lever driver class value
+ *
+ * \plist_id
+ *
+ * \return \H5FD_class_value_t
+ *
+ * \details H5Pget_driver_cls_value() returns the value of the low-level file
+ *          driver class associated with the file access property list
+ *          \p plist_id.
+ *
+ *          The returned driver class value is only valid as long as the
+ *          file driver remains registered.
+ *
+ *
+ * \since 2.0.0
+ *
+ */
+H5_DLL H5FD_class_value_t H5Pget_driver_cls_value(hid_t plist_id);
 /**
  * \ingroup FAPL
  *

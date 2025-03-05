@@ -241,7 +241,7 @@ typedef struct H5F_super_t {
  * pointing to this struct.
  */
 struct H5F_shared_t {
-    H5FD_t        *lf;          /* Lower level file handle for I/O	*/
+    H5FD_int_t    *fh;          /* Lower-level file handle for I/O	*/
     H5F_super_t   *sblock;      /* Pointer to (pinned) superblock for file */
     H5O_drvinfo_t *drvinfo;     /* Pointer to the (pinned) driver info
                                  * cache entry.  This field is only defined
@@ -448,7 +448,7 @@ H5_DLL herr_t H5F__accum_reset(H5F_shared_t *f_sh, bool flush, bool force);
 
 /* Shared file list related routines */
 H5_DLL herr_t        H5F__sfile_add(H5F_shared_t *shared);
-H5_DLL H5F_shared_t *H5F__sfile_search(H5FD_t *lf);
+H5_DLL H5F_shared_t *H5F__sfile_search(H5FD_int_t *fh);
 H5_DLL herr_t        H5F__sfile_remove(H5F_shared_t *shared);
 
 /* Parallel I/O (i.e. MPI) related routines */

@@ -125,7 +125,7 @@ uint64_t   vol_cap_flags_g   = H5VL_CAP_FLAG_NONE;
 static bool do_test_file_cleanup_g = true;
 
 static herr_t h5_errors(hid_t estack, void *client_data);
-static char  *h5_fixname_real(const char *base_name, hid_t fapl, const char *_suffix, char *fullname,
+static char  *h5_fixname_real(const char *base_name, hid_t fapl_id, const char *_suffix, char *fullname,
                               size_t size, bool nest_printf, bool subst_for_superblock);
 
 /*-------------------------------------------------------------------------
@@ -149,20 +149,20 @@ h5_errors(hid_t estack, void H5_ATTR_UNUSED *client_data)
 
 /*
  * Cleans up a single temporary testing file and does
- * NOT close 'fapl'
+ * NOT close 'fapl_id'
  */
 void
-h5_delete_test_file(const char *base_name, hid_t fapl)
+h5_delete_test_file(const char *base_name, hid_t fapl_id)
 {
     char filename[1024]; /* VFD-dependent filename to delete */
 
     /* Get the VFD-dependent filename */
-    if (NULL == h5_fixname(base_name, fapl, filename, sizeof(filename)))
+    if (NULL == h5_fixname(base_name, fapl_id, filename, sizeof(filename)))
         return;
 
     H5E_BEGIN_TRY
     {
-        H5Fdelete(filename, fapl);
+        H5Fdelete(filename, fapl_id);
     }
     H5E_END_TRY
 
@@ -170,28 +170,28 @@ h5_delete_test_file(const char *base_name, hid_t fapl)
 
 /*
  * Cleans up temporary testing files and does NOT close
- * 'fapl'
+ * 'fapl_id'
  */
 void
-h5_delete_all_test_files(const char *base_name[], hid_t fapl)
+h5_delete_all_test_files(const char *base_name[], hid_t fapl_id)
 {
     for (int i = 0; base_name[i]; i++)
-        h5_delete_test_file(base_name[i], fapl);
+        h5_delete_test_file(base_name[i], fapl_id);
 
 } /* end h5_delete_all_test_files() */
 
 /*
- * Cleans up temporary testing files and closes 'fapl'
+ * Cleans up temporary testing files and closes 'fapl_id'
  */
 int
-h5_cleanup(const char *base_name[], hid_t fapl)
+h5_cleanup(const char *base_name[], hid_t fapl_id)
 {
     int retval = 0;
 
     if (do_test_file_cleanup_g) {
         /* Clean up files in base_name, and the FAPL */
-        h5_delete_all_test_files(base_name, fapl);
-        H5Pclose(fapl);
+        h5_delete_all_test_files(base_name, fapl_id);
+        H5Pclose(fapl_id);
 
         retval = 1;
     } /* end if */
@@ -238,9 +238,9 @@ h5_test_init(void)
  * without a suffix and a File Access Property List
  */
 char *
-h5_fixname(const char *base_name, hid_t fapl, char *fullname, size_t size)
+h5_fixname(const char *base_name, hid_t fapl_id, char *fullname, size_t size)
 {
-    return (h5_fixname_real(base_name, fapl, ".h5", fullname, size, false, false));
+    return (h5_fixname_real(base_name, fapl_id, ".h5", fullname, size, false, false));
 }
 
 /*
@@ -260,9 +260,9 @@ h5_fixname_superblock(const char *base_name, hid_t fapl_id, char *fullname, size
  * List
  */
 char *
-h5_fixname_no_suffix(const char *base_name, hid_t fapl, char *fullname, size_t size)
+h5_fixname_no_suffix(const char *base_name, hid_t fapl_id, char *fullname, size_t size)
 {
-    return (h5_fixname_real(base_name, fapl, NULL, fullname, size, false, false));
+    return (h5_fixname_real(base_name, fapl_id, NULL, fullname, size, false, false));
 }
 
 /*
@@ -270,9 +270,9 @@ h5_fixname_no_suffix(const char *base_name, hid_t fapl, char *fullname, size_t s
  * filename without a suffix and a File Access Property List
  */
 char *
-h5_fixname_printf(const char *base_name, hid_t fapl, char *fullname, size_t size)
+h5_fixname_printf(const char *base_name, hid_t fapl_id, char *fullname, size_t size)
 {
-    return (h5_fixname_real(base_name, fapl, ".h5", fullname, size, true, false));
+    return (h5_fixname_real(base_name, fapl_id, ".h5", fullname, size, true, false));
 }
 
 /*-------------------------------------------------------------------------
@@ -295,7 +295,7 @@ h5_fixname_printf(const char *base_name, hid_t fapl, char *fullname, size_t size
  *-------------------------------------------------------------------------
  */
 static char *
-h5_fixname_real(const char *base_name, hid_t fapl, const char *_suffix, char *fullname, size_t size,
+h5_fixname_real(const char *base_name, hid_t fapl_id, const char *_suffix, char *fullname, size_t size,
                 bool nest_printf, bool subst_for_superblock)
 {
     const char *prefix         = NULL;
@@ -303,7 +303,7 @@ h5_fixname_real(const char *base_name, hid_t fapl, const char *_suffix, char *fu
     char       *ptr, last = '\0';
     const char *suffix = _suffix;
     size_t      i, j;
-    hid_t       driver     = H5I_INVALID_HID;
+    hid_t       driver_id     = H5I_INVALID_HID;
     bool        isppdriver = false; /* if the driver is MPI parallel */
 
     if (!base_name || !fullname || size < 1)
@@ -314,17 +314,23 @@ h5_fixname_real(const char *base_name, hid_t fapl, const char *_suffix, char *fu
     /* Determine if driver is set by environment variable. If it is,
      * only generate a suffix if fixing the filename for the superblock
      * file. */
-    driver_env_var = h5_get_test_driver_name();
-    if (driver_env_var && (H5P_DEFAULT == fapl) && subst_for_superblock)
-        fapl = H5P_FILE_ACCESS_DEFAULT;
+    driver_env_var = h5_get_test_driver_env();
+    if (driver_env_var && (H5P_DEFAULT == fapl_id) && subst_for_superblock)
+        fapl_id = H5P_FILE_ACCESS_DEFAULT;
 
     /* figure out the suffix */
-    if (H5P_DEFAULT != fapl) {
-        if ((driver = H5Pget_driver(fapl)) < 0)
+    if (H5P_DEFAULT != fapl_id) {
+        if ((driver_id = H5Pget_driver(fapl_id)) < 0)
             return NULL;
 
         if (suffix) {
-            if (H5FD_FAMILY == driver) {
+            int cmp_value = 0;
+
+            if (H5FDcmp_driver_cls(&cmp_value, H5FD_FAMILY, driver_id) < 0) {
+                H5Idec_ref(driver_id);
+                return NULL;
+            }
+            if (0 == cmp_value) {
                 if (subst_for_superblock)
                     suffix = "-000000.h5";
                 else {
@@ -336,31 +342,40 @@ h5_fixname_real(const char *base_name, hid_t fapl, const char *_suffix, char *fu
                     }
                 }
             }
-            else if (H5FD_MULTI == driver) {
-
-                /* Check the HDF5_DRIVER/HDF5_TEST_DRIVER environment
-                 * variable in case we are using the split driver since
-                 * both of those use the multi VFD under the hood.
-                 */
-                if (driver_env_var && !strcmp(driver_env_var, "split")) {
-                    /* split VFD */
-                    if (subst_for_superblock)
-                        suffix = ".h5.meta";
-                    else
-                        suffix = NULL;
+            else {
+                cmp_value = 0;
+                if (H5FDcmp_driver_cls(&cmp_value, H5FD_MULTI, driver_id) < 0) {
+                    H5Idec_ref(driver_id);
+                    return NULL;
                 }
-                else {
-                    /* multi VFD */
-                    if (subst_for_superblock)
-                        suffix = "-s.h5";
-                    else
-                        suffix = NULL;
+                if (0 == cmp_value) {
+                    /* Check the HDF5_DRIVER/HDF5_TEST_DRIVER environment
+                     * variable in case we are using the split driver since
+                     * both of those use the multi VFD under the hood.
+                     */
+                    if (driver_env_var && !strcmp(driver_env_var, "split")) {
+                        /* split VFD */
+                        if (subst_for_superblock)
+                            suffix = ".h5.meta";
+                        else
+                            suffix = NULL;
+                    }
+                    else {
+                        /* multi VFD */
+                        if (subst_for_superblock)
+                            suffix = "-s.h5";
+                        else
+                            suffix = NULL;
+                    }
                 }
             }
         }
+
+        if (H5Idec_ref(driver_id) < 0)
+            return NULL;
     }
 
-    if (h5_using_parallel_driver(fapl, &isppdriver) < 0)
+    if (h5_using_parallel_driver(fapl_id, &isppdriver) < 0)
         return NULL;
 
     /* Check HDF5_NOCLEANUP environment setting.
@@ -604,7 +619,7 @@ error:
  * or HDF5_TEST_DRIVER environment variables
  */
 herr_t
-h5_get_vfd_fapl(hid_t fapl)
+h5_get_vfd_fapl(hid_t fapl_id)
 {
     const char *env   = NULL; /* HDF5_DRIVER/HDF5_TEST_DRIVER environment variable */
     const char *tok   = NULL; /* strtok pointer                       */
@@ -612,9 +627,7 @@ h5_get_vfd_fapl(hid_t fapl)
     char        buf[1024];    /* buffer for tokenizing HDF5_DRIVER    */
 
     /* Get the environment variable, if it exists */
-    env = getenv(HDF5_DRIVER);
-    if (!env)
-        env = getenv("HDF5_TEST_DRIVER");
+    env = h5_get_test_driver_env();
 
     /* If the environment variable was not set, just return
      * without modifying the FAPL.
@@ -624,7 +637,7 @@ h5_get_vfd_fapl(hid_t fapl)
 
     /* Get the first 'word' of the environment variable.
      * If it's nothing (environment variable was whitespace)
-     * just return the default fapl.
+     * just return the default fapl_id.
      */
     strncpy(buf, env, sizeof(buf));
     buf[sizeof(buf) - 1] = '\0';
@@ -633,29 +646,29 @@ h5_get_vfd_fapl(hid_t fapl)
 
     if (!strcmp(tok, "sec2")) {
         /* POSIX (section 2) read() and write() system calls */
-        if (H5Pset_fapl_sec2(fapl) < 0)
+        if (H5Pset_fapl_sec2(fapl_id) < 0)
             goto error;
     }
     else if (!strcmp(tok, "stdio")) {
         /* Standard C fread() and fwrite() system calls */
-        if (H5Pset_fapl_stdio(fapl) < 0)
+        if (H5Pset_fapl_stdio(fapl_id) < 0)
             goto error;
     }
     else if (!strcmp(tok, "core")) {
         /* In-memory driver settings (backing store on, 1 MB increment) */
-        if (H5Pset_fapl_core(fapl, (size_t)H5_MB, true) < 0)
+        if (H5Pset_fapl_core(fapl_id, (size_t)H5_MB, true) < 0)
             goto error;
     }
     else if (!strcmp(tok, "core_paged")) {
         /* In-memory driver with write tracking and paging on */
-        if (H5Pset_fapl_core(fapl, (size_t)H5_MB, true) < 0)
+        if (H5Pset_fapl_core(fapl_id, (size_t)H5_MB, true) < 0)
             goto error;
-        if (H5Pset_core_write_tracking(fapl, true, 4096) < 0)
+        if (H5Pset_core_write_tracking(fapl_id, true, 4096) < 0)
             goto error;
     }
     else if (!strcmp(tok, "split")) {
         /* Split meta data and raw data each using default driver */
-        if (H5Pset_fapl_split(fapl, ".meta", H5P_DEFAULT, ".raw", H5P_DEFAULT) < 0)
+        if (H5Pset_fapl_split(fapl_id, ".meta", H5P_DEFAULT, ".raw", H5P_DEFAULT) < 0)
             goto error;
     }
     else if (!strcmp(tok, "multi")) {
@@ -682,7 +695,7 @@ h5_get_vfd_fapl(hid_t fapl)
             memb_addr[mt] = (haddr_t)MAX(mt - 1, 0) * (HADDR_MAX / 10);
         }
 
-        if (H5Pset_fapl_multi(fapl, memb_map, memb_fapl, memb_name, memb_addr, false) < 0)
+        if (H5Pset_fapl_multi(fapl_id, memb_map, memb_fapl, memb_name, memb_addr, false) < 0)
             goto error;
 
         for (mt = H5FD_MEM_DEFAULT; mt < H5FD_MEM_NTYPES; mt++)
@@ -695,7 +708,7 @@ h5_get_vfd_fapl(hid_t fapl)
         /* Was a family size specified in the environment variable? */
         if ((tok = HDstrtok_r(NULL, " \t\n\r", &lasts)))
             fam_size = (hsize_t)(strtod(tok, NULL) * 1024 * 1024);
-        if (H5Pset_fapl_family(fapl, fam_size, H5P_DEFAULT) < 0)
+        if (H5Pset_fapl_family(fapl_id, fam_size, H5P_DEFAULT) < 0)
             goto error;
     }
     else if (!strcmp(tok, "log")) {
@@ -706,7 +719,7 @@ h5_get_vfd_fapl(hid_t fapl)
         if ((tok = HDstrtok_r(NULL, " \t\n\r", &lasts)))
             log_flags = (unsigned)strtol(tok, NULL, 0);
 
-        if (H5Pset_fapl_log(fapl, NULL, log_flags, 0) < 0)
+        if (H5Pset_fapl_log(fapl_id, NULL, log_flags, 0) < 0)
             goto error;
     }
 #ifdef H5_HAVE_DIRECT
@@ -714,7 +727,7 @@ h5_get_vfd_fapl(hid_t fapl)
         /* Linux direct read() and write() system calls.  Set memory boundary,
          * file block size, and copy buffer size to the default values.
          */
-        if (H5Pset_fapl_direct(fapl, 1024, 4096, 8 * 4096) < 0)
+        if (H5Pset_fapl_direct(fapl_id, 1024, 4096, 8 * 4096) < 0)
             goto error;
     }
 #endif
@@ -763,7 +776,7 @@ h5_get_vfd_fapl(hid_t fapl)
             goto error;
         }
 
-        if (H5Pset_fapl_splitter(fapl, splitter_config) < 0) {
+        if (H5Pset_fapl_splitter(fapl_id, splitter_config) < 0) {
             H5Pclose(splitter_config->rw_fapl_id);
             H5Pclose(splitter_config->wo_fapl_id);
             free(splitter_config);
@@ -779,7 +792,7 @@ h5_get_vfd_fapl(hid_t fapl)
 #ifdef H5_HAVE_SUBFILING_VFD
     else if (!strcmp(tok, H5FD_SUBFILING_NAME)) {
         /* Use default subfiling configuration */
-        if (H5Pset_fapl_subfiling(fapl, NULL) < 0)
+        if (H5Pset_fapl_subfiling(fapl_id, NULL) < 0)
             goto error;
     }
 #endif
@@ -791,7 +804,7 @@ h5_get_vfd_fapl(hid_t fapl)
         MPI_Finalized(&mpi_finalized);
 
         if (mpi_initialized && !mpi_finalized) {
-            if (H5Pset_fapl_mpio(fapl, MPI_COMM_WORLD, MPI_INFO_NULL) < 0)
+            if (H5Pset_fapl_mpio(fapl_id, MPI_COMM_WORLD, MPI_INFO_NULL) < 0)
                 goto error;
         }
     }
@@ -832,7 +845,7 @@ error:
  * environment variable
  */
 herr_t
-h5_get_libver_fapl(hid_t fapl)
+h5_get_libver_fapl(hid_t fapl_id)
 {
     const char *env   = NULL; /* HDF5_LIBVER_BOUNDS environment variable */
     const char *tok   = NULL; /* strtok pointer                       */
@@ -864,7 +877,7 @@ h5_get_libver_fapl(hid_t fapl)
 
     if (!strcmp(tok, "latest")) {
         /* use the latest format */
-        if (H5Pset_libver_bounds(fapl, H5F_LIBVER_LATEST, H5F_LIBVER_LATEST) < 0)
+        if (H5Pset_libver_bounds(fapl_id, H5F_LIBVER_LATEST, H5F_LIBVER_LATEST) < 0)
             goto error;
     } /* end if */
     else {
@@ -1159,7 +1172,7 @@ h5_dump_info_object(MPI_Info info)
  */
 H5_GCC_CLANG_DIAG_OFF("format-nonliteral")
 h5_stat_size_t
-h5_get_file_size(const char *filename, hid_t fapl)
+h5_get_file_size(const char *filename, hid_t fapl_id)
 {
     char      temp[2048]; /* Temporary buffer for file names */
     h5_stat_t sb;         /* Structure for querying file info */
@@ -1167,49 +1180,47 @@ h5_get_file_size(const char *filename, hid_t fapl)
 
     memset(&sb, 0, sizeof(h5_stat_t));
 
-    if (fapl == H5P_DEFAULT) {
+    if (fapl_id == H5P_DEFAULT) {
         /* Get the file's statistics */
         if (0 == HDstat(filename, &sb))
             return ((h5_stat_size_t)sb.st_size);
     } /* end if */
     else {
-        hid_t driver; /* VFD used for file */
+        H5FD_class_value_t cls_value;
 
-        /* Get the driver used when creating the file */
-        if ((driver = H5Pget_driver(fapl)) < 0)
-            return (-1);
+        /* Get the driver's class value used when creating the file */
+        if ((cls_value = H5Pget_driver_cls_value(fapl_id)) < 0)
+            return(-1);
 
         /* Check for simple cases */
-        if (driver == H5FD_SEC2 || driver == H5FD_STDIO || driver == H5FD_CORE ||
+        if (cls_value == H5_VFD_SEC2 || cls_value == H5_VFD_STDIO || cls_value == H5_VFD_CORE ||
 #ifdef H5_HAVE_WINDOWS
-            driver == H5FD_WINDOWS ||
+            cls_value == H5_VFD_WINDOWS ||
 #endif /* H5_HAVE_WINDOWS */
 #ifdef H5_HAVE_DIRECT
-            driver == H5FD_DIRECT ||
+            cls_value == H5_VFD_DIRECT ||
 #endif /* H5_HAVE_DIRECT */
-            driver == H5FD_LOG || driver == H5FD_SPLITTER) {
+            cls_value == H5_VFD_LOG || cls_value == H5_VFD_SPLITTER) {
             /* Get the file's statistics */
             if (0 == HDstat(filename, &sb))
                 return ((h5_stat_size_t)sb.st_size);
         } /* end if */
-        else if (driver == H5FD_MULTI) {
+        else if (cls_value == H5_VFD_MULTI) {
             H5FD_mem_t     mt;
             h5_stat_size_t tot_size       = 0;
-            const char    *driver_env_var = NULL;
+            const char    *driver_name = NULL;
 
-            driver_env_var = h5_get_test_driver_name();
-            if (driver_env_var && !strcmp(driver_env_var, "split")) {
+            driver_name = h5_get_test_driver_name();
+            if (driver_name && !strcmp(driver_name, "split")) {
                 for (mt = H5FD_MEM_DEFAULT; mt < H5FD_MEM_NTYPES; mt++) {
                     if (mt != H5FD_MEM_DRAW && mt != H5FD_MEM_SUPER)
                         continue;
 
                     /* Create the filename to query */
-                    if (mt == H5FD_MEM_DRAW) {
+                    if (mt == H5FD_MEM_DRAW)
                         snprintf(temp, sizeof temp, "%s.raw", filename);
-                    }
-                    else {
+                    else
                         snprintf(temp, sizeof temp, "%s.meta", filename);
-                    }
 
                     /* Check for existence of file */
                     if (0 == HDaccess(temp, F_OK)) {
@@ -1244,7 +1255,7 @@ h5_get_file_size(const char *filename, hid_t fapl)
             return (tot_size);
         } /* end if */
 #ifdef H5_HAVE_PARALLEL
-        else if (driver == H5FD_MPIO) {
+        else if (cls_value == H5_VFD_MPIO) {
             MPI_File   fh; /* MPI file handle used to open the file and verify its size */
             int        mpi_ret;
             MPI_Offset file_size;
@@ -1262,7 +1273,7 @@ h5_get_file_size(const char *filename, hid_t fapl)
             return file_size;
         }
 #endif /* H5_HAVE_PARALLEL */
-        else if (driver == H5FD_FAMILY) {
+        else if (cls_value == H5_VFD_FAMILY) {
             h5_stat_size_t tot_size = 0;
 
             /* Try all filenames possible, until we find one that's missing */
@@ -1285,11 +1296,11 @@ h5_get_file_size(const char *filename, hid_t fapl)
             /* Return total size */
             return (tot_size);
         } /* end if */
-        else if (driver == H5FD_SUBFILING) {
+        else if (cls_value == H5_VFD_SUBFILING) {
             hsize_t size;
             hid_t   fid = H5I_INVALID_HID;
 
-            if ((fid = H5Fopen(filename, H5F_ACC_RDONLY, fapl)) < 0)
+            if ((fid = H5Fopen(filename, H5F_ACC_RDONLY, fapl_id)) < 0)
                 return -1;
             if (H5Fget_filesize(fid, &size) < 0) {
                 H5Fclose(fid);
@@ -1497,19 +1508,19 @@ h5_verify_cached_stabs_cb(hid_t oid, const char H5_ATTR_UNUSED *name, const H5O_
  * cached in the superblock.
  */
 herr_t
-h5_verify_cached_stabs(const char *base_name[], hid_t fapl)
+h5_verify_cached_stabs(const char *base_name[], hid_t fapl_id)
 {
     hid_t file = H5I_INVALID_HID;
     char  filename[1024];
     int   i = 0;
 
     while (base_name[i]) {
-        if (h5_fixname(base_name[i], fapl, filename, sizeof(filename)) == NULL)
+        if (h5_fixname(base_name[i], fapl_id, filename, sizeof(filename)) == NULL)
             continue;
 
         H5E_BEGIN_TRY
         {
-            file = H5Fopen(filename, H5F_ACC_RDONLY, fapl);
+            file = H5Fopen(filename, H5F_ACC_RDONLY, fapl_id);
         }
         H5E_END_TRY
         if (file < 0) {
@@ -2102,9 +2113,10 @@ done:
 /*
  * Checks the HDF5_DRIVER and HDF5_TEST_DRIVER environment
  * variables to see if a driver name has been set for testing.
+ * (COMMIT NOTE: Partial revert of https://github.com/HDFGroup/hdf5/pull/4211)
  */
 const char *
-h5_get_test_driver_name(void)
+h5_get_test_driver_env(void)
 {
     char *envval;
 
@@ -2113,6 +2125,23 @@ h5_get_test_driver_name(void)
     if ((envval = getenv(HDF5_DRIVER)))
         return envval;
     else if ((envval = getenv("HDF5_TEST_DRIVER")))
+        return envval;
+    else
+        return NULL;
+}
+
+/*
+ * Checks the HDF5_DRIVER and HDF5_TEST_DRIVER environment
+ * variables to see if a driver name has been set for testing.
+ */
+const char *
+h5_get_test_driver_name(void)
+{
+    const char *envval;
+
+    assert(H5_DEFAULT_VFD == H5FD_SEC2);
+
+    if ((envval = h5_get_test_driver_env()))
         return envval;
     else
         return H5_DEFAULT_VFD_NAME;
@@ -2163,6 +2192,9 @@ h5_using_parallel_driver(hid_t fapl_id, bool *driver_is_parallel)
 
     *driver_is_parallel = (feat_flags & H5FD_FEAT_HAS_MPI);
 
+    if (H5Idec_ref(driver_id) < 0)
+        return FAIL;
+
     return ret_value;
 }
 
@@ -2190,6 +2222,9 @@ h5_driver_is_default_vfd_compatible(hid_t fapl_id, bool *default_vfd_compatible)
         return FAIL;
 
     *default_vfd_compatible = (feat_flags & H5FD_FEAT_DEFAULT_VFD_COMPATIBLE);
+
+    if (H5Idec_ref(driver_id) < 0)
+        return FAIL;
 
     return ret_value;
 } /* end h5_driver_is_default_vfd_compatible() */

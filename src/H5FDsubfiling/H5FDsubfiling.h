@@ -319,13 +319,16 @@ typedef struct H5FD_subfiling_config_t {
 } H5FD_subfiling_config_t;
 //! <!-- [H5FD_subfiling_config_t_snip] -->
 
+/** Identifier for the subfiling VFD */
+#define H5FD_SUBFILING_VALUE H5_VFD_SUBFILING
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /** @private
  *
- * \brief ID for the SUBFILING VFD
+ * \brief ID for the subfiling VFD
  */
 H5_DLLVAR hid_t H5FD_SUBFILING_id_g;
 

@@ -36,6 +36,7 @@
  * "constants" in their source code.
  */
 hid_t H5FD_MPIO_id_g = H5I_INVALID_HID;
+H5FD_driver_t *H5FD_MPIO_driver_g = NULL;
 
 /* Flag to indicate whether global driver resources & settings have been
  *      initialized.
@@ -128,7 +129,7 @@ static herr_t H5FD__selection_build_types(bool io_op_write, size_t num_pieces, H
 /* The MPIO file driver information */
 static const H5FD_class_t H5FD_mpio_g = {
     H5FD_CLASS_VERSION,         /* struct version        */
-    H5_VFD_MPIO,                /* value                 */
+    H5FD_MPIO_VALUE,                /* value                 */
     "mpio",                     /* name                  */
     HADDR_MAX,                  /* maxaddr               */
     H5F_CLOSE_SEMI,             /* fc_degree             */
@@ -278,9 +279,18 @@ H5FD__mpio_register(void)
     FUNC_ENTER_PACKAGE
 
     /* Register the MPI-IO VFD, if it isn't already */
-    if (H5I_VFL != H5I_get_type(H5FD_MPIO_id_g))
-        if ((H5FD_MPIO_id_g = H5FD_register(&H5FD_mpio_g, sizeof(H5FD_class_t), false)) < 0)
-            HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "unable to register mpio driver");
+    if (NULL == H5FD_MPIO_driver_g)
+        if (NULL == (H5FD_MPIO_driver_g = H5FD__driver_register(&H5FD_mpio_g)))
+            HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "can't register mpio driver");
+
+    /* Get ID for mpio driver */
+    if (H5I_VFL != H5I_get_type(H5FD_MPIO_id_g)) {
+        if ((H5FD_MPIO_id_g = H5I_register(H5I_VFL, H5FD_MPIO_driver_g, false)) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "can't create ID for mpio driver");
+
+        /* ID is holding a reference to the connector */
+        H5FD__driver_inc_rc(H5FD_MPIO_driver_g);
+    }
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -302,6 +312,7 @@ H5FD__mpio_unregister(void)
 
     /* Reset VFL ID */
     H5FD_MPIO_id_g = H5I_INVALID_HID;
+    H5FD_MPIO_driver_g = NULL;
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5FD__mpio_unregister() */
@@ -444,7 +455,7 @@ H5Pset_fapl_mpio(hid_t fapl_id, MPI_Comm comm, MPI_Info info)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set MPI info object");
 
     /* duplication is done during driver setting. */
-    ret_value = H5P_set_driver(fapl, H5FD_MPIO, NULL, NULL);
+    ret_value = H5P_set_driver(fapl, H5FD_MPIO_driver_g, NULL, NULL);
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -487,7 +498,7 @@ H5Pget_fapl_mpio(hid_t fapl_id, MPI_Comm *comm /*out*/, MPI_Info *info /*out*/)
     /* Check arguments */
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADTYPE, FAIL, "not a file access list");
-    if (H5FD_MPIO != H5P_peek_driver(fapl))
+    if (H5FD_MPIO_VALUE != H5P_get_driver_value(fapl))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "VFL driver is not MPI-I/O");
 
     /* Initialize driver, if it's not yet */
@@ -787,9 +798,9 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5FD_set_mpio_atomicity(H5FD_t *_file, bool flag)
+H5FD_set_mpio_atomicity(H5FD_int_t *fh, bool flag)
 {
-    H5FD_mpio_t *file = (H5FD_mpio_t *)_file;
+    H5FD_mpio_t *file = (H5FD_mpio_t *)fh->file;
 #ifdef H5FDmpio_DEBUG
     bool H5FD_mpio_debug_t_flag = (H5FD_mpio_debug_flags_s[(int)'t'] && H5FD_MPIO_TRACE_THIS_RANK(file));
 #endif
@@ -826,9 +837,9 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5FD_get_mpio_atomicity(H5FD_t *_file, bool *flag)
+H5FD_get_mpio_atomicity(H5FD_int_t *fh, bool *flag)
 {
-    H5FD_mpio_t *file = (H5FD_mpio_t *)_file;
+    H5FD_mpio_t *file = (H5FD_mpio_t *)fh->file;
     int          temp_flag;
 #ifdef H5FDmpio_DEBUG
     bool H5FD_mpio_debug_t_flag = (H5FD_mpio_debug_flags_s[(int)'t'] && H5FD_MPIO_TRACE_THIS_RANK(file));
@@ -3270,6 +3281,9 @@ H5FD__mpio_read_selection(H5FD_t *_file, H5FD_mem_t type, hid_t H5_ATTR_UNUSED d
 
     } /* end if */
     else {
+        H5FD_int_t fh;  /* Temporary internal file handle */
+        H5FD_driver_t driver; /* Temporary VFD driver */
+
 #ifdef H5FDmpio_DEBUG
         if (H5FD_mpio_debug_r_flag)
             fprintf(stderr, "%s: (%d) doing MPI independent IO\n", __func__, file->mpi_rank);
@@ -3281,9 +3295,11 @@ H5FD__mpio_read_selection(H5FD_t *_file, H5FD_mem_t type, hid_t H5_ATTR_UNUSED d
                 offsets[i] -= _file->base_addr;
             }
         }
+        
+        /* Construct temporary internal file handle */
+        H5FD__construct_tmp_fh(_file, &fh, &driver);
 
-        if (H5FD_read_from_selection(_file, type, (uint32_t)count, mem_space_ids, file_space_ids, offsets,
-                                     element_sizes, bufs) < 0)
+        if (H5FD__read_from_selection(&fh, type, (uint32_t)count, mem_space_ids, file_space_ids, offsets, element_sizes, bufs) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_READERROR, FAIL, "read vector from selection failed");
     }
 
@@ -3586,6 +3602,8 @@ H5FD__mpio_write_selection(H5FD_t *_file, H5FD_mem_t type, hid_t H5_ATTR_UNUSED 
             file->local_eof = (haddr_t)save_mpi_off + (haddr_t)bytes_written;
     }
     else { /* Not H5FD_MPIO_COLLECTIVE */
+        H5FD_int_t fh;  /* Temporary internal file handle */
+        H5FD_driver_t driver; /* Temporary VFD driver */
 
 #ifdef H5FDmpio_DEBUG
         if (H5FD_mpio_debug_w_flag)
@@ -3598,9 +3616,10 @@ H5FD__mpio_write_selection(H5FD_t *_file, H5FD_mem_t type, hid_t H5_ATTR_UNUSED 
                 offsets[i] -= _file->base_addr;
             }
         }
+        /* Construct temporary internal file handle */
+        H5FD__construct_tmp_fh(_file, &fh, &driver);
 
-        if (H5FD_write_from_selection(_file, type, (uint32_t)count, mem_space_ids, file_space_ids, offsets,
-                                      element_sizes, bufs) < 0)
+        if (H5FD__write_from_selection(&fh, type, (uint32_t)count, mem_space_ids, file_space_ids, offsets, element_sizes, bufs) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_WRITEERROR, FAIL, "write vector from selection failed");
     }
 
@@ -3667,7 +3686,7 @@ H5FD__mpio_flush(H5FD_t *_file, hid_t H5_ATTR_UNUSED dxpl_id, bool closing)
 
     /* Sanity checks */
     assert(file);
-    assert(H5_VFD_MPIO == file->pub.cls->value);
+    assert(H5FD_MPIO_VALUE == file->pub.cls->value);
 
     /* Only sync the file if we are not going to immediately close it */
     if (!closing)
@@ -3823,7 +3842,7 @@ H5FD__mpio_delete(const char *filename, hid_t fapl_id)
 
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
-    assert(H5FD_MPIO == H5P_peek_driver(fapl));
+    assert(H5FD_MPIO_VALUE == H5P_get_driver_value(fapl));
 
     if (H5FD_mpi_self_initialized_s)
         comm = MPI_COMM_WORLD;

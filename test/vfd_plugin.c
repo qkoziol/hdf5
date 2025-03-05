@@ -32,7 +32,6 @@ static herr_t
 test_set_by_name(void)
 {
     htri_t is_registered = FAIL;
-    hid_t  driver_id     = H5I_INVALID_HID;
     hid_t  fapl_id       = H5I_INVALID_HID;
 
     TESTING("VFD plugin registration by name");
@@ -54,12 +53,6 @@ test_set_by_name(void)
         TEST_ERROR;
     if (false == is_registered)
         FAIL_PUTS_ERROR("NULL VFD was not registered");
-
-    /* Unregister the null VFD */
-    if ((driver_id = H5Pget_driver(fapl_id)) < 0)
-        TEST_ERROR;
-    if (H5FDunregister(driver_id) < 0)
-        TEST_ERROR;
 
     /* Close FAPL, which holds last reference to null VFD */
     if (H5Pclose(fapl_id) < 0)
@@ -99,7 +92,6 @@ static herr_t
 test_set_by_value(void)
 {
     htri_t is_registered = FAIL;
-    hid_t  driver_id     = H5I_INVALID_HID;
     hid_t  fapl_id       = H5I_INVALID_HID;
 
     TESTING("VFD plugin registration by value (ID)");
@@ -121,12 +113,6 @@ test_set_by_value(void)
         TEST_ERROR;
     if (false == is_registered)
         FAIL_PUTS_ERROR("NULL VFD was not registered");
-
-    /* Unregister the null VFD */
-    if ((driver_id = H5Pget_driver(fapl_id)) < 0)
-        TEST_ERROR;
-    if (H5FDunregister(driver_id) < 0)
-        TEST_ERROR;
 
     /* Close FAPL, which holds last reference to null VFD */
     if (H5Pclose(fapl_id) < 0)
@@ -166,7 +152,6 @@ static herr_t
 test_set_multi(void)
 {
     htri_t is_registered = FAIL;
-    hid_t  driver_id     = H5I_INVALID_HID;
     hid_t  fapl_id       = H5I_INVALID_HID;
     int    i;
 
@@ -181,24 +166,15 @@ test_set_multi(void)
     /* Register the VFD multiple times */
     if ((fapl_id = H5Pcreate(H5P_FILE_ACCESS)) < 0)
         TEST_ERROR;
-    for (i = 0; i < N_REGISTRATIONS; i++) {
+    for (i = 0; i < N_REGISTRATIONS; i++)
         if (H5Pset_driver_by_name(fapl_id, NULL_VFD_NAME, NULL) < 0)
             TEST_ERROR;
-    }
 
     /* The null VFD should be registered now */
     if ((is_registered = H5FDis_driver_registered_by_name(NULL_VFD_NAME)) < 0)
         TEST_ERROR;
     if (false == is_registered)
         FAIL_PUTS_ERROR("NULL VFD was not registered");
-
-    /* Unregister the null VFD */
-    if ((driver_id = H5Pget_driver(fapl_id)) < 0)
-        TEST_ERROR;
-    for (i = 0; i < N_REGISTRATIONS; i++) {
-        if (H5FDunregister(driver_id) < 0)
-            TEST_ERROR;
-    }
 
     /* Close FAPL, which holds last reference to null VFD */
     if (H5Pclose(fapl_id) < 0)
@@ -221,24 +197,15 @@ test_set_multi(void)
     /* Register the VFD multiple times */
     if ((fapl_id = H5Pcreate(H5P_FILE_ACCESS)) < 0)
         TEST_ERROR;
-    for (i = 0; i < N_REGISTRATIONS; i++) {
+    for (i = 0; i < N_REGISTRATIONS; i++)
         if (H5Pset_driver_by_value(fapl_id, NULL_VFD_VALUE, NULL) < 0)
             TEST_ERROR;
-    }
 
     /* The null VFD should be registered now */
     if ((is_registered = H5FDis_driver_registered_by_value(NULL_VFD_VALUE)) < 0)
         TEST_ERROR;
     if (false == is_registered)
         FAIL_PUTS_ERROR("NULL VFD was not registered");
-
-    /* Unregister the null VFD */
-    if ((driver_id = H5Pget_driver(fapl_id)) < 0)
-        TEST_ERROR;
-    for (i = 0; i < N_REGISTRATIONS; i++) {
-        if (H5FDunregister(driver_id) < 0)
-            TEST_ERROR;
-    }
 
     /* Close FAPL, which holds last reference to null VFD */
     if (H5Pclose(fapl_id) < 0)
@@ -342,6 +309,8 @@ test_env_var(void)
     const char *const config_str     = "{name: null}";
     ssize_t           config_str_len = 0;
     htri_t            driver_is_registered;
+    hid_t             driver_id = H5I_INVALID_HID;
+    int               cmp_value;
     char              config_str_buf[128];
 
     TESTING("Loading of VFD plugin with HDF5_DRIVER environment variable");
@@ -373,7 +342,14 @@ test_env_var(void)
         TEST_ERROR;
     if (!driver_is_registered)
         TEST_ERROR;
-    if (H5Pget_driver(H5P_FILE_ACCESS_DEFAULT) == H5_DEFAULT_VFD)
+    if ((driver_id = H5Pget_driver(H5P_FILE_ACCESS_DEFAULT)) < 0)
+        TEST_ERROR;
+    cmp_value = 0;
+    if (H5FDcmp_driver_cls(&cmp_value, driver_id, H5_DEFAULT_VFD) < 0)
+        TEST_ERROR;
+    if (0 == cmp_value)
+        TEST_ERROR;
+    if (H5Idec_ref(driver_id) < 0)
         TEST_ERROR;
 
     /* Check driver configuration string */

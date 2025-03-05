@@ -330,7 +330,7 @@ H5Pget_fapl_multi(hid_t fapl_id, H5FD_mem_t *memb_map /*out*/, hid_t *memb_fapl_
 
     if (H5I_GENPROP_LST != H5Iget_type(fapl_id) || true != H5Pisa_class(fapl_id, H5P_FILE_ACCESS))
         H5Epush_ret(__func__, H5E_ERR_CLS, H5E_PLIST, H5E_BADTYPE, "not an access list", -1);
-    if (H5FD_MULTI != H5Pget_driver(fapl_id))
+    if (H5_VFD_MULTI != H5Pget_driver_cls_value(fapl_id))
         H5Epush_ret(__func__, H5E_ERR_CLS, H5E_PLIST, H5E_BADVALUE, "incorrect VFL driver", -1);
     H5E_BEGIN_TRY
     {
@@ -1025,7 +1025,7 @@ H5FD_multi_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr
         fa = (const H5FD_multi_fapl_t *)H5Pget_driver_info(fapl_id);
     }
     H5E_END_TRY
-    if (!fa || (H5P_FILE_ACCESS_DEFAULT == fapl_id) || (H5FD_MULTI != H5Pget_driver(fapl_id))) {
+    if (!fa || (H5P_FILE_ACCESS_DEFAULT == fapl_id) || (H5_VFD_MULTI != H5Pget_driver_cls_value(fapl_id))) {
         char *env = getenv(HDF5_DRIVER);
 
         close_fapl_id = fapl_id = H5Pcreate(H5P_FILE_ACCESS);
@@ -1280,10 +1280,10 @@ H5FD_multi_get_eoa(const H5FD_t *_file, H5FD_mem_t type)
                     memb_eoa = H5FDget_eoa(file->memb[mt], mt);
                 }
                 H5E_END_TRY
-
                 if (HADDR_UNDEF == memb_eoa)
                     H5Epush_ret(__func__, H5E_ERR_CLS, H5E_INTERNAL, H5E_BADVALUE,
                                 "member file has unknown eoa", HADDR_UNDEF);
+
                 if (memb_eoa > 0)
                     memb_eoa += file->fa.memb_addr[mt];
             }
@@ -1295,9 +1295,8 @@ H5FD_multi_get_eoa(const H5FD_t *_file, H5FD_mem_t type)
                 memb_eoa = file->memb_next[mt];
                 assert(HADDR_UNDEF != memb_eoa);
             }
-            else {
+            else
                 H5Epush_ret(__func__, H5E_ERR_CLS, H5E_INTERNAL, H5E_BADVALUE, "bad eoa", HADDR_UNDEF);
-            }
 
             if (memb_eoa > eoa)
                 eoa = memb_eoa;
@@ -1316,10 +1315,10 @@ H5FD_multi_get_eoa(const H5FD_t *_file, H5FD_mem_t type)
                 eoa = H5FDget_eoa(file->memb[mmt], mmt);
             }
             H5E_END_TRY
-
             if (HADDR_UNDEF == eoa)
                 H5Epush_ret(__func__, H5E_ERR_CLS, H5E_INTERNAL, H5E_BADVALUE, "member file has unknown eoa",
                             HADDR_UNDEF);
+
             if (eoa > 0)
                 eoa += file->fa.memb_addr[mmt];
         }
@@ -1331,9 +1330,8 @@ H5FD_multi_get_eoa(const H5FD_t *_file, H5FD_mem_t type)
             eoa = file->memb_next[mmt];
             assert(HADDR_UNDEF != eoa);
         }
-        else {
+        else
             H5Epush_ret(__func__, H5E_ERR_CLS, H5E_INTERNAL, H5E_BADVALUE, "bad eoa", HADDR_UNDEF);
-        }
     }
 
     return eoa;

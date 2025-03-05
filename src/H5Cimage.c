@@ -38,8 +38,8 @@
 #include "H5Cpkg.h"      /* Cache				*/
 #include "H5Eprivate.h"  /* Error handling		  	*/
 #include "H5Fpkg.h"      /* Files				*/
-#include "H5FDprivate.h" /* File drivers				*/
-#include "H5FLprivate.h" /* Free Lists                           */
+#include "H5FDprivate.h" /* File drivers			*/
+#include "H5FLprivate.h" /* Free Lists                          */
 #include "H5MMprivate.h" /* Memory management			*/
 
 /****************/
@@ -934,11 +934,9 @@ H5C__prep_image_for_file_close(H5F_t *f, bool *image_generated)
              * Note that we allocate the cache image directly from the file
              * driver so as to avoid unsettling the free space managers.
              */
-            if (HADDR_UNDEF ==
-                (cache_ptr->image_addr = H5FD_alloc(f->shared->lf, H5FD_MEM_SUPER, f, (hsize_t)p0_image_len,
+            if (HADDR_UNDEF == (cache_ptr->image_addr = H5FD_alloc(f->shared->fh, H5FD_MEM_SUPER, f, (hsize_t)p0_image_len,
                                                     &eoa_frag_addr, &eoa_frag_size)))
-                HGOTO_ERROR(H5E_CACHE, H5E_NOSPACE, FAIL,
-                            "can't allocate file space for metadata cache image");
+                HGOTO_ERROR(H5E_CACHE, H5E_CANTALLOC, FAIL, "can't allocate file space for metadata cache image");
         } /* end if */
         else
 #endif /* H5_HAVE_PARALLEL */
@@ -946,11 +944,10 @@ H5C__prep_image_for_file_close(H5F_t *f, bool *image_generated)
              * this space directly from the file driver so as to avoid
              * unsettling the free space managers.
              */
-            if (HADDR_UNDEF == (cache_ptr->image_addr = H5FD_alloc(f->shared->lf, H5FD_MEM_SUPER, f,
+            if (HADDR_UNDEF == (cache_ptr->image_addr = H5FD_alloc(f->shared->fh, H5FD_MEM_SUPER, f,
                                                                    (hsize_t)(cache_ptr->image_data_len),
                                                                    &eoa_frag_addr, &eoa_frag_size)))
-                HGOTO_ERROR(H5E_CACHE, H5E_NOSPACE, FAIL,
-                            "can't allocate file space for metadata cache image");
+                HGOTO_ERROR(H5E_CACHE, H5E_CANTALLOC, FAIL, "can't allocate file space for metadata cache image");
 
         /* Make note of the eoa after allocation of the cache image
          * block.  This value is used for sanity checking when we
@@ -958,7 +955,7 @@ H5C__prep_image_for_file_close(H5F_t *f, bool *image_generated)
          * we destroy the metadata cache.
          */
         assert(HADDR_UNDEF == f->shared->eoa_post_mdci_fsalloc);
-        if (HADDR_UNDEF == (f->shared->eoa_post_mdci_fsalloc = H5FD_get_eoa(f->shared->lf, H5FD_MEM_DEFAULT)))
+        if (HADDR_UNDEF == (f->shared->eoa_post_mdci_fsalloc = H5FD_get_eoa(f->shared->fh, H5FD_MEM_DEFAULT)))
             HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to get file size");
 
         /* For now, drop any fragment left over from the allocation of the

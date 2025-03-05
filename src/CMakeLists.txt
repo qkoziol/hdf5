@@ -228,9 +228,11 @@ set (H5FD_SOURCES
     ${HDF5_SRC_DIR}/H5FD.c
     ${HDF5_SRC_DIR}/H5FDcore.c
     ${HDF5_SRC_DIR}/H5FDdirect.c
+    ${HDF5_SRC_DIR}/H5FDdriver.c
     ${HDF5_SRC_DIR}/H5FDfamily.c
     ${HDF5_SRC_DIR}/H5FDhdfs.c
     ${HDF5_SRC_DIR}/H5FDint.c
+    ${HDF5_SRC_DIR}/H5FDio.c
     ${HDF5_SRC_DIR}/H5FDlog.c
     ${HDF5_SRC_DIR}/H5FDmirror.c
     ${HDF5_SRC_DIR}/H5FDmpi.c
@@ -241,6 +243,7 @@ set (H5FD_SOURCES
     ${HDF5_SRC_DIR}/H5FDonion_header.c
     ${HDF5_SRC_DIR}/H5FDonion_history.c
     ${HDF5_SRC_DIR}/H5FDonion_index.c
+    ${HDF5_SRC_DIR}/H5FDquery.c
     ${HDF5_SRC_DIR}/H5FDros3.c
     ${HDF5_SRC_DIR}/H5FDs3comms.c
     ${HDF5_SRC_DIR}/H5FDsec2.c
@@ -914,11 +917,28 @@ set (H5_PRIVATE_HEADERS
     ${HDF5_SRC_DIR}/H5FApkg.h
     ${HDF5_SRC_DIR}/H5FAprivate.h
 
-    ${HDF5_SRC_DIR}/H5FDmirror_priv.h
+    ${HDF5_SRC_DIR}/H5FDcore_private.h
+    ${HDF5_SRC_DIR}/H5FDdirect_private.h
+    ${HDF5_SRC_DIR}/H5FDfamily_private.h
+    ${HDF5_SRC_DIR}/H5FDhdfs_private.h
+    ${HDF5_SRC_DIR}/H5FDlog_private.h
+    ${HDF5_SRC_DIR}/H5FDmirror_pkg.h
+    ${HDF5_SRC_DIR}/H5FDmirror_private.h
+    ${HDF5_SRC_DIR}/H5FDmpio_private.h
+    ${HDF5_SRC_DIR}/H5FDmulti_private.h
     ${HDF5_SRC_DIR}/H5FDonion_header.h
     ${HDF5_SRC_DIR}/H5FDonion_history.h
     ${HDF5_SRC_DIR}/H5FDonion_index.h
-    ${HDF5_SRC_DIR}/H5FDonion_priv.h
+    ${HDF5_SRC_DIR}/H5FDonion_pkg.h
+    ${HDF5_SRC_DIR}/H5FDonion_private.h
+    ${HDF5_SRC_DIR}/H5FDros3_private.h
+    ${HDF5_SRC_DIR}/H5FDsec2_private.h
+    ${HDF5_SRC_DIR}/H5FDsplitter_private.h
+    ${HDF5_SRC_DIR}/H5FDstdio_private.h
+    ${HDF5_SRC_DIR}/H5FDsubfiling/H5FDioc_private.h
+    ${HDF5_SRC_DIR}/H5FDsubfiling/H5FDioc_pkg.h
+    ${HDF5_SRC_DIR}/H5FDsubfiling/H5FDsubfiling_private.h
+    ${HDF5_SRC_DIR}/H5FDsubfiling/H5FDsubfiling_pkg.h
     ${HDF5_SRC_DIR}/H5FDpkg.h
     ${HDF5_SRC_DIR}/H5FDprivate.h
 

@@ -484,13 +484,13 @@ H5FD__subfiling_free_topology(sf_topology_t *topology)
  *-------------------------------------------------------------------------
  */
 herr_t
-H5FD__subfiling_open_stub_file(const char *name, unsigned flags, MPI_Comm file_comm, H5FD_t **file_ptr,
+H5FD__subfiling_open_stub_file(const char *name, unsigned flags, MPI_Comm file_comm, H5FD_int_t **file_ptr,
                                uint64_t *file_id)
 {
     H5P_genplist_t *fapl          = NULL;
     uint64_t        stub_file_id  = UINT64_MAX;
     bool            bcasted_inode = false;
-    H5FD_t         *stub_file     = NULL;
+    H5FD_int_t     *stub_file     = NULL;
     int             mpi_rank      = 0;
     int             mpi_size      = 1;
     int             mpi_code;
@@ -528,7 +528,7 @@ H5FD__subfiling_open_stub_file(const char *name, unsigned flags, MPI_Comm file_c
             HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set MPI communicator");
         if (H5P_set(fapl, H5F_ACS_MPI_PARAMS_INFO_NAME, &stub_info) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set MPI info object");
-        if (H5P_set_driver(fapl, H5FD_MPIO, NULL, NULL) < 0)
+        if (H5P_set_driver(fapl, H5FD_MPIO_driver_g, NULL, NULL) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set MPI I/O driver on FAPL");
 
         if (H5FD_open(false, &stub_file, name, flags, fapl, HADDR_UNDEF) < 0)
@@ -539,9 +539,7 @@ H5FD__subfiling_open_stub_file(const char *name, unsigned flags, MPI_Comm file_c
         /* Retrieve Inode value for stub file */
         memset(&st, 0, sizeof(h5_stat_t));
         if (HDstat(name, &st) < 0)
-            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL,
-                        "couldn't stat HDF5 stub file, errno = %d, error message = '%s'", errno,
-                        strerror(errno));
+            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "couldn't stat HDF5 stub file, errno = %d, error message = '%s'", errno, strerror(errno));
         stub_file_id = (uint64_t)st.st_ino;
     }
 

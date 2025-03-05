@@ -38,6 +38,9 @@
 #define H5FDmpio_DEBUG
 #endif
 
+/** Identifier for the mpio VFD */
+#define H5FD_MPIO_VALUE H5_VFD_MPIO
+
 #ifdef __cplusplus
 extern "C" {
 #endif

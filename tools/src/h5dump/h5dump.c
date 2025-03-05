@@ -1450,7 +1450,7 @@ main(int argc, char *argv[])
         fname = strdup(argv[H5_optind++]);
 
         /* A short cut to get the revision count of an onion file without opening the file */
-        if (get_onion_revision_count && H5FD_ONION == H5Pget_driver(fapl_id)) {
+        if (get_onion_revision_count && H5_VFD_ONION == H5Pget_driver_cls_value(fapl_id)) {
             uint64_t revision_count = 0;
 
             if (H5FDonion_get_revision_count(fname, fapl_id, &revision_count) < 0) {

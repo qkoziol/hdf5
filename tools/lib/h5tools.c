@@ -826,48 +826,49 @@ h5tools_get_vfd_name(hid_t fid, hid_t fapl_id, char *drivername, size_t driverna
 
     if (is_native) {
         const char *driver_name;
-        hid_t       driver_id;
+        H5FD_class_value_t cls_value;
 
-        if ((driver_id = H5Pget_driver(fapl_id)) < 0)
-            H5TOOLS_GOTO_ERROR(FAIL, "failed to retrieve VFL driver ID from FAPL");
+        /* Get the driver's class value used when creating the file */
+        if ((cls_value = H5Pget_driver_cls_value(fapl_id)) < 0)
+            H5TOOLS_GOTO_ERROR(FAIL, "failed to retrieve VFL driver class value from FAPL");
 
-        if (driver_id == H5FD_SEC2)
+        if (cls_value == H5_VFD_SEC2)
             driver_name = drivernames[SEC2_VFD_IDX];
 #ifdef H5_HAVE_DIRECT
-        else if (driver_id == H5FD_DIRECT)
+        else if (cls_value == H5_VFD_DIRECT)
             driver_name = drivernames[DIRECT_VFD_IDX];
 #endif
-        else if (driver_id == H5FD_LOG)
+        else if (cls_value == H5_VFD_LOG)
             driver_name = drivernames[LOG_VFD_IDX];
 #ifdef H5_HAVE_WINDOWS
-        else if (driver_id == H5FD_WINDOWS)
+        else if (cls_value == H5_VFD_WINDOWS)
             driver_name = drivernames[WINDOWS_VFD_IDX];
 #endif
-        else if (driver_id == H5FD_STDIO)
+        else if (cls_value == H5_VFD_STDIO)
             driver_name = drivernames[STDIO_VFD_IDX];
-        else if (driver_id == H5FD_CORE)
+        else if (cls_value == H5_VFD_CORE)
             driver_name = drivernames[CORE_VFD_IDX];
-        else if (driver_id == H5FD_FAMILY)
+        else if (cls_value == H5_VFD_FAMILY)
             driver_name = drivernames[FAMILY_VFD_IDX];
-        else if (driver_id == H5FD_MULTI)
+        else if (cls_value == H5_VFD_MULTI)
             driver_name = drivernames[MULTI_VFD_IDX];
 #ifdef H5_HAVE_PARALLEL
-        else if (driver_id == H5FD_MPIO)
+        else if (cls_value == H5_VFD_MPIO)
             driver_name = drivernames[MPIO_VFD_IDX];
 #endif
 #ifdef H5_HAVE_ROS3_VFD
-        else if (driver_id == H5FD_ROS3)
+        else if (cls_value == H5_VFD_ROS3)
             driver_name = drivernames[ROS3_VFD_IDX];
 #endif
 #ifdef H5_HAVE_LIBHDFS
-        else if (driver_id == H5FD_HDFS)
+        else if (cls_value == H5_VFD_HDFS)
             driver_name = drivernames[HDFS_VFD_IDX];
 #endif
 #ifdef H5_HAVE_SUBFILING_VFD
-        else if (driver_id == H5FD_SUBFILING)
+        else if (cls_value == H5_VFD_SUBFILING)
             driver_name = drivernames[SUBFILING_VFD_IDX];
 #endif
-        else if (driver_id == H5FD_ONION)
+        else if (cls_value == H5_VFD_ONION)
             driver_name = drivernames[ONION_VFD_IDX];
         else
             driver_name = "unknown";

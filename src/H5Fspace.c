@@ -86,7 +86,7 @@ H5F__alloc(H5F_t *f, H5F_mem_t type, hsize_t size, haddr_t *frag_addr, hsize_t *
     /* check args */
     assert(f);
     assert(f->shared);
-    assert(f->shared->lf);
+    assert(f->shared->fh);
     assert(type >= H5FD_MEM_DEFAULT && type < H5FD_MEM_NTYPES);
     assert(size > 0);
 
@@ -105,7 +105,7 @@ H5F__alloc(H5F_t *f, H5F_mem_t type, hsize_t size, haddr_t *frag_addr, hsize_t *
     } /* end if */
 
     /* Call the file driver 'alloc' routine */
-    ret_value = H5FD_alloc(f->shared->lf, type, f, size, frag_addr, frag_size);
+    ret_value = H5FD_alloc(f->shared->fh, type, f, size, frag_addr, frag_size);
     if (!H5_addr_defined(ret_value))
         HGOTO_ERROR(H5E_FILE, H5E_CANTALLOC, HADDR_UNDEF, "file driver 'alloc' request failed");
 
@@ -142,12 +142,12 @@ H5F__free(H5F_t *f, H5FD_mem_t type, haddr_t addr, hsize_t size)
     /* Check args */
     assert(f);
     assert(f->shared);
-    assert(f->shared->lf);
+    assert(f->shared->fh);
     assert(type >= H5FD_MEM_DEFAULT && type < H5FD_MEM_NTYPES);
     assert(size > 0);
 
     /* Call the file driver 'free' routine */
-    if (H5FD_free(f->shared->lf, type, f, addr, size) < 0)
+    if (H5FD_free(f->shared->fh, type, f, addr, size) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTFREE, FAIL, "file driver 'free' request failed");
 
     /* Mark EOA dirty */
@@ -183,12 +183,12 @@ H5F__try_extend(H5F_t *f, H5FD_mem_t type, haddr_t blk_end, hsize_t extra_reques
     /* check args */
     assert(f);
     assert(f->shared);
-    assert(f->shared->lf);
+    assert(f->shared->fh);
     assert(type >= H5FD_MEM_DEFAULT && type < H5FD_MEM_NTYPES);
     assert(extra_requested > 0);
 
     /* Extend the object by extending the underlying file */
-    if ((ret_value = H5FD_try_extend(f->shared->lf, type, f, blk_end, extra_requested)) < 0)
+    if ((ret_value = H5FD_try_extend(f->shared->fh, type, f, blk_end, extra_requested)) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTEXTEND, FAIL, "driver try extend request failed");
 
     /* H5FD_try_extend() updates driver message and marks the superblock

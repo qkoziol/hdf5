@@ -35,7 +35,7 @@
 #include "H5FLprivate.h" /* Free Lists                   */
 #include "H5Iprivate.h"  /* IDs                          */
 #include "H5MFprivate.h" /* File memory management       */
-#include "H5MMprivate.h" /* Memory management			*/
+#include "H5MMprivate.h" /* Memory management		 */
 #include "H5Oprivate.h"  /* Object headers               */
 #include "H5PBprivate.h" /* Page Buffer	                 */
 #include "H5VMprivate.h" /* Vector and array functions   */
@@ -208,7 +208,7 @@ H5D__contig_fill(H5D_t *dset)
 
 #ifdef H5_HAVE_PARALLEL
     /* Retrieve MPI parameters */
-    if (H5F_HAS_FEATURE(dset->oloc.file, H5FD_FEAT_HAS_MPI)) {
+    if (H5F_has_feature(dset->oloc.file, H5FD_FEAT_HAS_MPI)) {
         /* Get the MPI communicator */
         if (MPI_COMM_NULL == (mpi_comm = H5F_mpi_get_comm(dset->oloc.file)))
             HGOTO_ERROR(H5E_INTERNAL, H5E_MPI, FAIL, "Can't retrieve MPI communicator");
@@ -1776,7 +1776,7 @@ H5D__contig_copy(H5F_t *f_src, const H5O_storage_contig_t *storage_src, H5F_t *f
 
     /* If data sieving is enabled and the dataset is open in the file,
        set up to copy data out of the sieve buffer if deemed possible later */
-    if (H5F_HAS_FEATURE(f_src, H5FD_FEAT_DATA_SIEVE) && shared_fo && shared_fo->cache.contig.sieve_buf) {
+    if (H5F_has_feature(f_src, H5FD_FEAT_DATA_SIEVE) && shared_fo && shared_fo->cache.contig.sieve_buf) {
         try_sieve   = true;
         sieve_start = shared_fo->cache.contig.sieve_loc;
         sieve_end   = sieve_start + shared_fo->cache.contig.sieve_size;

@@ -123,7 +123,9 @@ public class TestH5Pfapls3 {
 
         H5.H5Pset_fapl_ros3(fapl_id, config);
 
-        assertEquals("driver types don't match", HDF5Constants.H5FD_ROS3, H5.H5Pget_driver(fapl_id));
+        long driver_id = H5.H5Pget_driver(fapl_id);
+        assertTrue("H5.H5FDcmp_driver_cls(H5FD_ROS3, driver_id)",
+                       H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_ROS3, driver_id));
 
         /* get_fapl_ros3 can throw exception in error cases */
         H5FD_ros3_fapl_t copy = H5.H5Pget_fapl_ros3(fapl_id);
@@ -148,7 +150,9 @@ public class TestH5Pfapls3 {
         /* TODO: for now, test against a sec2 fapl only */
 
         H5.H5Pset_fapl_sec2(fapl_id);
-        assertEquals("fapl_id was not set properly", HDF5Constants.H5FD_SEC2, H5.H5Pget_driver(fapl_id));
+        long driver_id = H5.H5Pget_driver(fapl_id);
+        assertTrue("H5.H5FDcmp_driver_cls(H5FD_SEC2, driver_id)",
+                       H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_SEC2, driver_id));
         H5FD_ros3_fapl_t fails = H5.H5Pget_fapl_ros3(fapl_id);
     }
 
@@ -164,7 +168,9 @@ public class TestH5Pfapls3 {
 
         final H5FD_ros3_fapl_t config = new H5FD_ros3_fapl_t(region, acc_id, acc_key);
         H5.H5Pset_fapl_ros3(fapl_id, config);
-        assertEquals("driver types don't match", HDF5Constants.H5FD_ROS3, H5.H5Pget_driver(fapl_id));
+        long driver_id = H5.H5Pget_driver(fapl_id);
+        assertTrue("H5.H5FDcmp_driver_cls(H5FD_ROS3, driver_id)",
+                       H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_ROS3, driver_id));
 
         H5FD_ros3_fapl_t copy = H5.H5Pget_fapl_ros3(fapl_id);
         assertEquals("contents of fapl set and get don't match",

@@ -23,13 +23,14 @@
 #include "H5Fprivate.h"     /* Files                       */
 #include "H5FDsec2.h"       /* Sec2 file driver            */
 #include "H5FDpkg.h"        /* File drivers                */
-#include "H5FDonion_priv.h" /* Onion file driver internals */
+#include "H5FDonion_pkg.h"  /* Onion file driver internals              */
 #include "H5FLprivate.h"    /* Free Lists                  */
 #include "H5Iprivate.h"     /* IDs                         */
 #include "H5MMprivate.h"    /* Memory management           */
 
 /* The driver identification number, initialized at runtime */
 hid_t H5FD_ONION_id_g = H5I_INVALID_HID;
+H5FD_driver_t *H5FD_ONION_driver_g = NULL;
 
 /* Driver-specific file access properties */
 /* (Identical to the H5FD_onion_fapl_info_t struct, but uses a pointer instead
@@ -141,10 +142,10 @@ typedef struct H5FD_onion_t {
     bool              align_history_on_pages;
 
     /* Onion-related files */
-    H5FD_t *original_file;
-    H5FD_t *onion_file;
-    H5FD_t *recovery_file;
-    char   *recovery_file_name;
+    H5FD_int_t *original_file;
+    H5FD_int_t *onion_file;
+    H5FD_int_t *recovery_file;
+    char      *recovery_file_name;
 
     /* Onion data structures */
     H5FD_onion_header_t          header;
@@ -186,7 +187,7 @@ static herr_t  H5FD__onion_ctl(H5FD_t *_file, uint64_t op_code, uint64_t flags,
 
 static herr_t H5FD__onion_fapl_info_dup(H5FD_onion_fapl_t *dst_fa, const H5FD_onion_fapl_t *src_fa);
 static herr_t H5FD__onion_open_rw(H5FD_onion_t *, unsigned int, haddr_t, bool new_open);
-static herr_t H5FD__get_onion_revision_count(H5FD_t *file, uint64_t *revision_count);
+static herr_t H5FD__get_onion_revision_count(H5FD_int_t *file, uint64_t *revision_count);
 
 /* Temporary */
 H5_DLL herr_t H5FD__onion_write_final_history(H5FD_onion_t *file);
@@ -250,9 +251,19 @@ H5FD__onion_register(void)
 
     FUNC_ENTER_PACKAGE
 
-    if (H5I_VFL != H5I_get_type(H5FD_ONION_id_g))
-        if ((H5FD_ONION_id_g = H5FD_register(&H5FD_onion_g, sizeof(H5FD_class_t), false)) < 0)
-            HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "unable to register onion driver");
+    /* Register the onion driver, if it isn't already */
+    if (NULL == H5FD_ONION_driver_g)
+        if (NULL == (H5FD_ONION_driver_g = H5FD__driver_register(&H5FD_onion_g)))
+            HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "can't register onion driver");
+
+    /* Get ID for onion driver */
+    if (H5I_VFL != H5I_get_type(H5FD_ONION_id_g)) {
+        if ((H5FD_ONION_id_g = H5I_register(H5I_VFL, H5FD_ONION_driver_g, false)) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "can't create ID for onion driver");
+
+        /* ID is holding a reference to the connector */
+        H5FD__driver_inc_rc(H5FD_ONION_driver_g);
+    }
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -274,6 +285,7 @@ H5FD__onion_unregister(void)
 
     /* Reset VFL ID */
     H5FD_ONION_id_g = H5I_INVALID_HID;
+    H5FD_ONION_driver_g = NULL;
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5FD__onion_unregister() */
@@ -333,12 +345,12 @@ H5Pget_fapl_onion(hid_t fapl_id, H5FD_onion_fapl_info_t *info_out)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "NULL info-out pointer");
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "Not a valid FAPL ID");
-    if (H5FD_ONION != H5P_peek_driver(fapl))
+    if (H5FD_ONION_VALUE != H5P_get_driver_value(fapl))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "Incorrect VFL driver");
 
     /* Copy the onion file access property */
     if (NULL == (fa = H5P_peek_driver_info(fapl)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "bad VFL driver info");
+        HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "bad VFL driver info");
 
     /* Copy the atomic fields */
     info_out->version          = H5FD_ONION_FAPL_INFO_VERSION_CURR;
@@ -375,7 +387,6 @@ H5Pset_fapl_onion(hid_t fapl_id, const H5FD_onion_fapl_info_t *info)
 {
     H5P_genplist_t   *fapl = NULL;
     H5FD_onion_fapl_t fa; /* Temporary copy of driver info */
-    hid_t             backing_vfd_id = H5I_INVALID_HID;
     herr_t            ret_value      = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
@@ -402,9 +413,7 @@ H5Pset_fapl_onion(hid_t fapl_id, const H5FD_onion_fapl_info_t *info)
     }
 
     /* The only backing fapl that is currently supported is sec2 */
-    if ((backing_vfd_id = H5P_peek_driver(fa.backing_fapl)) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "Can't get VFD from fapl");
-    if (backing_vfd_id != H5FD_SEC2)
+    if (H5FD_SEC2_VALUE != H5P_get_driver_value(fa.backing_fapl))
         HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "Onion VFD only supports sec2 backing store");
 
     /* Copy the atomic fields */
@@ -416,7 +425,7 @@ H5Pset_fapl_onion(hid_t fapl_id, const H5FD_onion_fapl_info_t *info)
     HDcompile_assert(sizeof(info->comment) == sizeof(fa.comment));
     memcpy(fa.comment, info->comment, sizeof(fa.comment));
 
-    if (H5P_set_driver(fapl, H5FD_ONION, &fa, NULL) < 0)
+    if (H5P_set_driver(fapl, H5FD_ONION_driver_g, &fa, NULL) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "Can't set the onion VFD");
 
 done:
@@ -739,7 +748,7 @@ H5FD__onion_close(H5FD_t *_file)
             /* Unset write-lock flag and write header */
             if (file->is_open_rw)
                 file->header.flags &= (uint32_t)~H5FD_ONION_HEADER_FLAG_WRITE_LOCK;
-            if (H5FD__onion_write_header(&(file->header), file->onion_file) < 0)
+            if (H5FD__onion_write_header(&file->header, file->onion_file) < 0)
                 HGOTO_ERROR(H5E_VFL, H5E_WRITEERROR, FAIL, "Can't write updated header to backing store");
         }
     }
@@ -1746,7 +1755,7 @@ herr_t
 H5FDonion_get_revision_count(const char *filename, hid_t fapl_id, uint64_t *revision_count /*out*/)
 {
     H5P_genplist_t *fapl      = NULL;
-    H5FD_t         *file      = NULL;
+    H5FD_int_t     *file      = NULL;
     herr_t          ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
@@ -1760,7 +1769,7 @@ H5FDonion_get_revision_count(const char *filename, hid_t fapl_id, uint64_t *revi
     /* Make sure using the correct driver */
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "not a valid FAPL ID");
-    if (H5FD_ONION != H5P_peek_driver(fapl))
+    if (H5FD_ONION_VALUE != H5P_get_driver_value(fapl))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "not a Onion VFL driver");
 
     /* Open the file with the driver */
@@ -1788,7 +1797,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5FD__get_onion_revision_count(H5FD_t *file, uint64_t *revision_count)
+H5FD__get_onion_revision_count(H5FD_int_t *file, uint64_t *revision_count)
 {
     uint64_t op_code;
     uint64_t flags;

@@ -619,6 +619,8 @@ test_hdfs_fapl(void)
 
     FAIL_IF(H5FDdriver_query(driver_id, &driver_flags) < 0)
 
+    FAIL_IF(H5Idec_ref(driver_id) < 0)
+
     JSVERIFY_NOT(0, (driver_flags & H5FD_FEAT_DATA_SIEVE),
                  "bit(s) in `driver_flags` must align with "
                  "H5FD_FEAT_DATA_SIEVE")

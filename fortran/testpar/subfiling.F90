@@ -52,6 +52,7 @@ PROGRAM subfiling_test
 #else
   LOGICAL(KIND=MPI_INTEGER_KIND) :: flag
 #endif
+  LOGICAL        :: are_same = .FALSE.
 
   INTEGER :: nerrors = 0
 
@@ -207,10 +208,9 @@ PROGRAM subfiling_test
   CALL h5pget_driver_f(fapl_id, driver_id, hdferror)
   CALL check("h5pget_driver_f", hdferror, nerrors)
 
-  IF( driver_id .NE. H5FD_SUBFILING_F) THEN
-     WRITE(*,*) "Wrong file driver type returned"
-     nerrors = nerrors + 1
-  ENDIF
+  CALL H5FDcmp_driver_cls_f(are_same, driver_id, H5FD_SUBFILING_F, hdferror)
+  CALL check("H5FDcmp_driver_cls_f", hdferror, nerrors)
+  CALL VERIFY("H5FDcmp_driver_cls_f", are_same, .TRUE., nerrors)
 
   ! *********************************************************
   ! Check the default parameters for subfiling and ioc

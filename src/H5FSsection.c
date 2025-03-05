@@ -2354,7 +2354,6 @@ H5FS_vfd_alloc_hdr_and_section_info_if_needed(H5F_t *f, H5FS_t *fspace, haddr_t 
     /* Check arguments. */
     assert(f);
     assert(f->shared);
-    assert(f->shared->lf);
     assert(fspace);
     assert(fs_addr_ptr);
 

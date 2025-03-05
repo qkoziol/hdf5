@@ -270,7 +270,7 @@ H5F__drvrinfo_prefix_decode(H5O_drvinfo_t *drvrinfo, char *drv_name, const uint8
         haddr_t min_eoa; /* Minimum EOA needed for reading the driver info */
 
         /* Get current EOA... */
-        eoa = H5FD_get_eoa(udata->f->shared->lf, H5FD_MEM_SUPER);
+        eoa = H5FD_get_eoa(udata->f->shared->fh, H5FD_MEM_SUPER);
         if (!H5_addr_defined(eoa))
             HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "driver get_eoa request failed");
 
@@ -279,7 +279,7 @@ H5F__drvrinfo_prefix_decode(H5O_drvinfo_t *drvrinfo, char *drv_name, const uint8
 
         /* If it grew, set it */
         if (H5_addr_gt(min_eoa, eoa))
-            if (H5FD_set_eoa(udata->f->shared->lf, H5FD_MEM_SUPER, min_eoa) < 0)
+            if (H5FD_set_eoa(udata->f->shared->fh, H5FD_MEM_SUPER, min_eoa) < 0)
                 HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, FAIL, "set end of space allocation request failed");
     }
 
@@ -710,7 +710,7 @@ H5F__cache_superblock_serialize(const H5F_t *f, void *_image, size_t H5_ATTR_UNU
          * we will eventually truncate the file to match the EOA value. As
          * such, use the EOA value in its place, knowing that the current EOF
          * value will ultimately match it. */
-        if ((rel_eof = H5FD_get_eoa(f->shared->lf, H5FD_MEM_SUPER)) == HADDR_UNDEF)
+        if ((rel_eof = H5FD_get_eoa(f->shared->fh, H5FD_MEM_SUPER)) == HADDR_UNDEF)
             HGOTO_ERROR(H5E_RESOURCE, H5E_CANTGET, FAIL, "driver get_eoa request failed");
         H5F_addr_encode(f, &image, (rel_eof + sblock->base_addr));
 
@@ -744,7 +744,7 @@ H5F__cache_superblock_serialize(const H5F_t *f, void *_image, size_t H5_ATTR_UNU
          * truncate it to match the EOA value. As such, use the EOA value
          * in its place, knowing that the current EOF value will
          * ultimately match it. */
-        if ((rel_eof = H5FD_get_eoa(f->shared->lf, H5FD_MEM_SUPER)) == HADDR_UNDEF)
+        if ((rel_eof = H5FD_get_eoa(f->shared->fh, H5FD_MEM_SUPER)) == HADDR_UNDEF)
             HGOTO_ERROR(H5E_RESOURCE, H5E_CANTGET, FAIL, "driver get_eoa request failed");
         H5F_addr_encode(f, &image, (rel_eof + sblock->base_addr));
 
@@ -894,7 +894,7 @@ H5F__cache_drvrinfo_deserialize(const void *_image, size_t len, void *_udata, bo
     assert(len == (H5F_DRVINFOBLOCK_HDR_SIZE + drvinfo->len));
 
     /* Validate and decode driver information */
-    if (H5FD_sb_load(udata->f->shared->lf, drv_name, image) < 0)
+    if (H5FD_sb_load(udata->f->shared->fh, drv_name, image) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTDECODE, NULL, "unable to decode driver information");
 
     /* Sanity check */
@@ -973,7 +973,7 @@ H5F__cache_drvrinfo_serialize(const H5F_t *f, void *_image, size_t H5_ATTR_NDEBU
     UINT32ENCODE(image, drvinfo->len);
 
     /* Encode driver-specific data */
-    if (H5FD_sb_encode(f->shared->lf, (char *)image, dbuf + H5F_DRVINFOBLOCK_HDR_SIZE) < 0)
+    if (H5FD_sb_encode(f->shared->fh, (char *)image, dbuf + H5F_DRVINFOBLOCK_HDR_SIZE) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, FAIL, "unable to encode driver information");
 
     /* Advance buffer pointer past name & variable-sized portion of driver info */

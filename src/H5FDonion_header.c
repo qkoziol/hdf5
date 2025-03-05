@@ -21,7 +21,7 @@
 #include "H5private.h"      /* Generic Functions                        */
 #include "H5Eprivate.h"     /* Error handling                           */
 #include "H5FDpkg.h"        /* File drivers                             */
-#include "H5FDonion_priv.h" /* Onion file driver internals              */
+#include "H5FDonion_pkg.h"  /* Onion file driver internals              */
 #include "H5MMprivate.h"    /* Memory management                        */
 
 /*-----------------------------------------------------------------------------
@@ -35,7 +35,7 @@
  *-----------------------------------------------------------------------------
  */
 herr_t
-H5FD__onion_ingest_header(H5FD_onion_header_t *hdr_out, H5FD_t *raw_file, haddr_t addr)
+H5FD__onion_ingest_header(H5FD_onion_header_t *hdr_out, H5FD_int_t *raw_file, haddr_t addr)
 {
     unsigned char *buf       = NULL;
     herr_t         ret_value = SUCCEED;
@@ -79,7 +79,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5FD__onion_write_header(H5FD_onion_header_t *header, H5FD_t *file)
+H5FD__onion_write_header(H5FD_onion_header_t *header, H5FD_int_t *file)
 {
     uint32_t       sum       = 0; /* Not used, but required by the encoder */
     uint64_t       size      = 0;

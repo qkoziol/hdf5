@@ -139,6 +139,8 @@ test_metadata_read_attempts(hid_t in_fapl)
     if (H5FDdriver_query(driver_id, &driver_flags) < 0)
         FAIL_STACK_ERROR;
     compat_w_default_vfd = (driver_flags & H5FD_FEAT_DEFAULT_VFD_COMPATIBLE) ? true : false;
+    if (H5Idec_ref(driver_id) < 0)
+        FAIL_STACK_ERROR;
 
     if (!compat_w_default_vfd) {
         SKIPPED();

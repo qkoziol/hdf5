@@ -113,7 +113,7 @@ H5VL__native_blob_get(void *obj, const void *blob_id, void *buf, size_t size, vo
     UINT32DECODE(id, hobjid.idx);
 
     /* Check if this sequence actually has any data */
-    if (hobjid.addr > 0) {
+    if (H5_addr_defined(hobjid.addr)) {
         /* Verify the size is correct */
         if (H5HG_get_obj_size(f, &hobjid, &hobj_size) < 0)
             HGOTO_ERROR(H5E_VOL, H5E_CANTGETSIZE, FAIL, "can't get object size");
@@ -183,7 +183,7 @@ H5VL__native_blob_specific(void *obj, void *blob_id, H5VL_blob_specific_args_t *
             UINT32DECODE(id, hobjid.idx);
 
             /* Free heap object */
-            if (hobjid.addr > 0)
+            if (H5_addr_defined(hobjid.addr))
                 if (H5HG_remove(f, &hobjid) < 0)
                     HGOTO_ERROR(H5E_VOL, H5E_CANTREMOVE, FAIL, "unable to remove heap object");
 

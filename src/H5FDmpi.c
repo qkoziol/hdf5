@@ -36,8 +36,9 @@
  *-------------------------------------------------------------------------
  */
 int
-H5FD_mpi_get_rank(H5FD_t *file)
+H5FD_mpi_get_rank(H5FD_int_t *fh)
 {
+    H5FD_t *file;
     const H5FD_class_t *cls;
     uint64_t            flags     = H5FD_CTL_FAIL_IF_UNKNOWN_FLAG | H5FD_CTL_ROUTE_TO_TERMINAL_VFD_FLAG;
     int                 rank      = -1;
@@ -46,15 +47,27 @@ H5FD_mpi_get_rank(H5FD_t *file)
 
     FUNC_ENTER_NOAPI(FAIL)
 
-    assert(file);
-    cls = (const H5FD_class_t *)(file->cls);
+    /* Sanity checks */
+    assert(fh);
+    assert(fh->driver);
+    assert(fh->driver->cls);
+    cls = (const H5FD_class_t *)(fh->driver->cls);
     assert(cls);
     assert(cls->ctl); /* All MPI drivers must implement this */
 
-    /* Dispatch to driver */
-    if ((cls->ctl)(file, H5FD_CTL_GET_MPI_RANK_OPCODE, flags, NULL, &rank_ptr) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "driver get_rank request failed");
+    /* Get the file pointer */
+    file = fh->file;
+    assert(file);
 
+   /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(-1)
+        {
+            /* Dispatch to driver */
+            ret_value = (cls->ctl)(file, H5FD_CTL_GET_MPI_RANK_OPCODE, flags, NULL, &rank_ptr);
+        }
+    H5_AFTER_USER_CB(-1)
+    if (ret_value < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "driver get_rank request failed");
     assert(rank >= 0);
 
     ret_value = rank;
@@ -75,8 +88,9 @@ done:
  *-------------------------------------------------------------------------
  */
 int
-H5FD_mpi_get_size(H5FD_t *file)
+H5FD_mpi_get_size(H5FD_int_t *fh)
 {
+    H5FD_t *file;
     const H5FD_class_t *cls;
     uint64_t            flags     = H5FD_CTL_FAIL_IF_UNKNOWN_FLAG | H5FD_CTL_ROUTE_TO_TERMINAL_VFD_FLAG;
     int                 size      = 0;
@@ -85,16 +99,29 @@ H5FD_mpi_get_size(H5FD_t *file)
 
     FUNC_ENTER_NOAPI(FAIL)
 
-    assert(file);
-    cls = (const H5FD_class_t *)(file->cls);
+    /* Sanity checks */
+    assert(fh);
+    assert(fh->driver);
+    assert(fh->driver->cls);
+    cls = (const H5FD_class_t *)(fh->driver->cls);
     assert(cls);
     assert(cls->ctl); /* All MPI drivers must implement this */
 
-    /* Dispatch to driver */
-    if ((cls->ctl)(file, H5FD_CTL_GET_MPI_SIZE_OPCODE, flags, NULL, &size_ptr) < 0)
+    /* Get the file pointer */
+    file = fh->file;
+    assert(file);
+
+   /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(-1)
+        {
+            /* Dispatch to driver */
+            ret_value = (cls->ctl)(file, H5FD_CTL_GET_MPI_SIZE_OPCODE, flags, NULL, &size_ptr);
+        }
+    H5_AFTER_USER_CB(-1)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "driver get_size request failed");
 
-    if (0 >= size)
+    if (size < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "driver get_size request returned bad value");
 
     ret_value = size;
@@ -114,8 +141,9 @@ done:
  *-------------------------------------------------------------------------
  */
 MPI_Comm
-H5FD_mpi_get_comm(H5FD_t *file)
+H5FD_mpi_get_comm(H5FD_int_t *fh)
 {
+    H5FD_t *file;
     const H5FD_class_t *cls;
     uint64_t            flags     = H5FD_CTL_FAIL_IF_UNKNOWN_FLAG | H5FD_CTL_ROUTE_TO_TERMINAL_VFD_FLAG;
     MPI_Comm            comm      = MPI_COMM_NULL;
@@ -124,13 +152,26 @@ H5FD_mpi_get_comm(H5FD_t *file)
 
     FUNC_ENTER_NOAPI(MPI_COMM_NULL)
 
-    assert(file);
-    cls = (const H5FD_class_t *)(file->cls);
+    /* Sanity checks */
+    assert(fh);
+    assert(fh->driver);
+    assert(fh->driver->cls);
+    cls = (const H5FD_class_t *)(fh->driver->cls);
     assert(cls);
     assert(cls->ctl); /* All MPI drivers must implement this */
 
-    /* Dispatch to driver */
-    if ((cls->ctl)(file, H5FD_CTL_GET_MPI_COMMUNICATOR_OPCODE, flags, NULL, &comm_ptr) < 0)
+    /* Get the file pointer */
+    file = fh->file;
+    assert(file);
+
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(MPI_COMM_NULL)
+        {
+            /* Dispatch to driver */
+            ret_value = (cls->ctl)(file, H5FD_CTL_GET_MPI_COMMUNICATOR_OPCODE, flags, NULL, &comm_ptr);
+        }
+    H5_AFTER_USER_CB(MPI_COMM_NULL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, MPI_COMM_NULL, "driver get_comm request failed");
 
     if (comm == MPI_COMM_NULL)
@@ -153,8 +194,9 @@ done:
  *-------------------------------------------------------------------------
  */
 MPI_Info
-H5FD_mpi_get_info(H5FD_t *file)
+H5FD_mpi_get_info(H5FD_int_t *fh)
 {
+    H5FD_t *file;
     const H5FD_class_t *cls;
     uint64_t            flags     = H5FD_CTL_FAIL_IF_UNKNOWN_FLAG | H5FD_CTL_ROUTE_TO_TERMINAL_VFD_FLAG;
     MPI_Info            info      = MPI_INFO_NULL;
@@ -163,13 +205,26 @@ H5FD_mpi_get_info(H5FD_t *file)
 
     FUNC_ENTER_NOAPI(MPI_INFO_NULL)
 
-    assert(file);
-    cls = (const H5FD_class_t *)(file->cls);
+    /* Sanity checks */
+    assert(fh);
+    assert(fh->driver);
+    assert(fh->driver->cls);
+    cls = (const H5FD_class_t *)(fh->driver->cls);
     assert(cls);
     assert(cls->ctl); /* All MPI drivers must implement this */
 
-    /* Dispatch to driver */
-    if ((cls->ctl)(file, H5FD_CTL_GET_MPI_INFO_OPCODE, flags, NULL, &info_ptr) < 0)
+    /* Get the file pointer */
+    file = fh->file;
+    assert(file);
+
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(MPI_INFO_NULL)
+        {
+            /* Dispatch to driver */
+            ret_value = (cls->ctl)(file, H5FD_CTL_GET_MPI_INFO_OPCODE, flags, NULL, &info_ptr);
+        }
+    H5_AFTER_USER_CB(MPI_INFO_NULL)
+    if (ret_value < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, MPI_INFO_NULL, "driver get_info request failed");
 
     if (info == MPI_INFO_NULL)
@@ -252,8 +307,9 @@ H5FD_mpi_haddr_to_MPIOff(haddr_t addr, MPI_Offset *mpi_off /*out*/)
  *-------------------------------------------------------------------------
  */
 herr_t
-H5FD_mpi_get_file_sync_required(H5FD_t *file, bool *file_sync_required)
+H5FD_mpi_get_file_sync_required(H5FD_int_t *fh, bool *file_sync_required)
 {
+    H5FD_t *file;
     const H5FD_class_t *cls;
     uint64_t            flags                  = H5FD_CTL_ROUTE_TO_TERMINAL_VFD_FLAG;
     void               *file_sync_required_ptr = (void *)(&file_sync_required);
@@ -261,109 +317,30 @@ H5FD_mpi_get_file_sync_required(H5FD_t *file, bool *file_sync_required)
 
     FUNC_ENTER_NOAPI(FAIL)
 
-    assert(file);
-    cls = (const H5FD_class_t *)(file->cls);
+    /* Sanity checks */
+    assert(fh);
+    assert(fh->driver);
+    assert(fh->driver->cls);
+    cls = (const H5FD_class_t *)(fh->driver->cls);
     assert(cls);
     assert(cls->ctl); /* All MPI drivers must implement this */
 
-    /* Dispatch to driver */
-    if ((cls->ctl)(file, H5FD_CTL_GET_MPI_FILE_SYNC_OPCODE, flags, NULL, file_sync_required_ptr) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "driver get_mpi_file_synce request failed");
+    /* Get the file pointer */
+    file = fh->file;
+    assert(file);
+
+    /* Prepare & restore library for user callback */
+    H5_BEFORE_USER_CB(FAIL)
+        {
+            /* Dispatch to driver */
+            ret_value = (cls->ctl)(file, H5FD_CTL_GET_MPI_FILE_SYNC_OPCODE, flags, NULL, file_sync_required_ptr);
+        }
+    H5_AFTER_USER_CB(FAIL)
+    if (ret_value < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "driver get_mpi_file_sync_required request failed");
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FD_mpi_get_file_sync_required() */
 
-#ifdef NOT_YET
-
-/*-------------------------------------------------------------------------
- * Function:	H5FD_mpio_wait_for_left_neighbor
- *
- * Purpose:	Blocks until (empty) msg is received from immediately
- *		lower-rank neighbor. In conjunction with
- *		H5FD_mpio_signal_right_neighbor, useful for enforcing
- *		1-process-at-at-time access to critical regions to avoid race
- *		conditions (though it is overkill to require that the
- *		processes be allowed to proceed strictly in order of their
- *		rank).
- *
- * Note:	This routine doesn't read or write any file, just performs
- *		interprocess coordination. It really should reside in a
- *		separate package of such routines.
- *
- * Return:	Success:	0
- *		Failure:	-1
- *
- *-------------------------------------------------------------------------
- */
-herr_t
-H5FD_mpio_wait_for_left_neighbor(H5FD_t *_file)
-{
-    H5FD_mpio_t *file = (H5FD_mpio_t *)_file;
-    char         msgbuf[1];
-    MPI_Status   rcvstat;
-    int          mpi_code;            /* mpi return code */
-    herr_t       ret_value = SUCCEED; /* Return value */
-
-    FUNC_ENTER_NOAPI(FAIL)
-
-    assert(file);
-    assert(H5FD_MPIO == file->pub.driver_id);
-
-    /* Portably initialize MPI status variable */
-    memset(&rcvstat, 0, sizeof(MPI_Status));
-
-    /* p0 has no left neighbor; all other procs wait for msg */
-    if (file->mpi_rank != 0) {
-        if (MPI_SUCCESS != (mpi_code = MPI_Recv(&msgbuf, 1, MPI_CHAR, file->mpi_rank - 1, MPI_ANY_TAG,
-                                                file->comm, &rcvstat)))
-            HMPI_GOTO_ERROR(FAIL, "MPI_Recv failed", mpi_code)
-    }
-
-done:
-    FUNC_LEAVE_NOAPI(ret_value)
-}
-
-/*-------------------------------------------------------------------------
- * Function:	H5FD_mpio_signal_right_neighbor
- *
- * Purpose:	Blocks until (empty) msg is received from immediately
- *		lower-rank neighbor. In conjunction with
- *		H5FD_mpio_wait_for_left_neighbor, useful for enforcing
- *		1-process-at-at-time access to critical regions to avoid race
- *		conditions (though it is overkill to require that the
- *		processes be allowed to proceed strictly in order of their
- *		rank).
- *
- * Note: 	This routine doesn't read or write any file, just performs
- *		interprocess coordination. It really should reside in a
- *		separate package of such routines.
- *
- * Return:	Success:	0
- *		Failure:	-1
- *
- *-------------------------------------------------------------------------
- */
-herr_t
-H5FD_mpio_signal_right_neighbor(H5FD_t *_file)
-{
-    H5FD_mpio_t *file = (H5FD_mpio_t *)_file;
-    char         msgbuf[1];
-    int          mpi_code;            /* mpi return code */
-    herr_t       ret_value = SUCCEED; /* Return value */
-
-    FUNC_ENTER_NOAPI(FAIL)
-
-    assert(file);
-    assert(H5FD_MPIO == file->pub.driver_id);
-
-    if (file->mpi_rank != (file->mpi_size - 1))
-        if (MPI_SUCCESS !=
-            (mpi_code = MPI_Send(&msgbuf, 0 /*empty msg*/, MPI_CHAR, file->mpi_rank + 1, 0, file->comm)))
-            HMPI_GOTO_ERROR(FAIL, "MPI_Send failed", mpi_code)
-
-done:
-    FUNC_LEAVE_NOAPI(ret_value)
-}
-#endif /* NOT_YET */
 #endif /* H5_HAVE_PARALLEL */

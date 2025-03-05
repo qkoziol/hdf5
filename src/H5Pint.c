@@ -18,6 +18,7 @@
 /* Module Setup */
 /****************/
 
+#include "H5Epublic.h"
 #include "H5Pmodule.h" /* This source code file is part of the H5P module */
 
 /***********/
@@ -438,7 +439,7 @@ static H5I_class_t H5I_GENPROPLST_CLS[1] = {{
 }};
 
 /*-------------------------------------------------------------------------
- * Function:    H5P_init_phase1
+ * Function:    H5P_init
  *
  * Purpose:     Initialize the interface from some other layer. This should
  *              be followed with a call to H5P_init_phase2 after the H5P
@@ -450,7 +451,7 @@ static H5I_class_t H5I_GENPROPLST_CLS[1] = {{
  *-------------------------------------------------------------------------
  */
 herr_t
-H5P_init_phase1(void)
+H5P_init(void)
 {
     herr_t ret_value = SUCCEED; /* Return value */
 
@@ -459,36 +460,7 @@ H5P_init_phase1(void)
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5P_init_phase1() */
-
-/*-------------------------------------------------------------------------
- * Function:    H5P_init_phase2
- *
- * Purpose:     Finish initializing the interface from some other package.
- *
- * Note:        This is broken out as a separate routine so that the
- *              library's default VFL driver can be chosen and initialized
- *              after the entire H5P interface has been initialized.
- *
- * Return:      Success:    Non-negative
- *              Failure:    Negative
- *
- *-------------------------------------------------------------------------
- */
-herr_t
-H5P_init_phase2(void)
-{
-    herr_t ret_value = SUCCEED;
-
-    FUNC_ENTER_NOAPI(FAIL)
-
-    /* Set up the default VFL driver */
-    if (H5P__facc_set_def_driver() < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "unable to set default VFL driver");
-
-done:
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5P_init_phase2() */
+} /* end H5P_init() */
 
 /*--------------------------------------------------------------------------
 NAME
@@ -581,6 +553,9 @@ H5P__init_package(void)
     assert(tot_init == NELMTS(init_class));
 
 done:
+    if (ret_value < 0)
+        H5Eprint2(H5E_DEFAULT, stderr);
+
     if (ret_value < 0 && tot_init > 0) {
         /* First uninitialize all default property lists */
         H5I_clear_type(H5I_GENPROP_LST, false, false);

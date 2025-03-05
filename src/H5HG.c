@@ -753,6 +753,9 @@ H5HG_remove(H5F_t *f, H5HG_t *hobj)
     if (0 == hobj->idx)
         HGOTO_ERROR(H5E_HEAP, H5E_BADVALUE, FAIL, "bad heap index, heap object = {%" PRIxHADDR ", %zu}",
                     hobj->addr, hobj->idx);
+    if (!H5_addr_defined(hobj->addr))
+        HGOTO_ERROR(H5E_HEAP, H5E_BADVALUE, FAIL, "bad heap address, heap object = {%" PRIxHADDR ", %zu}",
+                    hobj->addr, hobj->idx);
 
     /* Load the heap */
     if (NULL == (heap = H5HG__protect(f, hobj->addr, H5AC__NO_FLAGS_SET)))

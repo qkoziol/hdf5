@@ -23,7 +23,7 @@
 
 #include "H5Fprivate.h"     /* encode/decode macros         */
 #include "H5FDonion.h"      /* This file driver's utilities */
-#include "H5FDonion_priv.h" /* Onion file driver internals  */
+#include "H5FDonion_pkg.h"  /* Onion file driver internals  */
 
 /* The Onion VFD uses H5MM calls internally, so any tests that allocate
  * or free memory for said internal structures (e.g., the revision lists)

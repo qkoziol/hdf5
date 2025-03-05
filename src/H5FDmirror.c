@@ -24,7 +24,7 @@
 #include "H5Eprivate.h"      /* Error handling           */
 #include "H5Fprivate.h"      /* File access              */
 #include "H5FDmirror.h"      /* "Mirror" definitions     */
-#include "H5FDmirror_priv.h" /* Private header for the mirror VFD */
+#include "H5FDmirror_pkg.h"  /* Private header for the mirror VFD */
 #include "H5FDpkg.h"         /* File drivers             */
 #include "H5FLprivate.h"     /* Free Lists               */
 #include "H5Iprivate.h"      /* IDs                      */
@@ -33,7 +33,7 @@
 
 /* The driver identification number, initialized at runtime */
 hid_t H5FD_MIRROR_id_g = H5I_INVALID_HID;
-
+H5FD_driver_t *H5FD_MIRROR_driver_g = NULL;
 /* Virtual file structure for a Mirror Driver */
 typedef struct H5FD_mirror_t {
     H5FD_t             pub;     /* Public stuff, must be first            */
@@ -210,9 +210,19 @@ H5FD__mirror_register(void)
 
     LOG_OP_CALL(__func__);
 
-    if (H5I_VFL != H5I_get_type(H5FD_MIRROR_id_g))
-        if ((H5FD_MIRROR_id_g = H5FD_register(&H5FD_mirror_g, sizeof(H5FD_class_t), false)) < 0)
-            HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "unable to register mirror driver");
+    /* Register the mirror driver, if it isn't already */
+    if (NULL == H5FD_MIRROR_driver_g)
+        if (NULL == (H5FD_MIRROR_driver_g = H5FD__driver_register(&H5FD_mirror_g)))
+            HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "can't register mirror driver");
+
+    /* Get ID for mirror driver */
+    if (H5I_VFL != H5I_get_type(H5FD_MIRROR_id_g)) {
+        if ((H5FD_MIRROR_id_g = H5I_register(H5I_VFL, H5FD_MIRROR_driver_g, false)) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "can't create ID for mirror driver");
+
+        /* ID is holding a reference to the connector */
+            H5FD__driver_inc_rc(H5FD_MIRROR_driver_g);
+    }
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -236,6 +246,7 @@ H5FD__mirror_unregister(void)
 
     /* Reset VFL ID */
     H5FD_MIRROR_id_g = H5I_INVALID_HID;
+    H5FD_MIRROR_driver_g = NULL;
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5FD__mirror_unregister() */
@@ -1246,14 +1257,12 @@ H5Pget_fapl_mirror(hid_t fapl_id, H5FD_mirror_fapl_t *fa_dst /*out*/)
 
     if (NULL == fa_dst)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "fa_dst is NULL");
-
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
-    if (H5P_peek_driver(fapl) != H5FD_MIRROR)
+    if (H5FD_MIRROR_VALUE != H5P_get_driver_value(fapl))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "incorrect VFL driver");
 
-    fa_src = (const H5FD_mirror_fapl_t *)H5P_peek_driver_info(fapl);
-    if (NULL == fa_src)
+    if (NULL == (fa_src = H5P_peek_driver_info(fapl)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "bad VFL driver info");
 
     assert(fa_src->magic == H5FD_MIRROR_FAPL_MAGIC); /* sanity check */
@@ -1292,7 +1301,7 @@ H5Pset_fapl_mirror(hid_t fapl_id, H5FD_mirror_fapl_t *fa)
     if (H5FD_MIRROR_CURR_FAPL_T_VERSION != fa->version)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "unknown fapl_t version");
 
-    ret_value = H5P_set_driver(fapl, H5FD_MIRROR, (const void *)fa, NULL);
+    ret_value = H5P_set_driver(fapl, H5FD_MIRROR_driver_g, (const void *)fa, NULL);
 
 done:
     FUNC_LEAVE_API(ret_value)

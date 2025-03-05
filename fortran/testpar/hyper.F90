@@ -51,6 +51,7 @@ SUBROUTINE hyper(length,do_collective,do_chunk, mpi_size, mpi_rank, nerrors)
   INTEGER        :: actual_io_mode                  ! The type of I/O performed by this process
   LOGICAL        :: is_coll
   LOGICAL        :: is_coll_true = .TRUE.
+  LOGICAL        :: are_same = .FALSE.
 
   INTEGER :: local_no_collective_cause
   INTEGER :: global_no_collective_cause
@@ -104,10 +105,9 @@ SUBROUTINE hyper(length,do_collective,do_chunk, mpi_size, mpi_rank, nerrors)
   CALL h5pget_driver_f(fapl_id, driver_id, hdferror)
   CALL check("h5pget_driver_f", hdferror, nerrors)
 
-  IF( driver_id /= H5FD_MPIO_F) THEN
-     WRITE(*,*) "Wrong driver information returned"
-     nerrors = nerrors + 1
-  ENDIF
+  CALL H5FDcmp_driver_cls_f(are_same, driver_id, H5FD_MPIO_F, hdferror)
+  CALL check("H5FDcmp_driver_cls_f", hdferror, nerrors)
+  CALL VERIFY("H5FDcmp_driver_cls_f", are_same, .TRUE., nerrors)
 
   !
   ! create the file collectively

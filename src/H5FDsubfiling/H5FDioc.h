@@ -112,6 +112,9 @@ typedef struct H5FD_ioc_config_t {
 } H5FD_ioc_config_t;
 //! <!-- [H5FD_ioc_config_t_snip] -->
 
+/** Identifier for the ioc VFD */
+#define H5FD_IOC_VALUE H5_VFD_IOC
+
 #ifdef __cplusplus
 extern "C" {
 #endif

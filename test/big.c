@@ -259,7 +259,7 @@ enough_room(hid_t fapl)
         fd[i] = -1;
 
     /* Get file name template */
-    assert(H5FD_FAMILY == H5Pget_driver(fapl));
+    assert(H5_VFD_FAMILY == H5Pget_driver_cls_value(fapl));
     h5_fixname(FILENAME[0], fapl, filename, sizeof(filename));
 
     /* Create files */
@@ -711,7 +711,7 @@ main(int ac, char **av)
 {
     unsigned long seed   = 0; /* Random # seed */
     hid_t         fapl   = H5I_INVALID_HID;
-    hid_t         driver = H5I_INVALID_HID;
+    H5FD_class_value_t driver_cls_value;
 
     /* parameters setup */
 
@@ -747,7 +747,7 @@ main(int ac, char **av)
     /* check VFD to see if this is one we test */
     if ((fapl = h5_fileaccess()) < 0)
         goto error;
-    if ((driver = H5Pget_driver(fapl)) < 0)
+    if ((driver_cls_value = H5Pget_driver_cls_value(fapl)) < 0)
         goto error;
 
     /* check sparse file support unless cflag is not set. */
@@ -763,15 +763,15 @@ main(int ac, char **av)
     srand((unsigned)seed);
 
     /* run VFD-specific test */
-    if (H5FD_SEC2 == driver) {
+    if (H5_VFD_SEC2 == driver_cls_value) {
         if (test_sec2(fapl) != 0)
             goto error;
     }
-    else if (H5FD_STDIO == driver) {
+    else if (H5_VFD_STDIO == driver_cls_value) {
         if (test_stdio(fapl) != 0)
             goto error;
     }
-    else if (H5FD_FAMILY == driver) {
+    else if (H5_VFD_FAMILY == driver_cls_value) {
         if (test_family(fapl) != 0)
             goto error;
     }

@@ -234,6 +234,9 @@ test_sec2(void)
                          H5FD_FEAT_SUPPORTS_SWMR_IO | H5FD_FEAT_DEFAULT_VFD_COMPATIBLE))
         TEST_ERROR;
 
+    if (H5Idec_ref(driver_id) < 0)
+        TEST_ERROR;
+
     if ((fid = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, fapl_id)) < 0)
         TEST_ERROR;
 
@@ -242,7 +245,7 @@ test_sec2(void)
         TEST_ERROR;
 
     /* Check that the driver is correct */
-    if (H5FD_SEC2 != H5Pget_driver(fapl_id_out))
+    if (H5_VFD_SEC2 != H5Pget_driver_cls_value(fapl_id_out))
         TEST_ERROR;
 
     /* ...and close the property list */
@@ -282,6 +285,7 @@ test_sec2(void)
 error:
     H5E_BEGIN_TRY
     {
+        H5Idec_ref(driver_id);
         H5Pclose(fapl_id);
         H5Pclose(fapl_id_out);
         H5Fclose(fid);
@@ -373,6 +377,9 @@ test_core(void)
          H5FD_FEAT_AGGREGATE_SMALLDATA | H5FD_FEAT_ALLOW_FILE_IMAGE | H5FD_FEAT_CAN_USE_FILE_IMAGE_CALLBACKS))
         TEST_ERROR;
 
+    if (H5Idec_ref(driver_id) < 0)
+        TEST_ERROR;
+
     if ((fid = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, fapl_id)) < 0)
         TEST_ERROR;
     if (H5Fclose(fid) < 0)
@@ -413,7 +420,7 @@ test_core(void)
         TEST_ERROR;
 
     /* Check that the driver is correct */
-    if (H5FD_CORE != H5Pget_driver(fapl_id_out))
+    if (H5_VFD_CORE != H5Pget_driver_cls_value(fapl_id_out))
         TEST_ERROR;
 
     /* Get the basic VFD properties from the fapl and ensure that
@@ -665,6 +672,7 @@ error:
     {
         H5Sclose(sid);
         H5Dclose(did);
+        H5Idec_ref(driver_id);
         H5Pclose(fapl_id_out);
         H5Pclose(fapl_id);
         H5Fclose(fid);
@@ -751,7 +759,7 @@ test_direct(void)
         TEST_ERROR;
 
     /* Check that the driver is correct */
-    if (H5FD_DIRECT != H5Pget_driver(access_fapl))
+    if (H5_VFD_DIRECT != H5Pget_driver_cls_value(access_fapl))
         TEST_ERROR;
 
     /* ...and close the property list */
@@ -1050,6 +1058,9 @@ test_family(void)
                          H5FD_FEAT_AGGREGATE_SMALLDATA))
         TEST_ERROR;
 
+    if (H5Idec_ref(driver_id) < 0)
+        return FAIL;
+
     if ((file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, fapl)) < 0)
         TEST_ERROR;
 
@@ -1085,7 +1096,7 @@ test_family(void)
         TEST_ERROR;
 
     /* Check that the driver is correct */
-    if (H5FD_FAMILY != H5Pget_driver(access_fapl))
+    if (H5_VFD_FAMILY != H5Pget_driver_cls_value(access_fapl))
         TEST_ERROR;
 
     /* ...and close the property list */
@@ -1175,6 +1186,7 @@ error:
     {
         H5Sclose(space);
         H5Dclose(dset);
+        H5Idec_ref(driver_id);
         H5Pclose(fapl);
         H5Pclose(fapl2);
         H5Fclose(file);
@@ -1550,6 +1562,9 @@ test_multi(void)
                          H5FD_FEAT_PAGED_AGGR))
         TEST_ERROR;
 
+    if (H5Idec_ref(driver_id) < 0)
+        return FAIL;
+
     if ((file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, fapl)) < 0)
         TEST_ERROR;
 
@@ -1573,7 +1588,7 @@ test_multi(void)
         TEST_ERROR;
 
     /* Check that the driver is correct */
-    if (H5FD_MULTI != H5Pget_driver(access_fapl))
+    if (H5_VFD_MULTI != H5Pget_driver_cls_value(access_fapl))
         TEST_ERROR;
 
     /* ...and close the property list */
@@ -1686,6 +1701,7 @@ error:
     {
         H5Sclose(space);
         H5Dclose(dset);
+        H5Idec_ref(driver_id);
         H5Pclose(fapl);
         H5Pclose(fapl2);
         H5Fclose(file);
@@ -1957,6 +1973,9 @@ test_log(void)
                          H5FD_FEAT_SUPPORTS_SWMR_IO | H5FD_FEAT_DEFAULT_VFD_COMPATIBLE))
         TEST_ERROR;
 
+    if (H5Idec_ref(driver_id) < 0)
+        return FAIL;
+
     /* Create the test file */
     if ((file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, fapl)) < 0)
         TEST_ERROR;
@@ -1966,7 +1985,7 @@ test_log(void)
         TEST_ERROR;
 
     /* Check that the driver is correct */
-    if (H5FD_LOG != H5Pget_driver(access_fapl))
+    if (H5_VFD_LOG != H5Pget_driver_cls_value(access_fapl))
         TEST_ERROR;
 
     /* ...and close the property list */
@@ -2004,6 +2023,7 @@ test_log(void)
 error:
     H5E_BEGIN_TRY
     {
+        H5Idec_ref(driver_id);
         H5Pclose(fapl);
         H5Fclose(file);
     }
@@ -2062,6 +2082,9 @@ test_stdio(void)
                          H5FD_FEAT_AGGREGATE_SMALLDATA | H5FD_FEAT_DEFAULT_VFD_COMPATIBLE))
         TEST_ERROR;
 
+    if (H5Idec_ref(driver_id) < 0)
+        return FAIL;
+
     if ((file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, fapl)) < 0)
         TEST_ERROR;
 
@@ -2070,7 +2093,7 @@ test_stdio(void)
         TEST_ERROR;
 
     /* Check that the driver is correct */
-    if (H5FD_STDIO != H5Pget_driver(access_fapl))
+    if (H5_VFD_STDIO != H5Pget_driver_cls_value(access_fapl))
         TEST_ERROR;
 
     /* ...and close the property list */
@@ -2108,6 +2131,7 @@ test_stdio(void)
 error:
     H5E_BEGIN_TRY
     {
+        H5Idec_ref(driver_id);
         H5Pclose(fapl);
         H5Fclose(file);
     }
@@ -2182,6 +2206,9 @@ test_windows(void)
                          H5FD_FEAT_SUPPORTS_SWMR_IO | H5FD_FEAT_DEFAULT_VFD_COMPATIBLE))
         TEST_ERROR;
 
+    if (H5Idec_ref(driver_id) < 0)
+        return FAIL;
+
     if ((file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, fapl)) < 0)
         TEST_ERROR;
 
@@ -2190,7 +2217,7 @@ test_windows(void)
         TEST_ERROR;
 
     /* Check that the driver is correct */
-    if (H5FD_WINDOWS != H5Pget_driver(access_fapl))
+    if (H5_VFD_WINDOWS != H5Pget_driver_cls_value(access_fapl))
         TEST_ERROR;
 
     /* ...and close the property list */
@@ -2228,6 +2255,7 @@ test_windows(void)
 error:
     H5E_BEGIN_TRY
     {
+        H5Idec_ref(driver_id);
         H5Pclose(fapl);
         H5Fclose(file);
     }
@@ -2316,12 +2344,16 @@ test_ros3(void)
     if (driver_flags != (H5FD_FEAT_DATA_SIEVE))
         TEST_ERROR;
 
+    if (H5Idec_ref(driver_id) < 0)
+        TEST_ERROR;
+
     PASSED();
     return 0;
 
 error:
     H5E_BEGIN_TRY
     {
+        H5Idec_ref(driver_id);
         H5Pclose(fapl_id);
         H5Pclose(fapl_id_out);
         H5Fclose(fid);
@@ -2376,28 +2408,23 @@ compare_splitter_config_info(hid_t fapl_id, H5FD_splitter_vfd_config_t *info)
     fetched_info->rw_fapl_id = H5I_INVALID_HID;
     fetched_info->wo_fapl_id = H5I_INVALID_HID;
 
-    if (H5Pget_fapl_splitter(fapl_id, fetched_info) < 0) {
+    if (H5Pget_fapl_splitter(fapl_id, fetched_info) < 0)
         SPLITTER_TEST_FAULT("can't get splitter info");
-    }
     if (info->rw_fapl_id == H5P_DEFAULT) {
-        if (H5Pget_driver(fetched_info->rw_fapl_id) != H5Pget_driver(H5P_FILE_ACCESS_DEFAULT)) {
+        if (H5Pget_driver_cls_value(fetched_info->rw_fapl_id) != H5Pget_driver_cls_value(H5P_FILE_ACCESS_DEFAULT))
             SPLITTER_TEST_FAULT("Read-Write driver mismatch (default)\n");
-        }
     }
     else {
-        if (H5Pget_driver(fetched_info->rw_fapl_id) != H5Pget_driver(info->rw_fapl_id)) {
+        if (H5Pget_driver_cls_value(fetched_info->rw_fapl_id) != H5Pget_driver_cls_value(info->rw_fapl_id))
             SPLITTER_TEST_FAULT("Read-Write driver mismatch\n");
-        }
     }
     if (info->wo_fapl_id == H5P_DEFAULT) {
-        if (H5Pget_driver(fetched_info->wo_fapl_id) != H5Pget_driver(H5P_FILE_ACCESS_DEFAULT)) {
+        if (H5Pget_driver_cls_value(fetched_info->wo_fapl_id) != H5Pget_driver_cls_value(H5P_FILE_ACCESS_DEFAULT))
             SPLITTER_TEST_FAULT("Write-Only driver mismatch (default)\n");
-        }
     }
     else {
-        if (H5Pget_driver(fetched_info->wo_fapl_id) != H5Pget_driver(info->wo_fapl_id)) {
+        if (H5Pget_driver_cls_value(fetched_info->wo_fapl_id) != H5Pget_driver_cls_value(info->wo_fapl_id))
             SPLITTER_TEST_FAULT("Write-Only driver mismatch\n");
-        }
     }
     if ((strlen(info->wo_path) != strlen(fetched_info->wo_path)) ||
         strncmp(info->wo_path, fetched_info->wo_path, H5FD_SPLITTER_PATH_MAX) != 0) {
@@ -2456,28 +2483,22 @@ run_splitter_test(const struct splitter_dataset_def *data, bool ignore_wo_errors
     vfd_config->rw_fapl_id     = sub_fapl_ids[0];
     vfd_config->wo_fapl_id     = sub_fapl_ids[1];
 
-    if (splitter_prepare_file_paths(vfd_config, filename_rw) < 0) {
+    if (splitter_prepare_file_paths(vfd_config, filename_rw) < 0)
         SPLITTER_TEST_FAULT("can't prepare file paths\n");
-    }
 
-    if (provide_logfile_path == false) {
+    if (provide_logfile_path == false)
         vfd_config->log_file_path[0] = '\0'; /* reset as empty string */
-    }
 
     /* Create a new fapl to use the SPLITTER file driver */
-    if ((fapl_id = H5Pcreate(H5P_FILE_ACCESS)) == H5I_INVALID_HID) {
+    if ((fapl_id = H5Pcreate(H5P_FILE_ACCESS)) == H5I_INVALID_HID)
         SPLITTER_TEST_FAULT("can't create FAPL ID\n");
-    }
-    if (H5Pset_fapl_splitter(fapl_id, vfd_config) < 0) {
+    if (H5Pset_fapl_splitter(fapl_id, vfd_config) < 0)
         SPLITTER_TEST_FAULT("can't set splitter FAPL\n");
-    }
-    if (H5Pget_driver(fapl_id) != H5FD_SPLITTER) {
+    if (H5Pget_driver_cls_value(fapl_id) != H5_VFD_SPLITTER)
         SPLITTER_TEST_FAULT("set FAPL not SPLITTER\n");
-    }
 
-    if (compare_splitter_config_info(fapl_id, vfd_config) < 0) {
+    if (compare_splitter_config_info(fapl_id, vfd_config) < 0)
         SPLITTER_TEST_FAULT("information mismatch\n");
-    }
 
     /*
      * Copy property list, light compare, and close the copy.
@@ -2485,84 +2506,67 @@ run_splitter_test(const struct splitter_dataset_def *data, bool ignore_wo_errors
      */
 
     fapl_id_cpy = H5Pcopy(fapl_id);
-    if (H5I_INVALID_HID == fapl_id_cpy) {
+    if (H5I_INVALID_HID == fapl_id_cpy)
         SPLITTER_TEST_FAULT("can't copy FAPL\n");
-    }
-    if (compare_splitter_config_info(fapl_id_cpy, vfd_config) < 0) {
+    if (compare_splitter_config_info(fapl_id_cpy, vfd_config) < 0)
         SPLITTER_TEST_FAULT("information mismatch\n");
-    }
-    if (H5Pclose(fapl_id_cpy) < 0) {
+    if (H5Pclose(fapl_id_cpy) < 0)
         SPLITTER_TEST_FAULT("can't close fapl copy\n");
-    }
 
     /*
      * Proceed with test. Create file.
      */
     file_id = H5Fcreate(filename_rw, H5F_ACC_TRUNC, H5P_DEFAULT, fapl_id);
-    if (file_id < 0) {
+    if (file_id < 0)
         SPLITTER_TEST_FAULT("can't create file\n");
-    }
 
     /*
      * Check driver from file
      */
 
     fapl_id_out = H5Fget_access_plist(file_id);
-    if (H5I_INVALID_HID == fapl_id_out) {
+    if (H5I_INVALID_HID == fapl_id_out)
         SPLITTER_TEST_FAULT("can't get file's FAPL\n");
-    }
-    if (H5Pget_driver(fapl_id_out) != H5FD_SPLITTER) {
+    if (H5Pget_driver_cls_value(fapl_id_out) != H5_VFD_SPLITTER)
         SPLITTER_TEST_FAULT("wrong file FAPL driver\n");
-    }
-    if (compare_splitter_config_info(fapl_id_out, vfd_config) < 0) {
+    if (compare_splitter_config_info(fapl_id_out, vfd_config) < 0)
         SPLITTER_TEST_FAULT("information mismatch\n");
-    }
-    if (H5Pclose(fapl_id_out) < 0) {
+    if (H5Pclose(fapl_id_out) < 0)
         SPLITTER_TEST_FAULT("can't close file's FAPL\n");
-    }
 
     /*
      * Create and write the dataset
      */
 
     space_id = H5Screate_simple(data->n_dims, data->dims, NULL);
-    if (space_id < 0) {
+    if (space_id < 0)
         SPLITTER_TEST_FAULT("can't create dataspace\n");
-    }
     dset_id = H5Dcreate2(file_id, data->dset_name, data->mem_type_id, space_id, H5P_DEFAULT, H5P_DEFAULT,
                          H5P_DEFAULT);
-    if (dset_id < 0) {
+    if (dset_id < 0)
         SPLITTER_TEST_FAULT("can't create dataset\n");
-    }
-    if (H5Dwrite(dset_id, data->mem_type_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, data->buf) < 0) {
+    if (H5Dwrite(dset_id, data->mem_type_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, data->buf) < 0)
         SPLITTER_TEST_FAULT("can't write data to dataset\n");
-    }
 
     /* Close everything */
-    if (H5Dclose(dset_id) < 0) {
+    if (H5Dclose(dset_id) < 0)
         SPLITTER_TEST_FAULT("can't close dset\n");
-    }
-    if (H5Sclose(space_id) < 0) {
+    if (H5Sclose(space_id) < 0)
         SPLITTER_TEST_FAULT("can't close space\n");
-    }
-    if (H5Pclose(fapl_id) < 0) {
+    if (H5Pclose(fapl_id) < 0)
         SPLITTER_TEST_FAULT("can't close fapl\n");
-    }
-    if (H5Fclose(file_id) < 0) {
+    if (H5Fclose(file_id) < 0)
         SPLITTER_TEST_FAULT("can't close file\n");
-    }
 
     /* Verify that the R/W and W/O files are identical */
-    if (h5_compare_file_bytes(filename_rw, vfd_config->wo_path) < 0) {
+    if (h5_compare_file_bytes(filename_rw, vfd_config->wo_path) < 0)
         SPLITTER_TEST_FAULT("files are not byte-for-byte equivalent\n");
-    }
 
     /* Verify existence of logfile if appropriate */
     logfile = fopen(vfd_config->log_file_path, "r");
     if ((true == provide_logfile_path && NULL == logfile) ||
-        (false == provide_logfile_path && NULL != logfile)) {
+        (false == provide_logfile_path && NULL != logfile))
         SPLITTER_TEST_FAULT("no logfile when one was expected\n");
-    }
 
 done:
     if (ret_value < 0) {
@@ -2610,13 +2614,11 @@ driver_is_splitter_compatible(hid_t fapl_id)
     herr_t                      ret           = SUCCEED;
     int                         ret_value     = 0;
 
-    if (NULL == (vfd_config = calloc(1, sizeof(H5FD_splitter_vfd_config_t)))) {
+    if (NULL == (vfd_config = calloc(1, sizeof(H5FD_splitter_vfd_config_t))))
         FAIL_PUTS_ERROR("memory allocation for vfd_config struct failed");
-    }
 
-    if (H5I_INVALID_HID == (split_fapl_id = H5Pcreate(H5P_FILE_ACCESS))) {
+    if (H5I_INVALID_HID == (split_fapl_id = H5Pcreate(H5P_FILE_ACCESS)))
         FAIL_PUTS_ERROR("Can't create contained FAPL");
-    }
     vfd_config->magic          = H5FD_SPLITTER_MAGIC;
     vfd_config->version        = H5FD_CURR_SPLITTER_VFD_CONFIG_VERSION;
     vfd_config->ignore_wo_errs = false;
@@ -2630,13 +2632,11 @@ driver_is_splitter_compatible(hid_t fapl_id)
         ret = H5Pset_fapl_splitter(split_fapl_id, vfd_config);
     }
     H5E_END_TRY
-    if (SUCCEED == ret) {
+    if (SUCCEED == ret)
         ret_value = -1;
-    }
 
-    if (H5Pclose(split_fapl_id) < 0) {
+    if (H5Pclose(split_fapl_id) < 0)
         FAIL_PUTS_ERROR("Can't close contained FAPL");
-    }
     split_fapl_id = H5I_INVALID_HID;
 
     free(vfd_config);
@@ -2688,21 +2688,17 @@ splitter_RO_test(const struct splitter_dataset_def *data, hid_t child_fapl_id)
     vfd_config->rw_fapl_id     = child_fapl_id;
     vfd_config->wo_fapl_id     = child_fapl_id;
 
-    if (splitter_prepare_file_paths(vfd_config, filename_rw) < 0) {
+    if (splitter_prepare_file_paths(vfd_config, filename_rw) < 0)
         SPLITTER_TEST_FAULT("can't prepare splitter file paths\n");
-    }
 
     /* Create a new fapl to use the SPLITTER file driver */
     fapl_id = H5Pcreate(H5P_FILE_ACCESS);
-    if (H5I_INVALID_HID == fapl_id) {
+    if (H5I_INVALID_HID == fapl_id)
         SPLITTER_TEST_FAULT("can't create FAPL ID\n");
-    }
-    if (H5Pset_fapl_splitter(fapl_id, vfd_config) < 0) {
+    if (H5Pset_fapl_splitter(fapl_id, vfd_config) < 0)
         SPLITTER_TEST_FAULT("can't set splitter FAPL\n");
-    }
-    if (H5Pget_driver(fapl_id) != H5FD_SPLITTER) {
+    if (H5Pget_driver_cls_value(fapl_id) != H5_VFD_SPLITTER)
         SPLITTER_TEST_FAULT("set FAPL not SPLITTER\n");
-    }
 
     /* Attempt R/O open when both files are nonexistent
      * Should fail.
@@ -2713,67 +2709,57 @@ splitter_RO_test(const struct splitter_dataset_def *data, hid_t child_fapl_id)
         file_id = H5Fopen(filename_rw, H5F_ACC_RDONLY, fapl_id);
     }
     H5E_END_TRY
-    if (file_id >= 0) {
+    if (file_id >= 0)
         SPLITTER_TEST_FAULT("R/O open on nonexistent files unexpectedly successful\n");
-    }
 
     /* Attempt R/O open when only W/O file exists
      * Should fail.
      */
 
-    if (splitter_create_single_file_at(vfd_config->wo_path, vfd_config->wo_fapl_id, data) < 0) {
+    if (splitter_create_single_file_at(vfd_config->wo_path, vfd_config->wo_fapl_id, data) < 0)
         SPLITTER_TEST_FAULT("can't write W/O file\n");
-    }
     H5E_BEGIN_TRY
     {
         file_id = H5Fopen(filename_rw, H5F_ACC_RDONLY, fapl_id);
     }
     H5E_END_TRY
-    if (file_id >= 0) {
+    if (file_id >= 0)
         SPLITTER_TEST_FAULT("R/O open with extant W/O file unexpectedly successful\n");
-    }
     HDremove(vfd_config->wo_path);
 
     /* Attempt R/O open when only R/W file exists
      * Should fail.
      */
 
-    if (splitter_create_single_file_at(filename_rw, vfd_config->rw_fapl_id, data) < 0) {
+    if (splitter_create_single_file_at(filename_rw, vfd_config->rw_fapl_id, data) < 0)
         SPLITTER_TEST_FAULT("can't create R/W file\n");
-    }
     H5E_BEGIN_TRY
     {
         file_id = H5Fopen(filename_rw, H5F_ACC_RDONLY, fapl_id);
     }
     H5E_END_TRY
-    if (file_id >= 0) {
+    if (file_id >= 0)
         SPLITTER_TEST_FAULT("R/O open with extant R/W file unexpectedly successful\n");
-    }
 
     /* Attempt R/O open when both R/W and W/O files exist
      */
 
-    if (splitter_create_single_file_at(vfd_config->wo_path, vfd_config->wo_fapl_id, data) < 0) {
+    if (splitter_create_single_file_at(vfd_config->wo_path, vfd_config->wo_fapl_id, data) < 0)
         SPLITTER_TEST_FAULT("can't create W/O file\n");
-    }
     file_id = H5Fopen(filename_rw, H5F_ACC_RDONLY, fapl_id);
-    if (file_id < 0) {
+    if (file_id < 0)
         SPLITTER_TEST_FAULT("R/O open on two extant files failed\n");
-    }
-    if (splitter_compare_expected_data(file_id, data) < 0) {
+    if (splitter_compare_expected_data(file_id, data) < 0)
         SPLITTER_TEST_FAULT("data mismatch in R/W file\n");
-    }
-    if (H5Fclose(file_id) < 0) {
+    if (H5Fclose(file_id) < 0)
         SPLITTER_TEST_FAULT("can't close file(s)\n");
-    }
     file_id = H5I_INVALID_HID;
 
     /* Cleanup
      */
 
-    if (H5Pclose(fapl_id) < 0) {
+    if (H5Pclose(fapl_id) < 0)
         SPLITTER_TEST_FAULT("can't close FAPL ID\n");
-    }
     fapl_id = H5I_INVALID_HID;
 
 done:
@@ -2875,44 +2861,36 @@ splitter_create_single_file_at(const char *filename, hid_t fapl_id, const struct
     hid_t dset_id   = H5I_INVALID_HID;
     int   ret_value = 0;
 
-    if (filename == NULL || *filename == '\0') {
+    if (filename == NULL || *filename == '\0')
         SPLITTER_TEST_FAULT("filename is invalid\n");
-    }
     /* TODO: sanity-check fapl id? */
 
     file_id = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, fapl_id);
-    if (file_id < 0) {
+    if (file_id < 0)
         SPLITTER_TEST_FAULT("can't create file\n");
-    }
 
     if (data) {
         /* TODO: sanity-check data, if it exists? */
         space_id = H5Screate_simple(data->n_dims, data->dims, NULL);
-        if (space_id < 0) {
+        if (space_id < 0)
             SPLITTER_TEST_FAULT("can't create dataspace\n");
-        }
 
         dset_id = H5Dcreate2(file_id, data->dset_name, data->mem_type_id, space_id, H5P_DEFAULT, H5P_DEFAULT,
                              H5P_DEFAULT);
-        if (dset_id < 0) {
+        if (dset_id < 0)
             SPLITTER_TEST_FAULT("can't create dataset\n");
-        }
 
-        if (H5Dwrite(dset_id, data->mem_type_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, data->buf) < 0) {
+        if (H5Dwrite(dset_id, data->mem_type_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, data->buf) < 0)
             SPLITTER_TEST_FAULT("can't write data to dataset\n");
-        }
 
-        if (H5Dclose(dset_id) < 0) {
+        if (H5Dclose(dset_id) < 0)
             SPLITTER_TEST_FAULT("can't close dset\n");
-        }
-        if (H5Sclose(space_id) < 0) {
+        if (H5Sclose(space_id) < 0)
             SPLITTER_TEST_FAULT("can't close space\n");
-        }
     } /* end if data definition is provided */
 
-    if (H5Fclose(file_id) < 0) {
+    if (H5Fclose(file_id) < 0)
         SPLITTER_TEST_FAULT("can't close file\n");
-    }
 
 done:
     if (ret_value < 0) {
@@ -2951,31 +2929,24 @@ splitter_compare_expected_data(hid_t file_id, const struct splitter_dataset_def 
     size_t j         = 0;
     int    ret_value = 0;
 
-    if (sizeof((void *)buf) != sizeof(data->buf)) {
+    if (sizeof((void *)buf) != sizeof(data->buf))
         SPLITTER_TEST_FAULT("invariant size of expected data does not match that received!\n");
-    }
     memcpy(expected, data->buf, sizeof(expected));
 
     dset_id = H5Dopen2(file_id, data->dset_name, H5P_DEFAULT);
-    if (dset_id < 0) {
+    if (dset_id < 0)
         SPLITTER_TEST_FAULT("can't open dataset\n");
-    }
 
-    if (H5Dread(dset_id, data->mem_type_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, (void *)buf) < 0) {
+    if (H5Dread(dset_id, data->mem_type_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, (void *)buf) < 0)
         SPLITTER_TEST_FAULT("can't read dataset\n");
-    }
 
-    for (i = 0; i < SPLITTER_SIZE; i++) {
-        for (j = 0; j < SPLITTER_SIZE; j++) {
-            if (buf[i][j] != expected[i][j]) {
+    for (i = 0; i < SPLITTER_SIZE; i++)
+        for (j = 0; j < SPLITTER_SIZE; j++)
+            if (buf[i][j] != expected[i][j])
                 SPLITTER_TEST_FAULT("mismatch in expected data\n");
-            }
-        }
-    }
 
-    if (H5Dclose(dset_id) < 0) {
+    if (H5Dclose(dset_id) < 0)
         SPLITTER_TEST_FAULT("can't close dataset\n");
-    }
 
 done:
     if (ret_value < 0) {
@@ -3032,11 +3003,9 @@ splitter_tentative_open_test(hid_t child_fapl_id)
         SPLITTER_TEST_FAULT("memory allocation for filename_rw string failed");
 
     /* pre-fill data buffer to write */
-    for (i = 0; i < SPLITTER_SIZE; i++) {
-        for (j = 0; j < SPLITTER_SIZE; j++) {
+    for (i = 0; i < SPLITTER_SIZE; i++)
+        for (j = 0; j < SPLITTER_SIZE; j++)
             buf[i][j] = i * 100 + j;
-        }
-    }
 
     /* Dataset info */
     data.buf         = (void *)buf;
@@ -3051,28 +3020,23 @@ splitter_tentative_open_test(hid_t child_fapl_id)
     vfd_config->rw_fapl_id     = child_fapl_id;
     vfd_config->wo_fapl_id     = child_fapl_id;
 
-    if (splitter_prepare_file_paths(vfd_config, filename_rw) < 0) {
+    if (splitter_prepare_file_paths(vfd_config, filename_rw) < 0)
         SPLITTER_TEST_FAULT("can't prepare splitter file paths\n");
-    }
 
     /* Create a new fapl to use the SPLITTER file driver */
-    if ((fapl_id = H5Pcreate(H5P_FILE_ACCESS)) == H5I_INVALID_HID) {
+    if ((fapl_id = H5Pcreate(H5P_FILE_ACCESS)) == H5I_INVALID_HID)
         SPLITTER_TEST_FAULT("can't create FAPL ID\n");
-    }
-    if (H5Pset_fapl_splitter(fapl_id, vfd_config) < 0) {
+    if (H5Pset_fapl_splitter(fapl_id, vfd_config) < 0)
         SPLITTER_TEST_FAULT("can't set splitter FAPL\n");
-    }
-    if (H5Pget_driver(fapl_id) != H5FD_SPLITTER) {
+    if (H5Pget_driver_cls_value(fapl_id) != H5_VFD_SPLITTER)
         SPLITTER_TEST_FAULT("set FAPL not SPLITTER\n");
-    }
 
     /* Create instance of file on disk.
      * Will be copied verbatim as needed, to avoid issues where differences in
      * the creation time would befoul comparisons.
      */
-    if (splitter_create_single_file_at(filename_tmp, child_fapl_id, &data) < 0) {
+    if (splitter_create_single_file_at(filename_tmp, child_fapl_id, &data) < 0)
         SPLITTER_TEST_FAULT("can't write W/O file\n");
-    }
 
     /*
      * H5Fopen() with RDWR access.
@@ -3085,15 +3049,12 @@ splitter_tentative_open_test(hid_t child_fapl_id)
         file_id = H5Fopen(filename_rw, H5F_ACC_RDWR, fapl_id);
     }
     H5E_END_TRY
-    if (file_id != H5I_INVALID_HID) {
+    if (file_id != H5I_INVALID_HID)
         SPLITTER_TEST_FAULT("open with both nonexistent files unexpectedly succeeded\n");
-    }
-    if (file_exists(filename_rw, child_fapl_id)) {
+    if (file_exists(filename_rw, child_fapl_id))
         SPLITTER_TEST_FAULT("R/W file unexpectedly created\n");
-    }
-    if (file_exists(vfd_config->wo_path, child_fapl_id)) {
+    if (file_exists(vfd_config->wo_path, child_fapl_id))
         SPLITTER_TEST_FAULT("W/O file unexpectedly created\n");
-    }
 
     /*
      * H5Fopen() with RDWR access.
@@ -3101,27 +3062,22 @@ splitter_tentative_open_test(hid_t child_fapl_id)
      * Should fail.
      */
 
-    if (h5_duplicate_file_by_bytes(filename_tmp, vfd_config->wo_path) < 0) {
+    if (h5_duplicate_file_by_bytes(filename_tmp, vfd_config->wo_path) < 0)
         SPLITTER_TEST_FAULT("Can't create W/O file copy.\n");
-    }
     H5E_BEGIN_TRY
     {
         file_id = H5Fopen(filename_rw, H5F_ACC_RDWR, fapl_id);
     }
     H5E_END_TRY
-    if (file_id != H5I_INVALID_HID) {
+    if (file_id != H5I_INVALID_HID)
         SPLITTER_TEST_FAULT("open with nonexistent R/W file unexpectedly succeeded\n");
-    }
-    if (file_exists(filename_rw, child_fapl_id)) {
+    if (file_exists(filename_rw, child_fapl_id))
         SPLITTER_TEST_FAULT("R/W file unexpectedly created\n");
-    }
-    if (!file_exists(vfd_config->wo_path, child_fapl_id)) {
+    if (!file_exists(vfd_config->wo_path, child_fapl_id))
         SPLITTER_TEST_FAULT("W/O file mysteriously disappeared\n");
-    }
     HDremove(vfd_config->wo_path);
-    if (file_exists(vfd_config->wo_path, child_fapl_id)) {
+    if (file_exists(vfd_config->wo_path, child_fapl_id))
         SPLITTER_TEST_FAULT("failed to remove W/O file\n");
-    }
 
     /*
      * H5Fopen() with RDWR access.
@@ -3129,46 +3085,37 @@ splitter_tentative_open_test(hid_t child_fapl_id)
      * Should fail.
      */
 
-    if (h5_duplicate_file_by_bytes(filename_tmp, filename_rw) < 0) {
+    if (h5_duplicate_file_by_bytes(filename_tmp, filename_rw) < 0)
         SPLITTER_TEST_FAULT("Can't create R/W file copy.\n");
-    }
     H5E_BEGIN_TRY
     {
         file_id = H5Fopen(filename_rw, H5F_ACC_RDWR, fapl_id);
     }
     H5E_END_TRY
-    if (file_id != H5I_INVALID_HID) {
+    if (file_id != H5I_INVALID_HID)
         SPLITTER_TEST_FAULT("open with nonexistent W/O unexpectedly succeeded\n");
-    }
-    if (!file_exists(filename_rw, child_fapl_id)) {
+    if (!file_exists(filename_rw, child_fapl_id))
         SPLITTER_TEST_FAULT("R/W file mysteriously disappeared\n");
-    }
-    if (file_exists(vfd_config->wo_path, child_fapl_id)) {
+    if (file_exists(vfd_config->wo_path, child_fapl_id))
         SPLITTER_TEST_FAULT("W/O file unexpectedly created\n");
-    }
 
     /*
      * H5Fopen() with RDWR access.
      * Both files present.
      */
 
-    if (h5_duplicate_file_by_bytes(filename_tmp, vfd_config->wo_path) < 0) {
+    if (h5_duplicate_file_by_bytes(filename_tmp, vfd_config->wo_path) < 0)
         SPLITTER_TEST_FAULT("Can't create W/O file copy.\n");
-    }
     file_id = H5Fopen(filename_rw, H5F_ACC_RDWR, fapl_id);
-    if (file_id == H5I_INVALID_HID) {
+    if (file_id == H5I_INVALID_HID)
         SPLITTER_TEST_FAULT("file-open failed with both present\n");
-    }
     /* Open successful; close file then inspect presence again */
-    if (H5Fclose(file_id) < 0) {
+    if (H5Fclose(file_id) < 0)
         SPLITTER_TEST_FAULT("can't close file ID\n");
-    }
-    if (!file_exists(filename_rw, child_fapl_id)) {
+    if (!file_exists(filename_rw, child_fapl_id))
         SPLITTER_TEST_FAULT("R/W file mysteriously disappeared\n");
-    }
-    if (!file_exists(vfd_config->wo_path, child_fapl_id)) {
+    if (!file_exists(vfd_config->wo_path, child_fapl_id))
         SPLITTER_TEST_FAULT("W/O file mysteriously disappeared\n");
-    }
 
     /*
      * H5Fcreate() with TRUNC access.
@@ -3176,22 +3123,17 @@ splitter_tentative_open_test(hid_t child_fapl_id)
      */
 
     file_id = H5Fcreate(filename_rw, H5F_ACC_TRUNC, H5P_DEFAULT, fapl_id);
-    if (file_id == H5I_INVALID_HID) {
+    if (file_id == H5I_INVALID_HID)
         SPLITTER_TEST_FAULT("file-open failed with both present\n");
-    }
     /* Open successful; close file then inspect presence again */
-    if (H5Fclose(file_id) < 0) {
+    if (H5Fclose(file_id) < 0)
         SPLITTER_TEST_FAULT("can't close file ID\n");
-    }
-    if (!file_exists(filename_rw, child_fapl_id)) {
+    if (!file_exists(filename_rw, child_fapl_id))
         SPLITTER_TEST_FAULT("R/W file mysteriously disappeared\n");
-    }
-    if (!file_exists(vfd_config->wo_path, child_fapl_id)) {
+    if (!file_exists(vfd_config->wo_path, child_fapl_id))
         SPLITTER_TEST_FAULT("W/O file mysteriously disappeared\n");
-    }
-    if (h5_compare_file_bytes(filename_rw, vfd_config->wo_path) < 0) {
+    if (h5_compare_file_bytes(filename_rw, vfd_config->wo_path) < 0)
         SPLITTER_TEST_FAULT("files are not byte-for-byte equivalent\n");
-    }
     HDremove(filename_rw);
     HDremove(vfd_config->wo_path);
 
@@ -3200,29 +3142,22 @@ splitter_tentative_open_test(hid_t child_fapl_id)
      * R/W already exists.
      */
 
-    if (h5_duplicate_file_by_bytes(filename_tmp, filename_rw) < 0) {
+    if (h5_duplicate_file_by_bytes(filename_tmp, filename_rw) < 0)
         SPLITTER_TEST_FAULT("Can't create R/W file copy.\n");
-    }
-    if (file_exists(vfd_config->wo_path, child_fapl_id)) {
+    if (file_exists(vfd_config->wo_path, child_fapl_id))
         SPLITTER_TEST_FAULT("failed to remove W/O file\n");
-    }
     file_id = H5Fcreate(filename_rw, H5F_ACC_TRUNC, H5P_DEFAULT, fapl_id);
-    if (file_id == H5I_INVALID_HID) {
+    if (file_id == H5I_INVALID_HID)
         SPLITTER_TEST_FAULT("file-open failed with both present\n");
-    }
     /* Open successful; close file then inspect presence again */
-    if (H5Fclose(file_id) < 0) {
+    if (H5Fclose(file_id) < 0)
         SPLITTER_TEST_FAULT("can't close file ID\n");
-    }
-    if (!file_exists(filename_rw, child_fapl_id)) {
+    if (!file_exists(filename_rw, child_fapl_id))
         SPLITTER_TEST_FAULT("R/W file mysteriously disappeared\n");
-    }
-    if (!file_exists(vfd_config->wo_path, child_fapl_id)) {
+    if (!file_exists(vfd_config->wo_path, child_fapl_id))
         SPLITTER_TEST_FAULT("W/O file mysteriously disappeared\n");
-    }
-    if (h5_compare_file_bytes(filename_rw, vfd_config->wo_path) < 0) {
+    if (h5_compare_file_bytes(filename_rw, vfd_config->wo_path) < 0)
         SPLITTER_TEST_FAULT("files are not byte-for-byte equivalent\n");
-    }
     HDremove(filename_rw);
     HDremove(vfd_config->wo_path);
 
@@ -3231,29 +3166,22 @@ splitter_tentative_open_test(hid_t child_fapl_id)
      * Only W/O present.
      */
 
-    if (h5_duplicate_file_by_bytes(filename_tmp, vfd_config->wo_path) < 0) {
+    if (h5_duplicate_file_by_bytes(filename_tmp, vfd_config->wo_path) < 0)
         SPLITTER_TEST_FAULT("Can't create W/O file copy.\n");
-    }
-    if (file_exists(filename_rw, child_fapl_id)) {
+    if (file_exists(filename_rw, child_fapl_id))
         SPLITTER_TEST_FAULT("failed to remove R/W file\n");
-    }
     file_id = H5Fcreate(filename_rw, H5F_ACC_TRUNC, H5P_DEFAULT, fapl_id);
-    if (file_id == H5I_INVALID_HID) {
+    if (file_id == H5I_INVALID_HID)
         SPLITTER_TEST_FAULT("file-open failed with both present\n");
-    }
     /* Open successful; close file then inspect presence again */
-    if (H5Fclose(file_id) < 0) {
+    if (H5Fclose(file_id) < 0)
         SPLITTER_TEST_FAULT("can't close file ID\n");
-    }
-    if (!file_exists(filename_rw, child_fapl_id)) {
+    if (!file_exists(filename_rw, child_fapl_id))
         SPLITTER_TEST_FAULT("R/W file mysteriously disappeared\n");
-    }
-    if (!file_exists(vfd_config->wo_path, child_fapl_id)) {
+    if (!file_exists(vfd_config->wo_path, child_fapl_id))
         SPLITTER_TEST_FAULT("W/O file mysteriously disappeared\n");
-    }
-    if (h5_compare_file_bytes(filename_rw, vfd_config->wo_path) < 0) {
+    if (h5_compare_file_bytes(filename_rw, vfd_config->wo_path) < 0)
         SPLITTER_TEST_FAULT("files are not byte-for-byte equivalent\n");
-    }
     HDremove(filename_rw);
     HDremove(vfd_config->wo_path);
 
@@ -3263,9 +3191,8 @@ splitter_tentative_open_test(hid_t child_fapl_id)
      * Cleanup
      */
 
-    if (H5Pclose(fapl_id) < 0) {
+    if (H5Pclose(fapl_id) < 0)
         SPLITTER_TEST_FAULT("can't close splitter FAPL ID\n");
-    }
 
 done:
     if (ret_value < 0) {
@@ -3308,9 +3235,8 @@ file_exists(const char *filename, hid_t fapl_id)
     H5E_END_TRY
     if (file_id != H5I_INVALID_HID) {
         ret_value = 1;
-        if (H5Fclose(file_id) < 0) {
+        if (H5Fclose(file_id) < 0)
             FAIL_PUTS_ERROR("can't close file ID\n");
-        }
     }
 
     return ret_value;
@@ -3352,11 +3278,9 @@ test_splitter(void)
     TESTING("SPLITTER file driver");
 
     /* pre-fill data buffer to write */
-    for (i = 0; i < SPLITTER_SIZE; i++) {
-        for (j = 0; j < SPLITTER_SIZE; j++) {
+    for (i = 0; i < SPLITTER_SIZE; i++)
+        for (j = 0; j < SPLITTER_SIZE; j++)
             buf[i][j] = i * 100 + j;
-        }
-    }
 
     /* Dataset info */
     data.buf         = (void *)buf;
@@ -3369,9 +3293,8 @@ test_splitter(void)
      * Enables verification with arbitrary VFDs via `make check-vfd`
      */
     child_fapl_id = h5_fileaccess();
-    if (child_fapl_id < 0) {
+    if (child_fapl_id < 0)
         TEST_ERROR;
-    }
 
     if (!driver_is_splitter_compatible(child_fapl_id)) {
         SKIPPED();
@@ -3382,15 +3305,13 @@ test_splitter(void)
     /* Test Read-Only access, including when a file on the W/O channel
      * does not exist.
      */
-    if (splitter_RO_test(&data, child_fapl_id) < 0) {
+    if (splitter_RO_test(&data, child_fapl_id) < 0)
         TEST_ERROR;
-    }
 
     /* Test opening of files when the W/O channel does not exist.
      */
-    if (splitter_tentative_open_test(child_fapl_id) < 0) {
+    if (splitter_tentative_open_test(child_fapl_id) < 0)
         TEST_ERROR;
-    }
 
     /* Test file creation, utilizing different child FAPLs (default vs.
      * specified), logfile, and Write Channel error ignoring behavior.
@@ -3406,20 +3327,17 @@ test_splitter(void)
             child_fapl_ids[0] = (j & 1) ? child_fapl_id : H5P_DEFAULT;
             child_fapl_ids[1] = (j & 2) ? child_fapl_id : H5P_DEFAULT;
 
-            if (run_splitter_test(&data, ignore_wo_errors, provide_logfile_path, child_fapl_ids) < 0) {
+            if (run_splitter_test(&data, ignore_wo_errors, provide_logfile_path, child_fapl_ids) < 0)
                 TEST_ERROR;
-            }
 
         } /* end for child fapl definition/pairing */
-
     } /* end for behavior-flag loops */
 
     /* TODO: SWMR open? */
     /* Concurrent opens with both drivers using the Splitter */
 
-    if (H5Pclose(child_fapl_id) == FAIL) {
+    if (H5Pclose(child_fapl_id) == FAIL)
         TEST_ERROR;
-    }
 
     PASSED();
     return 0;
@@ -3455,7 +3373,6 @@ setup_rand(void)
     struct timeval tv;
 
     if (use_predefined_seed) {
-
         seed = predefined_seed;
 
         fprintf(stdout, "\n%s: predefined_seed = %d.\n\n", __func__, seed);
@@ -3464,14 +3381,11 @@ setup_rand(void)
         srand(seed);
     }
     else {
-
         if (HDgettimeofday(&tv, NULL) != 0) {
-
             fprintf(stdout, "\n%s: gettimeofday() failed -- srand() not called.\n\n", __func__);
             fflush(stdout);
         }
         else {
-
             seed = (unsigned)tv.tv_usec;
 
             fprintf(stdout, "\n%s: seed = %d.\n\n", __func__, seed);
@@ -3480,9 +3394,6 @@ setup_rand(void)
             srand(seed);
         }
     }
-
-    return;
-
 } /* setup_rand() */
 
 /*
@@ -3613,7 +3524,7 @@ run_ctl_test(uint64_t op_code, uint64_t flags, ctl_test_opc_type opc_type, hid_t
     bool    expect_fail        = false;
     H5FD_t *file_drv_ptr       = NULL;
     herr_t  ctl_result         = SUCCEED;
-    hid_t   driver_id          = H5I_INVALID_HID;
+    H5FD_class_value_t cls_value;
     char    filename[1024];
 
     /* Check for a few ctl function flags */
@@ -3621,10 +3532,10 @@ run_ctl_test(uint64_t op_code, uint64_t flags, ctl_test_opc_type opc_type, hid_t
     routing_flag_set = (flags & H5FD_CTL_ROUTE_TO_TERMINAL_VFD_FLAG);
 
     /* Determine if the top-level VFD is a passthrough VFD */
-    if ((driver_id = H5Pget_driver(fapl_id)) < 0)
+    if ((cls_value = H5Pget_driver_cls_value(fapl_id)) < 0)
         PUTS_ERROR("couldn't get VFD ID from FAPL");
 
-    is_passthrough_vfd = ((driver_id == H5FD_SPLITTER) || (driver_id == H5FD_MULTI));
+    is_passthrough_vfd = ((cls_value == H5_VFD_SPLITTER) || (cls_value == H5_VFD_MULTI));
 
     /*
      * "Open" testing file. Note that our VFD for testing the ctl
@@ -5873,15 +5784,15 @@ error:
 int
 main(void)
 {
-    const char *driver_name;
+    const char *driver_env;
     int         nerrors = 0;
 
     /* Don't run VFD tests when HDF5_DRIVER or HDF5_TEST_DRIVER is set. These
      * tests expect a specific VFD to be set and HDF5_DRIVER/HDF5_TEST_DRIVER
      * being set can interfere with that.
      */
-    driver_name = h5_get_test_driver_name();
-    if (driver_name) {
+    driver_env = h5_get_test_driver_env();
+    if (driver_env) {
         printf(" -- SKIPPED VFD tests because driver environment variable is set -- \n");
         exit(EXIT_SUCCESS);
     }

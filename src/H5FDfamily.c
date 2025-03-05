@@ -47,6 +47,7 @@
 
 /* The driver identification number, initialized at runtime */
 hid_t H5FD_FAMILY_id_g = H5I_INVALID_HID;
+H5FD_driver_t *H5FD_FAMILY_driver_g = NULL;
 
 /* Driver-specific file access properties */
 typedef struct H5FD_family_fapl_t {
@@ -61,7 +62,7 @@ typedef struct H5FD_family_t {
     hsize_t            pmem_size; /*member size passed in from property    */
     unsigned           nmembs;    /*number of family members        */
     unsigned           amembs;    /*number of member slots allocated    */
-    H5FD_t           **memb;      /*dynamic array of member pointers    */
+    H5FD_int_t       **memb;      /*dynamic array of member pointers    */
     haddr_t            eoa;       /*end of allocated addresses        */
     char              *name;      /*name generator printf format        */
     unsigned           flags;     /*flags for opening additional members    */
@@ -178,7 +179,7 @@ H5FD__family_get_default_config(H5FD_family_fapl_t *fa_out)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
     if (NULL == (fa_out->memb_fapl = H5P_copy_plist(def_fapl, false)))
         HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, FAIL, "can't copy property list");
-    if (H5P_set_driver_by_value(fa_out->memb_fapl, H5_VFD_SEC2, NULL, true) < 0)
+    if (H5P_set_driver_by_value(fa_out->memb_fapl, H5_VFD_SEC2, NULL) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set default driver on member FAPL");
 
 done:
@@ -277,9 +278,19 @@ H5FD__family_register(void)
 
     FUNC_ENTER_PACKAGE
 
-    if (H5I_VFL != H5I_get_type(H5FD_FAMILY_id_g))
-        if ((H5FD_FAMILY_id_g = H5FD_register(&H5FD_family_g, sizeof(H5FD_class_t), false)) < 0)
-            HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "unable to register family driver");
+    /* Register the family driver, if it isn't already */
+    if (NULL == H5FD_FAMILY_driver_g)
+        if (NULL == (H5FD_FAMILY_driver_g = H5FD__driver_register(&H5FD_family_g)))
+            HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "can't register family driver");
+
+    /* Get ID for family driver */
+    if (H5I_VFL != H5I_get_type(H5FD_FAMILY_id_g)) {
+        if ((H5FD_FAMILY_id_g = H5I_register(H5I_VFL, H5FD_FAMILY_driver_g, false)) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "can't create ID for family driver");
+
+        /* ID is holding a reference to the connector */
+        H5FD__driver_inc_rc(H5FD_FAMILY_driver_g);
+    }
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -301,6 +312,7 @@ H5FD__family_unregister(void)
 
     /* Reset VFL ID */
     H5FD_FAMILY_id_g = H5I_INVALID_HID;
+    H5FD_FAMILY_driver_g = NULL;
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5FD__family_unregister() */
@@ -344,8 +356,7 @@ H5Pset_fapl_family(hid_t fapl_id, hsize_t msize, hid_t memb_fapl_id)
 
     /* Initialize driver specific information. */
     fa.memb_size = msize;
-
-    ret_value = H5P_set_driver(fapl, H5FD_FAMILY, &fa, NULL);
+    ret_value = H5P_set_driver(fapl, H5FD_FAMILY_driver_g, &fa, NULL);
 
 done:
     if (is_default)
@@ -378,7 +389,7 @@ H5Pget_fapl_family(hid_t fapl_id, hsize_t *msize /*out*/, hid_t *memb_fapl_id /*
 
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access list");
-    if (H5FD_FAMILY != H5P_peek_driver(fapl))
+    if (H5FD_FAMILY_VALUE != H5P_get_driver_value(fapl))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "incorrect VFL driver");
     if (NULL == (fa = (const H5FD_family_fapl_t *)H5P_peek_driver_info(fapl)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "bad VFL driver info");
@@ -392,6 +403,76 @@ H5Pget_fapl_family(hid_t fapl_id, hsize_t *msize /*out*/, hid_t *memb_fapl_id /*
 done:
     FUNC_LEAVE_API(ret_value)
 }
+
+/*-------------------------------------------------------------------------
+ * Function:    H5Pset_family_offset
+ *
+ * Purpose:     Set offset for family driver.  This file access property
+ *              list will be passed to H5Fget_vfd_handle or H5FDget_vfd_handle
+ *              to retrieve VFD file handle.
+ *
+ * Return:      Success:        Non-negative value.
+ *              Failure:        Negative value.
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5Pset_family_offset(hid_t fapl_id, hsize_t offset)
+{
+    H5P_genplist_t *fapl;                /* Property list pointer */
+    herr_t          ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_API(FAIL)
+
+    /* Get the pointer to the property list object */
+    if (H5P_DEFAULT == fapl_id)
+        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "can't modify default property list");
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
+
+    /* Set value */
+    if (H5P_set(fapl, H5F_ACS_FAMILY_OFFSET_NAME, &offset) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set offset for family file");
+
+done:
+    FUNC_LEAVE_API(ret_value)
+} /* end H5Pset_family_offset() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5Pget_family_offset
+ *
+ * Purpose:     Get offset for family driver.  This file access property
+ *              list will be passed to H5Fget_vfd_handle or H5FDget_vfd_handle
+ *              to retrieve VFD file handle.
+ *
+ * Return:      Success:        Non-negative value.
+ *              Failure:        Negative value.
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5Pget_family_offset(hid_t fapl_id, hsize_t *offset /*out*/)
+{
+    H5P_genplist_t *fapl;                /* Property list pointer */
+    herr_t          ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_API(FAIL)
+
+    /* Get the pointer to the property list object */
+    if (H5P_DEFAULT == fapl_id)
+        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "can't modify default property list");
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
+
+    /* Get value */
+    if (offset) {
+        if (H5P_get(fapl, H5F_ACS_FAMILY_OFFSET_NAME, offset) < 0)
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't set offset for family file");
+    } /* end if */
+
+done:
+    FUNC_LEAVE_API(ret_value)
+} /* end H5Pget_family_offset() */
 
 /*-------------------------------------------------------------------------
  * Function:    H5FD__family_fapl_get
@@ -706,10 +787,10 @@ H5FD__family_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxad
         /* Enlarge member array */
         if (file->nmembs >= file->amembs) {
             unsigned n = MAX(64, 2 * file->amembs);
-            H5FD_t **x;
+            H5FD_int_t **x;
 
             assert(n > 0);
-            if (NULL == (x = (H5FD_t **)H5MM_realloc(file->memb, n * sizeof(H5FD_t *))))
+            if (NULL == (x = H5MM_realloc(file->memb, n * sizeof(H5FD_int_t *))))
                 HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "unable to reallocate members");
             file->amembs = n;
             file->memb   = x;
@@ -721,13 +802,11 @@ H5FD__family_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxad
          * Allow H5F_ACC_CREAT only on the first family member.
          */
         if (0 == file->nmembs) {
-            if (H5FD_open(false, &file->memb[file->nmembs], memb_name, (0 == file->nmembs ? flags : t_flags),
-                          file->fa.memb_fapl, HADDR_UNDEF) < 0)
+            if (H5FD_open(false, &file->memb[file->nmembs], memb_name, (0 == file->nmembs ? flags : t_flags), file->fa.memb_fapl, HADDR_UNDEF) < 0)
                 HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL, "unable to open member file");
         }
         else {
-            if (H5FD_open(true, &file->memb[file->nmembs], memb_name, (0 == file->nmembs ? flags : t_flags),
-                          file->fa.memb_fapl, HADDR_UNDEF) < 0)
+            if (H5FD_open(true, &file->memb[file->nmembs], memb_name, (0 == file->nmembs ? flags : t_flags), file->fa.memb_fapl, HADDR_UNDEF) < 0)
                 HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL, "unable to open member file");
 
             if (!file->memb[file->nmembs])
@@ -741,7 +820,7 @@ H5FD__family_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxad
      * smaller than the size specified through H5Pset_fapl_family().  Update the actual
      * member size.
      */
-    if ((eof = H5FD_get_eof(file->memb[0], H5FD_MEM_DEFAULT)))
+    if (0 != (eof = H5FD_get_eof(file->memb[0], H5FD_MEM_DEFAULT)))
         file->fa.memb_size = eof;
 
     ret_value = (H5FD_t *)file;
@@ -956,7 +1035,7 @@ H5FD__family_set_eoa(H5FD_t *_file, H5FD_mem_t type, haddr_t abs_eoa)
         /* Enlarge member array */
         if (u >= file->amembs) {
             unsigned n = MAX(64, 2 * file->amembs);
-            H5FD_t **x = (H5FD_t **)H5MM_realloc(file->memb, n * sizeof(H5FD_t *));
+            H5FD_int_t **x = H5MM_realloc(file->memb, n * sizeof(H5FD_int_t *));
 
             if (!x)
                 HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "unable to allocate memory block");

@@ -34,7 +34,7 @@
 
 /* The driver identification number, initialized at runtime */
 hid_t H5FD_LOG_id_g = H5I_INVALID_HID;
-
+H5FD_driver_t *H5FD_LOG_driver_g = NULL;
 /* Driver-specific file access properties */
 typedef struct H5FD_log_fapl_t {
     char              *logfile; /* Allocated log file name */
@@ -217,9 +217,19 @@ H5FD__log_register(void)
 
     FUNC_ENTER_PACKAGE
 
-    if (H5I_VFL != H5I_get_type(H5FD_LOG_id_g))
-        if ((H5FD_LOG_id_g = H5FD_register(&H5FD_log_g, sizeof(H5FD_class_t), false)) < 0)
-            HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "unable to register log driver");
+    /* Register the family driver, if it isn't already */
+    if (NULL == H5FD_LOG_driver_g)
+        if (NULL == (H5FD_LOG_driver_g = H5FD__driver_register(&H5FD_log_g)))
+            HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "can't register log driver");
+
+    /* Get ID for log driver */
+    if (H5I_VFL != H5I_get_type(H5FD_LOG_id_g)) {
+        if ((H5FD_LOG_id_g = H5I_register(H5I_VFL, H5FD_LOG_driver_g, false)) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "can't create ID for log driver");
+
+        /* ID is holding a reference to the connector */
+        H5FD__driver_inc_rc(H5FD_LOG_driver_g);
+    }
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -241,6 +251,7 @@ H5FD__log_unregister(void)
 
     /* Reset VFL ID */
     H5FD_LOG_id_g = H5I_INVALID_HID;
+    H5FD_LOG_driver_g = NULL;
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5FD__log_unregister() */
@@ -283,7 +294,7 @@ H5Pset_fapl_log(hid_t fapl_id, const char *logfile, unsigned long long flags, si
 
     fa.flags    = flags;
     fa.buf_size = buf_size;
-    ret_value   = H5P_set_driver(fapl, H5FD_LOG, &fa, NULL);
+    ret_value   = H5P_set_driver(fapl, H5FD_LOG_driver_g, &fa, NULL);
 
 done:
     if (fa.logfile)

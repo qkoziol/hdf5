@@ -99,7 +99,7 @@ extern "C" {
 
 /** @private
  *
- * \brief ID for the HDFS VFD
+ * \brief ID for the hdfs VFD
  */
 H5_DLLVAR hid_t H5FD_HDFS_id_g;
 

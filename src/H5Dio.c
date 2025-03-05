@@ -128,7 +128,7 @@ H5D__read(size_t count, H5D_dset_io_info_t *dset_info)
 #ifdef H5_HAVE_PARALLEL
     /* Check for non-MPI-based VFD.  Only need to check first dataset since all
      * share the same file. */
-    if (!(H5F_HAS_FEATURE(dset_info[0].dset->oloc.file, H5FD_FEAT_HAS_MPI))) {
+    if (!(H5F_has_feature(dset_info[0].dset->oloc.file, H5FD_FEAT_HAS_MPI))) {
         H5FD_mpio_xfer_t io_xfer_mode; /* MPI I/O transfer mode */
 
         /* Get I/O transfer mode */
@@ -584,7 +584,7 @@ H5D__write(size_t count, H5D_dset_io_info_t *dset_info)
 
             /* Various MPI based checks */
 #ifdef H5_HAVE_PARALLEL
-        if (H5F_HAS_FEATURE(dset_info[i].dset->oloc.file, H5FD_FEAT_HAS_MPI)) {
+        if (H5F_has_feature(dset_info[i].dset->oloc.file, H5FD_FEAT_HAS_MPI)) {
             /* If MPI based VFD is used, no VL or region reference datatype support yet. */
             /* This is because they use the global heap in the file and we don't */
             /* support parallel access of that yet */
@@ -699,7 +699,7 @@ H5D__write(size_t count, H5D_dset_io_info_t *dset_info)
          * in the storage allocation since this may use collective
          * operations and we will hang if we don't participate.
          */
-        if (!H5F_HAS_FEATURE(dset_info[i].dset->oloc.file, H5FD_FEAT_HAS_MPI))
+        if (!H5F_has_feature(dset_info[i].dset->oloc.file, H5FD_FEAT_HAS_MPI))
             should_alloc_space = should_alloc_space && (dset_info[i].nelmts > 0);
 
         if (should_alloc_space) {
@@ -966,7 +966,7 @@ H5D__ioinfo_init(size_t count, H5D_io_op_type_t op_type, H5D_dset_io_info_t *dse
 
     /* Determine if the file was opened with an MPI VFD */
     if (count > 0)
-        io_info->using_mpi_vfd = H5F_HAS_FEATURE(dset_info[0].dset->oloc.file, H5FD_FEAT_HAS_MPI);
+        io_info->using_mpi_vfd = H5F_has_feature(dset_info[0].dset->oloc.file, H5FD_FEAT_HAS_MPI);
 #endif /* H5_HAVE_PARALLEL */
 
     /* Check if we could potentially use in-place type conversion */

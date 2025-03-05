@@ -656,7 +656,7 @@ H5Z__flush_file_cb(void H5_ATTR_UNUSED *obj_ptr, hid_t obj_id, void H5_ATTR_PARA
             H5F_t *f = (H5F_t *)obj_ptr; /* File object for native VOL operation */
 
             /* Check if MPIO driver is used */
-            if (H5F_HAS_FEATURE(f, H5FD_FEAT_HAS_MPI)) {
+            if (H5F_has_feature(f, H5FD_FEAT_HAS_MPI)) {
 
                 /* Sanity check for collectively calling H5Zunregister, if requested */
                 /* (Sanity check assumes that a barrier on one file's comm

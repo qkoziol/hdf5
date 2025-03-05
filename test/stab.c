@@ -1442,10 +1442,10 @@ main(void)
 
         nerrors += no_compact(fcpl2, fapl2);
         nerrors += gcpl_on_root(fapl2);
-
-        /* Old group API specific tests */
-        nerrors += old_api(fapl);
     }
+
+    /* Old group API specific tests */
+    nerrors += old_api(fapl);
 
     if (driver_is_default_compatible) {
         nerrors += corrupt_stab_msg();

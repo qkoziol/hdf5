@@ -3879,7 +3879,7 @@ H5D__chunk_lookup(const H5D_t *dset, const hsize_t *scaled, H5D_chunk_ud_t *udat
             idx_info.storage = sc;
 
 #ifdef H5_HAVE_PARALLEL
-            if (H5F_HAS_FEATURE(idx_info.f, H5FD_FEAT_HAS_MPI)) {
+            if (H5F_has_feature(idx_info.f, H5FD_FEAT_HAS_MPI)) {
                 /* Disable collective metadata read for chunk indexes as it is
                  * highly unlikely that users would read the same chunks from all
                  * processes.
@@ -3937,7 +3937,7 @@ H5D__chunk_lookup(const H5D_t *dset, const hsize_t *scaled, H5D_chunk_ud_t *udat
                  *  - JTH (7/13/2018)
                  */
 #ifdef H5_HAVE_PARALLEL
-            if (!((H5F_HAS_FEATURE(idx_info.f, H5FD_FEAT_HAS_MPI)) &&
+            if (!((H5F_has_feature(idx_info.f, H5FD_FEAT_HAS_MPI)) &&
                   (H5F_INTENT(dset->oloc.file) & H5F_ACC_RDWR) && dset->shared->dcpl_cache.pline.nused))
 #endif
                 H5D__chunk_cinfo_cache_update(&dset->shared->cache.chunk.last, udata);
@@ -4999,7 +4999,7 @@ H5D__chunk_allocate(const H5D_t *dset, bool full_overwrite, const hsize_t old_di
 
 #ifdef H5_HAVE_PARALLEL
     /* Retrieve MPI parameters */
-    if (H5F_HAS_FEATURE(dset->oloc.file, H5FD_FEAT_HAS_MPI)) {
+    if (H5F_has_feature(dset->oloc.file, H5FD_FEAT_HAS_MPI)) {
         /* Set the MPI-capable file driver flag */
         using_mpi = true;
 

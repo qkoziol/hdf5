@@ -249,8 +249,8 @@ H5_init_library(void)
      * The dataspace interface needs to be initialized so that future IDs for
      *   dataspaces work.
      *
-     * The VFD & VOL interfaces need to be initialized before the H5P interface
-     *   so that the default VFD and default VOL connector are ready for the
+     * The VFD & VOL interfaces need to finish initializing after the H5P interface
+     *   so that the default VFD and default VOL connector can be set up in the
      *   default FAPL.
      *
      */
@@ -258,12 +258,16 @@ H5_init_library(void)
         HGOTO_ERROR(H5E_FUNC, H5E_CANTINIT, FAIL, "unable to initialize free list interface");
     if (H5E_init() < 0)
         HGOTO_ERROR(H5E_FUNC, H5E_CANTINIT, FAIL, "unable to initialize error interface");
-    if (H5FD_init() < 0)
-        HGOTO_ERROR(H5E_FUNC, H5E_CANTINIT, FAIL, "unable to initialize VFL interface");
+    if (H5FD_init_phase1() < 0)
+        HGOTO_ERROR(H5E_FUNC, H5E_CANTINIT, FAIL, "unable to initialize phase 1 of VFL interface");
     if (H5VL_init_phase1() < 0)
-        HGOTO_ERROR(H5E_FUNC, H5E_CANTINIT, FAIL, "unable to initialize vol interface");
-    if (H5P_init_phase1() < 0)
+        HGOTO_ERROR(H5E_FUNC, H5E_CANTINIT, FAIL, "unable to initialize phase 1 of vol interface");
+    if (H5P_init() < 0)
         HGOTO_ERROR(H5E_FUNC, H5E_CANTINIT, FAIL, "unable to initialize property list interface");
+    if (H5FD_init_phase2() < 0)
+        HGOTO_ERROR(H5E_FUNC, H5E_CANTINIT, FAIL, "unable to initialize phase 2 of VFL interface");
+    if (H5VL_init_phase2() < 0)
+        HGOTO_ERROR(H5E_FUNC, H5E_CANTINIT, FAIL, "unable to initialize phase 2 of vol interface");
     if (H5L_init() < 0)
         HGOTO_ERROR(H5E_FUNC, H5E_CANTINIT, FAIL, "unable to initialize link interface");
     if (H5O_init() < 0)
@@ -274,12 +278,6 @@ H5_init_library(void)
         HGOTO_ERROR(H5E_FUNC, H5E_CANTINIT, FAIL, "unable to initialize dataspace interface");
     if (H5T_init() < 0)
         HGOTO_ERROR(H5E_FUNC, H5E_CANTINIT, FAIL, "unable to initialize datatype interface");
-
-    /* Finish initializing interfaces that depend on the interfaces above */
-    if (H5P_init_phase2() < 0)
-        HGOTO_ERROR(H5E_FUNC, H5E_CANTINIT, FAIL, "unable to initialize property list interface");
-    if (H5VL_init_phase2() < 0)
-        HGOTO_ERROR(H5E_FUNC, H5E_CANTINIT, FAIL, "unable to initialize vol interface");
 
     /* Debugging? */
     H5__debug_mask("-all");

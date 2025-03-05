@@ -9629,7 +9629,7 @@ external_set_elink_fapl3(bool new_format)
     /* Verify that the driver for the link's fapl is the "stdio" driver */
     if ((l_fapl_id = H5Pget_elink_fapl(lapl_id)) < 0)
         TEST_ERROR;
-    if (H5Pget_driver(l_fapl_id) != H5FD_STDIO)
+    if (H5Pget_driver_cls_value(l_fapl_id) != H5_VFD_STDIO)
         TEST_ERROR;
     if (H5Pclose(l_fapl_id) < 0)
         TEST_ERROR;
@@ -9656,7 +9656,7 @@ external_set_elink_fapl3(bool new_format)
     /* Verify that the driver for the copied link's fapl is the "core" driver */
     if ((l_fapl_id = H5Pget_elink_fapl(new_lapl_id)) < 0)
         TEST_ERROR;
-    if (H5Pget_driver(l_fapl_id) != H5FD_CORE)
+    if (H5Pget_driver_cls_value(l_fapl_id) != H5_VFD_CORE)
         TEST_ERROR;
 
     /* get the fapl set in new_lapl_id */
@@ -10265,7 +10265,8 @@ static int
 external_set_elink_cb(hid_t fapl, bool new_format)
 {
     hid_t file1 = H5I_INVALID_HID, file2 = H5I_INVALID_HID, group = H5I_INVALID_HID, gapl = H5I_INVALID_HID,
-          fam_fapl = H5I_INVALID_HID, ret_fapl = H5I_INVALID_HID, base_driver;
+          fam_fapl = H5I_INVALID_HID, ret_fapl = H5I_INVALID_HID;
+    H5FD_class_value_t base_driver_cls_value;
     set_elink_cb_t       op_data, *op_data_p;
     H5L_elink_traverse_t cb;
     char                 filename1[NAME_BUF_SIZE], filename2[NAME_BUF_SIZE];
@@ -10285,7 +10286,7 @@ external_set_elink_cb(hid_t fapl, bool new_format)
     if (h5_using_parallel_driver(fapl, &driver_is_parallel) < 0)
         TEST_ERROR;
 
-    if ((base_driver = H5Pget_driver(fapl)) < 0)
+    if ((base_driver_cls_value = H5Pget_driver_cls_value(fapl)) < 0)
         TEST_ERROR;
 
     /* Core file driver has issues when used as the member file driver for a family file */
@@ -10293,8 +10294,8 @@ external_set_elink_cb(hid_t fapl, bool new_format)
     /* Also disable parallel member drivers, because H5F_HAS_FEATURE(H5FD_FEAT_HAS_MPI)
        would report false, causing problems */
     op_data.base_fapl = fapl;
-    if (base_driver == H5FD_CORE || base_driver == H5FD_FAMILY || base_driver == H5FD_MULTI ||
-        base_driver == H5FD_DIRECT || driver_is_parallel)
+    if (base_driver_cls_value == H5_VFD_CORE || base_driver_cls_value == H5_VFD_FAMILY || base_driver_cls_value == H5_VFD_MULTI ||
+        base_driver_cls_value == H5_VFD_DIRECT || driver_is_parallel)
         op_data.base_fapl = H5P_DEFAULT;
     op_data.fam_size = ELINK_CB_FAM_SIZE;
     op_data.code     = 0;
@@ -10358,7 +10359,7 @@ external_set_elink_cb(hid_t fapl, bool new_format)
         TEST_ERROR;
     if ((ret_fapl = H5Fget_access_plist(file2)) < 0)
         TEST_ERROR;
-    if (H5FD_FAMILY != H5Pget_driver(ret_fapl))
+    if (H5_VFD_FAMILY != H5Pget_driver_cls_value(ret_fapl))
         TEST_ERROR;
 
     if (H5Gclose(group) < 0)

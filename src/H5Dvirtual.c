@@ -2725,7 +2725,7 @@ H5D__virtual_read(H5D_io_info_t H5_ATTR_NDEBUG_UNUSED *io_info, H5D_dset_io_info
 
 #ifdef H5_HAVE_PARALLEL
     /* Parallel reads are not supported (yet) */
-    if (H5F_HAS_FEATURE(dset_info->dset->oloc.file, H5FD_FEAT_HAS_MPI))
+    if (H5F_has_feature(dset_info->dset->oloc.file, H5FD_FEAT_HAS_MPI))
         HGOTO_ERROR(H5E_DATASET, H5E_UNSUPPORTED, FAIL, "parallel reads not supported on virtual datasets");
 #endif /* H5_HAVE_PARALLEL */
 
@@ -2921,7 +2921,7 @@ H5D__virtual_write(H5D_io_info_t H5_ATTR_NDEBUG_UNUSED *io_info, H5D_dset_io_inf
 
 #ifdef H5_HAVE_PARALLEL
     /* Parallel writes are not supported (yet) */
-    if (H5F_HAS_FEATURE(dset_info->dset->oloc.file, H5FD_FEAT_HAS_MPI))
+    if (H5F_has_feature(dset_info->dset->oloc.file, H5FD_FEAT_HAS_MPI))
         HGOTO_ERROR(H5E_DATASET, H5E_UNSUPPORTED, FAIL, "parallel writes not supported on virtual datasets");
 #endif /* H5_HAVE_PARALLEL */
 

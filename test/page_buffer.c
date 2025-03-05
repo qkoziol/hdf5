@@ -690,7 +690,7 @@ test_raw_data_handling(hid_t orig_fapl, const char *driver_name)
 
     /* read elements 0 - 800 using the VFD.. this should result in -1s
        except for the writes that went through the PB (100-300 & 600-800) */
-    if (H5FD_read(f->shared->lf, H5FD_MEM_DRAW, addr, sizeof(int) * 800, data) < 0)
+    if (H5FD_read(f->shared->fh, H5FD_MEM_DRAW, addr, sizeof(int) * 800, data) < 0)
         FAIL_STACK_ERROR;
     i = 0;
     while (i < 800) {

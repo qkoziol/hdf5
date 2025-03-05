@@ -24,8 +24,10 @@
 #include "H5FDpublic.h" /* File drivers             */
 #include "H5FDsec2.h"   /* sec2 driver              */
 
-/** ID for the windows VFD */
+/** Alias the windows VFD values to the sec2 VFD values */
 #define H5FD_WINDOWS (H5OPEN H5FD_SEC2_id_g)
+#define H5FD_WINDOWS_DRIVER (H5OPEN H5FD_SEC2_driver_g)
+#define H5_VFD_WINDOWS H5_VFD_SEC2
 
 #ifdef __cplusplus
 extern "C" {

@@ -7828,6 +7828,9 @@ test_incr_filesize(void)
     ret = H5FDdriver_query(driver_id, &driver_flags);
     CHECK(ret, FAIL, "H5PDdriver_query");
 
+    ret = H5Idec_ref(driver_id);
+    CHECK(ret, FAIL, "H5Idec_ref");
+
     /* Check whether the VFD feature flag supports these two public routines */
     if (driver_flags & H5FD_FEAT_SUPPORTS_SWMR_IO) {
 
@@ -8351,6 +8354,7 @@ test_file(void H5_ATTR_UNUSED *params)
     const char *driver_name;               /* File Driver value from environment */
     hid_t       fapl_id = H5I_INVALID_HID; /* VFD-dependent fapl ID */
     bool        driver_is_default_compatible;
+    bool        driver_uses_mult_files;
     herr_t      ret;
 
     /* Output message about test being performed */
@@ -8365,6 +8369,7 @@ test_file(void H5_ATTR_UNUSED *params)
 
     ret = h5_driver_is_default_vfd_compatible(fapl_id, &driver_is_default_compatible);
     CHECK(ret, FAIL, "h5_driver_is_default_vfd_compatible");
+    driver_uses_mult_files = h5_driver_uses_multiple_files(NULL, 0);
 
     test_file_create();                   /* Test file creation(also creation templates)*/
     test_file_open(driver_name);          /* Test file opening */
@@ -8385,26 +8390,21 @@ test_file(void H5_ATTR_UNUSED *params)
     test_file_double_datatype_open();     /* Test opening same named datatype from two files works properly */
     test_file_double_file_dataset_open(true);
     test_file_double_file_dataset_open(false);
-    test_userblock_file_size(
-        driver_name);        /* Tests that files created with a userblock have the correct size */
+    test_userblock_file_size(driver_name);        /* Tests that files created with a userblock have the correct size */
     test_cached_stab_info(); /* Tests that files are created with cached stab info in the superblock */
 
-    if (driver_is_default_compatible) {
+    if (driver_is_default_compatible)
         test_rw_noupdate(); /* Test to ensure that RW permissions don't write the file unless dirtied */
-    }
 
-    test_userblock_alignment(
-        driver_name); /* Tests that files created with a userblock and alignment interact properly */
-    test_userblock_alignment_paged(driver_name); /* Tests files created with a userblock and alignment (via
-                                                    paged aggregation) interact properly */
+    test_userblock_alignment(driver_name); /* Tests that files created with a userblock and alignment interact properly */
+    test_userblock_alignment_paged(driver_name); /* Tests files created with a userblock and alignment (via paged aggregation) interact properly */
     test_filespace_info(driver_name);            /* Test file creation public routines: */
     /* H5Pget/set_file_space_strategy() & H5Pget/set_file_space_page_size() */
     /* Skipped testing for multi/split drivers */
     test_file_freespace(driver_name); /* Test file public routine H5Fget_freespace() */
                                       /* Skipped testing for multi/split drivers */
                                       /* Setup for multi/split drivers are there already */
-    test_sects_freespace(driver_name,
-                         true); /* Test file public routine H5Fget_free_sections() for new format */
+    test_sects_freespace(driver_name, true); /* Test file public routine H5Fget_free_sections() for new format */
                                 /* Skipped testing for multi/split drivers */
                                 /* Setup for multi/split drivers are there already */
     test_sects_freespace(driver_name, false); /* Test file public routine H5Fget_free_sections() */
@@ -8412,11 +8412,8 @@ test_file(void H5_ATTR_UNUSED *params)
 
     if (driver_is_default_compatible) {
         test_filespace_compatible(); /* Test compatibility for file space management */
-
-        test_filespace_round_compatible();  /* Testing file space compatibility for files from trunk to 1_8 to
-                                               trunk */
-        test_filespace_1_10_0_compatible(); /* Testing file space compatibility for files from release 1.10.0
-                                             */
+        test_filespace_round_compatible();  /* Testing file space compatibility for files from trunk to 1_8 to trunk */
+        test_filespace_1_10_0_compatible(); /* Testing file space compatibility for files from release 1.10.0 */
     }
 
     test_libver_bounds(); /* Test compatibility for file space management */
@@ -8425,7 +8422,8 @@ test_file(void H5_ATTR_UNUSED *params)
     test_libver_macros2();  /* Test the macros for library version comparison */
     test_incr_filesize();   /* Test H5Fincrement_filesize() and H5Fget_eoa() */
     test_min_dset_ohdr();   /* Test dataset object header minimization */
-    test_unseekable_file(); /* Test attempting to open/create an unseekable file */
+    if (!driver_uses_mult_files)
+        test_unseekable_file(); /* Test attempting to open/create an unseekable file */
 #ifndef H5_NO_DEPRECATED_SYMBOLS
     test_file_ishdf5(driver_name); /* Test detecting HDF5 files correctly */
     test_deprec(driver_name);      /* Test deprecated routines */

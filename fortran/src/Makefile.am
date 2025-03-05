@@ -42,7 +42,8 @@ endif
 # Source files for the library.
 libhdf5_fortran_la_SOURCES=H5fortran_types.F90 H5f90global.F90 \
 	  H5_ff.F90 H5Aff.F90 H5Dff.F90 H5Eff.F90 H5ESff.F90    \
-          H5Fff.F90 H5Gff.F90 H5Iff.F90 H5Lff.F90 H5Off.F90 H5Pff.F90 H5Rff.F90 H5Sff.F90    \
+          H5Fff.F90 H5FDff.90 H5Gff.F90 H5Iff.F90 H5Lff.F90 H5Off.F90 \
+          H5Pff.F90 H5Rff.F90 H5Sff.F90    \
           H5Tff.F90 H5VLff.F90 H5Zff.F90 H5_gen.F90 H5fortkit.F90 \
           H5f90kit.c H5_f.c H5Af.c H5Df.c H5Ef.c H5Ff.c H5Gf.c           \
           H5If.c H5Lf.c H5Of.c H5Pf.c H5Rf.c H5Sf.c H5Tf.c H5Zf.c HDF5.F90
@@ -150,6 +151,7 @@ H5Dff.lo:            $(srcdir)/H5Dff.F90 H5f90global.lo H5_ff.lo H5Sff.lo
 H5Eff.lo:            $(srcdir)/H5Eff.F90 H5f90global.lo H5fortkit.lo
 H5ESff.lo:           $(srcdir)/H5ESff.F90 H5f90global.lo
 H5Fff.lo:            $(srcdir)/H5Fff.F90 H5f90global.lo
+H5FDff.lo:           $(srcdir)/H5FDff.F90 H5f90global.lo H5fortkit.lo
 H5Gff.lo:            $(srcdir)/H5Gff.F90 H5f90global.lo H5Pff.lo
 H5Iff.lo:            $(srcdir)/H5Iff.F90 H5f90global.lo
 H5Lff.lo:            $(srcdir)/H5Lff.F90 H5f90global.lo

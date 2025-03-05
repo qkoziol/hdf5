@@ -109,15 +109,22 @@ It is also possible to query the file driver information from a file access prop
 calling #H5Pget_driver to determine the driver and then calling a driver-defined query function
 to obtain the driver information:
 \code
-hid_t driver = H5Pget_driver(fapl);
-if (H5FD_SEC2==driver) {
+hid_t driver_id = H5Pget_driver(fapl);
+int cmp;
+
+H5FDcmp_driver_cls(&cmp, driver_id, H5FD_SEC2);
+if (0 == cmp) {
     /*nothing further to get*/
-} else if (H5FD_FAMILY==driver) {
-    hid_t member_fapl;
-    haddr_t member_size;
-    H5Pget_fapl_family(fapl, &member_size, &member_fapl);
-} else if (....) {
-    ....
+} else {
+    H5FDcmp_driver_cls(&cmp, driver_id, H5FD_FAMILY);
+    if (0 == cmp) {
+        hid_t member_fapl;
+        haddr_t member_size;
+
+        H5Pget_fapl_family(fapl, &member_size, &member_fapl);
+    } else if (....) {
+        ....
+    }
 }
 \endcode
 
@@ -148,8 +155,11 @@ H5Dread(dataset, type, mspace, fspace, buffer, dxpl);
 The transfer property list can be queried in a manner similar to the file access property list: the driver
 provides a function (or functions) to return various information about the transfer property list:
 \code
-hid_t driver = H5Pget_driver(dxpl);
-if (H5FD_MPIO==driver) {
+hid_t driver_id = H5Pget_driver(dxpl);
+int cmp;
+
+H5FDcmp_driver_cls(&cmp, driver_id, H5FD_MPIO);
+if (0 == cmp) {
     H5FD_mpio_xfer_t xfer_mode;
     H5Pget_dxpl_mpio(dxpl, &xfer_mode);
 } else {

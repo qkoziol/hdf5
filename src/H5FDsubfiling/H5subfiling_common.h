@@ -17,11 +17,12 @@
 #ifndef H5_SUBFILING_COMMON_H
 #define H5_SUBFILING_COMMON_H
 
-#include "H5private.h"     /* Generic Functions                        */
-#include "H5FDsubfiling.h" /* Subfiling file driver */
-#include "H5FDioc.h"       /* I/O concentrator file driver */
-#include "H5Pprivate.h"    /* Property lists                           */
-#include "H5TSprivate.h"   /* Threads                                  */
+#include "H5private.h"        /* Generic Functions            */
+#include "H5FDioc.h"          /* I/O concentrator file driver */
+#include "H5FDmpio_private.h" /* MPI I/O file driver          */
+#include "H5FDsubfiling.h"    /* Subfiling file driver        */
+#include "H5Pprivate.h"       /* Property lists               */
+#include "H5TSprivate.h"      /* Threads                      */
 
 #ifndef PATH_MAX
 #define PATH_MAX 4096
@@ -274,7 +275,7 @@ extern "C" {
 #endif
 
 H5_DLL herr_t H5FD__subfiling_open_stub_file(const char *name, unsigned flags, MPI_Comm file_comm,
-                                             H5FD_t **file_ptr, uint64_t *file_id);
+                                             H5FD_int_t **file_ptr, uint64_t *file_id);
 H5_DLL herr_t H5FD__subfiling_open_subfiles(const char *base_filename, uint64_t file_id,
                                             H5FD_subfiling_params_t *subfiling_config, int file_acc_flags,
                                             MPI_Comm file_comm, int64_t *context_id_out);

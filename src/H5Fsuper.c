@@ -24,7 +24,7 @@
 #include "H5Eprivate.h"  /* Error handling                       */
 #include "H5Fpkg.h"      /* File access                          */
 #include "H5FDprivate.h" /* File drivers                         */
-#include "H5FLprivate.h" /* Free Lists                               */
+#include "H5FLprivate.h" /* Free Lists                           */
 #include "H5Iprivate.h"  /* IDs                                  */
 #include "H5MFprivate.h" /* File memory management               */
 #include "H5MMprivate.h" /* Memory management                    */
@@ -252,11 +252,11 @@ H5F__update_super_ext_driver_msg(H5F_t *f)
     if (sblock->super_vers >= HDF5_SUPERBLOCK_VERSION_2) {
         if (H5_addr_defined(sblock->ext_addr)) {
             /* Check for ignoring the driver info for this file */
-            if (!H5F_HAS_FEATURE(f, H5FD_FEAT_IGNORE_DRVRINFO)) {
+            if (!H5FD_HAS_FEATURE(f->shared->fh, H5FD_FEAT_IGNORE_DRVRINFO)) {
                 size_t driver_size; /* Size of driver info block (bytes)*/
 
                 /* Check for driver info */
-                H5_CHECKED_ASSIGN(driver_size, size_t, H5FD_sb_size(f->shared->lf), hsize_t);
+                H5_CHECKED_ASSIGN(driver_size, size_t, H5FD_sb_size(f->shared->fh), hsize_t);
 
                 /* Nothing to do unless there is both driver info and
                  * the driver info superblock extension message has
@@ -270,7 +270,7 @@ H5F__update_super_ext_driver_msg(H5F_t *f)
                     assert(driver_size <= H5F_MAX_DRVINFOBLOCK_SIZE);
 
                     /* Encode driver-specific data */
-                    if (H5FD_sb_encode(f->shared->lf, drvinfo.name, dbuf) < 0)
+                    if (H5FD_sb_encode(f->shared->fh, drvinfo.name, dbuf) < 0)
                         HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, FAIL, "unable to encode driver information");
 
                     /* Write the message to the superblock extension.
@@ -285,7 +285,7 @@ H5F__update_super_ext_driver_msg(H5F_t *f)
                         HGOTO_ERROR(H5E_FILE, H5E_WRITEERROR, FAIL,
                                     "unable to update driver info header message");
                 } /* end if driver_size > 0 */
-            }     /* end if !H5F_HAS_FEATURE(f, H5FD_FEAT_IGNORE_DRVRINFO) */
+            }     /* end if !H5FD_HAS_FEATURE(f, H5FD_FEAT_IGNORE_DRVRINFO) */
         }         /* end if superblock extension exists */
     }             /* end if sblock->super_vers >= HDF5_SUPERBLOCK_VERSION_2 */
 
@@ -312,7 +312,7 @@ H5F__super_read(H5F_t *f, H5P_genplist_t *fapl, bool initial_read)
     H5AC_ring_t               orig_ring = H5AC_RING_INV;
     H5F_super_t              *sblock    = NULL; /* Superblock structure */
     H5F_superblock_cache_ud_t udata;            /* User data for cache callbacks */
-    H5FD_t                   *file;             /* File driver pointer */
+    H5FD_int_t                   *fh;             /* File driver pointer */
     unsigned sblock_flags = H5AC__NO_FLAGS_SET; /* flags used in superblock unprotect call      */
     haddr_t  super_addr   = HADDR_UNDEF;        /* Absolute address of superblock */
     haddr_t  eof;                               /* End of file address */
@@ -331,11 +331,11 @@ H5F__super_read(H5F_t *f, H5P_genplist_t *fapl, bool initial_read)
     f->shared->drvinfo = NULL;
 
     /* Set up file driver I/O info */
-    file = f->shared->lf;
+    fh = f->shared->fh;
 
     /* Find the superblock */
 #ifdef H5_HAVE_PARALLEL
-    if (H5F_HAS_FEATURE(f, H5FD_FEAT_HAS_MPI))
+    if (H5FD_HAS_FEATURE(f->shared->fh, H5FD_FEAT_HAS_MPI))
         if ((mpi_size = H5F_mpi_get_size(f)) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't retrieve MPI communicator size");
 
@@ -354,7 +354,7 @@ H5F__super_read(H5F_t *f, H5P_genplist_t *fapl, bool initial_read)
         int      mpi_result;
 
         /* Sanity check */
-        assert(H5F_HAS_FEATURE(f, H5FD_FEAT_HAS_MPI));
+        assert(H5FD_HAS_FEATURE(f->shared->fh, H5FD_FEAT_HAS_MPI));
 
         /* Set up MPI info */
         if ((mpi_rank = H5F_mpi_get_rank(f)) < 0)
@@ -368,7 +368,7 @@ H5F__super_read(H5F_t *f, H5P_genplist_t *fapl, bool initial_read)
             /* (Don't leave before Bcast, to avoid hang on error) */
             H5E_PAUSE_ERRORS
                 {
-                    H5FD_locate_signature(file, &super_addr);
+                    H5FD_locate_signature(fh, &super_addr);
                 }
             H5E_RESUME_ERRORS
         } /* end if */
@@ -381,7 +381,7 @@ H5F__super_read(H5F_t *f, H5P_genplist_t *fapl, bool initial_read)
         /* Locate the signature as per per the serial library */
 #endif /* H5_HAVE_PARALLEL */
 
-        if (H5FD_locate_signature(file, &super_addr) < 0)
+        if (H5FD_locate_signature(fh, &super_addr) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_NOTHDF5, FAIL, "unable to locate file signature");
 
 #ifdef H5_HAVE_PARALLEL
@@ -415,7 +415,7 @@ H5F__super_read(H5F_t *f, H5P_genplist_t *fapl, bool initial_read)
 
     /* Set up the user data for cache callbacks */
     udata.f               = f;
-    udata.ignore_drvrinfo = H5F_HAS_FEATURE(f, H5FD_FEAT_IGNORE_DRVRINFO);
+    udata.ignore_drvrinfo = H5FD_HAS_FEATURE(f->shared->fh, H5FD_FEAT_IGNORE_DRVRINFO);
     udata.sym_leaf_k      = 0;
     if (H5P_get(f->shared->fcpl, H5F_CRT_BTREE_RANK_NAME, udata.btree_k) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to get rank for btree internal nodes");
@@ -565,7 +565,7 @@ H5F__super_read(H5F_t *f, H5P_genplist_t *fapl, bool initial_read)
             skip_eof_check = true;
     }
     if (!skip_eof_check && initial_read) {
-        if (HADDR_UNDEF == (eof = H5FD_get_eof(f->shared->lf, H5FD_MEM_DEFAULT)))
+        if (HADDR_UNDEF == (eof = H5FD_get_eof(f->shared->fh, H5FD_MEM_DEFAULT)))
             HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to determine file size");
 
         /* (Account for the stored EOA being absolute offset -QAK) */
@@ -602,19 +602,17 @@ H5F__super_read(H5F_t *f, H5P_genplist_t *fapl, bool initial_read)
         /* extend EOA so we can read at least the fixed sized
          * portion of the driver info block
          */
-        if (H5FD_set_eoa(f->shared->lf, H5FD_MEM_SUPER, sblock->driver_addr + H5F_DRVINFOBLOCK_HDR_SIZE) <
-            0) /* will extend eoa later if required */
+        if (H5FD_set_eoa(f->shared->fh, H5FD_MEM_SUPER, sblock->driver_addr + H5F_DRVINFOBLOCK_HDR_SIZE) < 0) /* will extend eoa later if required */
             HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, FAIL, "set end of space allocation request failed");
 
         /* Look up the driver info block */
-        if (NULL == (drvinfo = (H5O_drvinfo_t *)H5AC_protect(f, H5AC_DRVRINFO, sblock->driver_addr,
-                                                             &drvrinfo_udata, rw_flags)))
+        if (NULL == (drvinfo = (H5O_drvinfo_t *)H5AC_protect(f, H5AC_DRVRINFO, sblock->driver_addr, &drvrinfo_udata, rw_flags)))
             HGOTO_ERROR(H5E_FILE, H5E_CANTPROTECT, FAIL, "unable to load driver info block");
 
         /* Loading the driver info block is enough to set up the right info */
 
         /* Check if we need to rewrite the driver info block info */
-        if (((rw_flags & H5AC__READ_ONLY_FLAG) == 0) && H5F_HAS_FEATURE(f, H5FD_FEAT_DIRTY_DRVRINFO_LOAD))
+        if (((rw_flags & H5AC__READ_ONLY_FLAG) == 0) && H5FD_HAS_FEATURE(f->shared->fh, H5FD_FEAT_DIRTY_DRVRINFO_LOAD))
             drvinfo_flags |= H5AC__DIRTIED_FLAG;
 
         /* set the pin entry flag so that the driver information block
@@ -677,7 +675,7 @@ H5F__super_read(H5F_t *f, H5P_genplist_t *fapl, bool initial_read)
                     HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "driver info message not present");
 
                 /* Validate and decode driver information */
-                if (H5FD_sb_load(f->shared->lf, drvinfo.name, drvinfo.buf) < 0) {
+                if (H5FD_sb_load(f->shared->fh, drvinfo.name, drvinfo.buf) < 0) {
                     H5O_msg_reset(H5O_DRVINFO_ID, &drvinfo);
                     HGOTO_ERROR(H5E_FILE, H5E_CANTDECODE, FAIL, "unable to decode driver information");
                 } /* end if */
@@ -925,11 +923,11 @@ H5F__super_read(H5F_t *f, H5P_genplist_t *fapl, bool initial_read)
     if (((rw_flags & H5AC__READ_ONLY_FLAG) == 0) && sblock->super_vers >= HDF5_SUPERBLOCK_VERSION_2 &&
         H5_addr_defined(sblock->ext_addr)) {
         /* Check for modifying the driver info when opening the file */
-        if (H5F_HAS_FEATURE(f, H5FD_FEAT_DIRTY_DRVRINFO_LOAD)) {
+        if (H5FD_HAS_FEATURE(f->shared->fh, H5FD_FEAT_DIRTY_DRVRINFO_LOAD)) {
             size_t driver_size; /* Size of driver info block (bytes) */
 
             /* Check for driver info message */
-            H5_CHECKED_ASSIGN(driver_size, size_t, H5FD_sb_size(f->shared->lf), hsize_t);
+            H5_CHECKED_ASSIGN(driver_size, size_t, H5FD_sb_size(f->shared->fh), hsize_t);
             if (driver_size > 0) {
                 H5O_drvinfo_t drvinfo;                         /* Driver info */
                 uint8_t       dbuf[H5F_MAX_DRVINFOBLOCK_SIZE]; /* Driver info block encoding buffer */
@@ -938,7 +936,7 @@ H5F__super_read(H5F_t *f, H5P_genplist_t *fapl, bool initial_read)
                 assert(driver_size <= H5F_MAX_DRVINFOBLOCK_SIZE);
 
                 /* Encode driver-specific data */
-                if (H5FD_sb_encode(f->shared->lf, drvinfo.name, dbuf) < 0)
+                if (H5FD_sb_encode(f->shared->fh, drvinfo.name, dbuf) < 0)
                     HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, FAIL, "unable to encode driver information");
 
                 /* Set the driver info information for the superblock extension */
@@ -968,7 +966,7 @@ H5F__super_read(H5F_t *f, H5P_genplist_t *fapl, bool initial_read)
             } /* end if */
         }     /* end if */
         /* Check for eliminating the driver info block */
-        else if (H5F_HAS_FEATURE(f, H5FD_FEAT_IGNORE_DRVRINFO)) {
+        else if (H5FD_HAS_FEATURE(f->shared->fh, H5FD_FEAT_IGNORE_DRVRINFO)) {
             /* Remove the driver info message from the superblock extension */
             if (H5F__super_ext_remove_msg(f, H5O_DRVINFO_ID) < 0)
                 HGOTO_ERROR(H5E_FILE, H5E_CANTRELEASE, FAIL,
@@ -1155,7 +1153,7 @@ H5F__super_init(H5F_t *f)
             HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "unable to set superblock version");
     } /* end if */
 
-    if (H5FD_set_paged_aggr(f->shared->lf, (bool)H5F_PAGED_AGGR(f)) < 0)
+    if (H5FD_set_paged_aggr(f->shared->fh, (bool)H5F_PAGED_AGGR(f)) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, FAIL, "failed to set paged_aggr status for file driver");
 
     /*
@@ -1201,7 +1199,7 @@ H5F__super_init(H5F_t *f)
     superblock_size = (hsize_t)H5F_SUPERBLOCK_SIZE(sblock);
 
     /* Compute the size of the driver information block */
-    H5_CHECKED_ASSIGN(driver_size, size_t, H5FD_sb_size(f->shared->lf), hsize_t);
+    H5_CHECKED_ASSIGN(driver_size, size_t, H5FD_sb_size(f->shared->fh), hsize_t);
 
     /* The following code sets driver_size to the valued needed
      * for the driver info block, and sets the driver info block
@@ -1335,7 +1333,7 @@ H5F__super_init(H5F_t *f)
 
             /* Encode driver-specific data */
             memset(dbuf, 0, sizeof(dbuf));
-            if (H5FD_sb_encode(f->shared->lf, info.name, dbuf) < 0)
+            if (H5FD_sb_encode(f->shared->fh, info.name, dbuf) < 0)
                 HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, FAIL, "unable to encode driver information");
 
             /* Write driver info information to the superblock extension */
@@ -1392,7 +1390,7 @@ H5F__super_init(H5F_t *f)
              *          will be encoded by the VFD's 'encode' callback, so it
              *          doesn't need to be set here. -QAK, 7/20/2013
              */
-            H5_CHECKED_ASSIGN(drvinfo->len, size_t, H5FD_sb_size(f->shared->lf), hsize_t);
+            H5_CHECKED_ASSIGN(drvinfo->len, size_t, H5FD_sb_size(f->shared->fh), hsize_t);
 
             /* Insert driver info block into cache */
             if (H5AC_insert_entry(f, H5AC_DRVRINFO, sblock->driver_addr, drvinfo,

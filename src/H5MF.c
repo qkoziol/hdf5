@@ -144,7 +144,6 @@ H5MF_init_merge_flags(H5F_shared_t *f_sh)
 
     /* check args */
     assert(f_sh);
-    assert(f_sh->lf);
 
     /* Iterate over all the free space types to determine if sections of that type
      *  can merge with the metadata or small 'raw' data aggregator
@@ -756,7 +755,6 @@ H5MF_alloc(H5F_t *f, H5FD_mem_t alloc_type, hsize_t size)
     /* check arguments */
     assert(f);
     assert(f->shared);
-    assert(f->shared->lf);
     assert(size > 0);
 
     H5MF__alloc_to_fs_type(f->shared, alloc_type, size, &fs_type);
@@ -1009,7 +1007,6 @@ H5MF_alloc_tmp(H5F_t *f, hsize_t size)
     /* check args */
     assert(f);
     assert(f->shared);
-    assert(f->shared->lf);
     assert(size > 0);
 
     /* Retrieve the 'eoa' for the file */
@@ -1424,7 +1421,6 @@ H5MF_try_shrink(H5F_t *f, H5FD_mem_t alloc_type, haddr_t addr, hsize_t size)
     /* check arguments */
     assert(f);
     assert(f->shared);
-    assert(f->shared->lf);
     assert(H5_addr_defined(addr));
     assert(size > 0);
 
@@ -1710,7 +1706,7 @@ H5MF__close_aggrfs(H5F_t *f)
     /* check args */
     assert(f);
     assert(f->shared);
-    assert(f->shared->lf);
+    assert(f->shared->fh);
     assert(f->shared->sblock);
 
     /* Set the ring type in the API context.  In most cases, we will
@@ -1811,7 +1807,7 @@ H5MF__close_aggrfs(H5F_t *f)
             HGOTO_ERROR(H5E_RESOURCE, H5E_CANTSHRINK, FAIL, "can't shrink eoa");
 
         /* get the eoa, and verify that it has the expected value */
-        if (HADDR_UNDEF == (final_eoa = H5FD_get_eoa(f->shared->lf, H5FD_MEM_DEFAULT)))
+        if (HADDR_UNDEF == (final_eoa = H5FD_get_eoa(f->shared->fh, H5FD_MEM_DEFAULT)))
             HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to get file size");
 
         /* f->shared->eoa_post_fsm_fsalloc is undefined if there has
@@ -1874,7 +1870,6 @@ H5MF__close_pagefs(H5F_t *f)
     /* check args */
     assert(f);
     assert(f->shared);
-    assert(f->shared->lf);
     assert(f->shared->sblock);
     assert(f->shared->fs_page_size);
     assert(f->shared->sblock->super_vers >= HDF5_SUPERBLOCK_VERSION_2);
@@ -1966,7 +1961,7 @@ H5MF__close_pagefs(H5F_t *f)
             HGOTO_ERROR(H5E_RESOURCE, H5E_CANTSHRINK, FAIL, "can't shrink eoa");
 
         /* get the eoa, and verify that it has the expected value */
-        if (HADDR_UNDEF == (final_eoa = H5FD_get_eoa(f->shared->lf, H5FD_MEM_DEFAULT)))
+        if (HADDR_UNDEF == (final_eoa = H5FD_get_eoa(f->shared->fh, H5FD_MEM_DEFAULT)))
             HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to get file size");
 
         /* f->shared->eoa_post_fsm_fsalloc is undefined if there has
@@ -2162,7 +2157,6 @@ H5MF_get_freespace(H5F_t *f, hsize_t *tot_space, hsize_t *meta_size)
     /* check args */
     assert(f);
     assert(f->shared);
-    assert(f->shared->lf);
 
     /* Set the ring type in the API context.  In most cases, we will
      * need H5AC_RING_RDFSM, so initially set the ring in
@@ -2296,7 +2290,6 @@ H5MF_get_free_sections(H5F_t *f, H5FD_mem_t type, size_t nsects, H5F_sect_info_t
     /* check args */
     assert(f);
     assert(f->shared);
-    assert(f->shared->lf);
 
     /* H5MF_tidy_self_referential_fsm_hack() will fail if any self
      * referential FSM is opened prior to the call to it.  Thus call
@@ -3048,7 +3041,6 @@ H5MF_settle_meta_data_fsm(H5F_t *f, bool *fsm_settled)
      */
     if (f->shared->fs_persist && !H5F_NULL_FSM_ADDR(f)) {
         /* Sanity check */
-        assert(f->shared->lf);
 
         /* should only be called if file is opened R/W */
         assert(H5F_INTENT(f) & H5F_ACC_RDWR);
@@ -3238,7 +3230,7 @@ H5MF_settle_meta_data_fsm(H5F_t *f, bool *fsm_settled)
          * free space managers.  Assuming no cache image, this should be the
          * final EOA of the file.
          */
-        if (HADDR_UNDEF == (eoa_fsm_fsalloc = H5FD_get_eoa(f->shared->lf, H5FD_MEM_DEFAULT)))
+        if (HADDR_UNDEF == (eoa_fsm_fsalloc = H5FD_get_eoa(f->shared->fh, H5FD_MEM_DEFAULT)))
             HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to get file size");
         f->shared->eoa_fsm_fsalloc = eoa_fsm_fsalloc;
 

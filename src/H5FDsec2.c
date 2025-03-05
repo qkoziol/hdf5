@@ -32,6 +32,7 @@
 
 /* The driver identification number, initialized at runtime */
 hid_t H5FD_SEC2_id_g = H5I_INVALID_HID;
+H5FD_driver_t *H5FD_SEC2_driver_g = NULL;
 
 /* The description of a file belonging to this driver. The 'eoa' and 'eof'
  * determine the amount of hdf5 address space in use and the high-water mark
@@ -176,9 +177,19 @@ H5FD__sec2_register(void)
 
     FUNC_ENTER_PACKAGE
 
-    if (H5I_VFL != H5I_get_type(H5FD_SEC2_id_g))
-        if ((H5FD_SEC2_id_g = H5FD_register(&H5FD_sec2_g, sizeof(H5FD_class_t), false)) < 0)
-            HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "unable to register sec2 driver");
+    /* Register the sec2 driver, if it isn't already */
+    if (NULL == H5FD_SEC2_driver_g)
+        if (NULL == (H5FD_SEC2_driver_g = H5FD__driver_register(&H5FD_sec2_g)))
+            HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "can't register sec2 driver");
+
+    /* Get ID for sec2 driver */
+    if (H5I_VFL != H5I_get_type(H5FD_SEC2_id_g)) {
+        if ((H5FD_SEC2_id_g = H5I_register(H5I_VFL, H5FD_SEC2_driver_g, false)) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "can't create ID for family driver");
+
+        /* ID is holding a reference to the connector */
+        H5FD__driver_inc_rc(H5FD_SEC2_driver_g);
+    }
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -200,6 +211,7 @@ H5FD__sec2_unregister(void)
 
     /* Reset VFL ID */
     H5FD_SEC2_id_g = H5I_INVALID_HID;
+    H5FD_SEC2_driver_g = NULL;
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5FD__sec2_unregister() */
@@ -226,7 +238,7 @@ H5Pset_fapl_sec2(hid_t fapl_id)
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
 
-    ret_value = H5P_set_driver(fapl, H5FD_SEC2, NULL, NULL);
+    ret_value = H5P_set_driver(fapl, H5FD_SEC2_driver_g, NULL, NULL);
 
 done:
     FUNC_LEAVE_API(ret_value)

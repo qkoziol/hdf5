@@ -112,7 +112,7 @@ main(void)
 
     /* We'll be writing lots of garbage data, so extend the
         file a ways. 10MB should do. */
-    if (H5FD_set_eoa(f->shared->lf, H5FD_MEM_DEFAULT, (haddr_t)(1024 * 1024 * 10)) < 0)
+    if (H5FD_set_eoa(f->shared->fh, H5FD_MEM_DEFAULT, (haddr_t)(1024 * 1024 * 10)) < 0)
         FAIL_STACK_ERROR;
 
     /* Reset metadata accumulator for the file */
@@ -2122,7 +2122,7 @@ test_swmr_write_big(bool newest_format)
 
     /* We'll be writing lots of garbage data, so extend the
         file a ways. 10MB should do. */
-    if (H5FD_set_eoa(rf->shared->lf, H5FD_MEM_DEFAULT, (haddr_t)(1024 * 1024 * 10)) < 0)
+    if (H5FD_set_eoa(rf->shared->fh, H5FD_MEM_DEFAULT, (haddr_t)(1024 * 1024 * 10)) < 0)
         FAIL_STACK_ERROR;
 
     if (H5Fflush(fid, H5F_SCOPE_GLOBAL) < 0)

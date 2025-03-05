@@ -21,7 +21,7 @@
 #include "H5private.h"      /* Generic Functions                        */
 #include "H5Eprivate.h"     /* Error handling                           */
 #include "H5FDpkg.h"        /* File drivers                             */
-#include "H5FDonion_priv.h" /* Onion file driver internals              */
+#include "H5FDonion_pkg.h"  /* Onion file driver internals              */
 #include "H5MMprivate.h"    /* Memory management                        */
 
 /* 2^n for uint64_t types -- H5_EXP2 unsafe past 32 bits */
@@ -37,7 +37,7 @@ static herr_t H5FD__onion_revision_index_resize(H5FD_onion_revision_index_t *rix
  *-----------------------------------------------------------------------------
  */
 herr_t
-H5FD__onion_ingest_revision_record(H5FD_onion_revision_record_t *r_out, H5FD_t *raw_file,
+H5FD__onion_ingest_revision_record(H5FD_onion_revision_record_t *r_out, H5FD_int_t *raw_file,
                                    const H5FD_onion_history_t *history, uint64_t revision_num)
 {
     unsigned char *buf       = NULL;

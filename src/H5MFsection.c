@@ -847,7 +847,7 @@ H5MF__sect_large_can_shrink(const H5FS_section_info_t *_sect, void *_udata)
     assert(udata->f);
 
     /* Retrieve the end of the file's address space */
-    if (HADDR_UNDEF == (eoa = H5FD_get_eoa(udata->f->shared->lf, udata->alloc_type)))
+    if (HADDR_UNDEF == (eoa = H5FD_get_eoa(udata->f->shared->fh, udata->alloc_type)))
         HGOTO_ERROR(H5E_RESOURCE, H5E_CANTGET, FAIL, "driver get_eoa request failed");
 
     /* Compute address of end of section to check */

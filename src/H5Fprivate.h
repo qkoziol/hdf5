@@ -54,10 +54,8 @@ typedef struct H5F_t H5F_t;
 #define H5F_PARENT(F)                    ((F)->parent)
 #define H5F_NMOUNTS(F)                   ((F)->nmounts)
 #define H5F_GET_READ_ATTEMPTS(F)         ((F)->shared->read_attempts)
-#define H5F_DRIVER_ID(F)                 ((F)->shared->lf->driver_id)
 #define H5F_GET_FILENO(F, FILENUM)       ((FILENUM) = (F)->shared->lf->fileno)
-#define H5F_SHARED_HAS_FEATURE(F_SH, FL) ((F_SH)->lf->feature_flags & (FL))
-#define H5F_HAS_FEATURE(F, FL)           ((F)->shared->lf->feature_flags & (FL))
+#define H5F_SHARED_HAS_FEATURE(F_SH, FL) (H5FD_HAS_FEATURE((F_SH)->fh, (FL)))
 #define H5F_BASE_ADDR(F)                 ((F)->shared->sblock->base_addr)
 #define H5F_SYM_LEAF_K(F)                ((F)->shared->sblock->sym_leaf_k)
 #define H5F_KVALUE(F, T)                 ((F)->shared->sblock->btree_k[(T)->id])
@@ -117,10 +115,8 @@ typedef struct H5F_t H5F_t;
 #define H5F_PARENT(F)                    (H5F_get_parent(F))
 #define H5F_NMOUNTS(F)                   (H5F_get_nmounts(F))
 #define H5F_GET_READ_ATTEMPTS(F)         (H5F_get_read_attempts(F))
-#define H5F_DRIVER_ID(F)                 (H5F_get_driver_id(F))
 #define H5F_GET_FILENO(F, FILENUM)       (H5F_get_fileno((F), &(FILENUM)))
 #define H5F_SHARED_HAS_FEATURE(F_SH, FL) (H5F_shared_has_feature(F_SH, FL))
-#define H5F_HAS_FEATURE(F, FL)           (H5F_has_feature(F, FL))
 #define H5F_BASE_ADDR(F)                 (H5F_get_base_addr(F))
 #define H5F_SYM_LEAF_K(F)                (H5F_sym_leaf_k(F))
 #define H5F_KVALUE(F, T)                 (H5F_kvalue(F, T))
@@ -564,13 +560,12 @@ H5_DLL bool  H5F_start_mdc_log_on_access(const H5F_t *f);
 H5_DLL char *H5F_mdc_log_location(const H5F_t *f);
 
 /* Functions that retrieve values from VFD layer */
-H5_DLL hid_t   H5F_get_driver_id(const H5F_t *f);
 H5_DLL herr_t  H5F_get_fileno(const H5F_t *f, unsigned long *filenum);
 H5_DLL bool    H5F_shared_has_feature(const H5F_shared_t *f, unsigned feature);
 H5_DLL bool    H5F_has_feature(const H5F_t *f, unsigned feature);
 H5_DLL haddr_t H5F_shared_get_eoa(const H5F_shared_t *f_sh, H5FD_mem_t type);
 H5_DLL haddr_t H5F_get_eoa(const H5F_t *f, H5FD_mem_t type);
-H5_DLL herr_t  H5F_shared_get_file_driver(const H5F_shared_t *f_sh, H5FD_t **file_handle);
+H5_DLL herr_t  H5F_shared_get_file_driver(const H5F_shared_t *f_sh, H5FD_int_t **file_handle);
 H5_DLL herr_t  H5F_get_vfd_handle(const H5F_t *file, H5P_genplist_t *fapl, void **file_handle);
 H5_DLL bool    H5F_has_vector_select_io(const H5F_t *f, bool is_write);
 

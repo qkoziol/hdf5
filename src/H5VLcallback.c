@@ -38,6 +38,10 @@
 #include "H5Tprivate.h"  /* Datatypes                                        */
 #include "H5VLpkg.h"     /* Virtual Object Layer                             */
 
+/* VOL connectors */
+#include "H5VLnative_private.h"   /* Native VOL connector                 */
+#include "H5VLpassthru_private.h" /* Pass-through VOL connector           */
+
 /****************/
 /* Local Macros */
 /****************/
@@ -3854,16 +3858,12 @@ H5VL_file_open(H5VL_connector_t *connector, const char *name, unsigned flags, H5
 
     /* Call the corresponding internal VOL routine */
     if (NULL == (ret_value = H5VL__file_open(connector->cls, name, flags, fapl, dxpl_id, req))) {
-        bool is_default_conn = true;
-
         /* Opening the file failed - Determine whether we should search
          * the plugin path to see if any other VOL connectors are available
          * to attempt to open the file with. This only occurs if the default
          * VOL connector was used for the initial file open attempt.
          */
-        H5VL__is_default_conn(fapl, connector, &is_default_conn);
-
-        if (is_default_conn) {
+        if (connector == H5_DEFAULT_VOL) {
             herr_t iter_ret;
 
             find_connector_ud.filename = name;

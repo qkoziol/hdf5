@@ -38,6 +38,9 @@
 /* stdio VFD's class struct */
 H5_DLLVAR const H5FD_class_t H5FD_stdio_g;
 
+/* The stdio VFD driver */
+H5_DLLVAR H5FD_driver_t *H5FD_STDIO_driver_g;
+
 /******************************/
 /* Library Private Prototypes */
 /******************************/

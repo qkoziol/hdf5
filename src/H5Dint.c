@@ -1293,7 +1293,7 @@ H5D__create(H5F_t *file, hid_t type_id, const H5S_t *space, H5P_genplist_t *dcpl
     } /* end if */
 
     /* Check if the file driver would like to force early space allocation */
-    if (H5F_HAS_FEATURE(file, H5FD_FEAT_ALLOCATE_EARLY))
+    if (H5F_has_feature(file, H5FD_FEAT_ALLOCATE_EARLY))
         new_dset->shared->dcpl_cache.fill.alloc_time = H5D_ALLOC_TIME_EARLY;
 
     /*
@@ -1302,7 +1302,7 @@ H5D__create(H5F_t *file, hid_t type_id, const H5S_t *space, H5P_genplist_t *dcpl
      * so we don't need to force early space allocation. Otherwise, we force early space
      * allocation to facilitate independent raw data operations.
      */
-    if (H5F_HAS_FEATURE(file, H5FD_FEAT_HAS_MPI) && (new_dset->shared->dcpl_cache.pline.nused == 0))
+    if (H5F_has_feature(file, H5FD_FEAT_HAS_MPI) && (new_dset->shared->dcpl_cache.pline.nused == 0))
         new_dset->shared->dcpl_cache.fill.alloc_time = H5D_ALLOC_TIME_EARLY;
 
     /* Set the dataset's I/O operations */
@@ -1843,8 +1843,8 @@ H5D__open_oid(H5D_t *dataset, H5P_genplist_t *dapl)
      */
     must_init_storage = (H5F_INTENT(dataset->oloc.file) & H5F_ACC_RDWR) &&
                         !(*dataset->shared->layout.ops->is_space_alloc)(&dataset->shared->layout.storage);
-    must_init_storage = must_init_storage && (H5F_HAS_FEATURE(dataset->oloc.file, H5FD_FEAT_ALLOCATE_EARLY) ||
-                                              (H5F_HAS_FEATURE(dataset->oloc.file, H5FD_FEAT_HAS_MPI) &&
+    must_init_storage = must_init_storage && (H5F_has_feature(dataset->oloc.file, H5FD_FEAT_ALLOCATE_EARLY) ||
+                                              (H5F_has_feature(dataset->oloc.file, H5FD_FEAT_HAS_MPI) &&
                                                dataset->shared->dcpl_cache.pline.nused == 0));
 
     if (must_init_storage && (H5D__alloc_storage(dataset, H5D_ALLOC_OPEN, false, NULL) < 0))
@@ -3277,7 +3277,7 @@ H5D__flush(H5D_t *dset, hid_t dset_id)
 
     /* Currently, H5Oflush causes H5Fclose to trigger an assertion failure in metadata cache.
      * Leave this situation for the future solution */
-    if (H5F_HAS_FEATURE(dset->oloc.file, H5FD_FEAT_HAS_MPI))
+    if (H5F_has_feature(dset->oloc.file, H5FD_FEAT_HAS_MPI))
         HGOTO_ERROR(H5E_DATASET, H5E_UNSUPPORTED, FAIL, "H5Oflush isn't supported for parallel");
 
     /* Flush any dataset information still cached in memory */

@@ -21,7 +21,7 @@
 #include "H5private.h"      /* Generic Functions                        */
 #include "H5Eprivate.h"     /* Error handling                           */
 #include "H5FDpkg.h"        /* File drivers                             */
-#include "H5FDonion_priv.h" /* Onion file driver internals              */
+#include "H5FDonion_pkg.h"  /* Onion file driver internals              */
 #include "H5MMprivate.h"    /* Memory management                        */
 
 /*-----------------------------------------------------------------------------
@@ -35,7 +35,7 @@
  *-----------------------------------------------------------------------------
  */
 herr_t
-H5FD__onion_ingest_history(H5FD_onion_history_t *history_out, H5FD_t *raw_file, haddr_t addr, haddr_t size)
+H5FD__onion_ingest_history(H5FD_onion_history_t *history_out, H5FD_int_t *raw_file, haddr_t addr, haddr_t size)
 {
     unsigned char *buf       = NULL;
     uint32_t       sum       = 0;
@@ -94,7 +94,7 @@ done:
  *-----------------------------------------------------------------------------
  */
 uint64_t
-H5FD__onion_write_history(H5FD_onion_history_t *history, H5FD_t *file, haddr_t off_start,
+H5FD__onion_write_history(H5FD_onion_history_t *history, H5FD_int_t *file, haddr_t off_start,
                           haddr_t filesize_curr)
 {
     uint32_t       _sum      = 0; /* Required by the API call but unused here */

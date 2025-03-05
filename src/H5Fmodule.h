@@ -704,12 +704,24 @@
  *
  * <em>Identifying a driver</em>
  * \code
- *   hid_t H5Pget_driver (hid_t fapl_id)
+ *   hid_t driver_id; // identifier
+ *   int cmp;
+ *
+ *   // Get the VFD driver from the file access property list
+ *   driver_id = H5Pget_driver(fapl_id);
+ *
+ *   // Compare with the ID for the SEC2 VFD
+ *   H5FDcmp_driver_cls(&cmp, driver_id, H5FD_SEC2);
+ *
+ *   if (0 == cmp) {
+ *       // Driver for file access property list is the SEC2 driver
+ *       ...
+ *   }
  * \endcode
  *
- * #H5Pget_driver returns a constant identifying the low-level driver for the access property list
+ * #H5Pget_driver returns an ID for the low-level driver for the access property list
  * fapl_id. For example, if the file was created with the POSIX (aka SEC2) driver,
- * #H5Pget_driver returns #H5FD_SEC2.
+ * #H5Pget_driver returns an ID that with compare equal with #H5FD_SEC2 when passed to #H5FDcmp_driver_cls.
  *
  * If the application opens an HDF5 file without both determining the driver used to create the file
  * and setting up the use of that driver, the HDF5 Library will examine the superblock and the

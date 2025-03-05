@@ -49,6 +49,7 @@ SUBROUTINE multiple_dset_write(length, do_collective, do_chunk, mpi_size, mpi_ra
   CHARACTER(len=80) :: filename                     ! filename
   CHARACTER(len=80) :: dsetname                     ! dataset name
   INTEGER        :: n, i
+  LOGICAL        :: are_same = .FALSE.
 
   !//////////////////////////////////////////////////////////
   ! initialize the array data between the processes (3)
@@ -94,10 +95,9 @@ SUBROUTINE multiple_dset_write(length, do_collective, do_chunk, mpi_size, mpi_ra
   CALL h5pget_driver_f(fapl_id, driver_id, hdferror)
   CALL check("h5pget_driver_f", hdferror, nerrors)
 
-  IF( driver_id /= H5FD_MPIO_F) THEN
-     WRITE(*,*) "Wrong driver information returned"
-     nerrors = nerrors + 1
-  ENDIF
+  CALL H5FDcmp_driver_cls_f(are_same, driver_id, H5FD_MPIO_F, hdferror)
+  CALL check("H5FDcmp_driver_cls_f", hdferror, nerrors)
+  CALL VERIFY("H5FDcmp_driver_cls_f", are_same, .TRUE., nerrors)
 
   !//////////////////////////////////////////////////////////
   ! create the file collectively

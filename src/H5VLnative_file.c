@@ -25,7 +25,7 @@
 /* Headers */
 /***********/
 #include "H5private.h"   /* Generic Functions                        */
-#include "H5ACprivate.h" /* Metadata cache                           */
+#include "H5ACprivate.h" /* Metad527ata cache                           */
 #include "H5Cprivate.h"  /* Cache                                    */
 #include "H5Eprivate.h"  /* Error handling                           */
 #include "H5Fpkg.h"      /* Files                                    */
@@ -423,7 +423,7 @@ H5VL__native_file_optional(void *obj, H5VL_optional_args_t *args, hid_t H5_ATTR_
             /* Get the actual file size & base address */
             if (H5F__get_max_eof_eoa(f, &max_eof_eoa) < 0)
                 HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "file can't get max eof/eoa ");
-            base_addr = H5FD_get_base_addr(f->shared->lf);
+            base_addr = H5FD_get_base_addr(f->shared->fh);
 
             /* Convert relative base address for file to absolute address */
             *opt_args->get_size.size = (hsize_t)(max_eof_eoa + base_addr);
@@ -655,7 +655,7 @@ H5VL__native_file_optional(void *obj, H5VL_optional_args_t *args, hid_t H5_ATTR_
 
             /* This routine will work only for drivers with this feature enabled.*/
             /* We might introduce a new feature flag in the future */
-            if (!H5F_HAS_FEATURE(f, H5FD_FEAT_SUPPORTS_SWMR_IO))
+            if (!H5F_has_feature(f, H5FD_FEAT_SUPPORTS_SWMR_IO))
                 HGOTO_ERROR(H5E_FILE, H5E_BADVALUE, FAIL,
                             "must use a SWMR-compatible VFD for this public routine");
 
@@ -676,7 +676,7 @@ H5VL__native_file_optional(void *obj, H5VL_optional_args_t *args, hid_t H5_ATTR_
 
             /* This public routine will work only for drivers with this feature enabled.*/
             /* We might introduce a new feature flag in the future */
-            if (!H5F_HAS_FEATURE(f, H5FD_FEAT_SUPPORTS_SWMR_IO))
+            if (!H5F_has_feature(f, H5FD_FEAT_SUPPORTS_SWMR_IO))
                 HGOTO_ERROR(H5E_FILE, H5E_BADVALUE, FAIL,
                             "must use a SWMR-compatible VFD for this public routine");
 

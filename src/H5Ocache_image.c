@@ -273,12 +273,12 @@ H5O__mdci_delete(H5F_t *f, H5O_t H5_ATTR_UNUSED *open_oh, void *_mesg)
          */
         if (f->shared->closing) {
             /* Get the eoa, and verify that it has the expected value */
-            if (HADDR_UNDEF == (final_eoa = H5FD_get_eoa(f->shared->lf, H5FD_MEM_DEFAULT)))
+            if (HADDR_UNDEF == (final_eoa = H5FD_get_eoa(f->shared->fh, H5FD_MEM_DEFAULT)))
                 HGOTO_ERROR(H5E_CACHE, H5E_CANTGET, FAIL, "unable to get file size");
 
             assert(H5_addr_eq(final_eoa, mesg->addr + mesg->size));
 
-            if (H5FD_free(f->shared->lf, H5FD_MEM_SUPER, f, mesg->addr, mesg->size) < 0)
+            if (H5FD_free(f->shared->fh, H5FD_MEM_SUPER, f, mesg->addr, mesg->size) < 0)
                 HGOTO_ERROR(H5E_CACHE, H5E_CANTFREE, FAIL, "can't free MDC image");
         }
         else if (H5MF_xfree(f, H5FD_MEM_SUPER, mesg->addr, mesg->size) < 0)

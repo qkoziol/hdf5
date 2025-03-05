@@ -1020,7 +1020,7 @@ H5C__load_entry(H5F_t *f,
 #endif /* H5C_DO_MEMORY_SANITY_CHECKS */
 
 #ifdef H5_HAVE_PARALLEL
-    if (H5F_HAS_FEATURE(f, H5FD_FEAT_HAS_MPI)) {
+    if (H5F_has_feature(f, H5FD_FEAT_HAS_MPI)) {
         if ((mpi_rank = H5F_mpi_get_rank(f)) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTGET, NULL, "Can't get MPI rank");
         if ((comm = H5F_mpi_get_comm(f)) == MPI_COMM_NULL)
@@ -2303,7 +2303,7 @@ H5C_insert_entry(H5F_t *f, const H5C_class_t *type, haddr_t addr, void *thing, u
     H5C__UPDATE_STATS_FOR_INSERTION(cache_ptr, entry_ptr);
 
 #ifdef H5_HAVE_PARALLEL
-    if (H5F_HAS_FEATURE(f, H5FD_FEAT_HAS_MPI))
+    if (H5F_has_feature(f, H5FD_FEAT_HAS_MPI))
         coll_access = H5F_get_coll_metadata_reads(f);
 
     entry_ptr->coll_access = coll_access;
@@ -2992,7 +2992,7 @@ H5C_protect(H5F_t *f, const H5C_class_t *type, haddr_t addr, void *udata, unsign
     ring = H5CX_get_ring();
 
 #ifdef H5_HAVE_PARALLEL
-    if (H5F_HAS_FEATURE(f, H5FD_FEAT_HAS_MPI))
+    if (H5F_has_feature(f, H5FD_FEAT_HAS_MPI))
         coll_access = H5F_get_coll_metadata_reads(f);
 #endif /* H5_HAVE_PARALLEL */
 
@@ -3109,7 +3109,7 @@ H5C_protect(H5F_t *f, const H5C_class_t *type, haddr_t addr, void *udata, unsign
 
         entry_ptr->ring = ring;
 #ifdef H5_HAVE_PARALLEL
-        if (H5F_HAS_FEATURE(f, H5FD_FEAT_HAS_MPI) && entry_ptr->coll_access)
+        if (H5F_has_feature(f, H5FD_FEAT_HAS_MPI) && entry_ptr->coll_access)
             H5C__INSERT_IN_COLL_LIST(cache_ptr, entry_ptr, NULL);
 #endif /* H5_HAVE_PARALLEL */
 
