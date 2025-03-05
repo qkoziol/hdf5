@@ -177,8 +177,7 @@
          * considered as an API change                                                                       \
          */                                                                                                  \
         HGOTO_ERROR(majorcode, minorcode, retcode,                                                           \
-                    "%s, errno = %d, error message = '%s', Win32 GetLastError() = %" PRIu32 "", str,         \
-                    myerrno, strerror(myerrno), win_error);                                                  \
+                    "%s, errno = %d, error message = '%s', Win32 GetLastError() = %lu", str, myerrno, strerror(myerrno), (unsigned long)win_error);                                                  \
     }
 #endif /* H5_HAVE_WIN32_API */
 
