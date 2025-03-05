@@ -38,7 +38,7 @@
 int
 H5FD_mpi_get_rank(H5FD_int_t *fh)
 {
-    H5FD_t *file;
+    H5FD_t             *file;
     const H5FD_class_t *cls;
     uint64_t            flags     = H5FD_CTL_FAIL_IF_UNKNOWN_FLAG | H5FD_CTL_ROUTE_TO_TERMINAL_VFD_FLAG;
     int                 rank      = -1;
@@ -59,7 +59,7 @@ H5FD_mpi_get_rank(H5FD_int_t *fh)
     file = fh->file;
     assert(file);
 
-   /* Prepare & restore library for user callback */
+    /* Prepare & restore library for user callback */
     H5_BEFORE_USER_CB(-1)
         {
             /* Dispatch to driver */
@@ -90,7 +90,7 @@ done:
 int
 H5FD_mpi_get_size(H5FD_int_t *fh)
 {
-    H5FD_t *file;
+    H5FD_t             *file;
     const H5FD_class_t *cls;
     uint64_t            flags     = H5FD_CTL_FAIL_IF_UNKNOWN_FLAG | H5FD_CTL_ROUTE_TO_TERMINAL_VFD_FLAG;
     int                 size      = 0;
@@ -111,7 +111,7 @@ H5FD_mpi_get_size(H5FD_int_t *fh)
     file = fh->file;
     assert(file);
 
-   /* Prepare & restore library for user callback */
+    /* Prepare & restore library for user callback */
     H5_BEFORE_USER_CB(-1)
         {
             /* Dispatch to driver */
@@ -143,7 +143,7 @@ done:
 MPI_Comm
 H5FD_mpi_get_comm(H5FD_int_t *fh)
 {
-    H5FD_t *file;
+    H5FD_t             *file;
     const H5FD_class_t *cls;
     uint64_t            flags     = H5FD_CTL_FAIL_IF_UNKNOWN_FLAG | H5FD_CTL_ROUTE_TO_TERMINAL_VFD_FLAG;
     MPI_Comm            comm      = MPI_COMM_NULL;
@@ -196,7 +196,7 @@ done:
 MPI_Info
 H5FD_mpi_get_info(H5FD_int_t *fh)
 {
-    H5FD_t *file;
+    H5FD_t             *file;
     const H5FD_class_t *cls;
     uint64_t            flags     = H5FD_CTL_FAIL_IF_UNKNOWN_FLAG | H5FD_CTL_ROUTE_TO_TERMINAL_VFD_FLAG;
     MPI_Info            info      = MPI_INFO_NULL;
@@ -309,7 +309,7 @@ H5FD_mpi_haddr_to_MPIOff(haddr_t addr, MPI_Offset *mpi_off /*out*/)
 herr_t
 H5FD_mpi_get_file_sync_required(H5FD_int_t *fh, bool *file_sync_required)
 {
-    H5FD_t *file;
+    H5FD_t             *file;
     const H5FD_class_t *cls;
     uint64_t            flags                  = H5FD_CTL_ROUTE_TO_TERMINAL_VFD_FLAG;
     void               *file_sync_required_ptr = (void *)(&file_sync_required);
@@ -333,11 +333,12 @@ H5FD_mpi_get_file_sync_required(H5FD_int_t *fh, bool *file_sync_required)
     H5_BEFORE_USER_CB(FAIL)
         {
             /* Dispatch to driver */
-            ret_value = (cls->ctl)(file, H5FD_CTL_GET_MPI_FILE_SYNC_OPCODE, flags, NULL, file_sync_required_ptr);
+            ret_value =
+                (cls->ctl)(file, H5FD_CTL_GET_MPI_FILE_SYNC_OPCODE, flags, NULL, file_sync_required_ptr);
         }
     H5_AFTER_USER_CB(FAIL)
     if (ret_value < 0)
-            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "driver get_mpi_file_sync_required request failed");
+        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "driver get_mpi_file_sync_required request failed");
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)

@@ -35,7 +35,7 @@
  * is defined. This allows applications to still have the H5FD_MPIO
  * "constants" in their source code.
  */
-hid_t H5FD_MPIO_id_g = H5I_INVALID_HID;
+hid_t          H5FD_MPIO_id_g     = H5I_INVALID_HID;
 H5FD_driver_t *H5FD_MPIO_driver_g = NULL;
 
 /* Flag to indicate whether global driver resources & settings have been
@@ -129,7 +129,7 @@ static herr_t H5FD__selection_build_types(bool io_op_write, size_t num_pieces, H
 /* The MPIO file driver information */
 static const H5FD_class_t H5FD_mpio_g = {
     H5FD_CLASS_VERSION,         /* struct version        */
-    H5FD_MPIO_VALUE,                /* value                 */
+    H5FD_MPIO_VALUE,            /* value                 */
     "mpio",                     /* name                  */
     HADDR_MAX,                  /* maxaddr               */
     H5F_CLOSE_SEMI,             /* fc_degree             */
@@ -311,7 +311,7 @@ H5FD__mpio_unregister(void)
     FUNC_ENTER_PACKAGE_NOERR
 
     /* Reset VFL ID */
-    H5FD_MPIO_id_g = H5I_INVALID_HID;
+    H5FD_MPIO_id_g     = H5I_INVALID_HID;
     H5FD_MPIO_driver_g = NULL;
 
     FUNC_LEAVE_NOAPI(SUCCEED)
@@ -3281,7 +3281,7 @@ H5FD__mpio_read_selection(H5FD_t *_file, H5FD_mem_t type, hid_t H5_ATTR_UNUSED d
 
     } /* end if */
     else {
-        H5FD_int_t fh;  /* Temporary internal file handle */
+        H5FD_int_t    fh;     /* Temporary internal file handle */
         H5FD_driver_t driver; /* Temporary VFD driver */
 
 #ifdef H5FDmpio_DEBUG
@@ -3295,11 +3295,12 @@ H5FD__mpio_read_selection(H5FD_t *_file, H5FD_mem_t type, hid_t H5_ATTR_UNUSED d
                 offsets[i] -= _file->base_addr;
             }
         }
-        
+
         /* Construct temporary internal file handle */
         H5FD__construct_tmp_fh(_file, &fh, &driver);
 
-        if (H5FD__read_from_selection(&fh, type, (uint32_t)count, mem_space_ids, file_space_ids, offsets, element_sizes, bufs) < 0)
+        if (H5FD__read_from_selection(&fh, type, (uint32_t)count, mem_space_ids, file_space_ids, offsets,
+                                      element_sizes, bufs) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_READERROR, FAIL, "read vector from selection failed");
     }
 
@@ -3601,8 +3602,8 @@ H5FD__mpio_write_selection(H5FD_t *_file, H5FD_mem_t type, hid_t H5_ATTR_UNUSED 
         if (bytes_written && (((haddr_t)bytes_written + (haddr_t)save_mpi_off) > file->local_eof))
             file->local_eof = (haddr_t)save_mpi_off + (haddr_t)bytes_written;
     }
-    else { /* Not H5FD_MPIO_COLLECTIVE */
-        H5FD_int_t fh;  /* Temporary internal file handle */
+    else {                    /* Not H5FD_MPIO_COLLECTIVE */
+        H5FD_int_t    fh;     /* Temporary internal file handle */
         H5FD_driver_t driver; /* Temporary VFD driver */
 
 #ifdef H5FDmpio_DEBUG
@@ -3619,7 +3620,8 @@ H5FD__mpio_write_selection(H5FD_t *_file, H5FD_mem_t type, hid_t H5_ATTR_UNUSED 
         /* Construct temporary internal file handle */
         H5FD__construct_tmp_fh(_file, &fh, &driver);
 
-        if (H5FD__write_from_selection(&fh, type, (uint32_t)count, mem_space_ids, file_space_ids, offsets, element_sizes, bufs) < 0)
+        if (H5FD__write_from_selection(&fh, type, (uint32_t)count, mem_space_ids, file_space_ids, offsets,
+                                       element_sizes, bufs) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_WRITEERROR, FAIL, "write vector from selection failed");
     }
 

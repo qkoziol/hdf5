@@ -24,7 +24,7 @@
 /****************/
 
 #include "H5Pmodule.h" /* This source code file is part of the H5P module */
-#define H5FD_FRIEND /* Suppress error about including H5FDpkg   */
+#define H5FD_FRIEND    /* Suppress error about including H5FDpkg   */
 
 /***********/
 /* Headers */
@@ -41,7 +41,7 @@
 #include "H5VMprivate.h" /* Vector Functions                         */
 
 /* Includes needed to set default VFD driver & VOL connector */
-#include "H5FDsec2_private.h" /* sec2 VFD driver */
+#include "H5FDsec2_private.h"   /* sec2 VFD driver */
 #include "H5VLnative_private.h" /* Native VOL connector                     */
 
 /****************/
@@ -105,7 +105,10 @@
 #define H5F_ACS_GARBG_COLCT_REF_DEC  H5P__decode_unsigned
 /* Definition for file driver ID & info */
 #define H5F_ACS_FILE_DRV_SIZE sizeof(H5FD_driver_prop_t)
-#define H5F_ACS_FILE_DRV_DEF {NULL, NULL, NULL}
+#define H5F_ACS_FILE_DRV_DEF                                                                                 \
+    {                                                                                                        \
+        NULL, NULL, NULL                                                                                     \
+    }
 #define H5F_ACS_FILE_DRV_CRT   H5P__facc_file_driver_create
 #define H5F_ACS_FILE_DRV_SET   H5P__facc_file_driver_set
 #define H5F_ACS_FILE_DRV_GET   H5P__facc_file_driver_get
@@ -270,7 +273,7 @@
 #define H5F_ACS_VOL_CONN_SIZE sizeof(H5VL_connector_prop_t)
 #define H5F_ACS_VOL_CONN_DEF                                                                                 \
     {                                                                                                        \
-        NULL, NULL                                                                                 \
+        NULL, NULL                                                                                           \
     }
 #define H5F_ACS_VOL_CONN_CRT   H5P__facc_vol_create
 #define H5F_ACS_VOL_CONN_SET   H5P__facc_vol_set
@@ -395,7 +398,8 @@ static herr_t H5P__facc_mpi_info_close(const char *name, size_t size, void *valu
 #endif /* H5_HAVE_PARALLEL */
 
 /* VFD driver routines */
-static herr_t H5P__set_driver_by_name(H5P_genplist_t *plist, const char *driver_name, const char *driver_config);
+static herr_t H5P__set_driver_by_name(H5P_genplist_t *plist, const char *driver_name,
+                                      const char *driver_config);
 
 /*********************/
 /* Package Variables */
@@ -960,7 +964,7 @@ done:
 herr_t
 H5P_reset_vfd_class(const H5P_genclass_t *pclass, const H5FD_driver_prop_t *driver_prop)
 {
-    herr_t                ret_value = SUCCEED; /* Return value */
+    herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
@@ -992,7 +996,7 @@ herr_t
 H5Pset_driver(hid_t fapl_id, hid_t new_driver_id, const void *new_driver_info)
 {
     H5P_genplist_t *fapl;                /* Property list pointer */
-    H5FD_driver_t *driver;               /* Driver for ID */
+    H5FD_driver_t  *driver;              /* Driver for ID */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1031,9 +1035,9 @@ done:
 static herr_t
 H5P__set_driver_by_name(H5P_genplist_t *fapl, const char *driver_name, const char *driver_config)
 {
-    H5FD_driver_t *driver = NULL;
-    htri_t             driver_is_registered = false;
-    herr_t ret_value     = SUCCEED;
+    H5FD_driver_t *driver               = NULL;
+    htri_t         driver_is_registered = false;
+    herr_t         ret_value            = SUCCEED;
 
     FUNC_ENTER_PACKAGE
 
@@ -1050,7 +1054,7 @@ H5P__set_driver_by_name(H5P_genplist_t *fapl, const char *driver_name, const cha
         /* Register the driver */
         if (NULL == (driver = H5FD__register_driver_by_name(driver_name)))
             HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, FAIL, "unable to register VFD");
-    }     /* end else */
+    } /* end else */
 
     /* Set the driver */
     if (H5P_set_driver(fapl, driver, NULL, driver_config) < 0)
@@ -1124,9 +1128,9 @@ done:
 herr_t
 H5P_set_driver_by_value(H5P_genplist_t *fapl, H5FD_class_value_t driver_value, const char *driver_config)
 {
-    H5FD_driver_t *driver = NULL;
-    htri_t             driver_is_registered = false;
-    herr_t ret_value     = SUCCEED;
+    H5FD_driver_t *driver               = NULL;
+    htri_t         driver_is_registered = false;
+    herr_t         ret_value            = SUCCEED;
 
     FUNC_ENTER_NOAPI(FAIL)
 
@@ -1143,7 +1147,7 @@ H5P_set_driver_by_value(H5P_genplist_t *fapl, H5FD_class_value_t driver_value, c
         /* Register the driver */
         if (NULL == (driver = H5FD__register_driver_by_value(driver_value)))
             HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, FAIL, "unable to register VFD");
-    }     /* end else */
+    } /* end else */
 
     /* Set the driver */
     if (H5P_set_driver(fapl, driver, NULL, driver_config) < 0)
@@ -1281,9 +1285,9 @@ done:
 hid_t
 H5Pget_driver(hid_t fapl_id)
 {
-    H5P_genplist_t *fapl;      /* Property list pointer */
+    H5P_genplist_t    *fapl;        /* Property list pointer */
     H5FD_driver_prop_t driver_prop; /* Property for VOL connector ID & info */
-    hid_t           ret_value; /* Return value */
+    hid_t              ret_value;   /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
@@ -1489,9 +1493,9 @@ done:
 H5FD_class_value_t
 H5Pget_driver_cls_value(hid_t fapl_id)
 {
-    H5P_genplist_t *fapl;      /* Property list pointer */
+    H5P_genplist_t    *fapl;        /* Property list pointer */
     H5FD_driver_prop_t driver_prop; /* Property for VOL connector ID & info */
-    H5FD_class_value_t           ret_value; /* Return value */
+    H5FD_class_value_t ret_value;   /* Return value */
 
     FUNC_ENTER_API(H5_VFD_INVALID)
 
@@ -1544,7 +1548,7 @@ H5P__file_driver_copy(void *value)
 
             /* Copy driver info, if it exists */
             if (driver_prop->driver_info) {
-                void         *new_pl; /* Copy of driver info */
+                void *new_pl; /* Copy of driver info */
 
                 /* Allow the driver to copy or do it ourselves */
                 if (driver_prop->driver->cls->fapl_copy) {
@@ -1562,7 +1566,6 @@ H5P__file_driver_copy(void *value)
                 /* Set the driver info for the copy */
                 driver_prop->driver_info = new_pl;
             } /* end if */
-
 
             /* Copy driver configuration string, if it exists */
             if (driver_prop->driver_config_str) {
@@ -1728,7 +1731,8 @@ done:
 static int
 H5P__facc_file_driver_cmp(const void *_prop1, const void *_prop2, size_t H5_ATTR_UNUSED size)
 {
-    const H5FD_driver_prop_t *prop1 = (const H5FD_driver_prop_t *)_prop1, /* Create local aliases for values */
+    const H5FD_driver_prop_t *prop1 =
+                                 (const H5FD_driver_prop_t *)_prop1, /* Create local aliases for values */
         *prop2 = (const H5FD_driver_prop_t *)_prop2;
     herr_t H5_ATTR_NDEBUG_UNUSED status;        /* Status from info comparison */
     int                          ret_value = 0; /* Return value */
@@ -5575,7 +5579,7 @@ done:
 herr_t
 H5P_reset_vol_class(const H5P_genclass_t *pclass, const H5VL_connector_prop_t *vol_prop)
 {
-    herr_t                ret_value = SUCCEED; /* Return value */
+    herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 

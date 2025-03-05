@@ -539,7 +539,9 @@ H5FD__subfiling_open_stub_file(const char *name, unsigned flags, MPI_Comm file_c
         /* Retrieve Inode value for stub file */
         memset(&st, 0, sizeof(h5_stat_t));
         if (HDstat(name, &st) < 0)
-            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "couldn't stat HDF5 stub file, errno = %d, error message = '%s'", errno, strerror(errno));
+            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL,
+                        "couldn't stat HDF5 stub file, errno = %d, error message = '%s'", errno,
+                        strerror(errno));
         stub_file_id = (uint64_t)st.st_ino;
     }
 

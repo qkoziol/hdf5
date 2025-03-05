@@ -148,7 +148,7 @@ done:
 haddr_t
 H5FD__alloc_real(H5FD_int_t *fh, H5FD_mem_t type, hsize_t size, haddr_t *frag_addr, hsize_t *frag_size)
 {
-    H5FD_t *file;
+    H5FD_t       *file;
     hsize_t       orig_size = size;        /* Original allocation size */
     haddr_t       eoa;                     /* Address of end-of-allocated space */
     hsize_t       extra;                   /* Extra space to allocate, to align request */
@@ -220,7 +220,8 @@ H5FD__alloc_real(H5FD_int_t *fh, H5FD_mem_t type, hsize_t size, haddr_t *frag_ad
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(HADDR_UNDEF)
             {
-                ret_value = (fh->driver->cls->alloc)(file, type, H5CX_get_dxpl(), use_alloc_size ? size : size + extra);
+                ret_value = (fh->driver->cls->alloc)(file, type, H5CX_get_dxpl(),
+                                                     use_alloc_size ? size : size + extra);
             }
         H5_AFTER_USER_CB(HADDR_UNDEF)
         if (!H5_addr_defined(ret_value))
@@ -304,7 +305,7 @@ herr_t
 H5FD__free_real(H5FD_int_t *fh, H5FD_mem_t type, haddr_t addr, hsize_t size)
 {
     H5FD_t *file;
-    herr_t ret_value = SUCCEED; /* Return value */
+    herr_t  ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 

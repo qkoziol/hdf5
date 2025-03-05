@@ -653,7 +653,7 @@ H5PB_read(H5F_shared_t *f_sh, H5FD_mem_t type, haddr_t addr, size_t size, void *
 {
     H5PB_t       *page_buf;                        /* Page buffering info for this file */
     H5PB_entry_t *page_entry;                      /* Pointer to the corresponding page entry */
-    H5FD_int_t       *fh;                            /* File driver pointer */
+    H5FD_int_t   *fh;                              /* File driver pointer */
     haddr_t       first_page_addr, last_page_addr; /* Addresses of the first and last pages covered by I/O */
     haddr_t       offset;
     haddr_t       search_addr;       /* Address of current page */
@@ -968,7 +968,7 @@ H5PB_write(H5F_shared_t *f_sh, H5FD_mem_t type, haddr_t addr, size_t size, const
 {
     H5PB_t       *page_buf;                        /* Page buffering info for this file */
     H5PB_entry_t *page_entry;                      /* Pointer to the corresponding page entry */
-    H5FD_int_t       *fh;                            /* File driver pointer */
+    H5FD_int_t   *fh;                              /* File driver pointer */
     haddr_t       first_page_addr, last_page_addr; /* Addresses of the first and last pages covered by I/O */
     haddr_t       offset;
     haddr_t       search_addr;       /* Address of current page */
@@ -1546,7 +1546,7 @@ H5PB__write_entry(H5F_shared_t *f_sh, H5PB_entry_t *page_entry)
      */
     if (page_entry->addr <= eoa) {
         H5FD_int_t *fh; /* File driver I/O info */
-        size_t     page_size = f_sh->page_buf->page_size;
+        size_t      page_size = f_sh->page_buf->page_size;
 
         /* Adjust the page length if it exceeds the EOA */
         if ((page_entry->addr + page_size) > eoa)

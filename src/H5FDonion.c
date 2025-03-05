@@ -18,18 +18,18 @@
 
 #include "H5FDmodule.h" /* This source code file is part of the H5FD module */
 
-#include "H5private.h"      /* Generic Functions           */
-#include "H5Eprivate.h"     /* Error handling              */
-#include "H5Fprivate.h"     /* Files                       */
-#include "H5FDsec2.h"       /* Sec2 file driver            */
-#include "H5FDpkg.h"        /* File drivers                */
-#include "H5FDonion_pkg.h"  /* Onion file driver internals              */
-#include "H5FLprivate.h"    /* Free Lists                  */
-#include "H5Iprivate.h"     /* IDs                         */
-#include "H5MMprivate.h"    /* Memory management           */
+#include "H5private.h"     /* Generic Functions           */
+#include "H5Eprivate.h"    /* Error handling              */
+#include "H5Fprivate.h"    /* Files                       */
+#include "H5FDsec2.h"      /* Sec2 file driver            */
+#include "H5FDpkg.h"       /* File drivers                */
+#include "H5FDonion_pkg.h" /* Onion file driver internals              */
+#include "H5FLprivate.h"   /* Free Lists                  */
+#include "H5Iprivate.h"    /* IDs                         */
+#include "H5MMprivate.h"   /* Memory management           */
 
 /* The driver identification number, initialized at runtime */
-hid_t H5FD_ONION_id_g = H5I_INVALID_HID;
+hid_t          H5FD_ONION_id_g     = H5I_INVALID_HID;
 H5FD_driver_t *H5FD_ONION_driver_g = NULL;
 
 /* Driver-specific file access properties */
@@ -145,7 +145,7 @@ typedef struct H5FD_onion_t {
     H5FD_int_t *original_file;
     H5FD_int_t *onion_file;
     H5FD_int_t *recovery_file;
-    char      *recovery_file_name;
+    char       *recovery_file_name;
 
     /* Onion data structures */
     H5FD_onion_header_t          header;
@@ -284,7 +284,7 @@ H5FD__onion_unregister(void)
     FUNC_ENTER_PACKAGE_NOERR
 
     /* Reset VFL ID */
-    H5FD_ONION_id_g = H5I_INVALID_HID;
+    H5FD_ONION_id_g     = H5I_INVALID_HID;
     H5FD_ONION_driver_g = NULL;
 
     FUNC_LEAVE_NOAPI(SUCCEED)
@@ -387,7 +387,7 @@ H5Pset_fapl_onion(hid_t fapl_id, const H5FD_onion_fapl_info_t *info)
 {
     H5P_genplist_t   *fapl = NULL;
     H5FD_onion_fapl_t fa; /* Temporary copy of driver info */
-    herr_t            ret_value      = SUCCEED;
+    herr_t            ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
 

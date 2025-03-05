@@ -368,7 +368,7 @@ done:
 H5P_genplist_t *
 H5F_get_access_plist(H5F_t *f, bool app_ref)
 {
-    H5P_genplist_t       *new_fapl = NULL;           /* New property list */
+    H5P_genplist_t       *new_fapl = NULL;            /* New property list */
     H5FD_driver_prop_t    driver_prop;                /* Property for driver ID & info */
     bool                  driver_prop_copied = false; /* Whether the driver property has been set up */
     H5VL_connector_prop_t connector_prop;             /* Property for VOL connector ID & info */
@@ -425,10 +425,10 @@ H5F_get_access_plist(H5F_t *f, bool app_ref)
     if (f->shared->page_buf != NULL) {
         if (H5P_set(new_fapl, H5F_ACS_PAGE_BUFFER_SIZE_NAME, &f->shared->page_buf->max_size) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTSET, NULL, "can't set page buffer size");
-        if (H5P_set(new_fapl, H5F_ACS_PAGE_BUFFER_MIN_META_PERC_NAME, &f->shared->page_buf->min_meta_perc) < 0)
-            HGOTO_ERROR(H5E_FILE, H5E_CANTSET, NULL, "can't set minimum metadata fraction of page buffer");
-        if (H5P_set(new_fapl, H5F_ACS_PAGE_BUFFER_MIN_RAW_PERC_NAME, &f->shared->page_buf->min_raw_perc) <
+        if (H5P_set(new_fapl, H5F_ACS_PAGE_BUFFER_MIN_META_PERC_NAME, &f->shared->page_buf->min_meta_perc) <
             0)
+            HGOTO_ERROR(H5E_FILE, H5E_CANTSET, NULL, "can't set minimum metadata fraction of page buffer");
+        if (H5P_set(new_fapl, H5F_ACS_PAGE_BUFFER_MIN_RAW_PERC_NAME, &f->shared->page_buf->min_raw_perc) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTSET, NULL, "can't set minimum raw data fraction of page buffer");
     } /* end if */
 #ifdef H5_HAVE_PARALLEL
@@ -459,7 +459,7 @@ H5F_get_access_plist(H5F_t *f, bool app_ref)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, NULL, "can't set RFIC flags value");
 
     /* Prepare the driver property */
-    driver_prop.driver         = f->shared->fh->driver;
+    driver_prop.driver            = f->shared->fh->driver;
     driver_prop.driver_info       = H5FD_fapl_get(f->shared->fh);
     driver_prop.driver_config_str = H5P_peek_driver_config_str(new_fapl);
     driver_prop_copied            = true;
@@ -481,9 +481,8 @@ H5F_get_access_plist(H5F_t *f, bool app_ref)
         if (H5P_set(new_fapl, H5F_ACS_CLOSE_DEGREE_NAME, &drvr_fc_degree) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTSET, NULL, "can't set file close degree");
     }
-    else
-        if (H5P_set(new_fapl, H5F_ACS_CLOSE_DEGREE_NAME, &f->shared->fc_degree) < 0)
-            HGOTO_ERROR(H5E_FILE, H5E_CANTSET, NULL, "can't set file close degree");
+    else if (H5P_set(new_fapl, H5F_ACS_CLOSE_DEGREE_NAME, &f->shared->fc_degree) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, NULL, "can't set file close degree");
 
     /* Set return value */
     ret_value = new_fapl;
@@ -1065,7 +1064,7 @@ done:
 herr_t
 H5F__is_hdf5(const char *name, H5P_genplist_t *fapl, bool *is_hdf5)
 {
-    H5FD_int_t       *fh         = NULL;        /* Low-level file struct            */
+    H5FD_int_t   *fh         = NULL;        /* Low-level file struct            */
     H5F_shared_t *shared     = NULL;        /* Shared part of file              */
     haddr_t       sig_addr   = HADDR_UNDEF; /* Address of hdf5 file signature    */
     bool          found_hdf5 = false;       /* Found an HDF5 file */
@@ -1262,8 +1261,10 @@ H5F__new(H5F_shared_t *shared, unsigned flags, H5P_genplist_t *fcpl, H5P_genplis
             HGOTO_ERROR(H5E_FILE, H5E_CANTGET, NULL, "can't get feature flags from VFD");
 
         /* Require the SWMR feature flag if SWMR I/O is desired */
-        if (!H5FD_HAS_FEATURE(fh, H5FD_FEAT_SUPPORTS_SWMR_IO) && (H5F_INTENT(f) & (H5F_ACC_SWMR_WRITE | H5F_ACC_SWMR_READ)))
-            HGOTO_ERROR(H5E_FILE, H5E_BADVALUE, NULL, "must use a SWMR-compatible VFD when SWMR is specified");
+        if (!H5FD_HAS_FEATURE(fh, H5FD_FEAT_SUPPORTS_SWMR_IO) &&
+            (H5F_INTENT(f) & (H5F_ACC_SWMR_WRITE | H5F_ACC_SWMR_READ)))
+            HGOTO_ERROR(H5E_FILE, H5E_BADVALUE, NULL,
+                        "must use a SWMR-compatible VFD when SWMR is specified");
 
         if (H5FD_get_fs_type_map(fh, f->shared->fs_type_map) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTGET, NULL, "can't get free space type mapping from VFD");
@@ -1827,7 +1828,7 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
     size_t             page_buf_size;
     unsigned           page_buf_min_meta_perc = 0;
     unsigned           page_buf_min_raw_perc  = 0;
-    bool               set_status_flags               = false;  /* Set the status_flags in the superblock */
+    bool               set_status_flags       = false;  /* Set the status_flags in the superblock */
     bool               clear                  = false;  /* Clear the status_flags         */
     bool               evict_on_close;                  /* evict on close value from plist  */
     bool               use_file_locking      = true;    /* Using file locks? */
@@ -2110,7 +2111,8 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
          * the fapl is smaller than the file's page size, bump the page buffer
          * size up to the file's page size.
          */
-        if (page_buf_size > 0 && shared->fs_strategy == H5F_FSPACE_STRATEGY_PAGE && shared->fs_page_size > page_buf_size)
+        if (page_buf_size > 0 && shared->fs_strategy == H5F_FSPACE_STRATEGY_PAGE &&
+            shared->fs_page_size > page_buf_size)
             page_buf_size = shared->fs_page_size;
 
         /* Create the page buffer *after* reading the superblock */
@@ -3262,7 +3264,7 @@ H5F__get_file_image(H5F_t *file, void *buf_ptr, size_t buf_len, size_t *image_le
      * create "default" VFD compatible files are compatiple with the file
      * image feature.
      */
-    if (!H5FD_HAS_FEATURE(file->shared->fh, (H5FD_FEAT_ALLOW_FILE_IMAGE |H5FD_FEAT_DEFAULT_VFD_COMPATIBLE)))
+    if (!H5FD_HAS_FEATURE(file->shared->fh, (H5FD_FEAT_ALLOW_FILE_IMAGE | H5FD_FEAT_DEFAULT_VFD_COMPATIBLE)))
         HGOTO_ERROR(H5E_FILE, H5E_UNSUPPORTED, FAIL, "not supported for file driver");
 
     /* Go get the actual file size */

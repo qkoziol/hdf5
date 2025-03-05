@@ -46,8 +46,8 @@ typedef struct H5FD_onion_history_t {
 #ifdef __cplusplus
 extern "C" {
 #endif
-H5_DLL herr_t H5FD__onion_ingest_history(H5FD_onion_history_t *history_out, H5FD_int_t *raw_file, haddr_t addr,
-                                         haddr_t size);
+H5_DLL herr_t H5FD__onion_ingest_history(H5FD_onion_history_t *history_out, H5FD_int_t *raw_file,
+                                         haddr_t addr, haddr_t size);
 
 H5_DLL uint64_t H5FD__onion_write_history(H5FD_onion_history_t *history, H5FD_int_t *file, haddr_t off_start,
                                           haddr_t filesize_curr);

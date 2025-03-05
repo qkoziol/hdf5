@@ -28,39 +28,33 @@
 /***********/
 /* Headers */
 /***********/
-#include "H5private.h"   /* Generic Functions                        */
-#include "H5Eprivate.h"  /* Error handling                           */
-#include "H5FDpkg.h"     /* File Drivers                             */
+#include "H5private.h"  /* Generic Functions                        */
+#include "H5Eprivate.h" /* Error handling                           */
+#include "H5FDpkg.h"    /* File Drivers                             */
 
 /****************/
 /* Local Macros */
 /****************/
 
-
 /******************/
 /* Local Typedefs */
 /******************/
-
 
 /********************/
 /* Package Typedefs */
 /********************/
 
-
 /********************/
 /* Local Prototypes */
 /********************/
-
 
 /*********************/
 /* Package Variables */
 /*********************/
 
-
 /*****************************/
 /* Library Private Variables */
 /*****************************/
-
 
 /*******************/
 /* Local Variables */
@@ -418,4 +412,3 @@ H5FD_set_paged_aggr(H5FD_int_t *fh, bool paged)
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5FD_set_paged_aggr() */
-

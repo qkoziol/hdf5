@@ -21,18 +21,18 @@
 
 #ifdef H5_HAVE_MIRROR_VFD
 
-#include "H5Eprivate.h"      /* Error handling           */
-#include "H5Fprivate.h"      /* File access              */
-#include "H5FDmirror.h"      /* "Mirror" definitions     */
-#include "H5FDmirror_pkg.h"  /* Private header for the mirror VFD */
-#include "H5FDpkg.h"         /* File drivers             */
-#include "H5FLprivate.h"     /* Free Lists               */
-#include "H5Iprivate.h"      /* IDs                      */
-#include "H5MMprivate.h"     /* Memory management        */
-#include "H5Pprivate.h"      /* Property lists           */
+#include "H5Eprivate.h"     /* Error handling           */
+#include "H5Fprivate.h"     /* File access              */
+#include "H5FDmirror.h"     /* "Mirror" definitions     */
+#include "H5FDmirror_pkg.h" /* Private header for the mirror VFD */
+#include "H5FDpkg.h"        /* File drivers             */
+#include "H5FLprivate.h"    /* Free Lists               */
+#include "H5Iprivate.h"     /* IDs                      */
+#include "H5MMprivate.h"    /* Memory management        */
+#include "H5Pprivate.h"     /* Property lists           */
 
 /* The driver identification number, initialized at runtime */
-hid_t H5FD_MIRROR_id_g = H5I_INVALID_HID;
+hid_t          H5FD_MIRROR_id_g     = H5I_INVALID_HID;
 H5FD_driver_t *H5FD_MIRROR_driver_g = NULL;
 /* Virtual file structure for a Mirror Driver */
 typedef struct H5FD_mirror_t {
@@ -221,7 +221,7 @@ H5FD__mirror_register(void)
             HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "can't create ID for mirror driver");
 
         /* ID is holding a reference to the connector */
-            H5FD__driver_inc_rc(H5FD_MIRROR_driver_g);
+        H5FD__driver_inc_rc(H5FD_MIRROR_driver_g);
     }
 
 done:
@@ -245,7 +245,7 @@ H5FD__mirror_unregister(void)
     LOG_OP_CALL(__func__);
 
     /* Reset VFL ID */
-    H5FD_MIRROR_id_g = H5I_INVALID_HID;
+    H5FD_MIRROR_id_g     = H5I_INVALID_HID;
     H5FD_MIRROR_driver_g = NULL;
 
     FUNC_LEAVE_NOAPI(SUCCEED)

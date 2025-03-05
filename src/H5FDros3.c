@@ -38,7 +38,7 @@
 #define ROS3_MAX_CACHE_SIZE 16777216
 
 /* The driver identification number, initialized at runtime */
-hid_t H5FD_ROS3_id_g = H5I_INVALID_HID;
+hid_t          H5FD_ROS3_id_g     = H5I_INVALID_HID;
 H5FD_driver_t *H5FD_ROS3_driver_g = NULL;
 /* Flag to indicate whether global driver resources & settings have been
  *      initialized.
@@ -262,7 +262,7 @@ H5FD__ros3_unregister(void)
     FUNC_ENTER_PACKAGE_NOERR
 
     /* Reset VFL ID */
-    H5FD_ROS3_id_g = H5I_INVALID_HID;
+    H5FD_ROS3_id_g     = H5I_INVALID_HID;
     H5FD_ROS3_driver_g = NULL;
 
     FUNC_LEAVE_NOAPI(SUCCEED)

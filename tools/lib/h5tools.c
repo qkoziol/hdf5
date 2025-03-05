@@ -825,7 +825,7 @@ h5tools_get_vfd_name(hid_t fid, hid_t fapl_id, char *drivername, size_t driverna
         H5TOOLS_ERROR(FAIL, "failed to determine if file ID is native-terminal");
 
     if (is_native) {
-        const char *driver_name;
+        const char        *driver_name;
         H5FD_class_value_t cls_value;
 
         /* Get the driver's class value used when creating the file */

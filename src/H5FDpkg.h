@@ -71,8 +71,8 @@
 
 /* Internal struct to track VFD drivers */
 struct H5FD_driver_t {
-    const H5FD_class_t      *cls;         /* Pointer to driver class struct   */
-    int64_t                  nrefs;       /* Number of references to this struct */
+    const H5FD_class_t   *cls;         /* Pointer to driver class struct   */
+    int64_t               nrefs;       /* Number of references to this struct */
     struct H5FD_driver_t *next, *prev; /* Pointers to the next & previous */
 };
 
@@ -93,31 +93,32 @@ H5_DLL haddr_t H5FD__alloc_real(H5FD_int_t *fh, H5FD_mem_t type, hsize_t size, h
                                 hsize_t *align_size);
 H5_DLL herr_t  H5FD__free_real(H5FD_int_t *fh, H5FD_mem_t type, haddr_t addr, hsize_t size);
 H5_DLL herr_t  H5FD__read_selection_id(uint32_t skip_cb, H5FD_int_t *fh, H5FD_mem_t type, uint32_t count,
-                                      hid_t mem_space_ids[], hid_t file_space_ids[], haddr_t offsets[],
-                                      size_t element_sizes[], void *bufs[] /* out */);
-H5_DLL herr_t  H5FD__write_selection_id(uint32_t skip_cb, H5FD_int_t *fh, H5FD_mem_t type, uint32_t count,
                                        hid_t mem_space_ids[], hid_t file_space_ids[], haddr_t offsets[],
-                                       size_t element_sizes[], const void *bufs[]);
+                                       size_t element_sizes[], void *bufs[] /* out */);
+H5_DLL herr_t  H5FD__write_selection_id(uint32_t skip_cb, H5FD_int_t *fh, H5FD_mem_t type, uint32_t count,
+                                        hid_t mem_space_ids[], hid_t file_space_ids[], haddr_t offsets[],
+                                        size_t element_sizes[], const void *bufs[]);
 H5_DLL herr_t  H5FD__read_vector_from_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count,
-                                               hid_t mem_space_ids[], hid_t file_space_ids[],
-                                               haddr_t offsets[], size_t element_sizes[], void *bufs[]);
-H5_DLL herr_t H5FD__write_vector_from_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count,
-                                               hid_t mem_space_ids[], hid_t file_space_ids[],
-                                               haddr_t offsets[], size_t element_sizes[], const void *bufs[]);
-H5_DLL herr_t H5FD__read_from_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, hid_t mem_space_ids[],
-                                       hid_t file_space_ids[], haddr_t offsets[], size_t element_sizes[],
-                                       void *bufs[]);
-H5_DLL herr_t  H5FD__write_from_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, hid_t mem_space_ids[],
-                                         hid_t file_space_ids[], haddr_t offsets[], size_t element_sizes[],
-                                         const void *bufs[]);
-H5_DLL herr_t H5FD__read_selection_translate(bool skip_vector_cb, H5FD_int_t *fh, H5FD_mem_t type,
-                                             hid_t dxpl_id, uint32_t count, H5S_t **mem_spaces,
-                                             H5S_t **file_spaces, haddr_t offsets[], size_t element_sizes[],
-                                             void *bufs[] /* out */);
-H5_DLL herr_t H5FD__write_selection_translate(bool skip_vector_cb, H5FD_int_t *fh, H5FD_mem_t type,
+                                                hid_t mem_space_ids[], hid_t file_space_ids[],
+                                                haddr_t offsets[], size_t element_sizes[], void *bufs[]);
+H5_DLL herr_t  H5FD__write_vector_from_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count,
+                                                 hid_t mem_space_ids[], hid_t file_space_ids[],
+                                                 haddr_t offsets[], size_t element_sizes[],
+                                                 const void *bufs[]);
+H5_DLL herr_t  H5FD__read_from_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count,
+                                         hid_t mem_space_ids[], hid_t file_space_ids[], haddr_t offsets[],
+                                         size_t element_sizes[], void *bufs[]);
+H5_DLL herr_t  H5FD__write_from_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count,
+                                          hid_t mem_space_ids[], hid_t file_space_ids[], haddr_t offsets[],
+                                          size_t element_sizes[], const void *bufs[]);
+H5_DLL herr_t  H5FD__read_selection_translate(bool skip_vector_cb, H5FD_int_t *fh, H5FD_mem_t type,
                                               hid_t dxpl_id, uint32_t count, H5S_t **mem_spaces,
                                               H5S_t **file_spaces, haddr_t offsets[], size_t element_sizes[],
-                                              const void *bufs[]);
+                                              void *bufs[] /* out */);
+H5_DLL herr_t  H5FD__write_selection_translate(bool skip_vector_cb, H5FD_int_t *fh, H5FD_mem_t type,
+                                               hid_t dxpl_id, uint32_t count, H5S_t **mem_spaces,
+                                               H5S_t **file_spaces, haddr_t offsets[], size_t element_sizes[],
+                                               const void *bufs[]);
 
 /* Internal VFD init/term routines */
 H5_DLL herr_t H5FD__core_register(void);
@@ -170,7 +171,8 @@ H5_DLL H5FD_driver_t *H5FD__driver_register(const H5FD_class_t *cls);
 H5_DLL H5FD_driver_t *H5FD__register_driver_by_name(const char *name);
 H5_DLL H5FD_driver_t *H5FD__register_driver_by_value(H5FD_class_value_t value);
 H5_DLL htri_t  H5FD__is_driver_registered_by_name(const char *driver_name, H5FD_driver_t **registered_driver);
-H5_DLL htri_t  H5FD__is_driver_registered_by_value(H5FD_class_value_t driver_value, H5FD_driver_t **registered_driver);
+H5_DLL htri_t  H5FD__is_driver_registered_by_value(H5FD_class_value_t driver_value,
+                                                   H5FD_driver_t    **registered_driver);
 H5_DLL int64_t H5FD__driver_inc_rc(H5FD_driver_t *driver);
 H5_DLL int64_t H5FD__driver_dec_rc(H5FD_driver_t *driver);
 
@@ -196,20 +198,20 @@ H5_DLL bool H5FD__supports_swmr_test(const char *vfd_name);
 static inline void H5_ATTR_UNUSED
 H5FD__construct_tmp_fh(H5FD_t *file, H5FD_int_t /*OUT*/ *fh, H5FD_driver_t /*OUT*/ *driver)
 {
-    FUNC_ENTER_PACKAGE_NAMECHECK_ONLY                                                                    \
+    FUNC_ENTER_PACKAGE_NAMECHECK_ONLY
 
     assert(file);
     assert(fh);
     assert(driver);
 
     /* Set up internal file handle, using info from external one */
-    driver->cls = file->cls;
+    driver->cls   = file->cls;
     driver->nrefs = 1;
     driver->next = driver->prev = NULL;
-    fh->file = file;
-    fh->driver = driver;
+    fh->file                    = file;
+    fh->driver                  = driver;
 
-    FUNC_LEAVE_NOAPI_VOID_NAMECHECK_ONLY                                                                 \
+    FUNC_LEAVE_NOAPI_VOID_NAMECHECK_ONLY
 } /* end H5FD__construct_tmp_fh() */
 
 #endif /* H5FDpkg_H */

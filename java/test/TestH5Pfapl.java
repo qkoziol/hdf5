@@ -859,7 +859,7 @@ public class TestH5Pfapl {
             H5.H5Pset_fapl_core(fapl_id, 4096, false);
             long driver_id = H5.H5Pget_driver(fapl_id);
             assertTrue("H5.H5FDcmp_driver_cls(H5FD_CORE, driver_id)",
-                           H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_CORE, driver_id));
+                       H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_CORE, driver_id));
         }
         catch (Throwable err) {
             err.printStackTrace();
@@ -887,7 +887,7 @@ public class TestH5Pfapl {
             H5.H5Pset_fapl_family(fapl_id, 1024, HDF5Constants.H5P_DEFAULT);
             long driver_id = H5.H5Pget_driver(fapl_id);
             assertTrue("H5.H5FDcmp_driver_cls(H5FD_FAMILY, driver_id)",
-                           H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_FAMILY, driver_id));
+                       H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_FAMILY, driver_id));
         }
         catch (Throwable err) {
             err.printStackTrace();
@@ -918,7 +918,7 @@ public class TestH5Pfapl {
             H5.H5Pset_fapl_family(fapl_id, 1024, HDF5Constants.H5P_DEFAULT);
             long driver_id = H5.H5Pget_driver(fapl_id);
             assertTrue("H5.H5FDcmp_driver_cls(H5FD_FAMILY, driver_id)",
-                           H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_FAMILY, driver_id));
+                       H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_FAMILY, driver_id));
         }
         catch (Throwable err) {
             err.printStackTrace();
@@ -953,7 +953,7 @@ public class TestH5Pfapl {
             H5.H5Pset_fapl_sec2(fapl_id);
             long driver_id = H5.H5Pget_driver(fapl_id);
             assertTrue("H5.H5FDcmp_driver_cls(H5FD_SEC2, driver_id)",
-                           H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_SEC2, driver_id));
+                       H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_SEC2, driver_id));
         }
         catch (Throwable err) {
             err.printStackTrace();
@@ -972,7 +972,7 @@ public class TestH5Pfapl {
             H5.H5Pset_fapl_stdio(fapl_id);
             long driver_id = H5.H5Pget_driver(fapl_id);
             assertTrue("H5.H5FDcmp_driver_cls(H5FD_STDIO, driver_id)",
-                           H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_STDIO, driver_id));
+                       H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_STDIO, driver_id));
         }
         catch (Throwable err) {
             err.printStackTrace();
@@ -992,7 +992,7 @@ public class TestH5Pfapl {
             H5.H5Pset_fapl_log(fapl_id, H5_LOG_FILE, log_flags, 1024);
             long driver_id = H5.H5Pget_driver(fapl_id);
             assertTrue("H5.H5FDcmp_driver_cls(H5FD_LOG, driver_id)",
-                           H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_LOG, driver_id));
+                       H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_LOG, driver_id));
         }
         catch (Throwable err) {
             err.printStackTrace();
@@ -1018,7 +1018,7 @@ public class TestH5Pfapl {
             H5.H5Pset_fapl_multi(fapl_id, member_map, member_fapl, member_name, member_addr, true);
             long driver_id = H5.H5Pget_driver(fapl_id);
             assertTrue("H5.H5FDcmp_driver_cls(H5FD_MULTI, driver_id)",
-                           H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_MULTI, driver_id));
+                       H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_MULTI, driver_id));
         }
         catch (Throwable err) {
             err.printStackTrace();
@@ -1060,7 +1060,7 @@ public class TestH5Pfapl {
             H5.H5Pset_fapl_multi(fapl_id, member_map, member_fapl, member_name, member_addr, true);
             long driver_id = H5.H5Pget_driver(fapl_id);
             assertTrue("H5.H5FDcmp_driver_cls(H5FD_MULTI, driver_id)",
-                           H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_MULTI, driver_id));
+                       H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_MULTI, driver_id));
         }
         catch (Throwable err) {
             err.printStackTrace();
@@ -1145,7 +1145,7 @@ public class TestH5Pfapl {
             H5.H5Pset_fapl_multi(fapl_id, member_map, member_fapl, member_name, member_addr, true);
             long driver_id = H5.H5Pget_driver(fapl_id);
             assertTrue("H5.H5FDcmp_driver_cls(H5FD_MULTI, driver_id)",
-                           H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_MULTI, driver_id));
+                       H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_MULTI, driver_id));
         }
         catch (Throwable err) {
             err.printStackTrace();
@@ -1251,7 +1251,7 @@ public class TestH5Pfapl {
                                  HDF5Constants.H5P_DEFAULT);
             long driver_id = H5.H5Pget_driver(fapl_id);
             assertTrue("H5.H5FDcmp_driver_cls(H5FD_MULTI, driver_id)",
-                           H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_MULTI, driver_id));
+                       H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_MULTI, driver_id));
         }
         catch (Throwable err) {
             err.printStackTrace();
@@ -1304,7 +1304,7 @@ public class TestH5Pfapl {
             H5.H5Pset_fapl_direct(fapl_id, 1024, 4096, 8 * 4096);
             long driver_id = H5.H5Pget_driver(fapl_id);
             assertTrue("H5.H5FDcmp_driver_cls(H5FD_DIRECT, driver_id)",
-                           H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_DIRECT, driver_id));
+                       H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_DIRECT, driver_id));
         }
         catch (Throwable err) {
             err.printStackTrace();
@@ -1334,7 +1334,7 @@ public class TestH5Pfapl {
             H5.H5Pset_fapl_windows(fapl_id);
             long driver_id = H5.H5Pget_driver(fapl_id);
             assertTrue("H5.H5FDcmp_driver_cls(H5FD_WINDOWS, driver_id)",
-                           H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_WINDOWS, driver_id));
+                       H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_WINDOWS, driver_id));
         }
         catch (Throwable err) {
             err.printStackTrace();
@@ -1393,7 +1393,7 @@ public class TestH5Pfapl {
             H5.H5Pset_fapl_multi(fapl_id, member_map, member_fapl, member_name, member_addr, true);
             long driver_id = H5.H5Pget_driver(fapl_id);
             assertTrue("H5.H5FDcmp_driver_cls(H5FD_MULTI, driver_id)",
-                           H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_MULTI, driver_id));
+                       H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_MULTI, driver_id));
         }
         catch (Throwable err) {
             err.printStackTrace();

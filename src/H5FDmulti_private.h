@@ -36,7 +36,7 @@
 /*****************************/
 
 /* multi VFD's class struct */
-H5_DLLVAR const H5FD_class_t H5FD_multi_g;
+H5_DLLVAR const H5FD_class_t    H5FD_multi_g;
 H5_DLLVAR struct H5FD_driver_t *H5FD_MULTI_driver_g;
 
 /******************************/

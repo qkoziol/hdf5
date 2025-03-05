@@ -18,10 +18,10 @@
 #define H5FDcore_private_H
 
 /* Include driver's public header */
-#include "H5FDcore.h"     /* core VFD driver     */
+#include "H5FDcore.h" /* core VFD driver     */
 
 /* Private headers needed by this file */
-#include "H5FDprivate.h"  /* File drivers        */
+#include "H5FDprivate.h" /* File drivers        */
 
 /**************************/
 /* Library Private Macros */

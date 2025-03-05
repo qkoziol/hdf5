@@ -18,22 +18,22 @@
 
 #include "H5FDmodule.h" /* This source code file is part of the H5FD module */
 
-#include "H5private.h"          /* Generic Functions            */
-#include "H5CXprivate.h"        /* API contexts, etc.           */
-#include "H5Eprivate.h"         /* Error handling               */
-#include "H5Fprivate.h"         /* File access                  */
-#include "H5FDpkg.h"            /* File drivers                 */
-#include "H5FDioc_private.h"    /* I/O concentrator file driver */
-#include "H5FDmpio_private.h"   /* MPI I/O file driver          */
-#include "H5FDsec2_private.h"   /* Sec2 VFD                     */
-#include "H5FDsubfiling_pkg.h"  /* Subfiling file driver        */
-#include "H5FLprivate.h"        /* Free Lists                   */
-#include "H5Iprivate.h"         /* IDs                          */
-#include "H5MMprivate.h"        /* Memory management            */
-#include "H5Pprivate.h"         /* Property lists               */
+#include "H5private.h"         /* Generic Functions            */
+#include "H5CXprivate.h"       /* API contexts, etc.           */
+#include "H5Eprivate.h"        /* Error handling               */
+#include "H5Fprivate.h"        /* File access                  */
+#include "H5FDpkg.h"           /* File drivers                 */
+#include "H5FDioc_private.h"   /* I/O concentrator file driver */
+#include "H5FDmpio_private.h"  /* MPI I/O file driver          */
+#include "H5FDsec2_private.h"  /* Sec2 VFD                     */
+#include "H5FDsubfiling_pkg.h" /* Subfiling file driver        */
+#include "H5FLprivate.h"       /* Free Lists                   */
+#include "H5Iprivate.h"        /* IDs                          */
+#include "H5MMprivate.h"       /* Memory management            */
+#include "H5Pprivate.h"        /* Property lists               */
 
 /* The driver identification number, initialized at runtime */
-hid_t H5FD_SUBFILING_id_g = H5I_INVALID_HID;
+hid_t          H5FD_SUBFILING_id_g     = H5I_INVALID_HID;
 H5FD_driver_t *H5FD_SUBFILING_driver_g = NULL;
 
 /* Flag to indicate whether global driver resources & settings have been
@@ -333,7 +333,7 @@ H5FD__subfiling_unregister(void)
     FUNC_ENTER_PACKAGE_NOERR
 
     /* Reset driver ID */
-    H5FD_SUBFILING_id_g = H5I_INVALID_HID;
+    H5FD_SUBFILING_id_g     = H5I_INVALID_HID;
     H5FD_SUBFILING_driver_g = NULL;
 
     FUNC_LEAVE_NOAPI(SUCCEED)
@@ -897,7 +897,9 @@ H5FD__subfiling_sb_encode(H5FD_t *_file, char *name, unsigned char *buf)
 
     /* Check if the "fail to encode flag" is set */
     if (file->fail_to_encode)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTENCODE, FAIL, "can't encode subfiling driver info message - message was too large or internal error occurred");
+        HGOTO_ERROR(
+            H5E_VFL, H5E_CANTENCODE, FAIL,
+            "can't encode subfiling driver info message - message was too large or internal error occurred");
 
     if (NULL == (sf_context = H5FD__subfiling_get_object(file->context_id)))
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get subfiling context object");
@@ -1033,10 +1035,15 @@ H5FD__subfiling_sb_decode(H5FD_t *_file, const char *name, const unsigned char *
         HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "decoded subfiling driver info is invalid");
 
     if (file->fa.shared_cfg.stripe_size != sf_context->sf_stripe_size)
-        HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "specified subfiling stripe size (%" PRId64 ") doesn't match value stored in file (%" PRId64 ")", sf_context->sf_stripe_size, file->fa.shared_cfg.stripe_size);
+        HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL,
+                    "specified subfiling stripe size (%" PRId64
+                    ") doesn't match value stored in file (%" PRId64 ")",
+                    sf_context->sf_stripe_size, file->fa.shared_cfg.stripe_size);
 
     if (file->fa.shared_cfg.stripe_count != sf_context->sf_num_subfiles)
-        HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "specified subfiling stripe count (%d) doesn't match value stored in file (%" PRId32 ")", sf_context->sf_num_subfiles, file->fa.shared_cfg.stripe_count);
+        HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL,
+                    "specified subfiling stripe count (%d) doesn't match value stored in file (%" PRId32 ")",
+                    sf_context->sf_num_subfiles, file->fa.shared_cfg.stripe_count);
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -1153,10 +1160,10 @@ done:
 static H5FD_t *
 H5FD__subfiling_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
 {
-    H5FD_subfiling_t            *file = NULL;   /* Subfiling VFD info */
-    const H5FD_subfiling_fapl_t *fa   = NULL;   /* Driver-specific property list */
-    H5FD_subfiling_fapl_t        default_fa;    /* Default driver info, if not set */
-    H5P_genplist_t              *fapl   = NULL;
+    H5FD_subfiling_t            *file = NULL; /* Subfiling VFD info */
+    const H5FD_subfiling_fapl_t *fa   = NULL; /* Driver-specific property list */
+    H5FD_subfiling_fapl_t        default_fa;  /* Default driver info, if not set */
+    H5P_genplist_t              *fapl        = NULL;
     bool                         bcasted_eof = false;
     int64_t                      sf_eof      = -1;
     int                          mpi_code; /* MPI return code */
@@ -1237,7 +1244,8 @@ H5FD__subfiling_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t ma
 
     /* Check for correct IOC driver */
     if (H5FD_IOC_VALUE != H5P_get_driver_value(file->fa.ioc_fapl))
-        HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL, "unable to open file '%s' - only IOC VFD is currently supported for subfiles", name);
+        HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL,
+                    "unable to open file '%s' - only IOC VFD is currently supported for subfiles", name);
 
     /* Fully resolve the given filepath and get its dirname */
     if (H5FD__subfiling_resolve_pathname(name, file->comm, &file->file_path) < 0)
@@ -1249,7 +1257,8 @@ H5FD__subfiling_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t ma
      * Create/open the HDF5 stub file and get its inode value for
      * the internal mapping from file inode to subfiling context.
      */
-    if (H5FD__subfiling_open_stub_file(file->file_path, flags, file->comm, &file->stub_file, &file->file_id) < 0)
+    if (H5FD__subfiling_open_stub_file(file->file_path, flags, file->comm, &file->stub_file, &file->file_id) <
+        0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL, "can't open HDF5 stub file");
 
     /* Set stub file ID on IOC fapl so it can reuse on open */

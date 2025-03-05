@@ -29,7 +29,7 @@
 #include "H5Pprivate.h"   /* Property lists           */
 
 /* The driver identification number, initialized at runtime */
-hid_t H5FD_SPLITTER_id_g = H5I_INVALID_HID;
+hid_t          H5FD_SPLITTER_id_g     = H5I_INVALID_HID;
 H5FD_driver_t *H5FD_SPLITTER_driver_g = NULL;
 
 /* Driver-specific file access properties */
@@ -46,8 +46,8 @@ typedef struct H5FD_splitter_t {
     H5FD_t               pub;     /* public stuff, must be first    */
     unsigned             version; /* version of the H5FD_splitter_vfd_config_t structure used */
     H5FD_splitter_fapl_t fa;      /* driver-specific file access properties */
-    H5FD_int_t              *rw_file; /* pointer of R/W channel */
-    H5FD_int_t              *wo_file; /* pointer of W/O channel */
+    H5FD_int_t          *rw_file; /* pointer of R/W channel */
+    H5FD_int_t          *wo_file; /* pointer of W/O channel */
     FILE                *logfp;   /* Log file pointer */
 } H5FD_splitter_t;
 
@@ -216,7 +216,7 @@ H5FD__splitter_unregister(void)
     H5FD_SPLITTER_LOG_CALL(__func__);
 
     /* Reset VFL ID */
-    H5FD_SPLITTER_id_g = H5I_INVALID_HID;
+    H5FD_SPLITTER_id_g     = H5I_INVALID_HID;
     H5FD_SPLITTER_driver_g = NULL;
 
     FUNC_LEAVE_NOAPI(SUCCEED)
@@ -365,7 +365,7 @@ H5FD__splitter_populate_config(H5FD_splitter_vfd_config_t *vfd_config, H5FD_spli
      * determining attribute.
      */
     if (H5P_DEFAULT != vfd_config->wo_fapl_id) {
-        H5FD_driver_t      *wo_driver;
+        H5FD_driver_t     *wo_driver;
         H5FD_driver_prop_t wo_driver_prop;
         H5P_genplist_t    *wo_fapl;
         unsigned long      wo_driver_flags = 0;
@@ -1324,7 +1324,8 @@ H5FD__splitter_alloc(H5FD_t *_file, H5FD_mem_t type, hid_t H5_ATTR_UNUSED dxpl_i
         HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, HADDR_UNDEF, "unable to allocate for R/W file");
 
     if (HADDR_UNDEF == H5FD__alloc_real(file->wo_file, type, size, NULL, NULL))
-        H5FD_SPLITTER_WO_ERROR(file, __func__, H5E_VFL, H5E_CANTINIT, HADDR_UNDEF, "unable to alloc for W/O file")
+        H5FD_SPLITTER_WO_ERROR(file, __func__, H5E_VFL, H5E_CANTINIT, HADDR_UNDEF,
+                               "unable to alloc for W/O file")
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)

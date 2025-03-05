@@ -97,8 +97,8 @@ H5FL_BLK_DEFINE_STATIC(meta_accum);
 herr_t
 H5F__accum_read(H5F_shared_t *f_sh, H5FD_mem_t map_type, haddr_t addr, size_t size, void *buf /*out*/)
 {
-    H5FD_int_t *fh;                /* File driver pointer */
-    herr_t  ret_value = SUCCEED; /* Return value */
+    H5FD_int_t *fh;                  /* File driver pointer */
+    herr_t      ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -402,8 +402,8 @@ done:
 herr_t
 H5F__accum_write(H5F_shared_t *f_sh, H5FD_mem_t map_type, haddr_t addr, size_t size, const void *buf)
 {
-    H5FD_int_t *fh;                /* File driver pointer */
-    herr_t  ret_value = SUCCEED; /* Return value */
+    H5FD_int_t *fh;                  /* File driver pointer */
+    herr_t      ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -628,8 +628,8 @@ H5F__accum_write(H5F_shared_t *f_sh, H5FD_mem_t map_type, haddr_t addr, size_t s
                 else {
                     /* Write out the existing metadata accumulator, with dispatch to driver */
                     if (accum->dirty) {
-                        if (H5FD_write(fh, H5FD_MEM_DEFAULT, accum->loc + accum->dirty_off,
-                                       accum->dirty_len, accum->buf + accum->dirty_off) < 0)
+                        if (H5FD_write(fh, H5FD_MEM_DEFAULT, accum->loc + accum->dirty_off, accum->dirty_len,
+                                       accum->buf + accum->dirty_off) < 0)
                             HGOTO_ERROR(H5E_IO, H5E_WRITEERROR, FAIL, "file write failed");
 
                         /* Reset accumulator dirty flag */
@@ -840,7 +840,7 @@ herr_t
 H5F__accum_free(H5F_shared_t *f_sh, H5FD_mem_t H5_ATTR_UNUSED type, haddr_t addr, hsize_t size)
 {
     H5F_meta_accum_t *accum;               /* Alias for file's metadata accumulator */
-    H5FD_int_t           *fh;                /* File driver pointer */
+    H5FD_int_t       *fh;                  /* File driver pointer */
     herr_t            ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -1012,8 +1012,8 @@ H5F__accum_flush(H5F_shared_t *f_sh)
     /* Check if we need to flush out the metadata accumulator */
     if ((f_sh->feature_flags & H5FD_FEAT_ACCUMULATE_METADATA) && f_sh->accum.dirty) {
         /* Flush the metadata contents */
-        if (H5FD_write(f_sh->fh, H5FD_MEM_DEFAULT, f_sh->accum.loc + f_sh->accum.dirty_off, f_sh->accum.dirty_len,
-                       f_sh->accum.buf + f_sh->accum.dirty_off) < 0)
+        if (H5FD_write(f_sh->fh, H5FD_MEM_DEFAULT, f_sh->accum.loc + f_sh->accum.dirty_off,
+                       f_sh->accum.dirty_len, f_sh->accum.buf + f_sh->accum.dirty_off) < 0)
             HGOTO_ERROR(H5E_IO, H5E_WRITEERROR, FAIL, "file write failed");
 
         /* Reset the dirty flag */

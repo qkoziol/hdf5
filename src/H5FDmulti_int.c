@@ -36,7 +36,7 @@
 #include "H5FDmulti_private.h" /* multi VFD */
 
 /* The driver identification number, initialized at runtime */
-hid_t H5FD_MULTI_id_g = H5I_INVALID_HID;
+hid_t          H5FD_MULTI_id_g     = H5I_INVALID_HID;
 H5FD_driver_t *H5FD_MULTI_driver_g = NULL;
 
 /*-------------------------------------------------------------------------
@@ -88,7 +88,7 @@ H5FD__multi_unregister(void)
     FUNC_ENTER_PACKAGE_NOERR
 
     /* Reset VFL ID */
-    H5FD_MULTI_id_g = H5I_INVALID_HID;
+    H5FD_MULTI_id_g     = H5I_INVALID_HID;
     H5FD_MULTI_driver_g = NULL;
 
     FUNC_LEAVE_NOAPI(SUCCEED)

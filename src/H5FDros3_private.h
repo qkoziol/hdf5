@@ -18,10 +18,10 @@
 #define H5FDros3_private_H
 
 /* Include driver's public header */
-#include "H5FDros3.h"     /* ros3 VFD driver     */
+#include "H5FDros3.h" /* ros3 VFD driver     */
 
 /* Private headers needed by this file */
-#include "H5FDprivate.h"  /* File drivers        */
+#include "H5FDprivate.h" /* File drivers        */
 
 /**************************/
 /* Library Private Macros */

@@ -225,7 +225,8 @@ H5F__set_mpi_atomicity(H5F_t *file, bool flag)
 
     /* Check VFD */
     if (!H5F_SHARED_HAS_FEATURE(file->shared, H5FD_FEAT_HAS_MPI))
-        HGOTO_ERROR(H5E_FILE, H5E_BADVALUE, FAIL, "incorrect VFL driver, does not support MPI atomicity mode");
+        HGOTO_ERROR(H5E_FILE, H5E_BADVALUE, FAIL,
+                    "incorrect VFL driver, does not support MPI atomicity mode");
 
     /* Set atomicity value */
     if (H5FD_set_mpio_atomicity(file->shared->fh, flag) < 0)
@@ -294,7 +295,8 @@ H5F__get_mpi_atomicity(const H5F_t *file, bool *flag)
 
     /* Check VFD */
     if (!H5F_SHARED_HAS_FEATURE(file->shared, H5FD_FEAT_HAS_MPI))
-        HGOTO_ERROR(H5E_FILE, H5E_BADVALUE, FAIL, "incorrect VFL driver, does not support MPI atomicity mode");
+        HGOTO_ERROR(H5E_FILE, H5E_BADVALUE, FAIL,
+                    "incorrect VFL driver, does not support MPI atomicity mode");
 
     /* Get atomicity value */
     if (H5FD_get_mpio_atomicity(file->shared->fh, flag) < 0)

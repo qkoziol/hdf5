@@ -18,11 +18,11 @@
 
 #include "H5FDmodule.h" /* This source code file is part of the H5FD module */
 
-#include "H5private.h"      /* Generic Functions                        */
-#include "H5Eprivate.h"     /* Error handling                           */
-#include "H5FDpkg.h"        /* File drivers                             */
-#include "H5FDonion_pkg.h"  /* Onion file driver internals              */
-#include "H5MMprivate.h"    /* Memory management                        */
+#include "H5private.h"     /* Generic Functions                        */
+#include "H5Eprivate.h"    /* Error handling                           */
+#include "H5FDpkg.h"       /* File drivers                             */
+#include "H5FDonion_pkg.h" /* Onion file driver internals              */
+#include "H5MMprivate.h"   /* Memory management                        */
 
 /* 2^n for uint64_t types -- H5_EXP2 unsafe past 32 bits */
 #define U64_EXP2(n) ((uint64_t)1 << (n))

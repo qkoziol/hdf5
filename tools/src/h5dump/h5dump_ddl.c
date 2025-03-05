@@ -1185,9 +1185,9 @@ dump_fcpl(hid_t fid)
     hsize_t               fsp_size;     /* file space page size */
     H5F_info2_t           finfo;        /* file information */
 #ifdef SHOW_FILE_DRIVER
-    hid_t fapl;      /* file access property list ID */
-    H5FD_class_value_t drvr_cls_value;   /* file driver */
-    char  dname[32]; /* buffer to store driver name */
+    hid_t              fapl;           /* file access property list ID */
+    H5FD_class_value_t drvr_cls_value; /* file driver */
+    char               dname[32];      /* buffer to store driver name */
 #endif
     unsigned sym_lk;    /* symbol table B-tree leaf 'K' value */
     unsigned sym_ik;    /* symbol table B-tree internal 'K' value */
@@ -1215,7 +1215,7 @@ dump_fcpl(hid_t fid)
     H5Pget_file_space_page_size(fcpl, &fsp_size);
     H5Pclose(fcpl);
 #ifdef SHOW_FILE_DRIVER
-    fapl    = h5_fileaccess();
+    fapl           = h5_fileaccess();
     drvr_cls_value = H5Pget_driver_cls_value(fapl);
     H5Pclose(fapl);
 #endif

@@ -59,9 +59,9 @@
 #ifdef H5_HAVE_ROS3_VFD
 #include "H5FDros3_private.h" /* ros3 VFD driver */
 #endif
-#include "H5FDsec2_private.h" /* sec2 VFD driver */
+#include "H5FDsec2_private.h"     /* sec2 VFD driver */
 #include "H5FDsplitter_private.h" /* splitter VFD driver */
-#include "H5FDstdio_private.h" /* stdio VFD driver */
+#include "H5FDstdio_private.h"    /* stdio VFD driver */
 #ifdef H5_HAVE_SUBFILING_VFD
 #include "H5FDsubfiling_private.h" /* subfiling VFD driver */
 #endif
@@ -69,7 +69,6 @@
 /****************/
 /* Local Macros */
 /****************/
-
 
 /******************/
 /* Local Typedefs */
@@ -93,16 +92,15 @@ typedef struct H5FD_get_driver_ud_t {
 /* Package Typedefs */
 /********************/
 
-
 /********************/
 /* Local Prototypes */
 /********************/
-static herr_t H5FD__free_cls(const H5FD_class_t *cls);
-static herr_t H5FD__set_def_driver(void);
-static herr_t H5FD__driver_find(H5PL_vfd_key_t *key, H5FD_driver_t **driver);
+static herr_t         H5FD__free_cls(const H5FD_class_t *cls);
+static herr_t         H5FD__set_def_driver(void);
+static herr_t         H5FD__driver_find(H5PL_vfd_key_t *key, H5FD_driver_t **driver);
 static H5FD_driver_t *H5FD__driver_create(H5FD_class_t *cls);
-static herr_t H5FD__driver_free(H5FD_driver_t *driver);
-static herr_t H5FD__driver_free_id(H5FD_driver_t *driver, void **request);
+static herr_t         H5FD__driver_free(H5FD_driver_t *driver);
+static herr_t         H5FD__driver_free_id(H5FD_driver_t *driver, void **request);
 
 /*********************/
 /* Package Variables */
@@ -126,11 +124,9 @@ unsigned long H5FD_file_serial_no_p;
 /* Library Private Variables */
 /*****************************/
 
-
 /*******************/
 /* Local Variables */
 /*******************/
-
 
 /* Declare a free list to manage the H5FD_class_t struct */
 H5FL_DEFINE_STATIC(H5FD_class_t);
@@ -140,11 +136,11 @@ H5FL_DEFINE_STATIC(H5FD_driver_t);
 
 /* File driver ID class */
 static H5I_class_t H5I_VFL_CLS[1] = {{
-    H5I_VFL,                   /* ID class value */
-    0,                         /* Class flags */
-    0,                         /* # of reserved IDs for class */
-    NULL,                      /* Callback for locking objects of this class */
-    NULL,                      /* Callback for unlocking objects of this class */
+    H5I_VFL,                         /* ID class value */
+    0,                               /* Class flags */
+    0,                               /* # of reserved IDs for class */
+    NULL,                            /* Callback for locking objects of this class */
+    NULL,                            /* Callback for unlocking objects of this class */
     (H5I_free_t)H5FD__driver_free_id /* Callback routine for closing objects of this class */
 }};
 
@@ -267,7 +263,7 @@ done:
 herr_t
 H5FD_init_phase2(void)
 {
-    herr_t ret_value    = SUCCEED; /* Return value */
+    herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
@@ -347,7 +343,7 @@ H5FD_term_package(void)
             if (0 == n)
                 H5_PKG_INIT_VAR = false;
         } /* end else */
-    } /* end if */
+    }     /* end if */
 
     FUNC_LEAVE_NOAPI(n)
 } /* end H5FD_term_package() */
@@ -389,9 +385,9 @@ H5FD__free_cls(const H5FD_class_t *cls)
                         cls->name);
     }
 
-H5_GCC_CLANG_DIAG_OFF("cast-qual")
+    H5_GCC_CLANG_DIAG_OFF("cast-qual")
     H5FL_FREE(H5FD_class_t, (H5FD_class_t *)cls);
-H5_GCC_CLANG_DIAG_ON("cast-qual")
+    H5_GCC_CLANG_DIAG_ON("cast-qual")
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -410,13 +406,13 @@ done:
 static herr_t
 H5FD__set_def_driver(void)
 {
-    const char *driver_env_var;
-    const char *driver_config_env_var = NULL;
-    H5FD_driver_t *driver = NULL;    /* VFD driver */
-    H5P_genplist_t    *def_fapl;     /* Default file access property list */
-    H5P_genclass_t    *def_fapclass; /* Default file access property class */
+    const char        *driver_env_var;
+    const char        *driver_config_env_var = NULL;
+    H5FD_driver_t     *driver                = NULL;         /* VFD driver */
+    H5P_genplist_t    *def_fapl;                             /* Default file access property list */
+    H5P_genclass_t    *def_fapclass;                         /* Default file access property class */
     H5FD_driver_prop_t def_driver_prop = {NULL, NULL, NULL}; /* VFD driver for default FAPL */
-    herr_t      ret_value      = SUCCEED;
+    herr_t             ret_value       = SUCCEED;
 
     FUNC_ENTER_PACKAGE
 
@@ -425,7 +421,7 @@ H5FD__set_def_driver(void)
 
     /* Only parse VFL driver string if it's set */
     if (driver_env_var && *driver_env_var) {
-        htri_t             driver_is_registered;
+        htri_t driver_is_registered;
 
         /* Check for [legacy] aliases of the internal VFDs */
         if (!strcmp(driver_env_var, "core_paged"))
@@ -445,7 +441,7 @@ H5FD__set_def_driver(void)
             /* Register the VFL driver */
             if (NULL == (driver = H5FD__register_driver_by_name(driver_env_var)))
                 HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "can't register VFL driver");
-        }     /* end else */
+        } /* end else */
 
         /* Get any driver config string from the environment variable */
         driver_config_env_var = getenv(HDF5_DRIVER_CONFIG);
@@ -477,7 +473,8 @@ H5FD__set_def_driver(void)
 
     /* Set new default VFL driver for default file access pclass */
     if (H5P_reset_vfd_class(def_fapclass, &def_driver_prop) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set default VFD driver for default file access property class");
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL,
+                    "can't set default VFD driver for default file access property class");
 
 done:
     /* Release VFD used for default FAPL */
@@ -500,7 +497,7 @@ done:
 static H5FD_driver_t *
 H5FD__driver_create(H5FD_class_t *cls)
 {
-    H5FD_driver_t *driver = NULL; /* New VFD driver struct */
+    H5FD_driver_t *driver    = NULL; /* New VFD driver struct */
     H5FD_driver_t *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -515,7 +512,7 @@ H5FD__driver_create(H5FD_class_t *cls)
 
     /* Add driver to list of active VFD drivers */
     if (H5FD_driver_list_head_g) {
-        driver->next             = H5FD_driver_list_head_g;
+        driver->next                  = H5FD_driver_list_head_g;
         H5FD_driver_list_head_g->prev = driver;
     }
     H5FD_driver_list_head_g = driver;
@@ -721,10 +718,10 @@ done:
 H5FD_driver_t *
 H5FD__driver_register(const H5FD_class_t *cls)
 {
-    H5FD_driver_t       *driver = NULL; /* Connector for class */
-    H5FD_class_t       *saved = NULL;
-    H5FD_mem_t          type;
-    H5FD_driver_t       *ret_value = NULL; /* Return value */
+    H5FD_driver_t *driver = NULL; /* Connector for class */
+    H5FD_class_t  *saved  = NULL;
+    H5FD_mem_t     type;
+    H5FD_driver_t *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -781,8 +778,8 @@ done:
 H5FD_driver_t *
 H5FD__register_driver_by_name(const char *name)
 {
-    H5FD_driver_t *driver = NULL; /* Driver for class */
-    H5PL_vfd_key_t    key;              /* Info for driver search */
+    H5FD_driver_t *driver = NULL;    /* Driver for class */
+    H5PL_vfd_key_t key;              /* Info for driver search */
     H5FD_driver_t *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -838,13 +835,13 @@ H5FD_driver_t *
 H5FD__register_driver_by_value(H5FD_class_value_t value)
 {
     H5FD_driver_t *driver = NULL;
-    H5PL_vfd_key_t    key;              /* Info for driver search */
+    H5PL_vfd_key_t key; /* Info for driver search */
     H5FD_driver_t *ret_value = NULL;
 
     FUNC_ENTER_PACKAGE
 
     /* Set up data for find */
-    key.kind   = H5FD_GET_DRIVER_BY_VALUE;
+    key.kind    = H5FD_GET_DRIVER_BY_VALUE;
     key.u.value = value;
 
     /* Check if driver is already registered */
@@ -894,9 +891,9 @@ done:
 htri_t
 H5FD__is_driver_registered_by_name(const char *driver_name, H5FD_driver_t **registered_driver)
 {
-    H5PL_vfd_key_t    key;              /* Info for driver search */
+    H5PL_vfd_key_t key; /* Info for driver search */
     H5FD_driver_t *_registered_driver = NULL;
-    htri_t               ret_value = false; /* Return value */
+    htri_t         ret_value          = false; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -937,14 +934,14 @@ done:
 htri_t
 H5FD__is_driver_registered_by_value(H5FD_class_value_t driver_value, H5FD_driver_t **registered_driver)
 {
-    H5PL_vfd_key_t    key;              /* Info for driver search */
+    H5PL_vfd_key_t key; /* Info for driver search */
     H5FD_driver_t *_registered_driver = NULL;
-    htri_t               ret_value = false; /* Return value */
+    htri_t         ret_value          = false; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
     /* Set up data for find */
-    key.kind   = H5FD_GET_DRIVER_BY_VALUE;
+    key.kind    = H5FD_GET_DRIVER_BY_VALUE;
     key.u.value = driver_value;
 
     /* Allow this routine to be called with registered_driver = NULL */
@@ -1008,9 +1005,10 @@ H5FD_driver_prop_cmp(int *cmp_value, const H5FD_driver_prop_t *prop1, const H5FD
                 if (prop1->driver_info && prop2->driver_info) {
                     assert(prop1->driver->cls->fapl_size == prop2->driver->cls->fapl_size);
                     assert(prop1->driver->cls->fapl_size > 0);
-                    tmp_cmp_value = memcmp(prop1->driver_info, prop2->driver_info, prop1->driver->cls->fapl_size);
+                    tmp_cmp_value =
+                        memcmp(prop1->driver_info, prop2->driver_info, prop1->driver->cls->fapl_size);
                 } /* end if */
-            } /* end else */
+            }     /* end else */
 
             if (0 == tmp_cmp_value) {
                 if (prop1->driver_config_str && !prop2->driver_config_str)
@@ -1021,12 +1019,12 @@ H5FD_driver_prop_cmp(int *cmp_value, const H5FD_driver_prop_t *prop1, const H5FD
                     if (prop1->driver_config_str && prop2->driver_config_str)
                         tmp_cmp_value = strcmp(prop1->driver_config_str, prop2->driver_config_str);
                 } /* end else */
-            } /* end if*/
+            }     /* end if*/
 
             /* Set output comparison value */
             *cmp_value = tmp_cmp_value;
         } /* end else */
-    } /* end else */
+    }     /* end else */
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)

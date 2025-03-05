@@ -38,7 +38,7 @@
 #define HDFS_STATS 0
 
 /* The driver identification number, initialized at runtime */
-hid_t H5FD_HDFS_id_g = H5I_INVALID_HID;
+hid_t          H5FD_HDFS_id_g     = H5I_INVALID_HID;
 H5FD_driver_t *H5FD_HDFS_driver_g = NULL;
 
 /* Flag to indicate whether global driver resources & settings have been
@@ -351,7 +351,7 @@ H5FD__hdfs_unregister(void)
 #endif
 
     /* Reset VFL ID */
-    H5FD_HDFS_id_g = H5I_INVALID_HID;
+    H5FD_HDFS_id_g     = H5I_INVALID_HID;
     H5FD_HDFS_driver_g = NULL;
 
     FUNC_LEAVE_NOAPI(SUCCEED)

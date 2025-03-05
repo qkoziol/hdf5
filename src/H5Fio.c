@@ -255,7 +255,8 @@ H5F_shared_select_read(H5F_shared_t *f_sh, H5FD_mem_t type, uint32_t count, H5S_
     map_type = (type == H5FD_MEM_GHEAP) ? H5FD_MEM_DRAW : type;
 
     /* Pass down to file driver layer (bypass page buffer for now) */
-    if (H5FD_read_selection(f_sh->fh, map_type, count, mem_spaces, file_spaces, offsets, element_sizes, bufs) < 0)
+    if (H5FD_read_selection(f_sh->fh, map_type, count, mem_spaces, file_spaces, offsets, element_sizes,
+                            bufs) < 0)
         HGOTO_ERROR(H5E_IO, H5E_READERROR, FAIL, "selection read through file driver failed");
 
 done:
@@ -296,7 +297,8 @@ H5F_shared_select_write(H5F_shared_t *f_sh, H5FD_mem_t type, uint32_t count, H5S
     map_type = (type == H5FD_MEM_GHEAP) ? H5FD_MEM_DRAW : type;
 
     /* Pass down to file driver layer (bypass page buffer for now) */
-    if (H5FD_write_selection(f_sh->fh, map_type, count, mem_spaces, file_spaces, offsets, element_sizes, bufs) < 0)
+    if (H5FD_write_selection(f_sh->fh, map_type, count, mem_spaces, file_spaces, offsets, element_sizes,
+                             bufs) < 0)
         HGOTO_ERROR(H5E_IO, H5E_WRITEERROR, FAIL, "selection write through file driver failed");
 
 done:

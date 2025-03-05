@@ -21,10 +21,10 @@
 
 #include "H5FDmodule.h" /* This source code file is part of the H5FD module */
 
-#include "H5private.h"          /* Generic Functions        */
-#include "H5Eprivate.h"         /* Error handling           */
-#include "H5FDpkg.h"            /* File drivers             */
-#include "H5FDsubfiling_pkg.h"  /* Subfiling file driver    */
+#include "H5private.h"         /* Generic Functions        */
+#include "H5Eprivate.h"        /* Error handling           */
+#include "H5FDpkg.h"           /* File drivers             */
+#include "H5FDsubfiling_pkg.h" /* Subfiling file driver    */
 
 /*-------------------------------------------------------------------------
  * Function:    H5FD__subfiling__truncate_sub_files

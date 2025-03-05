@@ -18,11 +18,11 @@
 
 #include "H5FDmodule.h" /* This source code file is part of the H5FD module */
 
-#include "H5private.h"      /* Generic Functions                        */
-#include "H5Eprivate.h"     /* Error handling                           */
-#include "H5FDpkg.h"        /* File drivers                             */
-#include "H5FDonion_pkg.h"  /* Onion file driver internals              */
-#include "H5MMprivate.h"    /* Memory management                        */
+#include "H5private.h"     /* Generic Functions                        */
+#include "H5Eprivate.h"    /* Error handling                           */
+#include "H5FDpkg.h"       /* File drivers                             */
+#include "H5FDonion_pkg.h" /* Onion file driver internals              */
+#include "H5MMprivate.h"   /* Memory management                        */
 
 /*-----------------------------------------------------------------------------
  * Function:    H5FD_ingest_header

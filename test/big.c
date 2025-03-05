@@ -709,8 +709,8 @@ error:
 int
 main(int ac, char **av)
 {
-    unsigned long seed   = 0; /* Random # seed */
-    hid_t         fapl   = H5I_INVALID_HID;
+    unsigned long      seed = 0; /* Random # seed */
+    hid_t              fapl = H5I_INVALID_HID;
     H5FD_class_value_t driver_cls_value;
 
     /* parameters setup */

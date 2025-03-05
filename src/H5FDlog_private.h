@@ -18,10 +18,10 @@
 #define H5FDlog_private_H
 
 /* Include driver's public header */
-#include "H5FDlog.h"     /* log VFD driver     */
+#include "H5FDlog.h" /* log VFD driver     */
 
 /* Private headers needed by this file */
-#include "H5FDprivate.h"  /* File drivers        */
+#include "H5FDprivate.h" /* File drivers        */
 
 /**************************/
 /* Library Private Macros */

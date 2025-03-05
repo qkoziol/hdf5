@@ -31,7 +31,7 @@
 #ifdef H5_HAVE_DIRECT
 
 /* The driver identification number, initialized at runtime */
-hid_t H5FD_DIRECT_id_g = H5I_INVALID_HID;
+hid_t          H5FD_DIRECT_id_g     = H5I_INVALID_HID;
 H5FD_driver_t *H5FD_DIRECT_driver_g = NULL;
 
 /* File operations */
@@ -206,7 +206,7 @@ H5FD__direct_unregister(void)
     FUNC_ENTER_PACKAGE_NOERR
 
     /* Reset VFL ID */
-    H5FD_DIRECT_id_g = H5I_INVALID_HID;
+    H5FD_DIRECT_id_g     = H5I_INVALID_HID;
     H5FD_DIRECT_driver_g = NULL;
 
     FUNC_LEAVE_NOAPI(SUCCEED)

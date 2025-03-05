@@ -130,7 +130,7 @@ public class TestH5Pfaplhdfs {
 
         long driver_id = H5.H5Pget_driver(fapl_id);
         assertTrue("H5.H5FDcmp_driver_cls(H5FD_HDFS, driver_id)",
-                       H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_HDFS, driver_id));
+                   H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_HDFS, driver_id));
 
         H5FD_hdfs_fapl_t copy = H5.H5Pget_fapl_hdfs(fapl_id);
         assertEquals("fapl contents should match",
@@ -157,7 +157,7 @@ public class TestH5Pfaplhdfs {
         H5.H5Pset_fapl_sec2(fapl_id);
         long driver_id = H5.H5Pget_driver(fapl_id);
         assertTrue("H5.H5FDcmp_driver_cls(H5FD_SEC2, driver_id)",
-                       H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_SEC2, driver_id));
+                   H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_SEC2, driver_id));
         H5FD_hdfs_fapl_t fails = H5.H5Pget_fapl_hdfs(fapl_id);
     }
 }

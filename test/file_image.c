@@ -680,30 +680,30 @@ H5_GCC_CLANG_DIAG_OFF("format-nonliteral")
 static int
 test_get_file_image(const char *test_banner, const int file_name_num, hid_t fapl, bool user)
 {
-    char      file_name[1024] = "\0";
-    void     *insertion_ptr   = NULL;
-    void     *image_ptr       = NULL;
-    void     *file_image_ptr  = NULL;
-    bool      is_family_file  = false;
-    bool      identical;
-    int       data[100];
-    int       i;
-    int       fd = -1;
-    int       result;
+    char               file_name[1024] = "\0";
+    void              *insertion_ptr   = NULL;
+    void              *image_ptr       = NULL;
+    void              *file_image_ptr  = NULL;
+    bool               is_family_file  = false;
+    bool               identical;
+    int                data[100];
+    int                i;
+    int                fd = -1;
+    int                result;
     H5FD_class_value_t driver_cls_value;
-    hid_t     file_id      = H5I_INVALID_HID;
-    hid_t     dset_id      = H5I_INVALID_HID;
-    hid_t     space_id     = H5I_INVALID_HID;
-    hid_t     core_fapl_id = H5I_INVALID_HID;
-    hid_t     core_file_id = H5I_INVALID_HID;
-    herr_t    err;
-    hsize_t   dims[2];
-    ssize_t   bytes_read;
-    ssize_t   image_size;
-    ssize_t   file_size;
-    h5_stat_t stat_buf;
-    hid_t     fcpl = H5I_INVALID_HID;
-    herr_t    ret;
+    hid_t              file_id      = H5I_INVALID_HID;
+    hid_t              dset_id      = H5I_INVALID_HID;
+    hid_t              space_id     = H5I_INVALID_HID;
+    hid_t              core_fapl_id = H5I_INVALID_HID;
+    hid_t              core_file_id = H5I_INVALID_HID;
+    herr_t             err;
+    hsize_t            dims[2];
+    ssize_t            bytes_read;
+    ssize_t            image_size;
+    ssize_t            file_size;
+    h5_stat_t          stat_buf;
+    hid_t              fcpl = H5I_INVALID_HID;
+    herr_t             ret;
 
     TESTING(test_banner);
 

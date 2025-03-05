@@ -45,17 +45,17 @@
 
 /* If the module using this macro is allowed access to the private variables, access them directly */
 #ifdef H5FD_MODULE
-#define H5FD_DRVR_GET_VALUE(D)            ((D)->cls->value)
-#define H5FD_DRVR_HAS_CMP(D)            ((D)->cls->cmp)
-#define H5FD_DRVR_HAS_LOCK(D)            ((D)->cls->lock)
-#define H5FD_HAS_FEATURE(FH, FL)           ((FH)->lf->feature_flags & (FL))
-#define H5FD_FC_DEGREE(FH)                   ((FH)->driver->cls->fc_degree)
+#define H5FD_DRVR_GET_VALUE(D)   ((D)->cls->value)
+#define H5FD_DRVR_HAS_CMP(D)     ((D)->cls->cmp)
+#define H5FD_DRVR_HAS_LOCK(D)    ((D)->cls->lock)
+#define H5FD_HAS_FEATURE(FH, FL) ((FH)->lf->feature_flags & (FL))
+#define H5FD_FC_DEGREE(FH)       ((FH)->driver->cls->fc_degree)
 #else /* H5F_MODULE */
-#define H5FD_DRVR_GET_VALUE(D)            (H5FD_driver_get_value(D))
-#define H5FD_DRVR_HAS_CMP(D)            (H5FD_driver_has_cmp(D))
-#define H5FD_DRVR_HAS_LOCK(D)            (H5FD_driver_has_lock(D))
-#define H5FD_HAS_FEATURE(FH, FL)           (H5FD_has_feature(FH, FL))
-#define H5FD_FC_DEGREE(FH)                   (H5FD_get_fc_degree(FH))
+#define H5FD_DRVR_GET_VALUE(D)   (H5FD_driver_get_value(D))
+#define H5FD_DRVR_HAS_CMP(D)     (H5FD_driver_has_cmp(D))
+#define H5FD_DRVR_HAS_LOCK(D)    (H5FD_driver_has_lock(D))
+#define H5FD_HAS_FEATURE(FH, FL) (H5FD_has_feature(FH, FL))
+#define H5FD_FC_DEGREE(FH)       (H5FD_get_fc_degree(FH))
 #endif /* H5F_MODULE */
 
 /****************************/
@@ -97,15 +97,15 @@ typedef struct H5FD_driver_t H5FD_driver_t;
 
 /* Define structure to hold driver ID, info & configuration string for FAPLs */
 typedef struct H5FD_driver_prop_t {
-    H5FD_driver_t *driver;         /* Driver */
-    const void *driver_info;       /* Driver info, for open callbacks */
-    const char *driver_config_str; /* Driver configuration string */
+    H5FD_driver_t *driver;            /* Driver */
+    const void    *driver_info;       /* Driver info, for open callbacks */
+    const char    *driver_config_str; /* Driver configuration string */
 } H5FD_driver_prop_t;
 
 /* Define structure to hold driver & VFD file handle for each open file */
 typedef struct H5FD_int_t {
-    H5FD_driver_t *driver;      /* Driver */
-    H5FD_t    *file;              /* VFD's file handle */
+    H5FD_driver_t *driver; /* Driver */
+    H5FD_t        *file;   /* VFD's file handle */
 } H5FD_int_t;
 
 /* Which kind of VFD field to use for searching */
@@ -126,17 +126,18 @@ typedef enum H5FD_get_driver_kind_t {
 struct H5F_t;
 union H5PL_key_t;
 
-H5_DLL herr_t        H5FD_init_phase1(void);
-H5_DLL herr_t        H5FD_init_phase2(void);
-H5_DLL int           H5FD_term_interface(void);
-H5_DLL herr_t        H5FD_locate_signature(H5FD_int_t *fh, haddr_t *sig_addr);
-H5_DLL herr_t        H5FD_sb_load(H5FD_int_t *fh, const char *name, const uint8_t *buf);
+H5_DLL herr_t         H5FD_init_phase1(void);
+H5_DLL herr_t         H5FD_init_phase2(void);
+H5_DLL int            H5FD_term_interface(void);
+H5_DLL herr_t         H5FD_locate_signature(H5FD_int_t *fh, haddr_t *sig_addr);
+H5_DLL herr_t         H5FD_sb_load(H5FD_int_t *fh, const char *name, const uint8_t *buf);
 H5_DLL H5FD_driver_t *H5FD_get_driver_by_name(const char *name, bool is_api);
 H5_DLL H5FD_driver_t *H5FD_get_driver_by_value(H5FD_class_value_t value, bool is_api);
-H5_DLL herr_t  H5FD_driver_prop_cmp(int *cmp_value, const H5FD_driver_prop_t *prop1, const H5FD_driver_prop_t *prop2);
-H5_DLL herr_t  H5FD_driver_prop_free(const H5FD_driver_prop_t *driver_prop);
-H5_DLL herr_t  H5FD_cmp_driver_cls(int *cmp_value, const H5FD_class_t *cls1, const H5FD_class_t *cls2);
-H5_DLL herr_t  H5FD_driver_query(const H5FD_driver_t *driver, unsigned long *flags /*out*/);
+H5_DLL herr_t         H5FD_driver_prop_cmp(int *cmp_value, const H5FD_driver_prop_t *prop1,
+                                           const H5FD_driver_prop_t *prop2);
+H5_DLL herr_t         H5FD_driver_prop_free(const H5FD_driver_prop_t *driver_prop);
+H5_DLL herr_t         H5FD_cmp_driver_cls(int *cmp_value, const H5FD_class_t *cls1, const H5FD_class_t *cls2);
+H5_DLL herr_t         H5FD_driver_query(const H5FD_driver_t *driver, unsigned long *flags /*out*/);
 H5_DLL herr_t  H5FD_check_plugin_load(const H5FD_class_t *cls, const union H5PL_key_t *key, bool *success);
 H5_DLL htri_t  H5FD_try_extend(H5FD_int_t *fh, H5FD_mem_t type, struct H5F_t *f, haddr_t blk_end,
                                hsize_t extra_requested);
@@ -150,13 +151,13 @@ H5_DLL herr_t  H5FD_set_paged_aggr(H5FD_int_t *fh, bool paged);
 
 /* Driver callback equivalents */
 H5_DLL hsize_t H5FD_sb_size(H5FD_int_t *file);
-H5_DLL herr_t H5FD_sb_encode(H5FD_int_t *file, char *name /*out*/, uint8_t *buf);
-H5_DLL void *H5FD_fapl_get(H5FD_int_t *fh);
-H5_DLL herr_t H5FD_free_driver_info(const H5FD_driver_t *driver, const void *driver_info);
-H5_DLL herr_t  H5FD_open(bool attempt, H5FD_int_t **fh, const char *name, unsigned flags, H5P_genplist_t *fapl,
-                         haddr_t maxaddr);
-H5_DLL herr_t  H5FD_close(H5FD_int_t *fh);
-H5_DLL int     H5FD_cmp(const H5FD_int_t *fh1, const H5FD_int_t *fh2);
+H5_DLL herr_t  H5FD_sb_encode(H5FD_int_t *file, char *name /*out*/, uint8_t *buf);
+H5_DLL void   *H5FD_fapl_get(H5FD_int_t *fh);
+H5_DLL herr_t  H5FD_free_driver_info(const H5FD_driver_t *driver, const void *driver_info);
+H5_DLL herr_t H5FD_open(bool attempt, H5FD_int_t **fh, const char *name, unsigned flags, H5P_genplist_t *fapl,
+                        haddr_t maxaddr);
+H5_DLL herr_t H5FD_close(H5FD_int_t *fh);
+H5_DLL int    H5FD_cmp(const H5FD_int_t *fh1, const H5FD_int_t *fh2);
 H5_DLL haddr_t H5FD_alloc(H5FD_int_t *fh, H5FD_mem_t type, struct H5F_t *f, hsize_t size, haddr_t *frag_addr,
                           hsize_t *frag_size);
 H5_DLL herr_t  H5FD_free(H5FD_int_t *fh, H5FD_mem_t type, struct H5F_t *f, haddr_t addr, hsize_t size);
@@ -183,14 +184,14 @@ H5_DLL herr_t  H5FD_ctl(H5FD_int_t *fh, uint64_t op_code, uint64_t flags, const 
 
 /* Functions than retrieve values set/cached in driver */
 H5_DLL H5FD_class_value_t H5FD_driver_get_value(const H5FD_driver_t *driver);
-H5_DLL bool    H5FD_driver_has_cmp(const H5FD_driver_t *driver);
-H5_DLL bool    H5FD_driver_has_lock(const H5FD_driver_t *driver);
-H5_DLL bool    H5FD_has_feature(const H5FD_int_t *fh, unsigned feature);
-H5_DLL herr_t  H5FD_get_feature_flags(const H5FD_int_t *file, unsigned long *feature_flags);
-H5_DLL haddr_t H5FD_get_maxaddr(const H5FD_int_t *fh);
-H5_DLL herr_t  H5FD_get_fs_type_map(const H5FD_int_t *fh, H5FD_mem_t *type_map);
+H5_DLL bool               H5FD_driver_has_cmp(const H5FD_driver_t *driver);
+H5_DLL bool               H5FD_driver_has_lock(const H5FD_driver_t *driver);
+H5_DLL bool               H5FD_has_feature(const H5FD_int_t *fh, unsigned feature);
+H5_DLL herr_t             H5FD_get_feature_flags(const H5FD_int_t *file, unsigned long *feature_flags);
+H5_DLL haddr_t            H5FD_get_maxaddr(const H5FD_int_t *fh);
+H5_DLL herr_t             H5FD_get_fs_type_map(const H5FD_int_t *fh, H5FD_mem_t *type_map);
 H5_DLL H5F_close_degree_t H5FD_get_fc_degree(const H5FD_int_t *fh);
-H5_DLL bool H5FD_driver_has_vector_select_io(const H5FD_int_t *fh, bool is_write);
+H5_DLL bool               H5FD_driver_has_vector_select_io(const H5FD_int_t *fh, bool is_write);
 
 H5_DLL herr_t H5FD_sort_vector_io_req(bool *vector_was_sorted, uint32_t count, H5FD_mem_t types[],
                                       haddr_t addrs[], size_t sizes[], H5_flexible_const_ptr_t bufs[],
@@ -208,8 +209,8 @@ H5_DLL herr_t H5FD_sort_selection_io_req(bool *selection_was_sorted, size_t coun
 /* General routines */
 H5_DLL haddr_t H5FD_mpi_MPIOff_to_haddr(MPI_Offset mpi_off);
 H5_DLL herr_t  H5FD_mpi_haddr_to_MPIOff(haddr_t addr, MPI_Offset *mpi_off /*out*/);
-H5_DLL herr_t H5FD_set_mpio_atomicity(H5FD_int_t *fh, bool flag);
-H5_DLL herr_t H5FD_get_mpio_atomicity(H5FD_int_t *fh, bool *flag);
+H5_DLL herr_t  H5FD_set_mpio_atomicity(H5FD_int_t *fh, bool flag);
+H5_DLL herr_t  H5FD_get_mpio_atomicity(H5FD_int_t *fh, bool *flag);
 
 /* Driver specific methods */
 H5_DLL int      H5FD_mpi_get_rank(H5FD_int_t *fh);

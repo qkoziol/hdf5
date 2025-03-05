@@ -10266,7 +10266,7 @@ external_set_elink_cb(hid_t fapl, bool new_format)
 {
     hid_t file1 = H5I_INVALID_HID, file2 = H5I_INVALID_HID, group = H5I_INVALID_HID, gapl = H5I_INVALID_HID,
           fam_fapl = H5I_INVALID_HID, ret_fapl = H5I_INVALID_HID;
-    H5FD_class_value_t base_driver_cls_value;
+    H5FD_class_value_t   base_driver_cls_value;
     set_elink_cb_t       op_data, *op_data_p;
     H5L_elink_traverse_t cb;
     char                 filename1[NAME_BUF_SIZE], filename2[NAME_BUF_SIZE];
@@ -10294,8 +10294,8 @@ external_set_elink_cb(hid_t fapl, bool new_format)
     /* Also disable parallel member drivers, because H5F_HAS_FEATURE(H5FD_FEAT_HAS_MPI)
        would report false, causing problems */
     op_data.base_fapl = fapl;
-    if (base_driver_cls_value == H5_VFD_CORE || base_driver_cls_value == H5_VFD_FAMILY || base_driver_cls_value == H5_VFD_MULTI ||
-        base_driver_cls_value == H5_VFD_DIRECT || driver_is_parallel)
+    if (base_driver_cls_value == H5_VFD_CORE || base_driver_cls_value == H5_VFD_FAMILY ||
+        base_driver_cls_value == H5_VFD_MULTI || base_driver_cls_value == H5_VFD_DIRECT || driver_is_parallel)
         op_data.base_fapl = H5P_DEFAULT;
     op_data.fam_size = ELINK_CB_FAM_SIZE;
     op_data.code     = 0;

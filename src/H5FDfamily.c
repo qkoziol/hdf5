@@ -46,7 +46,7 @@
 #define H5FD_FAM_DEF_MEM_SIZE ((hsize_t)(100 * H5_MB))
 
 /* The driver identification number, initialized at runtime */
-hid_t H5FD_FAMILY_id_g = H5I_INVALID_HID;
+hid_t          H5FD_FAMILY_id_g     = H5I_INVALID_HID;
 H5FD_driver_t *H5FD_FAMILY_driver_g = NULL;
 
 /* Driver-specific file access properties */
@@ -311,7 +311,7 @@ H5FD__family_unregister(void)
     FUNC_ENTER_PACKAGE_NOERR
 
     /* Reset VFL ID */
-    H5FD_FAMILY_id_g = H5I_INVALID_HID;
+    H5FD_FAMILY_id_g     = H5I_INVALID_HID;
     H5FD_FAMILY_driver_g = NULL;
 
     FUNC_LEAVE_NOAPI(SUCCEED)
@@ -356,7 +356,7 @@ H5Pset_fapl_family(hid_t fapl_id, hsize_t msize, hid_t memb_fapl_id)
 
     /* Initialize driver specific information. */
     fa.memb_size = msize;
-    ret_value = H5P_set_driver(fapl, H5FD_FAMILY_driver_g, &fa, NULL);
+    ret_value    = H5P_set_driver(fapl, H5FD_FAMILY_driver_g, &fa, NULL);
 
 done:
     if (is_default)
@@ -786,7 +786,7 @@ H5FD__family_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxad
 
         /* Enlarge member array */
         if (file->nmembs >= file->amembs) {
-            unsigned n = MAX(64, 2 * file->amembs);
+            unsigned     n = MAX(64, 2 * file->amembs);
             H5FD_int_t **x;
 
             assert(n > 0);
@@ -802,11 +802,13 @@ H5FD__family_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxad
          * Allow H5F_ACC_CREAT only on the first family member.
          */
         if (0 == file->nmembs) {
-            if (H5FD_open(false, &file->memb[file->nmembs], memb_name, (0 == file->nmembs ? flags : t_flags), file->fa.memb_fapl, HADDR_UNDEF) < 0)
+            if (H5FD_open(false, &file->memb[file->nmembs], memb_name, (0 == file->nmembs ? flags : t_flags),
+                          file->fa.memb_fapl, HADDR_UNDEF) < 0)
                 HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL, "unable to open member file");
         }
         else {
-            if (H5FD_open(true, &file->memb[file->nmembs], memb_name, (0 == file->nmembs ? flags : t_flags), file->fa.memb_fapl, HADDR_UNDEF) < 0)
+            if (H5FD_open(true, &file->memb[file->nmembs], memb_name, (0 == file->nmembs ? flags : t_flags),
+                          file->fa.memb_fapl, HADDR_UNDEF) < 0)
                 HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL, "unable to open member file");
 
             if (!file->memb[file->nmembs])
@@ -1034,7 +1036,7 @@ H5FD__family_set_eoa(H5FD_t *_file, H5FD_mem_t type, haddr_t abs_eoa)
 
         /* Enlarge member array */
         if (u >= file->amembs) {
-            unsigned n = MAX(64, 2 * file->amembs);
+            unsigned     n = MAX(64, 2 * file->amembs);
             H5FD_int_t **x = H5MM_realloc(file->memb, n * sizeof(H5FD_int_t *));
 
             if (!x)

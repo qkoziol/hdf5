@@ -38,21 +38,17 @@
 /* Local Macros */
 /****************/
 
-
 /******************/
 /* Local Typedefs */
 /******************/
-
 
 /********************/
 /* Package Typedefs */
 /********************/
 
-
 /********************/
 /* Local Prototypes */
 /********************/
-
 
 /*********************/
 /* Package Variables */
@@ -68,7 +64,6 @@
 
 /* Declare a free list to manage the H5FD_int_t struct */
 H5FL_DEFINE(H5FD_int_t);
-
 
 /*-------------------------------------------------------------------------
  * Function:    H5FD_sb_size
@@ -301,7 +296,7 @@ done:
 herr_t
 H5FD_open(bool try, H5FD_int_t **_fh, const char *name, unsigned flags, H5P_genplist_t *fapl, haddr_t maxaddr)
 {
-    H5FD_int_t            *fh = NULL;           /* File handle */
+    H5FD_int_t            *fh   = NULL;         /* File handle */
     H5FD_t                *file = NULL;         /* File opened */
     H5FD_driver_t         *driver;              /* VFD for file */
     H5FD_driver_prop_t     driver_prop;         /* Property for driver ID & info */
@@ -432,7 +427,7 @@ done :
 herr_t
 H5FD_close(H5FD_int_t *fh)
 {
-    herr_t              ret_value = SUCCEED;
+    herr_t ret_value = SUCCEED;
 
     FUNC_ENTER_NOAPI(FAIL)
 
@@ -788,7 +783,7 @@ done:
 herr_t
 H5FD_read(H5FD_int_t *fh, H5FD_mem_t type, haddr_t addr, size_t size, void *buf /*out*/)
 {
-    H5FD_t *file;
+    H5FD_t  *file;
     hid_t    dxpl_id = H5I_INVALID_HID; /* DXPL for operation */
     uint32_t actual_selection_io_mode;
     herr_t   ret_value = SUCCEED; /* Return value */
@@ -875,11 +870,11 @@ done:
 herr_t
 H5FD_write(H5FD_int_t *fh, H5FD_mem_t type, haddr_t addr, size_t size, const void *buf)
 {
-    H5FD_t *file;
-    hid_t    dxpl_id;           /* DXPL for operation */
+    H5FD_t  *file;
+    hid_t    dxpl_id; /* DXPL for operation */
     uint32_t actual_selection_io_mode;
-    haddr_t  eoa = HADDR_UNDEF; /* EOA for file */
-    herr_t   ret_value = SUCCEED; /* Return value */
+    haddr_t  eoa       = HADDR_UNDEF; /* EOA for file */
+    herr_t   ret_value = SUCCEED;     /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
@@ -915,7 +910,9 @@ H5FD_write(H5FD_int_t *fh, H5FD_mem_t type, haddr_t addr, size_t size, const voi
     if (!H5_addr_defined(eoa))
         HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, FAIL, "driver get_eoa request failed");
     if ((addr + file->base_addr + size) > eoa)
-        HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, FAIL, "addr overflow, addr = %llu, size=%llu, eoa=%llu", (unsigned long long)(addr + file->base_addr), (unsigned long long)size, (unsigned long long)eoa);
+        HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, FAIL, "addr overflow, addr = %llu, size=%llu, eoa=%llu",
+                    (unsigned long long)(addr + file->base_addr), (unsigned long long)size,
+                    (unsigned long long)eoa);
 
     /* Prepare & restore library for user callback */
     H5_BEFORE_USER_CB(FAIL)
@@ -979,16 +976,16 @@ herr_t
 H5FD_read_vector(H5FD_int_t *fh, uint32_t count, H5FD_mem_t types[], haddr_t addrs[], size_t sizes[],
                  void *bufs[] /* out */)
 {
-    H5FD_t *file;
-    H5FD_mem_t type      = H5FD_MEM_DEFAULT;
-    hid_t      dxpl_id   = H5I_INVALID_HID; /* DXPL for operation */
-    size_t     size      = 0;
-    bool       is_raw    = false;           /* Does this include raw data */
+    H5FD_t    *file;
+    H5FD_mem_t type         = H5FD_MEM_DEFAULT;
+    hid_t      dxpl_id      = H5I_INVALID_HID; /* DXPL for operation */
+    size_t     size         = 0;
+    bool       is_raw       = false; /* Does this include raw data */
     bool       addrs_cooked = false;
     bool       extend_sizes = false;
     bool       extend_types = false;
     uint32_t   i;
-    herr_t     ret_value = SUCCEED;         /* Return value */
+    herr_t     ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
@@ -1078,7 +1075,10 @@ H5FD_read_vector(H5FD_int_t *fh, uint32_t count, H5FD_mem_t types[], haddr_t add
                 HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, FAIL, "driver get_eoa request failed");
 
             if ((addrs[i] + size) > eoa)
-                HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, FAIL, "addr overflow, addrs[%d] = %llu, sizes[%d] = %llu, eoa = %llu", (int)i, (unsigned long long)(addrs[i]), (int)i, (unsigned long long)size, (unsigned long long)eoa);
+                HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, FAIL,
+                            "addr overflow, addrs[%d] = %llu, sizes[%d] = %llu, eoa = %llu", (int)i,
+                            (unsigned long long)(addrs[i]), (int)i, (unsigned long long)size,
+                            (unsigned long long)eoa);
         }
     }
     else
@@ -1213,16 +1213,16 @@ herr_t
 H5FD_write_vector(H5FD_int_t *fh, uint32_t count, H5FD_mem_t types[], haddr_t addrs[], size_t sizes[],
                   const void *bufs[])
 {
-    H5FD_t *file;
+    H5FD_t    *file;
     H5FD_mem_t type = H5FD_MEM_DEFAULT;
-    hid_t      dxpl_id;                 /* DXPL for operation */
-    size_t     size = 0;
-    bool       is_raw    = false;       /* Does this include raw data */
+    hid_t      dxpl_id; /* DXPL for operation */
+    size_t     size         = 0;
+    bool       is_raw       = false; /* Does this include raw data */
     bool       addrs_cooked = false;
     bool       extend_sizes = false;
     bool       extend_types = false;
     uint32_t   i;
-    herr_t     ret_value = SUCCEED;     /* Return value */
+    herr_t     ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
@@ -1270,7 +1270,7 @@ H5FD_write_vector(H5FD_int_t *fh, uint32_t count, H5FD_mem_t types[], haddr_t ad
     extend_sizes = false;
     extend_types = false;
     for (i = 0; i < count; i++) {
-        haddr_t    eoa; /* EOA for file */
+        haddr_t eoa; /* EOA for file */
 
         if (!extend_sizes) {
             if (sizes[i] == 0) {
@@ -1305,7 +1305,10 @@ H5FD_write_vector(H5FD_int_t *fh, uint32_t count, H5FD_mem_t types[], haddr_t ad
             HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, FAIL, "driver get_eoa request failed");
 
         if ((addrs[i] + size) > eoa)
-            HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, FAIL, "addr overflow, addrs[%d] = %llu, sizes[%d] = %llu, eoa = %llu", (int)i, (unsigned long long)(addrs[i]), (int)i, (unsigned long long)size, (unsigned long long)eoa);
+            HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, FAIL,
+                        "addr overflow, addrs[%d] = %llu, sizes[%d] = %llu, eoa = %llu", (int)i,
+                        (unsigned long long)(addrs[i]), (int)i, (unsigned long long)size,
+                        (unsigned long long)eoa);
     }
 
     /* if the underlying VFD supports vector write, make the call */
@@ -1434,7 +1437,7 @@ herr_t
 H5FD_read_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, H5S_t **mem_spaces, H5S_t **file_spaces,
                     haddr_t offsets[], size_t element_sizes[], void *bufs[] /* out */)
 {
-    H5FD_t *file;
+    H5FD_t  *file;
     hid_t    mem_space_ids_local[H5FD_LOCAL_SEL_ARR_LEN];
     hid_t   *mem_space_ids = mem_space_ids_local;
     hid_t    file_space_ids_local[H5FD_LOCAL_SEL_ARR_LEN];
@@ -1512,7 +1515,8 @@ H5FD_read_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, H5S_t **mem
 
         for (i = 0; i < count; i++)
             if (offsets[i] > eoa)
-                HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, FAIL, "addr overflow, offsets[%d] = %llu, eoa = %llu", (int)i, (unsigned long long)(offsets[i]), (unsigned long long)eoa);
+                HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, FAIL, "addr overflow, offsets[%d] = %llu, eoa = %llu",
+                            (int)i, (unsigned long long)(offsets[i]), (unsigned long long)eoa);
     }
 
     /* If the underlying VFD supports selection read, make the call */
@@ -1533,7 +1537,8 @@ H5FD_read_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, H5S_t **mem
             if ((mem_space_ids[num_spaces] = H5I_register(H5I_DATASPACE, mem_spaces[num_spaces], true)) < 0)
                 HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "unable to register dataspace ID");
 
-            if ((file_space_ids[num_spaces] = H5I_register(H5I_DATASPACE, file_spaces[num_spaces], true)) < 0) {
+            if ((file_space_ids[num_spaces] = H5I_register(H5I_DATASPACE, file_spaces[num_spaces], true)) <
+                0) {
                 if (NULL == H5I_remove(mem_space_ids[num_spaces]))
                     HDONE_ERROR(H5E_VFL, H5E_CANTREMOVE, FAIL, "problem removing id");
                 HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "unable to register dataspace ID");
@@ -1543,7 +1548,8 @@ H5FD_read_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, H5S_t **mem
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
-                ret_value = (fh->driver->cls->read_selection)(file, type, dxpl_id, count, mem_space_ids, file_space_ids, offsets, element_sizes, bufs);
+                ret_value = (fh->driver->cls->read_selection)(file, type, dxpl_id, count, mem_space_ids,
+                                                              file_space_ids, offsets, element_sizes, bufs);
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
@@ -1560,7 +1566,8 @@ H5FD_read_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, H5S_t **mem
         /* Otherwise, implement the selection read as a sequence of regular
          * or vector read calls.
          */
-        if (H5FD__read_selection_translate(false, fh, type, dxpl_id, count, mem_spaces, file_spaces, offsets, element_sizes, bufs) < 0)
+        if (H5FD__read_selection_translate(false, fh, type, dxpl_id, count, mem_spaces, file_spaces, offsets,
+                                           element_sizes, bufs) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_READERROR, FAIL, "translation to vector or scalar read failed");
 
 done:
@@ -1627,14 +1634,14 @@ herr_t
 H5FD_write_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, H5S_t **mem_spaces, H5S_t **file_spaces,
                      haddr_t offsets[], size_t element_sizes[], const void *bufs[])
 {
-    H5FD_t *file;
+    H5FD_t  *file;
     hid_t    mem_space_ids_local[H5FD_LOCAL_SEL_ARR_LEN];
     hid_t   *mem_space_ids = mem_space_ids_local;
     hid_t    file_space_ids_local[H5FD_LOCAL_SEL_ARR_LEN];
     hid_t   *file_space_ids = file_space_ids_local;
     haddr_t  eoa;
-    uint32_t num_spaces = 0;
-    hid_t    dxpl_id    = H5I_INVALID_HID; /* DXPL for operation */
+    uint32_t num_spaces     = 0;
+    hid_t    dxpl_id        = H5I_INVALID_HID; /* DXPL for operation */
     bool     offsets_cooked = false;
     uint32_t i;
     herr_t   ret_value = SUCCEED; /* Return value */
@@ -1697,7 +1704,8 @@ H5FD_write_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, H5S_t **me
 
     for (i = 0; i < count; i++)
         if (offsets[i] > eoa)
-            HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, FAIL, "addr overflow, offsets[%d] = %llu, eoa = %llu", (int)i, (unsigned long long)(offsets[i]), (unsigned long long)eoa);
+            HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, FAIL, "addr overflow, offsets[%d] = %llu, eoa = %llu", (int)i,
+                        (unsigned long long)(offsets[i]), (unsigned long long)eoa);
 
     /* If the underlying VFD supports selection write, make the call */
     if (file->cls->write_selection) {
@@ -1717,7 +1725,8 @@ H5FD_write_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, H5S_t **me
             if ((mem_space_ids[num_spaces] = H5I_register(H5I_DATASPACE, mem_spaces[num_spaces], true)) < 0)
                 HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "unable to register dataspace ID");
 
-            if ((file_space_ids[num_spaces] = H5I_register(H5I_DATASPACE, file_spaces[num_spaces], true)) < 0) {
+            if ((file_space_ids[num_spaces] = H5I_register(H5I_DATASPACE, file_spaces[num_spaces], true)) <
+                0) {
                 if (NULL == H5I_remove(mem_space_ids[num_spaces]))
                     HDONE_ERROR(H5E_VFL, H5E_CANTREMOVE, FAIL, "problem removing id");
                 HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "unable to register dataspace ID");
@@ -1728,7 +1737,7 @@ H5FD_write_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, H5S_t **me
         H5_BEFORE_USER_CB(FAIL)
             {
                 ret_value = (fh->driver->cls->write_selection)(file, type, dxpl_id, count, mem_space_ids,
-                                                         file_space_ids, offsets, element_sizes, bufs);
+                                                               file_space_ids, offsets, element_sizes, bufs);
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
@@ -1746,7 +1755,8 @@ H5FD_write_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, H5S_t **me
          * or vector write calls.
          */
 
-        if (H5FD__write_selection_translate(false, fh, type, dxpl_id, count, mem_spaces, file_spaces, offsets, element_sizes, bufs) < 0)
+        if (H5FD__write_selection_translate(false, fh, type, dxpl_id, count, mem_spaces, file_spaces, offsets,
+                                            element_sizes, bufs) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_WRITEERROR, FAIL, "translation to vector or scalar write failed");
 
 done:
@@ -1938,7 +1948,7 @@ done:
 herr_t
 H5FD_delete(const char *filename, H5P_genplist_t *fapl)
 {
-    H5FD_driver_t      *driver;              /* VFD for file */
+    H5FD_driver_t     *driver;              /* VFD for file */
     H5FD_driver_prop_t driver_prop;         /* Property for driver ID & info */
     herr_t             ret_value = SUCCEED; /* Return value */
 
@@ -2019,9 +2029,9 @@ H5FD_ctl(H5FD_int_t *fh, uint64_t op_code, uint64_t flags, const void *input, vo
             HGOTO_ERROR(H5E_VFL, H5E_FCNTL, FAIL, "VFD ctl request failed");
     }
     else if (flags & H5FD_CTL_FAIL_IF_UNKNOWN_FLAG)
-        HGOTO_ERROR(H5E_VFL, H5E_FCNTL, FAIL, "VFD ctl request failed (no ctl callback and fail if unknown flag is set)");
+        HGOTO_ERROR(H5E_VFL, H5E_FCNTL, FAIL,
+                    "VFD ctl request failed (no ctl callback and fail if unknown flag is set)");
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FD_ctl() */
-

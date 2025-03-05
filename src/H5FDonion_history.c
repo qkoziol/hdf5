@@ -18,11 +18,11 @@
 
 #include "H5FDmodule.h" /* This source code file is part of the H5FD module */
 
-#include "H5private.h"      /* Generic Functions                        */
-#include "H5Eprivate.h"     /* Error handling                           */
-#include "H5FDpkg.h"        /* File drivers                             */
-#include "H5FDonion_pkg.h"  /* Onion file driver internals              */
-#include "H5MMprivate.h"    /* Memory management                        */
+#include "H5private.h"     /* Generic Functions                        */
+#include "H5Eprivate.h"    /* Error handling                           */
+#include "H5FDpkg.h"       /* File drivers                             */
+#include "H5FDonion_pkg.h" /* Onion file driver internals              */
+#include "H5MMprivate.h"   /* Memory management                        */
 
 /*-----------------------------------------------------------------------------
  * Function:    H5FD__onion_write_history
@@ -35,7 +35,8 @@
  *-----------------------------------------------------------------------------
  */
 herr_t
-H5FD__onion_ingest_history(H5FD_onion_history_t *history_out, H5FD_int_t *raw_file, haddr_t addr, haddr_t size)
+H5FD__onion_ingest_history(H5FD_onion_history_t *history_out, H5FD_int_t *raw_file, haddr_t addr,
+                           haddr_t size)
 {
     unsigned char *buf       = NULL;
     uint32_t       sum       = 0;

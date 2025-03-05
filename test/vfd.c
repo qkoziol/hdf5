@@ -2411,7 +2411,8 @@ compare_splitter_config_info(hid_t fapl_id, H5FD_splitter_vfd_config_t *info)
     if (H5Pget_fapl_splitter(fapl_id, fetched_info) < 0)
         SPLITTER_TEST_FAULT("can't get splitter info");
     if (info->rw_fapl_id == H5P_DEFAULT) {
-        if (H5Pget_driver_cls_value(fetched_info->rw_fapl_id) != H5Pget_driver_cls_value(H5P_FILE_ACCESS_DEFAULT))
+        if (H5Pget_driver_cls_value(fetched_info->rw_fapl_id) !=
+            H5Pget_driver_cls_value(H5P_FILE_ACCESS_DEFAULT))
             SPLITTER_TEST_FAULT("Read-Write driver mismatch (default)\n");
     }
     else {
@@ -2419,7 +2420,8 @@ compare_splitter_config_info(hid_t fapl_id, H5FD_splitter_vfd_config_t *info)
             SPLITTER_TEST_FAULT("Read-Write driver mismatch\n");
     }
     if (info->wo_fapl_id == H5P_DEFAULT) {
-        if (H5Pget_driver_cls_value(fetched_info->wo_fapl_id) != H5Pget_driver_cls_value(H5P_FILE_ACCESS_DEFAULT))
+        if (H5Pget_driver_cls_value(fetched_info->wo_fapl_id) !=
+            H5Pget_driver_cls_value(H5P_FILE_ACCESS_DEFAULT))
             SPLITTER_TEST_FAULT("Write-Only driver mismatch (default)\n");
     }
     else {
@@ -3331,7 +3333,7 @@ test_splitter(void)
                 TEST_ERROR;
 
         } /* end for child fapl definition/pairing */
-    } /* end for behavior-flag loops */
+    }     /* end for behavior-flag loops */
 
     /* TODO: SWMR open? */
     /* Concurrent opens with both drivers using the Splitter */
@@ -3518,14 +3520,14 @@ static const H5FD_class_t H5FD_ctl_test_vfd_g = {
 static herr_t
 run_ctl_test(uint64_t op_code, uint64_t flags, ctl_test_opc_type opc_type, hid_t fapl_id)
 {
-    bool    fail_if_unknown    = false;
-    bool    routing_flag_set   = false;
-    bool    is_passthrough_vfd = false;
-    bool    expect_fail        = false;
-    H5FD_t *file_drv_ptr       = NULL;
-    herr_t  ctl_result         = SUCCEED;
+    bool               fail_if_unknown    = false;
+    bool               routing_flag_set   = false;
+    bool               is_passthrough_vfd = false;
+    bool               expect_fail        = false;
+    H5FD_t            *file_drv_ptr       = NULL;
+    herr_t             ctl_result         = SUCCEED;
     H5FD_class_value_t cls_value;
-    char    filename[1024];
+    char               filename[1024];
 
     /* Check for a few ctl function flags */
     fail_if_unknown  = (flags & H5FD_CTL_FAIL_IF_UNKNOWN_FLAG);

@@ -18,10 +18,10 @@
 #define H5FDsplitter_private_H
 
 /* Include driver's public header */
-#include "H5FDsplitter.h"     /* splitter VFD driver     */
+#include "H5FDsplitter.h" /* splitter VFD driver     */
 
 /* Private headers needed by this file */
-#include "H5FDprivate.h"  /* File drivers        */
+#include "H5FDprivate.h" /* File drivers        */
 
 /**************************/
 /* Library Private Macros */

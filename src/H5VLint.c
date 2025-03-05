@@ -283,8 +283,8 @@ H5VL_term_package(void)
                 if (0 == n)
                     H5_PKG_INIT_VAR = false;
             } /* end else */
-        } /* end else */
-    } /* end if */
+        }     /* end else */
+    }         /* end if */
 
     FUNC_LEAVE_NOAPI(n)
 } /* end H5VL_term_package() */
@@ -348,14 +348,14 @@ done:
 herr_t
 H5VL__set_def_conn(void)
 {
-    H5P_genplist_t   *def_fapl;            /* Default file access property list */
-    H5P_genclass_t   *def_fapclass;        /* Default file access property class */
+    H5P_genplist_t       *def_fapl;                    /* Default file access property list */
+    H5P_genclass_t       *def_fapclass;                /* Default file access property class */
     H5VL_connector_prop_t def_vol_prop = {NULL, NULL}; /* VOL connector for default FAPL */
-    const char       *env_var;             /* Environment variable for default VOL connector */
-    char             *buf       = NULL;    /* Buffer for tokenizing string */
-    H5VL_connector_t *connector = NULL;    /* VOL connector */
-    void             *vol_info  = NULL;    /* VOL connector info */
-    herr_t            ret_value = SUCCEED; /* Return value */
+    const char           *env_var;                     /* Environment variable for default VOL connector */
+    char                 *buf       = NULL;            /* Buffer for tokenizing string */
+    H5VL_connector_t     *connector = NULL;            /* VOL connector */
+    void                 *vol_info  = NULL;            /* VOL connector info */
+    herr_t                ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -370,7 +370,8 @@ H5VL__set_def_conn(void)
 
         /* Duplicate the string to parse, as it is modified as we go */
         if (NULL == (buf = H5MM_strdup(env_var)))
-            HGOTO_ERROR(H5E_VOL, H5E_CANTALLOC, FAIL, "can't allocate memory for environment variable string");
+            HGOTO_ERROR(H5E_VOL, H5E_CANTALLOC, FAIL,
+                        "can't allocate memory for environment variable string");
 
         /* Get the first 'word' of the environment variable.
          * If it's nothing (environment variable was whitespace) return error.
@@ -394,7 +395,7 @@ H5VL__set_def_conn(void)
             /* (NOTE: No provisions for vipl_id currently) */
             if (NULL == (connector = H5VL__register_connector_by_name(tok, H5P_VOL_INITIALIZE_DEFAULT)))
                 HGOTO_ERROR(H5E_VOL, H5E_CANTREGISTER, FAIL, "can't register connector");
-        }     /* end else */
+        } /* end else */
 
         /* Was there any connector info specified in the environment variable? */
         if (NULL != (tok = HDstrtok_r(NULL, "\n\r", &lasts)))
@@ -428,7 +429,8 @@ H5VL__set_def_conn(void)
 
     /* Change the default VOL for the default file access pclass */
     if (H5P_reset_vol_class(def_fapclass, &def_vol_prop) < 0)
-        HGOTO_ERROR(H5E_VOL, H5E_CANTSET, FAIL, "can't set default VOL connector for default file access property class");
+        HGOTO_ERROR(H5E_VOL, H5E_CANTSET, FAIL,
+                    "can't set default VOL connector for default file access property class");
 
 done:
     /* Release VOL connector used for default FAPL */
@@ -2829,4 +2831,3 @@ H5VL_conn_prop_get_cap_flags(const H5VL_connector_prop_t *connector_prop, uint64
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5VL_conn_prop_get_cap_flags() */
-

@@ -312,7 +312,7 @@ H5F__super_read(H5F_t *f, H5P_genplist_t *fapl, bool initial_read)
     H5AC_ring_t               orig_ring = H5AC_RING_INV;
     H5F_super_t              *sblock    = NULL; /* Superblock structure */
     H5F_superblock_cache_ud_t udata;            /* User data for cache callbacks */
-    H5FD_int_t                   *fh;             /* File driver pointer */
+    H5FD_int_t               *fh;               /* File driver pointer */
     unsigned sblock_flags = H5AC__NO_FLAGS_SET; /* flags used in superblock unprotect call      */
     haddr_t  super_addr   = HADDR_UNDEF;        /* Absolute address of superblock */
     haddr_t  eof;                               /* End of file address */
@@ -602,17 +602,20 @@ H5F__super_read(H5F_t *f, H5P_genplist_t *fapl, bool initial_read)
         /* extend EOA so we can read at least the fixed sized
          * portion of the driver info block
          */
-        if (H5FD_set_eoa(f->shared->fh, H5FD_MEM_SUPER, sblock->driver_addr + H5F_DRVINFOBLOCK_HDR_SIZE) < 0) /* will extend eoa later if required */
+        if (H5FD_set_eoa(f->shared->fh, H5FD_MEM_SUPER, sblock->driver_addr + H5F_DRVINFOBLOCK_HDR_SIZE) <
+            0) /* will extend eoa later if required */
             HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, FAIL, "set end of space allocation request failed");
 
         /* Look up the driver info block */
-        if (NULL == (drvinfo = (H5O_drvinfo_t *)H5AC_protect(f, H5AC_DRVRINFO, sblock->driver_addr, &drvrinfo_udata, rw_flags)))
+        if (NULL == (drvinfo = (H5O_drvinfo_t *)H5AC_protect(f, H5AC_DRVRINFO, sblock->driver_addr,
+                                                             &drvrinfo_udata, rw_flags)))
             HGOTO_ERROR(H5E_FILE, H5E_CANTPROTECT, FAIL, "unable to load driver info block");
 
         /* Loading the driver info block is enough to set up the right info */
 
         /* Check if we need to rewrite the driver info block info */
-        if (((rw_flags & H5AC__READ_ONLY_FLAG) == 0) && H5FD_HAS_FEATURE(f->shared->fh, H5FD_FEAT_DIRTY_DRVRINFO_LOAD))
+        if (((rw_flags & H5AC__READ_ONLY_FLAG) == 0) &&
+            H5FD_HAS_FEATURE(f->shared->fh, H5FD_FEAT_DIRTY_DRVRINFO_LOAD))
             drvinfo_flags |= H5AC__DIRTIED_FLAG;
 
         /* set the pin entry flag so that the driver information block

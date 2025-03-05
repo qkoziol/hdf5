@@ -1032,7 +1032,8 @@ do_copy_objects(hid_t fidin, hid_t fidout, trav_table_t *travt, pack_opt_t *opti
                                     /* Set up collective write if using filters in parallel */
                                     {
 #ifdef H5_HAVE_PARALLEL
-                                        bool parallel = (H5_VFD_MPIO == H5Pget_driver_cls_value(options->fout_fapl));
+                                        bool parallel =
+                                            (H5_VFD_MPIO == H5Pget_driver_cls_value(options->fout_fapl));
 
                                         if (parallel && apply_s && apply_f) {
                                             if ((dxpl_id = H5Pcreate(H5P_DATASET_XFER)) < 0)

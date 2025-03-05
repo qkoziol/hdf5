@@ -18,10 +18,10 @@
 #define H5FDmpio_private_H
 
 /* Include driver's public header */
-#include "H5FDmpio.h"     /* mpio VFD driver     */
+#include "H5FDmpio.h" /* mpio VFD driver     */
 
 /* Private headers needed by this file */
-#include "H5FDprivate.h"  /* File drivers        */
+#include "H5FDprivate.h" /* File drivers        */
 
 /**************************/
 /* Library Private Macros */

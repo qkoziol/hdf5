@@ -18,19 +18,19 @@
 
 #include "H5FDmodule.h" /* This source code file is part of the H5FD module */
 
-#include "H5private.h"    /* Generic Functions            */
-#include "H5Eprivate.h"   /* Error handling               */
-#include "H5Fprivate.h"   /* File access                  */
-#include "H5FDpkg.h"      /* File drivers                 */
-#include "H5FDioc_pkg.h"  /* I/O concentrator file driver */
-#include "H5FDmpio.h"     /* MPI I/O VFD                  */
-#include "H5FLprivate.h"  /* Free Lists                   */
-#include "H5Iprivate.h"   /* IDs                          */
-#include "H5MMprivate.h"  /* Memory management            */
-#include "H5Pprivate.h"   /* Property lists               */
+#include "H5private.h"   /* Generic Functions            */
+#include "H5Eprivate.h"  /* Error handling               */
+#include "H5Fprivate.h"  /* File access                  */
+#include "H5FDpkg.h"     /* File drivers                 */
+#include "H5FDioc_pkg.h" /* I/O concentrator file driver */
+#include "H5FDmpio.h"    /* MPI I/O VFD                  */
+#include "H5FLprivate.h" /* Free Lists                   */
+#include "H5Iprivate.h"  /* IDs                          */
+#include "H5MMprivate.h" /* Memory management            */
+#include "H5Pprivate.h"  /* Property lists               */
 
 /* The driver identification number, initialized at runtime */
-hid_t H5FD_IOC_id_g = H5I_INVALID_HID;
+hid_t          H5FD_IOC_id_g     = H5I_INVALID_HID;
 H5FD_driver_t *H5FD_IOC_driver_g = NULL;
 
 /* Flag to indicate whether global driver resources & settings have been
@@ -203,7 +203,7 @@ H5FD__ioc_unregister(void)
     FUNC_ENTER_PACKAGE_NOERR
 
     /* Reset VFL ID */
-    H5FD_IOC_id_g = H5I_INVALID_HID;
+    H5FD_IOC_id_g     = H5I_INVALID_HID;
     H5FD_IOC_driver_g = NULL;
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5FD__ioc_unregister() */

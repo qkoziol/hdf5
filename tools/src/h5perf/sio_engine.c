@@ -1245,9 +1245,9 @@ done:
 static void
 do_cleanupfile(iotype iot, char *filename)
 {
-    char  *temp = NULL;
-    size_t temp_sz;
-    int    j;
+    char              *temp = NULL;
+    size_t             temp_sz;
+    int                j;
     H5FD_class_value_t drvr_cls_value;
 
     temp_sz = (4096 + sizeof("-?.h5")) * sizeof(char);

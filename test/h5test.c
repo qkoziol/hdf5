@@ -303,7 +303,7 @@ h5_fixname_real(const char *base_name, hid_t fapl_id, const char *_suffix, char 
     char       *ptr, last = '\0';
     const char *suffix = _suffix;
     size_t      i, j;
-    hid_t       driver_id     = H5I_INVALID_HID;
+    hid_t       driver_id  = H5I_INVALID_HID;
     bool        isppdriver = false; /* if the driver is MPI parallel */
 
     if (!base_name || !fullname || size < 1)
@@ -1190,7 +1190,7 @@ h5_get_file_size(const char *filename, hid_t fapl_id)
 
         /* Get the driver's class value used when creating the file */
         if ((cls_value = H5Pget_driver_cls_value(fapl_id)) < 0)
-            return(-1);
+            return (-1);
 
         /* Check for simple cases */
         if (cls_value == H5_VFD_SEC2 || cls_value == H5_VFD_STDIO || cls_value == H5_VFD_CORE ||
@@ -1207,7 +1207,7 @@ h5_get_file_size(const char *filename, hid_t fapl_id)
         } /* end if */
         else if (cls_value == H5_VFD_MULTI) {
             H5FD_mem_t     mt;
-            h5_stat_size_t tot_size       = 0;
+            h5_stat_size_t tot_size    = 0;
             const char    *driver_name = NULL;
 
             driver_name = h5_get_test_driver_name();

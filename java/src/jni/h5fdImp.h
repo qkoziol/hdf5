@@ -31,4 +31,3 @@ JNIEXPORT jboolean JNICALL Java_hdf_hdf5lib_H5_H5FDcmp_1driver_1cls(JNIEnv *, jc
 #endif /* __cplusplus */
 
 #endif /* Included_hdf_hdf5lib_H5_H5FD */
-
