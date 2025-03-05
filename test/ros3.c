@@ -423,7 +423,7 @@ test_vfl_open(void)
             MAXADDR,
         },
         {
-            "maxaddr cannot be 0 (caught in `H5FD_open()`)",
+            "maxaddr cannot be 0 (caught in `H5FDopen()`)",
             url_text_public,
             H5F_ACC_RDONLY,
             ros3_fapl_id,
@@ -666,7 +666,7 @@ test_vfl_read(void)
 
         if (S3_TEST_MAX_URL_SIZE < tests[i].len)
             FAIL_PUTS_ERROR("buffer too small!");
-        if (H5FD_set_eoa(fd, H5FD_MEM_DEFAULT, tests[i].eoa_set) < 0)
+        if (H5FDset_eoa(fd, H5FD_MEM_DEFAULT, tests[i].eoa_set) < 0)
             TEST_ERROR;
         memset(buffer, 0, S3_TEST_MAX_URL_SIZE);
 
