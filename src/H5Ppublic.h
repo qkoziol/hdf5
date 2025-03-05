@@ -3564,7 +3564,7 @@ H5_DLL ssize_t H5Pget_driver_config_str(hid_t fapl_id, char *config_buf, size_t 
  *
  * \plist_id
  *
- * \return \H5FD_class_value_t
+ * \return #H5FD_class_value_t
  *
  * \details H5Pget_driver_cls_value() returns the value of the low-level file
  *          driver class associated with the file access property list
