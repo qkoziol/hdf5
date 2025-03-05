@@ -145,9 +145,9 @@ H5FD_mpi_get_comm(H5FD_int_t *fh)
 {
     H5FD_t             *file;
     const H5FD_class_t *cls;
-    uint64_t            flags     = H5FD_CTL_FAIL_IF_UNKNOWN_FLAG | H5FD_CTL_ROUTE_TO_TERMINAL_VFD_FLAG;
-    MPI_Comm            comm      = MPI_COMM_NULL;
-    void               *comm_ptr  = (void *)(&comm);
+    uint64_t            flags    = H5FD_CTL_FAIL_IF_UNKNOWN_FLAG | H5FD_CTL_ROUTE_TO_TERMINAL_VFD_FLAG;
+    MPI_Comm            comm     = MPI_COMM_NULL;
+    void               *comm_ptr = (void *)(&comm);
     herr_t              status;
     MPI_Comm            ret_value = MPI_COMM_NULL;
 
@@ -199,9 +199,9 @@ H5FD_mpi_get_info(H5FD_int_t *fh)
 {
     H5FD_t             *file;
     const H5FD_class_t *cls;
-    uint64_t            flags     = H5FD_CTL_FAIL_IF_UNKNOWN_FLAG | H5FD_CTL_ROUTE_TO_TERMINAL_VFD_FLAG;
-    MPI_Info            info      = MPI_INFO_NULL;
-    void               *info_ptr  = (void *)(&info);
+    uint64_t            flags    = H5FD_CTL_FAIL_IF_UNKNOWN_FLAG | H5FD_CTL_ROUTE_TO_TERMINAL_VFD_FLAG;
+    MPI_Info            info     = MPI_INFO_NULL;
+    void               *info_ptr = (void *)(&info);
     herr_t              status;
     MPI_Info            ret_value = MPI_INFO_NULL;
 
