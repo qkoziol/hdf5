@@ -19,6 +19,7 @@ SUBROUTINE multiple_dset_write(length, do_collective, do_chunk, mpi_size, mpi_ra
   USE HDF5
   USE MPI
   USE TH5_MISC
+  USE TH5_MISC_GEN
 
   IMPLICIT NONE
 

@@ -19,6 +19,7 @@ SUBROUTINE hyper(length,do_collective,do_chunk, mpi_size, mpi_rank, nerrors)
   USE HDF5
   USE MPI
   USE TH5_MISC
+  USE TH5_MISC_GEN
 
   IMPLICIT NONE
 
