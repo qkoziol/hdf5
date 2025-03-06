@@ -5409,7 +5409,6 @@ public class H5 implements java.io.Serializable {
      * @see H5FD, C-API
      **/
 
-
     /**
      * @ingroup JH5FD
      *
