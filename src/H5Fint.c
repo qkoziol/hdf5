@@ -241,8 +241,8 @@ H5F_term_package(void)
 static herr_t
 H5F__close_cb(H5VL_object_t *file_vol_obj, void **request)
 {
-    H5P_genplist_t *def_dxpl = NULL; /* Default dataset transfer property list */
-    herr_t ret_value = SUCCEED; /* Return value */
+    H5P_genplist_t *def_dxpl  = NULL;    /* Default dataset transfer property list */
+    herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -4084,10 +4084,10 @@ done:
 hid_t
 H5F_get_file_id(H5VL_object_t *vol_obj, H5I_type_t obj_type, bool app_ref)
 {
-    void                  *vol_obj_file = NULL;               /* File object pointer */
-    H5VL_object_get_args_t vol_cb_args;                       /* Arguments to VOL callback */
-    H5VL_loc_params_t      loc_params;                        /* Location parameters */
-    H5P_genplist_t        *def_dxpl;                        /* Default dataset transfer property list pointer */
+    void                  *vol_obj_file = NULL; /* File object pointer */
+    H5VL_object_get_args_t vol_cb_args;         /* Arguments to VOL callback */
+    H5VL_loc_params_t      loc_params;          /* Location parameters */
+    H5P_genplist_t        *def_dxpl;            /* Default dataset transfer property list pointer */
     hid_t                  file_id         = H5I_INVALID_HID; /* File ID for object */
     bool                   vol_wrapper_set = false; /* Whether the VOL object wrapping context was set up */
     hid_t                  ret_value       = H5I_INVALID_HID; /* Return value */

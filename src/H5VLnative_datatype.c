@@ -69,7 +69,9 @@
  *-------------------------------------------------------------------------
  */
 void *
-H5VL__native_datatype_commit(void *obj, const H5VL_loc_params_t *loc_params, const char *name, hid_t type_id, hid_t lcpl_id, hid_t tcpl_id, hid_t H5_ATTR_UNUSED tapl_id, hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
+H5VL__native_datatype_commit(void *obj, const H5VL_loc_params_t *loc_params, const char *name, hid_t type_id,
+                             hid_t lcpl_id, hid_t tcpl_id, hid_t H5_ATTR_UNUSED tapl_id,
+                             hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
     H5G_loc_t       loc;              /* Location to commit datatype */
     H5T_t          *dt;               /* Datatype for ID */
@@ -144,7 +146,9 @@ done:
  *-------------------------------------------------------------------------
  */
 void *
-H5VL__native_datatype_open(void *obj, const H5VL_loc_params_t *loc_params, const char *name, hid_t H5_ATTR_UNUSED tapl_id, hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
+H5VL__native_datatype_open(void *obj, const H5VL_loc_params_t *loc_params, const char *name,
+                           hid_t H5_ATTR_UNUSED tapl_id, hid_t H5_ATTR_UNUSED dxpl_id,
+                           void H5_ATTR_UNUSED **req)
 {
     H5T_t    *type = NULL; /* Datatype opened in file */
     H5G_loc_t loc;         /* Group location of object to open */
@@ -177,7 +181,8 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL__native_datatype_get(void *obj, H5VL_datatype_get_args_t *args, hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
+H5VL__native_datatype_get(void *obj, H5VL_datatype_get_args_t *args, hid_t H5_ATTR_UNUSED dxpl_id,
+                          void H5_ATTR_UNUSED **req)
 {
     H5T_t *dt        = (H5T_t *)obj;
     herr_t ret_value = SUCCEED; /* Return value */
@@ -230,7 +235,8 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL__native_datatype_specific(void *obj, H5VL_datatype_specific_args_t *args, hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
+H5VL__native_datatype_specific(void *obj, H5VL_datatype_specific_args_t *args, hid_t H5_ATTR_UNUSED dxpl_id,
+                               void H5_ATTR_UNUSED **req)
 {
     H5T_t *dt        = (H5T_t *)obj;
     herr_t ret_value = SUCCEED; /* Return value */

@@ -292,7 +292,7 @@ H5T__ref_set_loc(H5T_t *dt, H5VL_object_t *file, H5T_loc_t loc)
                 H5VL_file_get_args_t  vol_cb_args; /* Arguments to VOL callback */
                 size_t                ref_encode_size;
                 H5R_ref_priv_t        fixed_ref;
-                H5P_genplist_t      *def_dxpl;    /* Default dataset transfer property list pointer */
+                H5P_genplist_t       *def_dxpl; /* Default dataset transfer property list pointer */
 
                 /* Retrieve the default dataset transfer property list */
                 if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
@@ -418,9 +418,9 @@ H5T__ref_mem_getsize(H5VL_object_t H5_ATTR_UNUSED *src_file, const void *src_buf
     const H5R_ref_priv_t *src_ref = (const H5R_ref_priv_t *)src_buf;
     char                 *file_name_buf_dyn =
         NULL; /* Pointer to dynamically allocated buffer for file name, if static buffer is too small */
-    unsigned flags     = 0; /* References flags */
-    H5P_genplist_t      *def_dxpl;    /* Default dataset transfer property list pointer */
-    size_t   ret_value = 0; /* Return value */
+    unsigned        flags = 0;     /* References flags */
+    H5P_genplist_t *def_dxpl;      /* Default dataset transfer property list pointer */
+    size_t          ret_value = 0; /* Return value */
 
     FUNC_ENTER_PACKAGE
     H5T_REF_LOG_DEBUG("");
@@ -594,7 +594,7 @@ H5T__ref_mem_read(H5VL_object_t H5_ATTR_UNUSED *src_file, const void *src_buf, s
     /* Get file name (if external reference) */
     if (flags) {
         H5VL_file_get_args_t vol_cb_args;       /* Arguments to VOL callback */
-        H5P_genplist_t      *def_dxpl;    /* Default dataset transfer property list pointer */
+        H5P_genplist_t      *def_dxpl;          /* Default dataset transfer property list pointer */
         size_t               file_name_len = 0; /* Length of file name */
 
         /* Retrieve the default dataset transfer property list */

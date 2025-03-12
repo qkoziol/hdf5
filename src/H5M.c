@@ -42,10 +42,17 @@
 static herr_t H5M__close_cb(H5VL_object_t *map_vol_obj, void **request);
 
 #ifdef H5_HAVE_MAP_API
-static hid_t  H5M__create_api_common(hid_t loc_id, const char *name, hid_t key_type_id, hid_t val_type_id, H5P_genplist_t *lcpl, hid_t mcpl_id, hid_t mapl_id, H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
-static hid_t  H5M__open_api_common(hid_t loc_id, const char *name, hid_t mapl_id, H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
-static herr_t H5M__put_api_common(hid_t map_id, hid_t key_mem_type_id, const void *key, hid_t val_mem_type_id, const void *value, H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
-static herr_t H5M__get_api_common(hid_t map_id, hid_t key_mem_type_id, const void *key, hid_t val_mem_type_id, void *value, H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static hid_t  H5M__create_api_common(hid_t loc_id, const char *name, hid_t key_type_id, hid_t val_type_id,
+                                     H5P_genplist_t *lcpl, hid_t mcpl_id, hid_t mapl_id, H5P_genplist_t *dxpl,
+                                     void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static hid_t  H5M__open_api_common(hid_t loc_id, const char *name, hid_t mapl_id, H5P_genplist_t *dxpl,
+                                   void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static herr_t H5M__put_api_common(hid_t map_id, hid_t key_mem_type_id, const void *key, hid_t val_mem_type_id,
+                                  const void *value, H5P_genplist_t *dxpl, void **token_ptr,
+                                  H5VL_object_t **_vol_obj_ptr);
+static herr_t H5M__get_api_common(hid_t map_id, hid_t key_mem_type_id, const void *key, hid_t val_mem_type_id,
+                                  void *value, H5P_genplist_t *dxpl, void **token_ptr,
+                                  H5VL_object_t **_vol_obj_ptr);
 #endif /*  H5_HAVE_MAP_API */
 
 /*********************/
@@ -207,7 +214,7 @@ static herr_t
 H5M__close_cb(H5VL_object_t *map_vol_obj, void **request)
 {
     H5VL_optional_args_t vol_cb_args;         /* Arguments to VOL callback */
-    H5P_genplist_t *def_dxpl; /* Default dataset transfer property list */
+    H5P_genplist_t      *def_dxpl;            /* Default dataset transfer property list */
     herr_t               ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -249,7 +256,9 @@ done:
  *-------------------------------------------------------------------------
  */
 static hid_t
-H5M__create_api_common(hid_t loc_id, const char *name, hid_t key_type_id, hid_t val_type_id, H5P_genplist_t *lcpl, hid_t mcpl_id, hid_t mapl_id, H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
+H5M__create_api_common(hid_t loc_id, const char *name, hid_t key_type_id, hid_t val_type_id,
+                       H5P_genplist_t *lcpl, hid_t mcpl_id, hid_t mapl_id, H5P_genplist_t *dxpl,
+                       void **token_ptr, H5VL_object_t **_vol_obj_ptr)
 {
     void           *map         = NULL; /* New map's info */
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
@@ -274,7 +283,8 @@ H5M__create_api_common(hid_t loc_id, const char *name, hid_t key_type_id, hid_t 
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "mcpl_id is not a map create property list ID");
 
     /* Set up VOL callback arguments */
-    if (H5VL_setup_acc_args(loc_id, H5P_CLS_MACC, true, &mapl_id, vol_obj_ptr, &map_args.create.loc_params) < 0)
+    if (H5VL_setup_acc_args(loc_id, H5P_CLS_MACC, true, &mapl_id, vol_obj_ptr, &map_args.create.loc_params) <
+        0)
         HGOTO_ERROR(H5E_MAP, H5E_CANTSET, H5I_INVALID_HID, "can't set object access arguments");
     map_args.create.name        = name;
     map_args.create.lcpl_id     = H5P_PLIST_ID(lcpl);
@@ -331,7 +341,7 @@ H5Mcreate(hid_t loc_id, const char *name, hid_t key_type_id, hid_t val_type_id, 
           hid_t mapl_id)
 {
     H5P_genplist_t *lcpl;                        /* Link creation property list */
-    H5P_genplist_t *def_dxpl; /* Default dataset propery list */
+    H5P_genplist_t *def_dxpl;                    /* Default dataset propery list */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -341,13 +351,14 @@ H5Mcreate(hid_t loc_id, const char *name, hid_t key_type_id, hid_t val_type_id, 
         lcpl_id = H5P_LINK_CREATE_DEFAULT;
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_MAP, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
-    
+
     /* Get the default dataset transfer property list */
     if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
         HGOTO_ERROR(H5E_MAP, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
 
     /* Create the map synchronously */
-    if ((ret_value = H5M__create_api_common(loc_id, name, key_type_id, val_type_id, lcpl, mcpl_id, mapl_id, def_dxpl, NULL, NULL)) < 0)
+    if ((ret_value = H5M__create_api_common(loc_id, name, key_type_id, val_type_id, lcpl, mcpl_id, mapl_id,
+                                            def_dxpl, NULL, NULL)) < 0)
         HGOTO_ERROR(H5E_MAP, H5E_CANTCREATE, H5I_INVALID_HID, "unable to create map synchronously");
 
 done:
@@ -372,7 +383,7 @@ H5Mcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
 {
     H5VL_object_t  *vol_obj = NULL;              /* Object for loc_id */
     H5P_genplist_t *lcpl;                        /* Link creation property list */
-    H5P_genplist_t *def_dxpl; /* Default dataset propery list */
+    H5P_genplist_t *def_dxpl;                    /* Default dataset propery list */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
@@ -394,7 +405,8 @@ H5Mcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
         token_ptr = &token;
 
     /* Create the map asynchronously */
-    if ((ret_value = H5M__create_api_common(loc_id, name, key_type_id, val_type_id, lcpl, mcpl_id, mapl_id, def_dxpl, token_ptr, &vol_obj)) < 0)
+    if ((ret_value = H5M__create_api_common(loc_id, name, key_type_id, val_type_id, lcpl, mcpl_id, mapl_id,
+                                            def_dxpl, token_ptr, &vol_obj)) < 0)
         HGOTO_ERROR(H5E_MAP, H5E_CANTCREATE, H5I_INVALID_HID, "unable to create map asynchronously");
 
     /* If a token was created, add the token to the event set */
@@ -441,7 +453,7 @@ H5Mcreate_anon(hid_t loc_id, hid_t key_type_id, hid_t val_type_id, hid_t mcpl_id
     void                *map     = NULL;              /* map object from VOL connector */
     H5VL_object_t       *vol_obj = NULL;              /* object of loc_id */
     H5VL_optional_args_t vol_cb_args;                 /* Arguments to VOL callback */
-    H5P_genplist_t      *def_dxpl; /* Default dataset propery list */
+    H5P_genplist_t      *def_dxpl;                    /* Default dataset propery list */
     H5VL_map_args_t      map_args;                    /* Arguments for map operations */
     hid_t                ret_value = H5I_INVALID_HID; /* Return value */
 
@@ -513,7 +525,8 @@ done:
  *-------------------------------------------------------------------------
  */
 static hid_t
-H5M__open_api_common(hid_t loc_id, const char *name, hid_t mapl_id, H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
+H5M__open_api_common(hid_t loc_id, const char *name, hid_t mapl_id, H5P_genplist_t *dxpl, void **token_ptr,
+                     H5VL_object_t **_vol_obj_ptr)
 {
     void           *map         = NULL; /* map object from VOL connector */
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
@@ -532,7 +545,8 @@ H5M__open_api_common(hid_t loc_id, const char *name, hid_t mapl_id, H5P_genplist
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, H5I_INVALID_HID, "name parameter cannot be an empty string");
 
     /* Set up VOL callback arguments */
-    if (H5VL_setup_acc_args(loc_id, H5P_CLS_MACC, false, &mapl_id, vol_obj_ptr, &map_args.open.loc_params) < 0)
+    if (H5VL_setup_acc_args(loc_id, H5P_CLS_MACC, false, &mapl_id, vol_obj_ptr, &map_args.open.loc_params) <
+        0)
         HGOTO_ERROR(H5E_MAP, H5E_CANTSET, H5I_INVALID_HID, "can't set object access arguments");
     map_args.open.name    = name;
     map_args.open.mapl_id = mapl_id;
@@ -581,8 +595,8 @@ done:
 hid_t
 H5Mopen(hid_t loc_id, const char *name, hid_t mapl_id)
 {
-    H5P_genplist_t *def_dxpl; /* Default dataset propery list */
-    hid_t ret_value = H5I_INVALID_HID; /* Return value */
+    H5P_genplist_t *def_dxpl;                    /* Default dataset propery list */
+    hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
@@ -613,11 +627,11 @@ hid_t
 H5Mopen_async(const char *app_file, const char *app_func, unsigned app_line, hid_t loc_id, const char *name,
               hid_t mapl_id, hid_t es_id)
 {
-    H5VL_object_t *vol_obj   = NULL;            /* Object for loc_id */
-    void          *token     = NULL;            /* Request token for async operation        */
-    void         **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    H5P_genplist_t *def_dxpl; /* Default dataset propery list */
-    hid_t          ret_value = H5I_INVALID_HID; /* Return value */
+    H5VL_object_t  *vol_obj   = NULL;            /* Object for loc_id */
+    void           *token     = NULL;            /* Request token for async operation        */
+    void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
+    H5P_genplist_t *def_dxpl;                    /* Default dataset propery list */
+    hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
@@ -758,7 +772,7 @@ H5Mget_key_type(hid_t map_id)
     H5VL_object_t       *vol_obj;                     /* Map structure    */
     H5VL_optional_args_t vol_cb_args;                 /* Arguments to VOL callback */
     H5VL_map_args_t      map_args;                    /* Arguments for map operations */
-    H5P_genplist_t      *def_dxpl; /* Default dataset propery list */
+    H5P_genplist_t      *def_dxpl;                    /* Default dataset propery list */
     hid_t                ret_value = H5I_INVALID_HID; /* Return value         */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -807,7 +821,7 @@ H5Mget_val_type(hid_t map_id)
     H5VL_object_t       *vol_obj;                     /* Map structure    */
     H5VL_optional_args_t vol_cb_args;                 /* Arguments to VOL callback */
     H5VL_map_args_t      map_args;                    /* Arguments for map operations */
-    H5P_genplist_t      *def_dxpl; /* Default dataset propery list */
+    H5P_genplist_t      *def_dxpl;                    /* Default dataset propery list */
     hid_t                ret_value = H5I_INVALID_HID; /* Return value         */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -856,7 +870,7 @@ H5Mget_create_plist(hid_t map_id)
     H5VL_object_t       *vol_obj;                     /* Map structure    */
     H5VL_optional_args_t vol_cb_args;                 /* Arguments to VOL callback */
     H5VL_map_args_t      map_args;                    /* Arguments for map operations */
-    H5P_genplist_t      *def_dxpl; /* Default dataset propery list */
+    H5P_genplist_t      *def_dxpl;                    /* Default dataset propery list */
     hid_t                ret_value = H5I_INVALID_HID; /* Return value         */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -908,7 +922,7 @@ H5Mget_access_plist(hid_t map_id)
     H5VL_object_t       *vol_obj;                     /* Map structure    */
     H5VL_optional_args_t vol_cb_args;                 /* Arguments to VOL callback */
     H5VL_map_args_t      map_args;                    /* Arguments for map operations */
-    H5P_genplist_t      *def_dxpl; /* Default dataset propery list */
+    H5P_genplist_t      *def_dxpl;                    /* Default dataset propery list */
     hid_t                ret_value = H5I_INVALID_HID; /* Return value         */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -956,7 +970,7 @@ H5Mget_count(hid_t map_id, hsize_t *count /*out*/, hid_t dxpl_id)
     H5VL_object_t       *vol_obj;             /* Map structure    */
     H5VL_optional_args_t vol_cb_args;         /* Arguments to VOL callback */
     H5VL_map_args_t      map_args;            /* Arguments for map operations */
-    H5P_genplist_t      *dxpl; /* Dataset transfer property list */
+    H5P_genplist_t      *dxpl;                /* Dataset transfer property list */
     herr_t               ret_value = SUCCEED; /* Return value         */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -1057,8 +1071,8 @@ herr_t
 H5Mput(hid_t map_id, hid_t key_mem_type_id, const void *key, hid_t val_mem_type_id, const void *value,
        hid_t dxpl_id)
 {
-    H5P_genplist_t *dxpl; /* Default dataset propery list */
-    herr_t ret_value = SUCCEED; /* Return value */
+    H5P_genplist_t *dxpl;                /* Default dataset propery list */
+    herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -1090,11 +1104,11 @@ H5Mput_async(const char *app_file, const char *app_func, unsigned app_line, hid_
              hid_t key_mem_type_id, const void *key, hid_t val_mem_type_id, const void *value, hid_t dxpl_id,
              hid_t es_id)
 {
-    H5VL_object_t *vol_obj   = NULL;            /* Object for loc_id */
-    void          *token     = NULL;            /* Request token for async operation        */
-    void         **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    H5P_genplist_t *dxpl; /* Default dataset propery list */
-    herr_t         ret_value = SUCCEED;         /* Return value */
+    H5VL_object_t  *vol_obj   = NULL;            /* Object for loc_id */
+    void           *token     = NULL;            /* Request token for async operation        */
+    void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
+    H5P_genplist_t *dxpl;                        /* Default dataset propery list */
+    herr_t          ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -1109,7 +1123,8 @@ H5Mput_async(const char *app_file, const char *app_func, unsigned app_line, hid_
         token_ptr = &token;
 
     /* Add key-value pair to the map asynchronously */
-    if (H5M__put_api_common(map_id, key_mem_type_id, key, val_mem_type_id, value, dxpl, token_ptr, &vol_obj) < 0)
+    if (H5M__put_api_common(map_id, key_mem_type_id, key, val_mem_type_id, value, dxpl, token_ptr, &vol_obj) <
+        0)
         HGOTO_ERROR(H5E_MAP, H5E_CANTPUT, FAIL, "unable to put value to map asynchronously");
 
     /* If a token was created, add the token to the event set */
@@ -1195,8 +1210,8 @@ herr_t
 H5Mget(hid_t map_id, hid_t key_mem_type_id, const void *key, hid_t val_mem_type_id, void *value,
        hid_t dxpl_id)
 {
-    H5P_genplist_t *dxpl; /* Default dataset propery list */
-    herr_t ret_value = SUCCEED; /* Return value */
+    H5P_genplist_t *dxpl;                /* Default dataset propery list */
+    herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -1228,11 +1243,11 @@ H5Mget_async(const char *app_file, const char *app_func, unsigned app_line, hid_
              hid_t key_mem_type_id, const void *key, hid_t val_mem_type_id, void *value, hid_t dxpl_id,
              hid_t es_id)
 {
-    H5VL_object_t *vol_obj   = NULL;            /* Object for loc_id */
-    void          *token     = NULL;            /* Request token for async operation        */
-    void         **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    H5P_genplist_t *def_dxpl; /* Default dataset propery list */
-    herr_t         ret_value = SUCCEED;         /* Return value */
+    H5VL_object_t  *vol_obj   = NULL;            /* Object for loc_id */
+    void           *token     = NULL;            /* Request token for async operation        */
+    void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
+    H5P_genplist_t *def_dxpl;                    /* Default dataset propery list */
+    herr_t          ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -1245,7 +1260,8 @@ H5Mget_async(const char *app_file, const char *app_func, unsigned app_line, hid_
         token_ptr = &token;
 
     /* Get key-value pair from the map asynchronously */
-    if (H5M__get_api_common(map_id, key_mem_type_id, key, val_mem_type_id, value, def_dxpl, token_ptr, &vol_obj) < 0)
+    if (H5M__get_api_common(map_id, key_mem_type_id, key, val_mem_type_id, value, def_dxpl, token_ptr,
+                            &vol_obj) < 0)
         HGOTO_ERROR(H5E_MAP, H5E_CANTGET, FAIL, "unable to get value from map asynchronously");
 
     /* If a token was created, add the token to the event set */
@@ -1279,7 +1295,7 @@ H5Mexists(hid_t map_id, hid_t key_mem_type_id, const void *key, hbool_t *exists,
     H5VL_object_t       *vol_obj = NULL;
     H5VL_optional_args_t vol_cb_args;         /* Arguments to VOL callback */
     H5VL_map_args_t      map_args;            /* Arguments for map operations */
-    H5P_genplist_t      *dxpl; /* Dataset transfer property list */
+    H5P_genplist_t      *dxpl;                /* Dataset transfer property list */
     herr_t               ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1354,7 +1370,7 @@ H5Miterate(hid_t map_id, hsize_t *idx, hid_t key_mem_type_id, H5M_iterate_t op, 
     H5VL_object_t       *vol_obj = NULL;
     H5VL_optional_args_t vol_cb_args;         /* Arguments to VOL callback */
     H5VL_map_args_t      map_args;            /* Arguments for map operations */
-    H5P_genplist_t      *dxpl; /* Dataset transfer property list */
+    H5P_genplist_t      *dxpl;                /* Dataset transfer property list */
     herr_t               ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1436,7 +1452,7 @@ H5Miterate_by_name(hid_t loc_id, const char *map_name, hsize_t *idx, hid_t key_m
     H5VL_object_t       *vol_obj = NULL;
     H5VL_optional_args_t vol_cb_args;         /* Arguments to VOL callback */
     H5VL_map_args_t      map_args;            /* Arguments for map operations */
-    H5P_genplist_t      *dxpl; /* Dataset transfer property list */
+    H5P_genplist_t      *dxpl;                /* Dataset transfer property list */
     herr_t               ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1507,7 +1523,7 @@ H5Mdelete(hid_t map_id, hid_t key_mem_type_id, const void *key, hid_t dxpl_id)
     H5VL_object_t       *vol_obj = NULL;
     H5VL_optional_args_t vol_cb_args;         /* Arguments to VOL callback */
     H5VL_map_args_t      map_args;            /* Arguments for map operations */
-    H5P_genplist_t      *dxpl; /* Dataset transfer property list */
+    H5P_genplist_t      *dxpl;                /* Dataset transfer property list */
     herr_t               ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)

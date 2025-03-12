@@ -552,7 +552,7 @@ done:
 herr_t
 H5Pset_dxpl_mpio(hid_t dxpl_id, H5FD_mpio_xfer_t xfer_mode)
 {
-    H5P_genplist_t *dxpl;               /* Property list pointer */
+    H5P_genplist_t *dxpl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -594,7 +594,7 @@ done:
 herr_t
 H5Pget_dxpl_mpio(hid_t dxpl_id, H5FD_mpio_xfer_t *xfer_mode /*out*/)
 {
-    H5P_genplist_t *dxpl;               /* Property list pointer */
+    H5P_genplist_t *dxpl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -636,7 +636,7 @@ done:
 herr_t
 H5Pset_dxpl_mpio_collective_opt(hid_t dxpl_id, H5FD_mpio_collective_opt_t opt_mode)
 {
-    H5P_genplist_t *dxpl;               /* Property list pointer */
+    H5P_genplist_t *dxpl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -679,7 +679,7 @@ done:
 herr_t
 H5Pset_dxpl_mpio_chunk_opt(hid_t dxpl_id, H5FD_mpio_chunk_opt_t opt_mode)
 {
-    H5P_genplist_t *dxpl;               /* Property list pointer */
+    H5P_genplist_t *dxpl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -720,7 +720,7 @@ done:
 herr_t
 H5Pset_dxpl_mpio_chunk_opt_num(hid_t dxpl_id, unsigned num_chunk_per_proc)
 {
-    H5P_genplist_t *dxpl;               /* Property list pointer */
+    H5P_genplist_t *dxpl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -764,7 +764,7 @@ done:
 herr_t
 H5Pset_dxpl_mpio_chunk_opt_ratio(hid_t dxpl_id, unsigned percent_num_proc_per_chunk)
 {
-    H5P_genplist_t *dxpl;               /* Property list pointer */
+    H5P_genplist_t *dxpl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)

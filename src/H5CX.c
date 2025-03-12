@@ -172,9 +172,10 @@ typedef struct H5CX_dxpl_cache_t {
     H5D_selection_io_mode_t selection_io_mode;     /* Selection I/O mode (H5D_XFER_SELECTION_IO_MODE_NAME) */
     uint32_t                no_selection_io_cause; /* Reasons for not performing selection I/O
                                                             (H5D_XFER_NO_SELECTION_IO_CAUSE_NAME) */
-    uint32_t actual_selection_io_mode;  /* Actual selection I/O mode (H5D_XFER_ACTUAL_SELECTION_IO_MODE_NAME) */
-    bool modify_write_buf;              /* Whether the library can modify write buffers */
-    H5S_t *dset_io_selection;           /* Dataset I/O selection (H5D_XFER_DSET_IO_SEL_NAME) */
+    uint32_t
+           actual_selection_io_mode; /* Actual selection I/O mode (H5D_XFER_ACTUAL_SELECTION_IO_MODE_NAME) */
+    bool   modify_write_buf;         /* Whether the library can modify write buffers */
+    H5S_t *dset_io_selection;        /* Dataset I/O selection (H5D_XFER_DSET_IO_SEL_NAME) */
 } H5CX_dxpl_cache_t;
 
 /* Typedef for cached default link creation property list information */
@@ -264,7 +265,7 @@ DESCRIPTION
 herr_t
 H5CX__init_package(void)
 {
-    H5P_genplist_t *dxpl;            /* Data transfer property list */
+    H5P_genplist_t *dxpl;                /* Data transfer property list */
     H5P_genplist_t *lcpl;                /* Link creation property list */
     H5P_genplist_t *lapl;                /* Link access property list */
     H5P_genplist_t *dcpl;                /* Dataset creation property list */
@@ -321,10 +322,13 @@ H5CX__init_package(void)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve chunk optimization ratio");
 
     /* Get the local & global reasons for breaking collective I/O values */
-    if (H5P_get(dxpl, H5D_MPIO_LOCAL_NO_COLLECTIVE_CAUSE_NAME, &H5CX_def_dxpl_cache.mpio_local_no_coll_cause) < 0)
+    if (H5P_get(dxpl, H5D_MPIO_LOCAL_NO_COLLECTIVE_CAUSE_NAME,
+                &H5CX_def_dxpl_cache.mpio_local_no_coll_cause) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve local cause for breaking collective I/O");
-    if (H5P_get(dxpl, H5D_MPIO_GLOBAL_NO_COLLECTIVE_CAUSE_NAME, &H5CX_def_dxpl_cache.mpio_global_no_coll_cause) < 0)
-        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve global cause for breaking collective I/O");
+    if (H5P_get(dxpl, H5D_MPIO_GLOBAL_NO_COLLECTIVE_CAUSE_NAME,
+                &H5CX_def_dxpl_cache.mpio_global_no_coll_cause) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL,
+                    "Can't retrieve global cause for breaking collective I/O");
 #endif /* H5_HAVE_PARALLEL */
 
     /* Get error detection properties */
@@ -365,7 +369,8 @@ H5CX__init_package(void)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve cause for no selection I/O");
 
     /* Get the actual selection I/O mode */
-    if (H5P_get(dxpl, H5D_XFER_ACTUAL_SELECTION_IO_MODE_NAME, &H5CX_def_dxpl_cache.actual_selection_io_mode) < 0)
+    if (H5P_get(dxpl, H5D_XFER_ACTUAL_SELECTION_IO_MODE_NAME, &H5CX_def_dxpl_cache.actual_selection_io_mode) <
+        0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve actual selection I/O mode");
 
     /* Get the modify write buffer property */
@@ -860,8 +865,8 @@ H5CX_is_def_dxpl(void)
 herr_t
 H5CX_set_dxpl(hid_t dxpl_id)
 {
-    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
-    herr_t ret_value = SUCCEED; /* Return value */
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI_NOINIT
 

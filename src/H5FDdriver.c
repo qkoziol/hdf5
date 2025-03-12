@@ -838,7 +838,8 @@ H5FD_read(H5FD_int_t *fh, H5FD_mem_t type, haddr_t addr, size_t size, void *buf 
     H5_BEFORE_USER_CB(FAIL)
         {
             /* Dispatch to driver */
-            ret_value = (fh->driver->cls->read)(file, type, H5CX_get_dxpl(), addr + file->base_addr, size, buf);
+            ret_value =
+                (fh->driver->cls->read)(file, type, H5CX_get_dxpl(), addr + file->base_addr, size, buf);
         }
     H5_AFTER_USER_CB(FAIL)
     if (ret_value < 0)
@@ -911,7 +912,8 @@ H5FD_write(H5FD_int_t *fh, H5FD_mem_t type, haddr_t addr, size_t size, const voi
     H5_BEFORE_USER_CB(FAIL)
         {
             /* Dispatch to driver */
-            ret_value = (fh->driver->cls->write)(file, type, H5CX_get_dxpl(), addr + file->base_addr, size, buf);
+            ret_value =
+                (fh->driver->cls->write)(file, type, H5CX_get_dxpl(), addr + file->base_addr, size, buf);
         }
     H5_AFTER_USER_CB(FAIL)
     if (ret_value < 0)
@@ -1083,7 +1085,8 @@ H5FD_read_vector(H5FD_int_t *fh, uint32_t count, H5FD_mem_t types[], haddr_t add
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
-                ret_value = (fh->driver->cls->read_vector)(file, H5CX_get_dxpl(), count, types, addrs, sizes, bufs);
+                ret_value =
+                    (fh->driver->cls->read_vector)(file, H5CX_get_dxpl(), count, types, addrs, sizes, bufs);
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
@@ -1203,7 +1206,7 @@ H5FD_write_vector(H5FD_int_t *fh, uint32_t count, H5FD_mem_t types[], haddr_t ad
                   const void *bufs[])
 {
     H5FD_t    *file;
-    H5FD_mem_t type = H5FD_MEM_DEFAULT;
+    H5FD_mem_t type         = H5FD_MEM_DEFAULT;
     size_t     size         = 0;
     bool       is_raw       = false; /* Does this include raw data */
     bool       addrs_cooked = false;
@@ -1301,7 +1304,8 @@ H5FD_write_vector(H5FD_int_t *fh, uint32_t count, H5FD_mem_t types[], haddr_t ad
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
-                ret_value = (fh->driver->cls->write_vector)(file, H5CX_get_dxpl(), count, types, addrs, sizes, bufs);
+                ret_value =
+                    (fh->driver->cls->write_vector)(file, H5CX_get_dxpl(), count, types, addrs, sizes, bufs);
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
@@ -1350,7 +1354,8 @@ H5FD_write_vector(H5FD_int_t *fh, uint32_t count, H5FD_mem_t types[], haddr_t ad
             /* Prepare & restore library for user callback */
             H5_BEFORE_USER_CB(FAIL)
                 {
-                    ret_value = (fh->driver->cls->write)(file, type, H5CX_get_dxpl(), addrs[i], size, bufs[i]);
+                    ret_value =
+                        (fh->driver->cls->write)(file, type, H5CX_get_dxpl(), addrs[i], size, bufs[i]);
                 }
             H5_AFTER_USER_CB(FAIL)
             if (ret_value < 0)
@@ -1529,7 +1534,9 @@ H5FD_read_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, H5S_t **mem
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
-                ret_value = (fh->driver->cls->read_selection)(file, type, H5CX_get_dxpl(), count, mem_space_ids, file_space_ids, offsets, element_sizes, bufs);
+                ret_value =
+                    (fh->driver->cls->read_selection)(file, type, H5CX_get_dxpl(), count, mem_space_ids,
+                                                      file_space_ids, offsets, element_sizes, bufs);
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
@@ -1546,7 +1553,8 @@ H5FD_read_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, H5S_t **mem
         /* Otherwise, implement the selection read as a sequence of regular
          * or vector read calls.
          */
-        if (H5FD__read_selection_translate(false, fh, type, count, mem_spaces, file_spaces, offsets, element_sizes, bufs) < 0)
+        if (H5FD__read_selection_translate(false, fh, type, count, mem_spaces, file_spaces, offsets,
+                                           element_sizes, bufs) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_READERROR, FAIL, "translation to vector or scalar read failed");
 
 done:
@@ -1711,7 +1719,9 @@ H5FD_write_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, H5S_t **me
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
-                ret_value = (fh->driver->cls->write_selection)(file, type, H5CX_get_dxpl(), count, mem_space_ids, file_space_ids, offsets, element_sizes, bufs);
+                ret_value =
+                    (fh->driver->cls->write_selection)(file, type, H5CX_get_dxpl(), count, mem_space_ids,
+                                                       file_space_ids, offsets, element_sizes, bufs);
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
@@ -1729,7 +1739,8 @@ H5FD_write_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, H5S_t **me
          * or vector write calls.
          */
 
-        if (H5FD__write_selection_translate(false, fh, type, count, mem_spaces, file_spaces, offsets, element_sizes, bufs) < 0)
+        if (H5FD__write_selection_translate(false, fh, type, count, mem_spaces, file_spaces, offsets,
+                                            element_sizes, bufs) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_WRITEERROR, FAIL, "translation to vector or scalar write failed");
 
 done:

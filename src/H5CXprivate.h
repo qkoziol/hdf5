@@ -225,12 +225,12 @@ typedef struct H5CX_t {
     bool no_selection_io_cause_set;   /* Whether reason for not performing selection I/O is set */
     bool no_selection_io_cause_valid; /* Whether reason for not performing selection I/O is valid */
 
-    uint32_t actual_selection_io_mode;   /* Actual selection I/O mode used
-                                            (H5D_XFER_ACTUAL_SELECTION_IO_MODE_NAME) */
-    bool actual_selection_io_mode_set;   /* Whether actual selection I/O mode is set */
-    bool actual_selection_io_mode_valid; /* Whether actual selection I/O mode is valid */
-    H5S_t *dset_io_selection;           /* Dataset I/O selection */
-    bool dset_io_selection_valid;       /* Whether dataset I/O selection is valid */
+    uint32_t actual_selection_io_mode;     /* Actual selection I/O mode used
+                                              (H5D_XFER_ACTUAL_SELECTION_IO_MODE_NAME) */
+    bool   actual_selection_io_mode_set;   /* Whether actual selection I/O mode is set */
+    bool   actual_selection_io_mode_valid; /* Whether actual selection I/O mode is valid */
+    H5S_t *dset_io_selection;              /* Dataset I/O selection */
+    bool   dset_io_selection_valid;        /* Whether dataset I/O selection is valid */
 
     /* Cached LCPL properties */
     H5T_cset_t encoding;         /* Link name character encoding (H5P_STRCRT_CHAR_ENCODING_NAME) */
@@ -305,7 +305,8 @@ H5_DLL herr_t H5CX_set_dxpl(hid_t dxpl_id);
 H5_DLL void   H5CX_set_lcpl(hid_t lcpl_id);
 H5_DLL void   H5CX_set_dcpl(hid_t dcpl_id);
 H5_DLL herr_t H5CX_set_libver_bounds(H5F_t *f);
-H5_DLL herr_t H5CX_set_apl(hid_t *acspl_id, const struct H5P_libclass_t *libclass, hid_t loc_id, bool is_collective);
+H5_DLL herr_t H5CX_set_apl(hid_t *acspl_id, const struct H5P_libclass_t *libclass, hid_t loc_id,
+                           bool is_collective);
 H5_DLL herr_t H5CX_set_loc(hid_t loc_id);
 H5_DLL herr_t H5CX_set_vol_wrap_ctx(void *wrap_ctx);
 H5_DLL herr_t H5CX_set_vol_connector_prop(const H5VL_connector_prop_t *vol_connector_prop);

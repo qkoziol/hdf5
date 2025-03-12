@@ -461,7 +461,7 @@ H5R__reopen_file(H5R_ref_priv_t *ref, H5P_genplist_t *fapl)
     void                 *new_file = NULL; /* File object opened */
     H5VL_connector_prop_t connector_prop;  /* Property for VOL connector ID & info     */
     H5VL_object_t        *vol_obj = NULL;  /* VOL object for file */
-    H5P_genplist_t                    *def_dxpl;     /* Dataset transfer property list pointer */
+    H5P_genplist_t       *def_dxpl;        /* Dataset transfer property list pointer */
     uint64_t              supported;       /* Whether 'post open' operation is supported by VOL connector */
     hid_t                 ret_value = H5I_INVALID_HID;
 
@@ -482,7 +482,8 @@ H5R__reopen_file(H5R_ref_priv_t *ref, H5P_genplist_t *fapl)
      *  connectors modify or unwrap it.
      */
     if (H5CX_set_vol_connector_prop(&connector_prop) < 0)
-        HGOTO_ERROR(H5E_REFERENCE, H5E_CANTSET, H5I_INVALID_HID, "can't set VOL connector info in API context");
+        HGOTO_ERROR(H5E_REFERENCE, H5E_CANTSET, H5I_INVALID_HID,
+                    "can't set VOL connector info in API context");
 
     /* Get the pointer to the default dataset transfer property list */
     if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
@@ -490,7 +491,8 @@ H5R__reopen_file(H5R_ref_priv_t *ref, H5P_genplist_t *fapl)
 
     /* Open the file */
     /* (Must open file read-write to allow for object modifications) */
-    if (NULL == (new_file = H5VL_file_open(connector_prop.connector, H5R_REF_FILENAME(ref), H5F_ACC_RDWR, fapl, def_dxpl, H5_REQUEST_NULL)))
+    if (NULL == (new_file = H5VL_file_open(connector_prop.connector, H5R_REF_FILENAME(ref), H5F_ACC_RDWR,
+                                           fapl, def_dxpl, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENFILE, H5I_INVALID_HID, "unable to open file");
 
     /* Get an ID for the file */
@@ -514,7 +516,8 @@ H5R__reopen_file(H5R_ref_priv_t *ref, H5P_genplist_t *fapl)
 
         /* Make the 'post open' callback */
         if (H5VL_file_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
-            HGOTO_ERROR(H5E_REFERENCE, H5E_CANTINIT, H5I_INVALID_HID, "unable to make file 'post open' callback");
+            HGOTO_ERROR(H5E_REFERENCE, H5E_CANTINIT, H5I_INVALID_HID,
+                        "unable to make file 'post open' callback");
     } /* end if */
 
     /* Attach loc_id to reference */

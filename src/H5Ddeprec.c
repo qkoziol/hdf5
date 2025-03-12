@@ -148,7 +148,8 @@ H5Dcreate1(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t 
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "invalid location identifier");
 
     /* Create the dataset */
-    if (NULL == (dset = H5VL_dataset_create(vol_obj, &loc_params, name, def_lcpl, type_id, space_id, dcpl, def_dapl, def_dxpl, H5_REQUEST_NULL)))
+    if (NULL == (dset = H5VL_dataset_create(vol_obj, &loc_params, name, def_lcpl, type_id, space_id, dcpl,
+                                            def_dapl, def_dxpl, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, H5I_INVALID_HID, "unable to create dataset");
 
     /* Register the new dataset to get an ID for it */
@@ -246,7 +247,7 @@ H5Dextend(hid_t dset_id, const hsize_t size[])
     H5VL_object_t               *vol_obj;                 /* Object for loc_id */
     H5VL_dataset_get_args_t      vol_get_cb_args;         /* Arguments to VOL callback */
     H5VL_dataset_specific_args_t vol_spec_cb_args;        /* Arguments to VOL callback */
-    H5P_genplist_t               *def_dxpl;              /* Default dataset transfer property list */
+    H5P_genplist_t              *def_dxpl;                /* Default dataset transfer property list */
     hid_t                        sid = H5I_INVALID_HID;   /* Dataspace ID */
     H5S_t                       *ds  = NULL;              /* Dataspace struct */
     int                          ndims;                   /* Dataset/space rank */

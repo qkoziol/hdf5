@@ -120,7 +120,9 @@ H5FL_EXTERN(H5S_sel_iter_t);
  *-------------------------------------------------------------------------
  */
 herr_t
-H5FD__read_selection_translate(bool skip_vector_cb, H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, H5S_t **mem_spaces, H5S_t **file_spaces, haddr_t offsets[], size_t element_sizes[], void *bufs[] /* out */)
+H5FD__read_selection_translate(bool skip_vector_cb, H5FD_int_t *fh, H5FD_mem_t type, uint32_t count,
+                               H5S_t **mem_spaces, H5S_t **file_spaces, haddr_t offsets[],
+                               size_t element_sizes[], void *bufs[] /* out */)
 {
     H5FD_t         *file;
     size_t          element_size = 0;
@@ -297,14 +299,17 @@ H5FD__read_selection_translate(bool skip_vector_cb, H5FD_int_t *fh, H5FD_mem_t t
 
                         /* Reallocate arrays */
                         if (NULL == (tmp_ptr = H5MM_realloc(addrs, vec_arr_nalloc * sizeof(*addrs) * 2)))
-                            HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "memory reallocation failed for address list");
+                            HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL,
+                                        "memory reallocation failed for address list");
                         addrs = tmp_ptr;
                         if (NULL == (tmp_ptr = H5MM_realloc(sizes, vec_arr_nalloc * sizeof(*sizes) * 2)))
                             HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL,
                                         "memory reallocation failed for size list");
                         sizes = tmp_ptr;
-                        if (NULL == (tmp_ptr = H5MM_realloc(vec_bufs, vec_arr_nalloc * sizeof(*vec_bufs) * 2)))
-                            HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "memory reallocation failed for buffer list");
+                        if (NULL ==
+                            (tmp_ptr = H5MM_realloc(vec_bufs, vec_arr_nalloc * sizeof(*vec_bufs) * 2)))
+                            HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL,
+                                        "memory reallocation failed for buffer list");
                         vec_bufs = tmp_ptr;
                     }
 
@@ -323,7 +328,9 @@ H5FD__read_selection_translate(bool skip_vector_cb, H5FD_int_t *fh, H5FD_mem_t t
                 H5_BEFORE_USER_CB(FAIL)
                     {
                         /* Issue scalar read call */
-                        ret_value = (fh->driver->cls->read)(file, type, H5CX_get_dxpl(), offsets[i] + file_off[file_seq_i], io_len, (void *)((uint8_t *)buf + mem_off[mem_seq_i]));
+                        ret_value = (fh->driver->cls->read)(file, type, H5CX_get_dxpl(),
+                                                            offsets[i] + file_off[file_seq_i], io_len,
+                                                            (void *)((uint8_t *)buf + mem_off[mem_seq_i]));
                     }
                 H5_AFTER_USER_CB(FAIL)
                 if (ret_value < 0)
@@ -368,7 +375,8 @@ H5FD__read_selection_translate(bool skip_vector_cb, H5FD_int_t *fh, H5FD_mem_t t
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
-                ret_value = (fh->driver->cls->read_vector)(file, H5CX_get_dxpl(), (uint32_t)vec_arr_nused, types, addrs, sizes, vec_bufs);
+                ret_value = (fh->driver->cls->read_vector)(file, H5CX_get_dxpl(), (uint32_t)vec_arr_nused,
+                                                           types, addrs, sizes, vec_bufs);
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
@@ -455,7 +463,9 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5FD__read_selection_id(uint32_t skip_cb, H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, hid_t mem_space_ids[], hid_t file_space_ids[], haddr_t offsets[], size_t element_sizes[], void *bufs[] /* out */)
+H5FD__read_selection_id(uint32_t skip_cb, H5FD_int_t *fh, H5FD_mem_t type, uint32_t count,
+                        hid_t mem_space_ids[], hid_t file_space_ids[], haddr_t offsets[],
+                        size_t element_sizes[], void *bufs[] /* out */)
 {
     H5FD_t  *file;
     H5S_t   *mem_spaces_local[H5FD_LOCAL_SEL_ARR_LEN];
@@ -535,7 +545,8 @@ H5FD__read_selection_id(uint32_t skip_cb, H5FD_int_t *fh, H5FD_mem_t type, uint3
 
         for (i = 0; i < count; i++)
             if (offsets[i] > eoa)
-                HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, FAIL, "addr overflow, offsets[%d] = %llu, eoa = %llu", (int)i, (unsigned long long)(offsets[i]), (unsigned long long)eoa);
+                HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, FAIL, "addr overflow, offsets[%d] = %llu, eoa = %llu",
+                            (int)i, (unsigned long long)(offsets[i]), (unsigned long long)eoa);
     }
 
     /* if the underlying VFD supports selection read, make the call */
@@ -545,7 +556,9 @@ H5FD__read_selection_id(uint32_t skip_cb, H5FD_int_t *fh, H5FD_mem_t type, uint3
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
-                ret_value = (fh->driver->cls->read_selection)(file, type, H5CX_get_dxpl(), count, mem_space_ids, file_space_ids, offsets, element_sizes, bufs);
+                ret_value =
+                    (fh->driver->cls->read_selection)(file, type, H5CX_get_dxpl(), count, mem_space_ids,
+                                                      file_space_ids, offsets, element_sizes, bufs);
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
@@ -581,7 +594,8 @@ H5FD__read_selection_id(uint32_t skip_cb, H5FD_int_t *fh, H5FD_mem_t type, uint3
         }
 
         /* Translate to vector or scalar I/O */
-        if (H5FD__read_selection_translate(skip_vector_cb, fh, type, count, mem_spaces, file_spaces, offsets, element_sizes, bufs) < 0)
+        if (H5FD__read_selection_translate(skip_vector_cb, fh, type, count, mem_spaces, file_spaces, offsets,
+                                           element_sizes, bufs) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_READERROR, FAIL, "translation to vector or scalar read failed");
     }
 
@@ -618,7 +632,9 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5FD__write_selection_translate(bool skip_vector_cb, H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, H5S_t **mem_spaces, H5S_t **file_spaces, haddr_t offsets[], size_t element_sizes[], const void *bufs[])
+H5FD__write_selection_translate(bool skip_vector_cb, H5FD_int_t *fh, H5FD_mem_t type, uint32_t count,
+                                H5S_t **mem_spaces, H5S_t **file_spaces, haddr_t offsets[],
+                                size_t element_sizes[], const void *bufs[])
 {
     H5FD_t         *file;
     size_t          element_size = 0;
@@ -824,7 +840,9 @@ H5FD__write_selection_translate(bool skip_vector_cb, H5FD_int_t *fh, H5FD_mem_t 
                 H5_BEFORE_USER_CB(FAIL)
                     {
                         /* Issue scalar write call */
-                        ret_value = (file->cls->write)(file, type, H5CX_get_dxpl(), offsets[i] + file_off[file_seq_i], io_len, (const void *)((const uint8_t *)buf + mem_off[mem_seq_i]));
+                        ret_value = (file->cls->write)(
+                            file, type, H5CX_get_dxpl(), offsets[i] + file_off[file_seq_i], io_len,
+                            (const void *)((const uint8_t *)buf + mem_off[mem_seq_i]));
                     }
                 H5_AFTER_USER_CB(FAIL)
                 if (ret_value < 0)
@@ -869,7 +887,8 @@ H5FD__write_selection_translate(bool skip_vector_cb, H5FD_int_t *fh, H5FD_mem_t 
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
-                ret_value = (fh->driver->cls->write_vector)(file, H5CX_get_dxpl(), (uint32_t)vec_arr_nused, types, addrs, sizes, vec_bufs);
+                ret_value = (fh->driver->cls->write_vector)(file, H5CX_get_dxpl(), (uint32_t)vec_arr_nused,
+                                                            types, addrs, sizes, vec_bufs);
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
@@ -954,7 +973,9 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5FD__write_selection_id(uint32_t skip_cb, H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, hid_t mem_space_ids[], hid_t file_space_ids[], haddr_t offsets[], size_t element_sizes[], const void *bufs[])
+H5FD__write_selection_id(uint32_t skip_cb, H5FD_int_t *fh, H5FD_mem_t type, uint32_t count,
+                         hid_t mem_space_ids[], hid_t file_space_ids[], haddr_t offsets[],
+                         size_t element_sizes[], const void *bufs[])
 {
     H5FD_t  *file;
     bool     offsets_cooked = false;
@@ -1026,7 +1047,8 @@ H5FD__write_selection_id(uint32_t skip_cb, H5FD_int_t *fh, H5FD_mem_t type, uint
 
     for (i = 0; i < count; i++)
         if ((offsets[i]) > eoa)
-            HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, FAIL, "addr overflow, offsets[%d] = %llu, eoa = %llu", (int)i, (unsigned long long)(offsets[i]), (unsigned long long)eoa);
+            HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, FAIL, "addr overflow, offsets[%d] = %llu, eoa = %llu", (int)i,
+                        (unsigned long long)(offsets[i]), (unsigned long long)eoa);
 
     /* if the underlying VFD supports selection write, make the call */
     if (!skip_selection_cb && fh->driver->cls->write_selection) {
@@ -1035,7 +1057,9 @@ H5FD__write_selection_id(uint32_t skip_cb, H5FD_int_t *fh, H5FD_mem_t type, uint
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
-                ret_value = (fh->driver->cls->write_selection)(file, type, H5CX_get_dxpl(), count, mem_space_ids, file_space_ids, offsets, element_sizes, bufs);
+                ret_value =
+                    (fh->driver->cls->write_selection)(file, type, H5CX_get_dxpl(), count, mem_space_ids,
+                                                       file_space_ids, offsets, element_sizes, bufs);
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
@@ -1071,7 +1095,8 @@ H5FD__write_selection_id(uint32_t skip_cb, H5FD_int_t *fh, H5FD_mem_t type, uint
         }
 
         /* Translate to vector or scalar I/O */
-        if (H5FD__write_selection_translate(skip_vector_cb, fh, type, count, mem_spaces, file_spaces, offsets, element_sizes, bufs) < 0)
+        if (H5FD__write_selection_translate(skip_vector_cb, fh, type, count, mem_spaces, file_spaces, offsets,
+                                            element_sizes, bufs) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_WRITEERROR, FAIL, "translation to vector or scalar write failed");
     }
 

@@ -1281,7 +1281,8 @@ H5FDread_vector_from_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, uin
 
     /* Call private function */
     /* (Note compensating for base address addition in internal routine) */
-    if (H5FD__read_vector_from_selection(&fh, type, count, mem_space_ids, file_space_ids, offsets, element_sizes, bufs) < 0)
+    if (H5FD__read_vector_from_selection(&fh, type, count, mem_space_ids, file_space_ids, offsets,
+                                         element_sizes, bufs) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_READERROR, FAIL, "file selection read request failed");
 
 done:

@@ -567,7 +567,7 @@ H5Z__check_unregister_dset_cb(void H5_ATTR_UNUSED *obj_ptr, hid_t obj_id, void *
     H5Z_object_t           *object  = (H5Z_object_t *)key;
     H5VL_object_t          *vol_obj;     /* Object for loc_id */
     H5VL_dataset_get_args_t vol_cb_args; /* Arguments to VOL callback */
-    H5P_genplist_t       *def_dxpl;    /* Default dataset transfer property list */
+    H5P_genplist_t         *def_dxpl;    /* Default dataset transfer property list */
     htri_t                  filter_in_pline = false;
     int                     ret_value       = false; /* Return value */
 

@@ -112,8 +112,13 @@ H5_DLL herr_t  H5FD__read_from_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32
 H5_DLL herr_t  H5FD__write_from_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count,
                                           hid_t mem_space_ids[], hid_t file_space_ids[], haddr_t offsets[],
                                           size_t element_sizes[], const void *bufs[]);
-H5_DLL herr_t  H5FD__read_selection_translate(bool skip_vector_cb, H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, H5S_t **mem_spaces, H5S_t **file_spaces, haddr_t offsets[], size_t element_sizes[], void *bufs[] /* out */);
-H5_DLL herr_t  H5FD__write_selection_translate(bool skip_vector_cb, H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, H5S_t **mem_spaces, H5S_t **file_spaces, haddr_t offsets[], size_t element_sizes[], const void *bufs[]);
+H5_DLL herr_t  H5FD__read_selection_translate(bool skip_vector_cb, H5FD_int_t *fh, H5FD_mem_t type,
+                                              uint32_t count, H5S_t **mem_spaces, H5S_t **file_spaces,
+                                              haddr_t offsets[], size_t element_sizes[],
+                                              void *bufs[] /* out */);
+H5_DLL herr_t  H5FD__write_selection_translate(bool skip_vector_cb, H5FD_int_t *fh, H5FD_mem_t type,
+                                               uint32_t count, H5S_t **mem_spaces, H5S_t **file_spaces,
+                                               haddr_t offsets[], size_t element_sizes[], const void *bufs[]);
 
 /* Internal VFD init/term routines */
 H5_DLL herr_t H5FD__core_register(void);

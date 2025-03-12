@@ -143,8 +143,8 @@ H5Literate1(hid_t group_id, H5_index_t idx_type, H5_iter_order_t order, hsize_t 
     H5VL_object_t            *vol_obj = NULL; /* Object of loc_id */
     H5VL_link_specific_args_t vol_cb_args;    /* Arguments to VOL callback */
     H5VL_loc_params_t         loc_params;
-    H5P_genplist_t           *def_dxpl;           /* Default dataset transfer property list */
-    H5I_type_t                id_type; /* Type of ID */
+    H5P_genplist_t           *def_dxpl; /* Default dataset transfer property list */
+    H5I_type_t                id_type;  /* Type of ID */
     H5L_shim_data_t           shim_data;
     bool                      is_native_vol_obj;
     herr_t                    ret_value; /* Return value */
@@ -229,7 +229,7 @@ H5Literate_by_name1(hid_t loc_id, const char *group_name, H5_index_t idx_type, H
     H5VL_object_t            *vol_obj = NULL; /* Object of loc_id */
     H5VL_link_specific_args_t vol_cb_args;    /* Arguments to VOL callback */
     H5VL_loc_params_t         loc_params;
-    H5P_genplist_t           *def_dxpl;           /* Default dataset transfer property list */
+    H5P_genplist_t           *def_dxpl; /* Default dataset transfer property list */
     H5L_shim_data_t           shim_data;
     bool                      is_native_vol_obj;
     herr_t                    ret_value; /* Return value */
@@ -260,7 +260,8 @@ H5Literate_by_name1(hid_t loc_id, const char *group_name, H5_index_t idx_type, H
     if (H5VL_object_is_native(vol_obj, &is_native_vol_obj) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTGET, FAIL, "can't determine if VOL object is native connector object");
     if (!is_native_vol_obj)
-        HGOTO_ERROR(H5E_LINK, H5E_BADVALUE, FAIL, "H5Literate_by_name1 is only meant to be used with the native VOL connector");
+        HGOTO_ERROR(H5E_LINK, H5E_BADVALUE, FAIL,
+                    "H5Literate_by_name1 is only meant to be used with the native VOL connector");
 
     /* Get the default dataset transfer property list */
     if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
@@ -311,8 +312,8 @@ H5Lget_info1(hid_t loc_id, const char *name, H5L_info1_t *linfo /*out*/, hid_t l
     H5VL_object_t       *vol_obj = NULL; /* object of loc_id */
     H5VL_link_get_args_t vol_cb_args;    /* Arguments to VOL callback */
     H5VL_loc_params_t    loc_params;
-    H5P_genplist_t      *def_dxpl;           /* Default dataset transfer property list */
-    H5L_info2_t          linfo2; /* New-style link info */
+    H5P_genplist_t      *def_dxpl; /* Default dataset transfer property list */
+    H5L_info2_t          linfo2;   /* New-style link info */
     bool                 is_native_vol_obj;
     herr_t               ret_value = SUCCEED; /* Return value */
 
@@ -400,8 +401,8 @@ H5Lget_info_by_idx1(hid_t loc_id, const char *group_name, H5_index_t idx_type, H
     H5VL_object_t       *vol_obj = NULL; /* object of loc_id */
     H5VL_link_get_args_t vol_cb_args;    /* Arguments to VOL callback */
     H5VL_loc_params_t    loc_params;
-    H5P_genplist_t      *def_dxpl;           /* Default dataset transfer property list */
-    H5L_info2_t          linfo2; /* New-style link info */
+    H5P_genplist_t      *def_dxpl; /* Default dataset transfer property list */
+    H5L_info2_t          linfo2;   /* New-style link info */
     bool                 is_native_vol_obj;
     herr_t               ret_value = SUCCEED; /* Return value */
 
@@ -509,8 +510,8 @@ H5Lvisit1(hid_t group_id, H5_index_t idx_type, H5_iter_order_t order, H5L_iterat
     H5VL_object_t            *vol_obj = NULL; /* Object of loc_id */
     H5VL_link_specific_args_t vol_cb_args;    /* Arguments to VOL callback */
     H5VL_loc_params_t         loc_params;
-    H5P_genplist_t           *def_dxpl;           /* Default dataset transfer property list */
-    H5I_type_t                id_type; /* Type of ID */
+    H5P_genplist_t           *def_dxpl; /* Default dataset transfer property list */
+    H5I_type_t                id_type;  /* Type of ID */
     H5L_shim_data_t           shim_data;
     bool                      is_native_vol_obj;
     herr_t                    ret_value; /* Return value */
@@ -544,7 +545,8 @@ H5Lvisit1(hid_t group_id, H5_index_t idx_type, H5_iter_order_t order, H5L_iterat
     if (H5VL_object_is_native(vol_obj, &is_native_vol_obj) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTGET, FAIL, "can't determine if VOL object is native connector object");
     if (!is_native_vol_obj)
-        HGOTO_ERROR(H5E_LINK, H5E_BADVALUE, FAIL, "H5Lvisit1 is only meant to be used with the native VOL connector");
+        HGOTO_ERROR(H5E_LINK, H5E_BADVALUE, FAIL,
+                    "H5Lvisit1 is only meant to be used with the native VOL connector");
 
     /* Set up shim */
     shim_data.real_op      = op;
@@ -601,7 +603,7 @@ H5Lvisit_by_name1(hid_t loc_id, const char *group_name, H5_index_t idx_type, H5_
     H5VL_object_t            *vol_obj = NULL; /* Object of loc_id */
     H5VL_link_specific_args_t vol_cb_args;    /* Arguments to VOL callback */
     H5VL_loc_params_t         loc_params;
-    H5P_genplist_t           *def_dxpl;           /* Default dataset transfer property list */
+    H5P_genplist_t           *def_dxpl; /* Default dataset transfer property list */
     H5L_shim_data_t           shim_data;
     bool                      is_native_vol_obj;
     herr_t                    ret_value; /* Return value */
@@ -632,7 +634,8 @@ H5Lvisit_by_name1(hid_t loc_id, const char *group_name, H5_index_t idx_type, H5_
     if (H5VL_object_is_native(vol_obj, &is_native_vol_obj) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTGET, FAIL, "can't determine if VOL object is native connector object");
     if (!is_native_vol_obj)
-        HGOTO_ERROR(H5E_LINK, H5E_BADVALUE, FAIL, "H5Lvisit_by_name1 is only meant to be used with the native VOL connector");
+        HGOTO_ERROR(H5E_LINK, H5E_BADVALUE, FAIL,
+                    "H5Lvisit_by_name1 is only meant to be used with the native VOL connector");
 
     /* Get the default dataset transfer property list */
     if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))

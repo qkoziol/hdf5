@@ -1693,7 +1693,8 @@ H5FD__subfiling_read_vector(H5FD_t *_file, hid_t dxpl_id, uint32_t count, H5FD_m
     if (H5CX_set_dxpl(dxpl_id) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
-    if (H5FD__subfiling_io_helper(file, (size_t)count, types, addrs, sizes, (H5_flexible_const_ptr_t *)bufs, IO_TYPE_READ) < 0)
+    if (H5FD__subfiling_io_helper(file, (size_t)count, types, addrs, sizes, (H5_flexible_const_ptr_t *)bufs,
+                                  IO_TYPE_READ) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_READERROR, FAIL, "couldn't read data");
 
 done:
@@ -1739,7 +1740,8 @@ H5FD__subfiling_write_vector(H5FD_t *_file, hid_t dxpl_id, uint32_t count, H5FD_
     if (H5CX_set_dxpl(dxpl_id) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
-    if (H5FD__subfiling_io_helper(file, (size_t)count, types, addrs, sizes, (H5_flexible_const_ptr_t *)bufs, IO_TYPE_WRITE) < 0)
+    if (H5FD__subfiling_io_helper(file, (size_t)count, types, addrs, sizes, (H5_flexible_const_ptr_t *)bufs,
+                                  IO_TYPE_WRITE) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_WRITEERROR, FAIL, "couldn't write data");
 
 done:

@@ -63,7 +63,8 @@
  *---------------------------------------------------------------------------
  */
 herr_t
-H5VL__native_token_cmp(void H5_ATTR_UNUSED *obj, const H5O_token_t *token1, const H5O_token_t *token2, int *cmp_value)
+H5VL__native_token_cmp(void H5_ATTR_UNUSED *obj, const H5O_token_t *token1, const H5O_token_t *token2,
+                       int *cmp_value)
 {
     herr_t ret_value = SUCCEED;
 

@@ -252,7 +252,7 @@ H5Fset_mpi_atomicity(hid_t file_id, hbool_t flag)
     H5VL_object_t                   *vol_obj;             /* File info */
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
-    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
+    H5P_genplist_t                  *def_dxpl;            /* Dataset transfer property list pointer */
     herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -327,7 +327,7 @@ H5Fget_mpi_atomicity(hid_t file_id, bool *flag /*out*/)
     H5VL_object_t                   *vol_obj;             /* File info */
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
-    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
+    H5P_genplist_t                  *def_dxpl;            /* Dataset transfer property list pointer */
     herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)

@@ -69,10 +69,13 @@ static int H5F__get_all_ids_cb(void H5_ATTR_UNUSED *obj_ptr, hid_t obj_id, void 
 
 /* Helper routines for sync/async API calls */
 static herr_t H5F__post_open_api_common(H5VL_object_t *vol_obj, H5P_genplist_t *dxpl, void **token_ptr);
-static hid_t  H5F__create_api_common(const char *filename, unsigned flags, H5P_genplist_t *fcpl, H5P_genplist_t *fapl, H5P_genplist_t *dxpl, void **token_ptr);
-static hid_t  H5F__open_api_common(const char *filename, unsigned flags, H5P_genplist_t *fapl, H5P_genplist_t *dxpl, void **token_ptr);
+static hid_t  H5F__create_api_common(const char *filename, unsigned flags, H5P_genplist_t *fcpl,
+                                     H5P_genplist_t *fapl, H5P_genplist_t *dxpl, void **token_ptr);
+static hid_t  H5F__open_api_common(const char *filename, unsigned flags, H5P_genplist_t *fapl,
+                                   H5P_genplist_t *dxpl, void **token_ptr);
 static hid_t  H5F__reopen_api_common(hid_t file_id, H5P_genplist_t *dxpl, void **token_ptr);
-static herr_t H5F__flush_api_common(hid_t object_id, H5F_scope_t scope, H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static herr_t H5F__flush_api_common(hid_t object_id, H5F_scope_t scope, H5P_genplist_t *dxpl,
+                                    void **token_ptr, H5VL_object_t **_vol_obj_ptr);
 
 /*********************/
 /* Package Variables */
@@ -442,7 +445,7 @@ H5Fget_vfd_handle(hid_t file_id, hid_t fapl_id, void **file_handle /*out*/)
     H5VL_object_t                   *vol_obj;             /* File info */
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
-    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
+    H5P_genplist_t                  *def_dxpl;            /* Dataset transfer property list pointer */
     herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -494,7 +497,7 @@ H5Fis_accessible(const char *filename, hid_t fapl_id)
 {
     H5VL_file_specific_args_t vol_cb_args;           /* Arguments to VOL callback */
     bool                      is_accessible = false; /* Whether file is accessible */
-    H5P_genplist_t            *def_dxpl;            /* Default dataset transfer property list pointer */
+    H5P_genplist_t           *def_dxpl;              /* Default dataset transfer property list pointer */
     htri_t                    ret_value;             /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -577,7 +580,8 @@ done:
  *-------------------------------------------------------------------------
  */
 static hid_t
-H5F__create_api_common(const char *filename, unsigned flags, H5P_genplist_t *fcpl, H5P_genplist_t *fapl, H5P_genplist_t *dxpl, void **token_ptr)
+H5F__create_api_common(const char *filename, unsigned flags, H5P_genplist_t *fcpl, H5P_genplist_t *fapl,
+                       H5P_genplist_t *dxpl, void **token_ptr)
 {
     hid_t                 fapl_id;                     /* ID for FAPL */
     void                 *new_file = NULL;             /* File struct for new file                 */
@@ -624,7 +628,8 @@ H5F__create_api_common(const char *filename, unsigned flags, H5P_genplist_t *fcp
     flags |= H5F_ACC_RDWR | H5F_ACC_CREAT;
 
     /* Create a new file or truncate an existing file through the VOL */
-    if (NULL == (new_file = H5VL_file_create(connector_prop.connector, filename, flags, fcpl, fapl, dxpl, token_ptr)))
+    if (NULL ==
+        (new_file = H5VL_file_create(connector_prop.connector, filename, flags, fcpl, fapl, dxpl, token_ptr)))
         HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, H5I_INVALID_HID, "unable to create file");
 
     /* Get an ID for the file */
@@ -799,7 +804,8 @@ done:
  *-------------------------------------------------------------------------
  */
 static hid_t
-H5F__open_api_common(const char *filename, unsigned flags, H5P_genplist_t *fapl, H5P_genplist_t *dxpl, void **token_ptr)
+H5F__open_api_common(const char *filename, unsigned flags, H5P_genplist_t *fapl, H5P_genplist_t *dxpl,
+                     void **token_ptr)
 {
     hid_t                 fapl_id;                     /* ID for FAPL */
     void                 *new_file = NULL;             /* File struct for new file                 */
@@ -875,7 +881,7 @@ H5Fopen(const char *filename, unsigned flags, hid_t fapl_id)
 {
     H5VL_object_t  *vol_obj = NULL;              /* File object */
     H5P_genplist_t *fapl;                        /* File access property list pointer */
-    H5P_genplist_t *def_dxpl;                   /* Default dataset transfer property list pointer */
+    H5P_genplist_t *def_dxpl;                    /* Default dataset transfer property list pointer */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -923,7 +929,7 @@ H5Fopen_async(const char *app_file, const char *app_func, unsigned app_line, con
 {
     H5VL_object_t  *vol_obj = NULL;              /* File object */
     H5P_genplist_t *fapl;                        /* File access property list pointer */
-    H5P_genplist_t *def_dxpl;                   /* Default dataset transfer property list pointer */
+    H5P_genplist_t *def_dxpl;                    /* Default dataset transfer property list pointer */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
@@ -993,7 +999,8 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5F__flush_api_common(hid_t object_id, H5F_scope_t scope, H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
+H5F__flush_api_common(hid_t object_id, H5F_scope_t scope, H5P_genplist_t *dxpl, void **token_ptr,
+                      H5VL_object_t **_vol_obj_ptr)
 {
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
@@ -1041,8 +1048,8 @@ done:
 herr_t
 H5Fflush(hid_t object_id, H5F_scope_t scope)
 {
-    H5P_genplist_t            *def_dxpl;             /* Default dataset transfer property list pointer */
-    herr_t ret_value = SUCCEED; /* Return value     */
+    H5P_genplist_t *def_dxpl;            /* Default dataset transfer property list pointer */
+    herr_t          ret_value = SUCCEED; /* Return value     */
 
     FUNC_ENTER_API(FAIL)
 
@@ -1072,11 +1079,11 @@ herr_t
 H5Fflush_async(const char *app_file, const char *app_func, unsigned app_line, hid_t object_id,
                H5F_scope_t scope, hid_t es_id)
 {
-    H5VL_object_t *vol_obj   = NULL;            /* Object for loc_id */
-    H5P_genplist_t            *def_dxpl;             /* Default dataset transfer property list pointer */
-    void          *token     = NULL;            /* Request token for async operation        */
-    void         **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    herr_t         ret_value = SUCCEED;         /* Return value     */
+    H5VL_object_t  *vol_obj = NULL;              /* Object for loc_id */
+    H5P_genplist_t *def_dxpl;                    /* Default dataset transfer property list pointer */
+    void           *token     = NULL;            /* Request token for async operation        */
+    void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
+    herr_t          ret_value = SUCCEED;         /* Return value     */
 
     FUNC_ENTER_API(FAIL)
 
@@ -1214,7 +1221,7 @@ H5Fdelete(const char *filename, hid_t fapl_id)
     H5P_genplist_t           *fapl;                  /* Property list pointer */
     H5VL_connector_prop_t     connector_prop;        /* Property for VOL connector ID & info */
     H5VL_file_specific_args_t vol_cb_args;           /* Arguments to VOL callback */
-    H5P_genplist_t            *def_dxpl;            /* Default dataset transfer property list pointer */
+    H5P_genplist_t           *def_dxpl;              /* Default dataset transfer property list pointer */
     bool                      is_accessible = false; /* Whether file is accessible */
     herr_t                    ret_value     = SUCCEED;
 
@@ -1287,7 +1294,7 @@ H5Fmount(hid_t loc_id, const char *name, hid_t child_id, hid_t plist_id)
     H5VL_object_t             *loc_vol_obj   = NULL; /* Parent object        */
     H5VL_object_t             *child_vol_obj = NULL; /* Child object         */
     H5VL_group_specific_args_t vol_cb_args;          /* Arguments to VOL callback */
-    H5P_genplist_t            *def_dxpl;            /* Default dataset transfer property list */
+    H5P_genplist_t            *def_dxpl;             /* Default dataset transfer property list */
     void                      *grp = NULL;           /* Root group opened */
     H5I_type_t                 loc_type;             /* ID type of location  */
     htri_t                     same_connector; /* Whether parent and child files use the same connector */
@@ -1358,15 +1365,18 @@ H5Fmount(hid_t loc_id, const char *name, hid_t child_id, hid_t plist_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "could not get child object");
 
     /* Check if both objects are associated with the same VOL connector */
-    if ((same_connector = H5VL_conn_same_class(H5VL_OBJ_CONNECTOR(loc_vol_obj), H5VL_OBJ_CONNECTOR(child_vol_obj))) < 0)
+    if ((same_connector =
+             H5VL_conn_same_class(H5VL_OBJ_CONNECTOR(loc_vol_obj), H5VL_OBJ_CONNECTOR(child_vol_obj))) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTCOMPARE, FAIL, "can't compare connector classes");
     if (!same_connector)
-        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "can't mount file onto object from different VOL connector");
+        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL,
+                    "can't mount file onto object from different VOL connector");
 
     /* Set up VOL callback arguments */
     vol_cb_args.op_type         = H5VL_GROUP_MOUNT;
     vol_cb_args.args.mount.name = name;
-    vol_cb_args.args.mount.child_file = H5VL_OBJ_DATA(child_vol_obj); /* Don't unwrap fully, so each connector can see its object */
+    vol_cb_args.args.mount.child_file =
+        H5VL_OBJ_DATA(child_vol_obj); /* Don't unwrap fully, so each connector can see its object */
     vol_cb_args.args.mount.fmpl_id = plist_id;
 
     /* Perform the mount operation */
@@ -1556,9 +1566,9 @@ done:
 hid_t
 H5Freopen(hid_t file_id)
 {
-    H5VL_object_t *vol_obj   = NULL;            /* File object */
-    H5P_genplist_t            *def_dxpl;             /* Default dataset transfer property list pointer */
-    hid_t          ret_value = H5I_INVALID_HID; /* Return value */
+    H5VL_object_t  *vol_obj = NULL;              /* File object */
+    H5P_genplist_t *def_dxpl;                    /* Default dataset transfer property list pointer */
+    hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
@@ -1598,11 +1608,11 @@ done:
 hid_t
 H5Freopen_async(const char *app_file, const char *app_func, unsigned app_line, hid_t file_id, hid_t es_id)
 {
-    H5VL_object_t *vol_obj   = NULL;            /* Object for loc_id */
-    void          *token     = NULL;            /* Request token for async operation        */
-    void         **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    H5P_genplist_t            *def_dxpl;             /* Default dataset transfer property list pointer */
-    hid_t          ret_value;                   /* Return value */
+    H5VL_object_t  *vol_obj   = NULL;            /* Object for loc_id */
+    void           *token     = NULL;            /* Request token for async operation        */
+    void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
+    H5P_genplist_t *def_dxpl;                    /* Default dataset transfer property list pointer */
+    hid_t           ret_value;                   /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
@@ -1756,7 +1766,7 @@ H5Fget_freespace(hid_t file_id)
     H5VL_object_t                   *vol_obj = NULL;
     H5VL_optional_args_t             vol_cb_args;        /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;      /* Arguments for optional operation */
-    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
+    H5P_genplist_t                  *def_dxpl;           /* Dataset transfer property list pointer */
     hsize_t                          file_freespace = 0; /* Size of freespace in the file */
     hssize_t                         ret_value;          /* Return value */
 
@@ -1803,7 +1813,7 @@ H5Fget_filesize(hid_t file_id, hsize_t *size /*out*/)
     H5VL_object_t                   *vol_obj;             /* File info */
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
-    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
+    H5P_genplist_t                  *def_dxpl;            /* Dataset transfer property list pointer */
     herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1874,7 +1884,7 @@ H5Fget_file_image(hid_t file_id, void *buf /*out*/, size_t buf_len)
     H5VL_object_t                   *vol_obj;       /* File object for file ID  */
     H5VL_optional_args_t             vol_cb_args;   /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args; /* Arguments for optional operation */
-    H5P_genplist_t                   *def_dxpl;     /* Dataset transfer property list pointer */
+    H5P_genplist_t                  *def_dxpl;      /* Dataset transfer property list pointer */
     size_t                           image_len = 0; /* Size of image buffer */
     ssize_t                          ret_value;     /* Return value             */
 
@@ -1926,7 +1936,7 @@ H5Fget_mdc_config(hid_t file_id, H5AC_cache_config_t *config /*out*/)
     H5VL_object_t                   *vol_obj = NULL;
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
-    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
+    H5P_genplist_t                  *def_dxpl;            /* Dataset transfer property list pointer */
     herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1973,7 +1983,7 @@ H5Fset_mdc_config(hid_t file_id, const H5AC_cache_config_t *config_ptr)
     H5VL_object_t                   *vol_obj = NULL;
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
-    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
+    H5P_genplist_t                  *def_dxpl;            /* Dataset transfer property list pointer */
     herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2017,7 +2027,7 @@ H5Fget_mdc_hit_rate(hid_t file_id, double *hit_rate /*out*/)
     H5VL_object_t                   *vol_obj;
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
-    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
+    H5P_genplist_t                  *def_dxpl;            /* Dataset transfer property list pointer */
     herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2065,7 +2075,7 @@ H5Fget_mdc_size(hid_t file_id, size_t *max_size /*out*/, size_t *min_clean_size 
     H5VL_object_t                   *vol_obj;
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
-    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
+    H5P_genplist_t                  *def_dxpl;            /* Dataset transfer property list pointer */
     uint32_t                         index_len = 0;       /* Size of cache index */
     herr_t                           ret_value = SUCCEED; /* Return value */
 
@@ -2120,7 +2130,7 @@ H5Freset_mdc_hit_rate_stats(hid_t file_id)
 {
     H5VL_object_t       *vol_obj = NULL;
     H5VL_optional_args_t vol_cb_args;         /* Arguments to VOL callback */
-    H5P_genplist_t       *def_dxpl;          /* Dataset transfer property list pointer */
+    H5P_genplist_t      *def_dxpl;            /* Dataset transfer property list pointer */
     herr_t               ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2227,7 +2237,7 @@ H5Fget_info2(hid_t obj_id, H5F_info2_t *finfo /*out*/)
     H5VL_object_t                   *vol_obj = NULL;
     H5VL_optional_args_t             vol_cb_args;   /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args; /* Arguments for optional operation */
-    H5P_genplist_t                   *def_dxpl;     /* Dataset transfer property list pointer */
+    H5P_genplist_t                  *def_dxpl;      /* Dataset transfer property list pointer */
     H5I_type_t                       type;
     herr_t                           ret_value = SUCCEED; /* Return value */
 
@@ -2281,7 +2291,7 @@ H5Fget_metadata_read_retry_info(hid_t file_id, H5F_retry_info_t *info /*out*/)
     H5VL_object_t                   *vol_obj = NULL;      /* File object for file ID */
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
-    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
+    H5P_genplist_t                  *def_dxpl;            /* Dataset transfer property list pointer */
     herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2329,7 +2339,7 @@ H5Fget_free_sections(hid_t file_id, H5F_mem_t type, size_t nsects, H5F_sect_info
     H5VL_object_t                   *vol_obj = NULL;
     H5VL_optional_args_t             vol_cb_args;     /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;   /* Arguments for optional operation */
-    H5P_genplist_t                   *def_dxpl;     /* Dataset transfer property list pointer */
+    H5P_genplist_t                  *def_dxpl;        /* Dataset transfer property list pointer */
     size_t                           sect_count = 0;  /* Number of sections */
     ssize_t                          ret_value  = -1; /* Return value */
 
@@ -2378,10 +2388,10 @@ done:
 herr_t
 H5Fclear_elink_file_cache(hid_t file_id)
 {
-    H5VL_object_t                   *vol_obj;             /* File */
-    H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
-    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
-    herr_t                           ret_value = SUCCEED; /* Return value */
+    H5VL_object_t       *vol_obj;             /* File */
+    H5VL_optional_args_t vol_cb_args;         /* Arguments to VOL callback */
+    H5P_genplist_t      *def_dxpl;            /* Dataset transfer property list pointer */
+    herr_t               ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -2442,10 +2452,10 @@ done:
 herr_t
 H5Fstart_swmr_write(hid_t file_id)
 {
-    H5VL_object_t                   *vol_obj = NULL;      /* File info */
-    H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
-    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
-    herr_t                           ret_value = SUCCEED; /* Return value */
+    H5VL_object_t       *vol_obj = NULL;      /* File info */
+    H5VL_optional_args_t vol_cb_args;         /* Arguments to VOL callback */
+    H5P_genplist_t      *def_dxpl;            /* Dataset transfer property list pointer */
+    herr_t               ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -2486,10 +2496,10 @@ done:
 herr_t
 H5Fstart_mdc_logging(hid_t file_id)
 {
-    H5VL_object_t                   *vol_obj;             /* File info */
-    H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
-    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
-    herr_t                           ret_value = SUCCEED; /* Return value */
+    H5VL_object_t       *vol_obj;             /* File info */
+    H5VL_optional_args_t vol_cb_args;         /* Arguments to VOL callback */
+    H5P_genplist_t      *def_dxpl;            /* Dataset transfer property list pointer */
+    herr_t               ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -2527,10 +2537,10 @@ done:
 herr_t
 H5Fstop_mdc_logging(hid_t file_id)
 {
-    H5VL_object_t                   *vol_obj;             /* File info */
-    H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
-    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
-    herr_t                           ret_value = SUCCEED; /* Return value */
+    H5VL_object_t       *vol_obj;             /* File info */
+    H5VL_optional_args_t vol_cb_args;         /* Arguments to VOL callback */
+    H5P_genplist_t      *def_dxpl;            /* Dataset transfer property list pointer */
+    herr_t               ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -2571,7 +2581,7 @@ H5Fget_mdc_logging_status(hid_t file_id, hbool_t *is_enabled /*out*/, hbool_t *i
     H5VL_object_t                   *vol_obj;             /* File info */
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
-    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
+    H5P_genplist_t                  *def_dxpl;            /* Dataset transfer property list pointer */
     herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2616,7 +2626,7 @@ H5Fset_libver_bounds(hid_t file_id, H5F_libver_t low, H5F_libver_t high)
     H5VL_object_t                   *vol_obj;             /* File as VOL object           */
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
-    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
+    H5P_genplist_t                  *def_dxpl;            /* Dataset transfer property list pointer */
     herr_t                           ret_value = SUCCEED; /* Return value 				*/
 
     FUNC_ENTER_API(FAIL)
@@ -2661,10 +2671,10 @@ done:
 herr_t
 H5Fformat_convert(hid_t file_id)
 {
-    H5VL_object_t                   *vol_obj = NULL;      /* File */
-    H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
-    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
-    herr_t                           ret_value = SUCCEED; /* Return value */
+    H5VL_object_t       *vol_obj = NULL;      /* File */
+    H5VL_optional_args_t vol_cb_args;         /* Arguments to VOL callback */
+    H5P_genplist_t      *def_dxpl;            /* Dataset transfer property list pointer */
+    herr_t               ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -2704,10 +2714,10 @@ done:
 herr_t
 H5Freset_page_buffering_stats(hid_t file_id)
 {
-    H5VL_object_t                   *vol_obj;             /* File to reset stats on */
-    H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
-    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
-    herr_t                           ret_value = SUCCEED; /* Return value */
+    H5VL_object_t       *vol_obj;             /* File to reset stats on */
+    H5VL_optional_args_t vol_cb_args;         /* Arguments to VOL callback */
+    H5P_genplist_t      *def_dxpl;            /* Dataset transfer property list pointer */
+    herr_t               ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -2748,7 +2758,7 @@ H5Fget_page_buffering_stats(hid_t file_id, unsigned accesses[2] /*out*/, unsigne
     H5VL_object_t                   *vol_obj;             /* File object */
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
-    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
+    H5P_genplist_t                  *def_dxpl;            /* Dataset transfer property list pointer */
     herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2799,7 +2809,7 @@ H5Fget_mdc_image_info(hid_t file_id, haddr_t *image_addr /*out*/, hsize_t *image
     H5VL_object_t                   *vol_obj;             /* File info */
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
-    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
+    H5P_genplist_t                  *def_dxpl;            /* Dataset transfer property list pointer */
     herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2853,7 +2863,7 @@ H5Fget_eoa(hid_t file_id, haddr_t *eoa /*out*/)
     if (eoa) {
         H5VL_optional_args_t             vol_cb_args;   /* Arguments to VOL callback */
         H5VL_native_file_optional_args_t file_opt_args; /* Arguments for optional operation */
-        H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
+        H5P_genplist_t                  *def_dxpl;      /* Dataset transfer property list pointer */
 
         /* Set up VOL callback arguments */
         file_opt_args.get_eoa.eoa = eoa;
@@ -2888,7 +2898,7 @@ H5Fincrement_filesize(hid_t file_id, hsize_t increment)
     H5VL_object_t                   *vol_obj;             /* File info */
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
-    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
+    H5P_genplist_t                  *def_dxpl;            /* Dataset transfer property list pointer */
     herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2930,7 +2940,7 @@ H5Fget_dset_no_attrs_hint(hid_t file_id, hbool_t *minimize /*out*/)
     H5VL_object_t                   *vol_obj;             /* File info */
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
-    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
+    H5P_genplist_t                  *def_dxpl;            /* Dataset transfer property list pointer */
     herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2974,7 +2984,7 @@ H5Fset_dset_no_attrs_hint(hid_t file_id, hbool_t minimize)
     H5VL_object_t                   *vol_obj;             /* File info */
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
-    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
+    H5P_genplist_t                  *def_dxpl;            /* Dataset transfer property list pointer */
     herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)

@@ -99,7 +99,7 @@ H5Tcommit1(hid_t loc_id, const char *name, hid_t type_id)
     H5T_t            *dt      = NULL; /* High level datatype object that wraps the VOL object */
     H5VL_object_t    *vol_obj = NULL; /* Object of loc_id */
     H5VL_loc_params_t loc_params;
-    H5P_genplist_t   *def_dxpl;       /* Dataset transfer property list */
+    H5P_genplist_t   *def_dxpl;            /* Dataset transfer property list */
     herr_t            ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -140,7 +140,8 @@ H5Tcommit1(hid_t loc_id, const char *name, hid_t type_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid object identifier");
 
     /* Commit the datatype */
-    if (NULL == (data = H5VL_datatype_commit(vol_obj, &loc_params, name, type_id, def_lcpl, def_tcpl, def_tapl, def_dxpl, H5_REQUEST_NULL)))
+    if (NULL == (data = H5VL_datatype_commit(vol_obj, &loc_params, name, type_id, def_lcpl, def_tcpl,
+                                             def_tapl, def_dxpl, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINIT, FAIL, "unable to commit datatype");
 
     /* Set up VOL object */
@@ -174,7 +175,7 @@ H5Topen1(hid_t loc_id, const char *name)
     H5P_genplist_t   *def_tapl;       /* Datatype access property list */
     H5VL_object_t    *vol_obj = NULL; /* Object of loc_id */
     H5VL_loc_params_t loc_params;
-    H5P_genplist_t   *def_dxpl;       /* Dataset transfer property list */
+    H5P_genplist_t   *def_dxpl;                    /* Dataset transfer property list */
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)

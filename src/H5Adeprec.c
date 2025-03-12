@@ -105,7 +105,7 @@ H5Acreate1(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t 
     void             *attr    = NULL; /* attr object from VOL connector */
     H5VL_object_t    *vol_obj = NULL; /* Object of loc_id */
     H5VL_loc_params_t loc_params;
-    H5P_genplist_t   *def_dxpl;             /* Default dataset transfer property list */
+    H5P_genplist_t   *def_dxpl;                    /* Default dataset transfer property list */
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -137,7 +137,8 @@ H5Acreate1(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t 
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
 
     /* Create the attribute */
-    if (NULL == (attr = H5VL_attr_create(vol_obj, &loc_params, name, type_id, space_id, acpl_id, H5P_ATTRIBUTE_ACCESS_DEFAULT, def_dxpl, H5_REQUEST_NULL)))
+    if (NULL == (attr = H5VL_attr_create(vol_obj, &loc_params, name, type_id, space_id, acpl_id,
+                                         H5P_ATTRIBUTE_ACCESS_DEFAULT, def_dxpl, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_ATTR, H5E_CANTINIT, H5I_INVALID_HID, "unable to create attribute");
 
     /* Register the new attribute and get an ID for it */
@@ -181,7 +182,7 @@ H5Aopen_name(hid_t loc_id, const char *name)
     void             *attr    = NULL; /* attr object from VOL connector */
     H5VL_object_t    *vol_obj = NULL; /* Object of loc_id */
     H5VL_loc_params_t loc_params;
-    H5P_genplist_t   *def_dxpl;             /* Default dataset transfer property list */
+    H5P_genplist_t   *def_dxpl;                    /* Default dataset transfer property list */
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -205,7 +206,8 @@ H5Aopen_name(hid_t loc_id, const char *name)
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
 
     /* Open the attribute */
-    if (NULL == (attr = H5VL_attr_open(vol_obj, &loc_params, name, H5P_ATTRIBUTE_ACCESS_DEFAULT, def_dxpl, H5_REQUEST_NULL)))
+    if (NULL == (attr = H5VL_attr_open(vol_obj, &loc_params, name, H5P_ATTRIBUTE_ACCESS_DEFAULT, def_dxpl,
+                                       H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_ATTR, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open attribute");
 
     /* Register the attribute and get an ID for it */
@@ -249,7 +251,7 @@ H5Aopen_idx(hid_t loc_id, unsigned idx)
     void             *attr    = NULL; /* attr object from VOL connector */
     H5VL_object_t    *vol_obj = NULL; /* Object of loc_id */
     H5VL_loc_params_t loc_params;
-    H5P_genplist_t   *def_dxpl;             /* Default dataset transfer property list */
+    H5P_genplist_t   *def_dxpl;                    /* Default dataset transfer property list */
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -276,7 +278,8 @@ H5Aopen_idx(hid_t loc_id, unsigned idx)
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
 
     /* Open the attribute */
-    if (NULL == (attr = H5VL_attr_open(vol_obj, &loc_params, NULL, H5P_ATTRIBUTE_ACCESS_DEFAULT, def_dxpl, H5_REQUEST_NULL)))
+    if (NULL == (attr = H5VL_attr_open(vol_obj, &loc_params, NULL, H5P_ATTRIBUTE_ACCESS_DEFAULT, def_dxpl,
+                                       H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_ATTR, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open attribute");
 
     /* Register the attribute and get an ID for it */
@@ -316,7 +319,7 @@ H5Aget_num_attrs(hid_t loc_id)
     H5VL_object_t         *vol_obj = NULL; /* Object of loc_id */
     H5VL_object_get_args_t vol_cb_args;    /* Arguments to VOL callback */
     H5VL_loc_params_t      loc_params;
-    H5P_genplist_t        *def_dxpl;             /* Default dataset transfer property list */
+    H5P_genplist_t        *def_dxpl; /* Default dataset transfer property list */
     H5O_info2_t            oinfo;
     int                    ret_value = -1;
 
@@ -391,7 +394,7 @@ H5Aiterate1(hid_t loc_id, unsigned *attr_num /*in,out*/, H5A_operator1_t op, voi
     H5VL_object_t                   *vol_obj = NULL; /* Object of loc_id */
     H5VL_optional_args_t             vol_cb_args;    /* Arguments to VOL callback */
     H5VL_native_attr_optional_args_t attr_opt_args;  /* Arguments for optional operation */
-    H5P_genplist_t                    *def_dxpl;     /* Dataset transfer property list pointer */
+    H5P_genplist_t                  *def_dxpl;       /* Dataset transfer property list pointer */
     herr_t                           ret_value;      /* Return value */
 
     FUNC_ENTER_API(H5_ITER_ERROR)

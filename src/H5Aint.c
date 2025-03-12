@@ -1279,8 +1279,8 @@ H5A__shared_free(H5A_t *attr)
 static herr_t
 H5A__close_cb(H5VL_object_t *attr_vol_obj, void **request)
 {
-    H5P_genplist_t *def_dxpl; /* Default dataset transfer property list */
-    herr_t         ret_value = SUCCEED; /* Return value */
+    H5P_genplist_t *def_dxpl;            /* Default dataset transfer property list */
+    herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 

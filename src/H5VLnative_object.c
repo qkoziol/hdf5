@@ -70,7 +70,8 @@
  *-------------------------------------------------------------------------
  */
 void *
-H5VL__native_object_open(void *obj, const H5VL_loc_params_t *loc_params, H5I_type_t *opened_type, hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
+H5VL__native_object_open(void *obj, const H5VL_loc_params_t *loc_params, H5I_type_t *opened_type,
+                         hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
     H5G_loc_t loc;
     void     *ret_value = NULL;
@@ -132,7 +133,10 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL__native_object_copy(void *src_obj, const H5VL_loc_params_t *loc_params1, const char *src_name, void *dst_obj, const H5VL_loc_params_t *loc_params2, const char *dst_name, hid_t ocpypl_id, hid_t lcpl_id, hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
+H5VL__native_object_copy(void *src_obj, const H5VL_loc_params_t *loc_params1, const char *src_name,
+                         void *dst_obj, const H5VL_loc_params_t *loc_params2, const char *dst_name,
+                         hid_t ocpypl_id, hid_t lcpl_id, hid_t H5_ATTR_UNUSED dxpl_id,
+                         void H5_ATTR_UNUSED **req)
 {
     H5G_loc_t       src_loc; /* Source object group location */
     H5G_loc_t       dst_loc; /* Destination group location */
@@ -167,7 +171,8 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL__native_object_get(void *obj, const H5VL_loc_params_t *loc_params, H5VL_object_get_args_t *args, hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
+H5VL__native_object_get(void *obj, const H5VL_loc_params_t *loc_params, H5VL_object_get_args_t *args,
+                        hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
     herr_t    ret_value = SUCCEED; /* Return value */
     H5G_loc_t loc;                 /* Location of group */
@@ -317,7 +322,9 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL__native_object_specific(void *obj, const H5VL_loc_params_t *loc_params, H5VL_object_specific_args_t *args, hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
+H5VL__native_object_specific(void *obj, const H5VL_loc_params_t *loc_params,
+                             H5VL_object_specific_args_t *args, hid_t H5_ATTR_UNUSED dxpl_id,
+                             void H5_ATTR_UNUSED **req)
 {
     H5G_loc_t loc;
     herr_t    ret_value = SUCCEED; /* Return value */
@@ -437,7 +444,8 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL__native_object_optional(void *obj, const H5VL_loc_params_t *loc_params, H5VL_optional_args_t *args, hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
+H5VL__native_object_optional(void *obj, const H5VL_loc_params_t *loc_params, H5VL_optional_args_t *args,
+                             hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
     H5G_loc_t                           loc;                    /* Location of group */
     H5VL_native_object_optional_args_t *opt_args  = args->args; /* Pointer to native operation's arguments */

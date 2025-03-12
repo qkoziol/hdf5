@@ -333,7 +333,7 @@ H5D_term_package(void)
 static herr_t
 H5D__close_cb(H5VL_object_t *dset_vol_obj, void **request)
 {
-    H5P_genplist_t *def_dxpl;                        /* Default dataset transfer property list pointer */
+    H5P_genplist_t *def_dxpl;            /* Default dataset transfer property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -2820,7 +2820,8 @@ H5D__vlen_get_buf_size_gen_cb(void H5_ATTR_UNUSED *elem, hid_t type_id, unsigned
         HGOTO_ERROR(H5E_DATASET, H5E_BADTYPE, FAIL, "not a datatype");
 
     /* Make certain there is enough fixed-length buffer available */
-    if (NULL == (vlen_bufsize->common.fl_tbuf = H5FL_BLK_REALLOC(vlen_fl_buf, vlen_bufsize->common.fl_tbuf, H5T_get_size(dt))))
+    if (NULL == (vlen_bufsize->common.fl_tbuf =
+                     H5FL_BLK_REALLOC(vlen_fl_buf, vlen_bufsize->common.fl_tbuf, H5T_get_size(dt))))
         HGOTO_ERROR(H5E_DATASET, H5E_NOSPACE, FAIL, "can't resize tbuf");
 
     /* Select point to read in */
@@ -2829,7 +2830,9 @@ H5D__vlen_get_buf_size_gen_cb(void H5_ATTR_UNUSED *elem, hid_t type_id, unsigned
 
     /* Read in the point (with the custom VL memory allocator) */
     vol_obj_data = H5VL_OBJ_DATA(vlen_bufsize->dset_vol_obj);
-    if (H5VL_dataset_read(1, &vol_obj_data, H5VL_OBJ_CONNECTOR(vlen_bufsize->dset_vol_obj), &type_id, &vlen_bufsize->mspace_id, &vlen_bufsize->fspace_id, vlen_bufsize->dxpl, &vlen_bufsize->common.fl_tbuf, H5_REQUEST_NULL) < 0)
+    if (H5VL_dataset_read(1, &vol_obj_data, H5VL_OBJ_CONNECTOR(vlen_bufsize->dset_vol_obj), &type_id,
+                          &vlen_bufsize->mspace_id, &vlen_bufsize->fspace_id, vlen_bufsize->dxpl,
+                          &vlen_bufsize->common.fl_tbuf, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_READERROR, FAIL, "can't read point");
 
 done:
@@ -2849,14 +2852,15 @@ done:
 herr_t
 H5D__vlen_get_buf_size_gen(H5VL_object_t *vol_obj, hid_t type_id, hid_t space_id, hsize_t *size)
 {
-    H5D_vlen_bufsize_generic_t vlen_bufsize = { NULL, H5I_INVALID_HID, NULL, H5I_INVALID_HID, NULL, {NULL, NULL, 0, 0}};
-    H5S_t                  *mspace = NULL;       /* Memory dataspace */
-    char                    bogus;               /* Bogus value to pass to H5Diterate() */
-    H5S_t                  *space;               /* Dataspace for iteration */
-    const H5T_t            *type;                /* Datatype */
-    H5S_sel_iter_op_t       dset_op;             /* Operator for iteration */
-    H5VL_dataset_get_args_t vol_cb_args;         /* Arguments to VOL callback */
-    herr_t                  ret_value = SUCCEED; /* Return value */
+    H5D_vlen_bufsize_generic_t vlen_bufsize = {NULL, H5I_INVALID_HID,   NULL, H5I_INVALID_HID,
+                                               NULL, {NULL, NULL, 0, 0}};
+    H5S_t                     *mspace       = NULL; /* Memory dataspace */
+    char                       bogus;               /* Bogus value to pass to H5Diterate() */
+    H5S_t                     *space;               /* Dataspace for iteration */
+    const H5T_t               *type;                /* Datatype */
+    H5S_sel_iter_op_t          dset_op;             /* Operator for iteration */
+    H5VL_dataset_get_args_t    vol_cb_args;         /* Arguments to VOL callback */
+    herr_t                     ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -2898,7 +2902,8 @@ H5D__vlen_get_buf_size_gen(H5VL_object_t *vol_obj, hid_t type_id, hid_t space_id
     vlen_bufsize.common.vl_tbuf_size = 1;
 
     /* Set the VL allocation callbacks on a DXPL */
-    if (H5P_set_vlen_mem_manager(vlen_bufsize.dxpl, H5D__vlen_get_buf_size_alloc, &vlen_bufsize.common, NULL, NULL) < 0)
+    if (H5P_set_vlen_mem_manager(vlen_bufsize.dxpl, H5D__vlen_get_buf_size_alloc, &vlen_bufsize.common, NULL,
+                                 NULL) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "can't set VL data allocation routine on DXPL");
 
     /* Set the initial number of bytes required */

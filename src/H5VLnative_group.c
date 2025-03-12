@@ -68,7 +68,9 @@
  *-------------------------------------------------------------------------
  */
 void *
-H5VL__native_group_create(void *obj, const H5VL_loc_params_t *loc_params, const char *name, hid_t lcpl_id, hid_t gcpl_id, hid_t H5_ATTR_UNUSED gapl_id, hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
+H5VL__native_group_create(void *obj, const H5VL_loc_params_t *loc_params, const char *name, hid_t lcpl_id,
+                          hid_t gcpl_id, hid_t H5_ATTR_UNUSED gapl_id, hid_t H5_ATTR_UNUSED dxpl_id,
+                          void H5_ATTR_UNUSED **req)
 {
     H5G_loc_t       loc;        /* Location to create group     */
     H5G_t          *grp = NULL; /* New group created            */
@@ -140,7 +142,8 @@ done:
  *-------------------------------------------------------------------------
  */
 void *
-H5VL__native_group_open(void *obj, const H5VL_loc_params_t *loc_params, const char *name, hid_t H5_ATTR_UNUSED gapl_id, hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
+H5VL__native_group_open(void *obj, const H5VL_loc_params_t *loc_params, const char *name,
+                        hid_t H5_ATTR_UNUSED gapl_id, hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
     H5G_loc_t loc;        /* Location to open group   */
     H5G_t    *grp = NULL; /* New group opened         */
@@ -172,7 +175,8 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL__native_group_get(void *obj, H5VL_group_get_args_t *args, hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
+H5VL__native_group_get(void *obj, H5VL_group_get_args_t *args, hid_t H5_ATTR_UNUSED dxpl_id,
+                       void H5_ATTR_UNUSED **req)
 {
     herr_t ret_value = SUCCEED; /* Return value */
 
@@ -247,7 +251,8 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL__native_group_specific(void *obj, H5VL_group_specific_args_t *args, hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
+H5VL__native_group_specific(void *obj, H5VL_group_specific_args_t *args, hid_t H5_ATTR_UNUSED dxpl_id,
+                            void H5_ATTR_UNUSED **req)
 {
     H5G_t *grp       = (H5G_t *)obj;
     herr_t ret_value = SUCCEED; /* Return value */
@@ -321,7 +326,8 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL__native_group_optional(void H5_ATTR_UNUSED *obj, H5VL_optional_args_t *args, hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
+H5VL__native_group_optional(void H5_ATTR_UNUSED *obj, H5VL_optional_args_t *args,
+                            hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
 #ifndef H5_NO_DEPRECATED_SYMBOLS
     H5VL_native_group_optional_args_t *opt_args = args->args; /* Pointer to native operation's arguments */
