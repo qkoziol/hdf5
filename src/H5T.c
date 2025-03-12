@@ -2342,8 +2342,14 @@ H5T__close_cb(H5T_t *dt, void **request)
      * close it through the VOL connector.
      */
     if (NULL != dt->vol_obj) {
+        H5P_genplist_t *def_dxpl;                 /* Dataset transfer property list */
+
+        /* Get default dataset transfer property list */
+        if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+            HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
+
         /* Close the connector-managed datatype data */
-        if (H5VL_datatype_close(dt->vol_obj, H5P_DATASET_XFER_DEFAULT, request) < 0)
+        if (H5VL_datatype_close(dt->vol_obj, def_dxpl, request) < 0)
             HGOTO_ERROR(H5E_DATATYPE, H5E_CLOSEERROR, FAIL, "unable to close datatype");
 
         /* Free the VOL object */
@@ -2439,10 +2445,15 @@ H5Tcopy(hid_t obj_id)
         case H5I_DATASET: {
             H5VL_object_t          *vol_obj;     /* Object for obj_id */
             H5VL_dataset_get_args_t vol_cb_args; /* Arguments to VOL callback */
+            H5P_genplist_t *def_dxpl; /* Default dataset transfer property list */
 
             /* The argument is a dataset handle */
             if (NULL == (vol_obj = (H5VL_object_t *)H5I_object_verify(obj_id, H5I_DATASET)))
                 HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "type_id is not a dataset ID");
+
+            /* Get the default dataset transfer property list */
+            if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+                HGOTO_ERROR(H5E_VOL, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
             /* Set up VOL callback arguments */
             vol_cb_args.op_type               = H5VL_DATASET_GET_TYPE;
@@ -2451,9 +2462,8 @@ H5Tcopy(hid_t obj_id)
             /* Get the datatype from the dataset
              * NOTE: This will have to be closed after we're done with it.
              */
-            if (H5VL_dataset_get(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
-                HGOTO_ERROR(H5E_DATATYPE, H5E_CANTGET, H5I_INVALID_HID,
-                            "unable to get datatype from the dataset");
+            if (H5VL_dataset_get(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+                HGOTO_ERROR(H5E_DATATYPE, H5E_CANTGET, H5I_INVALID_HID, "unable to get datatype from the dataset");
             dset_tid = vol_cb_args.args.get_type.type_id;
 
             /* Unwrap the type ID */
@@ -3189,8 +3199,7 @@ H5T__register(H5T_pers_t pers, const char *name, H5T_t *src, H5T_t *dst, H5T_con
                 /* Prepare & restore library for user callback */
                 H5_BEFORE_USER_CB(FAIL)
                     {
-                        ret_value = (conv->u.app_func)(tmp_sid, tmp_did, &cdata, 0, 0, 0, NULL, NULL,
-                                                       H5CX_get_dxpl());
+                        ret_value = (conv->u.app_func)(tmp_sid, tmp_did, &cdata, 0, 0, 0, NULL, NULL, H5CX_get_dxpl());
                     }
                 H5_AFTER_USER_CB(FAIL)
                 if (ret_value < 0) {
@@ -3575,16 +3584,14 @@ H5Tconvert(hid_t src_id, hid_t dst_id, size_t nelmts, void *buf, void *backgroun
     FUNC_ENTER_API(FAIL)
 
     /* Check args */
-    if (NULL == (src = (H5T_t *)H5I_object_verify(src_id, H5I_DATATYPE)) ||
-        NULL == (dst = (H5T_t *)H5I_object_verify(dst_id, H5I_DATATYPE)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a data type");
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
-    else if (true != H5P_isa_class(dxpl_id, H5P_DATASET_XFER))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not dataset transfer property list");
+    if (NULL == (src = H5I_object_verify(src_id, H5I_DATATYPE)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a datatype");
+    if (NULL == (dst = H5I_object_verify(dst_id, H5I_DATATYPE)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a datatype");
 
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl_id);
+    if (H5CX_set_dxpl(dxpl_id) < 0)
+        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
     /* Find the conversion function */
     if (NULL == (tpath = H5T_path_find(src, dst)))
@@ -3628,14 +3635,9 @@ H5Treclaim(hid_t type_id, hid_t space_id, hid_t dxpl_id, void *buf)
     if (!(H5S_has_extent(space)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "dataspace does not have extent set");
 
-    /* Get the default dataset transfer property list if the user didn't provide one */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
-    else if (true != H5P_isa_class(dxpl_id, H5P_DATASET_XFER))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not xfer parms");
-
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl_id);
+    if (H5CX_set_dxpl(dxpl_id) < 0)
+        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
     /* Call internal routine */
     ret_value = H5T_reclaim(type, space, buf);
@@ -5871,8 +5873,7 @@ H5T__path_find_init_new_path(H5T_path_t *path, const H5T_t *src, const H5T_t *ds
             /* Prepare & restore library for user callback */
             H5_BEFORE_USER_CB(FAIL)
                 {
-                    status = (conv->u.app_func)(src_id, dst_id, &(path->cdata), 0, 0, 0, NULL, NULL,
-                                                H5CX_get_dxpl());
+                    status = (conv->u.app_func)(src_id, dst_id, &(path->cdata), 0, 0, 0, NULL, NULL, H5CX_get_dxpl());
                 }
             H5_AFTER_USER_CB(FAIL)
         }
@@ -5931,14 +5932,12 @@ H5T__path_find_init_new_path(H5T_path_t *path, const H5T_t *src, const H5T_t *ds
             /* Prepare & restore library for user callback */
             H5_BEFORE_USER_CB(FAIL)
                 {
-                    status = (H5T_g.soft[i].conv.u.app_func)(src_id, dst_id, &(path->cdata), 0, 0, 0, NULL,
-                                                             NULL, H5CX_get_dxpl());
+                    status = (H5T_g.soft[i].conv.u.app_func)(src_id, dst_id, &path->cdata, 0, 0, 0, NULL, NULL, H5CX_get_dxpl());
                 }
             H5_AFTER_USER_CB(FAIL)
         }
         else
-            status = (H5T_g.soft[i].conv.u.lib_func)(path->src, path->dst, &(path->cdata), conv_ctx, 0, 0, 0,
-                                                     NULL, NULL);
+            status = (H5T_g.soft[i].conv.u.lib_func)(path->src, path->dst, &path->cdata, conv_ctx, 0, 0, 0, NULL, NULL);
 
         if (status < 0) {
             memset(&(path->cdata), 0, sizeof(H5T_cdata_t));
@@ -6023,15 +6022,12 @@ H5T__path_free(H5T_path_t *path, H5T_conv_ctx_t *conv_ctx)
             /* Prepare & restore library for user callback */
             H5_BEFORE_USER_CB_NOERR(FAIL)
                 {
-                    status =
-                        (path->conv.u.app_func)(conv_ctx->u.free.src_type_id, conv_ctx->u.free.dst_type_id,
-                                                &(path->cdata), 0, 0, 0, NULL, NULL, H5CX_get_dxpl());
+                    status = (path->conv.u.app_func)(conv_ctx->u.free.src_type_id, conv_ctx->u.free.dst_type_id, &path->cdata, 0, 0, 0, NULL, NULL, H5CX_get_dxpl());
                 }
             H5_AFTER_USER_CB_NOERR(FAIL)
         }
         else
-            status =
-                (path->conv.u.lib_func)(path->src, path->dst, &(path->cdata), conv_ctx, 0, 0, 0, NULL, NULL);
+            status = (path->conv.u.lib_func)(path->src, path->dst, &path->cdata, conv_ctx, 0, 0, 0, NULL, NULL);
 
         if (status < 0) {
             /* Ignore any error from shutting down the path */
@@ -6373,17 +6369,12 @@ H5T_convert(H5T_path_t *tpath, const H5T_t *src_type, const H5T_t *dst_type, siz
         if ((src_type_id = H5I_register(H5I_DATATYPE, src_type, false)) < 0)
             HGOTO_ERROR(H5E_DATATYPE, H5E_CANTREGISTER, FAIL, "unable to register ID for source datatype");
         if ((dst_type_id = H5I_register(H5I_DATATYPE, dst_type, false)) < 0)
-            HGOTO_ERROR(H5E_DATATYPE, H5E_CANTREGISTER, FAIL,
-                        "unable to register ID for destination datatype");
-
-        if (tpath->conv.is_app)
-            conv_ctx.u.conv.dxpl_id = H5CX_get_dxpl();
+            HGOTO_ERROR(H5E_DATATYPE, H5E_CANTREGISTER, FAIL, "unable to register ID for destination datatype");
     }
     conv_ctx.u.conv.src_type_id = src_type_id;
     conv_ctx.u.conv.dst_type_id = dst_type_id;
 
-    if (H5T_convert_with_ctx(tpath, src_type, dst_type, &conv_ctx, nelmts, buf_stride, bkg_stride, buf, bkg) <
-        0)
+    if (H5T_convert_with_ctx(tpath, src_type, dst_type, &conv_ctx, nelmts, buf_stride, bkg_stride, buf, bkg) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTCONVERT, FAIL, "datatype conversion failed");
 
 done:
@@ -6445,16 +6436,13 @@ H5T_convert_with_ctx(H5T_path_t *tpath, const H5T_t *src_type, const H5T_t *dst_
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
-                ret_value = (tpath->conv.u.app_func)(
-                    conv_ctx->u.conv.src_type_id, conv_ctx->u.conv.dst_type_id, &(tpath->cdata), nelmts,
-                    buf_stride, bkg_stride, buf, bkg, conv_ctx->u.conv.dxpl_id);
+                ret_value = (tpath->conv.u.app_func)(conv_ctx->u.conv.src_type_id, conv_ctx->u.conv.dst_type_id, &(tpath->cdata), nelmts, buf_stride, bkg_stride, buf, bkg, H5CX_get_dxpl());
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
             HGOTO_ERROR(H5E_DATATYPE, H5E_CANTCONVERT, FAIL, "datatype conversion failed");
     } /* end if */
-    else if ((tpath->conv.u.lib_func)(src_type, dst_type, &(tpath->cdata), conv_ctx, nelmts, buf_stride,
-                                      bkg_stride, buf, bkg) < 0)
+    else if ((tpath->conv.u.lib_func)(src_type, dst_type, &(tpath->cdata), conv_ctx, nelmts, buf_stride, bkg_stride, buf, bkg) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTCONVERT, FAIL, "datatype conversion failed");
 
 done:
@@ -6625,9 +6613,14 @@ H5T_convert_committed_datatype(H5T_t *dt, H5F_t *f)
         /* If the datatype is committed through the VOL, close it */
         if (NULL != dt->vol_obj) {
             H5VL_object_t *vol_obj = dt->vol_obj;
+            H5P_genplist_t *def_dxpl;                 /* Dataset transfer property list */
+
+            /* Get default dataset transfer property list */
+            if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+                HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
             /* Close the datatype through the VOL*/
-            if (H5VL_datatype_close(vol_obj, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+            if (H5VL_datatype_close(vol_obj, def_dxpl, H5_REQUEST_NULL) < 0)
                 HGOTO_ERROR(H5E_DATATYPE, H5E_CLOSEERROR, FAIL, "unable to close datatype");
 
             /* Free the datatype and set the VOL object pointer to NULL */

@@ -25,7 +25,7 @@
 /* Headers */
 /***********/
 #include "H5private.h"   /* Generic Functions                        */
-#include "H5ACprivate.h" /* Metad527ata cache                           */
+#include "H5ACprivate.h" /* Metadata cache                           */
 #include "H5Cprivate.h"  /* Cache                                    */
 #include "H5Eprivate.h"  /* Error handling                           */
 #include "H5Fpkg.h"      /* Files                                    */
@@ -73,8 +73,7 @@
  *-------------------------------------------------------------------------
  */
 void *
-H5VL__native_file_create(const char *name, unsigned flags, hid_t fcpl_id, hid_t fapl_id,
-                         hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
+H5VL__native_file_create(const char *name, unsigned flags, hid_t fcpl_id, hid_t fapl_id, hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
     H5F_t          *new_file = NULL;
     H5P_genplist_t *fcpl;             /* File creation property list */
@@ -121,8 +120,7 @@ done:
  *-------------------------------------------------------------------------
  */
 void *
-H5VL__native_file_open(const char *name, unsigned flags, hid_t fapl_id, hid_t H5_ATTR_UNUSED dxpl_id,
-                       void H5_ATTR_UNUSED **req)
+H5VL__native_file_open(const char *name, unsigned flags, hid_t fapl_id, hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
     H5F_t          *new_file = NULL;
     H5P_genplist_t *fcpl;             /* File creation property list */
@@ -159,8 +157,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL__native_file_get(void *obj, H5VL_file_get_args_t *args, hid_t H5_ATTR_UNUSED dxpl_id,
-                      void H5_ATTR_UNUSED **req)
+H5VL__native_file_get(void *obj, H5VL_file_get_args_t *args, hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
     H5F_t *f         = NULL;    /* File struct */
     herr_t ret_value = SUCCEED; /* Return value */
@@ -296,8 +293,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL__native_file_specific(void *obj, H5VL_file_specific_args_t *args, hid_t H5_ATTR_UNUSED dxpl_id,
-                           void H5_ATTR_UNUSED **req)
+H5VL__native_file_specific(void *obj, H5VL_file_specific_args_t *args, hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
     herr_t ret_value = SUCCEED; /* Return value */
 
@@ -405,8 +401,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL__native_file_optional(void *obj, H5VL_optional_args_t *args, hid_t H5_ATTR_UNUSED dxpl_id,
-                           void H5_ATTR_UNUSED **req)
+H5VL__native_file_optional(void *obj, H5VL_optional_args_t *args, hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
     H5F_t                            *f         = (H5F_t *)obj; /* File */
     H5VL_native_file_optional_args_t *opt_args  = args->args;   /* Pointer to native operation's arguments */

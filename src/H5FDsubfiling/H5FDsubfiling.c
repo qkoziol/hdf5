@@ -1689,17 +1689,11 @@ H5FD__subfiling_read_vector(H5FD_t *_file, hid_t dxpl_id, uint32_t count, H5FD_m
     assert(count == 0 || sizes[0] != 0);
     assert(count == 0 || types[0] != H5FD_MEM_NOLIST);
 
-    /* Get the default dataset transfer property list if the user didn't provide one */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
-    else if (true != H5P_isa_class(dxpl_id, H5P_DATASET_XFER))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a data transfer property list");
-
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl_id);
+    if (H5CX_set_dxpl(dxpl_id) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
-    if (H5FD__subfiling_io_helper(file, (size_t)count, types, addrs, sizes, (H5_flexible_const_ptr_t *)bufs,
-                                  IO_TYPE_READ) < 0)
+    if (H5FD__subfiling_io_helper(file, (size_t)count, types, addrs, sizes, (H5_flexible_const_ptr_t *)bufs, IO_TYPE_READ) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_READERROR, FAIL, "couldn't read data");
 
 done:
@@ -1741,17 +1735,11 @@ H5FD__subfiling_write_vector(H5FD_t *_file, hid_t dxpl_id, uint32_t count, H5FD_
     assert(count == 0 || sizes[0] != 0);
     assert(count == 0 || types[0] != H5FD_MEM_NOLIST);
 
-    /* Get the default dataset transfer property list if the user didn't provide one */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
-    else if (true != H5P_isa_class(dxpl_id, H5P_DATASET_XFER))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a data transfer property list");
-
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl_id);
+    if (H5CX_set_dxpl(dxpl_id) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
-    if (H5FD__subfiling_io_helper(file, (size_t)count, types, addrs, sizes, (H5_flexible_const_ptr_t *)bufs,
-                                  IO_TYPE_WRITE) < 0)
+    if (H5FD__subfiling_io_helper(file, (size_t)count, types, addrs, sizes, (H5_flexible_const_ptr_t *)bufs, IO_TYPE_WRITE) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_WRITEERROR, FAIL, "couldn't write data");
 
 done:

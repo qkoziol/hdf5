@@ -51,11 +51,8 @@
 /********************/
 
 /* Helper routines for read/write API calls */
-static herr_t H5VL__native_dataset_io_setup(size_t count, void *obj[], hid_t mem_type_id[],
-                                            hid_t mem_space_id[], hid_t file_space_id[], hid_t dxpl_id,
-                                            H5_flexible_const_ptr_t buf[], H5D_dset_io_info_t *dinfo);
-static herr_t H5VL__native_dataset_io_cleanup(size_t count, hid_t mem_space_id[], hid_t file_space_id[],
-                                              H5D_dset_io_info_t *dinfo);
+static herr_t H5VL__native_dataset_io_setup(size_t count, void *obj[], hid_t mem_type_id[], hid_t mem_space_id[], hid_t file_space_id[], H5P_genplist_t *dxpl, H5_flexible_const_ptr_t buf[], H5D_dset_io_info_t *dinfo);
+static herr_t H5VL__native_dataset_io_cleanup(size_t count, hid_t mem_space_id[], hid_t file_space_id[], H5D_dset_io_info_t *dinfo);
 
 /*********************/
 /* Package Variables */
@@ -79,9 +76,7 @@ static herr_t H5VL__native_dataset_io_cleanup(size_t count, hid_t mem_space_id[]
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5VL__native_dataset_io_setup(size_t count, void *obj[], hid_t mem_type_id[], hid_t mem_space_id[],
-                              hid_t file_space_id[], hid_t dxpl_id, H5_flexible_const_ptr_t buf[],
-                              H5D_dset_io_info_t *dinfo)
+H5VL__native_dataset_io_setup(size_t count, void *obj[], hid_t mem_type_id[], hid_t mem_space_id[], hid_t file_space_id[], H5P_genplist_t *dxpl, H5_flexible_const_ptr_t buf[], H5D_dset_io_info_t *dinfo)
 {
     H5F_shared_t *f_sh;
     size_t        i;
@@ -129,15 +124,10 @@ H5VL__native_dataset_io_setup(size_t count, void *obj[], hid_t mem_type_id[], hi
         else if (H5S_BLOCK == file_space_id[i])
             HGOTO_ERROR(H5E_DATASET, H5E_BADTYPE, FAIL, "H5S_BLOCK is not allowed for file dataspace");
         else if (H5S_PLIST == file_space_id[i]) {
-            H5P_genplist_t *plist; /* Property list pointer */
-            H5S_t          *space; /* Dataspace to hold selection */
-
-            /* Get the plist structure */
-            if (NULL == (plist = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
-                HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "bad dataset transfer property list");
+            H5S_t          *space = NULL; /* Dataspace to hold selection */
 
             /* Get a pointer to the file space in the property list */
-            if (H5P_peek(plist, H5D_XFER_DSET_IO_SEL_NAME, &space) < 0)
+            if (H5CX_get_dset_io_selection(&space) < 0)
                 HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "error getting dataset I/O selection");
 
             /* Use dataspace for dataset */
@@ -250,9 +240,7 @@ H5VL__native_dataset_io_cleanup(size_t count, hid_t mem_space_id[], hid_t file_s
  *-------------------------------------------------------------------------
  */
 void *
-H5VL__native_dataset_create(void *obj, const H5VL_loc_params_t *loc_params, const char *name, hid_t lcpl_id,
-                            hid_t type_id, hid_t space_id, hid_t dcpl_id, hid_t dapl_id,
-                            hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
+H5VL__native_dataset_create(void *obj, const H5VL_loc_params_t *loc_params, const char *name, hid_t lcpl_id, hid_t type_id, hid_t space_id, hid_t dcpl_id, hid_t dapl_id, hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
     H5G_loc_t       loc;         /* Object location to insert dataset into */
     H5D_t          *dset = NULL; /* New dataset's info */
@@ -325,8 +313,7 @@ done:
  *-------------------------------------------------------------------------
  */
 void *
-H5VL__native_dataset_open(void *obj, const H5VL_loc_params_t *loc_params, const char *name, hid_t dapl_id,
-                          hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
+H5VL__native_dataset_open(void *obj, const H5VL_loc_params_t *loc_params, const char *name, hid_t dapl_id, hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
     H5D_t          *dset = NULL;
     H5P_genplist_t *dapl; /* Dataset access property list */
@@ -360,12 +347,12 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL__native_dataset_read(size_t count, void *obj[], hid_t mem_type_id[], hid_t mem_space_id[],
-                          hid_t file_space_id[], hid_t dxpl_id, void *buf[], void H5_ATTR_UNUSED **req)
+H5VL__native_dataset_read(size_t count, void *obj[], hid_t mem_type_id[], hid_t mem_space_id[], hid_t file_space_id[], hid_t dxpl_id, void *buf[], void H5_ATTR_UNUSED **req)
 {
     H5D_dset_io_info_t  dinfo_local;
     H5D_dset_io_info_t *dinfo     = &dinfo_local;
-    herr_t              ret_value = SUCCEED; /* Return value */
+    H5P_genplist_t *dxpl; /* Dataset transfer property list */
+    herr_t         ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -374,13 +361,19 @@ H5VL__native_dataset_read(size_t count, void *obj[], hid_t mem_type_id[], hid_t 
         if (NULL == (dinfo = (H5D_dset_io_info_t *)H5MM_malloc(count * sizeof(H5D_dset_io_info_t))))
             HGOTO_ERROR(H5E_DATASET, H5E_CANTALLOC, FAIL, "couldn't allocate dset info array buffer");
 
-    /* Get file & memory dataspaces */
-    if (H5VL__native_dataset_io_setup(count, obj, mem_type_id, mem_space_id, file_space_id, dxpl_id,
-                                      (H5_flexible_const_ptr_t *)buf, dinfo) < 0)
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, FAIL, "unable to set up file and memory dataspaces");
+    /* Get the pointer to the dataset transfer property list */
+    if (H5P_DEFAULT == dxpl_id)
+        dxpl_id = H5P_DATASET_XFER_DEFAULT;
+    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+        HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "bad dataset transfer property list");
 
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl_id);
+    if (H5CX_set_dxpl(dxpl_id) < 0)
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "can't set DXPL for operation");
+
+    /* Get file & memory dataspaces */
+    if (H5VL__native_dataset_io_setup(count, obj, mem_type_id, mem_space_id, file_space_id, dxpl, (H5_flexible_const_ptr_t *)buf, dinfo) < 0)
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, FAIL, "unable to set up file and memory dataspaces");
 
     /* Read raw data.  Call H5D__read directly in single dset case. */
     if (H5D__read(count, dinfo) < 0)
@@ -407,12 +400,12 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL__native_dataset_write(size_t count, void *obj[], hid_t mem_type_id[], hid_t mem_space_id[],
-                           hid_t file_space_id[], hid_t dxpl_id, const void *buf[], void H5_ATTR_UNUSED **req)
+H5VL__native_dataset_write(size_t count, void *obj[], hid_t mem_type_id[], hid_t mem_space_id[], hid_t file_space_id[], hid_t dxpl_id, const void *buf[], void H5_ATTR_UNUSED **req)
 {
     H5D_dset_io_info_t  dinfo_local;
     H5D_dset_io_info_t *dinfo     = &dinfo_local;
-    herr_t              ret_value = SUCCEED; /* Return value */
+    H5P_genplist_t *dxpl; /* Dataset transfer property list */
+    herr_t         ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -421,13 +414,19 @@ H5VL__native_dataset_write(size_t count, void *obj[], hid_t mem_type_id[], hid_t
         if (NULL == (dinfo = (H5D_dset_io_info_t *)H5MM_malloc(count * sizeof(H5D_dset_io_info_t))))
             HGOTO_ERROR(H5E_DATASET, H5E_CANTALLOC, FAIL, "couldn't allocate dset info array buffer");
 
-    /* Get file & memory dataspaces */
-    if (H5VL__native_dataset_io_setup(count, obj, mem_type_id, mem_space_id, file_space_id, dxpl_id,
-                                      (H5_flexible_const_ptr_t *)buf, dinfo) < 0)
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, FAIL, "unable to set up file and memory dataspaces");
+    /* Get the pointer to the dataset transfer property list */
+    if (H5P_DEFAULT == dxpl_id)
+        dxpl_id = H5P_DATASET_XFER_DEFAULT;
+    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+        HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "bad dataset transfer property list");
 
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl_id);
+    if (H5CX_set_dxpl(dxpl_id) < 0)
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "can't set DXPL for operation");
+
+    /* Get file & memory dataspaces */
+    if (H5VL__native_dataset_io_setup(count, obj, mem_type_id, mem_space_id, file_space_id, dxpl, (H5_flexible_const_ptr_t *)buf, dinfo) < 0)
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, FAIL, "unable to set up file and memory dataspaces");
 
     /* Write raw data.  Call H5D__write directly in single dset case. */
     if (H5D__write(count, dinfo) < 0)
@@ -454,8 +453,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL__native_dataset_get(void *obj, H5VL_dataset_get_args_t *args, hid_t H5_ATTR_UNUSED dxpl_id,
-                         void H5_ATTR_UNUSED **req)
+H5VL__native_dataset_get(void *obj, H5VL_dataset_get_args_t *args, hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
     H5D_t *dset      = (H5D_t *)obj;
     herr_t ret_value = SUCCEED; /* Return value */
@@ -534,8 +532,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL__native_dataset_specific(void *obj, H5VL_dataset_specific_args_t *args, hid_t H5_ATTR_UNUSED dxpl_id,
-                              void H5_ATTR_UNUSED **req)
+H5VL__native_dataset_specific(void *obj, H5VL_dataset_specific_args_t *args, hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
     H5D_t *dset      = (H5D_t *)obj;
     herr_t ret_value = SUCCEED; /* Return value */
@@ -596,7 +593,8 @@ H5VL__native_dataset_optional(void *obj, H5VL_optional_args_t *args, hid_t dxpl_
     assert(dset);
 
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl_id);
+    if (H5CX_set_dxpl(dxpl_id) < 0)
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
     switch (args->op_type) {
         /* H5Dformat_convert */

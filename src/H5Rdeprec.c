@@ -31,8 +31,6 @@
 /***********/
 /* Headers */
 /***********/
-/* Public headers needed by this file */
-#include "H5Ppublic.h" /* Property lists                           */
 
 /* Private headers needed by this file */
 #include "H5private.h"   /* Generic Functions                        */
@@ -42,6 +40,7 @@
 #include "H5Iprivate.h"  /* IDs                                      */
 #include "H5MMprivate.h" /* Memory management                        */
 #include "H5Oprivate.h"  /* Object headers                           */
+#include "H5Pprivate.h"  /* Property lists                           */
 #include "H5Rpkg.h"      /* References                               */
 #include "H5Sprivate.h"  /* Dataspaces                               */
 
@@ -94,6 +93,7 @@ H5R__decode_token_compat(H5VL_object_t *vol_obj, H5I_type_t type, H5R_type_t ref
     H5VL_object_t        *vol_obj_file = NULL;
     H5VL_file_cont_info_t cont_info    = {H5VL_CONTAINER_INFO_VERSION, 0, 0, 0};
     H5VL_file_get_args_t  vol_cb_args; /* Arguments to VOL callback */
+    H5P_genplist_t      *def_dxpl;    /* Default dataset transfer property list pointer */
     herr_t                ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
@@ -119,12 +119,16 @@ H5R__decode_token_compat(H5VL_object_t *vol_obj, H5I_type_t type, H5R_type_t ref
     if (NULL == (vol_obj_file = H5VL_vol_object(file_id)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid location identifier");
 
+    /* Retrieve the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
     /* Set up VOL callback arguments */
     vol_cb_args.op_type                 = H5VL_FILE_GET_CONT_INFO;
     vol_cb_args.args.get_cont_info.info = &cont_info;
 
     /* Get container info */
-    if (H5VL_file_get(vol_obj_file, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_get(vol_obj_file, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTGET, FAIL, "unable to get container info");
 
     if (ref_type == H5R_OBJECT1) {
@@ -247,6 +251,7 @@ H5Rget_obj_type1(hid_t id, H5R_type_t ref_type, const void *ref)
     H5I_type_t             vol_obj_type = H5I_BADID;               /* Object type of loc_id */
     H5VL_object_get_args_t vol_cb_args;                            /* Arguments to VOL callback */
     H5VL_loc_params_t      loc_params;                             /* Location parameters */
+    H5P_genplist_t *def_dxpl; /* Default dataset transfer property list */
     H5O_token_t            obj_token = {0};                        /* Object token */
     const unsigned char   *buf       = (const unsigned char *)ref; /* Reference buffer */
     H5O_type_t             obj_type  = H5O_TYPE_UNKNOWN;           /* Type of the referenced object */
@@ -267,13 +272,15 @@ H5Rget_obj_type1(hid_t id, H5R_type_t ref_type, const void *ref)
 
     /* Check if using native VOL connector */
     if (H5VL_object_is_native(vol_obj, &is_native_vol_obj) < 0)
-        HGOTO_ERROR(H5E_REFERENCE, H5E_CANTGET, H5G_UNKNOWN,
-                    "can't determine if VOL object is native connector object");
+        HGOTO_ERROR(H5E_REFERENCE, H5E_CANTGET, H5G_UNKNOWN, "can't determine if VOL object is native connector object");
 
     /* Must use native VOL connector for this operation */
     if (!is_native_vol_obj)
-        HGOTO_ERROR(H5E_REFERENCE, H5E_VOL, H5G_UNKNOWN,
-                    "H5Rget_obj_type1 is only meant to be used with the native VOL connector");
+        HGOTO_ERROR(H5E_REFERENCE, H5E_VOL, H5G_UNKNOWN, "H5Rget_obj_type1 is only meant to be used with the native VOL connector");
+
+    /* Get the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_REFERENCE, H5E_BADID, H5G_UNKNOWN, "not a dataset transfer property list");
 
     /* Get object type */
     if ((vol_obj_type = H5I_get_type(id)) < 0)
@@ -293,7 +300,7 @@ H5Rget_obj_type1(hid_t id, H5R_type_t ref_type, const void *ref)
     vol_cb_args.args.get_type.obj_type = &obj_type;
 
     /* Retrieve object's type */
-    if (H5VL_object_get(vol_obj, &loc_params, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_object_get(vol_obj, &loc_params, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTGET, H5G_UNKNOWN, "can't retrieve object type");
 
     /* Set return value */
@@ -320,6 +327,7 @@ H5Rdereference1(hid_t obj_id, H5R_type_t ref_type, const void *ref)
     H5VL_object_t       *vol_obj      = NULL;                     /* Object of loc_id */
     H5I_type_t           vol_obj_type = H5I_BADID;                /* Object type of loc_id */
     H5VL_loc_params_t    loc_params;                              /* Location parameters */
+    H5P_genplist_t *def_dxpl; /* Default dataset transfer property list */
     H5O_token_t          obj_token = {0};                         /* Object token */
     H5I_type_t           opened_type;                             /* Opened object type */
     void                *opened_obj = NULL;                       /* Opened object */
@@ -341,13 +349,15 @@ H5Rdereference1(hid_t obj_id, H5R_type_t ref_type, const void *ref)
 
     /* Check if using native VOL connector */
     if (H5VL_object_is_native(vol_obj, &is_native_vol_obj) < 0)
-        HGOTO_ERROR(H5E_REFERENCE, H5E_CANTGET, H5I_INVALID_HID,
-                    "can't determine if VOL object is native connector object");
+        HGOTO_ERROR(H5E_REFERENCE, H5E_CANTGET, H5I_INVALID_HID, "can't determine if VOL object is native connector object");
 
     /* Must use native VOL connector for this operation */
     if (!is_native_vol_obj)
-        HGOTO_ERROR(H5E_REFERENCE, H5E_VOL, H5I_INVALID_HID,
-                    "H5Rdereference1 is only meant to be used with the native VOL connector");
+        HGOTO_ERROR(H5E_REFERENCE, H5E_VOL, H5I_INVALID_HID, "H5Rdereference1 is only meant to be used with the native VOL connector");
+
+    /* Get the default transfer property list */
+    if (NULL == (def_dxpl = H5P_object_verify(H5P_DATASET_XFER_DEFAULT, H5P_TYPE_DATASET_XFER, true)))
+        HGOTO_ERROR(H5E_REFERENCE, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Get object type */
     if ((vol_obj_type = H5I_get_type(obj_id)) < 0)
@@ -363,8 +373,7 @@ H5Rdereference1(hid_t obj_id, H5R_type_t ref_type, const void *ref)
     loc_params.obj_type                    = vol_obj_type;
 
     /* Dereference */
-    if (NULL == (opened_obj = H5VL_object_open(vol_obj, &loc_params, &opened_type, H5P_DATASET_XFER_DEFAULT,
-                                               H5_REQUEST_NULL)))
+    if (NULL == (opened_obj = H5VL_object_open(vol_obj, &loc_params, &opened_type, def_dxpl, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open object by token");
 
     /* Register object */
@@ -399,6 +408,7 @@ H5Rcreate(void *ref, hid_t loc_id, const char *name, H5R_type_t ref_type, hid_t 
     H5O_token_t                 obj_token = {0};          /* Object token */
     H5VL_file_cont_info_t       cont_info = {H5VL_CONTAINER_INFO_VERSION, 0, 0, 0};
     H5VL_file_get_args_t        file_get_vol_cb_args;           /* Arguments to VOL callback */
+    H5P_genplist_t             *def_dxpl;    /* Default dataset transfer property list pointer */
     hid_t                       file_id      = H5I_INVALID_HID; /* File ID for region reference */
     void                       *vol_obj_file = NULL;
     bool           is_native_vol_obj = false; /* Whether the src file is using the native VOL connector */
@@ -435,6 +445,10 @@ H5Rcreate(void *ref, hid_t loc_id, const char *name, H5R_type_t ref_type, hid_t 
     if ((vol_obj_type = H5I_get_type(loc_id)) < 0)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid location identifier");
 
+    /* Retrieve the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_REFERENCE, H5E_BADID, FAIL, "not a dataset transfer property list");
+
     /* Set location parameters */
     loc_params.type                         = H5VL_OBJECT_BY_NAME;
     loc_params.loc_data.loc_by_name.name    = name;
@@ -446,8 +460,7 @@ H5Rcreate(void *ref, hid_t loc_id, const char *name, H5R_type_t ref_type, hid_t 
     obj_spec_vol_cb_args.args.lookup.token_ptr = &obj_token;
 
     /* Get the object token */
-    if (H5VL_object_specific(vol_obj, &loc_params, &obj_spec_vol_cb_args, H5P_DATASET_XFER_DEFAULT,
-                             H5_REQUEST_NULL) < 0)
+    if (H5VL_object_specific(vol_obj, &loc_params, &obj_spec_vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTGET, FAIL, "unable to retrieve object token");
 
     /* Get the file for the object */
@@ -463,7 +476,7 @@ H5Rcreate(void *ref, hid_t loc_id, const char *name, H5R_type_t ref_type, hid_t 
     file_get_vol_cb_args.args.get_cont_info.info = &cont_info;
 
     /* Get container info */
-    if (H5VL_file_get(vol_obj_file, &file_get_vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_get(vol_obj_file, &file_get_vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTGET, FAIL, "unable to get container info");
 
     /* Create reference */
@@ -518,6 +531,7 @@ H5Rget_obj_type2(hid_t id, H5R_type_t ref_type, const void *ref, H5O_type_t *obj
     H5I_type_t             vol_obj_type = H5I_BADID;                       /* Object type of loc_id */
     H5VL_object_get_args_t vol_cb_args;                                    /* Arguments to VOL callback */
     H5VL_loc_params_t      loc_params;                                     /* Location parameters */
+    H5P_genplist_t *def_dxpl; /* Default dataset transfer property list */
     H5O_token_t            obj_token         = {0};                        /* Object token */
     const unsigned char   *buf               = (const unsigned char *)ref; /* Reference pointer */
     bool                   is_native_vol_obj = false;   /* Whether the native VOL connector is in use */
@@ -545,6 +559,10 @@ H5Rget_obj_type2(hid_t id, H5R_type_t ref_type, const void *ref, H5O_type_t *obj
         HGOTO_ERROR(H5E_REFERENCE, H5E_VOL, FAIL,
                     "H5Rget_obj_type2 is only meant to be used with the native VOL connector");
 
+    /* Get the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_REFERENCE, H5E_BADID, FAIL, "not a dataset transfer property list");
+
     /* Get object type */
     if ((vol_obj_type = H5I_get_type(id)) < 0)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid location identifier");
@@ -563,7 +581,7 @@ H5Rget_obj_type2(hid_t id, H5R_type_t ref_type, const void *ref, H5O_type_t *obj
     vol_cb_args.args.get_type.obj_type = obj_type;
 
     /* Retrieve object's type */
-    if (H5VL_object_get(vol_obj, &loc_params, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_object_get(vol_obj, &loc_params, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTGET, FAIL, "can't retrieve object type");
 
 done:
@@ -576,7 +594,7 @@ done:
  * Purpose:     Given a reference to some object, open that object and return
  *              an ID for that object.
  *
- * Return:      Success:    Valid ID
+ * Return:      Success:    Valid ID229G
  *              Failure:    H5I_INVALID_HID
  *
  *-------------------------------------------------------------------------
@@ -587,6 +605,7 @@ H5Rdereference2(hid_t obj_id, hid_t oapl_id, H5R_type_t ref_type, const void *re
     H5VL_object_t       *vol_obj      = NULL;                            /* Object of loc_id */
     H5I_type_t           vol_obj_type = H5I_BADID;                       /* Object type of loc_id */
     H5VL_loc_params_t    loc_params;                                     /* Location parameters */
+    H5P_genplist_t *def_dxpl; /* Default dataset transfer property list */
     H5O_token_t          obj_token = {0};                                /* Object token */
     H5I_type_t           opened_type;                                    /* Opened object type */
     void                *opened_obj        = NULL;                       /* Opened object */
@@ -614,13 +633,15 @@ H5Rdereference2(hid_t obj_id, hid_t oapl_id, H5R_type_t ref_type, const void *re
 
     /* Check if using native VOL connector */
     if (H5VL_object_is_native(vol_obj, &is_native_vol_obj) < 0)
-        HGOTO_ERROR(H5E_REFERENCE, H5E_CANTGET, H5I_INVALID_HID,
-                    "can't determine if VOL object is native connector object");
+        HGOTO_ERROR(H5E_REFERENCE, H5E_CANTGET, H5I_INVALID_HID, "can't determine if VOL object is native connector object");
 
     /* Must use native VOL connector for this operation */
     if (!is_native_vol_obj)
-        HGOTO_ERROR(H5E_REFERENCE, H5E_VOL, H5I_INVALID_HID,
-                    "H5Rdereference2 is only meant to be used with the native VOL connector");
+        HGOTO_ERROR(H5E_REFERENCE, H5E_VOL, H5I_INVALID_HID, "H5Rdereference2 is only meant to be used with the native VOL connector");
+
+    /* Get the default transfer property list */
+    if (NULL == (def_dxpl = H5P_object_verify(H5P_DATASET_XFER_DEFAULT, H5P_TYPE_DATASET_XFER, true)))
+        HGOTO_ERROR(H5E_REFERENCE, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Get object type */
     if ((vol_obj_type = H5I_get_type(obj_id)) < 0)
@@ -636,8 +657,7 @@ H5Rdereference2(hid_t obj_id, hid_t oapl_id, H5R_type_t ref_type, const void *re
     loc_params.obj_type                    = vol_obj_type;
 
     /* Open object by token */
-    if (NULL == (opened_obj = H5VL_object_open(vol_obj, &loc_params, &opened_type, H5P_DATASET_XFER_DEFAULT,
-                                               H5_REQUEST_NULL)))
+    if (NULL == (opened_obj = H5VL_object_open(vol_obj, &loc_params, &opened_type, def_dxpl, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open object by token");
 
     /* Register object */
@@ -668,6 +688,7 @@ H5Rget_region(hid_t id, H5R_type_t ref_type, const void *ref)
     void                 *vol_obj_file = NULL;      /* VOL file */
     H5VL_file_cont_info_t cont_info    = {H5VL_CONTAINER_INFO_VERSION, 0, 0, 0};
     H5VL_file_get_args_t  vol_cb_args;                           /* Arguments to VOL callback */
+    H5P_genplist_t      *def_dxpl;    /* Default dataset transfer property list pointer */
     H5F_t                *f        = NULL;                       /* Native file */
     size_t                buf_size = H5R_DSET_REG_REF_BUF_SIZE;  /* Reference buffer size */
     H5S_t                *space    = NULL;                       /* Dataspace object */
@@ -709,12 +730,16 @@ H5Rget_region(hid_t id, H5R_type_t ref_type, const void *ref)
     if (NULL == (vol_obj_file = H5VL_vol_object(file_id)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "invalid location identifier");
 
+    /* Retrieve the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
+
     /* Set up VOL callback arguments */
     vol_cb_args.op_type                 = H5VL_FILE_GET_CONT_INFO;
     vol_cb_args.args.get_cont_info.info = &cont_info;
 
     /* Get container info */
-    if (H5VL_file_get(vol_obj_file, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_get(vol_obj_file, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTGET, H5I_INVALID_HID, "unable to get container info");
 
     /* Retrieve file from VOL object */
@@ -753,6 +778,7 @@ H5Rget_name(hid_t id, H5R_type_t ref_type, const void *ref, char *name /*out*/, 
     H5I_type_t             vol_obj_type = H5I_BADID;                  /* Object type of loc_id */
     H5VL_object_get_args_t vol_cb_args;                               /* Arguments to VOL callback */
     H5VL_loc_params_t      loc_params;                                /* Location parameters */
+    H5P_genplist_t *def_dxpl; /* Default dataset transfer property list */
     H5O_token_t            obj_token    = {0};                        /* Object token */
     const unsigned char   *buf          = (const unsigned char *)ref; /* Reference pointer */
     size_t                 obj_name_len = 0;                          /* Length of object's name */
@@ -778,6 +804,10 @@ H5Rget_name(hid_t id, H5R_type_t ref_type, const void *ref, char *name /*out*/, 
     if (H5R__decode_token_compat(vol_obj, vol_obj_type, ref_type, buf, &obj_token) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTDECODE, (-1), "unable to get object token");
 
+    /* Get the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_REFERENCE, H5E_BADID, (-1), "not a dataset transfer property list");
+        
     /* Set location parameters */
     loc_params.type                        = H5VL_OBJECT_BY_TOKEN;
     loc_params.loc_data.loc_by_token.token = &obj_token;
@@ -790,7 +820,7 @@ H5Rget_name(hid_t id, H5R_type_t ref_type, const void *ref, char *name /*out*/, 
     vol_cb_args.args.get_name.name_len = &obj_name_len;
 
     /* Retrieve object's name */
-    if (H5VL_object_get(vol_obj, &loc_params, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_object_get(vol_obj, &loc_params, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTGET, (-1), "can't retrieve object name");
 
     /* Set return value */

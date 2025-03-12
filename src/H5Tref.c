@@ -292,13 +292,18 @@ H5T__ref_set_loc(H5T_t *dt, H5VL_object_t *file, H5T_loc_t loc)
                 H5VL_file_get_args_t  vol_cb_args; /* Arguments to VOL callback */
                 size_t                ref_encode_size;
                 H5R_ref_priv_t        fixed_ref;
+                H5P_genplist_t      *def_dxpl;    /* Default dataset transfer property list pointer */
+
+                /* Retrieve the default dataset transfer property list */
+                if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+                    HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
                 /* Set up VOL callback arguments */
                 vol_cb_args.op_type                 = H5VL_FILE_GET_CONT_INFO;
                 vol_cb_args.args.get_cont_info.info = &cont_info;
 
                 /* Get container info */
-                if (H5VL_file_get(file, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+                if (H5VL_file_get(file, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
                     HGOTO_ERROR(H5E_DATATYPE, H5E_CANTGET, FAIL, "unable to get container info");
 
                 /* Retrieve min encode size (when references have no vlen part) */
@@ -414,6 +419,7 @@ H5T__ref_mem_getsize(H5VL_object_t H5_ATTR_UNUSED *src_file, const void *src_buf
     char                 *file_name_buf_dyn =
         NULL; /* Pointer to dynamically allocated buffer for file name, if static buffer is too small */
     unsigned flags     = 0; /* References flags */
+    H5P_genplist_t      *def_dxpl;    /* Default dataset transfer property list pointer */
     size_t   ret_value = 0; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -471,8 +477,12 @@ H5T__ref_mem_getsize(H5VL_object_t H5_ATTR_UNUSED *src_file, const void *src_buf
         vol_cb_args.args.get_name.buf           = file_name_buf_static;
         vol_cb_args.args.get_name.file_name_len = &file_name_len;
 
+        /* Retrieve the default dataset transfer property list */
+        if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+            HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, 0, "not a dataset transfer property list");
+
         /* Get file name */
-        if (H5VL_file_get(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, NULL) < 0)
+        if (H5VL_file_get(vol_obj, &vol_cb_args, def_dxpl, NULL) < 0)
             HGOTO_ERROR(H5E_REFERENCE, H5E_CANTGET, 0, "can't get file name");
 
         /* Check if we need to allocate a buffer for the file name */
@@ -486,7 +496,7 @@ H5T__ref_mem_getsize(H5VL_object_t H5_ATTR_UNUSED *src_file, const void *src_buf
             vol_cb_args.args.get_name.buf      = file_name_buf_dyn;
 
             /* Get file name again */
-            if (H5VL_file_get(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, NULL) < 0)
+            if (H5VL_file_get(vol_obj, &vol_cb_args, def_dxpl, NULL) < 0)
                 HGOTO_ERROR(H5E_REFERENCE, H5E_CANTGET, 0, "can't get file name");
 
             file_name = file_name_buf_dyn;
@@ -584,7 +594,12 @@ H5T__ref_mem_read(H5VL_object_t H5_ATTR_UNUSED *src_file, const void *src_buf, s
     /* Get file name (if external reference) */
     if (flags) {
         H5VL_file_get_args_t vol_cb_args;       /* Arguments to VOL callback */
+        H5P_genplist_t      *def_dxpl;    /* Default dataset transfer property list pointer */
         size_t               file_name_len = 0; /* Length of file name */
+
+        /* Retrieve the default dataset transfer property list */
+        if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+            HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, 0, "not a dataset transfer property list");
 
         /* Set up VOL callback arguments */
         vol_cb_args.op_type                     = H5VL_FILE_GET_NAME;
@@ -594,7 +609,7 @@ H5T__ref_mem_read(H5VL_object_t H5_ATTR_UNUSED *src_file, const void *src_buf, s
         vol_cb_args.args.get_name.file_name_len = &file_name_len;
 
         /* Get file name */
-        if (H5VL_file_get(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, NULL) < 0)
+        if (H5VL_file_get(vol_obj, &vol_cb_args, def_dxpl, NULL) < 0)
             HGOTO_ERROR(H5E_REFERENCE, H5E_CANTGET, 0, "can't get file name");
 
         /* Check if we need to allocate a buffer for the file name */
@@ -608,7 +623,7 @@ H5T__ref_mem_read(H5VL_object_t H5_ATTR_UNUSED *src_file, const void *src_buf, s
             vol_cb_args.args.get_name.buf      = file_name_buf_dyn;
 
             /* Get file name again */
-            if (H5VL_file_get(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, NULL) < 0)
+            if (H5VL_file_get(vol_obj, &vol_cb_args, def_dxpl, NULL) < 0)
                 HGOTO_ERROR(H5E_REFERENCE, H5E_CANTGET, 0, "can't get file name");
 
             file_name = file_name_buf_dyn;

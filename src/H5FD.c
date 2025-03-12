@@ -535,13 +535,10 @@ H5FDalloc(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, hsize_t size)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, HADDR_UNDEF, "invalid request type");
     if (size == 0)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, HADDR_UNDEF, "zero-size request");
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
-    else if (true != H5P_isa_class(dxpl_id, H5P_DATASET_XFER))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, HADDR_UNDEF, "not a data transfer property list");
 
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl_id);
+    if (H5CX_set_dxpl(dxpl_id) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, HADDR_UNDEF, "can't set DXPL for operation");
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -587,13 +584,10 @@ H5FDfree(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, hsize_t siz
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "file class pointer cannot be NULL");
     if (type < H5FD_MEM_DEFAULT || type >= H5FD_MEM_NTYPES)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid request type");
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
-    else if (true != H5P_isa_class(dxpl_id, H5P_DATASET_XFER))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a data transfer property list");
 
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl_id);
+    if (H5CX_set_dxpl(dxpl_id) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -830,14 +824,9 @@ H5FDread(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, size_t size
     if (!buf)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "result buffer parameter can't be NULL");
 
-    /* Get the default dataset transfer property list if the user didn't provide one */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
-    else if (true != H5P_isa_class(dxpl_id, H5P_DATASET_XFER))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a data transfer property list");
-
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl_id);
+    if (H5CX_set_dxpl(dxpl_id) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -880,14 +869,9 @@ H5FDwrite(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, size_t siz
     if (!buf)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "result buffer parameter can't be NULL");
 
-    /* Get the default dataset transfer property list if the user didn't provide one */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
-    else if (true != H5P_isa_class(dxpl_id, H5P_DATASET_XFER))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a data transfer property list");
-
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl_id);
+    if (H5CX_set_dxpl(dxpl_id) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -952,16 +936,9 @@ H5FDread_vector(H5FD_t *file, hid_t dxpl_id, uint32_t count, H5FD_mem_t types[],
             HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "count[0] can't be H5FD_MEM_NOLIST");
     }
 
-    /* Get the default dataset transfer property list if the user
-     * didn't provide one
-     */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
-    else if (true != H5P_isa_class(dxpl_id, H5P_DATASET_XFER))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a data transfer property list");
-
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl_id);
+    if (H5CX_set_dxpl(dxpl_id) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -1024,14 +1001,9 @@ H5FDwrite_vector(H5FD_t *file, hid_t dxpl_id, uint32_t count, H5FD_mem_t types[]
             HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "count[0] can't be H5FD_MEM_NOLIST");
     }
 
-    /* Get the default dataset transfer property list if the user didn't provide one */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
-    else if (true != H5P_isa_class(dxpl_id, H5P_DATASET_XFER))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a data transfer property list");
-
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl_id);
+    if (H5CX_set_dxpl(dxpl_id) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -1118,14 +1090,9 @@ H5FDread_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, uint32_t count,
             HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "bufs[0] can't be NULL");
     }
 
-    /* Get the default dataset transfer property list if the user didn't provide one */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
-    else if (true != H5P_isa_class(dxpl_id, H5P_DATASET_XFER))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a data transfer property list");
-
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl_id);
+    if (H5CX_set_dxpl(dxpl_id) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -1211,14 +1178,9 @@ H5FDwrite_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, uint32_t count
             HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "bufs[0] can't be NULL");
     }
 
-    /* Get the default dataset transfer property list if the user didn't provide one */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
-    else if (true != H5P_isa_class(dxpl_id, H5P_DATASET_XFER))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a data transfer property list");
-
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl_id);
+    if (H5CX_set_dxpl(dxpl_id) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -1310,19 +1272,16 @@ H5FDread_vector_from_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, uin
             HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "bufs[0] can't be NULL");
     }
 
-    /* Get the default dataset transfer property list if the user didn't provide one */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
-    else if (true != H5P_isa_class(dxpl_id, H5P_DATASET_XFER))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a data transfer property list");
+    /* Set DXPL for operation */
+    if (H5CX_set_dxpl(dxpl_id) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
 
     /* Call private function */
     /* (Note compensating for base address addition in internal routine) */
-    if (H5FD__read_vector_from_selection(&fh, type, count, mem_space_ids, file_space_ids, offsets,
-                                         element_sizes, bufs) < 0)
+    if (H5FD__read_vector_from_selection(&fh, type, count, mem_space_ids, file_space_ids, offsets, element_sizes, bufs) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_READERROR, FAIL, "file selection read request failed");
 
 done:
@@ -1404,11 +1363,9 @@ H5FDwrite_vector_from_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, ui
             HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "bufs[0] can't be NULL");
     }
 
-    /* Get the default dataset transfer property list if the user didn't provide one */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
-    else if (true != H5P_isa_class(dxpl_id, H5P_DATASET_XFER))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a data transfer property list");
+    /* Set DXPL for operation */
+    if (H5CX_set_dxpl(dxpl_id) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -1498,11 +1455,9 @@ H5FDread_from_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, uint32_t c
             HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "bufs[0] can't be NULL");
     }
 
-    /* Get the default dataset transfer property list if the user didn't provide one */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
-    else if (true != H5P_isa_class(dxpl_id, H5P_DATASET_XFER))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a data transfer property list");
+    /* Set DXPL for operation */
+    if (H5CX_set_dxpl(dxpl_id) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -1591,11 +1546,9 @@ H5FDwrite_from_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, uint32_t 
             HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "bufs[0] can't be NULL");
     }
 
-    /* Get the default dataset transfer property list if the user didn't provide one */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
-    else if (true != H5P_isa_class(dxpl_id, H5P_DATASET_XFER))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a data transfer property list");
+    /* Set DXPL for operation */
+    if (H5CX_set_dxpl(dxpl_id) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -1635,13 +1588,9 @@ H5FDflush(H5FD_t *file, hid_t dxpl_id, hbool_t closing)
     if (!file->cls)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "file class pointer cannot be NULL");
 
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
-    else if (true != H5P_isa_class(dxpl_id, H5P_DATASET_XFER))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a data transfer property list");
-
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl_id);
+    if (H5CX_set_dxpl(dxpl_id) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -1677,13 +1626,10 @@ H5FDtruncate(H5FD_t *file, hid_t dxpl_id, hbool_t closing)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "file pointer cannot be NULL");
     if (!file->cls)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "file class pointer cannot be NULL");
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
-    else if (true != H5P_isa_class(dxpl_id, H5P_DATASET_XFER))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a data transfer property list");
 
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl_id);
+    if (H5CX_set_dxpl(dxpl_id) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);

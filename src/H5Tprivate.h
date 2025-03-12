@@ -119,7 +119,7 @@ H5_DLL herr_t             H5T_save_refresh_state(hid_t tid, struct H5O_shared_t 
 H5_DLL herr_t             H5T_restore_refresh_state(hid_t tid, struct H5O_shared_t *cached_H5O_shared);
 H5_DLL bool               H5T_already_vol_managed(const H5T_t *dt);
 H5_DLL htri_t             H5T_is_vl_storage(const H5T_t *dt);
-H5_DLL herr_t H5T_invoke_vol_optional(H5T_t *dt, H5VL_optional_args_t *args, hid_t dxpl_id, void **req,
+H5_DLL herr_t H5T_invoke_vol_optional(H5T_t *dt, H5VL_optional_args_t *args, H5P_genplist_t *dxpl, void **req,
                                       H5VL_object_t **vol_obj_ptr);
 H5_DLL bool   H5T_is_numeric_with_unusual_unused_bits(const H5T_t *dt);
 

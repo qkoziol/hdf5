@@ -67,7 +67,6 @@ typedef struct H5T_conv_ctx_t {
          */
         struct H5T_conv_ctx_conv_fields {
             H5T_conv_cb_t cb_struct;
-            hid_t         dxpl_id;
             hid_t         src_type_id;
             hid_t         dst_type_id;
 

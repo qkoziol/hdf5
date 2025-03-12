@@ -99,6 +99,7 @@ H5Tcommit1(hid_t loc_id, const char *name, hid_t type_id)
     H5T_t            *dt      = NULL; /* High level datatype object that wraps the VOL object */
     H5VL_object_t    *vol_obj = NULL; /* Object of loc_id */
     H5VL_loc_params_t loc_params;
+    H5P_genplist_t   *def_dxpl;       /* Dataset transfer property list */
     herr_t            ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -123,6 +124,10 @@ H5Tcommit1(hid_t loc_id, const char *name, hid_t type_id)
     if (NULL == (def_tapl = H5I_object(H5P_DATATYPE_ACCESS_DEFAULT)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTGET, FAIL, "can't find object for ID");
 
+    /* Get the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTGET, FAIL, "can't find object for ID");
+
     /* Set up collective metadata if appropriate */
     if (H5CX_set_loc(loc_id) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set access property list info");
@@ -135,8 +140,7 @@ H5Tcommit1(hid_t loc_id, const char *name, hid_t type_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid object identifier");
 
     /* Commit the datatype */
-    if (NULL == (data = H5VL_datatype_commit(vol_obj, &loc_params, name, type_id, def_lcpl, def_tcpl,
-                                             def_tapl, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL)))
+    if (NULL == (data = H5VL_datatype_commit(vol_obj, &loc_params, name, type_id, def_lcpl, def_tcpl, def_tapl, def_dxpl, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINIT, FAIL, "unable to commit datatype");
 
     /* Set up VOL object */
@@ -170,6 +174,7 @@ H5Topen1(hid_t loc_id, const char *name)
     H5P_genplist_t   *def_tapl;       /* Datatype access property list */
     H5VL_object_t    *vol_obj = NULL; /* Object of loc_id */
     H5VL_loc_params_t loc_params;
+    H5P_genplist_t   *def_dxpl;       /* Dataset transfer property list */
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -189,9 +194,12 @@ H5Topen1(hid_t loc_id, const char *name)
     if (NULL == (vol_obj = H5VL_vol_object(loc_id)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "invalid location identifier");
 
+    /* Get default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_VOL, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+
     /* Open the datatype */
-    if (NULL == (dt = H5VL_datatype_open(vol_obj, &loc_params, name, def_tapl, H5P_DATASET_XFER_DEFAULT,
-                                         H5_REQUEST_NULL)))
+    if (NULL == (dt = H5VL_datatype_open(vol_obj, &loc_params, name, def_tapl, def_dxpl, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open named datatype");
 
     /* Register the type and return the ID */
@@ -201,7 +209,7 @@ H5Topen1(hid_t loc_id, const char *name)
 done:
     /* Cleanup on error */
     if (H5I_INVALID_HID == ret_value)
-        if (dt && H5VL_datatype_close(vol_obj, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+        if (dt && H5VL_datatype_close(vol_obj, def_dxpl, H5_REQUEST_NULL) < 0)
             HDONE_ERROR(H5E_DATATYPE, H5E_CLOSEERROR, H5I_INVALID_HID, "unable to close datatype");
 
     FUNC_LEAVE_API(ret_value)

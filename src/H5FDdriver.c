@@ -33,6 +33,7 @@
 #include "H5FDpkg.h"     /* File Drivers                             */
 #include "H5FLprivate.h" /* Free Lists                               */
 #include "H5Iprivate.h"  /* IDs                                      */
+#include "H5Pprivate.h"  /* Property lists                           */
 
 /****************/
 /* Local Macros */
@@ -784,7 +785,6 @@ herr_t
 H5FD_read(H5FD_int_t *fh, H5FD_mem_t type, haddr_t addr, size_t size, void *buf /*out*/)
 {
     H5FD_t  *file;
-    hid_t    dxpl_id = H5I_INVALID_HID; /* DXPL for operation */
     uint32_t actual_selection_io_mode;
     herr_t   ret_value = SUCCEED; /* Return value */
 
@@ -806,9 +806,6 @@ H5FD_read(H5FD_int_t *fh, H5FD_mem_t type, haddr_t addr, size_t size, void *buf 
     if (0 == size)
         HGOTO_DONE(SUCCEED);
 #endif /* H5_HAVE_PARALLEL */
-
-    /* Get proper DXPL for I/O */
-    dxpl_id = H5CX_get_dxpl();
 
     /* Get file pointer */
     file = fh->file;
@@ -841,7 +838,7 @@ H5FD_read(H5FD_int_t *fh, H5FD_mem_t type, haddr_t addr, size_t size, void *buf 
     H5_BEFORE_USER_CB(FAIL)
         {
             /* Dispatch to driver */
-            ret_value = (fh->driver->cls->read)(file, type, dxpl_id, addr + file->base_addr, size, buf);
+            ret_value = (fh->driver->cls->read)(file, type, H5CX_get_dxpl(), addr + file->base_addr, size, buf);
         }
     H5_AFTER_USER_CB(FAIL)
     if (ret_value < 0)
@@ -871,7 +868,6 @@ herr_t
 H5FD_write(H5FD_int_t *fh, H5FD_mem_t type, haddr_t addr, size_t size, const void *buf)
 {
     H5FD_t  *file;
-    hid_t    dxpl_id; /* DXPL for operation */
     uint32_t actual_selection_io_mode;
     haddr_t  eoa       = HADDR_UNDEF; /* EOA for file */
     herr_t   ret_value = SUCCEED;     /* Return value */
@@ -895,9 +891,6 @@ H5FD_write(H5FD_int_t *fh, H5FD_mem_t type, haddr_t addr, size_t size, const voi
         HGOTO_DONE(SUCCEED);
 #endif /* H5_HAVE_PARALLEL */
 
-    /* Get proper DXPL for I/O */
-    dxpl_id = H5CX_get_dxpl();
-
     /* Get file pointer */
     file = fh->file;
 
@@ -918,7 +911,7 @@ H5FD_write(H5FD_int_t *fh, H5FD_mem_t type, haddr_t addr, size_t size, const voi
     H5_BEFORE_USER_CB(FAIL)
         {
             /* Dispatch to driver */
-            ret_value = (fh->driver->cls->write)(file, type, dxpl_id, addr + file->base_addr, size, buf);
+            ret_value = (fh->driver->cls->write)(file, type, H5CX_get_dxpl(), addr + file->base_addr, size, buf);
         }
     H5_AFTER_USER_CB(FAIL)
     if (ret_value < 0)
@@ -978,7 +971,6 @@ H5FD_read_vector(H5FD_int_t *fh, uint32_t count, H5FD_mem_t types[], haddr_t add
 {
     H5FD_t    *file;
     H5FD_mem_t type         = H5FD_MEM_DEFAULT;
-    hid_t      dxpl_id      = H5I_INVALID_HID; /* DXPL for operation */
     size_t     size         = 0;
     bool       is_raw       = false; /* Does this include raw data */
     bool       addrs_cooked = false;
@@ -1014,9 +1006,6 @@ H5FD_read_vector(H5FD_int_t *fh, uint32_t count, H5FD_mem_t types[], haddr_t add
     if (0 == count)
         HGOTO_DONE(SUCCEED);
 #endif /* H5_HAVE_PARALLEL */
-
-    /* Get proper DXPL for I/O */
-    dxpl_id = H5CX_get_dxpl();
 
     /* Get file pointer */
     file = fh->file;
@@ -1094,7 +1083,7 @@ H5FD_read_vector(H5FD_int_t *fh, uint32_t count, H5FD_mem_t types[], haddr_t add
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
-                ret_value = (fh->driver->cls->read_vector)(file, dxpl_id, count, types, addrs, sizes, bufs);
+                ret_value = (fh->driver->cls->read_vector)(file, H5CX_get_dxpl(), count, types, addrs, sizes, bufs);
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
@@ -1143,7 +1132,7 @@ H5FD_read_vector(H5FD_int_t *fh, uint32_t count, H5FD_mem_t types[], haddr_t add
             /* Prepare & restore library for user callback */
             H5_BEFORE_USER_CB(FAIL)
                 {
-                    ret_value = (fh->driver->cls->read)(file, type, dxpl_id, addrs[i], size, bufs[i]);
+                    ret_value = (fh->driver->cls->read)(file, type, H5CX_get_dxpl(), addrs[i], size, bufs[i]);
                 }
             H5_AFTER_USER_CB(FAIL)
             if (ret_value < 0)
@@ -1215,7 +1204,6 @@ H5FD_write_vector(H5FD_int_t *fh, uint32_t count, H5FD_mem_t types[], haddr_t ad
 {
     H5FD_t    *file;
     H5FD_mem_t type = H5FD_MEM_DEFAULT;
-    hid_t      dxpl_id; /* DXPL for operation */
     size_t     size         = 0;
     bool       is_raw       = false; /* Does this include raw data */
     bool       addrs_cooked = false;
@@ -1251,9 +1239,6 @@ H5FD_write_vector(H5FD_int_t *fh, uint32_t count, H5FD_mem_t types[], haddr_t ad
     if (0 == count)
         HGOTO_DONE(SUCCEED);
 #endif /* H5_HAVE_PARALLEL */
-
-    /* Get proper DXPL for I/O */
-    dxpl_id = H5CX_get_dxpl();
 
     /* Get file pointer */
     file = fh->file;
@@ -1316,7 +1301,7 @@ H5FD_write_vector(H5FD_int_t *fh, uint32_t count, H5FD_mem_t types[], haddr_t ad
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
-                ret_value = (fh->driver->cls->write_vector)(file, dxpl_id, count, types, addrs, sizes, bufs);
+                ret_value = (fh->driver->cls->write_vector)(file, H5CX_get_dxpl(), count, types, addrs, sizes, bufs);
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
@@ -1365,7 +1350,7 @@ H5FD_write_vector(H5FD_int_t *fh, uint32_t count, H5FD_mem_t types[], haddr_t ad
             /* Prepare & restore library for user callback */
             H5_BEFORE_USER_CB(FAIL)
                 {
-                    ret_value = (fh->driver->cls->write)(file, type, dxpl_id, addrs[i], size, bufs[i]);
+                    ret_value = (fh->driver->cls->write)(file, type, H5CX_get_dxpl(), addrs[i], size, bufs[i]);
                 }
             H5_AFTER_USER_CB(FAIL)
             if (ret_value < 0)
@@ -1443,7 +1428,6 @@ H5FD_read_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, H5S_t **mem
     hid_t    file_space_ids_local[H5FD_LOCAL_SEL_ARR_LEN];
     hid_t   *file_space_ids = file_space_ids_local;
     uint32_t num_spaces     = 0;
-    hid_t    dxpl_id        = H5I_INVALID_HID; /* DXPL for operation */
     bool     offsets_cooked = false;
     uint32_t i;
     herr_t   ret_value = SUCCEED; /* Return value */
@@ -1475,9 +1459,6 @@ H5FD_read_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, H5S_t **mem
     if (0 == count)
         HGOTO_DONE(SUCCEED);
 #endif /* H5_HAVE_PARALLEL */
-
-    /* Get proper DXPL for I/O */
-    dxpl_id = H5CX_get_dxpl();
 
     /* Get file pointer */
     file = fh->file;
@@ -1548,8 +1529,7 @@ H5FD_read_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, H5S_t **mem
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
-                ret_value = (fh->driver->cls->read_selection)(file, type, dxpl_id, count, mem_space_ids,
-                                                              file_space_ids, offsets, element_sizes, bufs);
+                ret_value = (fh->driver->cls->read_selection)(file, type, H5CX_get_dxpl(), count, mem_space_ids, file_space_ids, offsets, element_sizes, bufs);
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
@@ -1566,8 +1546,7 @@ H5FD_read_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, H5S_t **mem
         /* Otherwise, implement the selection read as a sequence of regular
          * or vector read calls.
          */
-        if (H5FD__read_selection_translate(false, fh, type, dxpl_id, count, mem_spaces, file_spaces, offsets,
-                                           element_sizes, bufs) < 0)
+        if (H5FD__read_selection_translate(false, fh, type, count, mem_spaces, file_spaces, offsets, element_sizes, bufs) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_READERROR, FAIL, "translation to vector or scalar read failed");
 
 done:
@@ -1641,7 +1620,6 @@ H5FD_write_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, H5S_t **me
     hid_t   *file_space_ids = file_space_ids_local;
     haddr_t  eoa;
     uint32_t num_spaces     = 0;
-    hid_t    dxpl_id        = H5I_INVALID_HID; /* DXPL for operation */
     bool     offsets_cooked = false;
     uint32_t i;
     herr_t   ret_value = SUCCEED; /* Return value */
@@ -1673,9 +1651,6 @@ H5FD_write_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, H5S_t **me
     if (0 == count)
         HGOTO_DONE(SUCCEED);
 #endif /* H5_HAVE_PARALLEL */
-
-    /* Get proper DXPL for I/O */
-    dxpl_id = H5CX_get_dxpl();
 
     /* Get file pointer */
     file = fh->file;
@@ -1736,8 +1711,7 @@ H5FD_write_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, H5S_t **me
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
-                ret_value = (fh->driver->cls->write_selection)(file, type, dxpl_id, count, mem_space_ids,
-                                                               file_space_ids, offsets, element_sizes, bufs);
+                ret_value = (fh->driver->cls->write_selection)(file, type, H5CX_get_dxpl(), count, mem_space_ids, file_space_ids, offsets, element_sizes, bufs);
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
@@ -1755,8 +1729,7 @@ H5FD_write_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, H5S_t **me
          * or vector write calls.
          */
 
-        if (H5FD__write_selection_translate(false, fh, type, dxpl_id, count, mem_spaces, file_spaces, offsets,
-                                            element_sizes, bufs) < 0)
+        if (H5FD__write_selection_translate(false, fh, type, count, mem_spaces, file_spaces, offsets, element_sizes, bufs) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_WRITEERROR, FAIL, "translation to vector or scalar write failed");
 
 done:

@@ -1238,10 +1238,15 @@ H5VL_file_is_same(const H5VL_object_t *vol_obj1, const H5VL_object_t *vol_obj2, 
     else {
         void                     *obj2;        /* Terminal object for second file */
         H5VL_file_specific_args_t vol_cb_args; /* Arguments to VOL callback */
+        H5P_genplist_t           *def_dxpl;    /* Default transfer property list */
 
         /* Get unwrapped (terminal) object for vol_obj2 */
         if (NULL == (obj2 = H5VL_object_data(vol_obj2)))
             HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "can't get unwrapped object");
+
+        /* Set up default transfer property list */
+        if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+            HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "can't get default transfer property list");
 
         /* Set up VOL callback arguments */
         vol_cb_args.op_type                 = H5VL_FILE_IS_EQUAL;
@@ -1249,7 +1254,7 @@ H5VL_file_is_same(const H5VL_object_t *vol_obj1, const H5VL_object_t *vol_obj2, 
         vol_cb_args.args.is_equal.same_file = same_file;
 
         /* Make 'are files equal' callback */
-        if (H5VL_file_specific(vol_obj1, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, NULL) < 0)
+        if (H5VL_file_specific(vol_obj1, &vol_cb_args, def_dxpl, NULL) < 0)
             HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "file specific failed");
     } /* end else */
 

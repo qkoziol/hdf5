@@ -260,6 +260,7 @@ H5G_term_package(void)
 static herr_t
 H5G__close_cb(H5VL_object_t *grp_vol_obj, void **request)
 {
+    H5P_genplist_t *def_dxpl = NULL; /* Default dataset transfer property list */
     herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -267,8 +268,12 @@ H5G__close_cb(H5VL_object_t *grp_vol_obj, void **request)
     /* Sanity check */
     assert(grp_vol_obj);
 
+    /* Get the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5P_object_verify(H5P_DATASET_XFER_DEFAULT, H5P_TYPE_DATASET_XFER, true)))
+        HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
+
     /* Close the group */
-    if (H5VL_group_close(grp_vol_obj, H5P_DATASET_XFER_DEFAULT, request) < 0)
+    if (H5VL_group_close(grp_vol_obj, def_dxpl, request) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CLOSEERROR, FAIL, "unable to close group");
 
     /* Free the VOL object */

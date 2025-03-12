@@ -66,7 +66,7 @@ typedef struct {
     hid_t                     fspace_id;    /* Dataset dataspace ID of the dataset we are working on */
     H5S_t                    *fspace;       /* Dataset's dataspace for operation */
     hid_t                     mspace_id;    /* Memory dataspace ID of the dataset we are working on */
-    hid_t                     dxpl_id;      /* Dataset transfer property list to pass to dataset read */
+    H5P_genplist_t           *dxpl;         /* Dataset transfer property list to pass to dataset read */
     H5D_vlen_bufsize_common_t common;       /* VL data buffers & accumulatd size */
 } H5D_vlen_bufsize_generic_t;
 
@@ -333,15 +333,20 @@ H5D_term_package(void)
 static herr_t
 H5D__close_cb(H5VL_object_t *dset_vol_obj, void **request)
 {
-    herr_t ret_value = SUCCEED; /* Return value */
+    H5P_genplist_t *def_dxpl;                        /* Default dataset transfer property list pointer */
+    herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
     /* Sanity check */
     assert(dset_vol_obj);
 
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_DATASET, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
     /* Close the dataset */
-    if (H5VL_dataset_close(dset_vol_obj, H5P_DATASET_XFER_DEFAULT, request) < 0)
+    if (H5VL_dataset_close(dset_vol_obj, def_dxpl, request) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CLOSEERROR, FAIL, "unable to close dataset");
 
 done:
@@ -2815,8 +2820,7 @@ H5D__vlen_get_buf_size_gen_cb(void H5_ATTR_UNUSED *elem, hid_t type_id, unsigned
         HGOTO_ERROR(H5E_DATASET, H5E_BADTYPE, FAIL, "not a datatype");
 
     /* Make certain there is enough fixed-length buffer available */
-    if (NULL == (vlen_bufsize->common.fl_tbuf =
-                     H5FL_BLK_REALLOC(vlen_fl_buf, vlen_bufsize->common.fl_tbuf, H5T_get_size(dt))))
+    if (NULL == (vlen_bufsize->common.fl_tbuf = H5FL_BLK_REALLOC(vlen_fl_buf, vlen_bufsize->common.fl_tbuf, H5T_get_size(dt))))
         HGOTO_ERROR(H5E_DATASET, H5E_NOSPACE, FAIL, "can't resize tbuf");
 
     /* Select point to read in */
@@ -2825,9 +2829,7 @@ H5D__vlen_get_buf_size_gen_cb(void H5_ATTR_UNUSED *elem, hid_t type_id, unsigned
 
     /* Read in the point (with the custom VL memory allocator) */
     vol_obj_data = H5VL_OBJ_DATA(vlen_bufsize->dset_vol_obj);
-    if (H5VL_dataset_read(1, &vol_obj_data, H5VL_OBJ_CONNECTOR(vlen_bufsize->dset_vol_obj), &type_id,
-                          &vlen_bufsize->mspace_id, &vlen_bufsize->fspace_id, vlen_bufsize->dxpl_id,
-                          &vlen_bufsize->common.fl_tbuf, H5_REQUEST_NULL) < 0)
+    if (H5VL_dataset_read(1, &vol_obj_data, H5VL_OBJ_CONNECTOR(vlen_bufsize->dset_vol_obj), &type_id, &vlen_bufsize->mspace_id, &vlen_bufsize->fspace_id, vlen_bufsize->dxpl, &vlen_bufsize->common.fl_tbuf, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_READERROR, FAIL, "can't read point");
 
 done:
@@ -2847,9 +2849,7 @@ done:
 herr_t
 H5D__vlen_get_buf_size_gen(H5VL_object_t *vol_obj, hid_t type_id, hid_t space_id, hsize_t *size)
 {
-    H5D_vlen_bufsize_generic_t vlen_bufsize = {
-        NULL, H5I_INVALID_HID, NULL, H5I_INVALID_HID, H5I_INVALID_HID, {NULL, NULL, 0, 0}};
-    H5P_genplist_t         *dxpl   = NULL;       /* DXPL for operation */
+    H5D_vlen_bufsize_generic_t vlen_bufsize = { NULL, H5I_INVALID_HID, NULL, H5I_INVALID_HID, NULL, {NULL, NULL, 0, 0}};
     H5S_t                  *mspace = NULL;       /* Memory dataspace */
     char                    bogus;               /* Bogus value to pass to H5Diterate() */
     H5S_t                  *space;               /* Dataspace for iteration */
@@ -2876,7 +2876,9 @@ H5D__vlen_get_buf_size_gen(H5VL_object_t *vol_obj, hid_t type_id, hid_t space_id
     vol_cb_args.args.get_space.space_id = H5I_INVALID_HID;
 
     /* Get a copy of the dataset's dataspace */
-    if (H5VL_dataset_get(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (NULL == (vlen_bufsize.dxpl = (H5P_genplist_t *)H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get default DXPL");
+    if (H5VL_dataset_get(vol_obj, &vol_cb_args, vlen_bufsize.dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get dataspace");
     vlen_bufsize.fspace_id = vol_cb_args.args.get_space.space_id;
     if (NULL == (vlen_bufsize.fspace = (H5S_t *)H5I_object(vlen_bufsize.fspace_id)))
@@ -2896,13 +2898,7 @@ H5D__vlen_get_buf_size_gen(H5VL_object_t *vol_obj, hid_t type_id, hid_t space_id
     vlen_bufsize.common.vl_tbuf_size = 1;
 
     /* Set the VL allocation callbacks on a DXPL */
-    if (NULL == (dxpl = (H5P_genplist_t *)H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get default DXPL");
-    if ((vlen_bufsize.dxpl_id = H5P_copy_plist_id(dxpl, true)) < 0)
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTCOPY, FAIL, "can't copy property list");
-    if (NULL == (dxpl = (H5P_genplist_t *)H5I_object(vlen_bufsize.dxpl_id)))
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get copied DXPL");
-    if (H5P_set_vlen_mem_manager(dxpl, H5D__vlen_get_buf_size_alloc, &vlen_bufsize.common, NULL, NULL) < 0)
+    if (H5P_set_vlen_mem_manager(vlen_bufsize.dxpl, H5D__vlen_get_buf_size_alloc, &vlen_bufsize.common, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "can't set VL data allocation routine on DXPL");
 
     /* Set the initial number of bytes required */
@@ -2938,13 +2934,6 @@ done:
         vlen_bufsize.common.fl_tbuf = H5FL_BLK_FREE(vlen_fl_buf, vlen_bufsize.common.fl_tbuf);
     if (vlen_bufsize.common.vl_tbuf != NULL)
         vlen_bufsize.common.vl_tbuf = H5FL_BLK_FREE(vlen_vl_buf, vlen_bufsize.common.vl_tbuf);
-    if (vlen_bufsize.dxpl_id != H5I_INVALID_HID) {
-        if (H5I_dec_app_ref(vlen_bufsize.dxpl_id) < 0)
-            HDONE_ERROR(H5E_DATASET, H5E_CANTDEC, FAIL, "can't close property list");
-        dxpl = NULL;
-    } /* end if */
-    if (dxpl && H5P_close(dxpl) < 0)
-        HDONE_ERROR(H5E_DATASET, H5E_CANTRELEASE, FAIL, "unable to release DXPL");
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5D__vlen_get_buf_size_gen() */

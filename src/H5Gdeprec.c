@@ -155,6 +155,7 @@ H5Gcreate1(hid_t loc_id, const char *name, size_t size_hint)
     void             *grp = NULL; /* New group created */
     H5P_genplist_t   *def_lcpl;   /* Link creation property list */
     H5P_genplist_t   *def_gapl;   /* Group access property list */
+    H5P_genplist_t   *def_dxpl;   /* Default dataset transfer property list */
     H5VL_object_t    *vol_obj;    /* Object of loc_id */
     H5VL_loc_params_t loc_params;
     H5P_genplist_t   *tmp_gcpl  = NULL;            /* Temporary group creation property list */
@@ -200,6 +201,10 @@ H5Gcreate1(hid_t loc_id, const char *name, size_t size_hint)
     if (NULL == (def_gapl = H5I_object(H5P_GROUP_ACCESS_DEFAULT)))
         HGOTO_ERROR(H5E_SYM, H5E_CANTGET, H5I_INVALID_HID, "can't find object for ID");
 
+    /* Get default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
+
     /* Set up collective metadata if appropriate */
     if (H5CX_set_loc(loc_id) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTSET, H5I_INVALID_HID, "can't set collective metadata read info");
@@ -208,13 +213,12 @@ H5Gcreate1(hid_t loc_id, const char *name, size_t size_hint)
     loc_params.type     = H5VL_OBJECT_BY_SELF;
     loc_params.obj_type = H5I_get_type(loc_id);
 
-    /* get the location object */
+    /* Get the location object */
     if (NULL == (vol_obj = H5VL_vol_object(loc_id)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "invalid location identifier");
 
     /* Create the group */
-    if (NULL == (grp = H5VL_group_create(vol_obj, &loc_params, name, def_lcpl, tmp_gcpl, def_gapl,
-                                         H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL)))
+    if (NULL == (grp = H5VL_group_create(vol_obj, &loc_params, name, def_lcpl, tmp_gcpl, def_gapl, def_dxpl, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_SYM, H5E_CANTINIT, H5I_INVALID_HID, "unable to create group");
 
     /* Get an ID for the group */
@@ -228,7 +232,7 @@ done:
                         "can't close group creation property list");
 
     if (H5I_INVALID_HID == ret_value)
-        if (grp && H5VL_group_close(vol_obj, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+        if (grp && H5VL_group_close(vol_obj, def_dxpl, H5_REQUEST_NULL) < 0)
             HDONE_ERROR(H5E_SYM, H5E_CLOSEERROR, H5I_INVALID_HID, "unable to release group");
 
     FUNC_LEAVE_API(ret_value)
@@ -253,6 +257,7 @@ H5Gopen1(hid_t loc_id, const char *name)
 {
     void             *grp = NULL;     /* Group opened */
     H5P_genplist_t   *def_gapl;       /* Group access property list */
+    H5P_genplist_t   *def_dxpl;       /* Default dataset transfer property list */
     H5VL_object_t    *vol_obj = NULL; /* Object of loc_id */
     H5VL_loc_params_t loc_params;
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */
@@ -267,6 +272,10 @@ H5Gopen1(hid_t loc_id, const char *name)
     if (NULL == (def_gapl = H5I_object(H5P_GROUP_ACCESS_DEFAULT)))
         HGOTO_ERROR(H5E_SYM, H5E_CANTGET, H5I_INVALID_HID, "can't find object for ID");
 
+    /* Get default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
+
     /* Set location parameters */
     loc_params.type     = H5VL_OBJECT_BY_SELF;
     loc_params.obj_type = H5I_get_type(loc_id);
@@ -276,8 +285,7 @@ H5Gopen1(hid_t loc_id, const char *name)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "invalid location identifier");
 
     /* Open the group */
-    if (NULL == (grp = H5VL_group_open(vol_obj, &loc_params, name, def_gapl, H5P_DATASET_XFER_DEFAULT,
-                                       H5_REQUEST_NULL)))
+    if (NULL == (grp = H5VL_group_open(vol_obj, &loc_params, name, def_gapl, def_dxpl, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_SYM, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open group");
 
     /* Get an ID for the group */
@@ -286,7 +294,7 @@ H5Gopen1(hid_t loc_id, const char *name)
 
 done:
     if (H5I_INVALID_HID == ret_value)
-        if (grp && H5VL_group_close(vol_obj, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+        if (grp && H5VL_group_close(vol_obj, def_dxpl, H5_REQUEST_NULL) < 0)
             HDONE_ERROR(H5E_SYM, H5E_CLOSEERROR, H5I_INVALID_HID, "unable to release group");
 
     FUNC_LEAVE_API(ret_value)
@@ -305,6 +313,7 @@ H5Glink(hid_t cur_loc_id, H5G_link_t type, const char *cur_name, const char *new
 {
     H5P_genplist_t         *def_lcpl;            /* Link creation property list */
     H5P_genplist_t         *def_lapl;            /* Link access property list */
+    H5P_genplist_t         *def_dxpl;            /* Default dataset transfer property list */
     H5VL_link_create_args_t vol_cb_args;         /* Arguments to VOL callback */
     herr_t                  ret_value = SUCCEED; /* Return value */
 
@@ -322,11 +331,15 @@ H5Glink(hid_t cur_loc_id, H5G_link_t type, const char *cur_name, const char *new
 
     /* Get default link creation property list */
     if (NULL == (def_lcpl = H5I_object(H5P_LINK_CREATE_DEFAULT)))
-        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTGET, FAIL, "can't find object for ID");
+        HGOTO_ERROR(H5E_SYM, H5E_CANTGET, FAIL, "can't find object for ID");
 
     /* Get default link access property list */
     if (NULL == (def_lapl = H5I_object(H5P_LINK_ACCESS_DEFAULT)))
-        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTGET, FAIL, "can't find object for ID");
+        HGOTO_ERROR(H5E_SYM, H5E_CANTGET, FAIL, "can't find object for ID");
+
+    /* Get the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_SYM, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Create link */
     if (type == H5L_TYPE_HARD) {
@@ -352,8 +365,7 @@ H5Glink(hid_t cur_loc_id, H5G_link_t type, const char *cur_name, const char *new
         vol_cb_args.args.hard.curr_loc_params.loc_data.loc_by_name.lapl_id = H5P_PLIST_ID(def_lapl);
 
         /* Create the link through the VOL */
-        if (H5VL_link_create(&vol_cb_args, vol_obj, &new_loc_params, def_lcpl, def_lapl,
-                             H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+        if (H5VL_link_create(&vol_cb_args, vol_obj, &new_loc_params, def_lcpl, def_lapl, def_dxpl, H5_REQUEST_NULL) < 0)
             HGOTO_ERROR(H5E_SYM, H5E_CANTINIT, FAIL, "unable to create link");
     } /* end if */
     else if (type == H5L_TYPE_SOFT) {
@@ -375,8 +387,7 @@ H5Glink(hid_t cur_loc_id, H5G_link_t type, const char *cur_name, const char *new
         vol_cb_args.args.soft.target = cur_name;
 
         /* Create the link through the VOL */
-        if (H5VL_link_create(&vol_cb_args, vol_obj, &loc_params, def_lcpl, def_lapl, H5P_DATASET_XFER_DEFAULT,
-                             H5_REQUEST_NULL) < 0)
+        if (H5VL_link_create(&vol_cb_args, vol_obj, &loc_params, def_lcpl, def_lapl, def_dxpl, H5_REQUEST_NULL) < 0)
             HGOTO_ERROR(H5E_SYM, H5E_CANTINIT, FAIL, "unable to create link");
     } /* end else-if */
     else
@@ -399,6 +410,7 @@ H5Glink2(hid_t cur_loc_id, const char *cur_name, H5G_link_t type, hid_t new_loc_
 {
     H5P_genplist_t         *def_lcpl;            /* Link creation property list */
     H5P_genplist_t         *def_lapl;            /* Link access property list */
+    H5P_genplist_t         *def_dxpl;            /* Default dataset transfer property list */
     H5VL_link_create_args_t vol_cb_args;         /* Arguments to VOL callback */
     herr_t                  ret_value = SUCCEED; /* Return value */
 
@@ -416,11 +428,15 @@ H5Glink2(hid_t cur_loc_id, const char *cur_name, H5G_link_t type, hid_t new_loc_
 
     /* Get default link creation property list */
     if (NULL == (def_lcpl = H5I_object(H5P_LINK_CREATE_DEFAULT)))
-        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTGET, FAIL, "can't find object for ID");
+        HGOTO_ERROR(H5E_SYM, H5E_CANTGET, FAIL, "can't find object for ID");
 
     /* Get default link access property list */
     if (NULL == (def_lapl = H5I_object(H5P_LINK_ACCESS_DEFAULT)))
-        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTGET, FAIL, "can't find object for ID");
+        HGOTO_ERROR(H5E_SYM, H5E_CANTGET, FAIL, "can't find object for ID");
+
+    /* Get the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_SYM, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Create the appropriate kind of link */
     if (type == H5L_TYPE_HARD) {
@@ -449,8 +465,7 @@ H5Glink2(hid_t cur_loc_id, const char *cur_name, H5G_link_t type, hid_t new_loc_
         vol_cb_args.args.hard.curr_loc_params.loc_data.loc_by_name.lapl_id = H5P_PLIST_ID(def_lapl);
 
         /* Create the link through the VOL */
-        if (H5VL_link_create(&vol_cb_args, vol_obj2, &new_loc_params, def_lcpl, def_lapl,
-                             H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+        if (H5VL_link_create(&vol_cb_args, vol_obj2, &new_loc_params, def_lcpl, def_lapl, def_dxpl, H5_REQUEST_NULL) < 0)
             HGOTO_ERROR(H5E_SYM, H5E_CANTINIT, FAIL, "unable to create link");
     } /* end if */
     else if (type == H5L_TYPE_SOFT) {
@@ -477,8 +492,7 @@ H5Glink2(hid_t cur_loc_id, const char *cur_name, H5G_link_t type, hid_t new_loc_
         vol_cb_args.args.soft.target = cur_name;
 
         /* Create the link through the VOL */
-        if (H5VL_link_create(&vol_cb_args, vol_obj, &loc_params, def_lcpl, def_lapl, H5P_DATASET_XFER_DEFAULT,
-                             H5_REQUEST_NULL) < 0)
+        if (H5VL_link_create(&vol_cb_args, vol_obj, &loc_params, def_lcpl, def_lapl, def_dxpl, H5_REQUEST_NULL) < 0)
             HGOTO_ERROR(H5E_SYM, H5E_CANTINIT, FAIL, "unable to create link");
     } /* end else-if */
     else
@@ -501,6 +515,7 @@ H5Gmove(hid_t src_loc_id, const char *src_name, const char *dst_name)
     H5VL_object_t    *vol_obj;  /* Object of loc_id */
     H5P_genplist_t   *def_lcpl; /* Link creation property list */
     H5P_genplist_t   *def_lapl; /* Link access property list */
+    H5P_genplist_t   *def_dxpl; /* Default dataset transfer property list */
     H5VL_loc_params_t loc_params1;
     H5VL_loc_params_t loc_params2;
     herr_t            ret_value = SUCCEED; /* Return value */
@@ -514,6 +529,10 @@ H5Gmove(hid_t src_loc_id, const char *src_name, const char *dst_name)
     /* Get default link access property list */
     if (NULL == (def_lapl = H5I_object(H5P_LINK_ACCESS_DEFAULT)))
         HGOTO_ERROR(H5E_SYM, H5E_CANTGET, FAIL, "can't find object for ID");
+
+    /* Get the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_SYM, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Set up collective metadata if appropriate */
     if (H5CX_set_loc(src_loc_id) < 0)
@@ -533,8 +552,7 @@ H5Gmove(hid_t src_loc_id, const char *src_name, const char *dst_name)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid location identifier");
 
     /* Move the link */
-    if (H5VL_link_move(vol_obj, &loc_params1, NULL, &loc_params2, def_lcpl, def_lapl,
-                       H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_link_move(vol_obj, &loc_params1, NULL, &loc_params2, def_lcpl, def_lapl, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTMOVE, FAIL, "couldn't move link");
 
 done:
@@ -557,6 +575,7 @@ H5Gmove2(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *d
     H5VL_loc_params_t loc_params2;
     H5P_genplist_t   *def_lcpl; /* Link creation property list */
     H5P_genplist_t   *def_lapl; /* Link access property list */
+    H5P_genplist_t   *def_dxpl; /* Default dataset transfer property list */
     H5I_type_t        src_id_type = H5I_BADID, dst_id_type = H5I_BADID;
     herr_t            ret_value = SUCCEED; /* Return value */
 
@@ -575,6 +594,10 @@ H5Gmove2(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *d
     /* Get default link access property list */
     if (NULL == (def_lapl = H5I_object(H5P_LINK_ACCESS_DEFAULT)))
         HGOTO_ERROR(H5E_SYM, H5E_CANTGET, FAIL, "can't find object for ID");
+
+    /* Get the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_SYM, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* src and dst location IDs cannot both have the value of H5L_SAME_LOC */
     if (src_loc_id == H5L_SAME_LOC && dst_loc_id == H5L_SAME_LOC)
@@ -618,8 +641,7 @@ H5Gmove2(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *d
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid location identifier");
 
     /* Move the link */
-    if (H5VL_link_move(vol_obj1, &loc_params1, vol_obj2, &loc_params2, def_lcpl, def_lapl,
-                       H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_link_move(vol_obj1, &loc_params1, vol_obj2, &loc_params2, def_lcpl, def_lapl, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTMOVE, FAIL, "unable to move link");
 
 done:
@@ -639,6 +661,7 @@ H5Gunlink(hid_t loc_id, const char *name)
     H5VL_object_t            *vol_obj;     /* Object of loc_id */
     H5VL_link_specific_args_t vol_cb_args; /* Arguments to VOL callback */
     H5VL_loc_params_t         loc_params;
+    H5P_genplist_t           *def_dxpl;           /* Default dataset transfer property list */
     herr_t                    ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -650,6 +673,10 @@ H5Gunlink(hid_t loc_id, const char *name)
     /* Set up collective metadata if appropriate */
     if (H5CX_set_loc(loc_id) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTSET, FAIL, "can't set collective metadata read info");
+
+    /* Get the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_SYM, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     loc_params.type                         = H5VL_OBJECT_BY_NAME;
     loc_params.obj_type                     = H5I_get_type(loc_id);
@@ -664,7 +691,7 @@ H5Gunlink(hid_t loc_id, const char *name)
     vol_cb_args.op_type = H5VL_LINK_DELETE;
 
     /* Delete the link */
-    if (H5VL_link_specific(vol_obj, &loc_params, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_link_specific(vol_obj, &loc_params, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTDELETE, FAIL, "couldn't delete link");
 
 done:
@@ -685,6 +712,7 @@ H5Gget_linkval(hid_t loc_id, const char *name, size_t size, char *buf /*out*/)
     H5VL_object_t       *vol_obj;     /* Object of loc_id */
     H5VL_link_get_args_t vol_cb_args; /* Arguments to VOL callback */
     H5VL_loc_params_t    loc_params;
+    H5P_genplist_t      *def_dxpl;           /* Default dataset transfer property list */
     herr_t               ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -696,6 +724,10 @@ H5Gget_linkval(hid_t loc_id, const char *name, size_t size, char *buf /*out*/)
     /* Set up collective metadata if appropriate */
     if (H5CX_set_loc(loc_id) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTSET, FAIL, "can't set collective metadata read info");
+
+    /* Get the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_SYM, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Set up location struct */
     loc_params.type                         = H5VL_OBJECT_BY_NAME;
@@ -713,7 +745,7 @@ H5Gget_linkval(hid_t loc_id, const char *name, size_t size, char *buf /*out*/)
     vol_cb_args.args.get_val.buf_size = size;
 
     /* Get the link value */
-    if (H5VL_link_get(vol_obj, &loc_params, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_link_get(vol_obj, &loc_params, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTGET, FAIL, "unable to get link value");
 
 done:
@@ -740,6 +772,7 @@ H5Gset_comment(hid_t loc_id, const char *name, const char *comment)
     H5VL_object_t                     *vol_obj;      /* Object of loc_id */
     H5VL_optional_args_t               vol_cb_args;  /* Arguments to VOL callback */
     H5VL_native_object_optional_args_t obj_opt_args; /* Arguments for optional operation */
+    H5P_genplist_t                     *def_dxpl;     /* Default dataset transfer property list */
     H5VL_loc_params_t                  loc_params;
     herr_t                             ret_value = SUCCEED; /* Return value */
 
@@ -747,6 +780,10 @@ H5Gset_comment(hid_t loc_id, const char *name, const char *comment)
 
     if (!name || !*name)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "no name specified");
+
+    /* Get the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_SYM, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Set up collective metadata if appropriate */
     if (H5CX_set_loc(loc_id) < 0)
@@ -768,8 +805,7 @@ H5Gset_comment(hid_t loc_id, const char *name, const char *comment)
     vol_cb_args.args                 = &obj_opt_args;
 
     /* Set the comment */
-    if (H5VL_object_optional(vol_obj, &loc_params, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) <
-        0)
+    if (H5VL_object_optional(vol_obj, &loc_params, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTSET, FAIL, "unable to set comment value");
 
 done:
@@ -802,6 +838,7 @@ H5Gget_comment(hid_t loc_id, const char *name, size_t bufsize, char *buf /*out*/
     H5VL_object_t                     *vol_obj;      /* Object of loc_id */
     H5VL_optional_args_t               vol_cb_args;  /* Arguments to VOL callback */
     H5VL_native_object_optional_args_t obj_opt_args; /* Arguments for optional operation */
+    H5P_genplist_t                     *def_dxpl;     /* Default dataset transfer property list */
     H5VL_loc_params_t                  loc_params;
     size_t                             comment_len = 0; /* Length of comment */
     int                                ret_value;       /* Return value */
@@ -816,6 +853,10 @@ H5Gget_comment(hid_t loc_id, const char *name, size_t bufsize, char *buf /*out*/
     /* Set up collective metadata if appropriate */
     if (H5CX_set_loc(loc_id) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTSET, -1, "can't set collective metadata read info");
+
+    /* Get the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_SYM, H5E_BADTYPE, -1, "not a dataset transfer property list");
 
     /* Fill in location struct fields */
     loc_params.type                         = H5VL_OBJECT_BY_NAME;
@@ -835,8 +876,7 @@ H5Gget_comment(hid_t loc_id, const char *name, size_t bufsize, char *buf /*out*/
     vol_cb_args.args                     = &obj_opt_args;
 
     /* Get the comment */
-    if (H5VL_object_optional(vol_obj, &loc_params, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) <
-        0)
+    if (H5VL_object_optional(vol_obj, &loc_params, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTGET, -1, "unable to get comment value");
 
     /* Set return value */
@@ -876,6 +916,7 @@ H5Giterate(hid_t loc_id, const char *name, int *idx_p, H5G_iterate_t op, void *o
     H5VL_object_t                    *vol_obj;      /* Object of loc_id */
     H5VL_optional_args_t              vol_cb_args;  /* Arguments to VOL callback */
     H5VL_native_group_optional_args_t grp_opt_args; /* Arguments for optional operation */
+    H5P_genplist_t                    *def_dxpl;     /* Dataset transfer property list pointer */
     hsize_t                           last_obj = 0; /* Pointer to index value */
     herr_t                            ret_value;    /* Return value                     */
 
@@ -905,9 +946,12 @@ H5Giterate(hid_t loc_id, const char *name, int *idx_p, H5G_iterate_t op, void *o
     vol_cb_args.op_type                                              = H5VL_NATIVE_GROUP_ITERATE_OLD;
     vol_cb_args.args                                                 = &grp_opt_args;
 
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_SYM, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
     /* Call private iteration function, through VOL callback */
-    if ((ret_value = H5VL_group_optional(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL)) <
-        0)
+    if ((ret_value = H5VL_group_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL)) < 0)
         HERROR(H5E_SYM, H5E_BADITER, "error iterating over group's links");
 
     /* Set value to return */
@@ -936,6 +980,7 @@ H5Gget_num_objs(hid_t loc_id, hsize_t *num_objs /*out*/)
 {
     H5VL_object_t        *vol_obj = NULL;      /* Object of loc_id */
     H5VL_group_get_args_t vol_cb_args;         /* Arguments to VOL callback */
+    H5P_genplist_t       *def_dxpl;           /* Default dataset transfer property list */
     H5I_type_t            id_type;             /* Type of ID */
     H5G_info_t            grp_info;            /* Group information */
     herr_t                ret_value = SUCCEED; /* Return value */
@@ -949,6 +994,10 @@ H5Gget_num_objs(hid_t loc_id, hsize_t *num_objs /*out*/)
     if (!num_objs)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "bad pointer to # of objects");
 
+    /* Get default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
     /* Set up VOL callback & object access arguments */
     vol_cb_args.op_type = H5VL_GROUP_GET_INFO;
     if (H5VL_setup_self_args(loc_id, &vol_obj, &vol_cb_args.args.get_info.loc_params) < 0)
@@ -956,7 +1005,7 @@ H5Gget_num_objs(hid_t loc_id, hsize_t *num_objs /*out*/)
     vol_cb_args.args.get_info.ginfo = &grp_info;
 
     /* Retrieve the group's information */
-    if (H5VL_group_get(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_group_get(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTGET, FAIL, "unable to get group info");
 
     /* Set the number of objects [i.e. links] in the group */
@@ -986,6 +1035,7 @@ H5Gget_objinfo(hid_t loc_id, const char *name, hbool_t follow_link, H5G_stat_t *
     H5VL_object_t                    *vol_obj = NULL;      /* Object of loc_id */
     H5VL_optional_args_t              vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_group_optional_args_t grp_opt_args;        /* Arguments for optional operation */
+    H5P_genplist_t                    *def_dxpl;          /* Dataset transfer property list pointer */
     herr_t                            ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1012,8 +1062,12 @@ H5Gget_objinfo(hid_t loc_id, const char *name, hbool_t follow_link, H5G_stat_t *
     vol_cb_args.op_type                                              = H5VL_NATIVE_GROUP_GET_OBJINFO;
     vol_cb_args.args                                                 = &grp_opt_args;
 
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_SYM, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
     /* Retrieve the object's information */
-    if (H5VL_group_optional(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_group_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTGET, FAIL, "can't get info for object: '%s'", name);
 
 done:
@@ -1217,10 +1271,15 @@ H5Gget_objname_by_idx(hid_t loc_id, hsize_t idx, char *name /*out*/, size_t size
     H5VL_object_t       *vol_obj;     /* Object of loc_id */
     H5VL_link_get_args_t vol_cb_args; /* Arguments to VOL callback */
     H5VL_loc_params_t    loc_params;
+    H5P_genplist_t      *def_dxpl;           /* Default dataset transfer property list */
     size_t               name_len = 0; /* Length of object name */
     ssize_t              ret_value;    /* Return value */
 
     FUNC_ENTER_API(-1)
+
+    /* Get the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_SYM, H5E_BADTYPE, (-1), "not a dataset transfer property list");
 
     /* Set up collective metadata if appropriate */
     if (H5CX_set_loc(loc_id) < 0)
@@ -1246,7 +1305,7 @@ H5Gget_objname_by_idx(hid_t loc_id, hsize_t idx, char *name /*out*/, size_t size
     vol_cb_args.args.get_name.name_len  = &name_len;
 
     /* Call internal function */
-    if (H5VL_link_get(vol_obj, &loc_params, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_link_get(vol_obj, &loc_params, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTGET, (-1), "can't get object name");
 
     /* Set the return value */
@@ -1274,10 +1333,15 @@ H5Gget_objtype_by_idx(hid_t loc_id, hsize_t idx)
     H5VL_object_t         *vol_obj;     /* Object of loc_id */
     H5VL_object_get_args_t vol_cb_args; /* Arguments to VOL callback */
     H5VL_loc_params_t      loc_params;
+    H5P_genplist_t        *def_dxpl;    /* Default dataset transfer property list */
     H5O_info2_t            oinfo;     /* Object info (contains object type) */
     H5G_obj_t              ret_value; /* Return value */
 
     FUNC_ENTER_API(H5G_UNKNOWN)
+
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_SYM, H5E_BADTYPE, H5G_UNKNOWN, "not a dataset transfer property list");
 
     /* Set location parameters */
     loc_params.type                         = H5VL_OBJECT_BY_IDX;
@@ -1298,7 +1362,7 @@ H5Gget_objtype_by_idx(hid_t loc_id, hsize_t idx)
     vol_cb_args.args.get_info.fields = H5O_INFO_BASIC;
 
     /* Retrieve the object's basic information (which includes its type) */
-    if (H5VL_object_get(vol_obj, &loc_params, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_object_get(vol_obj, &loc_params, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_BADTYPE, H5G_UNKNOWN, "can't get object info");
 
     /* Map to group object type */

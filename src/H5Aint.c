@@ -1279,15 +1279,20 @@ H5A__shared_free(H5A_t *attr)
 static herr_t
 H5A__close_cb(H5VL_object_t *attr_vol_obj, void **request)
 {
-    herr_t ret_value = SUCCEED; /* Return value */
+    H5P_genplist_t *def_dxpl; /* Default dataset transfer property list */
+    herr_t         ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
     /* Sanity check */
     assert(attr_vol_obj);
 
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
     /* Close the attribute */
-    if (H5VL_attr_close(attr_vol_obj, H5P_DATASET_XFER_DEFAULT, request) < 0)
+    if (H5VL_attr_close(attr_vol_obj, def_dxpl, request) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CLOSEERROR, FAIL, "problem closing attribute");
 
     /* Free the VOL object */

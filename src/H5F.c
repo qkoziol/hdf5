@@ -68,14 +68,11 @@ static int H5F__get_all_count_cb(void H5_ATTR_UNUSED *obj_ptr, hid_t H5_ATTR_UNU
 static int H5F__get_all_ids_cb(void H5_ATTR_UNUSED *obj_ptr, hid_t obj_id, void *key);
 
 /* Helper routines for sync/async API calls */
-static herr_t H5F__post_open_api_common(H5VL_object_t *vol_obj, void **token_ptr);
-static hid_t  H5F__create_api_common(const char *filename, unsigned flags, H5P_genplist_t *fcpl,
-                                     H5P_genplist_t *fapl, void **token_ptr);
-static hid_t  H5F__open_api_common(const char *filename, unsigned flags, H5P_genplist_t *fapl,
-                                   void **token_ptr);
-static hid_t  H5F__reopen_api_common(hid_t file_id, void **token_ptr);
-static herr_t H5F__flush_api_common(hid_t object_id, H5F_scope_t scope, void **token_ptr,
-                                    H5VL_object_t **_vol_obj_ptr);
+static herr_t H5F__post_open_api_common(H5VL_object_t *vol_obj, H5P_genplist_t *dxpl, void **token_ptr);
+static hid_t  H5F__create_api_common(const char *filename, unsigned flags, H5P_genplist_t *fcpl, H5P_genplist_t *fapl, H5P_genplist_t *dxpl, void **token_ptr);
+static hid_t  H5F__open_api_common(const char *filename, unsigned flags, H5P_genplist_t *fapl, H5P_genplist_t *dxpl, void **token_ptr);
+static hid_t  H5F__reopen_api_common(hid_t file_id, H5P_genplist_t *dxpl, void **token_ptr);
+static herr_t H5F__flush_api_common(hid_t object_id, H5F_scope_t scope, H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
 
 /*********************/
 /* Package Variables */
@@ -108,6 +105,7 @@ H5Fget_create_plist(hid_t file_id)
 {
     H5VL_object_t       *vol_obj;                     /* File for file_id */
     H5VL_file_get_args_t vol_cb_args;                 /* Arguments to VOL callback */
+    H5P_genplist_t      *def_dxpl;                    /* Default dataset transfer property list pointer */
     hid_t                ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -116,12 +114,16 @@ H5Fget_create_plist(hid_t file_id)
     if (NULL == (vol_obj = H5VL_vol_object_verify(file_id, H5I_FILE)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "invalid file identifier");
 
+    /* Retrieve the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
+
     /* Set up VOL callback arguments */
     vol_cb_args.op_type               = H5VL_FILE_GET_FCPL;
     vol_cb_args.args.get_fcpl.fcpl_id = H5I_INVALID_HID;
 
     /* Retrieve the file creation property list */
-    if (H5VL_file_get(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_get(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTCOPY, H5I_INVALID_HID, "unable to retrieve file creation properties");
 
     /* Set return value */
@@ -154,6 +156,7 @@ H5Fget_access_plist(hid_t file_id)
 {
     H5VL_object_t       *vol_obj;                     /* File for file_id */
     H5VL_file_get_args_t vol_cb_args;                 /* Arguments to VOL callback */
+    H5P_genplist_t      *def_dxpl;                    /* Default dataset transfer property list pointer */
     hid_t                ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -162,12 +165,16 @@ H5Fget_access_plist(hid_t file_id)
     if (NULL == (vol_obj = H5VL_vol_object_verify(file_id, H5I_FILE)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "invalid file identifier");
 
+    /* Retrieve the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
+
     /* Set up VOL callback arguments */
     vol_cb_args.op_type               = H5VL_FILE_GET_FAPL;
     vol_cb_args.args.get_fapl.fapl_id = H5I_INVALID_HID;
 
     /* Retrieve the file's access property list */
-    if (H5VL_file_get(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_get(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, H5I_INVALID_HID, "can't get file access property list");
 
     /* Set return value */
@@ -232,10 +239,15 @@ H5Fget_obj_count(hid_t file_id, unsigned types)
         H5VL_object_t       *vol_obj;     /* File for file_id */
         size_t               count = 0;   /* Object count */
         H5VL_file_get_args_t vol_cb_args; /* Arguments to VOL callback */
+        H5P_genplist_t      *def_dxpl;    /* Default dataset transfer property list pointer */
 
         /* Get the file object */
         if (NULL == (vol_obj = H5VL_vol_object_verify(file_id, H5I_FILE)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, (-1), "not a file id");
+
+        /* Retrieve the default dataset transfer property list */
+        if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+            HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
 
         /* Set up VOL callback arguments */
         vol_cb_args.op_type                  = H5VL_FILE_GET_OBJ_COUNT;
@@ -243,7 +255,7 @@ H5Fget_obj_count(hid_t file_id, unsigned types)
         vol_cb_args.args.get_obj_count.count = &count;
 
         /* Get the count */
-        if (H5VL_file_get(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+        if (H5VL_file_get(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTGET, (-1), "unable to get object count in file(s)");
 
         /* Set return value */
@@ -351,10 +363,15 @@ H5Fget_obj_ids(hid_t file_id, unsigned types, size_t max_objs, hid_t *oid_list /
         H5VL_object_t       *vol_obj;     /* File for file_id */
         size_t               count = 0;   /* Object count */
         H5VL_file_get_args_t vol_cb_args; /* Arguments to VOL callback */
+        H5P_genplist_t      *def_dxpl;    /* Default dataset transfer property list pointer */
 
         /* get the file object */
         if (NULL == (vol_obj = H5VL_vol_object_verify(file_id, H5I_FILE)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, (-1), "invalid file identifier");
+
+        /* Retrieve the default dataset transfer property list */
+        if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+            HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
 
         /* Set up VOL callback arguments */
         vol_cb_args.op_type                   = H5VL_FILE_GET_OBJ_IDS;
@@ -364,7 +381,7 @@ H5Fget_obj_ids(hid_t file_id, unsigned types, size_t max_objs, hid_t *oid_list /
         vol_cb_args.args.get_obj_ids.count    = &count;
 
         /* Get the IDs */
-        if (H5VL_file_get(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+        if (H5VL_file_get(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTGET, (-1), "unable to get object ids in file(s)");
 
         /* Set return value */
@@ -425,6 +442,7 @@ H5Fget_vfd_handle(hid_t file_id, hid_t fapl_id, void **file_handle /*out*/)
     H5VL_object_t                   *vol_obj;             /* File info */
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
+    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
     herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -449,8 +467,12 @@ H5Fget_vfd_handle(hid_t file_id, hid_t fapl_id, void **file_handle /*out*/)
     vol_cb_args.op_type                      = H5VL_NATIVE_FILE_GET_VFD_HANDLE;
     vol_cb_args.args                         = &file_opt_args;
 
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
     /* Retrieve the VFD handle for the file */
-    if (H5VL_file_optional(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to get VFD handle");
 
 done:
@@ -472,6 +494,7 @@ H5Fis_accessible(const char *filename, hid_t fapl_id)
 {
     H5VL_file_specific_args_t vol_cb_args;           /* Arguments to VOL callback */
     bool                      is_accessible = false; /* Whether file is accessible */
+    H5P_genplist_t            *def_dxpl;            /* Default dataset transfer property list pointer */
     htri_t                    ret_value;             /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -486,6 +509,10 @@ H5Fis_accessible(const char *filename, hid_t fapl_id)
     else if (true != H5P_isa_class(fapl_id, H5P_FILE_ACCESS))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not file access property list");
 
+    /* Retrieve the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
     /* Set up VOL callback arguments */
     vol_cb_args.op_type                       = H5VL_FILE_IS_ACCESSIBLE;
     vol_cb_args.args.is_accessible.filename   = filename;
@@ -493,7 +520,7 @@ H5Fis_accessible(const char *filename, hid_t fapl_id)
     vol_cb_args.args.is_accessible.accessible = &is_accessible;
 
     /* Check if file is accessible */
-    if (H5VL_file_specific(NULL, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_specific(NULL, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_NOTHDF5, FAIL, "unable to determine if file is accessible as HDF5");
 
     /* Set return value */
@@ -513,7 +540,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5F__post_open_api_common(H5VL_object_t *vol_obj, void **token_ptr)
+H5F__post_open_api_common(H5VL_object_t *vol_obj, H5P_genplist_t *dxpl, void **token_ptr)
 {
     uint64_t supported;           /* Whether 'post open' operation is supported by VOL connector */
     herr_t   ret_value = SUCCEED; /* Return value     */
@@ -532,7 +559,7 @@ H5F__post_open_api_common(H5VL_object_t *vol_obj, void **token_ptr)
         vol_cb_args.args    = NULL;
 
         /* Make the 'post open' callback */
-        if (H5VL_file_optional(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, token_ptr) < 0)
+        if (H5VL_file_optional(vol_obj, &vol_cb_args, dxpl, token_ptr) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, FAIL, "unable to make file 'post open' callback");
     } /* end if */
 
@@ -550,8 +577,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static hid_t
-H5F__create_api_common(const char *filename, unsigned flags, H5P_genplist_t *fcpl, H5P_genplist_t *fapl,
-                       void **token_ptr)
+H5F__create_api_common(const char *filename, unsigned flags, H5P_genplist_t *fcpl, H5P_genplist_t *fapl, H5P_genplist_t *dxpl, void **token_ptr)
 {
     hid_t                 fapl_id;                     /* ID for FAPL */
     void                 *new_file = NULL;             /* File struct for new file                 */
@@ -598,8 +624,7 @@ H5F__create_api_common(const char *filename, unsigned flags, H5P_genplist_t *fcp
     flags |= H5F_ACC_RDWR | H5F_ACC_CREAT;
 
     /* Create a new file or truncate an existing file through the VOL */
-    if (NULL == (new_file = H5VL_file_create(connector_prop.connector, filename, flags, fcpl, fapl,
-                                             H5P_DATASET_XFER_DEFAULT, token_ptr)))
+    if (NULL == (new_file = H5VL_file_create(connector_prop.connector, filename, flags, fcpl, fapl, dxpl, token_ptr)))
         HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, H5I_INVALID_HID, "unable to create file");
 
     /* Get an ID for the file */
@@ -641,6 +666,7 @@ H5Fcreate(const char *filename, unsigned flags, hid_t fcpl_id, hid_t fapl_id)
     H5VL_object_t  *vol_obj = NULL;              /* File object */
     H5P_genplist_t *fcpl;                        /* File creation property list pointer */
     H5P_genplist_t *fapl;                        /* File access property list pointer */
+    H5P_genplist_t *def_dxpl;                    /* Default dataset transfer property list pointer */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -657,8 +683,12 @@ H5Fcreate(const char *filename, unsigned flags, hid_t fcpl_id, hid_t fapl_id)
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a file access property list");
 
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
+
     /* Create the file synchronously */
-    if ((ret_value = H5F__create_api_common(filename, flags, fcpl, fapl, NULL)) < 0)
+    if ((ret_value = H5F__create_api_common(filename, flags, fcpl, fapl, def_dxpl, NULL)) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTCREATE, H5I_INVALID_HID, "unable to synchronously create file");
 
     /* Get the file object */
@@ -666,7 +696,7 @@ H5Fcreate(const char *filename, unsigned flags, hid_t fcpl_id, hid_t fapl_id)
         HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, H5I_INVALID_HID, "invalid object identifier");
 
     /* Perform 'post open' operation */
-    if (H5F__post_open_api_common(vol_obj, NULL) < 0)
+    if (H5F__post_open_api_common(vol_obj, def_dxpl, NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, H5I_INVALID_HID, "'post open' operation failed");
 
 done:
@@ -691,6 +721,7 @@ H5Fcreate_async(const char *app_file, const char *app_func, unsigned app_line, c
     H5VL_object_t  *vol_obj = NULL;              /* File object */
     H5P_genplist_t *fcpl;                        /* File creation property list pointer */
     H5P_genplist_t *fapl;                        /* File access property list pointer */
+    H5P_genplist_t *def_dxpl;                    /* Default dataset transfer property list pointer */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
@@ -709,12 +740,16 @@ H5Fcreate_async(const char *app_file, const char *app_func, unsigned app_line, c
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a file access property list");
 
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
+
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Create the file, possibly asynchronously */
-    if ((ret_value = H5F__create_api_common(filename, flags, fcpl, fapl, token_ptr)) < 0)
+    if ((ret_value = H5F__create_api_common(filename, flags, fcpl, fapl, def_dxpl, token_ptr)) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTCREATE, H5I_INVALID_HID, "unable to asynchronously create file");
 
     /* Get the file object */
@@ -737,7 +772,7 @@ H5Fcreate_async(const char *app_file, const char *app_func, unsigned app_line, c
     token = NULL;
 
     /* Perform 'post open' operation */
-    if (H5F__post_open_api_common(vol_obj, token_ptr) < 0)
+    if (H5F__post_open_api_common(vol_obj, def_dxpl, token_ptr) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, H5I_INVALID_HID, "'post open' operation failed");
 
     /* If a token was created, add the token to the event set */
@@ -764,7 +799,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static hid_t
-H5F__open_api_common(const char *filename, unsigned flags, H5P_genplist_t *fapl, void **token_ptr)
+H5F__open_api_common(const char *filename, unsigned flags, H5P_genplist_t *fapl, H5P_genplist_t *dxpl, void **token_ptr)
 {
     hid_t                 fapl_id;                     /* ID for FAPL */
     void                 *new_file = NULL;             /* File struct for new file                 */
@@ -805,8 +840,7 @@ H5F__open_api_common(const char *filename, unsigned flags, H5P_genplist_t *fapl,
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID, "can't set VOL connector info in API context");
 
     /* Open the file through the VOL layer */
-    if (NULL == (new_file = H5VL_file_open(connector_prop.connector, filename, flags, fapl,
-                                           H5P_DATASET_XFER_DEFAULT, token_ptr)))
+    if (NULL == (new_file = H5VL_file_open(connector_prop.connector, filename, flags, fapl, dxpl, token_ptr)))
         HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, H5I_INVALID_HID, "unable to open file");
 
     /* Get an ID for the file */
@@ -841,6 +875,7 @@ H5Fopen(const char *filename, unsigned flags, hid_t fapl_id)
 {
     H5VL_object_t  *vol_obj = NULL;              /* File object */
     H5P_genplist_t *fapl;                        /* File access property list pointer */
+    H5P_genplist_t *def_dxpl;                   /* Default dataset transfer property list pointer */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -850,7 +885,12 @@ H5Fopen(const char *filename, unsigned flags, hid_t fapl_id)
         fapl_id = H5P_FILE_ACCESS_DEFAULT;
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a file access property list");
-    if ((ret_value = H5F__open_api_common(filename, flags, fapl, NULL)) < 0)
+
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
+
+    if ((ret_value = H5F__open_api_common(filename, flags, fapl, def_dxpl, NULL)) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, H5I_INVALID_HID, "unable to synchronously open file");
 
     /* Get the file object */
@@ -858,7 +898,7 @@ H5Fopen(const char *filename, unsigned flags, hid_t fapl_id)
         HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, H5I_INVALID_HID, "invalid object identifier");
 
     /* Perform 'post open' operation */
-    if (H5F__post_open_api_common(vol_obj, NULL) < 0)
+    if (H5F__post_open_api_common(vol_obj, def_dxpl, NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, H5I_INVALID_HID, "'post open' operation failed");
 
 done:
@@ -883,6 +923,7 @@ H5Fopen_async(const char *app_file, const char *app_func, unsigned app_line, con
 {
     H5VL_object_t  *vol_obj = NULL;              /* File object */
     H5P_genplist_t *fapl;                        /* File access property list pointer */
+    H5P_genplist_t *def_dxpl;                   /* Default dataset transfer property list pointer */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
@@ -898,7 +939,13 @@ H5Fopen_async(const char *app_file, const char *app_func, unsigned app_line, con
         fapl_id = H5P_FILE_ACCESS_DEFAULT;
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a file access property list");
-    if ((ret_value = H5F__open_api_common(filename, flags, fapl, token_ptr)) < 0)
+
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
+
+    /* Open the file, possibly asynchronously */
+    if ((ret_value = H5F__open_api_common(filename, flags, fapl, def_dxpl, token_ptr)) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, H5I_INVALID_HID, "unable to asynchronously open file");
 
     /* Get the file object */
@@ -921,7 +968,7 @@ H5Fopen_async(const char *app_file, const char *app_func, unsigned app_line, con
     token = NULL;
 
     /* Perform 'post open' operation */
-    if (H5F__post_open_api_common(vol_obj, token_ptr) < 0)
+    if (H5F__post_open_api_common(vol_obj, def_dxpl, token_ptr) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, H5I_INVALID_HID, "'post open' operation failed");
 
     /* If a token was created, add the token to the event set */
@@ -946,7 +993,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5F__flush_api_common(hid_t object_id, H5F_scope_t scope, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
+H5F__flush_api_common(hid_t object_id, H5F_scope_t scope, H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
 {
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
@@ -973,7 +1020,7 @@ H5F__flush_api_common(hid_t object_id, H5F_scope_t scope, void **token_ptr, H5VL
     vol_cb_args.args.flush.scope    = scope;
 
     /* Flush the object */
-    if (H5VL_file_specific(*vol_obj_ptr, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, token_ptr) < 0)
+    if (H5VL_file_specific(*vol_obj_ptr, &vol_cb_args, dxpl, token_ptr) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTFLUSH, FAIL, "unable to flush file");
 
 done:
@@ -994,12 +1041,17 @@ done:
 herr_t
 H5Fflush(hid_t object_id, H5F_scope_t scope)
 {
+    H5P_genplist_t            *def_dxpl;             /* Default dataset transfer property list pointer */
     herr_t ret_value = SUCCEED; /* Return value     */
 
     FUNC_ENTER_API(FAIL)
 
+    /* Retrieve the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
     /* Flush the file synchronously */
-    if (H5F__flush_api_common(object_id, scope, NULL, NULL) < 0)
+    if (H5F__flush_api_common(object_id, scope, def_dxpl, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTFLUSH, FAIL, "unable to synchronously flush file");
 
 done:
@@ -1021,18 +1073,23 @@ H5Fflush_async(const char *app_file, const char *app_func, unsigned app_line, hi
                H5F_scope_t scope, hid_t es_id)
 {
     H5VL_object_t *vol_obj   = NULL;            /* Object for loc_id */
+    H5P_genplist_t            *def_dxpl;             /* Default dataset transfer property list pointer */
     void          *token     = NULL;            /* Request token for async operation        */
     void         **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     herr_t         ret_value = SUCCEED;         /* Return value     */
 
     FUNC_ENTER_API(FAIL)
 
+    /* Retrieve the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Flush the file asynchronously */
-    if (H5F__flush_api_common(object_id, scope, token_ptr, &vol_obj) < 0)
+    if (H5F__flush_api_common(object_id, scope, def_dxpl, token_ptr, &vol_obj) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTFLUSH, FAIL, "unable to asynchronously flush file");
 
     /* If a token was created, add the token to the event set */
@@ -1157,6 +1214,7 @@ H5Fdelete(const char *filename, hid_t fapl_id)
     H5P_genplist_t           *fapl;                  /* Property list pointer */
     H5VL_connector_prop_t     connector_prop;        /* Property for VOL connector ID & info */
     H5VL_file_specific_args_t vol_cb_args;           /* Arguments to VOL callback */
+    H5P_genplist_t            *def_dxpl;            /* Default dataset transfer property list pointer */
     bool                      is_accessible = false; /* Whether file is accessible */
     herr_t                    ret_value     = SUCCEED;
 
@@ -1184,6 +1242,10 @@ H5Fdelete(const char *filename, hid_t fapl_id)
     if (H5CX_set_vol_connector_prop(&connector_prop) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set VOL connector info in API context");
 
+    /* Retrieve the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
     /* Set up VOL callback arguments */
     vol_cb_args.op_type                       = H5VL_FILE_IS_ACCESSIBLE;
     vol_cb_args.args.is_accessible.filename   = filename;
@@ -1191,7 +1253,7 @@ H5Fdelete(const char *filename, hid_t fapl_id)
     vol_cb_args.args.is_accessible.accessible = &is_accessible;
 
     /* Make sure this is HDF5 storage for this VOL connector */
-    if (H5VL_file_specific(NULL, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_specific(NULL, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_NOTHDF5, FAIL, "unable to determine if file is accessible as HDF5");
     if (!is_accessible)
         HGOTO_ERROR(H5E_FILE, H5E_NOTHDF5, FAIL, "not an HDF5 file");
@@ -1202,7 +1264,7 @@ H5Fdelete(const char *filename, hid_t fapl_id)
     vol_cb_args.args.del.fapl_id  = fapl_id;
 
     /* Delete the file */
-    if (H5VL_file_specific(NULL, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_specific(NULL, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTDELETEFILE, FAIL, "unable to delete the file");
 
 done:
@@ -1225,6 +1287,7 @@ H5Fmount(hid_t loc_id, const char *name, hid_t child_id, hid_t plist_id)
     H5VL_object_t             *loc_vol_obj   = NULL; /* Parent object        */
     H5VL_object_t             *child_vol_obj = NULL; /* Child object         */
     H5VL_group_specific_args_t vol_cb_args;          /* Arguments to VOL callback */
+    H5P_genplist_t            *def_dxpl;            /* Default dataset transfer property list */
     void                      *grp = NULL;           /* Root group opened */
     H5I_type_t                 loc_type;             /* ID type of location  */
     htri_t                     same_connector; /* Whether parent and child files use the same connector */
@@ -1246,6 +1309,10 @@ H5Fmount(hid_t loc_id, const char *name, hid_t child_id, hid_t plist_id)
         plist_id = H5P_FILE_MOUNT_DEFAULT;
     else if (true != H5P_isa_class(plist_id, H5P_FILE_MOUNT))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "plist_id is not a file mount property list ID");
+
+    /* Get default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Set up collective metadata if appropriate */
     if (H5CX_set_loc(loc_id) < 0)
@@ -1273,8 +1340,7 @@ H5Fmount(hid_t loc_id, const char *name, hid_t child_id, hid_t plist_id)
         loc_params.obj_type = loc_type;
 
         /* Open the root group object */
-        if (NULL ==
-            (grp = H5VL_group_open(vol_obj, &loc_params, "/", def_gapl, H5P_DATASET_XFER_DEFAULT, NULL)))
+        if (NULL == (grp = H5VL_group_open(vol_obj, &loc_params, "/", def_gapl, def_dxpl, NULL)))
             HGOTO_ERROR(H5E_FILE, H5E_CANTOPENOBJ, FAIL, "unable to open group");
 
         /* Create a VOL object for the root group */
@@ -1292,32 +1358,29 @@ H5Fmount(hid_t loc_id, const char *name, hid_t child_id, hid_t plist_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "could not get child object");
 
     /* Check if both objects are associated with the same VOL connector */
-    if ((same_connector =
-             H5VL_conn_same_class(H5VL_OBJ_CONNECTOR(loc_vol_obj), H5VL_OBJ_CONNECTOR(child_vol_obj))) < 0)
+    if ((same_connector = H5VL_conn_same_class(H5VL_OBJ_CONNECTOR(loc_vol_obj), H5VL_OBJ_CONNECTOR(child_vol_obj))) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTCOMPARE, FAIL, "can't compare connector classes");
     if (!same_connector)
-        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL,
-                    "can't mount file onto object from different VOL connector");
+        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "can't mount file onto object from different VOL connector");
 
     /* Set up VOL callback arguments */
     vol_cb_args.op_type         = H5VL_GROUP_MOUNT;
     vol_cb_args.args.mount.name = name;
-    vol_cb_args.args.mount.child_file =
-        H5VL_OBJ_DATA(child_vol_obj); /* Don't unwrap fully, so each connector can see its object */
+    vol_cb_args.args.mount.child_file = H5VL_OBJ_DATA(child_vol_obj); /* Don't unwrap fully, so each connector can see its object */
     vol_cb_args.args.mount.fmpl_id = plist_id;
 
     /* Perform the mount operation */
     /* (This is on a group, so that the VOL framework always sees groups for
      *  the 'mount' operation, instead of mixing files and groups)
      */
-    if (H5VL_group_specific(loc_vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_group_specific(loc_vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_MOUNT, FAIL, "unable to mount file");
 
 done:
     /* Clean up if we temporarily opened the root group for a file */
     if (grp) {
         assert(loc_vol_obj);
-        if (H5VL_group_close(loc_vol_obj, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+        if (H5VL_group_close(loc_vol_obj, def_dxpl, H5_REQUEST_NULL) < 0)
             HDONE_ERROR(H5E_FILE, H5E_CLOSEERROR, FAIL, "unable to release group");
         if (H5VL_free_object(loc_vol_obj) < 0)
             HDONE_ERROR(H5E_FILE, H5E_CANTDEC, FAIL, "unable to free VOL object");
@@ -1347,6 +1410,7 @@ H5Funmount(hid_t loc_id, const char *name)
 {
     H5VL_object_t             *loc_vol_obj = NULL;  /* Parent object        */
     H5VL_group_specific_args_t vol_cb_args;         /* Arguments to VOL callback */
+    H5P_genplist_t            *def_dxpl;            /* Default dataset transfer property list */
     void                      *grp = NULL;          /* Root group opened */
     H5I_type_t                 loc_type;            /* ID type of location  */
     herr_t                     ret_value = SUCCEED; /* Return value         */
@@ -1361,6 +1425,10 @@ H5Funmount(hid_t loc_id, const char *name)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "name parameter cannot be NULL");
     if (!*name)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "name parameter cannot be the empty string");
+
+    /* Get default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Set up collective metadata if appropriate */
     if (H5CX_set_loc(loc_id) < 0)
@@ -1388,8 +1456,7 @@ H5Funmount(hid_t loc_id, const char *name)
         loc_params.obj_type = loc_type;
 
         /* Open the root group object */
-        if (NULL ==
-            (grp = H5VL_group_open(vol_obj, &loc_params, "/", def_gapl, H5P_DATASET_XFER_DEFAULT, NULL)))
+        if (NULL == (grp = H5VL_group_open(vol_obj, &loc_params, "/", def_gapl, def_dxpl, NULL)))
             HGOTO_ERROR(H5E_FILE, H5E_CANTOPENOBJ, FAIL, "unable to open group");
 
         /* Create a VOL object for the root group */
@@ -1410,14 +1477,14 @@ H5Funmount(hid_t loc_id, const char *name)
     /* (This is on a group, so that the VOL framework always sees groups for
      *  the 'unmount' operation, instead of mixing files and groups)
      */
-    if (H5VL_group_specific(loc_vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_group_specific(loc_vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_MOUNT, FAIL, "unable to unmount file");
 
 done:
     /* Clean up if we temporarily opened the root group for a file */
     if (grp) {
         assert(loc_vol_obj);
-        if (H5VL_group_close(loc_vol_obj, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+        if (H5VL_group_close(loc_vol_obj, def_dxpl, H5_REQUEST_NULL) < 0)
             HDONE_ERROR(H5E_FILE, H5E_CLOSEERROR, FAIL, "unable to release group");
         if (H5VL_free_object(loc_vol_obj) < 0)
             HDONE_ERROR(H5E_FILE, H5E_CANTDEC, FAIL, "unable to free VOL object");
@@ -1438,7 +1505,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static hid_t
-H5F__reopen_api_common(hid_t file_id, void **token_ptr)
+H5F__reopen_api_common(hid_t file_id, H5P_genplist_t *dxpl, void **token_ptr)
 {
     H5VL_object_t            *vol_obj = NULL;                /* Object for loc_id */
     H5VL_file_specific_args_t vol_cb_args;                   /* Arguments to VOL callback */
@@ -1456,7 +1523,7 @@ H5F__reopen_api_common(hid_t file_id, void **token_ptr)
     vol_cb_args.args.reopen.file = &reopen_file;
 
     /* Reopen the file */
-    if (H5VL_file_specific(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, token_ptr) < 0)
+    if (H5VL_file_specific(vol_obj, &vol_cb_args, dxpl, token_ptr) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, H5I_INVALID_HID, "unable to reopen file via the VOL connector");
 
     /* Make sure that worked */
@@ -1490,12 +1557,17 @@ hid_t
 H5Freopen(hid_t file_id)
 {
     H5VL_object_t *vol_obj   = NULL;            /* File object */
+    H5P_genplist_t            *def_dxpl;             /* Default dataset transfer property list pointer */
     hid_t          ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
+    /* Retrieve the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
+
     /* Reopen the file synchronously */
-    if ((ret_value = H5F__reopen_api_common(file_id, NULL)) < 0)
+    if ((ret_value = H5F__reopen_api_common(file_id, def_dxpl, NULL)) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, H5I_INVALID_HID, "unable to synchronously reopen file");
 
     /* Get the file object */
@@ -1503,7 +1575,7 @@ H5Freopen(hid_t file_id)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, H5I_INVALID_HID, "can't get handle for re-opened file");
 
     /* Perform 'post open' operation */
-    if (H5F__post_open_api_common(vol_obj, NULL) < 0)
+    if (H5F__post_open_api_common(vol_obj, def_dxpl, NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, H5I_INVALID_HID, "'post open' operation failed");
 
 done:
@@ -1529,16 +1601,21 @@ H5Freopen_async(const char *app_file, const char *app_func, unsigned app_line, h
     H5VL_object_t *vol_obj   = NULL;            /* Object for loc_id */
     void          *token     = NULL;            /* Request token for async operation        */
     void         **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
+    H5P_genplist_t            *def_dxpl;             /* Default dataset transfer property list pointer */
     hid_t          ret_value;                   /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
+
+    /* Retrieve the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Reopen the file, possibly asynchronously */
-    if ((ret_value = H5F__reopen_api_common(file_id, token_ptr)) < 0)
+    if ((ret_value = H5F__reopen_api_common(file_id, def_dxpl, token_ptr)) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, H5I_INVALID_HID, "unable to asynchronously reopen file");
 
     /* Get the file object */
@@ -1561,7 +1638,7 @@ H5Freopen_async(const char *app_file, const char *app_func, unsigned app_line, h
     token = NULL;
 
     /* Perform 'post open' operation */
-    if (H5F__post_open_api_common(vol_obj, token_ptr) < 0)
+    if (H5F__post_open_api_common(vol_obj, def_dxpl, token_ptr) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, H5I_INVALID_HID, "'post open' operation failed");
 
     /* If a token was created, add the token to the event set */
@@ -1597,17 +1674,22 @@ H5Fget_intent(hid_t file_id, unsigned *intent_flags /*out*/)
     if (intent_flags) {
         H5VL_object_t       *vol_obj;     /* File for file_id */
         H5VL_file_get_args_t vol_cb_args; /* Arguments to VOL callback */
+        H5P_genplist_t      *def_dxpl;    /* Default dataset transfer property list pointer */
 
         /* Get the internal file structure */
         if (NULL == (vol_obj = H5VL_vol_object_verify(file_id, H5I_FILE)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid file identifier");
+
+        /* Retrieve the default dataset transfer property list */
+        if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+            HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
 
         /* Set up VOL callback arguments */
         vol_cb_args.op_type               = H5VL_FILE_GET_INTENT;
         vol_cb_args.args.get_intent.flags = intent_flags;
 
         /* Get the flags */
-        if (H5VL_file_get(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+        if (H5VL_file_get(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to get file's intent flags");
     } /* end if */
 
@@ -1636,17 +1718,22 @@ H5Fget_fileno(hid_t file_id, unsigned long *fnumber /*out*/)
     if (fnumber) {
         H5VL_object_t       *vol_obj;     /* File for file_id */
         H5VL_file_get_args_t vol_cb_args; /* Arguments to VOL callback */
+        H5P_genplist_t      *def_dxpl;    /* Default dataset transfer property list pointer */
 
         /* Get the internal file structure */
         if (NULL == (vol_obj = H5VL_vol_object_verify(file_id, H5I_FILE)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid file identifier");
+
+        /* Retrieve the default dataset transfer property list */
+        if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+            HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
 
         /* Set up VOL callback arguments */
         vol_cb_args.op_type                = H5VL_FILE_GET_FILENO;
         vol_cb_args.args.get_fileno.fileno = fnumber;
 
         /* Get the 'file number' */
-        if (H5VL_file_get(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+        if (H5VL_file_get(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to get file's 'file number'");
     } /* end if */
 
@@ -1669,6 +1756,7 @@ H5Fget_freespace(hid_t file_id)
     H5VL_object_t                   *vol_obj = NULL;
     H5VL_optional_args_t             vol_cb_args;        /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;      /* Arguments for optional operation */
+    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
     hsize_t                          file_freespace = 0; /* Size of freespace in the file */
     hssize_t                         ret_value;          /* Return value */
 
@@ -1683,8 +1771,12 @@ H5Fget_freespace(hid_t file_id)
     vol_cb_args.op_type              = H5VL_NATIVE_FILE_GET_FREE_SPACE;
     vol_cb_args.args                 = &file_opt_args;
 
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, (-1), "not a dataset transfer property list");
+
     /* Get the amount of free space in the file */
-    if (H5VL_file_optional(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, (-1), "unable to get file free space");
 
     /* Set return value */
@@ -1711,6 +1803,7 @@ H5Fget_filesize(hid_t file_id, hsize_t *size /*out*/)
     H5VL_object_t                   *vol_obj;             /* File info */
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
+    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
     herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1726,8 +1819,12 @@ H5Fget_filesize(hid_t file_id, hsize_t *size /*out*/)
     vol_cb_args.op_type         = H5VL_NATIVE_FILE_GET_SIZE;
     vol_cb_args.args            = &file_opt_args;
 
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
     /* Get the file size */
-    if (H5VL_file_optional(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to get file size");
 
 done:
@@ -1777,6 +1874,7 @@ H5Fget_file_image(hid_t file_id, void *buf /*out*/, size_t buf_len)
     H5VL_object_t                   *vol_obj;       /* File object for file ID  */
     H5VL_optional_args_t             vol_cb_args;   /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args; /* Arguments for optional operation */
+    H5P_genplist_t                   *def_dxpl;     /* Dataset transfer property list pointer */
     size_t                           image_len = 0; /* Size of image buffer */
     ssize_t                          ret_value;     /* Return value             */
 
@@ -1793,8 +1891,12 @@ H5Fget_file_image(hid_t file_id, void *buf /*out*/, size_t buf_len)
     vol_cb_args.op_type                    = H5VL_NATIVE_FILE_GET_FILE_IMAGE;
     vol_cb_args.args                       = &file_opt_args;
 
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, (-1), "not a dataset transfer property list");
+
     /* Get the file image */
-    if (H5VL_file_optional(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, (-1), "unable to get file image");
 
     /* Set return value */
@@ -1824,6 +1926,7 @@ H5Fget_mdc_config(hid_t file_id, H5AC_cache_config_t *config /*out*/)
     H5VL_object_t                   *vol_obj = NULL;
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
+    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
     herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1841,8 +1944,12 @@ H5Fget_mdc_config(hid_t file_id, H5AC_cache_config_t *config /*out*/)
     vol_cb_args.op_type                 = H5VL_NATIVE_FILE_GET_MDC_CONF;
     vol_cb_args.args                    = &file_opt_args;
 
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
     /* Get the metadata cache configuration */
-    if (H5VL_file_optional(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to get metadata cache configuration");
 
 done:
@@ -1866,6 +1973,7 @@ H5Fset_mdc_config(hid_t file_id, const H5AC_cache_config_t *config_ptr)
     H5VL_object_t                   *vol_obj = NULL;
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
+    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
     herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1879,8 +1987,12 @@ H5Fset_mdc_config(hid_t file_id, const H5AC_cache_config_t *config_ptr)
     vol_cb_args.op_type                 = H5VL_NATIVE_FILE_SET_MDC_CONFIG;
     vol_cb_args.args                    = &file_opt_args;
 
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
     /* Set the metadata cache configuration  */
-    if (H5VL_file_optional(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "unable to set metadata cache configuration");
 
 done:
@@ -1905,6 +2017,7 @@ H5Fget_mdc_hit_rate(hid_t file_id, double *hit_rate /*out*/)
     H5VL_object_t                   *vol_obj;
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
+    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
     herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1920,8 +2033,12 @@ H5Fget_mdc_hit_rate(hid_t file_id, double *hit_rate /*out*/)
     vol_cb_args.op_type                     = H5VL_NATIVE_FILE_GET_MDC_HR;
     vol_cb_args.args                        = &file_opt_args;
 
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
     /* Get the current hit rate */
-    if (H5VL_file_optional(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to get MDC hit rate");
 
 done:
@@ -1948,6 +2065,7 @@ H5Fget_mdc_size(hid_t file_id, size_t *max_size /*out*/, size_t *min_clean_size 
     H5VL_object_t                   *vol_obj;
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
+    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
     uint32_t                         index_len = 0;       /* Size of cache index */
     herr_t                           ret_value = SUCCEED; /* Return value */
 
@@ -1965,8 +2083,12 @@ H5Fget_mdc_size(hid_t file_id, size_t *max_size /*out*/, size_t *min_clean_size 
     vol_cb_args.op_type                        = H5VL_NATIVE_FILE_GET_MDC_SIZE;
     vol_cb_args.args                           = &file_opt_args;
 
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
     /* Get the size data */
-    if (H5VL_file_optional(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to get MDC size");
 
     /* Set mis-matched return value */
@@ -1998,6 +2120,7 @@ H5Freset_mdc_hit_rate_stats(hid_t file_id)
 {
     H5VL_object_t       *vol_obj = NULL;
     H5VL_optional_args_t vol_cb_args;         /* Arguments to VOL callback */
+    H5P_genplist_t       *def_dxpl;          /* Dataset transfer property list pointer */
     herr_t               ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2010,8 +2133,12 @@ H5Freset_mdc_hit_rate_stats(hid_t file_id)
     vol_cb_args.op_type = H5VL_NATIVE_FILE_RESET_MDC_HIT_RATE;
     vol_cb_args.args    = NULL;
 
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
     /* Reset the hit rate statistic */
-    if (H5VL_file_optional(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't reset cache hit rate");
 
 done:
@@ -2042,6 +2169,7 @@ H5Fget_name(hid_t obj_id, char *name /*out*/, size_t size)
 {
     H5VL_object_t       *vol_obj;     /* File for file_id */
     H5VL_file_get_args_t vol_cb_args; /* Arguments to VOL callback */
+    H5P_genplist_t      *def_dxpl;    /* Default dataset transfer property list pointer */
     H5I_type_t           type;
     size_t               file_name_len = 0;  /* Length of file name */
     ssize_t              ret_value     = -1; /* Return value */
@@ -2058,6 +2186,10 @@ H5Fget_name(hid_t obj_id, char *name /*out*/, size_t size)
     if (NULL == (vol_obj = H5VL_vol_object(obj_id)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, (-1), "invalid file identifier");
 
+    /* Retrieve the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
+
     /* Set up VOL callback arguments */
     vol_cb_args.op_type                     = H5VL_FILE_GET_NAME;
     vol_cb_args.args.get_name.type          = type;
@@ -2066,7 +2198,7 @@ H5Fget_name(hid_t obj_id, char *name /*out*/, size_t size)
     vol_cb_args.args.get_name.file_name_len = &file_name_len;
 
     /* Get the filename via the VOL */
-    if (H5VL_file_get(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_get(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, (-1), "unable to get file name");
 
     /* Set the return value */
@@ -2095,6 +2227,7 @@ H5Fget_info2(hid_t obj_id, H5F_info2_t *finfo /*out*/)
     H5VL_object_t                   *vol_obj = NULL;
     H5VL_optional_args_t             vol_cb_args;   /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args; /* Arguments for optional operation */
+    H5P_genplist_t                   *def_dxpl;     /* Dataset transfer property list pointer */
     H5I_type_t                       type;
     herr_t                           ret_value = SUCCEED; /* Return value */
 
@@ -2120,8 +2253,12 @@ H5Fget_info2(hid_t obj_id, H5F_info2_t *finfo /*out*/)
     vol_cb_args.op_type          = H5VL_NATIVE_FILE_GET_INFO;
     vol_cb_args.args             = &file_opt_args;
 
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
     /* Get the file information */
-    if (H5VL_file_optional(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to retrieve file info");
 
 done:
@@ -2144,6 +2281,7 @@ H5Fget_metadata_read_retry_info(hid_t file_id, H5F_retry_info_t *info /*out*/)
     H5VL_object_t                   *vol_obj = NULL;      /* File object for file ID */
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
+    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
     herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2161,8 +2299,12 @@ H5Fget_metadata_read_retry_info(hid_t file_id, H5F_retry_info_t *info /*out*/)
     vol_cb_args.op_type                             = H5VL_NATIVE_FILE_GET_METADATA_READ_RETRY_INFO;
     vol_cb_args.args                                = &file_opt_args;
 
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
     /* Get the retry info */
-    if (H5VL_file_optional(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get metadata read retry info");
 
 done:
@@ -2187,6 +2329,7 @@ H5Fget_free_sections(hid_t file_id, H5F_mem_t type, size_t nsects, H5F_sect_info
     H5VL_object_t                   *vol_obj = NULL;
     H5VL_optional_args_t             vol_cb_args;     /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;   /* Arguments for optional operation */
+    H5P_genplist_t                   *def_dxpl;     /* Dataset transfer property list pointer */
     size_t                           sect_count = 0;  /* Number of sections */
     ssize_t                          ret_value  = -1; /* Return value */
 
@@ -2206,8 +2349,12 @@ H5Fget_free_sections(hid_t file_id, H5F_mem_t type, size_t nsects, H5F_sect_info
     vol_cb_args.op_type                        = H5VL_NATIVE_FILE_GET_FREE_SECTIONS;
     vol_cb_args.args                           = &file_opt_args;
 
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, (-1), "not a dataset transfer property list");
+
     /* Get the free-space section information in the file */
-    if (H5VL_file_optional(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, (-1), "unable to get file free sections");
 
     /* Set return value */
@@ -2231,9 +2378,10 @@ done:
 herr_t
 H5Fclear_elink_file_cache(hid_t file_id)
 {
-    H5VL_object_t       *vol_obj;             /* File */
-    H5VL_optional_args_t vol_cb_args;         /* Arguments to VOL callback */
-    herr_t               ret_value = SUCCEED; /* Return value */
+    H5VL_object_t                   *vol_obj;             /* File */
+    H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
+    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
+    herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -2245,8 +2393,12 @@ H5Fclear_elink_file_cache(hid_t file_id)
     vol_cb_args.op_type = H5VL_NATIVE_FILE_CLEAR_ELINK_CACHE;
     vol_cb_args.args    = NULL;
 
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
     /* Release the EFC */
-    if (H5VL_file_optional(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTRELEASE, FAIL, "can't release external file cache");
 
 done:
@@ -2290,9 +2442,10 @@ done:
 herr_t
 H5Fstart_swmr_write(hid_t file_id)
 {
-    H5VL_object_t       *vol_obj = NULL;      /* File info */
-    H5VL_optional_args_t vol_cb_args;         /* Arguments to VOL callback */
-    herr_t               ret_value = SUCCEED; /* Return value */
+    H5VL_object_t                   *vol_obj = NULL;      /* File info */
+    H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
+    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
+    herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -2308,8 +2461,12 @@ H5Fstart_swmr_write(hid_t file_id)
     vol_cb_args.op_type = H5VL_NATIVE_FILE_START_SWMR_WRITE;
     vol_cb_args.args    = NULL;
 
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
     /* Start SWMR writing */
-    if (H5VL_file_optional(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_SYSTEM, FAIL, "unable to start SWMR writing");
 
 done:
@@ -2329,9 +2486,10 @@ done:
 herr_t
 H5Fstart_mdc_logging(hid_t file_id)
 {
-    H5VL_object_t       *vol_obj;             /* File info */
-    H5VL_optional_args_t vol_cb_args;         /* Arguments to VOL callback */
-    herr_t               ret_value = SUCCEED; /* Return value */
+    H5VL_object_t                   *vol_obj;             /* File info */
+    H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
+    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
+    herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -2343,8 +2501,12 @@ H5Fstart_mdc_logging(hid_t file_id)
     vol_cb_args.op_type = H5VL_NATIVE_FILE_START_MDC_LOGGING;
     vol_cb_args.args    = NULL;
 
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
     /* Call mdc logging function */
-    if (H5VL_file_optional(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_LOGGING, FAIL, "unable to start mdc logging");
 
 done:
@@ -2365,9 +2527,10 @@ done:
 herr_t
 H5Fstop_mdc_logging(hid_t file_id)
 {
-    H5VL_object_t       *vol_obj;             /* File info */
-    H5VL_optional_args_t vol_cb_args;         /* Arguments to VOL callback */
-    herr_t               ret_value = SUCCEED; /* Return value */
+    H5VL_object_t                   *vol_obj;             /* File info */
+    H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
+    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
+    herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -2379,8 +2542,12 @@ H5Fstop_mdc_logging(hid_t file_id)
     vol_cb_args.op_type = H5VL_NATIVE_FILE_STOP_MDC_LOGGING;
     vol_cb_args.args    = NULL;
 
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
     /* Call mdc logging function */
-    if (H5VL_file_optional(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_LOGGING, FAIL, "unable to stop mdc logging");
 
 done:
@@ -2404,6 +2571,7 @@ H5Fget_mdc_logging_status(hid_t file_id, hbool_t *is_enabled /*out*/, hbool_t *i
     H5VL_object_t                   *vol_obj;             /* File info */
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
+    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
     herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2418,8 +2586,12 @@ H5Fget_mdc_logging_status(hid_t file_id, hbool_t *is_enabled /*out*/, hbool_t *i
     vol_cb_args.op_type                                       = H5VL_NATIVE_FILE_GET_MDC_LOGGING_STATUS;
     vol_cb_args.args                                          = &file_opt_args;
 
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
     /* Call mdc logging function */
-    if (H5VL_file_optional(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_LOGGING, FAIL, "unable to get logging status");
 
 done:
@@ -2444,6 +2616,7 @@ H5Fset_libver_bounds(hid_t file_id, H5F_libver_t low, H5F_libver_t high)
     H5VL_object_t                   *vol_obj;             /* File as VOL object           */
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
+    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
     herr_t                           ret_value = SUCCEED; /* Return value 				*/
 
     FUNC_ENTER_API(FAIL)
@@ -2462,8 +2635,12 @@ H5Fset_libver_bounds(hid_t file_id, H5F_libver_t low, H5F_libver_t high)
     vol_cb_args.op_type                  = H5VL_NATIVE_FILE_SET_LIBVER_BOUNDS;
     vol_cb_args.args                     = &file_opt_args;
 
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
     /* Set the library's version bounds */
-    if (H5VL_file_optional(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set library version bounds");
 
 done:
@@ -2484,9 +2661,10 @@ done:
 herr_t
 H5Fformat_convert(hid_t file_id)
 {
-    H5VL_object_t       *vol_obj = NULL;      /* File */
-    H5VL_optional_args_t vol_cb_args;         /* Arguments to VOL callback */
-    herr_t               ret_value = SUCCEED; /* Return value */
+    H5VL_object_t                   *vol_obj = NULL;      /* File */
+    H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
+    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
+    herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -2502,8 +2680,12 @@ H5Fformat_convert(hid_t file_id)
     vol_cb_args.op_type = H5VL_NATIVE_FILE_FORMAT_CONVERT;
     vol_cb_args.args    = NULL;
 
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
     /* Convert the format */
-    if (H5VL_file_optional(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTCONVERT, FAIL, "can't convert file format");
 
 done:
@@ -2522,9 +2704,10 @@ done:
 herr_t
 H5Freset_page_buffering_stats(hid_t file_id)
 {
-    H5VL_object_t       *vol_obj;             /* File to reset stats on */
-    H5VL_optional_args_t vol_cb_args;         /* Arguments to VOL callback */
-    herr_t               ret_value = SUCCEED; /* Return value */
+    H5VL_object_t                   *vol_obj;             /* File to reset stats on */
+    H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
+    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
+    herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -2536,8 +2719,12 @@ H5Freset_page_buffering_stats(hid_t file_id)
     vol_cb_args.op_type = H5VL_NATIVE_FILE_RESET_PAGE_BUFFERING_STATS;
     vol_cb_args.args    = NULL;
 
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
     /* Reset the statistics */
-    if (H5VL_file_optional(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't reset stats for page buffering");
 
 done:
@@ -2561,6 +2748,7 @@ H5Fget_page_buffering_stats(hid_t file_id, unsigned accesses[2] /*out*/, unsigne
     H5VL_object_t                   *vol_obj;             /* File object */
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
+    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
     herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2580,8 +2768,12 @@ H5Fget_page_buffering_stats(hid_t file_id, unsigned accesses[2] /*out*/, unsigne
     vol_cb_args.op_type                              = H5VL_NATIVE_FILE_GET_PAGE_BUFFERING_STATS;
     vol_cb_args.args                                 = &file_opt_args;
 
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
     /* Get the statistics */
-    if (H5VL_file_optional(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't retrieve stats for page buffering");
 
 done:
@@ -2607,6 +2799,7 @@ H5Fget_mdc_image_info(hid_t file_id, haddr_t *image_addr /*out*/, hsize_t *image
     H5VL_object_t                   *vol_obj;             /* File info */
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
+    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
     herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2621,8 +2814,12 @@ H5Fget_mdc_image_info(hid_t file_id, haddr_t *image_addr /*out*/, hsize_t *image
     vol_cb_args.op_type                   = H5VL_NATIVE_FILE_GET_MDC_IMAGE_INFO;
     vol_cb_args.args                      = &file_opt_args;
 
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
     /* Go get the address and size of the cache image */
-    if (H5VL_file_optional(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't retrieve cache image info");
 
 done:
@@ -2656,14 +2853,19 @@ H5Fget_eoa(hid_t file_id, haddr_t *eoa /*out*/)
     if (eoa) {
         H5VL_optional_args_t             vol_cb_args;   /* Arguments to VOL callback */
         H5VL_native_file_optional_args_t file_opt_args; /* Arguments for optional operation */
+        H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
 
         /* Set up VOL callback arguments */
         file_opt_args.get_eoa.eoa = eoa;
         vol_cb_args.op_type       = H5VL_NATIVE_FILE_GET_EOA;
         vol_cb_args.args          = &file_opt_args;
 
+        /* Get the pointer to the default dataset transfer property list */
+        if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+            HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
         /* Retrieve the EOA for the file */
-        if (H5VL_file_optional(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+        if (H5VL_file_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to get EOA");
     } /* end if */
 
@@ -2686,6 +2888,7 @@ H5Fincrement_filesize(hid_t file_id, hsize_t increment)
     H5VL_object_t                   *vol_obj;             /* File info */
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
+    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
     herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2699,8 +2902,12 @@ H5Fincrement_filesize(hid_t file_id, hsize_t increment)
     vol_cb_args.op_type                        = H5VL_NATIVE_FILE_INCR_FILESIZE;
     vol_cb_args.args                           = &file_opt_args;
 
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
     /* Increment the file size */
-    if (H5VL_file_optional(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "unable to increment file size");
 
 done:
@@ -2723,6 +2930,7 @@ H5Fget_dset_no_attrs_hint(hid_t file_id, hbool_t *minimize /*out*/)
     H5VL_object_t                   *vol_obj;             /* File info */
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
+    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
     herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2738,8 +2946,12 @@ H5Fget_dset_no_attrs_hint(hid_t file_id, hbool_t *minimize /*out*/)
     vol_cb_args.op_type                           = H5VL_NATIVE_FILE_GET_MIN_DSET_OHDR_FLAG;
     vol_cb_args.args                              = &file_opt_args;
 
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
     /* Get the dataset object header minimum size flag */
-    if (H5VL_file_optional(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "unable to set file's dataset header minimization flag");
 
 done:
@@ -2762,6 +2974,7 @@ H5Fset_dset_no_attrs_hint(hid_t file_id, hbool_t minimize)
     H5VL_object_t                   *vol_obj;             /* File info */
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
+    H5P_genplist_t                   *def_dxpl;          /* Dataset transfer property list pointer */
     herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2775,8 +2988,12 @@ H5Fset_dset_no_attrs_hint(hid_t file_id, hbool_t minimize)
     vol_cb_args.op_type                           = H5VL_NATIVE_FILE_SET_MIN_DSET_OHDR_FLAG;
     vol_cb_args.args                              = &file_opt_args;
 
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
     /* Set the 'minimize dataset object headers flag' */
-    if (H5VL_file_optional(vol_obj, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "unable to set file's dataset header minimization flag");
 
 done:

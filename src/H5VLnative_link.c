@@ -67,9 +67,7 @@
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL__native_link_create(H5VL_link_create_args_t *args, void *obj, const H5VL_loc_params_t *loc_params,
-                         hid_t lcpl_id, hid_t H5_ATTR_UNUSED lapl_id, hid_t H5_ATTR_UNUSED dxpl_id,
-                         void H5_ATTR_UNUSED **req)
+H5VL__native_link_create(H5VL_link_create_args_t *args, void *obj, const H5VL_loc_params_t *loc_params, hid_t lcpl_id, hid_t H5_ATTR_UNUSED lapl_id, hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
     H5P_genplist_t *lcpl;                /* Link creation property list */
     herr_t          ret_value = SUCCEED; /* Return value */
@@ -163,9 +161,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL__native_link_copy(void *src_obj, const H5VL_loc_params_t *loc_params1, void *dst_obj,
-                       const H5VL_loc_params_t *loc_params2, hid_t lcpl_id, hid_t H5_ATTR_UNUSED lapl_id,
-                       hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
+H5VL__native_link_copy(void *src_obj, const H5VL_loc_params_t *loc_params1, void *dst_obj, const H5VL_loc_params_t *loc_params2, hid_t lcpl_id, hid_t H5_ATTR_UNUSED lapl_id, hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
     H5G_loc_t       src_loc, *src_loc_p;
     H5G_loc_t       dst_loc, *dst_loc_p;
@@ -208,9 +204,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL__native_link_move(void *src_obj, const H5VL_loc_params_t *loc_params1, void *dst_obj,
-                       const H5VL_loc_params_t *loc_params2, hid_t lcpl_id, hid_t H5_ATTR_UNUSED lapl_id,
-                       hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
+H5VL__native_link_move(void *src_obj, const H5VL_loc_params_t *loc_params1, void *dst_obj, const H5VL_loc_params_t *loc_params2, hid_t lcpl_id, hid_t H5_ATTR_UNUSED lapl_id, hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
     H5G_loc_t       src_loc, *src_loc_p;
     H5G_loc_t       dst_loc, *dst_loc_p;
@@ -253,8 +247,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL__native_link_get(void *obj, const H5VL_loc_params_t *loc_params, H5VL_link_get_args_t *args,
-                      hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
+H5VL__native_link_get(void *obj, const H5VL_loc_params_t *loc_params, H5VL_link_get_args_t *args, hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
     H5G_loc_t loc;
     herr_t    ret_value = SUCCEED; /* Return value */
@@ -336,8 +329,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL__native_link_specific(void *obj, const H5VL_loc_params_t *loc_params, H5VL_link_specific_args_t *args,
-                           hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
+H5VL__native_link_specific(void *obj, const H5VL_loc_params_t *loc_params, H5VL_link_specific_args_t *args, hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
     herr_t ret_value = SUCCEED; /* Return value */
 

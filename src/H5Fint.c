@@ -241,6 +241,7 @@ H5F_term_package(void)
 static herr_t
 H5F__close_cb(H5VL_object_t *file_vol_obj, void **request)
 {
+    H5P_genplist_t *def_dxpl = NULL; /* Default dataset transfer property list */
     herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -248,8 +249,12 @@ H5F__close_cb(H5VL_object_t *file_vol_obj, void **request)
     /* Sanity check */
     assert(file_vol_obj);
 
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+
     /* Close the file */
-    if (H5VL_file_close(file_vol_obj, H5P_DATASET_XFER_DEFAULT, request) < 0)
+    if (H5VL_file_close(file_vol_obj, def_dxpl, request) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTCLOSEFILE, FAIL, "unable to close file");
 
     /* Free the VOL object; it is unnecessary to unwrap the VOL
@@ -4082,11 +4087,16 @@ H5F_get_file_id(H5VL_object_t *vol_obj, H5I_type_t obj_type, bool app_ref)
     void                  *vol_obj_file = NULL;               /* File object pointer */
     H5VL_object_get_args_t vol_cb_args;                       /* Arguments to VOL callback */
     H5VL_loc_params_t      loc_params;                        /* Location parameters */
+    H5P_genplist_t        *def_dxpl;                        /* Default dataset transfer property list pointer */
     hid_t                  file_id         = H5I_INVALID_HID; /* File ID for object */
     bool                   vol_wrapper_set = false; /* Whether the VOL object wrapping context was set up */
     hid_t                  ret_value       = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_NOAPI(H5I_INVALID_HID)
+
+    /* Get the pointer to the default dataset transfer property list */
+    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
 
     /* Set location parameters */
     loc_params.type     = H5VL_OBJECT_BY_SELF;
@@ -4097,7 +4107,7 @@ H5F_get_file_id(H5VL_object_t *vol_obj, H5I_type_t obj_type, bool app_ref)
     vol_cb_args.args.get_file.file = &vol_obj_file;
 
     /* Retrieve VOL file from object */
-    if (H5VL_object_get(vol_obj, &loc_params, &vol_cb_args, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL) < 0)
+    if (H5VL_object_get(vol_obj, &loc_params, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, H5I_INVALID_HID, "can't retrieve file from object");
 
     /* Check if the file's ID already exists */
