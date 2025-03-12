@@ -923,7 +923,7 @@ H5Ovisit_by_name1(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_it
     H5VL_object_t              *vol_obj = NULL; /* Object of loc_id */
     H5VL_object_specific_args_t vol_cb_args;    /* Arguments to VOL callback */
     H5VL_loc_params_t           loc_params;     /* Location parameters for object access */
-    H5P_genplist_t             *def_dxpl;       /* Default datatset transfer property list */
+    H5P_genplist_t             *def_dxpl;       /* Default dataset transfer property list */
     H5O_visit1_adapter_t        shim_data;      /* Adapter for passing app callback & user data */
     herr_t                      ret_value;      /* Return value */
     bool                        is_native_vol_obj = false;
