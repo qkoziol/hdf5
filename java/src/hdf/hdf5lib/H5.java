@@ -5403,6 +5403,11 @@ public class H5 implements java.io.Serializable {
     // H5FD: File Driver Interface Functions //
     // //
     // ////////////////////////////////////////////////////////////
+    /**
+     * @defgroup JH5FD Java VFD (H5FD) Interface
+     *
+     * @see H5FD, C-API
+     **/
 
     /**
      * @ingroup JH5FD
