@@ -152,7 +152,7 @@ H5G__create_api_common(hid_t loc_id, const char *name, H5P_genplist_t *lcpl, H5P
     H5VL_object_t **vol_obj_ptr =
         (_vol_obj_ptr ? _vol_obj_ptr : &tmp_vol_obj); /* Ptr to object ptr for loc_id */
     H5VL_loc_params_t loc_params;                     /* Location parameters for object access */
-    H5P_genplist_t   *def_dxpl = NULL;                       /* Default dataset transfer property list */
+    H5P_genplist_t   *def_dxpl  = NULL;               /* Default dataset transfer property list */
     hid_t             ret_value = H5I_INVALID_HID;    /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -358,8 +358,8 @@ H5Gcreate_anon(hid_t loc_id, hid_t gcpl_id, hid_t gapl_id)
     H5P_genplist_t   *def_lcpl;                    /* Link creation property list */
     H5P_genplist_t   *gcpl;                        /* Group creation property list */
     H5P_genplist_t   *gapl;                        /* Group access property list */
-    H5P_genplist_t   *def_dxpl = NULL;                    /* Default dataset transfer property list */
-    H5VL_object_t    *vol_obj = NULL;              /* Object for loc_id */
+    H5P_genplist_t   *def_dxpl = NULL;             /* Default dataset transfer property list */
+    H5VL_object_t    *vol_obj  = NULL;             /* Object for loc_id */
     H5VL_loc_params_t loc_params;                  /* Location parameters for object access */
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */
 
@@ -434,7 +434,7 @@ H5G__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *gapl, void 
     H5VL_object_t **vol_obj_ptr =
         (_vol_obj_ptr ? _vol_obj_ptr : &tmp_vol_obj); /* Ptr to object ptr for loc_id */
     H5VL_loc_params_t loc_params;                     /* Location parameters for object access */
-    H5P_genplist_t   *def_dxpl = NULL;                       /* Default dataset transfer property list */
+    H5P_genplist_t   *def_dxpl  = NULL;               /* Default dataset transfer property list */
     hid_t             ret_value = H5I_INVALID_HID;    /* Return value */
 
     FUNC_ENTER_PACKAGE
