@@ -1044,8 +1044,8 @@ done:
 } /* end H5FD__ioc_write() */
 
 static herr_t
-H5FD__ioc_read_vector(H5FD_t *_file, hid_t H5_ATTR_UNUSED dxpl_id, uint32_t count, H5FD_mem_t types[], haddr_t addrs[],
-                      size_t sizes[], void *bufs[] /* out */)
+H5FD__ioc_read_vector(H5FD_t *_file, hid_t H5_ATTR_UNUSED dxpl_id, uint32_t count, H5FD_mem_t types[],
+                      haddr_t addrs[], size_t sizes[], void *bufs[] /* out */)
 {
     H5FD_ioc_t *file      = (H5FD_ioc_t *)_file;
     herr_t      ret_value = SUCCEED; /* Return value */
@@ -1072,8 +1072,8 @@ done:
 }
 
 static herr_t
-H5FD__ioc_write_vector(H5FD_t *_file, hid_t H5_ATTR_UNUSED dxpl_id, uint32_t count, H5FD_mem_t types[], haddr_t addrs[],
-                       size_t sizes[], const void *bufs[] /* in */)
+H5FD__ioc_write_vector(H5FD_t *_file, hid_t H5_ATTR_UNUSED dxpl_id, uint32_t count, H5FD_mem_t types[],
+                       haddr_t addrs[], size_t sizes[], const void *bufs[] /* in */)
 {
     H5FD_ioc_t *file      = (H5FD_ioc_t *)_file;
     herr_t      ret_value = SUCCEED; /* Return value */
