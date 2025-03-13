@@ -258,7 +258,7 @@ H5Gopen1(hid_t loc_id, const char *name)
 {
     void             *grp = NULL;     /* Group opened */
     H5P_genplist_t   *def_gapl;       /* Group access property list */
-    H5P_genplist_t   *def_dxpl;       /* Default dataset transfer property list */
+    H5P_genplist_t   *def_dxpl = NULL;       /* Default dataset transfer property list */
     H5VL_object_t    *vol_obj = NULL; /* Object of loc_id */
     H5VL_loc_params_t loc_params;
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */
