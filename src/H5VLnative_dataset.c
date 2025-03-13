@@ -80,8 +80,7 @@ static herr_t H5VL__native_dataset_io_cleanup(size_t count, hid_t mem_space_id[]
  */
 static herr_t
 H5VL__native_dataset_io_setup(size_t count, void *obj[], hid_t mem_type_id[], hid_t mem_space_id[],
-                              hid_t file_space_id[], H5_flexible_const_ptr_t buf[],
-                              H5D_dset_io_info_t *dinfo)
+                              hid_t file_space_id[], H5_flexible_const_ptr_t buf[], H5D_dset_io_info_t *dinfo)
 {
     H5F_shared_t *f_sh;
     size_t        i;
@@ -359,7 +358,7 @@ H5VL__native_dataset_read(size_t count, void *obj[], hid_t mem_type_id[], hid_t 
                           hid_t file_space_id[], hid_t dxpl_id, void *buf[], void H5_ATTR_UNUSED **req)
 {
     H5D_dset_io_info_t  dinfo_local;
-    H5D_dset_io_info_t *dinfo = &dinfo_local;
+    H5D_dset_io_info_t *dinfo     = &dinfo_local;
     herr_t              ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -374,7 +373,8 @@ H5VL__native_dataset_read(size_t count, void *obj[], hid_t mem_type_id[], hid_t 
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
     /* Get file & memory dataspaces */
-    if (H5VL__native_dataset_io_setup(count, obj, mem_type_id, mem_space_id, file_space_id, (H5_flexible_const_ptr_t *)buf, dinfo) < 0)
+    if (H5VL__native_dataset_io_setup(count, obj, mem_type_id, mem_space_id, file_space_id,
+                                      (H5_flexible_const_ptr_t *)buf, dinfo) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, FAIL, "unable to set up file and memory dataspaces");
 
     /* Read raw data.  Call H5D__read directly in single dset case. */
@@ -406,7 +406,7 @@ H5VL__native_dataset_write(size_t count, void *obj[], hid_t mem_type_id[], hid_t
                            hid_t file_space_id[], hid_t dxpl_id, const void *buf[], void H5_ATTR_UNUSED **req)
 {
     H5D_dset_io_info_t  dinfo_local;
-    H5D_dset_io_info_t *dinfo = &dinfo_local;
+    H5D_dset_io_info_t *dinfo     = &dinfo_local;
     herr_t              ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -421,7 +421,8 @@ H5VL__native_dataset_write(size_t count, void *obj[], hid_t mem_type_id[], hid_t
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
     /* Get file & memory dataspaces */
-    if (H5VL__native_dataset_io_setup(count, obj, mem_type_id, mem_space_id, file_space_id, (H5_flexible_const_ptr_t *)buf, dinfo) < 0)
+    if (H5VL__native_dataset_io_setup(count, obj, mem_type_id, mem_space_id, file_space_id,
+                                      (H5_flexible_const_ptr_t *)buf, dinfo) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, FAIL, "unable to set up file and memory dataspaces");
 
     /* Write raw data.  Call H5D__write directly in single dset case. */
