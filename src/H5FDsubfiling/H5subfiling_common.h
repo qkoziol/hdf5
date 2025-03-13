@@ -50,14 +50,14 @@
  * uses to pass its configuration down to the underlying
  * IOC VFD
  */
-#define H5FD_SUBFILING_CONFIG_PROP "H5FD_SUBFILING_CONFIG_PROP"
+#define  H5F_ACS_SUBFILING_CONFIG_PROP_NAME "H5FD_SUBFILING_CONFIG_PROP"
 
 /*
  * Name of the HDF5 FAPL property that the Subfiling VFD
  * uses to pass the HDF5 stub file's Inode value to the
  * underlying IOC VFD
  */
-#define H5FD_SUBFILING_STUB_FILE_ID "H5FD_SUBFILING_STUB_FILE_ID"
+#define  H5F_ACS_SUBFILING_STUB_FILE_ID_NAME "H5FD_SUBFILING_STUB_FILE_ID"
 
 /*
  * MPI Tags are 32 bits, we treat them as unsigned
@@ -287,11 +287,11 @@ H5_DLL herr_t H5FD__subfiling_get_config_from_file(FILE *config_file, int64_t *s
                                                    int64_t *num_subfiles);
 H5_DLL herr_t H5FD__subfiling_resolve_pathname(const char *filepath, MPI_Comm comm, char **resolved_filepath);
 
-H5_DLL herr_t H5FD__subfiling_set_config_prop(H5P_genplist_t                *plist_ptr,
+H5_DLL herr_t H5FD__subfiling_set_config_prop(H5P_genplist_t                *fapl,
                                               const H5FD_subfiling_params_t *vfd_config);
-H5_DLL herr_t H5FD__subfiling_get_config_prop(H5P_genplist_t *plist_ptr, H5FD_subfiling_params_t *vfd_config);
-H5_DLL herr_t H5FD__subfiling_set_file_id_prop(H5P_genplist_t *plist_ptr, uint64_t file_id);
-H5_DLL herr_t H5FD__subfiling_get_file_id_prop(H5P_genplist_t *plist_ptr, uint64_t *file_id);
+H5_DLL herr_t H5FD__subfiling_get_config_prop(H5P_genplist_t *fapl, H5FD_subfiling_params_t *vfd_config);
+H5_DLL herr_t H5FD__subfiling_set_file_id_prop(H5P_genplist_t *fapl, uint64_t file_id);
+H5_DLL herr_t H5FD__subfiling_get_file_id_prop(H5P_genplist_t *fapl, uint64_t *file_id);
 H5_DLL herr_t H5FD__subfile_fid_to_context(uint64_t file_id, int64_t *context_id_out);
 
 H5_DLL herr_t H5FD__subfiling_validate_config_params(const H5FD_subfiling_params_t *subf_config);

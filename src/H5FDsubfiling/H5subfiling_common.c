@@ -2727,24 +2727,24 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5FD__subfiling_set_config_prop(H5P_genplist_t *plist, const H5FD_subfiling_params_t *vfd_config)
+H5FD__subfiling_set_config_prop(H5P_genplist_t *fapl, const H5FD_subfiling_params_t *vfd_config)
 {
     htri_t prop_exists = FAIL;
     herr_t ret_value   = SUCCEED;
 
     FUNC_ENTER_PACKAGE
 
-    if (!plist)
+    if (!fapl)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "NULL FAPL pointer");
     if (!vfd_config)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid subfiling configuration pointer");
 
-    if ((prop_exists = H5P_exist_plist(plist, H5FD_SUBFILING_CONFIG_PROP)) < 0)
+    if ((prop_exists = H5P_exist_plist(fapl,  H5F_ACS_SUBFILING_CONFIG_PROP_NAME)) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL,
                     "can't check if subfiling configuration property exists in FAPL");
 
     if (prop_exists) {
-        if (H5P_set(plist, H5FD_SUBFILING_CONFIG_PROP, vfd_config) < 0)
+        if (H5P_set(fapl,  H5F_ACS_SUBFILING_CONFIG_PROP_NAME, vfd_config) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set subfiling configuration property on FAPL");
     }
     else
@@ -2752,7 +2752,7 @@ H5FD__subfiling_set_config_prop(H5P_genplist_t *plist, const H5FD_subfiling_para
          * Cast away const since H5P_insert doesn't match the signature
          * for "value" as H5P_set
          */
-        if (H5P_insert(plist, H5FD_SUBFILING_CONFIG_PROP, sizeof(H5FD_subfiling_params_t),
+        if (H5P_insert(fapl,  H5F_ACS_SUBFILING_CONFIG_PROP_NAME, sizeof(H5FD_subfiling_params_t),
                        H5FD__subfiling_cast_to_void(vfd_config), NULL, NULL, NULL, NULL, NULL, NULL, NULL,
                        NULL) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL,
@@ -2775,24 +2775,24 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5FD__subfiling_get_config_prop(H5P_genplist_t *plist, H5FD_subfiling_params_t *vfd_config)
+H5FD__subfiling_get_config_prop(H5P_genplist_t *fapl, H5FD_subfiling_params_t *vfd_config)
 {
     htri_t prop_exists = FAIL;
     herr_t ret_value   = SUCCEED;
 
     FUNC_ENTER_PACKAGE
 
-    if (!plist)
+    if (!fapl)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "NULL FAPL pointer");
     if (!vfd_config)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid subfiling configuration pointer");
 
-    if ((prop_exists = H5P_exist_plist(plist, H5FD_SUBFILING_CONFIG_PROP)) < 0)
+    if ((prop_exists = H5P_exist_plist(fapl,  H5F_ACS_SUBFILING_CONFIG_PROP_NAME)) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL,
                     "can't check if subfiling configuration property exists in FAPL");
 
     if (prop_exists) {
-        if (H5P_get(plist, H5FD_SUBFILING_CONFIG_PROP, vfd_config) < 0)
+        if (H5P_get(fapl,  H5F_ACS_SUBFILING_CONFIG_PROP_NAME, vfd_config) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get subfiling configuration property from FAPL");
     }
     else {
@@ -2818,26 +2818,26 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5FD__subfiling_set_file_id_prop(H5P_genplist_t *plist, uint64_t file_id)
+H5FD__subfiling_set_file_id_prop(H5P_genplist_t *fapl, uint64_t file_id)
 {
     htri_t prop_exists = FAIL;
     herr_t ret_value   = SUCCEED;
 
     FUNC_ENTER_PACKAGE
 
-    if (!plist)
+    if (!fapl)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "NULL FAPL pointer");
     if (file_id == UINT64_MAX)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid file ID value");
 
-    if ((prop_exists = H5P_exist_plist(plist, H5FD_SUBFILING_STUB_FILE_ID)) < 0)
+    if ((prop_exists = H5P_exist_plist(fapl,  H5F_ACS_SUBFILING_STUB_FILE_ID_NAME)) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't check if file ID property exists in FAPL");
 
     if (prop_exists) {
-        if (H5P_set(plist, H5FD_SUBFILING_STUB_FILE_ID, &file_id) < 0)
+        if (H5P_set(fapl,  H5F_ACS_SUBFILING_STUB_FILE_ID_NAME, &file_id) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set file ID property on FAPL");
     }
-    else if (H5P_insert(plist, H5FD_SUBFILING_STUB_FILE_ID, sizeof(uint64_t), &file_id, NULL, NULL, NULL,
+    else if (H5P_insert(fapl,  H5F_ACS_SUBFILING_STUB_FILE_ID_NAME, sizeof(uint64_t), &file_id, NULL, NULL, NULL,
                         NULL, NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "unable to register file ID property in FAPL");
 
@@ -2857,23 +2857,23 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5FD__subfiling_get_file_id_prop(H5P_genplist_t *plist, uint64_t *file_id)
+H5FD__subfiling_get_file_id_prop(H5P_genplist_t *fapl, uint64_t *file_id)
 {
     htri_t prop_exists = FAIL;
     herr_t ret_value   = SUCCEED;
 
     FUNC_ENTER_PACKAGE
 
-    if (!plist)
+    if (!fapl)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "NULL FAPL pointer");
     if (!file_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "NULL file ID pointer");
 
-    if ((prop_exists = H5P_exist_plist(plist, H5FD_SUBFILING_STUB_FILE_ID)) < 0)
+    if ((prop_exists = H5P_exist_plist(fapl,  H5F_ACS_SUBFILING_STUB_FILE_ID_NAME)) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't check if file ID property exists in FAPL");
 
     if (prop_exists) {
-        if (H5P_get(plist, H5FD_SUBFILING_STUB_FILE_ID, file_id) < 0)
+        if (H5P_get(fapl,  H5F_ACS_SUBFILING_STUB_FILE_ID_NAME, file_id) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get file ID property from FAPL");
     }
     else
