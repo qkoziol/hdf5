@@ -325,7 +325,7 @@ H5Dcreate_anon(hid_t loc_id, hid_t type_id, hid_t space_id, hid_t dcpl_id, hid_t
     H5P_genplist_t   *def_lcpl;                    /* Default link creation property list */
     H5P_genplist_t   *dcpl;                        /* Dataset creation property list */
     H5P_genplist_t   *dapl;                        /* Dataset access property list */
-    H5P_genplist_t   *def_dxpl;                    /* Default dataset transfer property list */
+    H5P_genplist_t   *def_dxpl = NULL;                    /* Default dataset transfer property list */
     H5VL_object_t    *vol_obj = NULL;              /* Object for loc_id */
     H5VL_loc_params_t loc_params;                  /* Location parameters for object access */
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */

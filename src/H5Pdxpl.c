@@ -969,7 +969,7 @@ H5Pset_data_transform(hid_t dxpl_id, const char *expression)
     if (expression == NULL)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "expression cannot be NULL");
 
-    /* Get the dxpl structure */
+    /* Get the property list structure */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -1027,7 +1027,7 @@ H5Pget_data_transform(hid_t dxpl_id, char *expression /*out*/, size_t size)
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the dxpl structure */
+    /* Get the property list structure */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -1085,7 +1085,7 @@ H5Pset_buffer(hid_t dxpl_id, size_t size, void *tconv, void *bkg)
     if (size == 0)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "buffer size must not be zero");
 
-    /* Get the dxpl structure */
+    /* Get the property list structure */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -1121,7 +1121,7 @@ H5Pget_buffer(hid_t dxpl_id, void **tconv /*out*/, void **bkg /*out*/)
 
     FUNC_ENTER_API(0)
 
-    /* Get the dxpl structure */
+    /* Get the property list structure */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, 0, "can't find object for ID");
 
@@ -1166,7 +1166,7 @@ H5Pset_preserve(hid_t dxpl_id, hbool_t status)
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the dxpl structure */
+    /* Get the property list structure */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -1199,7 +1199,7 @@ H5Pget_preserve(hid_t dxpl_id)
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the dxpl structure */
+    /* Get the property list structure */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -1238,7 +1238,7 @@ H5Pset_edc_check(hid_t dxpl_id, H5Z_EDC_t check)
     if (check != H5Z_ENABLE_EDC && check != H5Z_DISABLE_EDC)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "not a valid value");
 
-    /* Get the dxpl structure */
+    /* Get the property list structure */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -1270,7 +1270,7 @@ H5Pget_edc_check(hid_t dxpl_id)
 
     FUNC_ENTER_API(H5Z_ERROR_EDC)
 
-    /* Get the dxpl structure */
+    /* Get the property list structure */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, H5Z_ERROR_EDC, "can't find object for ID");
 
@@ -1302,7 +1302,7 @@ H5Pset_filter_callback(hid_t dxpl_id, H5Z_filter_func_t func, void *op_data)
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the dxpl structure */
+    /* Get the property list structure */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -1337,7 +1337,7 @@ H5Pset_type_conv_cb(hid_t dxpl_id, H5T_conv_except_func_t op, void *operate_data
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the dxpl structure */
+    /* Get the property list structure */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -1372,7 +1372,7 @@ H5Pget_type_conv_cb(hid_t dxpl_id, H5T_conv_except_func_t *op /*out*/, void **op
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the dxpl structure */
+    /* Get the property list structure */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -1409,7 +1409,7 @@ H5Pget_btree_ratios(hid_t dxpl_id, double *left /*out*/, double *middle /*out*/,
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the dxpl structure */
+    /* Get the property list structure */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -1459,7 +1459,7 @@ H5Pset_btree_ratios(hid_t dxpl_id, double left, double middle, double right)
     if (left < 0.0 || left > 1.0 || middle < 0.0 || middle > 1.0 || right < 0.0 || right > 1.0)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "split ratio must satisfy 0.0 <= X <= 1.0");
 
-    /* Get the dxpl structure */
+    /* Get the property list structure */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -1571,7 +1571,7 @@ H5Pget_vlen_mem_manager(hid_t dxpl_id, H5MM_allocate_t *alloc_func /*out*/, void
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the dxpl structure */
+    /* Get the property list structure */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -1622,7 +1622,7 @@ H5Pset_hyper_vector_size(hid_t dxpl_id, size_t vector_size)
     if (vector_size < 1)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "vector size too small");
 
-    /* Get the dxpl structure */
+    /* Get the property list structure */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -1651,7 +1651,7 @@ H5Pget_hyper_vector_size(hid_t dxpl_id, size_t *vector_size /*out*/)
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the dxpl structure */
+    /* Get the property list structure */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
