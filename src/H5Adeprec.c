@@ -105,7 +105,7 @@ H5Acreate1(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t 
     void             *attr    = NULL; /* attr object from VOL connector */
     H5VL_object_t    *vol_obj = NULL; /* Object of loc_id */
     H5VL_loc_params_t loc_params;
-    H5P_genplist_t   *def_dxpl = NULL;                    /* Default dataset transfer property list */
+    H5P_genplist_t   *def_dxpl  = NULL;            /* Default dataset transfer property list */
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -182,7 +182,7 @@ H5Aopen_name(hid_t loc_id, const char *name)
     void             *attr    = NULL; /* attr object from VOL connector */
     H5VL_object_t    *vol_obj = NULL; /* Object of loc_id */
     H5VL_loc_params_t loc_params;
-    H5P_genplist_t   *def_dxpl = NULL;                    /* Default dataset transfer property list */
+    H5P_genplist_t   *def_dxpl  = NULL;            /* Default dataset transfer property list */
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -251,7 +251,7 @@ H5Aopen_idx(hid_t loc_id, unsigned idx)
     void             *attr    = NULL; /* attr object from VOL connector */
     H5VL_object_t    *vol_obj = NULL; /* Object of loc_id */
     H5VL_loc_params_t loc_params;
-    H5P_genplist_t   *def_dxpl = NULL;                    /* Default dataset transfer property list */
+    H5P_genplist_t   *def_dxpl  = NULL;            /* Default dataset transfer property list */
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
