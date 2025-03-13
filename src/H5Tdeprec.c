@@ -175,7 +175,7 @@ H5Topen1(hid_t loc_id, const char *name)
     H5P_genplist_t   *def_tapl;       /* Datatype access property list */
     H5VL_object_t    *vol_obj = NULL; /* Object of loc_id */
     H5VL_loc_params_t loc_params;
-    H5P_genplist_t   *def_dxpl = NULL;                    /* Dataset transfer property list */
+    H5P_genplist_t   *def_dxpl  = NULL;            /* Dataset transfer property list */
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
