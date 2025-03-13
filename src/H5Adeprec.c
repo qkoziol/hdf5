@@ -106,6 +106,8 @@ H5Acreate1(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t 
     H5VL_object_t    *vol_obj = NULL; /* Object of loc_id */
     H5VL_loc_params_t loc_params;
     H5P_genplist_t   *def_dxpl  = NULL;            /* Default dataset transfer property list */
+    H5P_genplist_t   *def_acpl;            /* Default attribute create property list */
+    H5P_genplist_t   *def_aapl;            /* Default attribute access property list */
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -136,9 +138,16 @@ H5Acreate1(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t 
     if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
 
+    /* Get the pointer to the default attribute creation property list */
+    if (NULL == (def_acpl = H5I_object(H5P_ATTRIBUTE_CREATE_DEFAULT)))
+        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute create property list");
+
+    /* Get the pointer to the default attribute access property list */
+    if (NULL == (def_aapl = H5I_object(H5P_ATTRIBUTE_ACCESS_DEFAULT)))
+        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute access property list");
+
     /* Create the attribute */
-    if (NULL == (attr = H5VL_attr_create(vol_obj, &loc_params, name, type_id, space_id, acpl_id,
-                                         H5P_ATTRIBUTE_ACCESS_DEFAULT, def_dxpl, H5_REQUEST_NULL)))
+    if (NULL == (attr = H5VL_attr_create(vol_obj, &loc_params, name, type_id, space_id, def_acpl, def_aapl, def_dxpl, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_ATTR, H5E_CANTINIT, H5I_INVALID_HID, "unable to create attribute");
 
     /* Register the new attribute and get an ID for it */
@@ -183,6 +192,7 @@ H5Aopen_name(hid_t loc_id, const char *name)
     H5VL_object_t    *vol_obj = NULL; /* Object of loc_id */
     H5VL_loc_params_t loc_params;
     H5P_genplist_t   *def_dxpl  = NULL;            /* Default dataset transfer property list */
+    H5P_genplist_t   *def_aapl;            /* Default attribute access property list */
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -205,9 +215,12 @@ H5Aopen_name(hid_t loc_id, const char *name)
     if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
 
+    /* Get the pointer to the default attribute access property list */
+    if (NULL == (def_aapl = H5I_object(H5P_ATTRIBUTE_ACCESS_DEFAULT)))
+        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute access property list");
+
     /* Open the attribute */
-    if (NULL == (attr = H5VL_attr_open(vol_obj, &loc_params, name, H5P_ATTRIBUTE_ACCESS_DEFAULT, def_dxpl,
-                                       H5_REQUEST_NULL)))
+    if (NULL == (attr = H5VL_attr_open(vol_obj, &loc_params, name, def_aapl, def_dxpl, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_ATTR, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open attribute");
 
     /* Register the attribute and get an ID for it */
@@ -252,6 +265,7 @@ H5Aopen_idx(hid_t loc_id, unsigned idx)
     H5VL_object_t    *vol_obj = NULL; /* Object of loc_id */
     H5VL_loc_params_t loc_params;
     H5P_genplist_t   *def_dxpl  = NULL;            /* Default dataset transfer property list */
+    H5P_genplist_t   *def_aapl;            /* Default attribute access property list */
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -277,9 +291,12 @@ H5Aopen_idx(hid_t loc_id, unsigned idx)
     if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
 
+    /* Get the pointer to the default attribute access property list */
+    if (NULL == (def_aapl = H5I_object(H5P_ATTRIBUTE_ACCESS_DEFAULT)))
+        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute access property list");
+
     /* Open the attribute */
-    if (NULL == (attr = H5VL_attr_open(vol_obj, &loc_params, NULL, H5P_ATTRIBUTE_ACCESS_DEFAULT, def_dxpl,
-                                       H5_REQUEST_NULL)))
+    if (NULL == (attr = H5VL_attr_open(vol_obj, &loc_params, NULL, def_aapl, def_dxpl, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_ATTR, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open attribute");
 
     /* Register the attribute and get an ID for it */

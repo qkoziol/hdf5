@@ -77,10 +77,10 @@ H5VL__native_attr_create(void *obj, const H5VL_loc_params_t *loc_params, const c
                          hid_t space_id, hid_t acpl_id, hid_t aapl_id, hid_t H5_ATTR_UNUSED dxpl_id,
                          void H5_ATTR_UNUSED **req)
 {
-    H5P_genplist_t *plist;
     H5G_loc_t       loc;     /* Object location */
     H5G_loc_t       obj_loc; /* Location used to open group */
     bool            loc_found = false;
+    H5P_genplist_t *acpl; /* Attribute creation property list */
     H5T_t          *type, *dt; /* Datatype to use for attribute */
     H5S_t          *space;     /* Dataspace to use for attribute */
     H5A_t          *attr      = NULL;
@@ -92,10 +92,8 @@ H5VL__native_attr_create(void *obj, const H5VL_loc_params_t *loc_params, const c
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file or file object");
     if (0 == (H5F_INTENT(loc.oloc->file) & H5F_ACC_RDWR))
         HGOTO_ERROR(H5E_ARGS, H5E_WRITEERROR, NULL, "no write intent on file");
-
-    if (NULL == (plist = H5P_object_verify(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, true)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "AAPL is not an attribute access property list");
-
+    if (NULL == (acpl = H5P_object_verify(acpl_id, H5P_TYPE_ATTRIBUTE_CREATE, true)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "ACPL is not an attribute creation property list");
     if (NULL == (dt = (H5T_t *)H5I_object_verify(type_id, H5I_DATATYPE)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a datatype");
     /* If this is a named datatype, get the connector's pointer to the datatype */
@@ -107,13 +105,12 @@ H5VL__native_attr_create(void *obj, const H5VL_loc_params_t *loc_params, const c
     if (loc_params->type == H5VL_OBJECT_BY_SELF) {
         /* H5Acreate */
         /* Go do the real work for attaching the attribute to the dataset */
-        if (NULL == (attr = H5A__create(&loc, attr_name, type, space, acpl_id)))
+        if (NULL == (attr = H5A__create(&loc, attr_name, type, space, acpl)))
             HGOTO_ERROR(H5E_ATTR, H5E_CANTINIT, NULL, "unable to create attribute");
     } /* end if */
     else if (loc_params->type == H5VL_OBJECT_BY_NAME) {
         /* H5Acreate_by_name */
-        if (NULL == (attr = H5A__create_by_name(&loc, loc_params->loc_data.loc_by_name.name, attr_name, type,
-                                                space, acpl_id)))
+        if (NULL == (attr = H5A__create_by_name(&loc, loc_params->loc_data.loc_by_name.name, attr_name, type, space, acpl)))
             HGOTO_ERROR(H5E_ATTR, H5E_CANTINIT, NULL, "unable to create attribute");
     } /* end else-if */
     else
@@ -143,7 +140,6 @@ void *
 H5VL__native_attr_open(void *obj, const H5VL_loc_params_t *loc_params, const char *attr_name, hid_t aapl_id,
                        hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
-    H5P_genplist_t *plist;
     H5G_loc_t       loc;         /* Object location */
     H5A_t          *attr = NULL; /* Attribute opened */
     void           *ret_value;
@@ -153,9 +149,6 @@ H5VL__native_attr_open(void *obj, const H5VL_loc_params_t *loc_params, const cha
     /* check arguments */
     if (H5G_loc_real(obj, loc_params->obj_type, &loc) < 0)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file or file object");
-
-    if (NULL == (plist = H5P_object_verify(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, true)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "AAPL is not an attribute access property list");
 
     if (loc_params->type == H5VL_OBJECT_BY_SELF) {
         /* H5Aopen */

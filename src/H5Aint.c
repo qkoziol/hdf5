@@ -279,7 +279,7 @@ H5A_term_package(void)
  *-------------------------------------------------------------------------
  */
 H5A_t *
-H5A__create(const H5G_loc_t *loc, const char *attr_name, const H5T_t *type, const H5S_t *space, hid_t acpl_id)
+H5A__create(const H5G_loc_t *loc, const char *attr_name, const H5T_t *type, const H5S_t *space, H5P_genplist_t *acpl)
 {
     H5A_t   *attr = NULL;      /* Attribute created */
     hssize_t snelmts;          /* elements in attribute */
@@ -321,20 +321,12 @@ H5A__create(const H5G_loc_t *loc, const char *attr_name, const H5T_t *type, cons
     if (NULL == (attr->shared = H5FL_CALLOC(H5A_shared_t)))
         HGOTO_ERROR(H5E_ATTR, H5E_CANTALLOC, NULL, "can't allocate shared attr structure");
 
-    /* If the creation property list is H5P_ATTRIBUTE_CREATE_DEFAULT, use the default character encoding */
-    assert(acpl_id != H5P_DEFAULT);
-    if (acpl_id == H5P_ATTRIBUTE_CREATE_DEFAULT)
+    /* If it's a default creation property list, use the default character encoding */
+    if (H5P_PLIST_IS_DEFAULT(acpl))
         attr->shared->encoding = H5F_DEFAULT_CSET;
-    else {
-        H5P_genplist_t *ac_plist; /* ACPL Property list */
-
-        /* Get a local copy of the attribute creation property list */
-        if (NULL == (ac_plist = (H5P_genplist_t *)H5I_object(acpl_id)))
-            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a property list");
-
-        if (H5P_get(ac_plist, H5P_STRCRT_CHAR_ENCODING_NAME, &(attr->shared->encoding)) < 0)
+    else
+        if (H5P_get(acpl, H5P_STRCRT_CHAR_ENCODING_NAME, &(attr->shared->encoding)) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, NULL, "can't get character encoding flag");
-    } /* end else */
 
     /* Copy the attribute name */
     attr->shared->name = H5MM_xstrdup(attr_name);
@@ -438,8 +430,7 @@ done:
  *-------------------------------------------------------------------------
  */
 H5A_t *
-H5A__create_by_name(const H5G_loc_t *loc, const char *obj_name, const char *attr_name, const H5T_t *type,
-                    const H5S_t *space, hid_t acpl_id)
+H5A__create_by_name(const H5G_loc_t *loc, const char *obj_name, const char *attr_name, const H5T_t *type, const H5S_t *space, H5P_genplist_t *acpl)
 {
     H5G_loc_t  obj_loc;           /* Location used to open group */
     H5G_name_t obj_path;          /* Opened object group hier. path */
@@ -466,7 +457,7 @@ H5A__create_by_name(const H5G_loc_t *loc, const char *obj_name, const char *attr
     loc_found = true;
 
     /* Go do the real work for attaching the attribute to the object */
-    if (NULL == (attr = H5A__create(&obj_loc, attr_name, type, space, acpl_id)))
+    if (NULL == (attr = H5A__create(&obj_loc, attr_name, type, space, acpl)))
         HGOTO_ERROR(H5E_ATTR, H5E_CANTINIT, NULL, "unable to create attribute");
 
     /* Set return value */

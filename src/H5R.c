@@ -52,8 +52,7 @@ static hid_t H5R__open_object_api_common(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_
 static hid_t H5R__open_region_api_common(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t oapl_id,
                                          H5P_genplist_t *dxpl, void **token_ptr,
                                          H5VL_object_t **_vol_obj_ptr);
-static hid_t H5R__open_attr_api_common(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t aapl_id, H5P_genplist_t *dxpl,
-                                       void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static hid_t H5R__open_attr_api_common(H5R_ref_t *ref_ptr, hid_t rapl_id, H5P_genplist_t *aapl, H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
 
 /*********************/
 /* Package Variables */
@@ -834,10 +833,10 @@ done:
  *-------------------------------------------------------------------------
  */
 static hid_t
-H5R__open_attr_api_common(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t aapl_id, H5P_genplist_t *dxpl,
-                          void **token_ptr, H5VL_object_t **_vol_obj_ptr)
+H5R__open_attr_api_common(H5R_ref_t *ref_ptr, hid_t rapl_id, H5P_genplist_t *aapl, H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
 {
     hid_t           loc_id;             /* Reference location ID */
+    hid_t aapl_id; /* Attribute access property list */
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
         (_vol_obj_ptr ? _vol_obj_ptr : &tmp_vol_obj);  /* Ptr to object ptr for loc_id */
@@ -857,8 +856,6 @@ H5R__open_attr_api_common(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t aapl_id, H5P_
     if (H5R__get_type((const H5R_ref_priv_t *)ref_ptr) != H5R_ATTR)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, H5I_INVALID_HID, "invalid reference type");
     if (rapl_id < 0)
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a property list");
-    if (aapl_id < 0)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a property list");
 
     /* Retrieve loc_id from reference */
@@ -896,6 +893,7 @@ H5R__open_attr_api_common(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t aapl_id, H5P_
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTREGISTER, H5I_INVALID_HID, "unable to register object handle");
 
     /* Verify access property list and set up collective metadata if appropriate */
+    aapl_id = H5P_PLIST_ID(aapl);
     if (H5CX_set_apl(&aapl_id, H5P_CLS_AACC, loc_id, false) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTSET, H5I_INVALID_HID, "can't set access property list info");
 
@@ -908,11 +906,8 @@ H5R__open_attr_api_common(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t aapl_id, H5P_
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "invalid location identifier");
 
     /* Open the attribute */
-    if (NULL == (opened_attr = H5VL_attr_open(opened_obj, &loc_params,
-                                              H5R_REF_ATTRNAME((const H5R_ref_priv_t *)ref_ptr), aapl_id,
-                                              dxpl, H5_REQUEST_NULL)))
-        HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open attribute: '%s'",
-                    H5R_REF_ATTRNAME((const H5R_ref_priv_t *)ref_ptr));
+    if (NULL == (opened_attr = H5VL_attr_open(opened_obj, &loc_params, H5R_REF_ATTRNAME((const H5R_ref_priv_t *)ref_ptr), aapl, dxpl, H5_REQUEST_NULL)))
+        HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open attribute: '%s'", H5R_REF_ATTRNAME((const H5R_ref_priv_t *)ref_ptr));
 
     /* Register the attribute and get an ID for it */
     if ((ret_value = H5VL_register(H5I_ATTR, opened_attr, H5VL_OBJ_CONNECTOR(*vol_obj_ptr), true)) < 0)
@@ -941,17 +936,24 @@ done:
 hid_t
 H5Ropen_attr(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t aapl_id)
 {
+    H5P_genplist_t *aapl;                        /* Attribute access property list */
     H5P_genplist_t *def_dxpl;                    /* Default transfer property list */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
+
+    /* Get the pointer to the attribute access property list */
+    if (H5P_DEFAULT == aapl_id)
+        aapl_id = H5P_ATTRIBUTE_ACCESS_DEFAULT;
+    if (NULL == (aapl = H5P_object_verify(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, true)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute access property list");
 
     /* Get the default transfer property list */
     if (NULL == (def_dxpl = H5P_object_verify(H5P_DATASET_XFER_DEFAULT, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_REFERENCE, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Open the attribute synchronously */
-    if ((ret_value = H5R__open_attr_api_common(ref_ptr, rapl_id, aapl_id, def_dxpl, NULL, NULL)) < 0)
+    if ((ret_value = H5R__open_attr_api_common(ref_ptr, rapl_id, aapl, def_dxpl, NULL, NULL)) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_OPENERROR, H5I_INVALID_HID, "unable to open attribute synchronously");
 
 done:
@@ -974,10 +976,17 @@ H5Ropen_attr_async(const char *app_file, const char *app_func, unsigned app_line
     H5VL_object_t  *vol_obj   = NULL;            /* Object for loc_id */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
+    H5P_genplist_t *aapl;                        /* Attribute access property list */
     H5P_genplist_t *def_dxpl;                    /* Default transfer property list */
     hid_t           ret_value;                   /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
+
+    /* Get the pointer to the attribute access property list */
+    if (H5P_DEFAULT == aapl_id)
+        aapl_id = H5P_ATTRIBUTE_ACCESS_DEFAULT;
+    if (NULL == (aapl = H5P_object_verify(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, true)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute access property list");
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -988,7 +997,7 @@ H5Ropen_attr_async(const char *app_file, const char *app_func, unsigned app_line
         HGOTO_ERROR(H5E_REFERENCE, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Open the attribute asynchronously */
-    if ((ret_value = H5R__open_attr_api_common(ref_ptr, rapl_id, aapl_id, def_dxpl, token_ptr, &vol_obj)) < 0)
+    if ((ret_value = H5R__open_attr_api_common(ref_ptr, rapl_id, aapl, def_dxpl, token_ptr, &vol_obj)) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_OPENERROR, H5I_INVALID_HID, "unable to open attribute asynchronously");
 
     /* If a token was created, add the token to the event set */
