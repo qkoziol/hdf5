@@ -3578,7 +3578,7 @@ done:
 H5P_genplist_t *
 H5D_get_create_plist(const H5D_t *dset)
 {
-    H5P_genplist_t *new_plist = NULL;  /* Copy of dataset's DCPL */
+    H5P_genplist_t *new_dcpl = NULL;   /* Copy of dataset's DCPL */
     H5O_layout_t    copied_layout;     /* Layout to tweak */
     H5O_fill_t      copied_fill = {0}; /* Fill value to tweak */
     H5O_efl_t       copied_efl;        /* External file list to tweak */
@@ -3589,15 +3589,15 @@ H5D_get_create_plist(const H5D_t *dset)
     FUNC_ENTER_NOAPI(NULL)
 
     /* Copy the creation property list */
-    if (NULL == (new_plist = H5P_copy_plist(dset->shared->dcpl, true)))
+    if (NULL == (new_dcpl = H5P_copy_plist(dset->shared->dcpl, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_CANTCOPY, NULL, "unable to copy the creation property list");
 
     /* Retrieve any object creation properties */
-    if (H5O_get_create_plist(&dset->oloc, new_plist) < 0)
+    if (H5O_get_create_plist(&dset->oloc, new_dcpl) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, NULL, "can't get object creation info");
 
     /* Get the layout property */
-    if (H5P_peek(new_plist, H5D_CRT_LAYOUT_NAME, &copied_layout) < 0)
+    if (H5P_peek(new_dcpl, H5D_CRT_LAYOUT_NAME, &copied_layout) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, NULL, "can't get layout");
 
     /* Reset layout values set when dataset is created */
@@ -3640,11 +3640,11 @@ H5D_get_create_plist(const H5D_t *dset)
     } /* end switch */
 
     /* Set back the (possibly modified) layout property to property list */
-    if (H5P_poke(new_plist, H5D_CRT_LAYOUT_NAME, &copied_layout) < 0)
+    if (H5P_poke(new_dcpl, H5D_CRT_LAYOUT_NAME, &copied_layout) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, NULL, "unable to set layout");
 
     /* Get the fill value property */
-    if (H5P_peek(new_plist, H5D_CRT_FILL_VALUE_NAME, &copied_fill) < 0)
+    if (H5P_peek(new_dcpl, H5D_CRT_FILL_VALUE_NAME, &copied_fill) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, NULL, "can't get fill value");
 
     /* Check if there is a fill value, but no type yet */
@@ -3693,11 +3693,11 @@ H5D_get_create_plist(const H5D_t *dset)
     }     /* end if */
 
     /* Set back the (possibly modified) fill value property to property list */
-    if (H5P_poke(new_plist, H5D_CRT_FILL_VALUE_NAME, &copied_fill) < 0)
+    if (H5P_poke(new_dcpl, H5D_CRT_FILL_VALUE_NAME, &copied_fill) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, NULL, "unable to set fill value");
 
     /* Get the fill value property */
-    if (H5P_peek(new_plist, H5D_CRT_EXT_FILE_LIST_NAME, &copied_efl) < 0)
+    if (H5P_peek(new_dcpl, H5D_CRT_EXT_FILE_LIST_NAME, &copied_efl) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, NULL, "can't get external file list");
 
     /* Reset efl name_offset and heap_addr, these are the values when the dataset is created */
@@ -3710,18 +3710,18 @@ H5D_get_create_plist(const H5D_t *dset)
     } /* end if */
 
     /* Set back the (possibly modified) external file list property to property list */
-    if (H5P_poke(new_plist, H5D_CRT_EXT_FILE_LIST_NAME, &copied_efl) < 0)
+    if (H5P_poke(new_dcpl, H5D_CRT_EXT_FILE_LIST_NAME, &copied_efl) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, NULL, "unable to set external file list");
 
     /* Set the return value */
-    ret_value = new_plist;
+    ret_value = new_dcpl;
 
 done:
     if (tmp_type && (H5T_close(tmp_type) < 0))
         HDONE_ERROR(H5E_DATASET, H5E_CANTCLOSEOBJ, NULL, "unable to close temporary datatype");
 
     if (NULL == ret_value) {
-        if (new_plist && H5P_release(new_plist) < 0)
+        if (new_dcpl && H5P_release(new_dcpl) < 0)
             HDONE_ERROR(H5E_DATASET, H5E_CANTCLOSEOBJ, NULL, "can't close dataset creation property list");
 
         if (copied_fill.type && (H5T_close_real(copied_fill.type) < 0))
