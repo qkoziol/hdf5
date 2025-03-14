@@ -205,7 +205,7 @@ typedef struct H5CX_dapl_cache_t {
 } H5CX_dapl_cache_t;
 
 /* Typedef for cached default file access property list information */
-/* (Same as the cached DXPL struct, above, except for the default DCPL) */
+/* (Same as the cached DXPL struct, above, except for the default FAPL) */
 typedef struct H5CX_fapl_cache_t {
     H5F_libver_t low_bound;  /* low_bound property for H5Pset_libver_bounds() */
     H5F_libver_t high_bound; /* high_bound property for H5Pset_libver_bounds */
