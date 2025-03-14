@@ -3763,15 +3763,15 @@ done:
 herr_t
 H5F__start_swmr_write(H5F_t *f)
 {
-    bool              ci_load         = false; /* whether MDC ci load requested */
-    bool              ci_write        = false; /* whether MDC CI write requested */
-    size_t            grp_dset_count  = 0;     /* # of open objects: groups & datasets */
-    size_t            nt_attr_count   = 0;     /* # of opened named datatypes  + opened attributes */
-    hid_t            *obj_ids         = NULL;  /* List of ids */
-    H5P_genplist_t  **obj_dapl_plists = NULL;  /* Array of dataset access property lists */
-    H5G_loc_t        *obj_glocs       = NULL;  /* Group location of the object */
-    H5O_loc_t        *obj_olocs       = NULL;  /* Object location */
-    H5G_name_t       *obj_paths       = NULL;  /* Group hierarchy path */
+    bool              ci_load        = false;  /* whether MDC ci load requested */
+    bool              ci_write       = false;  /* whether MDC CI write requested */
+    size_t            grp_dset_count = 0;      /* # of open objects: groups & datasets */
+    size_t            nt_attr_count  = 0;      /* # of opened named datatypes  + opened attributes */
+    hid_t            *obj_ids        = NULL;   /* List of ids */
+    H5P_genplist_t  **obj_dapls      = NULL;   /* Array of dataset access property lists */
+    H5G_loc_t        *obj_glocs      = NULL;   /* Group location of the object */
+    H5O_loc_t        *obj_olocs      = NULL;   /* Object location */
+    H5G_name_t       *obj_paths      = NULL;   /* Group hierarchy path */
     size_t            u;                       /* Local index variable */
     bool              setup         = false;   /* Boolean flag to indicate whether SWMR setting is enabled */
     H5VL_connector_t *vol_connector = NULL;    /* VOL connector for the file */
@@ -3861,7 +3861,7 @@ H5F__start_swmr_write(H5F_t *f)
             HGOTO_ERROR(H5E_FILE, H5E_CANTALLOC, FAIL, "can't allocate buffer for object paths");
 
         /* Allocate array for dataset access property list pointers */
-        if (NULL == (obj_dapl_plists = H5MM_calloc(grp_dset_count * sizeof(H5P_genplist_t *))))
+        if (NULL == (obj_dapls = H5MM_calloc(grp_dset_count * sizeof(H5P_genplist_t *))))
             HGOTO_ERROR(H5E_FILE, H5E_CANTALLOC, FAIL, "can't allocate buffer for property lists");
 
         /* Save the VOL connector and the object wrapping context for the refresh step */
@@ -3905,7 +3905,7 @@ H5F__start_swmr_write(H5F_t *f)
                 case H5I_DATASET:
 
                     /* Get dataset access properties */
-                    if (NULL == (obj_dapl_plists[u] = H5D_get_access_plist(obj)))
+                    if (NULL == (obj_dapls[u] = H5D_get_access_plist(obj)))
                         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL,
                                     "unable to get dataset access property list");
                     break;
@@ -4000,8 +4000,7 @@ H5F__start_swmr_write(H5F_t *f)
 
     /* Refresh (reopen) the objects (groups & datasets) in the file */
     for (u = 0; u < grp_dset_count; u++)
-        if (H5O_refresh_metadata_reopen(obj_ids[u], obj_dapl_plists[u], &obj_glocs[u], vol_connector, true) <
-            0)
+        if (H5O_refresh_metadata_reopen(obj_ids[u], obj_dapls[u], &obj_glocs[u], vol_connector, true) < 0)
             HGOTO_ERROR(H5E_ID, H5E_CLOSEERROR, FAIL, "can't refresh-close object");
 
 done:
@@ -4047,11 +4046,11 @@ done:
         H5MM_xfree(obj_paths);
 
     /* Free access property lists */
-    if (obj_dapl_plists) {
+    if (obj_dapls) {
         for (u = 0; u < grp_dset_count; u++)
-            if (obj_dapl_plists[u] && H5P_release(obj_dapl_plists[u]) < 0)
+            if (obj_dapls[u] && H5P_release(obj_dapls[u]) < 0)
                 HDONE_ERROR(H5E_FILE, H5E_CANTCLOSEOBJ, FAIL, "closing property list failed");
-        H5MM_xfree(obj_dapl_plists);
+        H5MM_xfree(obj_dapls);
     }
 
     FUNC_LEAVE_NOAPI(ret_value)

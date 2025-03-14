@@ -1281,7 +1281,7 @@ done:
 H5P_genplist_t *
 H5G_get_create_plist(const H5G_t *grp)
 {
-    H5P_genplist_t *new_plist = NULL;
+    H5P_genplist_t *new_gcpl = NULL;
     H5O_linfo_t     linfo; /* Link info message            */
     htri_t          ginfo_exists;
     htri_t          linfo_exists;
@@ -1291,11 +1291,11 @@ H5G_get_create_plist(const H5G_t *grp)
     FUNC_ENTER_NOAPI(NULL)
 
     /* Create the property list object to return */
-    if (NULL == (new_plist = H5P_new_plist_of_type(H5P_TYPE_GROUP_CREATE, true)))
+    if (NULL == (new_gcpl = H5P_new_plist_of_type(H5P_TYPE_GROUP_CREATE, true)))
         HGOTO_ERROR(H5E_SYM, H5E_CANTCREATE, NULL, "unable to create group creation property list");
 
     /* Retrieve any object creation properties */
-    if (H5O_get_create_plist(&grp->oloc, new_plist) < 0)
+    if (H5O_get_create_plist(&grp->oloc, new_gcpl) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTGET, NULL, "can't get object creation info");
 
     /* Check for the group having a group info message */
@@ -1309,7 +1309,7 @@ H5G_get_create_plist(const H5G_t *grp)
             HGOTO_ERROR(H5E_SYM, H5E_BADMESG, NULL, "can't get group info");
 
         /* Set the group info for the property list */
-        if (H5P_set(new_plist, H5G_CRT_GROUP_INFO_NAME, &ginfo) < 0)
+        if (H5P_set(new_gcpl, H5G_CRT_GROUP_INFO_NAME, &ginfo) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, NULL, "can't set group info");
     } /* end if */
 
@@ -1318,7 +1318,7 @@ H5G_get_create_plist(const H5G_t *grp)
         HGOTO_ERROR(H5E_SYM, H5E_CANTINIT, NULL, "unable to read object header");
     if (linfo_exists) {
         /* Set the link info for the property list */
-        if (H5P_set(new_plist, H5G_CRT_LINK_INFO_NAME, &linfo) < 0)
+        if (H5P_set(new_gcpl, H5G_CRT_LINK_INFO_NAME, &linfo) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, NULL, "can't set link info");
     } /* end if */
 
@@ -1333,16 +1333,16 @@ H5G_get_create_plist(const H5G_t *grp)
             HGOTO_ERROR(H5E_SYM, H5E_BADMESG, NULL, "can't get link pipeline");
 
         /* Set the pipeline for the property list */
-        if (H5P_poke(new_plist, H5O_CRT_PIPELINE_NAME, &pline) < 0)
+        if (H5P_poke(new_gcpl, H5O_CRT_PIPELINE_NAME, &pline) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, NULL, "can't set link pipeline");
     } /* end if */
 
     /* Set the return value */
-    ret_value = new_plist;
+    ret_value = new_gcpl;
 
 done:
     if (NULL == ret_value)
-        if (new_plist && H5P_release(new_plist) < 0)
+        if (new_gcpl && H5P_release(new_gcpl) < 0)
             HDONE_ERROR(H5E_SYM, H5E_CANTCLOSEOBJ, NULL, "can't close group creation property list");
 
     FUNC_LEAVE_NOAPI(ret_value)
