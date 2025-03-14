@@ -313,7 +313,7 @@ done:
 herr_t
 H5Pset_userblock(hid_t fcpl_id, hsize_t size)
 {
-    H5P_genplist_t *fcpl;               /* Property list pointer */
+    H5P_genplist_t *fcpl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -356,7 +356,7 @@ done:
 herr_t
 H5Pget_userblock(hid_t fcpl_id, hsize_t *size /*out*/)
 {
-    H5P_genplist_t *fcpl;               /* Property list pointer */
+    H5P_genplist_t *fcpl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -388,7 +388,7 @@ done:
 herr_t
 H5Pset_sizes(hid_t fcpl_id, size_t sizeof_addr, size_t sizeof_size)
 {
-    H5P_genplist_t *fcpl;               /* Property list pointer */
+    H5P_genplist_t *fcpl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -440,7 +440,7 @@ done:
 herr_t
 H5Pget_sizes(hid_t fcpl_id, size_t *sizeof_addr /*out*/, size_t *sizeof_size /*out*/)
 {
-    H5P_genplist_t *fcpl;               /* Property list pointer */
+    H5P_genplist_t *fcpl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -495,7 +495,7 @@ herr_t
 H5Pset_sym_k(hid_t fcpl_id, unsigned ik, unsigned lk)
 {
     unsigned        btree_k[H5B_NUM_BTREE_ID];
-    H5P_genplist_t *fcpl;               /* Property list pointer */
+    H5P_genplist_t *fcpl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -539,7 +539,7 @@ herr_t
 H5Pget_sym_k(hid_t fcpl_id, unsigned *ik /*out*/, unsigned *lk /*out*/)
 {
     unsigned        btree_k[H5B_NUM_BTREE_ID];
-    H5P_genplist_t *fcpl;               /* Property list pointer */
+    H5P_genplist_t *fcpl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -577,7 +577,7 @@ herr_t
 H5Pset_istore_k(hid_t fcpl_id, unsigned ik)
 {
     unsigned        btree_k[H5B_NUM_BTREE_ID];
-    H5P_genplist_t *fcpl;               /* Property list pointer */
+    H5P_genplist_t *fcpl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -621,7 +621,7 @@ herr_t
 H5Pget_istore_k(hid_t fcpl_id, unsigned *ik /*out*/)
 {
     unsigned        btree_k[H5B_NUM_BTREE_ID];
-    H5P_genplist_t *fcpl;               /* Property list pointer */
+    H5P_genplist_t *fcpl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -743,7 +743,7 @@ done:
 herr_t
 H5Pset_shared_mesg_nindexes(hid_t fcpl_id, unsigned nindexes)
 {
-    H5P_genplist_t *fcpl;               /* Property list pointer */
+    H5P_genplist_t *fcpl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -777,7 +777,7 @@ done:
 herr_t
 H5Pget_shared_mesg_nindexes(hid_t fcpl_id, unsigned *nindexes /*out*/)
 {
-    H5P_genplist_t *fcpl;               /* Property list pointer */
+    H5P_genplist_t *fcpl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -810,7 +810,7 @@ done:
 herr_t
 H5Pset_shared_mesg_index(hid_t fcpl_id, unsigned index_num, unsigned mesg_type_flags, unsigned min_mesg_size)
 {
-    H5P_genplist_t *fcpl;                               /* Property list pointer */
+    H5P_genplist_t *fcpl;                                /* Property list pointer */
     unsigned        nindexes;                            /* Number of SOHM indexes */
     unsigned        type_flags[H5O_SHMESG_MAX_NINDEXES]; /* Array of mesg_type_flags*/
     unsigned        minsizes[H5O_SHMESG_MAX_NINDEXES];   /* Array of min_mesg_sizes*/
@@ -869,7 +869,7 @@ herr_t
 H5Pget_shared_mesg_index(hid_t fcpl_id, unsigned index_num, unsigned *mesg_type_flags /*out*/,
                          unsigned *min_mesg_size /*out*/)
 {
-    H5P_genplist_t *fcpl;                               /* Property list pointer */
+    H5P_genplist_t *fcpl;                                /* Property list pointer */
     unsigned        nindexes;                            /* Number of SOHM indexes */
     unsigned        type_flags[H5O_SHMESG_MAX_NINDEXES]; /* Array of mesg_type_flags*/
     unsigned        minsizes[H5O_SHMESG_MAX_NINDEXES];   /* Array of min_mesg_sizes*/
@@ -1094,7 +1094,7 @@ done:
 herr_t
 H5Pset_shared_mesg_phase_change(hid_t fcpl_id, unsigned max_list, unsigned min_btree)
 {
-    H5P_genplist_t *fcpl;               /* Property list pointer */
+    H5P_genplist_t *fcpl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1143,7 +1143,7 @@ done:
 herr_t
 H5Pget_shared_mesg_phase_change(hid_t fcpl_id, unsigned *max_list /*out*/, unsigned *min_btree /*out*/)
 {
-    H5P_genplist_t *fcpl;               /* Property list pointer */
+    H5P_genplist_t *fcpl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1214,7 +1214,7 @@ done:
 herr_t
 H5Pset_file_space_strategy(hid_t fcpl_id, H5F_fspace_strategy_t strategy, hbool_t persist, hsize_t threshold)
 {
-    H5P_genplist_t *fcpl;               /* Property list pointer */
+    H5P_genplist_t *fcpl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1282,7 +1282,7 @@ herr_t
 H5Pget_file_space_strategy(hid_t fcpl_id, H5F_fspace_strategy_t *strategy /*out*/, hbool_t *persist /*out*/,
                            hsize_t *threshold /*out*/)
 {
-    H5P_genplist_t *fcpl;               /* Property list pointer */
+    H5P_genplist_t *fcpl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1377,7 +1377,7 @@ H5P__fcrt_fspace_strategy_dec(const void **_pp, void *_value)
 herr_t
 H5Pset_file_space_page_size(hid_t fcpl_id, hsize_t fsp_size)
 {
-    H5P_genplist_t *fcpl;               /* Property list pointer */
+    H5P_genplist_t *fcpl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1413,7 +1413,7 @@ done:
 herr_t
 H5Pget_file_space_page_size(hid_t fcpl_id, hsize_t *fsp_size /*out*/)
 {
-    H5P_genplist_t *fcpl;               /* Property list pointer */
+    H5P_genplist_t *fcpl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
