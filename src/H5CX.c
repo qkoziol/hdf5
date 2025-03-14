@@ -198,7 +198,7 @@ typedef struct H5CX_dcpl_cache_t {
 } H5CX_dcpl_cache_t;
 
 /* Typedef for cached default dataset access property list information */
-/* (Same as the cached DXPL struct, above, except for the default DXPL) */
+/* (Same as the cached DXPL struct, above, except for the default DAPL) */
 typedef struct H5CX_dapl_cache_t {
     const char *extfile_prefix; /* Prefix for external file */
     const char *vds_prefix;     /* Prefix for VDS           */
