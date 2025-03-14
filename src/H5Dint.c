@@ -3743,7 +3743,7 @@ done:
 H5P_genplist_t *
 H5D_get_access_plist(const H5D_t *dset)
 {
-    H5P_genplist_t *new_dapl = NULL; /* New DAPL */
+    H5P_genplist_t *new_dapl  = NULL; /* New DAPL */
     H5P_genplist_t *def_dapl  = NULL; /* Default DAPL */
     H5P_genplist_t *ret_value = NULL; /* Return value */
 
@@ -3758,8 +3758,7 @@ H5D_get_access_plist(const H5D_t *dset)
     if (dset->shared->layout.type == H5D_CHUNKED) {
         if (H5P_set(new_dapl, H5D_ACS_DATA_CACHE_NUM_SLOTS_NAME, &(dset->shared->cache.chunk.nslots)) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, NULL, "can't set data cache number of slots");
-        if (H5P_set(new_dapl, H5D_ACS_DATA_CACHE_BYTE_SIZE_NAME, &(dset->shared->cache.chunk.nbytes_max)) <
-            0)
+        if (H5P_set(new_dapl, H5D_ACS_DATA_CACHE_BYTE_SIZE_NAME, &(dset->shared->cache.chunk.nbytes_max)) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, NULL, "can't set data cache byte size");
         if (H5P_set(new_dapl, H5D_ACS_PREEMPT_READ_CHUNKS_NAME, &(dset->shared->cache.chunk.w0)) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, NULL, "can't set preempt read chunks");
