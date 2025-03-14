@@ -3591,7 +3591,7 @@ done:
 H5P_genplist_t *
 H5D_get_create_plist(const H5D_t *dset)
 {
-    H5P_genplist_t *new_dcpl = NULL;  /* Copy of dataset's DCPL */
+    H5P_genplist_t *new_dcpl = NULL;   /* Copy of dataset's DCPL */
     H5O_layout_t    copied_layout;     /* Layout to tweak */
     H5O_fill_t      copied_fill = {0}; /* Fill value to tweak */
     H5O_efl_t       copied_efl;        /* External file list to tweak */
