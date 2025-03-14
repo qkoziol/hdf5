@@ -140,7 +140,7 @@ H5Pset_create_intermediate_group(hid_t lcpl_id, unsigned crt_intmd_group)
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the plist structure */
+    /* Get the property list structure */
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -171,7 +171,7 @@ H5Pget_create_intermediate_group(hid_t lcpl_id, unsigned *crt_intmd_group /*out*
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the plist structure */
+    /* Get the property list structure */
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
