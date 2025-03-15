@@ -186,15 +186,15 @@ H5_DLL char           *H5P_get_class_name(H5P_genclass_t *pclass) H5_ATTR_MALLOC
 H5_DLL H5P_genplist_t    *H5P_new_plist_of_type(H5P_plist_type_t type, bool app_ref);
 H5_DLL herr_t             H5P_get_nprops_pclass(const H5P_genclass_t *pclass, size_t *nprops, bool recurse);
 H5_DLL H5FD_class_value_t H5P_get_driver_value(H5P_genplist_t *fapl);
-H5_DLL struct H5FD_driver_t *H5P_peek_driver(H5P_genplist_t *plist);
-H5_DLL const void           *H5P_peek_driver_info(H5P_genplist_t *plist);
-H5_DLL const char           *H5P_peek_driver_config_str(H5P_genplist_t *plist);
-H5_DLL herr_t                H5P_set_driver(H5P_genplist_t *plist, struct H5FD_driver_t *new_driver,
+H5_DLL struct H5FD_driver_t *H5P_peek_driver(H5P_genplist_t *fapl);
+H5_DLL const void           *H5P_peek_driver_info(H5P_genplist_t *fapl);
+H5_DLL const char           *H5P_peek_driver_config_str(H5P_genplist_t *fapl);
+H5_DLL herr_t                H5P_set_driver(H5P_genplist_t *fapl, struct H5FD_driver_t *new_driver,
                                             const void *new_driver_info, const char *new_driver_config_str);
 H5_DLL herr_t H5P_reset_vfd_class(const H5P_genclass_t *pclass, const struct H5FD_driver_prop_t *driver_prop);
-H5_DLL herr_t H5P_set_driver_by_value(H5P_genplist_t *plist, H5FD_class_value_t driver_value,
+H5_DLL herr_t H5P_set_driver_by_value(H5P_genplist_t *fapl, H5FD_class_value_t driver_value,
                                       const char *driver_config);
-H5_DLL herr_t H5P_set_vol(H5P_genplist_t *plist, struct H5VL_connector_t *connector, const void *vol_info);
+H5_DLL herr_t H5P_set_vol(H5P_genplist_t *fapl, struct H5VL_connector_t *connector, const void *vol_info);
 H5_DLL herr_t H5P_reset_vol_class(const H5P_genclass_t *pclass, const struct H5VL_connector_prop_t *vol_prop);
 H5_DLL herr_t H5P_set_vlen_mem_manager(H5P_genplist_t *plist, H5MM_allocate_t alloc_func, void *alloc_info,
                                        H5MM_free_t free_func, void *free_info);
