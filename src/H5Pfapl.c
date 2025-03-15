@@ -3394,7 +3394,7 @@ done:
  * Function:    H5P__facc_file_image_info_del
  *
  * Purpose:     Delete callback for the file image info property, called
- *              when the property is deleted from the plist. The buffer
+ *              when the property is deleted from the property list. The buffer
  *              and udata may need to be freed, possibly using their
  *              respective callbacks so the default free won't work.
  *
@@ -4875,7 +4875,7 @@ H5Pset_all_coll_metadata_ops(hid_t fapl_id, hbool_t is_collective)
      *  are sub-classes of link access property lists -QAK)
      */
     if (true != H5P_isa_type(fapl, H5P_TYPE_LINK_ACCESS) && true != H5P_isa_type(fapl, H5P_TYPE_FILE_ACCESS))
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, FAIL, "property list is not an access plist");
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, FAIL, "property list is not an access property list");
 
     /* set property to either true if > 0, or false otherwise */
     if (is_collective)
@@ -4922,7 +4922,7 @@ H5Pget_all_coll_metadata_ops(hid_t fapl_id, hbool_t *is_collective /*out*/)
      *  are sub-classes of link access property lists -QAK)
      */
     if (true != H5P_isa_type(fapl, H5P_TYPE_LINK_ACCESS) && true != H5P_isa_type(fapl, H5P_TYPE_FILE_ACCESS))
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, FAIL, "property list is not an access plist");
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, FAIL, "property list is not an access property list");
 
     /* Get value */
     if (is_collective) {
@@ -4997,9 +4997,9 @@ H5Pget_mpi_params(hid_t fapl_id, MPI_Comm *comm /*out*/, MPI_Info *info /*out*/)
 
     /* Get the properties */
     if (H5P_get(fapl, H5F_ACS_MPI_PARAMS_COMM_NAME, comm) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get MPI communicator from plist");
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get MPI communicator from property list");
     if (H5P_get(fapl, H5F_ACS_MPI_PARAMS_INFO_NAME, info) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get MPI info from plist");
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get MPI info from property list");
 
 done:
     FUNC_LEAVE_API(ret_value)
