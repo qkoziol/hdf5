@@ -50,14 +50,14 @@
  * uses to pass its configuration down to the underlying
  * IOC VFD
  */
-#define  H5F_ACS_SUBFILING_CONFIG_PROP_NAME "H5FD_SUBFILING_CONFIG_PROP"
+#define H5F_ACS_SUBFILING_CONFIG_PROP_NAME "H5FD_SUBFILING_CONFIG_PROP"
 
 /*
  * Name of the HDF5 FAPL property that the Subfiling VFD
  * uses to pass the HDF5 stub file's Inode value to the
  * underlying IOC VFD
  */
-#define  H5F_ACS_SUBFILING_STUB_FILE_ID_NAME "H5FD_SUBFILING_STUB_FILE_ID"
+#define H5F_ACS_SUBFILING_STUB_FILE_ID_NAME "H5FD_SUBFILING_STUB_FILE_ID"
 
 /*
  * MPI Tags are 32 bits, we treat them as unsigned
