@@ -52,7 +52,8 @@ static hid_t H5R__open_object_api_common(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_
 static hid_t H5R__open_region_api_common(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t oapl_id,
                                          H5P_genplist_t *dxpl, void **token_ptr,
                                          H5VL_object_t **_vol_obj_ptr);
-static hid_t H5R__open_attr_api_common(H5R_ref_t *ref_ptr, hid_t rapl_id, H5P_genplist_t *aapl, H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static hid_t H5R__open_attr_api_common(H5R_ref_t *ref_ptr, hid_t rapl_id, H5P_genplist_t *aapl,
+                                       H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
 
 /*********************/
 /* Package Variables */
@@ -833,10 +834,11 @@ done:
  *-------------------------------------------------------------------------
  */
 static hid_t
-H5R__open_attr_api_common(H5R_ref_t *ref_ptr, hid_t rapl_id, H5P_genplist_t *aapl, H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
+H5R__open_attr_api_common(H5R_ref_t *ref_ptr, hid_t rapl_id, H5P_genplist_t *aapl, H5P_genplist_t *dxpl,
+                          void **token_ptr, H5VL_object_t **_vol_obj_ptr)
 {
     hid_t           loc_id;             /* Reference location ID */
-    hid_t aapl_id; /* Attribute access property list */
+    hid_t           aapl_id;            /* Attribute access property list */
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
         (_vol_obj_ptr ? _vol_obj_ptr : &tmp_vol_obj);  /* Ptr to object ptr for loc_id */
@@ -906,8 +908,11 @@ H5R__open_attr_api_common(H5R_ref_t *ref_ptr, hid_t rapl_id, H5P_genplist_t *aap
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "invalid location identifier");
 
     /* Open the attribute */
-    if (NULL == (opened_attr = H5VL_attr_open(opened_obj, &loc_params, H5R_REF_ATTRNAME((const H5R_ref_priv_t *)ref_ptr), aapl, dxpl, H5_REQUEST_NULL)))
-        HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open attribute: '%s'", H5R_REF_ATTRNAME((const H5R_ref_priv_t *)ref_ptr));
+    if (NULL == (opened_attr = H5VL_attr_open(opened_obj, &loc_params,
+                                              H5R_REF_ATTRNAME((const H5R_ref_priv_t *)ref_ptr), aapl, dxpl,
+                                              H5_REQUEST_NULL)))
+        HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open attribute: '%s'",
+                    H5R_REF_ATTRNAME((const H5R_ref_priv_t *)ref_ptr));
 
     /* Register the attribute and get an ID for it */
     if ((ret_value = H5VL_register(H5I_ATTR, opened_attr, H5VL_OBJ_CONNECTOR(*vol_obj_ptr), true)) < 0)

@@ -77,8 +77,11 @@ static herr_t H5VL__common_optional_op(hid_t id, H5I_type_t id_type, H5VL_reg_op
                                        H5VL_object_t **_vol_obj_ptr);
 
 /* VOL connector callback equivalents */
-static void  *H5VL__attr_create(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_class_t *cls, const char *name, hid_t type_id, hid_t space_id, H5P_genplist_t *acpl, H5P_genplist_t *aapl, H5P_genplist_t *dxpl, void **req);
-static void  *H5VL__attr_open(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_class_t *cls, const char *name, H5P_genplist_t *aapl, H5P_genplist_t *dxpl, void **req);
+static void  *H5VL__attr_create(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_class_t *cls,
+                                const char *name, hid_t type_id, hid_t space_id, H5P_genplist_t *acpl,
+                                H5P_genplist_t *aapl, H5P_genplist_t *dxpl, void **req);
+static void  *H5VL__attr_open(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_class_t *cls,
+                              const char *name, H5P_genplist_t *aapl, H5P_genplist_t *dxpl, void **req);
 static herr_t H5VL__attr_read(void *obj, const H5VL_class_t *cls, hid_t mem_type_id, void *buf,
                               H5P_genplist_t *dxpl, void **req);
 static herr_t H5VL__attr_write(void *obj, const H5VL_class_t *cls, hid_t mem_type_id, const void *buf,
@@ -1047,8 +1050,8 @@ done:
  */
 static void *
 H5VL__attr_create(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_class_t *cls, const char *name,
-                  hid_t type_id, hid_t space_id, H5P_genplist_t *acpl, H5P_genplist_t *aapl, H5P_genplist_t *dxpl,
-                  void **req)
+                  hid_t type_id, hid_t space_id, H5P_genplist_t *acpl, H5P_genplist_t *aapl,
+                  H5P_genplist_t *dxpl, void **req)
 {
     void *ret_value = NULL; /* Return value */
 
@@ -1062,7 +1065,8 @@ H5VL__attr_create(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_cla
     H5_BEFORE_USER_CB(NULL)
         {
             /* Call the corresponding VOL callback */
-            ret_value = (cls->attr_cls.create)(obj, loc_params, name, type_id, space_id, H5P_PLIST_ID(acpl), H5P_PLIST_ID(aapl), H5P_PLIST_ID(dxpl), req);
+            ret_value = (cls->attr_cls.create)(obj, loc_params, name, type_id, space_id, H5P_PLIST_ID(acpl),
+                                               H5P_PLIST_ID(aapl), H5P_PLIST_ID(dxpl), req);
         }
     H5_AFTER_USER_CB(NULL)
     if (NULL == ret_value)
@@ -1084,8 +1088,8 @@ done:
  */
 void *
 H5VL_attr_create(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, const char *name,
-                 hid_t type_id, hid_t space_id, H5P_genplist_t *acpl, H5P_genplist_t *aapl, H5P_genplist_t *dxpl,
-                 void **req)
+                 hid_t type_id, hid_t space_id, H5P_genplist_t *acpl, H5P_genplist_t *aapl,
+                 H5P_genplist_t *dxpl, void **req)
 {
     bool  vol_wrapper_set = false; /* Whether the VOL object wrapping context was set up */
     void *ret_value       = NULL;  /* Return value */
@@ -1098,7 +1102,8 @@ H5VL_attr_create(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_para
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__attr_create(vol_obj->data, loc_params, vol_obj->connector->cls, name, type_id, space_id, acpl, aapl, dxpl, req)))
+    if (NULL == (ret_value = H5VL__attr_create(vol_obj->data, loc_params, vol_obj->connector->cls, name,
+                                               type_id, space_id, acpl, aapl, dxpl, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, NULL, "attribute create failed");
 
 done:
@@ -1155,10 +1160,10 @@ H5VLattr_create(void *obj, const H5VL_loc_params_t *loc_params, hid_t connector_
         aapl_id = H5P_ATTRIBUTE_ACCESS_DEFAULT;
     if (NULL == (aapl = H5P_object_verify(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not an attribute access property list");
-    
-    
+
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__attr_create(obj, loc_params, connector->cls, name, type_id, space_id, acpl, aapl, dxpl, req)))
+    if (NULL == (ret_value = H5VL__attr_create(obj, loc_params, connector->cls, name, type_id, space_id, acpl,
+                                               aapl, dxpl, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, NULL, "unable to create attribute");
 
 done:
@@ -1176,7 +1181,8 @@ done:
  *-------------------------------------------------------------------------
  */
 static void *
-H5VL__attr_open(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_class_t *cls, const char *name, H5P_genplist_t *aapl, H5P_genplist_t *dxpl, void **req)
+H5VL__attr_open(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_class_t *cls, const char *name,
+                H5P_genplist_t *aapl, H5P_genplist_t *dxpl, void **req)
 {
     void *ret_value = NULL; /* Return value */
 
@@ -1190,7 +1196,8 @@ H5VL__attr_open(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_class
     H5_BEFORE_USER_CB(NULL)
         {
             /* Call the corresponding VOL open callback */
-            ret_value = (cls->attr_cls.open)(obj, loc_params, name, H5P_PLIST_ID(aapl), H5P_PLIST_ID(dxpl), req);
+            ret_value =
+                (cls->attr_cls.open)(obj, loc_params, name, H5P_PLIST_ID(aapl), H5P_PLIST_ID(dxpl), req);
         }
     H5_AFTER_USER_CB(NULL)
     if (NULL == ret_value)
@@ -1211,7 +1218,8 @@ done:
  *-------------------------------------------------------------------------
  */
 void *
-H5VL_attr_open(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, const char *name, H5P_genplist_t *aapl, H5P_genplist_t *dxpl, void **req)
+H5VL_attr_open(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, const char *name,
+               H5P_genplist_t *aapl, H5P_genplist_t *dxpl, void **req)
 {
     bool  vol_wrapper_set = false; /* Whether the VOL object wrapping context was set up */
     void *ret_value       = NULL;  /* Return value */
@@ -1224,7 +1232,8 @@ H5VL_attr_open(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__attr_open(vol_obj->data, loc_params, vol_obj->connector->cls, name, aapl, dxpl, req)))
+    if (NULL == (ret_value = H5VL__attr_open(vol_obj->data, loc_params, vol_obj->connector->cls, name, aapl,
+                                             dxpl, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPENOBJ, NULL, "attribute open failed");
 
 done:

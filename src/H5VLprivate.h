@@ -172,8 +172,11 @@ H5_DLL herr_t H5VL_cmp_connector_info(const H5VL_connector_t *connector, int *cm
 H5_DLL herr_t H5VL_free_connector_info(const H5VL_connector_t *connector, const void *info);
 
 /* Attribute functions */
-H5_DLL void  *H5VL_attr_create(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, const char *attr_name, hid_t type_id, hid_t space_id, H5P_genplist_t *acpl, H5P_genplist_t *aapl, H5P_genplist_t *dxpl, void **req);
-H5_DLL void  *H5VL_attr_open(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, const char *name, H5P_genplist_t *aapl, H5P_genplist_t *dxpl, void **req);
+H5_DLL void  *H5VL_attr_create(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params,
+                               const char *attr_name, hid_t type_id, hid_t space_id, H5P_genplist_t *acpl,
+                               H5P_genplist_t *aapl, H5P_genplist_t *dxpl, void **req);
+H5_DLL void  *H5VL_attr_open(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params,
+                             const char *name, H5P_genplist_t *aapl, H5P_genplist_t *dxpl, void **req);
 H5_DLL herr_t H5VL_attr_read(const H5VL_object_t *vol_obj, hid_t dtype_id, void *buf, H5P_genplist_t *dxpl,
                              void **req);
 H5_DLL herr_t H5VL_attr_write(const H5VL_object_t *vol_obj, hid_t dtype_id, const void *buf,
