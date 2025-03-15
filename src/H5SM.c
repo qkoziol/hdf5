@@ -112,7 +112,7 @@ H5FL_ARR_DEFINE(H5SM_sohm_t, H5O_SHMESG_MAX_LIST_SIZE);
  *-------------------------------------------------------------------------
  */
 herr_t
-H5SM_init(H5F_t *f, H5P_genplist_t *fc_plist, const H5O_loc_t *ext_loc)
+H5SM_init(H5F_t *f, H5P_genplist_t *fcpl, const H5O_loc_t *ext_loc)
 {
     H5O_shmesg_table_t   sohm_table;                 /* SOHM message for superblock extension */
     H5SM_master_table_t *table      = NULL;          /* SOHM master table for file */
@@ -141,13 +141,13 @@ H5SM_init(H5F_t *f, H5P_genplist_t *fc_plist, const H5O_loc_t *ext_loc)
     table->table_size  = H5SM_TABLE_SIZE(f);
 
     /* Get information from fcpl */
-    if (H5P_get(fc_plist, H5F_CRT_SHMSG_INDEX_TYPES_NAME, &index_type_flags) < 0)
+    if (H5P_get(fcpl, H5F_CRT_SHMSG_INDEX_TYPES_NAME, &index_type_flags) < 0)
         HGOTO_ERROR(H5E_SOHM, H5E_CANTGET, FAIL, "can't get SOHM type flags");
-    if (H5P_get(fc_plist, H5F_CRT_SHMSG_LIST_MAX_NAME, &list_max) < 0)
+    if (H5P_get(fcpl, H5F_CRT_SHMSG_LIST_MAX_NAME, &list_max) < 0)
         HGOTO_ERROR(H5E_SOHM, H5E_CANTGET, FAIL, "can't get SOHM list maximum");
-    if (H5P_get(fc_plist, H5F_CRT_SHMSG_BTREE_MIN_NAME, &btree_min) < 0)
+    if (H5P_get(fcpl, H5F_CRT_SHMSG_BTREE_MIN_NAME, &btree_min) < 0)
         HGOTO_ERROR(H5E_SOHM, H5E_CANTGET, FAIL, "can't get SOHM btree minimum");
-    if (H5P_get(fc_plist, H5F_CRT_SHMSG_INDEX_MINSIZE_NAME, &minsizes) < 0)
+    if (H5P_get(fcpl, H5F_CRT_SHMSG_INDEX_MINSIZE_NAME, &minsizes) < 0)
         HGOTO_ERROR(H5E_SOHM, H5E_CANTGET, FAIL, "can't get SOHM message min sizes");
 
     /* Verify that values are valid */
@@ -1917,7 +1917,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5SM_get_info(const H5O_loc_t *ext_loc, H5P_genplist_t *fc_plist)
+H5SM_get_info(const H5O_loc_t *ext_loc, H5P_genplist_t *fcpl)
 {
     H5F_t               *f = ext_loc->file;         /* File pointer (convenience variable) */
     H5O_shmesg_table_t   sohm_table;                /* SOHM message from superblock extension */
@@ -1932,7 +1932,7 @@ H5SM_get_info(const H5O_loc_t *ext_loc, H5P_genplist_t *fc_plist)
     /* Sanity check */
     assert(ext_loc);
     assert(f);
-    assert(fc_plist);
+    assert(fcpl);
 
     /* Check for the extension having a 'shared message info' message */
     if ((status = H5O_msg_exists(ext_loc, H5O_SHMESG_ID)) < 0)
@@ -1994,15 +1994,15 @@ H5SM_get_info(const H5O_loc_t *ext_loc, H5P_genplist_t *fc_plist)
 
         /* Set values in the property list */
         tmp_sohm_nindexes = H5F_SOHM_NINDEXES(f);
-        if (H5P_set(fc_plist, H5F_CRT_SHMSG_NINDEXES_NAME, &tmp_sohm_nindexes) < 0)
+        if (H5P_set(fcpl, H5F_CRT_SHMSG_NINDEXES_NAME, &tmp_sohm_nindexes) < 0)
             HGOTO_ERROR(H5E_SOHM, H5E_CANTSET, FAIL, "can't set number of SOHM indexes");
-        if (H5P_set(fc_plist, H5F_CRT_SHMSG_INDEX_TYPES_NAME, index_flags) < 0)
+        if (H5P_set(fcpl, H5F_CRT_SHMSG_INDEX_TYPES_NAME, index_flags) < 0)
             HGOTO_ERROR(H5E_SOHM, H5E_CANTSET, FAIL, "can't set type flags for indexes");
-        if (H5P_set(fc_plist, H5F_CRT_SHMSG_INDEX_MINSIZE_NAME, minsizes) < 0)
+        if (H5P_set(fcpl, H5F_CRT_SHMSG_INDEX_MINSIZE_NAME, minsizes) < 0)
             HGOTO_ERROR(H5E_SOHM, H5E_CANTSET, FAIL, "can't set type flags for indexes");
-        if (H5P_set(fc_plist, H5F_CRT_SHMSG_LIST_MAX_NAME, &sohm_l2b) < 0)
+        if (H5P_set(fcpl, H5F_CRT_SHMSG_LIST_MAX_NAME, &sohm_l2b) < 0)
             HGOTO_ERROR(H5E_SOHM, H5E_CANTGET, FAIL, "can't set SOHM cutoff in property list");
-        if (H5P_set(fc_plist, H5F_CRT_SHMSG_BTREE_MIN_NAME, &sohm_b2l) < 0)
+        if (H5P_set(fcpl, H5F_CRT_SHMSG_BTREE_MIN_NAME, &sohm_b2l) < 0)
             HGOTO_ERROR(H5E_SOHM, H5E_CANTGET, FAIL, "can't set SOHM cutoff in property list");
     } /* end if */
     else {
@@ -2013,7 +2013,7 @@ H5SM_get_info(const H5O_loc_t *ext_loc, H5P_genplist_t *fc_plist)
 
         /* Shared object header messages are disabled */
         tmp_sohm_nindexes = H5F_SOHM_NINDEXES(f);
-        if (H5P_set(fc_plist, H5F_CRT_SHMSG_NINDEXES_NAME, &tmp_sohm_nindexes) < 0)
+        if (H5P_set(fcpl, H5F_CRT_SHMSG_NINDEXES_NAME, &tmp_sohm_nindexes) < 0)
             HGOTO_ERROR(H5E_SOHM, H5E_CANTSET, FAIL, "can't set number of SOHM indexes");
     } /* end else */
 

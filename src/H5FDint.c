@@ -455,7 +455,7 @@ H5FD__set_def_driver(void)
             HGOTO_ERROR(H5E_VFL, H5E_CANTINC, FAIL, "can't increment ref count on VFD driver");
     }
 
-    /* Get default file access plist */
+    /* Get default file access property list */
     if (NULL == (def_fapl = H5I_object(H5P_FILE_ACCESS_DEFAULT)))
         HGOTO_ERROR(H5E_VFL, H5E_BADID, FAIL, "can't find object for default fapl ID");
 

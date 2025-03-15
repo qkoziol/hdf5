@@ -817,7 +817,7 @@ H5Pset_nlinks(hid_t lapl_id, size_t nlinks)
     if (nlinks <= 0)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "number of links must be positive");
 
-    /* Get the plist structure */
+    /* Get the property list structure */
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -853,7 +853,7 @@ H5Pget_nlinks(hid_t lapl_id, size_t *nlinks /*out*/)
     if (!nlinks)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid pointer passed in");
 
-    /* Get the plist structure */
+    /* Get the property list structure */
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -884,7 +884,7 @@ H5Pset_elink_prefix(hid_t lapl_id, const char *prefix)
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the plist structure */
+    /* Get the property list structure */
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -919,7 +919,7 @@ H5Pget_elink_prefix(hid_t lapl_id, char *prefix /*out*/, size_t size)
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the plist structure */
+    /* Get the property list structure */
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -998,7 +998,7 @@ H5Pget_elink_fapl(hid_t lapl_id)
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
-    /* Get the plist structure */
+    /* Get the property list structure */
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
@@ -1042,7 +1042,7 @@ H5Pset_elink_acc_flags(hid_t lapl_id, unsigned flags)
         (flags != H5F_ACC_DEFAULT))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid file open flags");
 
-    /* Get the plist structure */
+    /* Get the property list structure */
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -1072,7 +1072,7 @@ H5Pget_elink_acc_flags(hid_t lapl_id, unsigned *flags /*out*/)
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the plist structure */
+    /* Get the property list structure */
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -1110,7 +1110,7 @@ H5Pset_elink_cb(hid_t lapl_id, H5L_elink_traverse_t func, void *op_data)
     if (!func && op_data)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "callback is NULL while user data is not");
 
-    /* Get the plist structure */
+    /* Get the property list structure */
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -1145,7 +1145,7 @@ H5Pget_elink_cb(hid_t lapl_id, H5L_elink_traverse_t *func /*out*/, void **op_dat
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the plist structure */
+    /* Get the property list structure */
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
