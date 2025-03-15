@@ -74,7 +74,7 @@
  */
 void *
 H5VL__native_attr_create(void *obj, const H5VL_loc_params_t *loc_params, const char *attr_name, hid_t type_id,
-                         hid_t space_id, hid_t acpl_id, hid_t aapl_id, hid_t H5_ATTR_UNUSED dxpl_id,
+                         hid_t space_id, hid_t acpl_id, hid_t H5_ATTR_UNUSED aapl_id, hid_t H5_ATTR_UNUSED dxpl_id,
                          void H5_ATTR_UNUSED **req)
 {
     H5G_loc_t       loc;     /* Object location */
@@ -137,7 +137,7 @@ done:
  *-------------------------------------------------------------------------
  */
 void *
-H5VL__native_attr_open(void *obj, const H5VL_loc_params_t *loc_params, const char *attr_name, hid_t aapl_id,
+H5VL__native_attr_open(void *obj, const H5VL_loc_params_t *loc_params, const char *attr_name, hid_t H5_ATTR_UNUSED aapl_id,
                        hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
     H5G_loc_t       loc;         /* Object location */
