@@ -189,7 +189,7 @@ H5R__create_object(const H5O_token_t *obj_token, size_t token_size, H5R_ref_priv
 
     /* Create new reference */
     ref->info.obj.filename = NULL;
-    ref->file_id            = H5I_INVALID_HID;
+    ref->file_id           = H5I_INVALID_HID;
     ref->type              = (uint8_t)H5R_OBJECT2;
     if (H5R__set_obj_token(ref, obj_token, token_size) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTSET, FAIL, "unable to set object token");
@@ -233,7 +233,7 @@ H5R__create_region(const H5O_token_t *obj_token, size_t token_size, H5S_t *space
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTCOPY, FAIL, "unable to copy dataspace");
 
     ref->file_id = H5I_INVALID_HID;
-    ref->type   = (uint8_t)H5R_DATASET_REGION2;
+    ref->type    = (uint8_t)H5R_DATASET_REGION2;
     if (H5R__set_obj_token(ref, obj_token, token_size) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTSET, FAIL, "unable to set object token");
 
@@ -287,7 +287,7 @@ H5R__create_attr(const H5O_token_t *obj_token, size_t token_size, const char *at
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTCOPY, FAIL, "Cannot copy attribute name");
 
     ref->file_id = H5I_INVALID_HID;
-    ref->type   = (uint8_t)H5R_ATTR;
+    ref->type    = (uint8_t)H5R_ATTR;
     if (H5R__set_obj_token(ref, obj_token, token_size) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTSET, FAIL, "unable to set object token");
 
@@ -486,7 +486,8 @@ H5R__reopen_file(H5R_ref_priv_t *ref, H5P_genplist_t *fapl, H5P_genplist_t *dxpl
 
     /* Open the file */
     /* (Must open file read-write to allow for object modifications) */
-    if (NULL == (new_file = H5VL_file_open(connector_prop.connector, H5R_REF_FILENAME(ref), H5F_ACC_RDWR, fapl, dxpl, H5_REQUEST_NULL)))
+    if (NULL == (new_file = H5VL_file_open(connector_prop.connector, H5R_REF_FILENAME(ref), H5F_ACC_RDWR,
+                                           fapl, dxpl, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENFILE, H5I_INVALID_HID, "unable to open file");
 
     /* Get an ID for the file */
@@ -510,7 +511,8 @@ H5R__reopen_file(H5R_ref_priv_t *ref, H5P_genplist_t *fapl, H5P_genplist_t *dxpl
 
         /* Make the 'post open' callback */
         if (H5VL_file_optional(vol_obj, &vol_cb_args, dxpl, H5_REQUEST_NULL) < 0)
-            HGOTO_ERROR(H5E_REFERENCE, H5E_CANTINIT, H5I_INVALID_HID, "unable to make file 'post open' callback");
+            HGOTO_ERROR(H5E_REFERENCE, H5E_CANTINIT, H5I_INVALID_HID,
+                        "unable to make file 'post open' callback");
     } /* end if */
 
     /* Attach file_id to reference */

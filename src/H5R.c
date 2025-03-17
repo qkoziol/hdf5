@@ -47,7 +47,7 @@
 
 /* Helper routines for sync/async API calls */
 static void *H5R__open_common(H5R_ref_t *ref_ptr, hid_t file_id, hid_t oapl_id, H5P_genplist_t *dxpl,
-                 void **token_ptr, H5VL_object_t **vol_obj_ptr, H5I_type_t *opened_type);
+                              void **token_ptr, H5VL_object_t **vol_obj_ptr, H5I_type_t *opened_type);
 static hid_t H5R__open_object_api_common(H5R_ref_t *ref_ptr, hid_t file_id, hid_t oapl_id,
                                          H5P_genplist_t *dxpl, void **token_ptr,
                                          H5VL_object_t **_vol_obj_ptr);
@@ -501,12 +501,12 @@ done:
  *-------------------------------------------------------------------------
  */
 static void *
-H5R__open_common(H5R_ref_t *ref_ptr, hid_t file_id, hid_t oapl_id, H5P_genplist_t *dxpl,
-                 void **token_ptr, H5VL_object_t **vol_obj_ptr, H5I_type_t *opened_type)
+H5R__open_common(H5R_ref_t *ref_ptr, hid_t file_id, hid_t oapl_id, H5P_genplist_t *dxpl, void **token_ptr,
+                 H5VL_object_t **vol_obj_ptr, H5I_type_t *opened_type)
 {
-    H5VL_loc_params_t loc_params;                     /* Location parameters */
-    H5O_token_t       obj_token = {0};                /* Object token */
-    void             *ret_value  = NULL;   /* Return value */
+    H5VL_loc_params_t loc_params;       /* Location parameters */
+    H5O_token_t       obj_token = {0};  /* Object token */
+    void             *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -550,14 +550,15 @@ H5R__open_object_api_common(H5R_ref_t *ref_ptr, hid_t file_id, hid_t oapl_id, H5
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for file_id */
     H5VL_object_t **vol_obj_ptr =
         (_vol_obj_ptr ? _vol_obj_ptr : &tmp_vol_obj); /* Ptr to object ptr for file_id */
-    H5I_type_t        opened_type;                    /* Opened object type */
-    void             *opened_obj = NULL;              /* Opened object */
-    hid_t             ret_value  = H5I_INVALID_HID;   /* Return value */
+    H5I_type_t opened_type;                           /* Opened object type */
+    void      *opened_obj = NULL;                     /* Opened object */
+    hid_t      ret_value  = H5I_INVALID_HID;          /* Return value */
 
     FUNC_ENTER_PACKAGE
 
     /* Open object */
-    if (NULL == (opened_obj = H5R__open_common(ref_ptr, file_id, oapl_id, dxpl, token_ptr, vol_obj_ptr, &opened_type)))
+    if (NULL == (opened_obj =
+                     H5R__open_common(ref_ptr, file_id, oapl_id, dxpl, token_ptr, vol_obj_ptr, &opened_type)))
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open object");
 
     /* Register object */
@@ -582,7 +583,7 @@ hid_t
 H5Ropen_object(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t oapl_id)
 {
     H5P_genplist_t *def_dxpl;                    /* Default transfer property list */
-    hid_t           file_id;             /* Reference file ID */
+    hid_t           file_id;                     /* Reference file ID */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -638,7 +639,7 @@ H5Ropen_object_async(const char *app_file, const char *app_func, unsigned app_li
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     H5P_genplist_t *def_dxpl;                    /* Default transfer property list */
-    hid_t           file_id;             /* Reference file ID */
+    hid_t           file_id;                     /* Reference file ID */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -674,7 +675,8 @@ H5Ropen_object_async(const char *app_file, const char *app_func, unsigned app_li
     }
 
     /* Open the object asynchronously */
-    if ((ret_value = H5R__open_object_api_common(ref_ptr, file_id, oapl_id, def_dxpl, token_ptr, &vol_obj)) < 0)
+    if ((ret_value = H5R__open_object_api_common(ref_ptr, file_id, oapl_id, def_dxpl, token_ptr, &vol_obj)) <
+        0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open object asynchronously");
 
     /* If a token was created, add the token to the event set */
@@ -708,19 +710,20 @@ H5R__open_region_api_common(H5R_ref_t *ref_ptr, hid_t file_id, hid_t oapl_id, H5
 {
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for file_id */
     H5VL_object_t **vol_obj_ptr =
-        (_vol_obj_ptr ? _vol_obj_ptr : &tmp_vol_obj);        /* Ptr to object ptr for file_id */
-    void                   *opened_obj    = NULL;            /* Opened object */
-    H5VL_object_t  *vol_obj = NULL; /* VOL object for opened object */
-    H5I_type_t              opened_type;                     /* Opened object type */
-    H5VL_dataset_get_args_t vol_cb_args;                     /* Arguments to VOL callback */
-    H5S_t                  *space         = NULL;            /* Dataspace pointer (copy) */
-    hid_t                   space_id      = H5I_INVALID_HID; /* Dataspace ID */
-    hid_t                   ret_value     = H5I_INVALID_HID; /* Return value */
+        (_vol_obj_ptr ? _vol_obj_ptr : &tmp_vol_obj);    /* Ptr to object ptr for file_id */
+    void                   *opened_obj = NULL;           /* Opened object */
+    H5VL_object_t          *vol_obj    = NULL;           /* VOL object for opened object */
+    H5I_type_t              opened_type;                 /* Opened object type */
+    H5VL_dataset_get_args_t vol_cb_args;                 /* Arguments to VOL callback */
+    H5S_t                  *space     = NULL;            /* Dataspace pointer (copy) */
+    hid_t                   space_id  = H5I_INVALID_HID; /* Dataspace ID */
+    hid_t                   ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
     /* Open object */
-    if (NULL == (opened_obj = H5R__open_common(ref_ptr, file_id, oapl_id, dxpl, token_ptr, vol_obj_ptr, &opened_type)))
+    if (NULL == (opened_obj =
+                     H5R__open_common(ref_ptr, file_id, oapl_id, dxpl, token_ptr, vol_obj_ptr, &opened_type)))
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open object");
 
     /* Create a VOL object for the opened object */
@@ -729,7 +732,8 @@ H5R__open_region_api_common(H5R_ref_t *ref_ptr, hid_t file_id, hid_t oapl_id, H5
 
     /* Only dataset objects be used for region references */
     if (H5I_DATASET != opened_type)
-        HGOTO_ERROR(H5E_REFERENCE, H5E_BADVALUE, H5I_INVALID_HID, "non-dataset object for region reference, type: %u", (unsigned)opened_type);
+        HGOTO_ERROR(H5E_REFERENCE, H5E_BADVALUE, H5I_INVALID_HID,
+                    "non-dataset object for region reference, type: %u", (unsigned)opened_type);
 
     /* Set up VOL callback arguments */
     vol_cb_args.op_type                 = H5VL_DATASET_GET_SPACE;
@@ -777,7 +781,7 @@ hid_t
 H5Ropen_region(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t oapl_id)
 {
     H5P_genplist_t *def_dxpl;                    /* Default transfer property list */
-    hid_t           file_id;             /* Reference file ID */
+    hid_t           file_id;                     /* Reference file ID */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -833,7 +837,7 @@ H5Ropen_region_async(const char *app_file, const char *app_func, unsigned app_li
     void           *token     = NULL;            /* Request token for async operation */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation */
     H5P_genplist_t *def_dxpl;                    /* Default transfer property list */
-    hid_t           file_id;             /* Reference file ID */
+    hid_t           file_id;                     /* Reference file ID */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -869,7 +873,8 @@ H5Ropen_region_async(const char *app_file, const char *app_func, unsigned app_li
     }
 
     /* Open the region asynchronously */
-    if ((ret_value = H5R__open_region_api_common(ref_ptr, file_id, oapl_id, def_dxpl, token_ptr, &vol_obj)) < 0)
+    if ((ret_value = H5R__open_region_api_common(ref_ptr, file_id, oapl_id, def_dxpl, token_ptr, &vol_obj)) <
+        0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open region asynchronously");
 
     /* If a token was created, add the token to the event set */
@@ -904,18 +909,19 @@ H5R__open_attr_api_common(H5R_ref_t *ref_ptr, hid_t file_id, H5P_genplist_t *aap
     hid_t           aapl_id;            /* Attribute access property list */
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for file_id */
     H5VL_object_t **vol_obj_ptr =
-        (_vol_obj_ptr ? _vol_obj_ptr : &tmp_vol_obj);  /* Ptr to object ptr for file_id */
-    void                   *opened_obj    = NULL;            /* Opened object */
-    H5VL_object_t  *vol_obj = NULL; /* VOL object for opened object */
-    H5I_type_t              opened_type;                     /* Opened object type */
+        (_vol_obj_ptr ? _vol_obj_ptr : &tmp_vol_obj); /* Ptr to object ptr for file_id */
+    void             *opened_obj = NULL;              /* Opened object */
+    H5VL_object_t    *vol_obj    = NULL;              /* VOL object for opened object */
+    H5I_type_t        opened_type;                    /* Opened object type */
     H5VL_loc_params_t loc_params;                     /* Location parameters for object access */
-    void             *opened_attr   = NULL;            /* Opened attribute */
-    hid_t             ret_value     = H5I_INVALID_HID; /* Return value */
+    void             *opened_attr = NULL;             /* Opened attribute */
+    hid_t             ret_value   = H5I_INVALID_HID;  /* Return value */
 
     FUNC_ENTER_PACKAGE
 
     /* Open object */
-    if (NULL == (opened_obj = H5R__open_common(ref_ptr, file_id, H5P_DEFAULT, dxpl, token_ptr, vol_obj_ptr, &opened_type)))
+    if (NULL == (opened_obj = H5R__open_common(ref_ptr, file_id, H5P_DEFAULT, dxpl, token_ptr, vol_obj_ptr,
+                                               &opened_type)))
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open object");
 
     /* Create a VOL object for the opened object */
@@ -932,8 +938,11 @@ H5R__open_attr_api_common(H5R_ref_t *ref_ptr, hid_t file_id, H5P_genplist_t *aap
     loc_params.obj_type = opened_type;
 
     /* Open the attribute */
-    if (NULL == (opened_attr = H5VL_attr_open(vol_obj, &loc_params, H5R_REF_ATTRNAME((const H5R_ref_priv_t *)ref_ptr), aapl, dxpl, H5_REQUEST_NULL)))
-        HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open attribute: '%s'", H5R_REF_ATTRNAME((const H5R_ref_priv_t *)ref_ptr));
+    if (NULL ==
+        (opened_attr = H5VL_attr_open(vol_obj, &loc_params, H5R_REF_ATTRNAME((const H5R_ref_priv_t *)ref_ptr),
+                                      aapl, dxpl, H5_REQUEST_NULL)))
+        HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open attribute: '%s'",
+                    H5R_REF_ATTRNAME((const H5R_ref_priv_t *)ref_ptr));
 
     /* Register the attribute and get an ID for it */
     if ((ret_value = H5VL_register(H5I_ATTR, opened_attr, H5VL_OBJ_CONNECTOR(*vol_obj_ptr), true)) < 0)
@@ -967,7 +976,7 @@ H5Ropen_attr(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t aapl_id)
 {
     H5P_genplist_t *aapl;                        /* Attribute access property list */
     H5P_genplist_t *def_dxpl;                    /* Default transfer property list */
-    hid_t           file_id;             /* Reference file ID */
+    hid_t           file_id;                     /* Reference file ID */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -1029,7 +1038,7 @@ H5Ropen_attr_async(const char *app_file, const char *app_func, unsigned app_line
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     H5P_genplist_t *aapl;                        /* Attribute access property list */
     H5P_genplist_t *def_dxpl;                    /* Default transfer property list */
-    hid_t           file_id;             /* Reference file ID */
+    hid_t           file_id;                     /* Reference file ID */
     hid_t           ret_value;                   /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -1102,7 +1111,7 @@ done:
 herr_t
 H5Rget_obj_type3(H5R_ref_t *ref_ptr, hid_t rapl_id, H5O_type_t *obj_type /*out*/)
 {
-    hid_t           file_id;             /* Reference file ID */
+    hid_t                  file_id;             /* Reference file ID */
     H5VL_object_t         *vol_obj = NULL;      /* Object of file_id */
     H5VL_object_get_args_t vol_cb_args;         /* Arguments to VOL callback */
     H5VL_loc_params_t      loc_params;          /* Location parameters */
@@ -1176,7 +1185,7 @@ done:
 ssize_t
 H5Rget_file_name(const H5R_ref_t *ref_ptr, char *buf /*out*/, size_t size)
 {
-    hid_t   file_id;    /* Reference location ID */
+    hid_t   file_id;   /* Reference location ID */
     ssize_t ret_value; /* Return value */
 
     FUNC_ENTER_API((-1))
@@ -1241,7 +1250,7 @@ done:
 ssize_t
 H5Rget_obj_name(H5R_ref_t *ref_ptr, hid_t rapl_id, char *buf /*out*/, size_t size)
 {
-    hid_t           file_id;             /* Reference file ID */
+    hid_t                  file_id;            /* Reference file ID */
     H5VL_object_t         *vol_obj = NULL;     /* Object of file_id */
     H5VL_object_get_args_t vol_cb_args;        /* Arguments to VOL callback */
     H5VL_loc_params_t      loc_params;         /* Location parameters */

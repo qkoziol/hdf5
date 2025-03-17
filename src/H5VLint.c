@@ -1186,7 +1186,7 @@ H5VL_close_object(H5VL_object_t *vol_obj, H5I_type_t type, H5P_genplist_t *dxpl)
             break;
 
         case H5I_MAP: {
-            H5VL_optional_args_t vol_cb_args;         /* Arguments to VOL callback */
+            H5VL_optional_args_t vol_cb_args; /* Arguments to VOL callback */
 
             /* Set up VOL callback arguments */
             vol_cb_args.op_type = H5VL_MAP_CLOSE;
@@ -1904,7 +1904,7 @@ void *
 H5VL_object(hid_t id)
 {
     H5VL_object_t *vol_obj   = NULL;
-    void *ret_value = NULL;
+    void          *ret_value = NULL;
 
     FUNC_ENTER_NOAPI(NULL)
 
