@@ -390,9 +390,15 @@ H5VL__set_def_conn(void)
                 HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "can't get VOL connector ID");
         } /* end else-if */
         else {
+            H5P_genplist_t *def_vipl;    /* Default VOL initialization property list */ 
+
+            /* Get the default VOL initialization property list */
+            if (NULL == (def_vipl = H5I_object(H5P_VOL_INITIALIZE_DEFAULT)))
+                HGOTO_ERROR(H5E_VOL, H5E_BADTYPE, FAIL, "not a VOL initialize property list");
+
             /* Register the VOL connector */
             /* (NOTE: No provisions for vipl_id currently) */
-            if (NULL == (connector = H5VL__register_connector_by_name(tok, H5P_VOL_INITIALIZE_DEFAULT)))
+            if (NULL == (connector = H5VL__register_connector_by_name(tok, def_vipl)))
                 HGOTO_ERROR(H5E_VOL, H5E_CANTREGISTER, FAIL, "can't register connector");
         } /* end else */
 
@@ -1353,7 +1359,7 @@ done:
  *-------------------------------------------------------------------------
  */
 H5VL_connector_t *
-H5VL__register_connector(const H5VL_class_t *cls, hid_t vipl_id)
+H5VL__register_connector(const H5VL_class_t *cls, H5P_genplist_t *vipl)
 {
     H5VL_connector_t *connector = NULL;
     H5VL_class_t     *saved     = NULL;
@@ -1379,7 +1385,7 @@ H5VL__register_connector(const H5VL_class_t *cls, hid_t vipl_id)
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(NULL)
             {
-                status = cls->initialize(vipl_id);
+                status = cls->initialize(vipl ? H5P_PLIST_ID(vipl) : H5I_INVALID_HID);
             }
         H5_AFTER_USER_CB(NULL)
         if (status < 0)
@@ -1426,7 +1432,7 @@ done:
  *-------------------------------------------------------------------------
  */
 H5VL_connector_t *
-H5VL__register_connector_by_class(const H5VL_class_t *cls, hid_t vipl_id)
+H5VL__register_connector_by_class(const H5VL_class_t *cls, H5P_genplist_t *vipl)
 {
     H5VL_connector_t *connector = NULL; /* Connector for class */
     H5PL_vol_key_t    key;              /* Info for connector search */
@@ -1462,7 +1468,7 @@ H5VL__register_connector_by_class(const H5VL_class_t *cls, hid_t vipl_id)
 
     /* If not found, create a new connector */
     if (NULL == connector)
-        if (NULL == (connector = H5VL__register_connector(cls, vipl_id)))
+        if (NULL == (connector = H5VL__register_connector(cls, vipl)))
             HGOTO_ERROR(H5E_VOL, H5E_CANTREGISTER, NULL, "unable to register VOL connector");
 
     /* Inc. refcount on connector object, so it can be uniformly released */
@@ -1487,7 +1493,7 @@ done:
  *-------------------------------------------------------------------------
  */
 H5VL_connector_t *
-H5VL__register_connector_by_name(const char *name, hid_t vipl_id)
+H5VL__register_connector_by_name(const char *name, H5P_genplist_t *vipl)
 {
     H5VL_connector_t *connector = NULL; /* Connector for class */
     H5PL_vol_key_t    key;              /* Info for connector search */
@@ -1515,7 +1521,7 @@ H5VL__register_connector_by_name(const char *name, hid_t vipl_id)
             HGOTO_ERROR(H5E_VOL, H5E_CANTINIT, NULL, "unable to load VOL connector");
 
         /* Create a connector for the class we loaded */
-        if (NULL == (connector = H5VL__register_connector(cls, vipl_id)))
+        if (NULL == (connector = H5VL__register_connector(cls, vipl)))
             HGOTO_ERROR(H5E_VOL, H5E_CANTREGISTER, NULL, "unable to register VOL connector");
     } /* end if */
 
@@ -1541,7 +1547,7 @@ done:
  *-------------------------------------------------------------------------
  */
 H5VL_connector_t *
-H5VL__register_connector_by_value(H5VL_class_value_t value, hid_t vipl_id)
+H5VL__register_connector_by_value(H5VL_class_value_t value, H5P_genplist_t *vipl)
 {
     H5VL_connector_t *connector = NULL; /* Connector for class */
     H5PL_vol_key_t    key;              /* Info for connector search */
@@ -1569,7 +1575,7 @@ H5VL__register_connector_by_value(H5VL_class_value_t value, hid_t vipl_id)
             HGOTO_ERROR(H5E_VOL, H5E_CANTINIT, NULL, "unable to load VOL connector");
 
         /* Create a connector for the class we loaded */
-        if (NULL == (connector = H5VL__register_connector(cls, vipl_id)))
+        if (NULL == (connector = H5VL__register_connector(cls, vipl)))
             HGOTO_ERROR(H5E_VOL, H5E_CANTREGISTER, NULL, "unable to register VOL connector ID");
     } /* end if */
 

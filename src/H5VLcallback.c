@@ -3994,6 +3994,7 @@ H5VL__file_open_find_connector_cb(H5PL_type_t H5_ATTR_UNUSED plugin_type,
     H5VL_connector_t                *connector = NULL;
     const H5VL_class_t              *cls       = (const H5VL_class_t *)plugin_info;
     H5P_genplist_t                  *fapl_copy = NULL;
+    H5P_genplist_t                  *def_vipl;    /* Default VOL initialization property list */
     herr_t                           status;
     bool                             is_accessible = false; /* Whether file is accessible */
     herr_t                           ret_value     = H5_ITER_CONT;
@@ -4005,8 +4006,12 @@ H5VL__file_open_find_connector_cb(H5PL_type_t H5_ATTR_UNUSED plugin_type,
     assert(cls);
     assert(plugin_type == H5PL_TYPE_VOL);
 
+    /* Get the default VOL initialization property list */
+    if (NULL == (def_vipl = H5I_object(H5P_VOL_INITIALIZE_DEFAULT)))
+        HGOTO_ERROR(H5E_VOL, H5E_BADTYPE, H5_ITER_ERROR, "not a VOL initialize property list");
+
     /* Attempt to register plugin as a VOL connector */
-    if (NULL == (connector = H5VL__register_connector_by_class(cls, H5P_VOL_INITIALIZE_DEFAULT)))
+    if (NULL == (connector = H5VL__register_connector_by_class(cls, def_vipl)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTREGISTER, H5_ITER_ERROR, "unable to register VOL connector");
 
     /* Setup FAPL with registered VOL connector */

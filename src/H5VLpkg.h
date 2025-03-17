@@ -16,6 +16,7 @@
  *          include H5VLprivate.h instead.
  */
 
+#include "H5Pprivate.h"
 #if !(defined H5VL_FRIEND || defined H5VL_MODULE)
 #error "Do not include this file outside the H5VL package!"
 #endif
@@ -59,10 +60,10 @@ struct H5VL_object_t {
 /* Package Private Prototypes */
 /******************************/
 H5_DLL herr_t            H5VL__set_def_conn(void);
-H5_DLL H5VL_connector_t *H5VL__register_connector(const H5VL_class_t *cls, hid_t vipl_id);
-H5_DLL H5VL_connector_t *H5VL__register_connector_by_class(const H5VL_class_t *cls, hid_t vipl_id);
-H5_DLL H5VL_connector_t *H5VL__register_connector_by_name(const char *name, hid_t vipl_id);
-H5_DLL H5VL_connector_t *H5VL__register_connector_by_value(H5VL_class_value_t value, hid_t vipl_id);
+H5_DLL H5VL_connector_t *H5VL__register_connector(const H5VL_class_t *cls, H5P_genplist_t *vipl);
+H5_DLL H5VL_connector_t *H5VL__register_connector_by_class(const H5VL_class_t *cls, H5P_genplist_t *vipl);
+H5_DLL H5VL_connector_t *H5VL__register_connector_by_name(const char *name, H5P_genplist_t *vipl);
+H5_DLL H5VL_connector_t *H5VL__register_connector_by_value(H5VL_class_value_t value, H5P_genplist_t *vipl);
 H5_DLL htri_t            H5VL__is_connector_registered_by_name(const char *name);
 H5_DLL htri_t            H5VL__is_connector_registered_by_value(H5VL_class_value_t value);
 H5_DLL H5VL_connector_t *H5VL__get_connector_by_name(const char *name);

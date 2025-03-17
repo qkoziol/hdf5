@@ -58,8 +58,7 @@ H5VL__passthru_register(void)
 
     /* Register the passthru VOL connector, if it isn't already */
     if (NULL == H5VL_PASSTHRU_conn_g)
-        if (NULL == (H5VL_PASSTHRU_conn_g =
-                         H5VL__register_connector(&H5VL_pass_through_g, H5P_VOL_INITIALIZE_DEFAULT)))
+        if (NULL == (H5VL_PASSTHRU_conn_g = H5VL__register_connector(&H5VL_pass_through_g, NULL)))
             HGOTO_ERROR(H5E_VOL, H5E_CANTREGISTER, FAIL, "can't register passthru VOL connector");
 
     /* Get ID for connector */
