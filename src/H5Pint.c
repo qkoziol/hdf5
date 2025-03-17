@@ -229,6 +229,26 @@ const H5P_libclass_t H5P_CLS_AACC[1] = {{
     NULL  /* Class close callback info    */
 }};
 
+/* Attribute creation property list class library initialization object */
+/* (move to proper source code file when used for real) */
+const H5P_libclass_t H5P_CLS_ACRT[1] = {{
+    "attribute create",        /* Class name for debugging                 */
+    H5P_TYPE_ATTRIBUTE_CREATE, /* Class type                               */
+
+    &H5P_CLS_STRING_CREATE_g,       /* Parent class                             */
+    &H5P_CLS_ATTRIBUTE_CREATE_g,    /* Pointer to class                         */
+    &H5P_CLS_ATTRIBUTE_CREATE_ID_g, /* Pointer to class ID                      */
+    &H5P_LST_ATTRIBUTE_CREATE_ID_g, /* Pointer to default property list ID      */
+    NULL,                           /* Default property registration routine    */
+
+    NULL, /* Class creation callback                  */
+    NULL, /* Class creation callback info             */
+    NULL, /* Class copy callback                      */
+    NULL, /* Class copy callback info                 */
+    NULL, /* Class close callback                     */
+    NULL  /* Class close callback info                */
+}};
+
 /* Group access property list class library initialization object */
 /* (move to proper source code file when used for real) */
 const H5P_libclass_t H5P_CLS_GACC[1] = {{

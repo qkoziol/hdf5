@@ -492,7 +492,6 @@ IDE_GENERATED_PROPERTIES ("H5O" "${H5O_HDRS}" "${H5O_SOURCES}" )
 
 set (H5P_SOURCES
     ${HDF5_SRC_DIR}/H5P.c
-    ${HDF5_SRC_DIR}/H5Pacpl.c
     ${HDF5_SRC_DIR}/H5Pdapl.c
     ${HDF5_SRC_DIR}/H5Pdcpl.c
     ${HDF5_SRC_DIR}/H5Pdeprec.c
