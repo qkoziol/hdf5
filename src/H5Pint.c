@@ -376,10 +376,8 @@ H5_DLLVAR const H5P_libclass_t H5P_CLS_STRCRT[1]; /* String create */
 H5_DLLVAR const H5P_libclass_t H5P_CLS_GCRT[1];   /* Group create */
 H5_DLLVAR const H5P_libclass_t H5P_CLS_FCRT[1];   /* File creation */
 H5_DLLVAR const H5P_libclass_t H5P_CLS_DCRT[1];   /* Dataset creation */
-H5_DLLVAR const H5P_libclass_t H5P_CLS_MCRT[1];   /* Map creation */
 H5_DLLVAR const H5P_libclass_t H5P_CLS_DXFR[1];   /* Data transfer */
 H5_DLLVAR const H5P_libclass_t H5P_CLS_FMNT[1];   /* File mount */
-H5_DLLVAR const H5P_libclass_t H5P_CLS_ACRT[1];   /* Attribute creation */
 
 /*****************************/
 /* Library Private Variables */
