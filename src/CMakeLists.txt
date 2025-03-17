@@ -506,7 +506,6 @@ set (H5P_SOURCES
     ${HDF5_SRC_DIR}/H5Plapl.c
     ${HDF5_SRC_DIR}/H5Plcpl.c
     ${HDF5_SRC_DIR}/H5Pmapl.c
-    ${HDF5_SRC_DIR}/H5Pmcpl.c
     ${HDF5_SRC_DIR}/H5Pocpl.c
     ${HDF5_SRC_DIR}/H5Pocpypl.c
     ${HDF5_SRC_DIR}/H5Pstrcpl.c

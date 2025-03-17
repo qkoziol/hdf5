@@ -150,19 +150,19 @@ done:
 herr_t
 H5Pset_map_iterate_hints(hid_t mapl_id, size_t key_prefetch_size, size_t key_alloc_size)
 {
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *mapl;               /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(mapl_id, H5P_TYPE_MAP_ACCESS, false)))
-        HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
+    /* Get the map access property list structure */
+    if (NULL == (mapl = H5P_object_verify(mapl_id, H5P_TYPE_MAP_ACCESS, false)))
+        HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set sizes */
-    if (H5P_set(plist, H5M_ACS_KEY_PREFETCH_SIZE_NAME, &key_prefetch_size) < 0)
+    if (H5P_set(mapl, H5M_ACS_KEY_PREFETCH_SIZE_NAME, &key_prefetch_size) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set key prefetch size");
-    if (H5P_set(plist, H5M_ACS_KEY_ALLOC_SIZE_NAME, &key_alloc_size) < 0)
+    if (H5P_set(mapl, H5M_ACS_KEY_ALLOC_SIZE_NAME, &key_alloc_size) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set key allocation size");
 
 done:
@@ -181,22 +181,22 @@ done:
 herr_t
 H5Pget_map_iterate_hints(hid_t mapl_id, size_t *key_prefetch_size /*out*/, size_t *key_alloc_size /*out*/)
 {
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *mapl;               /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(mapl_id, H5P_TYPE_MAP_ACCESS, true)))
-        HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
+    /* Get the map access property list structure */
+    if (NULL == (mapl = H5P_object_verify(mapl_id, H5P_TYPE_MAP_ACCESS, true)))
+        HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get the properties */
     if (key_prefetch_size) {
-        if (H5P_get(plist, H5M_ACS_KEY_PREFETCH_SIZE_NAME, key_prefetch_size) < 0)
+        if (H5P_get(mapl, H5M_ACS_KEY_PREFETCH_SIZE_NAME, key_prefetch_size) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get key prefetch size");
     } /* end if */
     if (key_alloc_size) {
-        if (H5P_get(plist, H5M_ACS_KEY_ALLOC_SIZE_NAME, key_alloc_size) < 0)
+        if (H5P_get(mapl, H5M_ACS_KEY_ALLOC_SIZE_NAME, key_alloc_size) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get key allocation size");
     } /* end if */
 

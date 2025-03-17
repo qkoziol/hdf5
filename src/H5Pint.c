@@ -289,6 +289,26 @@ const H5P_libclass_t H5P_CLS_TACC[1] = {{
     NULL  /* Class close callback info    */
 }};
 
+/* Map create property list class library initialization object */
+/* (move to proper source code file when used for real) */
+const H5P_libclass_t H5P_CLS_MCRT[1] = {{
+    "map create",        /* Class name for debugging     */
+    H5P_TYPE_MAP_CREATE, /* Class type                   */
+
+    &H5P_CLS_OBJECT_CREATE_g, /* Parent class                 */
+    &H5P_CLS_MAP_CREATE_g,    /* Pointer to class             */
+    &H5P_CLS_MAP_CREATE_ID_g, /* Pointer to class ID          */
+    &H5P_LST_MAP_CREATE_ID_g, /* Pointer to default property list ID */
+    NULL,       /* Default property registration routine */
+
+    NULL, /* Class creation callback      */
+    NULL, /* Class creation callback info */
+    NULL, /* Class copy callback          */
+    NULL, /* Class copy callback info     */
+    NULL, /* Class close callback         */
+    NULL  /* Class close callback info    */
+}};
+
 /* VOL initialization property list class library initialization object */
 /* (move to proper source code file when used for real) */
 const H5P_libclass_t H5P_CLS_VINI[1] = {{
