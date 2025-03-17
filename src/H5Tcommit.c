@@ -125,7 +125,7 @@ H5T__commit_api_common(hid_t loc_id, const char *name, hid_t type_id, H5P_genpli
 
     /* Set up VOL object */
     if (NULL == (new_obj = H5VL_create_object(data, H5VL_OBJ_CONNECTOR(*vol_obj_ptr))))
-        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTALLOC, FAIL, "can't create VOL object for committed datatype");
+        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINIT, FAIL, "can't create VOL object for committed datatype");
 
     /* Set the committed type object to the VOL connector pointer in the H5T_t struct */
     dt->vol_obj = new_obj;
@@ -401,7 +401,7 @@ H5Tcommit_anon(hid_t loc_id, hid_t type_id, hid_t tcpl_id, hid_t tapl_id)
 
     /* Setup VOL object */
     if (NULL == (new_obj = H5VL_create_object(dt, H5VL_OBJ_CONNECTOR(vol_obj))))
-        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTALLOC, FAIL, "can't create VOL object for committed datatype");
+        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINIT, FAIL, "can't create VOL object for committed datatype");
 
     /* Set the committed type object to the VOL connector pointer in the H5T_t struct */
     type->vol_obj = new_obj;
@@ -1279,9 +1279,17 @@ H5T_update_shared(H5T_t *dt)
 /*-------------------------------------------------------------------------
  * Function:    H5T_construct_datatype
  *
- * Purpose:     Create a Library datatype with a connector specific datatype object
+ * Purpose:     Create a library datatype around a connector-specific datatype
+ *              object
  *
- * Return:      Success:    A type structure
+ * Note:        We assume (require) that the connector has used the library's
+ *              datatype encoding API routine (H5Tencode) to serialize the
+ *              named datatype when it was stored.  The conector's in-memory
+ *              representation may be different though, hence the algorithm
+ *              below that uses the encoded form in order to create a copy of
+ *              the stored datatype.
+ *
+ * Return:      Success:    A datatype structure
  *              Failure:    NULL
  *
  *-------------------------------------------------------------------------
@@ -1361,7 +1369,7 @@ H5T_destruct_datatype(void *datatype, H5VL_connector_t *vol_connector, H5P_genpl
     FUNC_ENTER_NOAPI(FAIL)
 
     if (NULL == (vol_obj = H5VL_create_object(datatype, vol_connector)))
-        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTALLOC, FAIL, "can't create VOL object for committed datatype");
+        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINIT, FAIL, "can't create VOL object for committed datatype");
 
     if (H5VL_datatype_close(vol_obj, dxpl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CLOSEERROR, FAIL, "unable to release datatype");

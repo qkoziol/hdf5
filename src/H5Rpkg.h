@@ -73,7 +73,7 @@ typedef struct H5R_ref_priv_t {
         H5R_ref_priv_reg_t  reg;  /* Region reference                 */
         H5R_ref_priv_attr_t attr; /* Attribute Reference             */
     } info;
-    hid_t    loc_id;      /* Cached location identifier       */
+    hid_t    file_id;     /* Cached file identifier       */
     uint32_t encode_size; /* Cached encoding size             */
     int8_t   type;        /* Reference type                   */
     uint8_t  token_size;  /* Cached token size                */
@@ -94,9 +94,9 @@ H5_DLL herr_t H5R__create_attr(const H5O_token_t *obj_token, size_t token_size, 
                                H5R_ref_priv_t *ref);
 H5_DLL herr_t H5R__destroy(H5R_ref_priv_t *ref);
 
-H5_DLL herr_t H5R__set_loc_id(H5R_ref_priv_t *ref, hid_t id, bool inc_ref, bool app_ref);
-H5_DLL hid_t  H5R__get_loc_id(const H5R_ref_priv_t *ref);
-H5_DLL hid_t  H5R__reopen_file(H5R_ref_priv_t *ref, H5P_genplist_t *fapl);
+H5_DLL herr_t H5R__set_file_id(H5R_ref_priv_t *ref, hid_t file_id, bool inc_ref, bool app_ref);
+H5_DLL hid_t  H5R__get_file_id(const H5R_ref_priv_t *ref);
+H5_DLL hid_t  H5R__reopen_file(H5R_ref_priv_t *ref, H5P_genplist_t *fapl, H5P_genplist_t *dxpl);
 
 H5_DLL H5R_type_t H5R__get_type(const H5R_ref_priv_t *ref);
 H5_DLL htri_t     H5R__equal(const H5R_ref_priv_t *ref1, const H5R_ref_priv_t *ref2);

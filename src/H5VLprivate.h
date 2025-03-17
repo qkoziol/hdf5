@@ -115,6 +115,7 @@ H5_DLL H5VL_object_t *H5VL_new_vol_obj(H5I_type_t type, void *object, H5VL_conne
                                        bool wrap_obj);
 H5_DLL hsize_t        H5VL_object_inc_rc(H5VL_object_t *obj);
 H5_DLL herr_t         H5VL_free_object(H5VL_object_t *obj);
+H5_DLL herr_t H5VL_close_object(H5VL_object_t *vol_obj, H5I_type_t type, H5P_genplist_t *dxpl);
 H5_DLL herr_t         H5VL_object_is_native(const H5VL_object_t *obj, bool *is_native);
 H5_DLL herr_t         H5VL_file_is_same(const H5VL_object_t *vol_obj1, const H5VL_object_t *vol_obj2,
                                         bool *same_file);

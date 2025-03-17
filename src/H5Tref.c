@@ -433,7 +433,7 @@ H5T__ref_mem_getsize(H5VL_object_t H5_ATTR_UNUSED *src_file, const void *src_buf
         bool files_equal = true; /* Whether src & dst references are in same file */
 
         /* Retrieve VOL object */
-        if (NULL == (vol_obj = H5VL_vol_object(src_ref->loc_id)))
+        if (NULL == (vol_obj = H5VL_vol_object(src_ref->file_id)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, 0, "invalid location identifier");
 
         /* Set external flag if referenced file is not destination file */
@@ -562,7 +562,7 @@ H5T__ref_mem_read(H5VL_object_t H5_ATTR_UNUSED *src_file, const void *src_buf, s
     }
 
     /* Retrieve VOL object */
-    if (NULL == (vol_obj = H5VL_vol_object(src_ref->loc_id)))
+    if (NULL == (vol_obj = H5VL_vol_object(src_ref->file_id)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, 0, "invalid location identifier");
 
     /* Set external flag if referenced file is not destination file */
@@ -744,9 +744,9 @@ H5T__ref_mem_write(H5VL_object_t *src_file, const void *src_buf, size_t src_size
         if ((file_id = H5F_get_file_id(src_file, H5I_FILE, false)) < 0)
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file or file object");
 
-        /* Attach loc ID to reference and hold reference to it, this is a
+        /* Attach file ID to reference and hold reference to it, this is a
          * user exposed reference so set app_ref to true. */
-        if (H5R__set_loc_id(&tmp_ref, file_id, true, true) < 0)
+        if (H5R__set_file_id(&tmp_ref, file_id, true, true) < 0)
             HGOTO_ERROR(H5E_REFERENCE, H5E_CANTSET, FAIL, "unable to attach location id to reference");
     } /* end if */
 

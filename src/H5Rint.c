@@ -189,7 +189,7 @@ H5R__create_object(const H5O_token_t *obj_token, size_t token_size, H5R_ref_priv
 
     /* Create new reference */
     ref->info.obj.filename = NULL;
-    ref->loc_id            = H5I_INVALID_HID;
+    ref->file_id            = H5I_INVALID_HID;
     ref->type              = (uint8_t)H5R_OBJECT2;
     if (H5R__set_obj_token(ref, obj_token, token_size) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTSET, FAIL, "unable to set object token");
@@ -232,7 +232,7 @@ H5R__create_region(const H5O_token_t *obj_token, size_t token_size, H5S_t *space
     if (NULL == (ref->info.reg.space = H5S_copy(space, false, true)))
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTCOPY, FAIL, "unable to copy dataspace");
 
-    ref->loc_id = H5I_INVALID_HID;
+    ref->file_id = H5I_INVALID_HID;
     ref->type   = (uint8_t)H5R_DATASET_REGION2;
     if (H5R__set_obj_token(ref, obj_token, token_size) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTSET, FAIL, "unable to set object token");
@@ -286,7 +286,7 @@ H5R__create_attr(const H5O_token_t *obj_token, size_t token_size, const char *at
     if (NULL == (ref->info.attr.name = strdup(attr_name)))
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTCOPY, FAIL, "Cannot copy attribute name");
 
-    ref->loc_id = H5I_INVALID_HID;
+    ref->file_id = H5I_INVALID_HID;
     ref->type   = (uint8_t)H5R_ATTR;
     if (H5R__set_obj_token(ref, obj_token, token_size) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTSET, FAIL, "unable to set object token");
@@ -361,14 +361,14 @@ H5R__destroy(H5R_ref_priv_t *ref)
             HGOTO_ERROR(H5E_REFERENCE, H5E_UNSUPPORTED, FAIL, "internal error (unknown reference type)");
     } /* end switch */
 
-    /* Decrement refcount of attached loc_id */
-    if (ref->type && (ref->loc_id != H5I_INVALID_HID)) {
+    /* Decrement refcount of attached file_id */
+    if (ref->type && (ref->file_id != H5I_INVALID_HID)) {
         if (ref->app_ref) {
-            if (H5I_dec_app_ref(ref->loc_id) < 0)
+            if (H5I_dec_app_ref(ref->file_id) < 0)
                 HGOTO_ERROR(H5E_REFERENCE, H5E_CANTDEC, FAIL, "decrementing location ID failed");
         }
         else {
-            if (H5I_dec_ref(ref->loc_id) < 0)
+            if (H5I_dec_ref(ref->file_id) < 0)
                 HGOTO_ERROR(H5E_REFERENCE, H5E_CANTDEC, FAIL, "decrementing location ID failed");
         }
     }
@@ -378,61 +378,61 @@ done:
 } /* end H5R__destroy() */
 
 /*-------------------------------------------------------------------------
- * Function:    H5R__set_loc_id
+ * Function:    H5R__set_file_id
  *
- * Purpose:     Attach location ID to reference and increment location refcount.
+ * Purpose:     Attach file ID to reference and increment location refcount.
  *
  * Return:      SUCCEED/FAIL
  *
  *-------------------------------------------------------------------------
  */
 herr_t
-H5R__set_loc_id(H5R_ref_priv_t *ref, hid_t id, bool inc_ref, bool app_ref)
+H5R__set_file_id(H5R_ref_priv_t *ref, hid_t file_id, bool inc_ref, bool app_ref)
 {
     herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
     assert(ref != NULL);
-    assert(id != H5I_INVALID_HID);
+    assert(file_id != H5I_INVALID_HID);
 
     /* If a location ID was previously assigned, decrement refcount and
      * assign new one */
-    if ((ref->loc_id != H5I_INVALID_HID)) {
+    if ((ref->file_id != H5I_INVALID_HID)) {
         if (ref->app_ref) {
-            if (H5I_dec_app_ref(ref->loc_id) < 0)
+            if (H5I_dec_app_ref(ref->file_id) < 0)
                 HGOTO_ERROR(H5E_REFERENCE, H5E_CANTDEC, FAIL, "decrementing location ID failed");
         }
         else {
-            if (H5I_dec_ref(ref->loc_id) < 0)
+            if (H5I_dec_ref(ref->file_id) < 0)
                 HGOTO_ERROR(H5E_REFERENCE, H5E_CANTDEC, FAIL, "decrementing location ID failed");
         }
     }
-    ref->loc_id = id;
+    ref->file_id = file_id;
 
     /* Prevent location ID from being freed until reference is destroyed,
      * set app_ref if necessary as references are exposed to users and are
-     * expected to be destroyed, this allows the loc_id to be cleanly released
+     * expected to be destroyed, this allows the file_id to be cleanly released
      * on shutdown if users fail to call H5Rdestroy(). */
-    if (inc_ref && H5I_inc_ref(ref->loc_id, app_ref) < 0)
+    if (inc_ref && H5I_inc_ref(ref->file_id, app_ref) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTINC, FAIL, "incrementing location ID failed");
     ref->app_ref = app_ref;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5R__set_loc_id() */
+} /* end H5R__set_file_id() */
 
 /*-------------------------------------------------------------------------
- * Function:    H5R__get_loc_id
+ * Function:    H5R__get_file_id
  *
- * Purpose:     Retrieve location ID attached to existing reference.
+ * Purpose:     Retrieve file ID attached to existing reference.
  *
  * Return:      Valid ID on success / H5I_INVALID_HID on failure
  *
  *-------------------------------------------------------------------------
  */
 hid_t
-H5R__get_loc_id(const H5R_ref_priv_t *ref)
+H5R__get_file_id(const H5R_ref_priv_t *ref)
 {
     hid_t ret_value = H5I_INVALID_HID; /* Return value */
 
@@ -440,10 +440,10 @@ H5R__get_loc_id(const H5R_ref_priv_t *ref)
 
     assert(ref != NULL);
 
-    ret_value = ref->loc_id;
+    ret_value = ref->file_id;
 
     FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5R__get_loc_id() */
+} /* end H5R__get_file_id() */
 
 /*-------------------------------------------------------------------------
  * Function:    H5R__reopen_file
@@ -455,13 +455,12 @@ H5R__get_loc_id(const H5R_ref_priv_t *ref)
  *-------------------------------------------------------------------------
  */
 hid_t
-H5R__reopen_file(H5R_ref_priv_t *ref, H5P_genplist_t *fapl)
+H5R__reopen_file(H5R_ref_priv_t *ref, H5P_genplist_t *fapl, H5P_genplist_t *dxpl)
 {
     hid_t                 fapl_id;         /* ID for FAPL */
     void                 *new_file = NULL; /* File object opened */
     H5VL_connector_prop_t connector_prop;  /* Property for VOL connector ID & info     */
     H5VL_object_t        *vol_obj = NULL;  /* VOL object for file */
-    H5P_genplist_t       *def_dxpl;        /* Dataset transfer property list pointer */
     uint64_t              supported;       /* Whether 'post open' operation is supported by VOL connector */
     hid_t                 ret_value = H5I_INVALID_HID;
 
@@ -485,14 +484,9 @@ H5R__reopen_file(H5R_ref_priv_t *ref, H5P_genplist_t *fapl)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTSET, H5I_INVALID_HID,
                     "can't set VOL connector info in API context");
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_REFERENCE, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
-
     /* Open the file */
     /* (Must open file read-write to allow for object modifications) */
-    if (NULL == (new_file = H5VL_file_open(connector_prop.connector, H5R_REF_FILENAME(ref), H5F_ACC_RDWR,
-                                           fapl, def_dxpl, H5_REQUEST_NULL)))
+    if (NULL == (new_file = H5VL_file_open(connector_prop.connector, H5R_REF_FILENAME(ref), H5F_ACC_RDWR, fapl, dxpl, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENFILE, H5I_INVALID_HID, "unable to open file");
 
     /* Get an ID for the file */
@@ -515,13 +509,12 @@ H5R__reopen_file(H5R_ref_priv_t *ref, H5P_genplist_t *fapl)
         vol_cb_args.args    = NULL;
 
         /* Make the 'post open' callback */
-        if (H5VL_file_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
-            HGOTO_ERROR(H5E_REFERENCE, H5E_CANTINIT, H5I_INVALID_HID,
-                        "unable to make file 'post open' callback");
+        if (H5VL_file_optional(vol_obj, &vol_cb_args, dxpl, H5_REQUEST_NULL) < 0)
+            HGOTO_ERROR(H5E_REFERENCE, H5E_CANTINIT, H5I_INVALID_HID, "unable to make file 'post open' callback");
     } /* end if */
 
-    /* Attach loc_id to reference */
-    if (H5R__set_loc_id((H5R_ref_priv_t *)ref, ret_value, false, true) < 0)
+    /* Attach file_id to reference */
+    if (H5R__set_file_id((H5R_ref_priv_t *)ref, ret_value, false, true) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTSET, H5I_INVALID_HID, "unable to attach location id to reference");
 
 done:
@@ -660,20 +653,20 @@ H5R__copy(const H5R_ref_priv_t *src_ref, H5R_ref_priv_t *dst_ref)
             HGOTO_ERROR(H5E_REFERENCE, H5E_UNSUPPORTED, FAIL, "internal error (unknown reference type)");
     } /* end switch */
 
-    /* We only need to keep a copy of the filename if we don't have the loc_id */
-    if (src_ref->loc_id == H5I_INVALID_HID) {
+    /* We only need to keep a copy of the filename if we don't have the file_id */
+    if (src_ref->file_id == H5I_INVALID_HID) {
         assert(src_ref->info.obj.filename);
 
         if (NULL == (dst_ref->info.obj.filename = strdup(src_ref->info.obj.filename)))
             HGOTO_ERROR(H5E_REFERENCE, H5E_CANTCOPY, FAIL, "Cannot copy filename");
-        dst_ref->loc_id = H5I_INVALID_HID;
+        dst_ref->file_id = H5I_INVALID_HID;
     }
     else {
         dst_ref->info.obj.filename = NULL;
 
         /* Set location ID and hold reference to it */
-        dst_ref->loc_id = src_ref->loc_id;
-        if (H5I_inc_ref(dst_ref->loc_id, true) < 0)
+        dst_ref->file_id = src_ref->file_id;
+        if (H5I_inc_ref(dst_ref->file_id, true) < 0)
             HGOTO_ERROR(H5E_REFERENCE, H5E_CANTINC, FAIL, "incrementing location ID failed");
         dst_ref->app_ref = true;
     }
@@ -1036,7 +1029,7 @@ H5R__decode(const unsigned char *buf, size_t *nbytes, H5R_ref_priv_t *ref)
     } /* end switch */
 
     /* Set loc ID to invalid */
-    ref->loc_id = H5I_INVALID_HID;
+    ref->file_id = H5I_INVALID_HID;
 
     /* Set encoding size */
     ref->encode_size = (uint32_t)decode_size;

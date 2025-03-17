@@ -98,7 +98,6 @@ static H5VL_connector_t *H5VL__conn_create(H5VL_class_t *cls);
 static herr_t            H5VL__conn_find(H5PL_vol_key_t *key, H5VL_connector_t **connector);
 static herr_t            H5VL__conn_free(H5VL_connector_t *connector);
 static herr_t            H5VL__conn_free_id(H5VL_connector_t *connector, void H5_ATTR_UNUSED **request);
-static void             *H5VL__object(hid_t id, H5I_type_t obj_type);
 static herr_t            H5VL__free_vol_wrapper(H5VL_wrap_ctx_t *vol_wrap_ctx);
 
 /*********************/
@@ -1124,8 +1123,8 @@ H5VL_object_inc_rc(H5VL_object_t *vol_obj)
 /*-------------------------------------------------------------------------
  * Function:    H5VL_free_object
  *
- * Purpose:     Wrapper to unregister an object ID with a VOL aux struct
- *              and decrement ref count on VOL connector ID
+ * Purpose:     Wrapper to decrement the ref count on an object with a VOL
+ *              struct and possibly decrement ref count on VOL connector
  *
  * Return:      SUCCEED/FAIL
  *
@@ -1152,6 +1151,86 @@ H5VL_free_object(H5VL_object_t *vol_obj)
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5VL_free_object() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5VL_close_object
+ *
+ * Purpose:     Wrapper to close a VOL object and release its VOL wrapper
+ *
+ * Return:      SUCCEED/FAIL
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5VL_close_object(H5VL_object_t *vol_obj, H5I_type_t type, H5P_genplist_t *dxpl)
+{
+    herr_t ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Check arguments */
+    assert(vol_obj);
+
+    /* Close the underlying object */
+    switch (type) {
+        case H5I_GROUP:
+            /* Close the group */
+            if (H5VL_group_close(vol_obj, dxpl, H5_REQUEST_NULL) < 0)
+                HGOTO_ERROR(H5E_VOL, H5E_CLOSEERROR, FAIL, "unable to close group");
+            break;
+
+        case H5I_DATASET:
+            /* Close the dataset */
+            if (H5VL_dataset_close(vol_obj, dxpl, H5_REQUEST_NULL) < 0)
+                HGOTO_ERROR(H5E_VOL, H5E_CLOSEERROR, FAIL, "unable to close dataset");
+            break;
+
+        case H5I_MAP: {
+            H5VL_optional_args_t vol_cb_args;         /* Arguments to VOL callback */
+
+            /* Set up VOL callback arguments */
+            vol_cb_args.op_type = H5VL_MAP_CLOSE;
+            vol_cb_args.args    = NULL;
+
+            /* Close the map */
+            if (H5VL_optional(vol_obj, &vol_cb_args, dxpl, H5_REQUEST_NULL) < 0)
+                HGOTO_ERROR(H5E_VOL, H5E_CLOSEERROR, FAIL, "unable to close map");
+
+            break;
+        }
+
+        case H5I_DATATYPE:
+            /* Close the connector-managed datatype data */
+            if (H5VL_datatype_close(vol_obj, dxpl, H5_REQUEST_NULL) < 0)
+                HGOTO_ERROR(H5E_VOL, H5E_CLOSEERROR, FAIL, "unable to close datatype");
+            break;
+
+        case H5I_UNINIT:
+        case H5I_BADID:
+        case H5I_FILE:
+        case H5I_ATTR:
+        case H5I_DATASPACE:
+        case H5I_VFL:
+        case H5I_VOL:
+        case H5I_GENPROP_CLS:
+        case H5I_GENPROP_LST:
+        case H5I_ERROR_CLASS:
+        case H5I_ERROR_MSG:
+        case H5I_ERROR_STACK:
+        case H5I_SPACE_SEL_ITER:
+        case H5I_EVENTSET:
+        case H5I_NTYPES:
+        default:
+            HGOTO_ERROR(H5E_VOL, H5E_UNSUPPORTED, FAIL, "unsupported object type");
+    } /* end switch */
+
+    /* Free the VOL object */
+    if (H5VL_free_object(vol_obj) < 0)
+        HGOTO_ERROR(H5E_VOL, H5E_CANTDEC, FAIL, "unable to free VOL object");
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5VL_close_object() */
 
 /*-------------------------------------------------------------------------
  * Function:    H5VL_object_is_native
@@ -1811,26 +1890,26 @@ done:
 } /* end H5VL_object_unwrap() */
 
 /*-------------------------------------------------------------------------
- * Function:    H5VL__object
+ * Function:    H5VL_object
  *
- * Purpose:     Internal function to return the VOL object pointer associated
- *              with an hid_t.
+ * Purpose:     Utility function to return the VOL object pointer associated with
+ *              a hid_t.
  *
  * Return:      Success:    object pointer
  *              Failure:    NULL
  *
  *-------------------------------------------------------------------------
  */
-static void *
-H5VL__object(hid_t id, H5I_type_t obj_type)
+void *
+H5VL_object(hid_t id)
 {
     H5VL_object_t *vol_obj   = NULL;
-    void          *ret_value = NULL;
+    void *ret_value = NULL;
 
-    FUNC_ENTER_PACKAGE
+    FUNC_ENTER_NOAPI(NULL)
 
     /* Get the underlying object */
-    switch (obj_type) {
+    switch (H5I_get_type(id)) {
         case H5I_GROUP:
         case H5I_DATASET:
         case H5I_FILE:
@@ -1872,32 +1951,7 @@ H5VL__object(hid_t id, H5I_type_t obj_type)
     } /* end switch */
 
     /* Set the return value */
-    ret_value = H5VL_object_data(vol_obj);
-
-done:
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5VL__object() */
-
-/*-------------------------------------------------------------------------
- * Function:    H5VL_object
- *
- * Purpose:     Utility function to return the VOL object pointer associated with
- *              a hid_t.
- *
- * Return:      Success:    object pointer
- *              Failure:    NULL
- *
- *-------------------------------------------------------------------------
- */
-void *
-H5VL_object(hid_t id)
-{
-    void *ret_value = NULL;
-
-    FUNC_ENTER_NOAPI(NULL)
-
-    /* Get the underlying object */
-    if (NULL == (ret_value = H5VL__object(id, H5I_get_type(id))))
+    if (NULL == (ret_value = H5VL_object_data(vol_obj)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTGET, NULL, "can't retrieve object for ID");
 
 done:
@@ -1927,7 +1981,7 @@ H5VL_object_verify(hid_t id, H5I_type_t obj_type)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "invalid identifier");
 
     /* Get the underlying object */
-    if (NULL == (ret_value = H5VL__object(id, obj_type)))
+    if (NULL == (ret_value = H5VL_object(id)))
         HGOTO_ERROR(H5E_ARGS, H5E_CANTGET, NULL, "can't retrieve object for ID");
 
 done:
