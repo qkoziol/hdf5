@@ -1289,7 +1289,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Fmount(hid_t loc_id, const char *name, hid_t child_id, hid_t plist_id)
+H5Fmount(hid_t loc_id, const char *name, hid_t child_id, hid_t fmpl_id)
 {
     H5VL_object_t             *loc_vol_obj   = NULL; /* Parent object        */
     H5VL_object_t             *child_vol_obj = NULL; /* Child object         */
@@ -1312,10 +1312,10 @@ H5Fmount(hid_t loc_id, const char *name, hid_t child_id, hid_t plist_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "name parameter cannot be the empty string");
     if (H5I_FILE != H5I_get_type(child_id))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "child_id parameter not a file ID");
-    if (H5P_DEFAULT == plist_id)
-        plist_id = H5P_FILE_MOUNT_DEFAULT;
-    else if (true != H5P_isa_class(plist_id, H5P_FILE_MOUNT))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "plist_id is not a file mount property list ID");
+    if (H5P_DEFAULT == fmpl_id)
+        fmpl_id = H5P_FILE_MOUNT_DEFAULT;
+    else if (true != H5P_isa_class(fmpl_id, H5P_FILE_MOUNT))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "fmpl_id is not a file mount property list ID");
 
     /* Get default dataset transfer property list */
     if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
@@ -1377,7 +1377,7 @@ H5Fmount(hid_t loc_id, const char *name, hid_t child_id, hid_t plist_id)
     vol_cb_args.args.mount.name = name;
     vol_cb_args.args.mount.child_file =
         H5VL_OBJ_DATA(child_vol_obj); /* Don't unwrap fully, so each connector can see its object */
-    vol_cb_args.args.mount.fmpl_id = plist_id;
+    vol_cb_args.args.mount.fmpl_id = fmpl_id;
 
     /* Perform the mount operation */
     /* (This is on a group, so that the VOL framework always sees groups for

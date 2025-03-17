@@ -86,7 +86,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5F_mount(const H5G_loc_t *loc, const char *name, H5F_t *child, hid_t H5_ATTR_UNUSED plist_id)
+H5F_mount(const H5G_loc_t *loc, const char *name, H5F_t *child)
 {
     H5G_t     *mount_point = NULL;  /*mount point group		*/
     H5F_t     *ancestor    = NULL;  /*ancestor files		*/
@@ -104,7 +104,6 @@ H5F_mount(const H5G_loc_t *loc, const char *name, H5F_t *child, hid_t H5_ATTR_UN
     assert(loc);
     assert(name && *name);
     assert(child);
-    assert(true == H5P_isa_class(plist_id, H5P_FILE_MOUNT));
 
     /* Set up group location to fill in */
     mp_loc.oloc = &mp_oloc;

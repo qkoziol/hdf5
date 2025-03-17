@@ -267,8 +267,7 @@ H5VL__native_group_specific(void *obj, H5VL_group_specific_args_t *args, hid_t H
             if (H5G_loc_real(grp, H5I_GROUP, &loc) < 0)
                 HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a group object");
 
-            if (H5F_mount(&loc, args->args.mount.name, args->args.mount.child_file,
-                          args->args.mount.fmpl_id) < 0)
+            if (H5F_mount(&loc, args->args.mount.name, args->args.mount.child_file) < 0)
                 HGOTO_ERROR(H5E_FILE, H5E_MOUNT, FAIL, "unable to mount file");
 
             break;

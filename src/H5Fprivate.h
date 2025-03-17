@@ -570,7 +570,7 @@ H5_DLL herr_t  H5F_get_vfd_handle(const H5F_t *file, H5P_genplist_t *fapl, void 
 H5_DLL bool    H5F_has_vector_select_io(const H5F_t *f, bool is_write);
 
 /* File mounting routines */
-H5_DLL herr_t H5F_mount(const struct H5G_loc_t *loc, const char *name, H5F_t *child, hid_t plist_id);
+H5_DLL herr_t H5F_mount(const struct H5G_loc_t *loc, const char *name, H5F_t *child);
 H5_DLL herr_t H5F_unmount(const struct H5G_loc_t *loc, const char *name);
 H5_DLL bool   H5F_is_mount(const H5F_t *file);
 H5_DLL bool   H5F_has_mount(const H5F_t *file);
