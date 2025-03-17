@@ -134,9 +134,9 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pset_char_encoding(hid_t plist_id, H5T_cset_t encoding)
+H5Pset_char_encoding(hid_t strcpl_id, H5T_cset_t encoding)
 {
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *strcpl;               /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -145,12 +145,12 @@ H5Pset_char_encoding(hid_t plist_id, H5T_cset_t encoding)
     if (encoding <= H5T_CSET_ERROR || encoding >= H5T_NCSET)
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, FAIL, "character encoding is not valid");
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_TYPE_STRING_CREATE, false)))
+    /* Get the property list structure */
+    if (NULL == (strcpl = H5P_object_verify(strcpl_id, H5P_TYPE_STRING_CREATE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set the character encoding */
-    if (H5P_set(plist, H5P_STRCRT_CHAR_ENCODING_NAME, &encoding) < 0)
+    if (H5P_set(strcpl, H5P_STRCRT_CHAR_ENCODING_NAME, &encoding) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set character encoding");
 
 done:
@@ -167,20 +167,20 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pget_char_encoding(hid_t plist_id, H5T_cset_t *encoding /*out*/)
+H5Pget_char_encoding(hid_t strcpl_id, H5T_cset_t *encoding /*out*/)
 {
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *strcpl;               /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_TYPE_STRING_CREATE, true)))
+    /* Get the property list structure */
+    if (NULL == (strcpl = H5P_object_verify(strcpl_id, H5P_TYPE_STRING_CREATE, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get value */
     if (encoding)
-        if (H5P_get(plist, H5P_STRCRT_CHAR_ENCODING_NAME, encoding) < 0)
+        if (H5P_get(strcpl, H5P_STRCRT_CHAR_ENCODING_NAME, encoding) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get character encoding flag");
 
 done:
