@@ -82,7 +82,7 @@ hid_t
 H5VLregister_connector(const H5VL_class_t *cls, hid_t vipl_id)
 {
     H5VL_connector_t *connector = NULL;
-    H5P_genplist_t      *vipl;                /* VOL initialization property list */
+    H5P_genplist_t   *vipl;                        /* VOL initialization property list */
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -105,7 +105,8 @@ done:
     if (ret_value < 0)
         /* Decrement refcount on connector */
         if (connector && H5VL_conn_dec_rc(connector) < 0)
-            HDONE_ERROR(H5E_VOL, H5E_CANTDEC, H5I_INVALID_HID, "unable to decrement ref count on VOL connector");
+            HDONE_ERROR(H5E_VOL, H5E_CANTDEC, H5I_INVALID_HID,
+                        "unable to decrement ref count on VOL connector");
 
     FUNC_LEAVE_API(ret_value)
 } /* end H5VLregister_connector() */
@@ -131,7 +132,7 @@ hid_t
 H5VLregister_connector_by_name(const char *name, hid_t vipl_id)
 {
     H5VL_connector_t *connector = NULL;
-    H5P_genplist_t *vipl = NULL;    /* VOL initialization property list */
+    H5P_genplist_t   *vipl      = NULL;            /* VOL initialization property list */
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -188,7 +189,7 @@ hid_t
 H5VLregister_connector_by_value(H5VL_class_value_t value, hid_t vipl_id)
 {
     H5VL_connector_t *connector = NULL;
-    H5P_genplist_t *vipl = NULL;    /* VOL initialization property list */
+    H5P_genplist_t   *vipl      = NULL;            /* VOL initialization property list */
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)

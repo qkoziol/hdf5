@@ -390,7 +390,7 @@ H5VL__set_def_conn(void)
                 HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "can't get VOL connector ID");
         } /* end else-if */
         else {
-            H5P_genplist_t *def_vipl;    /* Default VOL initialization property list */ 
+            H5P_genplist_t *def_vipl; /* Default VOL initialization property list */
 
             /* Get the default VOL initialization property list */
             if (NULL == (def_vipl = H5I_object(H5P_VOL_INITIALIZE_DEFAULT)))
