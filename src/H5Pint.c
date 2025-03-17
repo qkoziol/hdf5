@@ -299,7 +299,7 @@ const H5P_libclass_t H5P_CLS_MCRT[1] = {{
     &H5P_CLS_MAP_CREATE_g,    /* Pointer to class             */
     &H5P_CLS_MAP_CREATE_ID_g, /* Pointer to class ID          */
     &H5P_LST_MAP_CREATE_ID_g, /* Pointer to default property list ID */
-    NULL,       /* Default property registration routine */
+    NULL,                     /* Default property registration routine */
 
     NULL, /* Class creation callback      */
     NULL, /* Class creation callback info */

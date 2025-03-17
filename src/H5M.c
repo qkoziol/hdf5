@@ -42,10 +42,17 @@
 static herr_t H5M__close_cb(H5VL_object_t *map_vol_obj, void **request);
 
 #ifdef H5_HAVE_MAP_API
-static hid_t  H5M__create_api_common(hid_t loc_id, const char *name, hid_t key_type_id, hid_t val_type_id, H5P_genplist_t *lcpl, H5P_genplist_t *mcpl, H5P_genplist_t *mapl, H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
-static hid_t  H5M__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *mapl, H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
-static herr_t H5M__put_api_common(hid_t map_id, hid_t key_mem_type_id, const void *key, hid_t val_mem_type_id, const void *value, H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
-static herr_t H5M__get_api_common(hid_t map_id, hid_t key_mem_type_id, const void *key, hid_t val_mem_type_id, void *value, H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static hid_t  H5M__create_api_common(hid_t loc_id, const char *name, hid_t key_type_id, hid_t val_type_id,
+                                     H5P_genplist_t *lcpl, H5P_genplist_t *mcpl, H5P_genplist_t *mapl,
+                                     H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static hid_t  H5M__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *mapl, H5P_genplist_t *dxpl,
+                                   void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static herr_t H5M__put_api_common(hid_t map_id, hid_t key_mem_type_id, const void *key, hid_t val_mem_type_id,
+                                  const void *value, H5P_genplist_t *dxpl, void **token_ptr,
+                                  H5VL_object_t **_vol_obj_ptr);
+static herr_t H5M__get_api_common(hid_t map_id, hid_t key_mem_type_id, const void *key, hid_t val_mem_type_id,
+                                  void *value, H5P_genplist_t *dxpl, void **token_ptr,
+                                  H5VL_object_t **_vol_obj_ptr);
 #endif /*  H5_HAVE_MAP_API */
 
 /*********************/
@@ -259,7 +266,7 @@ H5M__create_api_common(hid_t loc_id, const char *name, hid_t key_type_id, hid_t 
         (_vol_obj_ptr ? _vol_obj_ptr : &tmp_vol_obj); /* Ptr to object ptr for loc_id */
     H5VL_optional_args_t vol_cb_args;                 /* Arguments to VOL callback */
     H5VL_map_args_t      map_args;                    /* Arguments for map operations */
-    hid_t                mapl_id;   /* Map access property list ID */
+    hid_t                mapl_id;                     /* Map access property list ID */
     hid_t                ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -272,7 +279,8 @@ H5M__create_api_common(hid_t loc_id, const char *name, hid_t key_type_id, hid_t 
 
     /* Set up VOL callback arguments */
     mapl_id = H5P_PLIST_ID(mapl);
-    if (H5VL_setup_acc_args(loc_id, H5P_CLS_MACC, true, &mapl_id, vol_obj_ptr, &map_args.create.loc_params) < 0)
+    if (H5VL_setup_acc_args(loc_id, H5P_CLS_MACC, true, &mapl_id, vol_obj_ptr, &map_args.create.loc_params) <
+        0)
         HGOTO_ERROR(H5E_MAP, H5E_CANTSET, H5I_INVALID_HID, "can't set object access arguments");
     map_args.create.name        = name;
     map_args.create.lcpl_id     = H5P_PLIST_ID(lcpl);
@@ -359,7 +367,8 @@ H5Mcreate(hid_t loc_id, const char *name, hid_t key_type_id, hid_t val_type_id, 
         HGOTO_ERROR(H5E_MAP, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
 
     /* Create the map synchronously */
-    if ((ret_value = H5M__create_api_common(loc_id, name, key_type_id, val_type_id, lcpl, mcpl, mapl, def_dxpl, NULL, NULL)) < 0)
+    if ((ret_value = H5M__create_api_common(loc_id, name, key_type_id, val_type_id, lcpl, mcpl, mapl,
+                                            def_dxpl, NULL, NULL)) < 0)
         HGOTO_ERROR(H5E_MAP, H5E_CANTCREATE, H5I_INVALID_HID, "unable to create map synchronously");
 
 done:
@@ -384,7 +393,7 @@ H5Mcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
 {
     H5VL_object_t  *vol_obj = NULL;              /* Object for loc_id */
     H5P_genplist_t *lcpl;                        /* Link creation property list */
-    H5P_genplist_t *mcpl;                        /* Map creation property list */   
+    H5P_genplist_t *mcpl;                        /* Map creation property list */
     H5P_genplist_t *mapl;                        /* Map access property list */
     H5P_genplist_t *def_dxpl;                    /* Default dataset property list */
     void           *token     = NULL;            /* Request token for async operation        */
@@ -420,7 +429,8 @@ H5Mcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
         token_ptr = &token;
 
     /* Create the map asynchronously */
-    if ((ret_value = H5M__create_api_common(loc_id, name, key_type_id, val_type_id, lcpl, mcpl, mapl, def_dxpl, token_ptr, &vol_obj)) < 0)
+    if ((ret_value = H5M__create_api_common(loc_id, name, key_type_id, val_type_id, lcpl, mcpl, mapl,
+                                            def_dxpl, token_ptr, &vol_obj)) < 0)
         HGOTO_ERROR(H5E_MAP, H5E_CANTCREATE, H5I_INVALID_HID, "unable to create map asynchronously");
 
     /* If a token was created, add the token to the event set */
@@ -543,8 +553,8 @@ done:
  *-------------------------------------------------------------------------
  */
 static hid_t
-H5M__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *mapl, H5P_genplist_t *dxpl, void **token_ptr,
-                     H5VL_object_t **_vol_obj_ptr)
+H5M__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *mapl, H5P_genplist_t *dxpl,
+                     void **token_ptr, H5VL_object_t **_vol_obj_ptr)
 {
     void           *map         = NULL; /* map object from VOL connector */
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
@@ -552,7 +562,7 @@ H5M__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *mapl, H5P_g
         (_vol_obj_ptr ? _vol_obj_ptr : &tmp_vol_obj); /* Ptr to object ptr for loc_id */
     H5VL_optional_args_t vol_cb_args;                 /* Arguments to VOL callback */
     H5VL_map_args_t      map_args;                    /* Arguments for map operations */
-    hid_t                mapl_id;   /* Map access property list ID */
+    hid_t                mapl_id;                     /* Map access property list ID */
     hid_t                ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -565,7 +575,8 @@ H5M__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *mapl, H5P_g
 
     /* Set up VOL callback arguments */
     mapl_id = H5P_PLIST_ID(mapl);
-    if (H5VL_setup_acc_args(loc_id, H5P_CLS_MACC, false, &mapl_id, vol_obj_ptr, &map_args.open.loc_params) < 0)
+    if (H5VL_setup_acc_args(loc_id, H5P_CLS_MACC, false, &mapl_id, vol_obj_ptr, &map_args.open.loc_params) <
+        0)
         HGOTO_ERROR(H5E_MAP, H5E_CANTSET, H5I_INVALID_HID, "can't set object access arguments");
     map_args.open.name    = name;
     map_args.open.mapl_id = mapl_id;
@@ -1156,7 +1167,8 @@ H5Mput_async(const char *app_file, const char *app_func, unsigned app_line, hid_
         token_ptr = &token;
 
     /* Add key-value pair to the map asynchronously */
-    if (H5M__put_api_common(map_id, key_mem_type_id, key, val_mem_type_id, value, dxpl, token_ptr, &vol_obj) < 0)
+    if (H5M__put_api_common(map_id, key_mem_type_id, key, val_mem_type_id, value, dxpl, token_ptr, &vol_obj) <
+        0)
         HGOTO_ERROR(H5E_MAP, H5E_CANTPUT, FAIL, "unable to put value to map asynchronously");
 
     /* If a token was created, add the token to the event set */
@@ -1292,7 +1304,8 @@ H5Mget_async(const char *app_file, const char *app_func, unsigned app_line, hid_
         token_ptr = &token;
 
     /* Get key-value pair from the map asynchronously */
-    if (H5M__get_api_common(map_id, key_mem_type_id, key, val_mem_type_id, value, def_dxpl, token_ptr, &vol_obj) < 0)
+    if (H5M__get_api_common(map_id, key_mem_type_id, key, val_mem_type_id, value, def_dxpl, token_ptr,
+                            &vol_obj) < 0)
         HGOTO_ERROR(H5E_MAP, H5E_CANTGET, FAIL, "unable to get value from map asynchronously");
 
     /* If a token was created, add the token to the event set */
