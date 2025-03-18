@@ -55,22 +55,12 @@
 /********************/
 
 /* Helper routines for sync/async API calls */
-static hid_t  H5O__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *lapl, H5P_genplist_t *dxpl,
-                                   void **token_ptr, H5VL_object_t **_vol_obj_ptr);
-static hid_t  H5O__open_by_idx_api_common(hid_t loc_id, const char *group_name, H5_index_t idx_type,
-                                          H5_iter_order_t order, hsize_t n, H5P_genplist_t *lapl,
-                                          H5P_genplist_t *dxpl, void **token_ptr,
-                                          H5VL_object_t **_vol_obj_ptr);
-static herr_t H5O__get_info_by_name_api_common(hid_t loc_id, const char *name, H5O_info2_t *oinfo /*out*/,
-                                               unsigned fields, H5P_genplist_t *lapl, H5P_genplist_t *dxpl,
-                                               void **token_ptr, H5VL_object_t **_vol_obj_ptr);
-static herr_t H5O__copy_api_common(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id,
-                                   const char *dst_name, hid_t ocpypl_id, H5P_genplist_t *lcpl,
-                                   H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
-static herr_t H5O__flush_api_common(hid_t obj_id, H5P_genplist_t *dxpl, void **token_ptr,
-                                    H5VL_object_t **_vol_obj_ptr);
-static herr_t H5O__refresh_api_common(hid_t oid, H5P_genplist_t *dxpl, void **token_ptr,
-                                      H5VL_object_t **_vol_obj_ptr);
+static hid_t  H5O__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *lapl, H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static hid_t  H5O__open_by_idx_api_common(hid_t loc_id, const char *group_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t n, H5P_genplist_t *lapl, H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static herr_t H5O__get_info_by_name_api_common(hid_t loc_id, const char *name, H5O_info2_t *oinfo /*out*/, unsigned fields, H5P_genplist_t *lapl, H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static herr_t H5O__copy_api_common(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *dst_name, H5P_genplist_t *ocpypl, H5P_genplist_t *lcpl, H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static herr_t H5O__flush_api_common(hid_t obj_id, H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static herr_t H5O__refresh_api_common(hid_t oid, H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
 static htri_t H5O__close_check_type(hid_t object_id);
 
 /*********************/
@@ -449,19 +439,15 @@ done:
  */
 static herr_t
 H5O__copy_api_common(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *dst_name,
-                     hid_t ocpypl_id, H5P_genplist_t *lcpl, H5P_genplist_t *dxpl, void **token_ptr,
+                     H5P_genplist_t *ocpypl, H5P_genplist_t *lcpl, H5P_genplist_t *dxpl, void **token_ptr,
                      H5VL_object_t **_vol_obj_ptr)
 {
-    /* dst_id */
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
         (_vol_obj_ptr ? _vol_obj_ptr : &tmp_vol_obj); /* Ptr to object ptr for loc_id */
     H5VL_loc_params_t loc_params2;
-
-    /* src_id */
     H5VL_object_t    *vol_obj1 = NULL; /* object of src_id */
     H5VL_loc_params_t loc_params1;
-
     herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -471,12 +457,6 @@ H5O__copy_api_common(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, c
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "no source name specified");
     if (!dst_name || !*dst_name)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "no destination name specified");
-
-    /* Get object copy property list */
-    if (H5P_DEFAULT == ocpypl_id)
-        ocpypl_id = H5P_OBJECT_COPY_DEFAULT;
-    else if (true != H5P_isa_class(ocpypl_id, H5P_OBJECT_COPY))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not object copy property list");
 
     /* Setup and check args */
     if (H5VL_setup_loc_args(src_loc_id, &vol_obj1, &loc_params1) < 0)
@@ -489,8 +469,7 @@ H5O__copy_api_common(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, c
     loc_params2.obj_type = H5I_get_type(dst_loc_id);
 
     /* Copy the object */
-    if (H5VL_object_copy(vol_obj1, &loc_params1, src_name, *vol_obj_ptr, &loc_params2, dst_name, ocpypl_id,
-                         lcpl, dxpl, token_ptr) < 0)
+    if (H5VL_object_copy(vol_obj1, &loc_params1, src_name, *vol_obj_ptr, &loc_params2, dst_name, ocpypl, lcpl, dxpl, token_ptr) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTCOPY, FAIL, "unable to copy object");
 
 done:
@@ -576,6 +555,7 @@ H5Ocopy(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *ds
         hid_t lcpl_id)
 {
     H5P_genplist_t *lcpl;                /* Link creation property list */
+    H5P_genplist_t *ocpypl;               /* Object copy property list */
     H5P_genplist_t *def_dxpl;            /* Default dataset transfer property list */
     herr_t          ret_value = SUCCEED; /* Return value */
 
@@ -587,6 +567,11 @@ H5Ocopy(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *ds
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "can't find object for ID");
 
+    if (H5P_DEFAULT == ocpypl_id)
+        ocpypl_id = H5P_OBJECT_COPY_DEFAULT;
+    if (NULL == (ocpypl = H5P_object_verify(ocpypl_id, H5P_TYPE_OBJECT_COPY, true)))
+        HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "can't find object for ID");
+
     /* Get the default transfer property list */
     if (NULL == (def_dxpl = H5P_object_verify(H5P_DATASET_XFER_DEFAULT, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "can't find object for ID");
@@ -595,8 +580,7 @@ H5Ocopy(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *ds
     H5CX_set_lcpl(lcpl_id);
 
     /* To copy an object synchronously */
-    if (H5O__copy_api_common(src_loc_id, src_name, dst_loc_id, dst_name, ocpypl_id, lcpl, def_dxpl, NULL,
-                             NULL) < 0)
+    if (H5O__copy_api_common(src_loc_id, src_name, dst_loc_id, dst_name, ocpypl, lcpl, def_dxpl, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTCOPY, FAIL, "unable to synchronously copy object");
 
 done:
@@ -619,6 +603,7 @@ H5Ocopy_async(const char *app_file, const char *app_func, unsigned app_line, hid
 {
     H5VL_object_t  *vol_obj = NULL;              /* Object for loc_id */
     H5P_genplist_t *lcpl;                        /* Link creation property list */
+    H5P_genplist_t *ocpypl;                      /* Object copy property list */
     H5P_genplist_t *def_dxpl;                    /* Default dataset transfer property list */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
@@ -630,6 +615,11 @@ H5Ocopy_async(const char *app_file, const char *app_func, unsigned app_line, hid
     if (H5P_DEFAULT == lcpl_id)
         lcpl_id = H5P_LINK_CREATE_DEFAULT;
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
+        HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "can't find object for ID");
+
+    if (H5P_DEFAULT == ocpypl_id)
+        ocpypl_id = H5P_OBJECT_COPY_DEFAULT;
+    if (NULL == (ocpypl = H5P_object_verify(ocpypl_id, H5P_TYPE_OBJECT_COPY, true)))
         HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get the default transfer property list */
@@ -644,8 +634,7 @@ H5Ocopy_async(const char *app_file, const char *app_func, unsigned app_line, hid
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* To copy an object asynchronously */
-    if (H5O__copy_api_common(src_loc_id, src_name, dst_loc_id, dst_name, ocpypl_id, lcpl, def_dxpl, token_ptr,
-                             &vol_obj) < 0)
+    if (H5O__copy_api_common(src_loc_id, src_name, dst_loc_id, dst_name, ocpypl, lcpl, def_dxpl, token_ptr, &vol_obj) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTCOPY, FAIL, "unable to asynchronously copy object");
 
     /* If a token was created, add the token to the event set */

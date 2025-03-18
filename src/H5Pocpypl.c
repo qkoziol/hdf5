@@ -84,11 +84,11 @@ static herr_t                       H5P__copy_merge_comm_dt_list(H5O_copy_dtype_
 static herr_t H5P__ocpy_reg_prop(H5P_genclass_t *pclass);
 
 /* Property callbacks */
-static herr_t H5P__ocpy_merge_comm_dt_list_set(hid_t prop_id, const char *name, size_t size, void *value);
-static herr_t H5P__ocpy_merge_comm_dt_list_get(hid_t prop_id, const char *name, size_t size, void *value);
+static herr_t H5P__ocpy_merge_comm_dt_list_set(hid_t ocpyl_id, const char *name, size_t size, void *value);
+static herr_t H5P__ocpy_merge_comm_dt_list_get(hid_t ocpyl_id, const char *name, size_t size, void *value);
 static herr_t H5P__ocpy_merge_comm_dt_list_enc(const void *value, void **_pp, size_t *size);
 static herr_t H5P__ocpy_merge_comm_dt_list_dec(const void **_pp, void *value);
-static herr_t H5P__ocpy_merge_comm_dt_list_del(hid_t prop_id, const char *name, size_t size, void *value);
+static herr_t H5P__ocpy_merge_comm_dt_list_del(hid_t ocpyl_id, const char *name, size_t size, void *value);
 static herr_t H5P__ocpy_merge_comm_dt_list_copy(const char *name, size_t size, void *value);
 static int    H5P__ocpy_merge_comm_dt_list_cmp(const void *value1, const void *value2, size_t size);
 static herr_t H5P__ocpy_merge_comm_dt_list_close(const char *name, size_t size, void *value);
@@ -279,7 +279,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5P__ocpy_merge_comm_dt_list_set(hid_t H5_ATTR_UNUSED prop_id, const char H5_ATTR_UNUSED *name,
+H5P__ocpy_merge_comm_dt_list_set(hid_t H5_ATTR_UNUSED ocpyl_id, const char H5_ATTR_UNUSED *name,
                                  size_t H5_ATTR_UNUSED size, void *value)
 {
     herr_t ret_value = SUCCEED; /* Return value */
@@ -308,7 +308,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5P__ocpy_merge_comm_dt_list_get(hid_t H5_ATTR_UNUSED prop_id, const char H5_ATTR_UNUSED *name,
+H5P__ocpy_merge_comm_dt_list_get(hid_t H5_ATTR_UNUSED ocpyl_id, const char H5_ATTR_UNUSED *name,
                                  size_t H5_ATTR_UNUSED size, void *value)
 {
     herr_t ret_value = SUCCEED; /* Return value */
@@ -465,7 +465,7 @@ done:
  *--------------------------------------------------------------------------
  */
 static herr_t
-H5P__ocpy_merge_comm_dt_list_del(hid_t H5_ATTR_UNUSED prop_id, const char H5_ATTR_UNUSED *name,
+H5P__ocpy_merge_comm_dt_list_del(hid_t H5_ATTR_UNUSED ocpyl_id, const char H5_ATTR_UNUSED *name,
                                  size_t H5_ATTR_UNUSED size, void *value)
 {
     FUNC_ENTER_PACKAGE_NOERR
@@ -590,8 +590,8 @@ H5P__ocpy_merge_comm_dt_list_close(const char H5_ATTR_UNUSED *name, size_t H5_AT
  * Purpose:     Set properties when copying an object (group, dataset, and datatype)
  *              from one location to another
  *
- * Usage:       H5Pset_copy_group(plist_id, cpy_option)
- *              hid_t plist_id;			IN: Property list to copy object
+ * Usage:       H5Pset_copy_group(ocpyl_id, cpy_option)
+ *              hid_t ocpyl_id;			IN: Property list to copy object
  *              unsigned cpy_option; 		IN: Options to copy object such as
  *                  H5O_COPY_SHALLOW_HIERARCHY_FLAG    -- Copy only immediate members
  *                  H5O_COPY_EXPAND_SOFT_LINK_FLAG     -- Expand soft links into new objects/
@@ -604,9 +604,9 @@ H5P__ocpy_merge_comm_dt_list_close(const char H5_ATTR_UNUSED *name, size_t H5_AT
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pset_copy_object(hid_t plist_id, unsigned cpy_option)
+H5Pset_copy_object(hid_t ocpyl_id, unsigned cpy_option)
 {
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *ocpypl;               /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -615,12 +615,12 @@ H5Pset_copy_object(hid_t plist_id, unsigned cpy_option)
     if (cpy_option & ~H5O_COPY_ALL)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "unknown option specified");
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_TYPE_OBJECT_COPY, false)))
+    /* Get the property list structure */
+    if (NULL == (ocpypl = H5P_object_verify(ocpyl_id, H5P_TYPE_OBJECT_COPY, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set value */
-    if (H5P_set(plist, H5O_CPY_OPTION_NAME, &cpy_option) < 0)
+    if (H5P_set(ocpypl, H5O_CPY_OPTION_NAME, &cpy_option) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set copy object flag");
 
 done:
@@ -638,20 +638,20 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pget_copy_object(hid_t plist_id, unsigned *cpy_option /*out*/)
+H5Pget_copy_object(hid_t ocpyl_id, unsigned *cpy_option /*out*/)
 {
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *ocpypl;               /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_TYPE_OBJECT_COPY, true)))
+    /* Get the property list structure */
+    if (NULL == (ocpypl = H5P_object_verify(ocpyl_id, H5P_TYPE_OBJECT_COPY, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get values */
     if (cpy_option)
-        if (H5P_get(plist, H5O_CPY_OPTION_NAME, cpy_option) < 0)
+        if (H5P_get(ocpypl, H5O_CPY_OPTION_NAME, cpy_option) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get object copy flag");
 
 done:
@@ -668,8 +668,8 @@ done:
  *              datatype is not found in the list of paths created by this
  *              function, the entire file will be searched.
  *
- * Usage:       H5Padd_merge_committed_dtype_path(plist_id, path)
- *              hid_t plist_id;                 IN: Property list to copy object
+ * Usage:       H5Padd_merge_committed_dtype_path(ocpyl_id, path)
+ *              hid_t ocpyl_id;                 IN: Property list to copy object
  *              const char *path;               IN: Path to add to list
  *
  * Return:      Non-negative on success/Negative on failure
@@ -677,9 +677,9 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Padd_merge_committed_dtype_path(hid_t plist_id, const char *path)
+H5Padd_merge_committed_dtype_path(hid_t ocpyl_id, const char *path)
 {
-    H5P_genplist_t              *plist;               /* Property list pointer */
+    H5P_genplist_t              *ocpypl;               /* Property list pointer */
     H5O_copy_dtype_merge_list_t *old_list;            /* Merge committed dtype list currently present */
     H5O_copy_dtype_merge_list_t *new_obj   = NULL;    /* New object to add to list */
     herr_t                       ret_value = SUCCEED; /* Return value */
@@ -692,12 +692,12 @@ H5Padd_merge_committed_dtype_path(hid_t plist_id, const char *path)
     if (path[0] == '\0')
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "path is empty string");
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_TYPE_OBJECT_COPY, false)))
+    /* Get the property list structure */
+    if (NULL == (ocpypl = H5P_object_verify(ocpyl_id, H5P_TYPE_OBJECT_COPY, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get dtype list */
-    if (H5P_peek(plist, H5O_CPY_MERGE_COMM_DT_LIST_NAME, &old_list) < 0)
+    if (H5P_peek(ocpypl, H5O_CPY_MERGE_COMM_DT_LIST_NAME, &old_list) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get merge named dtype list");
 
     /* Add the new path to the list */
@@ -708,7 +708,7 @@ H5Padd_merge_committed_dtype_path(hid_t plist_id, const char *path)
     new_obj->next = old_list;
 
     /* Update the list stored in the property list */
-    if (H5P_poke(plist, H5O_CPY_MERGE_COMM_DT_LIST_NAME, &new_obj) < 0)
+    if (H5P_poke(ocpypl, H5O_CPY_MERGE_COMM_DT_LIST_NAME, &new_obj) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set merge named dtype list");
 
 done:
@@ -728,35 +728,35 @@ done:
  *              H5Padd_merge_committed_dtype_path.  A new list may then be
  *              created by calling H5Padd_merge_committed_dtype_path again.
  *
- * Usage:       H5Pfree_merge_committed_dtype_paths(plist_id)
- *              hid_t plist_id;                 IN: Property list to copy object
+ * Usage:       H5Pfree_merge_committed_dtype_paths(ocpyl_id)
+ *              hid_t ocpyl_id;                 IN: Property list to copy object
  *
  * Return:      Non-negative on success/Negative on failure
  *
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pfree_merge_committed_dtype_paths(hid_t plist_id)
+H5Pfree_merge_committed_dtype_paths(hid_t ocpyl_id)
 {
-    H5P_genplist_t              *plist;               /* Property list pointer */
+    H5P_genplist_t              *ocpypl;               /* Property list pointer */
     H5O_copy_dtype_merge_list_t *dt_list;             /* Merge committed dtype list currently present */
     herr_t                       ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_TYPE_OBJECT_COPY, false)))
+    /* Get the property list structure */
+    if (NULL == (ocpypl = H5P_object_verify(ocpyl_id, H5P_TYPE_OBJECT_COPY, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get dtype list */
-    if (H5P_peek(plist, H5O_CPY_MERGE_COMM_DT_LIST_NAME, &dt_list) < 0)
+    if (H5P_peek(ocpypl, H5O_CPY_MERGE_COMM_DT_LIST_NAME, &dt_list) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get merge committed dtype list");
 
     /* Free dtype list */
     dt_list = H5P__free_merge_comm_dtype_list(dt_list);
 
     /* Update the list stored in the property list (to NULL) */
-    if (H5P_poke(plist, H5O_CPY_MERGE_COMM_DT_LIST_NAME, &dt_list) < 0)
+    if (H5P_poke(ocpypl, H5O_CPY_MERGE_COMM_DT_LIST_NAME, &dt_list) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set merge committed dtype list");
 
 done:
@@ -771,8 +771,8 @@ done:
  * 		H5Ocopy will invoke this callback before searching all committed datatypes
  *		at destination.
  *
- * Usage:       H5Pset_mcdt_search_cb(plist_id, H5O_mcdt_search_cb_t func, void *op_data)
- *              hid_t plist_id;                 IN: Property list to copy object
+ * Usage:       H5Pset_mcdt_search_cb(ocpyl_id, H5O_mcdt_search_cb_t func, void *op_data)
+ *              hid_t ocpyl_id;                 IN: Property list to copy object
  *              H5O_mcdt_search_cb_t func;      IN: The callback function
  *              void *op_data;      		IN: The user data
  *
@@ -781,9 +781,9 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pset_mcdt_search_cb(hid_t plist_id, H5O_mcdt_search_cb_t func, void *op_data)
+H5Pset_mcdt_search_cb(hid_t ocpyl_id, H5O_mcdt_search_cb_t func, void *op_data)
 {
-    H5P_genplist_t    *plist;               /* Property list pointer */
+    H5P_genplist_t    *ocpypl;               /* Property list pointer */
     H5O_mcdt_cb_info_t cb_info;             /* Callback info struct */
     herr_t             ret_value = SUCCEED; /* Return value */
 
@@ -794,8 +794,8 @@ H5Pset_mcdt_search_cb(hid_t plist_id, H5O_mcdt_search_cb_t func, void *op_data)
     if (!func && op_data)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "callback is NULL while user data is not");
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_TYPE_OBJECT_COPY, false)))
+    /* Get the property list structure */
+    if (NULL == (ocpypl = H5P_object_verify(ocpyl_id, H5P_TYPE_OBJECT_COPY, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Populate the callback info struct */
@@ -803,7 +803,7 @@ H5Pset_mcdt_search_cb(hid_t plist_id, H5O_mcdt_search_cb_t func, void *op_data)
     cb_info.user_data = op_data;
 
     /* Set callback info */
-    if (H5P_set(plist, H5O_CPY_MCDT_SEARCH_CB_NAME, &cb_info) < 0)
+    if (H5P_set(ocpypl, H5O_CPY_MCDT_SEARCH_CB_NAME, &cb_info) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set callback info");
 
 done:
@@ -816,8 +816,8 @@ done:
  * Purpose:     Retrieves the callback function and user data from the specified
  *		object copy property list.
  *
- * Usage:       H5Pget_mcdt_search_cb(plist_id, H5O_mcdt_search_cb_t *func, void **op_data)
- *              hid_t plist_id;                 IN: Property list to copy object
+ * Usage:       H5Pget_mcdt_search_cb(ocpyl_id, H5O_mcdt_search_cb_t *func, void **op_data)
+ *              hid_t ocpyl_id;                 IN: Property list to copy object
  *		H5O_mcdt_search_cb_t *func;	OUT: The callback function
  *		void **op_data;			OUT: The user data
  *
@@ -826,20 +826,20 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pget_mcdt_search_cb(hid_t plist_id, H5O_mcdt_search_cb_t *func /*out*/, void **op_data /*out*/)
+H5Pget_mcdt_search_cb(hid_t ocpyl_id, H5O_mcdt_search_cb_t *func /*out*/, void **op_data /*out*/)
 {
-    H5P_genplist_t    *plist;               /* Property list pointer */
+    H5P_genplist_t    *ocpypl;               /* Property list pointer */
     H5O_mcdt_cb_info_t cb_info;             /* Callback info struct */
     herr_t             ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_TYPE_OBJECT_COPY, true)))
+    /* Get the property list structure */
+    if (NULL == (ocpypl = H5P_object_verify(ocpyl_id, H5P_TYPE_OBJECT_COPY, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get callback info */
-    if (H5P_get(plist, H5O_CPY_MCDT_SEARCH_CB_NAME, &cb_info) < 0)
+    if (H5P_get(ocpypl, H5O_CPY_MCDT_SEARCH_CB_NAME, &cb_info) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get callback info");
 
     if (func)

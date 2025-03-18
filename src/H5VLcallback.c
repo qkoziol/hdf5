@@ -169,7 +169,7 @@ static void  *H5VL__object_open(void *obj, const H5VL_loc_params_t *params, cons
                                 H5I_type_t *opened_type, H5P_genplist_t *dxpl, void **req);
 static herr_t H5VL__object_copy(void *src_obj, const H5VL_loc_params_t *src_loc_params, const char *src_name,
                                 void *dst_obj, const H5VL_loc_params_t *dst_loc_params, const char *dst_name,
-                                const H5VL_class_t *cls, hid_t ocpypl_id, H5P_genplist_t *lcpl,
+                                const H5VL_class_t *cls, H5P_genplist_t *ocpypl, H5P_genplist_t *lcpl,
                                 H5P_genplist_t *dxpl, void **req);
 static herr_t H5VL__object_get(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_class_t *cls,
                                H5VL_object_get_args_t *args, H5P_genplist_t *dxpl, void **req);
@@ -6326,7 +6326,7 @@ done:
 static herr_t
 H5VL__object_copy(void *src_obj, const H5VL_loc_params_t *src_loc_params, const char *src_name, void *dst_obj,
                   const H5VL_loc_params_t *dst_loc_params, const char *dst_name, const H5VL_class_t *cls,
-                  hid_t ocpypl_id, H5P_genplist_t *lcpl, H5P_genplist_t *dxpl, void **req)
+                  H5P_genplist_t *ocpypl, H5P_genplist_t *lcpl, H5P_genplist_t *dxpl, void **req)
 {
     herr_t ret_value = SUCCEED; /* Return value */
 
@@ -6341,8 +6341,7 @@ H5VL__object_copy(void *src_obj, const H5VL_loc_params_t *src_loc_params, const 
         {
             /* Call the corresponding VOL callback */
             ret_value =
-                (cls->object_cls.copy)(src_obj, src_loc_params, src_name, dst_obj, dst_loc_params, dst_name,
-                                       ocpypl_id, H5P_PLIST_ID(lcpl), H5P_PLIST_ID(dxpl), req);
+                (cls->object_cls.copy)(src_obj, src_loc_params, src_name, dst_obj, dst_loc_params, dst_name, H5P_PLIST_ID(ocpypl), H5P_PLIST_ID(lcpl), H5P_PLIST_ID(dxpl), req);
         }
     H5_AFTER_USER_CB(FAIL)
     if (ret_value < 0)
@@ -6365,7 +6364,7 @@ done:
 herr_t
 H5VL_object_copy(const H5VL_object_t *src_obj, const H5VL_loc_params_t *src_loc_params, const char *src_name,
                  const H5VL_object_t *dst_obj, const H5VL_loc_params_t *dst_loc_params, const char *dst_name,
-                 hid_t ocpypl_id, H5P_genplist_t *lcpl, H5P_genplist_t *dxpl, void **req)
+                 H5P_genplist_t *ocpypl, H5P_genplist_t *lcpl, H5P_genplist_t *dxpl, void **req)
 {
     bool   vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
     herr_t ret_value       = SUCCEED; /* Return value */
@@ -6374,8 +6373,7 @@ H5VL_object_copy(const H5VL_object_t *src_obj, const H5VL_loc_params_t *src_loc_
 
     /* Make sure that the VOL connectors are the same */
     if (src_obj->connector->cls->value != dst_obj->connector->cls->value)
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL,
-                    "objects are accessed through different VOL connectors and can't be copied");
+        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "objects are accessed through different VOL connectors and can't be copied");
 
     /* Set wrapper info in API context */
     if (H5VL_set_vol_wrapper(src_obj) < 0)
@@ -6383,8 +6381,7 @@ H5VL_object_copy(const H5VL_object_t *src_obj, const H5VL_loc_params_t *src_loc_
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__object_copy(src_obj->data, src_loc_params, src_name, dst_obj->data, dst_loc_params, dst_name,
-                          src_obj->connector->cls, ocpypl_id, lcpl, dxpl, req) < 0)
+    if (H5VL__object_copy(src_obj->data, src_loc_params, src_name, dst_obj->data, dst_loc_params, dst_name, src_obj->connector->cls, ocpypl, lcpl, dxpl, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTCOPY, FAIL, "object copy failed");
 
 done:
@@ -6411,6 +6408,7 @@ H5VLobject_copy(void *src_obj, const H5VL_loc_params_t *src_loc_params, const ch
                 hid_t ocpypl_id, hid_t lcpl_id, hid_t dxpl_id, void **req /*out*/)
 {
     H5VL_connector_t *connector;           /* VOL connector */
+    H5P_genplist_t   *ocpypl;              /* Object copy property list */
     H5P_genplist_t   *lcpl;                /* Link creation property list */
     H5P_genplist_t   *dxpl;                /* Dataset transfer property list */
     herr_t            ret_value = SUCCEED; /* Return value */
@@ -6422,14 +6420,15 @@ H5VLobject_copy(void *src_obj, const H5VL_loc_params_t *src_loc_params, const ch
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid object");
     if (NULL == (connector = H5I_object_verify(connector_id, H5I_VOL)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a VOL connector ID");
+    if (NULL == (ocpypl = H5P_object_verify(ocpypl_id, H5P_TYPE_OBJECT_COPY, true)))
+        HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__object_copy(src_obj, src_loc_params, src_name, dst_obj, dst_loc_params, dst_name,
-                          connector->cls, ocpypl_id, lcpl, dxpl, req) < 0)
+    if (H5VL__object_copy(src_obj, src_loc_params, src_name, dst_obj, dst_loc_params, dst_name, connector->cls, ocpypl, lcpl, dxpl, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTCOPY, FAIL, "unable to copy object");
 
 done:
