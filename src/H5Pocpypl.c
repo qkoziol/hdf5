@@ -606,7 +606,7 @@ H5P__ocpy_merge_comm_dt_list_close(const char H5_ATTR_UNUSED *name, size_t H5_AT
 herr_t
 H5Pset_copy_object(hid_t ocpyl_id, unsigned cpy_option)
 {
-    H5P_genplist_t *ocpypl;               /* Property list pointer */
+    H5P_genplist_t *ocpypl;              /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -640,7 +640,7 @@ done:
 herr_t
 H5Pget_copy_object(hid_t ocpyl_id, unsigned *cpy_option /*out*/)
 {
-    H5P_genplist_t *ocpypl;               /* Property list pointer */
+    H5P_genplist_t *ocpypl;              /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -679,7 +679,7 @@ done:
 herr_t
 H5Padd_merge_committed_dtype_path(hid_t ocpyl_id, const char *path)
 {
-    H5P_genplist_t              *ocpypl;               /* Property list pointer */
+    H5P_genplist_t              *ocpypl;              /* Property list pointer */
     H5O_copy_dtype_merge_list_t *old_list;            /* Merge committed dtype list currently present */
     H5O_copy_dtype_merge_list_t *new_obj   = NULL;    /* New object to add to list */
     herr_t                       ret_value = SUCCEED; /* Return value */
@@ -738,7 +738,7 @@ done:
 herr_t
 H5Pfree_merge_committed_dtype_paths(hid_t ocpyl_id)
 {
-    H5P_genplist_t              *ocpypl;               /* Property list pointer */
+    H5P_genplist_t              *ocpypl;              /* Property list pointer */
     H5O_copy_dtype_merge_list_t *dt_list;             /* Merge committed dtype list currently present */
     herr_t                       ret_value = SUCCEED; /* Return value */
 
@@ -783,7 +783,7 @@ done:
 herr_t
 H5Pset_mcdt_search_cb(hid_t ocpyl_id, H5O_mcdt_search_cb_t func, void *op_data)
 {
-    H5P_genplist_t    *ocpypl;               /* Property list pointer */
+    H5P_genplist_t    *ocpypl;              /* Property list pointer */
     H5O_mcdt_cb_info_t cb_info;             /* Callback info struct */
     herr_t             ret_value = SUCCEED; /* Return value */
 
@@ -828,7 +828,7 @@ done:
 herr_t
 H5Pget_mcdt_search_cb(hid_t ocpyl_id, H5O_mcdt_search_cb_t *func /*out*/, void **op_data /*out*/)
 {
-    H5P_genplist_t    *ocpypl;               /* Property list pointer */
+    H5P_genplist_t    *ocpypl;              /* Property list pointer */
     H5O_mcdt_cb_info_t cb_info;             /* Callback info struct */
     herr_t             ret_value = SUCCEED; /* Return value */
 

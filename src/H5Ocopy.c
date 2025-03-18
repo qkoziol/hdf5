@@ -73,8 +73,10 @@ typedef struct H5O_copy_search_comm_dt_ud_t {
 static herr_t H5O__copy_free_addrmap_cb(void *item, void *key, void *op_data);
 static herr_t H5O__copy_header_real(const H5O_loc_t *oloc_src, H5O_loc_t *oloc_dst /*out*/,
                                     H5O_copy_t *cpy_info, H5O_type_t *obj_type, void **udata);
-static herr_t H5O__copy_header(const H5O_loc_t *oloc_src, H5O_loc_t *oloc_dst /*out*/, H5P_genplist_t *ocpypl, H5P_genplist_t *lcpl);
-static herr_t H5O__copy_obj(H5G_loc_t *src_loc, H5G_loc_t *dst_loc, const char *dst_name, H5P_genplist_t *ocpypl, H5P_genplist_t *lcpl);
+static herr_t H5O__copy_header(const H5O_loc_t *oloc_src, H5O_loc_t *oloc_dst /*out*/, H5P_genplist_t *ocpypl,
+                               H5P_genplist_t *lcpl);
+static herr_t H5O__copy_obj(H5G_loc_t *src_loc, H5G_loc_t *dst_loc, const char *dst_name,
+                            H5P_genplist_t *ocpypl, H5P_genplist_t *lcpl);
 static herr_t H5O__copy_free_comm_dt_cb(void *item, void *key, void *op_data);
 static int    H5O__copy_comm_dt_cmp(const void *dt1, const void *dt2);
 static herr_t H5O__copy_search_comm_dt_cb(hid_t group, const char *name, const H5L_info2_t *linfo,
@@ -1019,7 +1021,8 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5O__copy_obj(H5G_loc_t *src_loc, H5G_loc_t *dst_loc, const char *dst_name, H5P_genplist_t *ocpypl, H5P_genplist_t *lcpl)
+H5O__copy_obj(H5G_loc_t *src_loc, H5G_loc_t *dst_loc, const char *dst_name, H5P_genplist_t *ocpypl,
+              H5P_genplist_t *lcpl)
 {
     H5G_name_t new_path;                 /* Copied object group hier. path */
     H5O_loc_t  new_oloc;                 /* Copied object object location */

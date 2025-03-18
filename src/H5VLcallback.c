@@ -6341,7 +6341,8 @@ H5VL__object_copy(void *src_obj, const H5VL_loc_params_t *src_loc_params, const 
         {
             /* Call the corresponding VOL callback */
             ret_value =
-                (cls->object_cls.copy)(src_obj, src_loc_params, src_name, dst_obj, dst_loc_params, dst_name, H5P_PLIST_ID(ocpypl), H5P_PLIST_ID(lcpl), H5P_PLIST_ID(dxpl), req);
+                (cls->object_cls.copy)(src_obj, src_loc_params, src_name, dst_obj, dst_loc_params, dst_name,
+                                       H5P_PLIST_ID(ocpypl), H5P_PLIST_ID(lcpl), H5P_PLIST_ID(dxpl), req);
         }
     H5_AFTER_USER_CB(FAIL)
     if (ret_value < 0)
@@ -6373,7 +6374,8 @@ H5VL_object_copy(const H5VL_object_t *src_obj, const H5VL_loc_params_t *src_loc_
 
     /* Make sure that the VOL connectors are the same */
     if (src_obj->connector->cls->value != dst_obj->connector->cls->value)
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "objects are accessed through different VOL connectors and can't be copied");
+        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL,
+                    "objects are accessed through different VOL connectors and can't be copied");
 
     /* Set wrapper info in API context */
     if (H5VL_set_vol_wrapper(src_obj) < 0)
@@ -6381,7 +6383,8 @@ H5VL_object_copy(const H5VL_object_t *src_obj, const H5VL_loc_params_t *src_loc_
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__object_copy(src_obj->data, src_loc_params, src_name, dst_obj->data, dst_loc_params, dst_name, src_obj->connector->cls, ocpypl, lcpl, dxpl, req) < 0)
+    if (H5VL__object_copy(src_obj->data, src_loc_params, src_name, dst_obj->data, dst_loc_params, dst_name,
+                          src_obj->connector->cls, ocpypl, lcpl, dxpl, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTCOPY, FAIL, "object copy failed");
 
 done:
@@ -6428,7 +6431,8 @@ H5VLobject_copy(void *src_obj, const H5VL_loc_params_t *src_loc_params, const ch
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__object_copy(src_obj, src_loc_params, src_name, dst_obj, dst_loc_params, dst_name, connector->cls, ocpypl, lcpl, dxpl, req) < 0)
+    if (H5VL__object_copy(src_obj, src_loc_params, src_name, dst_obj, dst_loc_params, dst_name,
+                          connector->cls, ocpypl, lcpl, dxpl, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTCOPY, FAIL, "unable to copy object");
 
 done:
