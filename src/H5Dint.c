@@ -693,7 +693,8 @@ H5D__use_minimized_dset_headers(H5F_t *file, bool *minimize)
 
     /* Get the dataset object header minimize flag for this call */
     if (H5CX_get_min_dset_hdr(minimize) < 0)
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get dataset object header minimize flag from API context");
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL,
+                    "can't get dataset object header minimize flag from API context");
 
     if (false == *minimize)
         *minimize = H5F_get_min_dset_ohdr(file);
@@ -721,7 +722,7 @@ H5D__calculate_minimum_header_size(H5F_t *file, H5D_t *dset, H5O_t *ohdr)
     H5O_fill_t *fill_prop        = NULL;
     bool        use_at_least_v18 = false;
     const char  continuation[1]  = ""; /* required for work-around */
-    size_t      msg_size        = 0;
+    size_t      msg_size         = 0;
     size_t      ret_value        = 0;
 
     FUNC_ENTER_PACKAGE
@@ -774,7 +775,8 @@ H5D__calculate_minimum_header_size(H5F_t *file, H5D_t *dset, H5O_t *ohdr)
             HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, 0, "can't reset the copied fill property");
 
         if (0 == (msg_size = H5O_msg_size_oh(file, ohdr, H5O_FILL_ID, &old_fill_prop, 0)))
-            HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, 0, "can't get size of fill value (backwards compat) message");
+            HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, 0,
+                        "can't get size of fill value (backwards compat) message");
         ret_value += msg_size;
     }
 

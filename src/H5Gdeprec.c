@@ -179,7 +179,8 @@ H5Gcreate1(hid_t loc_id, const char *name, size_t size_hint)
 
         /* Get a copy of the default property list */
         if (NULL == (tmp_gcpl = H5P_new_plist_of_type(H5P_TYPE_GROUP_CREATE, false)))
-            HGOTO_ERROR(H5E_SYM, H5E_CANTCREATE, H5I_INVALID_HID, "unable to create group creation property list");
+            HGOTO_ERROR(H5E_SYM, H5E_CANTCREATE, H5I_INVALID_HID,
+                        "unable to create group creation property list");
 
         /* Get the group info property */
         if (H5P_get(tmp_gcpl, H5G_CRT_GROUP_INFO_NAME, &ginfo) < 0)
@@ -192,7 +193,8 @@ H5Gcreate1(hid_t loc_id, const char *name, size_t size_hint)
     }
     else {
         if (NULL == (tmp_gcpl = H5I_object(H5P_LST_GROUP_CREATE_ID_g)))
-            HGOTO_ERROR(H5E_SYM, H5E_CANTGET, H5I_INVALID_HID, "can't get default group creation property list");
+            HGOTO_ERROR(H5E_SYM, H5E_CANTGET, H5I_INVALID_HID,
+                        "can't get default group creation property list");
     }
 
     /* Set the GCPL for the API context */
@@ -220,7 +222,8 @@ H5Gcreate1(hid_t loc_id, const char *name, size_t size_hint)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "invalid location identifier");
 
     /* Create the group */
-    if (NULL == (grp = H5VL_group_create(vol_obj, &loc_params, name, def_lcpl, tmp_gcpl, def_gapl, def_dxpl, H5_REQUEST_NULL)))
+    if (NULL == (grp = H5VL_group_create(vol_obj, &loc_params, name, def_lcpl, tmp_gcpl, def_gapl, def_dxpl,
+                                         H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_SYM, H5E_CANTINIT, H5I_INVALID_HID, "unable to create group");
 
     /* Get an ID for the group */
@@ -230,7 +233,8 @@ H5Gcreate1(hid_t loc_id, const char *name, size_t size_hint)
 done:
     if (tmp_gcpl && !H5P_PLIST_IS_DEFAULT(tmp_gcpl))
         if (H5P_release(tmp_gcpl) < 0)
-            HDONE_ERROR(H5E_SYM, H5E_CANTCLOSEOBJ, H5I_INVALID_HID, "can't close group creation property list");
+            HDONE_ERROR(H5E_SYM, H5E_CANTCLOSEOBJ, H5I_INVALID_HID,
+                        "can't close group creation property list");
 
     if (H5I_INVALID_HID == ret_value)
         if (grp && H5VL_group_close(vol_obj, def_dxpl, H5_REQUEST_NULL) < 0)

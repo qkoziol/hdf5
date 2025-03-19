@@ -244,19 +244,20 @@ typedef struct H5CX_t {
 
     /* Cached OCPL properties */
 #ifdef H5O_ENABLE_BAD_MESG_COUNT
-    bool bad_mesg_count;             /* Write a bad message count to the object header (H5O_CRT_BAD_MESG_COUNT_NAME) */
-    bool bad_mesg_count_valid;       /* Whether the write a bad message count to the object header flag is valid */
-#endif /* H5O_ENABLE_BAD_MESG_COUNT */
-    unsigned attr_max_compact; /* Maximum # of attributes to store in compact form (H5O_CRT_ATTR_MAX_COMPACT_NAME) */
-    bool    attr_max_compact_valid;       /* Whether the min dense attrs value is valid */
-    unsigned attr_min_dense; /* Minimum # of attributes to store in dense form */
-    bool    attr_min_dense_valid;       /* Whether the min dense attrs value is valid (H5O_CRT_ATTR_MIN_DENSE_NAME) */
-    uint8_t ohdr_flags;             /* Object header flags (H5O_CRT_OHDR_FLAGS_NAME) */
-    bool    ohdr_flags_valid;       /* Whether the object headers flags are valid */
+    bool bad_mesg_count; /* Write a bad message count to the object header (H5O_CRT_BAD_MESG_COUNT_NAME) */
+    bool bad_mesg_count_valid; /* Whether the write a bad message count to the object header flag is valid */
+#endif                         /* H5O_ENABLE_BAD_MESG_COUNT */
+    unsigned attr_max_compact; /* Maximum # of attributes to store in compact form
+                                  (H5O_CRT_ATTR_MAX_COMPACT_NAME) */
+    bool     attr_max_compact_valid; /* Whether the min dense attrs value is valid */
+    unsigned attr_min_dense;         /* Minimum # of attributes to store in dense form */
+    bool attr_min_dense_valid; /* Whether the min dense attrs value is valid (H5O_CRT_ATTR_MIN_DENSE_NAME) */
+    uint8_t ohdr_flags;        /* Object header flags (H5O_CRT_OHDR_FLAGS_NAME) */
+    bool    ohdr_flags_valid;  /* Whether the object headers flags are valid */
 
     /* Cached DCPL properties */
-    bool    min_dset_ohdr; /* Whether to minimize dataset object header (H5D_CRT_MIN_DSET_HDR_SIZE_NAME) */
-    bool    min_dset_ohdr_valid; /* Whether minimize dataset object header flag is valid */
+    bool min_dset_ohdr;       /* Whether to minimize dataset object header (H5D_CRT_MIN_DSET_HDR_SIZE_NAME) */
+    bool min_dset_ohdr_valid; /* Whether minimize dataset object header flag is valid */
 
     /* Cached DAPL properties */
     const char *extfile_prefix;       /* Prefix for external file (H5D_ACS_EFILE_PREFIX_NAME) */

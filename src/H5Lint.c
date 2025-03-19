@@ -563,7 +563,9 @@ H5L__link_cb(H5G_loc_t *grp_loc /*in*/, const char *name, const H5O_link_t H5_AT
             H5G_loc_t new_loc; /* Group location for new object */
 
             /* Create new object at this location */
-            if (NULL == (udata->ocrt_info->new_obj = H5O_obj_create(grp_loc->oloc->file, udata->ocrt_info->obj_type, udata->ocrt_info->crt_info, &new_loc)))
+            if (NULL ==
+                (udata->ocrt_info->new_obj = H5O_obj_create(grp_loc->oloc->file, udata->ocrt_info->obj_type,
+                                                            udata->ocrt_info->crt_info, &new_loc)))
                 HGOTO_ERROR(H5E_LINK, H5E_CANTINIT, FAIL, "unable to create object");
 
             /* Set address for hard link */

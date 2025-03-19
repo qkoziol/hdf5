@@ -149,9 +149,9 @@ herr_t
 H5G__obj_create_real(H5F_t *f, const H5O_ginfo_t *ginfo, const H5O_linfo_t *linfo, const H5O_pline_t *pline,
                      H5G_obj_create_t *gcrt_info, H5O_loc_t *oloc /*out*/)
 {
-    size_t          hdr_size;                    /* Size of object header to request */
-    bool            use_at_least_v18;            /* Flag indicating the new group format should be used */
-    herr_t          ret_value = SUCCEED;         /* Return value */
+    size_t hdr_size;            /* Size of object header to request */
+    bool   use_at_least_v18;    /* Flag indicating the new group format should be used */
+    herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 

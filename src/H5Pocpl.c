@@ -91,8 +91,8 @@ static int    H5P__ocrt_pipeline_cmp(const void *value1, const void *value2, siz
 static herr_t H5P__ocrt_pipeline_close(const char *name, size_t size, void *value);
 
 /* Local routines */
-static herr_t H5P__set_filter(H5P_genplist_t *ocpl, H5Z_filter_t filter, unsigned int flags,
-                              size_t cd_nelmts, const unsigned int cd_values[/*cd_nelmts*/]);
+static herr_t H5P__set_filter(H5P_genplist_t *ocpl, H5Z_filter_t filter, unsigned int flags, size_t cd_nelmts,
+                              const unsigned int cd_values[/*cd_nelmts*/]);
 
 /*********************/
 /* Package Variables */
@@ -200,7 +200,7 @@ done:
 herr_t
 H5Pset_attr_phase_change(hid_t ocpl_id, unsigned max_compact, unsigned min_dense)
 {
-    H5P_genplist_t *ocpl;               /* Property list pointer */
+    H5P_genplist_t *ocpl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -239,7 +239,7 @@ done:
 herr_t
 H5Pget_attr_phase_change(hid_t ocpl_id, unsigned *max_compact /*out*/, unsigned *min_dense /*out*/)
 {
-    H5P_genplist_t *ocpl;               /* Property list pointer */
+    H5P_genplist_t *ocpl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -274,7 +274,7 @@ done:
 herr_t
 H5Pset_attr_creation_order(hid_t ocpl_id, unsigned crt_order_flags)
 {
-    H5P_genplist_t *ocpl;               /* Property list pointer */
+    H5P_genplist_t *ocpl;                /* Property list pointer */
     uint8_t         ohdr_flags;          /* Object header flags */
     herr_t          ret_value = SUCCEED; /* Return value */
 
@@ -328,7 +328,7 @@ H5Pget_attr_creation_order(hid_t ocpl_id, unsigned *crt_order_flags /*out*/)
 
     /* Get values */
     if (crt_order_flags) {
-        H5P_genplist_t *ocpl;      /* Property list pointer */
+        H5P_genplist_t *ocpl;       /* Property list pointer */
         uint8_t         ohdr_flags; /* Object header flags */
 
         /* Reset the value to return */
@@ -377,7 +377,7 @@ done:
 herr_t
 H5Pset_obj_track_times(hid_t ocpl_id, hbool_t track_times)
 {
-    H5P_genplist_t *ocpl;               /* Property list pointer */
+    H5P_genplist_t *ocpl;                /* Property list pointer */
     uint8_t         ohdr_flags;          /* Object header flags */
     herr_t          ret_value = SUCCEED; /* Return value */
 
@@ -423,7 +423,7 @@ H5Pget_obj_track_times(hid_t ocpl_id, hbool_t *track_times /*out*/)
 
     /* Get values */
     if (track_times) {
-        H5P_genplist_t *ocpl;      /* Property list pointer */
+        H5P_genplist_t *ocpl;       /* Property list pointer */
         uint8_t         ohdr_flags; /* Object header flags */
 
         /* Get the property list structure */
@@ -537,7 +537,7 @@ herr_t
 H5Pmodify_filter(hid_t ocpl_id, H5Z_filter_t filter, unsigned int flags, size_t cd_nelmts,
                  const unsigned int cd_values[/*cd_nelmts*/])
 {
-    H5P_genplist_t *ocpl;               /* Property list */
+    H5P_genplist_t *ocpl;                /* Property list */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -595,7 +595,7 @@ herr_t
 H5Pset_filter(hid_t ocpl_id, H5Z_filter_t filter, unsigned int flags, size_t cd_nelmts,
               const unsigned int cd_values[/*cd_nelmts*/])
 {
-    H5P_genplist_t *ocpl;               /* Property list */
+    H5P_genplist_t *ocpl;                /* Property list */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -702,7 +702,7 @@ done:
 int
 H5Pget_nfilters(hid_t ocpl_id)
 {
-    H5P_genplist_t *ocpl;     /* Property list */
+    H5P_genplist_t *ocpl;      /* Property list */
     H5O_pline_t     pline;     /* Filter pipeline */
     int             ret_value; /* return value */
 
@@ -749,7 +749,7 @@ H5Pget_filter2(hid_t ocpl_id, unsigned idx, unsigned int *flags /*out*/, size_t 
                unsigned cd_values[] /*out*/, size_t namelen, char name[] /*out*/,
                unsigned *filter_config /*out*/)
 {
-    H5P_genplist_t          *ocpl;     /* Property list */
+    H5P_genplist_t          *ocpl;      /* Property list */
     H5O_pline_t              pline;     /* Filter pipeline */
     const H5Z_filter_info_t *filter;    /* Pointer to filter information */
     H5Z_filter_t             ret_value; /* return value */
@@ -874,7 +874,7 @@ H5Pget_filter_by_id2(hid_t ocpl_id, H5Z_filter_t id, unsigned int *flags /*out*/
                      size_t *cd_nelmts /*in,out*/, unsigned cd_values[] /*out*/, size_t namelen,
                      char name[] /*out*/, unsigned *filter_config /*out*/)
 {
-    H5P_genplist_t *ocpl;               /* Property list */
+    H5P_genplist_t *ocpl;                /* Property list */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -929,7 +929,7 @@ done:
 htri_t
 H5Pall_filters_avail(hid_t ocpl_id)
 {
-    H5P_genplist_t *ocpl;     /* Property list */
+    H5P_genplist_t *ocpl;      /* Property list */
     H5O_pline_t     pline;     /* Filter pipeline */
     htri_t          ret_value; /* Return value */
 
@@ -996,7 +996,7 @@ done:
 herr_t
 H5Premove_filter(hid_t ocpl_id, H5Z_filter_t filter)
 {
-    H5P_genplist_t *ocpl;               /* Property list */
+    H5P_genplist_t *ocpl;                /* Property list */
     H5O_pline_t     pline;               /* Filter pipeline */
     herr_t          ret_value = SUCCEED; /* return value          */
 
@@ -1043,7 +1043,7 @@ done:
 herr_t
 H5Pset_deflate(hid_t ocpl_id, unsigned level)
 {
-    H5P_genplist_t *ocpl;               /* Property list */
+    H5P_genplist_t *ocpl;                /* Property list */
     H5O_pline_t     pline;               /* Filter pipeline */
     herr_t          ret_value = SUCCEED; /* return value */
 
@@ -1086,7 +1086,7 @@ done:
 herr_t
 H5Pset_fletcher32(hid_t ocpl_id)
 {
-    H5P_genplist_t *ocpl;               /* Property list */
+    H5P_genplist_t *ocpl;                /* Property list */
     H5O_pline_t     pline;               /* Filter pipeline */
     herr_t          ret_value = SUCCEED; /* return value */
 
@@ -1645,7 +1645,7 @@ H5Pget_filter1(hid_t ocpl_id, unsigned idx, unsigned int *flags /*out*/, size_t 
 {
     H5O_pline_t              pline;     /* Filter pipeline */
     const H5Z_filter_info_t *filter;    /* Pointer to filter information */
-    H5P_genplist_t          *ocpl;     /* Property list pointer */
+    H5P_genplist_t          *ocpl;      /* Property list pointer */
     H5Z_filter_t             ret_value; /* return value */
 
     FUNC_ENTER_API(H5Z_FILTER_ERROR)
@@ -1721,7 +1721,7 @@ H5Pget_filter_by_id1(hid_t ocpl_id, H5Z_filter_t id, unsigned int *flags /*out*/
                      size_t *cd_nelmts /*in,out*/, unsigned cd_values[] /*out*/, size_t namelen,
                      char name[] /*out*/)
 {
-    H5P_genplist_t *ocpl;               /* Property list pointer */
+    H5P_genplist_t *ocpl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)

@@ -952,11 +952,14 @@ H5_DLL int    H5O_msg_count(const H5O_loc_t *loc, unsigned type_id);
 H5_DLL htri_t H5O_msg_exists(const H5O_loc_t *loc, unsigned type_id);
 H5_DLL htri_t H5O_msg_exists_oh(const H5O_t *oh, unsigned type_id);
 H5_DLL herr_t H5O_msg_remove(const H5O_loc_t *loc, unsigned type_id, int sequence, bool adj_link);
-H5_DLL herr_t H5O_msg_remove_op(const H5O_loc_t *loc, unsigned type_id, int sequence, H5O_operator_t op, void *op_data, bool adj_link);
-H5_DLL herr_t H5O_msg_iterate(const H5O_loc_t *loc, unsigned type_id, const H5O_mesg_operator_t *op, void *op_data);
+H5_DLL herr_t H5O_msg_remove_op(const H5O_loc_t *loc, unsigned type_id, int sequence, H5O_operator_t op,
+                                void *op_data, bool adj_link);
+H5_DLL herr_t H5O_msg_iterate(const H5O_loc_t *loc, unsigned type_id, const H5O_mesg_operator_t *op,
+                              void *op_data);
 H5_DLL size_t H5O_msg_raw_size(const H5F_t *f, unsigned type_id, bool disable_shared, const void *mesg);
 H5_DLL size_t H5O_msg_size_f(const H5F_t *f, unsigned type_id, const void *mesg, size_t extra_raw);
-H5_DLL size_t H5O_msg_size_oh(const H5F_t *f, const H5O_t *oh, unsigned type_id, const void *mesg, size_t extra_raw);
+H5_DLL size_t H5O_msg_size_oh(const H5F_t *f, const H5O_t *oh, unsigned type_id, const void *mesg,
+                              size_t extra_raw);
 H5_DLL htri_t H5O_msg_is_shared(unsigned type_id, const void *mesg);
 H5_DLL htri_t H5O_msg_can_share(unsigned type_id, const void *mesg);
 H5_DLL htri_t H5O_msg_can_share_in_ohdr(unsigned type_id);

@@ -119,7 +119,8 @@ H5T__commit_api_common(hid_t loc_id, const char *name, hid_t type_id, H5P_genpli
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set object access arguments");
 
     /* Commit the type */
-    if (NULL == (data = H5VL_datatype_commit(*vol_obj_ptr, &loc_params, name, type_id, lcpl, tcpl, tapl, dxpl, token_ptr)))
+    if (NULL == (data = H5VL_datatype_commit(*vol_obj_ptr, &loc_params, name, type_id, lcpl, tcpl, tapl, dxpl,
+                                             token_ptr)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINIT, FAIL, "unable to commit datatype");
 
     /* Set up VOL object */
@@ -180,7 +181,8 @@ H5Tcommit2(hid_t loc_id, const char *name, hid_t type_id, hid_t lcpl_id, hid_t t
     H5CX_set_lcpl(lcpl_id);
 
     /* Commit the dataset synchronously */
-    if ((ret_value = H5T__commit_api_common(loc_id, name, type_id, lcpl, tcpl, tapl, def_dxpl, NULL, NULL)) < 0)
+    if ((ret_value = H5T__commit_api_common(loc_id, name, type_id, lcpl, tcpl, tapl, def_dxpl, NULL, NULL)) <
+        0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTOPENOBJ, FAIL, "unable to commit datatype synchronously");
 
 done:
@@ -312,7 +314,8 @@ done:
             if (H5FO_top_decr(dt->sh_loc.file, dt->sh_loc.u.loc.oh_addr) < 0)
                 HDONE_ERROR(H5E_DATATYPE, H5E_CANTRELEASE, FAIL, "can't decrement count for object");
             if (H5FO_delete(dt->sh_loc.file, dt->sh_loc.u.loc.oh_addr) < 0)
-                HDONE_ERROR(H5E_DATATYPE, H5E_CANTRELEASE, FAIL, "can't remove dataset from list of open objects");
+                HDONE_ERROR(H5E_DATATYPE, H5E_CANTRELEASE, FAIL,
+                            "can't remove dataset from list of open objects");
 
             /* Close the datatype object */
             if (H5O_close(&(dt->oloc), NULL) < 0)
@@ -404,7 +407,8 @@ H5Tcommit_anon(hid_t loc_id, hid_t type_id, hid_t tcpl_id, hid_t tapl_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid file identifier");
 
     /* Commit the datatype */
-    if (NULL == (dt = H5VL_datatype_commit(vol_obj, &loc_params, NULL, type_id, def_lcpl, tcpl, tapl, def_dxpl, H5_REQUEST_NULL)))
+    if (NULL == (dt = H5VL_datatype_commit(vol_obj, &loc_params, NULL, type_id, def_lcpl, tcpl, tapl,
+                                           def_dxpl, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINIT, FAIL, "unable to commit datatype");
 
     /* Setup VOL object */
@@ -858,7 +862,8 @@ H5Tget_create_plist(hid_t dtype_id)
 
         /* Create the property list object to return */
         if (NULL == (tcpl = H5P_new_plist_of_type(H5P_TYPE_DATATYPE_CREATE, true)))
-            HGOTO_ERROR(H5E_DATATYPE, H5E_CANTCREATE, H5I_INVALID_HID, "unable to create datatype creation property list");
+            HGOTO_ERROR(H5E_DATATYPE, H5E_CANTCREATE, H5I_INVALID_HID,
+                        "unable to create datatype creation property list");
 
         /* Set return value */
         ret_value = H5P_PLIST_ID(tcpl);

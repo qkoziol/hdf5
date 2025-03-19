@@ -1280,7 +1280,8 @@ H5O_msg_size_f(const H5F_t *f, unsigned type_id, const void *mesg, size_t extra_
     ret_value = (size_t)H5O_ALIGN_F(f, ret_value);
 
     /* Add space for message header */
-    ret_value += (size_t)H5O_SIZEOF_MSGHDR_F(f, (H5F_STORE_MSG_CRT_IDX(f) || oh_flags & H5O_HDR_ATTR_CRT_ORDER_TRACKED));
+    ret_value += (size_t)H5O_SIZEOF_MSGHDR_F(
+        f, (H5F_STORE_MSG_CRT_IDX(f) || oh_flags & H5O_HDR_ATTR_CRT_ORDER_TRACKED));
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)

@@ -101,7 +101,9 @@ H5F__super_ext_create(H5F_t *f, H5O_loc_t *ext_ptr)
 
     /* Check for older version of superblock format that can't support superblock extensions */
     if (f->shared->sblock->super_vers < HDF5_SUPERBLOCK_VERSION_2)
-        HGOTO_ERROR(H5E_FILE, H5E_CANTCREATE, FAIL, "superblock extension not permitted with version %u of superblock", f->shared->sblock->super_vers);
+        HGOTO_ERROR(H5E_FILE, H5E_CANTCREATE, FAIL,
+                    "superblock extension not permitted with version %u of superblock",
+                    f->shared->sblock->super_vers);
     else if (H5_addr_defined(f->shared->sblock->ext_addr))
         HGOTO_ERROR(H5E_FILE, H5E_CANTCREATE, FAIL, "superblock extension already exists?!?!");
     else {

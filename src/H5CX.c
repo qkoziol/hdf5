@@ -65,7 +65,7 @@
             HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, (FAILVAL), "can't get property list");
 
 /* Common macro for the duplicated code to retrieve properties from a property list */
-#define H5CX_RETRIEVE_PROP_COMMON(PL, SUB_PL, DEF_PL, PROP_NAME, PROP_FIELD)                                         \
+#define H5CX_RETRIEVE_PROP_COMMON(PL, SUB_PL, DEF_PL, PROP_NAME, PROP_FIELD)                                 \
     {                                                                                                        \
                                                                                                              \
         /* Check for default property list */                                                                \
@@ -92,7 +92,7 @@
     H5CX_RETRIEVE_PROP_COMMON(PL, PL, DEF_PL, PROP_NAME, PROP_FIELD)
 
 /* Macro for the duplicated code to retrieve a value from a plist if the context value is invalid */
-#define H5CX_RETRIEVE_SUBCLS_PROP_VALID(PL, SUB_PL, DEF_PL, PROP_NAME, PROP_FIELD)                                          \
+#define H5CX_RETRIEVE_SUBCLS_PROP_VALID(PL, SUB_PL, DEF_PL, PROP_NAME, PROP_FIELD)                           \
     /* Check if the value has been retrieved already */                                                      \
     if (!(*head)->ctx.H5_GLUE(PROP_FIELD, _valid))                                                           \
     H5CX_RETRIEVE_PROP_COMMON(PL, SUB_PL, DEF_PL, PROP_NAME, PROP_FIELD)
@@ -201,17 +201,17 @@ typedef struct H5CX_lapl_cache_t {
 /* (Same as the cached DXPL struct, above, except for the default OCPL) */
 typedef struct H5CX_ocpl_cache_t {
 #ifdef H5O_ENABLE_BAD_MESG_COUNT
-    bool bad_mesg_count;             /* Write a bad message count to the object header */
-#endif /* H5O_ENABLE_BAD_MESG_COUNT */
+    bool bad_mesg_count;       /* Write a bad message count to the object header */
+#endif                         /* H5O_ENABLE_BAD_MESG_COUNT */
     unsigned attr_max_compact; /* Maximum # of attributes to store in compact form */
-    unsigned attr_min_dense; /* Minimum # of attributes to store in dense form */
-    uint8_t ohdr_flags;       /* Object header flags */
+    unsigned attr_min_dense;   /* Minimum # of attributes to store in dense form */
+    uint8_t  ohdr_flags;       /* Object header flags */
 } H5CX_ocpl_cache_t;
 
 /* Typedef for cached default dataset creation property list information */
 /* (Same as the cached DXPL struct, above, except for the default DCPL) */
 typedef struct H5CX_dcpl_cache_t {
-    bool    min_dset_ohdr; /* Whether to minimize dataset object header */
+    bool min_dset_ohdr; /* Whether to minimize dataset object header */
 } H5CX_dcpl_cache_t;
 
 /* Typedef for cached default dataset access property list information */
@@ -1002,12 +1002,16 @@ H5CX_set_lcpl(hid_t lcpl_id)
 herr_t
 H5CX_set_cpl(hid_t crtpl_id, const H5P_libclass_t *libclass)
 {
-    H5CX_node_t **head = NULL;    /* Pointer to head of API context list */
-    htri_t is_dcpl = false; /* Whether the creation property list is (or is derived from) a dataset creation property list */
-    htri_t is_gcpl = false; /* Whether the creation property list is (or is derived from) a group creation property list */
-    htri_t is_tcpl = false; /* Whether the creation property list is (or is derived from) a datatype creation property list */
-    htri_t is_ocpl = false; /* Whether the creation property list is (or is derived from) an object creation property list */
-    herr_t        ret_value = SUCCEED; /* Return value */
+    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
+    htri_t is_dcpl = false; /* Whether the creation property list is (or is derived from) a dataset creation
+                               property list */
+    htri_t is_gcpl =
+        false; /* Whether the creation property list is (or is derived from) a group creation property list */
+    htri_t is_tcpl = false; /* Whether the creation property list is (or is derived from) a datatype creation
+                               property list */
+    htri_t is_ocpl = false; /* Whether the creation property list is (or is derived from) an object creation
+                               property list */
+    herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
@@ -2560,7 +2564,8 @@ H5CX_get_min_dset_hdr(bool *min_dset_hdr)
     assert(head && *head);
     assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, dcpl, H5P_OBJECT_CREATE_DEFAULT, H5D_CRT_MIN_DSET_HDR_SIZE_NAME, min_dset_ohdr)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, dcpl, H5P_OBJECT_CREATE_DEFAULT, H5D_CRT_MIN_DSET_HDR_SIZE_NAME,
+                                    min_dset_ohdr)
 
     /* Get the value */
     *min_dset_hdr = (*head)->ctx.min_dset_ohdr;
