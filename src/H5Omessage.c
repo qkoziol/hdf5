@@ -1249,7 +1249,7 @@ done:
  *-------------------------------------------------------------------------
  */
 size_t
-H5O_msg_size_f(const H5F_t *f, H5P_genplist_t *ocpl, unsigned type_id, const void *mesg, size_t extra_raw)
+H5O_msg_size_f(const H5F_t *f, unsigned type_id, const void *mesg, size_t extra_raw)
 {
     const H5O_msg_class_t *type;          /* Actual H5O class type for the ID */
     uint8_t                oh_flags;      /* Object header status flags */
@@ -1265,9 +1265,9 @@ H5O_msg_size_f(const H5F_t *f, H5P_genplist_t *ocpl, unsigned type_id, const voi
     assert(f);
     assert(mesg);
 
-    /* Get any object header status flags set by properties */
-    if (H5P_get(ocpl, H5O_CRT_OHDR_FLAGS_NAME, &oh_flags) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, 0, "can't get object header flags");
+    /* Get any object header status flags set by creation properties */
+    if (H5CX_get_ohdr_flags(&oh_flags) < 0)
+        HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, 0, "can't get object header flags");
 
     /* Compute the raw data size for the mesg */
     if ((ret_value = (type->raw_size)(f, false, mesg)) == 0)
@@ -1280,8 +1280,7 @@ H5O_msg_size_f(const H5F_t *f, H5P_genplist_t *ocpl, unsigned type_id, const voi
     ret_value = (size_t)H5O_ALIGN_F(f, ret_value);
 
     /* Add space for message header */
-    ret_value += (size_t)H5O_SIZEOF_MSGHDR_F(
-        f, (H5F_STORE_MSG_CRT_IDX(f) || oh_flags & H5O_HDR_ATTR_CRT_ORDER_TRACKED));
+    ret_value += (size_t)H5O_SIZEOF_MSGHDR_F(f, (H5F_STORE_MSG_CRT_IDX(f) || oh_flags & H5O_HDR_ATTR_CRT_ORDER_TRACKED));
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)

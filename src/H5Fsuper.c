@@ -101,26 +101,21 @@ H5F__super_ext_create(H5F_t *f, H5O_loc_t *ext_ptr)
 
     /* Check for older version of superblock format that can't support superblock extensions */
     if (f->shared->sblock->super_vers < HDF5_SUPERBLOCK_VERSION_2)
-        HGOTO_ERROR(H5E_FILE, H5E_CANTCREATE, FAIL,
-                    "superblock extension not permitted with version %u of superblock",
-                    f->shared->sblock->super_vers);
+        HGOTO_ERROR(H5E_FILE, H5E_CANTCREATE, FAIL, "superblock extension not permitted with version %u of superblock", f->shared->sblock->super_vers);
     else if (H5_addr_defined(f->shared->sblock->ext_addr))
         HGOTO_ERROR(H5E_FILE, H5E_CANTCREATE, FAIL, "superblock extension already exists?!?!");
     else {
-        H5P_genplist_t *def_gcpl; /* Default group creation property list */
+        /* Set the default OCPL in the API context for superblock creation */
+        if (H5CX_set_cpl(H5P_OBJECT_CREATE_DEFAULT, H5P_CLS_OCRT) < 0)
+            HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set creation property list info");
 
-        /* The superblock extension isn't actually a group, but the
-         * default group creation list should work fine.
-         * If we don't supply a size for the object header, HDF5 will
-         * allocate H5O_MIN_SIZE by default.  This is currently
-         * big enough to hold the biggest possible extension, but should
-         * be tuned if more information is added to the superblock
-         * extension.
+        /* If we pass 0 as a size hint for the object header, the library will
+         * allocate H5O_MIN_SIZE by default.  This is currently big enough to
+         * hold the biggest possible extension, but should be tuned if more
+         * information is added to the superblock extension.
          */
         H5O_loc_reset(ext_ptr);
-        if (NULL == (def_gcpl = H5I_object(H5P_LST_GROUP_CREATE_ID_g)))
-            HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get default group creation property list");
-        if (H5O_create(f, (size_t)0, (size_t)1, def_gcpl, ext_ptr) < 0)
+        if (H5O_create(f, (size_t)0, (size_t)1, ext_ptr) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTCREATE, FAIL, "unable to create superblock extension");
 
         /* Record the address of the superblock extension */

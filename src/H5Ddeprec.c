@@ -129,7 +129,8 @@ H5Dcreate1(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t 
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Set the DCPL for the API context */
-    H5CX_set_dcpl(dcpl_id);
+    if (H5CX_set_cpl(dcpl_id, H5P_CLS_DCRT) < 0)
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, H5I_INVALID_HID, "can't set creation property list info");
 
     /* Get a pointer to the default DAPL */
     if (NULL == (def_dapl = H5I_object(H5P_DATASET_ACCESS_DEFAULT)))

@@ -240,6 +240,10 @@ H5Gcreate2(hid_t loc_id, const char *name, hid_t lcpl_id, hid_t gcpl_id, hid_t g
     if (NULL == (gapl = H5P_object_verify(gapl_id, H5P_TYPE_GROUP_ACCESS, true)))
         HGOTO_ERROR(H5E_SYM, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
+    /* Set the GCPL for the API context */
+    if (H5CX_set_cpl(gcpl_id, H5P_CLS_GCRT) < 0)
+        HGOTO_ERROR(H5E_SYM, H5E_CANTSET, H5I_INVALID_HID, "can't set creation property list info");
+
     /* Set the LCPL for the API context */
     H5CX_set_lcpl(lcpl_id);
 
@@ -292,6 +296,10 @@ H5Gcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
         gapl_id = H5P_GROUP_ACCESS_DEFAULT;
     if (NULL == (gapl = H5P_object_verify(gapl_id, H5P_TYPE_GROUP_ACCESS, true)))
         HGOTO_ERROR(H5E_SYM, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+
+    /* Set the GCPL for the API context */
+    if (H5CX_set_cpl(gcpl_id, H5P_CLS_GCRT) < 0)
+        HGOTO_ERROR(H5E_SYM, H5E_CANTSET, H5I_INVALID_HID, "can't set creation property list info");
 
     /* Set the LCPL for the API context */
     H5CX_set_lcpl(lcpl_id);
@@ -383,6 +391,10 @@ H5Gcreate_anon(hid_t loc_id, hid_t gcpl_id, hid_t gapl_id)
     /* Verify access property list and set up collective metadata if appropriate */
     if (H5CX_set_apl(&gapl_id, H5P_CLS_GACC, loc_id, true) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTSET, H5I_INVALID_HID, "can't set access property list info");
+
+    /* Set the GCPL for the API context */
+    if (H5CX_set_cpl(gcpl_id, H5P_CLS_GCRT) < 0)
+        HGOTO_ERROR(H5E_SYM, H5E_CANTSET, H5I_INVALID_HID, "can't set creation property list info");
 
     /* Set location struct fields */
     loc_params.type     = H5VL_OBJECT_BY_SELF;

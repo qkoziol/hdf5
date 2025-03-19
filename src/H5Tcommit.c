@@ -119,8 +119,7 @@ H5T__commit_api_common(hid_t loc_id, const char *name, hid_t type_id, H5P_genpli
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set object access arguments");
 
     /* Commit the type */
-    if (NULL == (data = H5VL_datatype_commit(*vol_obj_ptr, &loc_params, name, type_id, lcpl, tcpl, tapl, dxpl,
-                                             token_ptr)))
+    if (NULL == (data = H5VL_datatype_commit(*vol_obj_ptr, &loc_params, name, type_id, lcpl, tcpl, tapl, dxpl, token_ptr)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINIT, FAIL, "unable to commit datatype");
 
     /* Set up VOL object */
@@ -173,12 +172,15 @@ H5Tcommit2(hid_t loc_id, const char *name, hid_t type_id, hid_t lcpl_id, hid_t t
     if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTGET, FAIL, "can't find object for ID");
 
+    /* Set the TCPL for the API context */
+    if (H5CX_set_cpl(tcpl_id, H5P_CLS_TCRT) < 0)
+        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set creation property list info");
+
     /* Set the LCPL for the API context */
     H5CX_set_lcpl(lcpl_id);
 
     /* Commit the dataset synchronously */
-    if ((ret_value = H5T__commit_api_common(loc_id, name, type_id, lcpl, tcpl, tapl, def_dxpl, NULL, NULL)) <
-        0)
+    if ((ret_value = H5T__commit_api_common(loc_id, name, type_id, lcpl, tcpl, tapl, def_dxpl, NULL, NULL)) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTOPENOBJ, FAIL, "unable to commit datatype synchronously");
 
 done:
@@ -226,6 +228,10 @@ H5Tcommit_async(const char *app_file, const char *app_func, unsigned app_line, h
     /* Get default dataset transfer property list */
     if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTGET, FAIL, "can't find object for ID");
+
+    /* Set the TCPL for the API context */
+    if (H5CX_set_cpl(tcpl_id, H5P_CLS_TCRT) < 0)
+        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set creation property list info");
 
     /* Set the LCPL for the API context */
     H5CX_set_lcpl(lcpl_id);
@@ -304,10 +310,9 @@ done:
         if (dt->shared->state == H5T_STATE_OPEN && dt->sh_loc.type == H5O_SHARE_TYPE_COMMITTED) {
             /* Remove the datatype from the list of opened objects in the file */
             if (H5FO_top_decr(dt->sh_loc.file, dt->sh_loc.u.loc.oh_addr) < 0)
-                HDONE_ERROR(H5E_DATASET, H5E_CANTRELEASE, FAIL, "can't decrement count for object");
+                HDONE_ERROR(H5E_DATATYPE, H5E_CANTRELEASE, FAIL, "can't decrement count for object");
             if (H5FO_delete(dt->sh_loc.file, dt->sh_loc.u.loc.oh_addr) < 0)
-                HDONE_ERROR(H5E_DATASET, H5E_CANTRELEASE, FAIL,
-                            "can't remove dataset from list of open objects");
+                HDONE_ERROR(H5E_DATATYPE, H5E_CANTRELEASE, FAIL, "can't remove dataset from list of open objects");
 
             /* Close the datatype object */
             if (H5O_close(&(dt->oloc), NULL) < 0)
@@ -386,6 +391,10 @@ H5Tcommit_anon(hid_t loc_id, hid_t type_id, hid_t tcpl_id, hid_t tapl_id)
     if (H5CX_set_apl(&tapl_id, H5P_CLS_TACC, loc_id, true) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set access property list info");
 
+    /* Set the TCPL for the API context */
+    if (H5CX_set_cpl(tcpl_id, H5P_CLS_TCRT) < 0)
+        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set creation property list info");
+
     /* Fill in location struct fields */
     loc_params.type     = H5VL_OBJECT_BY_SELF;
     loc_params.obj_type = H5I_get_type(loc_id);
@@ -395,8 +404,7 @@ H5Tcommit_anon(hid_t loc_id, hid_t type_id, hid_t tcpl_id, hid_t tapl_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid file identifier");
 
     /* Commit the datatype */
-    if (NULL == (dt = H5VL_datatype_commit(vol_obj, &loc_params, NULL, type_id, def_lcpl, tcpl, tapl,
-                                           def_dxpl, H5_REQUEST_NULL)))
+    if (NULL == (dt = H5VL_datatype_commit(vol_obj, &loc_params, NULL, type_id, def_lcpl, tcpl, tapl, def_dxpl, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINIT, FAIL, "unable to commit datatype");
 
     /* Setup VOL object */
@@ -420,7 +428,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5T__commit_anon(H5F_t *file, H5T_t *type, H5P_genplist_t *tcpl)
+H5T__commit_anon(H5F_t *file, H5T_t *type)
 {
     H5O_loc_t *oloc;                /* Object location for datatype */
     herr_t     ret_value = SUCCEED; /* Return value */
@@ -430,10 +438,9 @@ H5T__commit_anon(H5F_t *file, H5T_t *type, H5P_genplist_t *tcpl)
     /* Sanity checks */
     assert(file);
     assert(type);
-    assert(tcpl);
 
     /* Commit the type */
-    if (H5T__commit(file, type, tcpl) < 0)
+    if (H5T__commit(file, type) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINIT, FAIL, "unable to commit datatype");
 
     /* Release the datatype's object header */
@@ -461,7 +468,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5T__commit(H5F_t *file, H5T_t *type, H5P_genplist_t *tcpl)
+H5T__commit(H5F_t *file, H5T_t *type)
 {
     H5O_t     *oh = NULL;            /* Pointer to actual object header */
     H5O_loc_t  temp_oloc;            /* Temporary object header location */
@@ -475,7 +482,6 @@ H5T__commit(H5F_t *file, H5T_t *type, H5P_genplist_t *tcpl)
 
     assert(file);
     assert(type);
-    assert(tcpl);
 
     /* Check if we are allowed to write to this file */
     if (0 == (H5F_INTENT(file) & H5F_ACC_RDWR))
@@ -510,17 +516,17 @@ H5T__commit(H5F_t *file, H5T_t *type, H5P_genplist_t *tcpl)
 
     /* Set the version for datatype */
     if (H5T_set_version(file, type) < 0)
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "can't set version of datatype");
+        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set version of datatype");
 
     /* Calculate message size information, for creating object header */
-    dtype_size = H5O_msg_size_f(file, tcpl, H5O_DTYPE_ID, type, (size_t)0);
+    dtype_size = H5O_msg_size_f(file, H5O_DTYPE_ID, type, (size_t)0);
     assert(dtype_size);
 
     /*
      * Create the object header and open it for write access. Insert the data
      * type message and then give the object header a name.
      */
-    if (H5O_create(file, dtype_size, (size_t)1, tcpl, &temp_oloc) < 0)
+    if (H5O_create(file, dtype_size, (size_t)1, &temp_oloc) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINIT, FAIL, "unable to create datatype object header");
     ohdr_created = true;
 
@@ -852,8 +858,7 @@ H5Tget_create_plist(hid_t dtype_id)
 
         /* Create the property list object to return */
         if (NULL == (tcpl = H5P_new_plist_of_type(H5P_TYPE_DATATYPE_CREATE, true)))
-            HGOTO_ERROR(H5E_DATATYPE, H5E_CANTCREATE, H5I_INVALID_HID,
-                        "unable to create datatype creation property list");
+            HGOTO_ERROR(H5E_DATATYPE, H5E_CANTCREATE, H5I_INVALID_HID, "unable to create datatype creation property list");
 
         /* Set return value */
         ret_value = H5P_PLIST_ID(tcpl);
@@ -1018,7 +1023,7 @@ H5T__get_create_plist(const H5T_t *type)
 done:
     if (NULL == ret_value)
         if (new_plist && H5P_release(new_plist) < 0)
-            HDONE_ERROR(H5E_DATASET, H5E_CANTCLOSEOBJ, NULL, "can't close datatype creation property list");
+            HDONE_ERROR(H5E_DATATYPE, H5E_CANTCLOSEOBJ, NULL, "can't close datatype creation property list");
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5T__get_create_plist() */

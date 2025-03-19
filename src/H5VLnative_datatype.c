@@ -76,7 +76,6 @@ H5VL__native_datatype_commit(void *obj, const H5VL_loc_params_t *loc_params, con
     H5G_loc_t       loc;              /* Location to commit datatype */
     H5T_t          *dt;               /* Datatype for ID */
     H5T_t          *type = NULL;      /* copy of the original type which will be committed */
-    H5P_genplist_t *tcpl;             /* Datatype creation property list */
     void           *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -84,8 +83,6 @@ H5VL__native_datatype_commit(void *obj, const H5VL_loc_params_t *loc_params, con
     /* check arguments */
     if (H5G_loc_real(obj, loc_params->obj_type, &loc) < 0)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file or file object");
-    if (NULL == (tcpl = H5I_object(tcpl_id)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a property list");
 
     if (NULL == (dt = (H5T_t *)H5I_object_verify(type_id, H5I_DATATYPE)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a datatype");
@@ -112,9 +109,12 @@ H5VL__native_datatype_commit(void *obj, const H5VL_loc_params_t *loc_params, con
 
     /* Commit the datatype */
     if (NULL != name) {
+        H5P_genplist_t *tcpl;             /* Datatype creation property list */
         H5P_genplist_t *lcpl; /* Link creation property list */
 
         /* H5Tcommit */
+        if (NULL == (tcpl = H5I_object(tcpl_id)))
+            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a property list");
         if (NULL == (lcpl = H5I_object(lcpl_id)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a property list");
         if (H5T__commit_named(&loc, name, type, lcpl, tcpl) < 0)
@@ -122,7 +122,7 @@ H5VL__native_datatype_commit(void *obj, const H5VL_loc_params_t *loc_params, con
     } /* end if */
     else {
         /* H5Tcommit_anon */
-        if (H5T__commit_anon(loc.oloc->file, type, tcpl) < 0)
+        if (H5T__commit_anon(loc.oloc->file, type) < 0)
             HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINIT, NULL, "unable to commit datatype");
     } /* end else */
 

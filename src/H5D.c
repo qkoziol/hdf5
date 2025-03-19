@@ -188,7 +188,8 @@ H5Dcreate2(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t 
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Set the DCPL for the API context */
-    H5CX_set_dcpl(dcpl_id);
+    if (H5CX_set_cpl(dcpl_id, H5P_CLS_DCRT) < 0)
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, H5I_INVALID_HID, "can't set creation property list info");
 
     /* Get the pointer to the dataset access property list */
     if (H5P_DEFAULT == dapl_id)
@@ -250,7 +251,8 @@ H5Dcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Set the DCPL for the API context */
-    H5CX_set_dcpl(dcpl_id);
+    if (H5CX_set_cpl(dcpl_id, H5P_CLS_DCRT) < 0)
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, H5I_INVALID_HID, "can't set creation property list info");
 
     /* Get the pointer to the dataset access property list */
     if (H5P_DEFAULT == dapl_id)
@@ -343,7 +345,8 @@ H5Dcreate_anon(hid_t loc_id, hid_t type_id, hid_t space_id, hid_t dcpl_id, hid_t
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Set the DCPL for the API context */
-    H5CX_set_dcpl(dcpl_id);
+    if (H5CX_set_cpl(dcpl_id, H5P_CLS_DCRT) < 0)
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, H5I_INVALID_HID, "can't set creation property list info");
 
     /* Get the pointer to the dataset access property list */
     if (H5P_DEFAULT == dapl_id)

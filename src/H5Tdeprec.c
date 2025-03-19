@@ -116,6 +116,10 @@ H5Tcommit1(hid_t loc_id, const char *name, hid_t type_id)
     if (NULL == (def_lcpl = H5I_object(H5P_LINK_CREATE_DEFAULT)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTGET, FAIL, "can't find object for ID");
 
+    /* Set the default TCPL for the API context */
+    if (H5CX_set_cpl(H5P_DATATYPE_CREATE_DEFAULT, H5P_CLS_TCRT) < 0)
+        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set creation property list info");
+
     /* Get default datatype creation property list */
     if (NULL == (def_tcpl = H5I_object(H5P_DATATYPE_CREATE_DEFAULT)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTGET, FAIL, "can't find object for ID");
@@ -140,8 +144,7 @@ H5Tcommit1(hid_t loc_id, const char *name, hid_t type_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid object identifier");
 
     /* Commit the datatype */
-    if (NULL == (data = H5VL_datatype_commit(vol_obj, &loc_params, name, type_id, def_lcpl, def_tcpl,
-                                             def_tapl, def_dxpl, H5_REQUEST_NULL)))
+    if (NULL == (data = H5VL_datatype_commit(vol_obj, &loc_params, name, type_id, def_lcpl, def_tcpl, def_tapl, def_dxpl, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINIT, FAIL, "unable to commit datatype");
 
     /* Set up VOL object */

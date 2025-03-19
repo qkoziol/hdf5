@@ -37,7 +37,7 @@
 
 /* API context state */
 typedef struct H5CX_state_t {
-    hid_t                 dcpl_id;            /* DCPL for operation */
+    hid_t                 ocpl_id;            /* DCPL/GCPL/TCPL for operation */
     hid_t                 dxpl_id;            /* DXPL for operation */
     hid_t                 lapl_id;            /* LAPL for operation */
     hid_t                 lcpl_id;            /* LCPL for operation */
@@ -107,9 +107,9 @@ typedef struct H5CX_t {
     hid_t           lapl_id; /* LAPL ID for API operation */
     H5P_genplist_t *lapl;    /* Link Access Property List */
 
-    /* DCPL */
-    hid_t           dcpl_id; /* DCPL ID for API operation */
-    H5P_genplist_t *dcpl;    /* Dataset Creation Property List */
+    /* OCPL */
+    hid_t           ocpl_id; /* OCPL (i.e. DCPL, GCPL, or TCPL) ID for API operation */
+    H5P_genplist_t *ocpl;    /* Object Creation Property List */
 
     /* DAPL */
     hid_t           dapl_id; /* DAPL ID for API operation */
@@ -242,11 +242,21 @@ typedef struct H5CX_t {
     size_t nlinks;       /* Number of soft / UD links to traverse (H5L_ACS_NLINKS_NAME) */
     bool   nlinks_valid; /* Whether number of soft / UD links to traverse is valid */
 
-    /* Cached DCPL properties */
-    bool    do_min_dset_ohdr; /* Whether to minimize dataset object header (H5D_CRT_MIN_DSET_HDR_SIZE_NAME) */
-    bool    do_min_dset_ohdr_valid; /* Whether minimize dataset object header flag is valid */
+    /* Cached OCPL properties */
+#ifdef H5O_ENABLE_BAD_MESG_COUNT
+    bool bad_mesg_count;             /* Write a bad message count to the object header (H5O_CRT_BAD_MESG_COUNT_NAME) */
+    bool bad_mesg_count_valid;       /* Whether the write a bad message count to the object header flag is valid */
+#endif /* H5O_ENABLE_BAD_MESG_COUNT */
+    unsigned attr_max_compact; /* Maximum # of attributes to store in compact form (H5O_CRT_ATTR_MAX_COMPACT_NAME) */
+    bool    attr_max_compact_valid;       /* Whether the min dense attrs value is valid */
+    unsigned attr_min_dense; /* Minimum # of attributes to store in dense form */
+    bool    attr_min_dense_valid;       /* Whether the min dense attrs value is valid (H5O_CRT_ATTR_MIN_DENSE_NAME) */
     uint8_t ohdr_flags;             /* Object header flags (H5O_CRT_OHDR_FLAGS_NAME) */
     bool    ohdr_flags_valid;       /* Whether the object headers flags are valid */
+
+    /* Cached DCPL properties */
+    bool    min_dset_ohdr; /* Whether to minimize dataset object header (H5D_CRT_MIN_DSET_HDR_SIZE_NAME) */
+    bool    min_dset_ohdr_valid; /* Whether minimize dataset object header flag is valid */
 
     /* Cached DAPL properties */
     const char *extfile_prefix;       /* Prefix for external file (H5D_ACS_EFILE_PREFIX_NAME) */
@@ -301,9 +311,9 @@ H5_DLL herr_t H5CX_restore_state(const H5CX_state_t *api_state);
 H5_DLL herr_t H5CX_free_state(H5CX_state_t *api_state);
 
 /* "Setter" routines for API context info */
+H5_DLL herr_t H5CX_set_cpl(hid_t crtpl_id, const struct H5P_libclass_t *libclass);
 H5_DLL herr_t H5CX_set_dxpl(hid_t dxpl_id);
 H5_DLL void   H5CX_set_lcpl(hid_t lcpl_id);
-H5_DLL void   H5CX_set_dcpl(hid_t dcpl_id);
 H5_DLL herr_t H5CX_set_libver_bounds(H5F_t *f);
 H5_DLL herr_t H5CX_set_apl(hid_t *acspl_id, const struct H5P_libclass_t *libclass, hid_t loc_id,
                            bool is_collective);
@@ -359,9 +369,16 @@ H5_DLL herr_t H5CX_get_intermediate_group(unsigned *crt_intermed_group);
 /* "Getter" routines for LAPL properties cached in API context */
 H5_DLL herr_t H5CX_get_nlinks(size_t *nlinks);
 
-/* "Getter" routines for DCPL properties cached in API context */
-H5_DLL herr_t H5CX_get_dset_min_ohdr_flag(bool *dset_min_ohdr_flag);
+/* "Getter" routines for OCPL properties cached in API context */
+#ifdef H5O_ENABLE_BAD_MESG_COUNT
+H5_DLL herr_t H5CX_get_bad_mesg_count(bool *bad_mesg_count);
+#endif /* H5O_ENABLE_BAD_MESG_COUNT */
+H5_DLL herr_t H5CX_get_attr_max_compact(unsigned *attr_max_compact);
+H5_DLL herr_t H5CX_get_attr_min_dense(unsigned *attr_min_dense);
 H5_DLL herr_t H5CX_get_ohdr_flags(uint8_t *ohdr_flags);
+
+/* "Getter" routines for DCPL properties cached in API context */
+H5_DLL herr_t H5CX_get_min_dset_hdr(bool *dset_min_ohdr);
 
 /* "Getter" routines for DAPL properties cached in API context */
 H5_DLL herr_t H5CX_get_ext_file_prefix(const char **prefix_extfile);

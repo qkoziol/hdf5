@@ -286,7 +286,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5O_create(H5F_t *f, size_t size_hint, size_t initial_rc, H5P_genplist_t *ocpl, H5O_loc_t *loc /*out*/)
+H5O_create(H5F_t *f, size_t size_hint, size_t initial_rc, H5O_loc_t *loc /*out*/)
 {
     H5O_t *oh        = NULL;
     herr_t ret_value = SUCCEED;
@@ -295,14 +295,13 @@ H5O_create(H5F_t *f, size_t size_hint, size_t initial_rc, H5P_genplist_t *ocpl, 
 
     assert(f);
     assert(loc);
-    assert(true == H5P_isa_type(ocpl, H5P_TYPE_OBJECT_CREATE));
 
     /* Create object header, header version is set internally */
-    if (NULL == (oh = H5O_create_ohdr(f, ocpl)))
+    if (NULL == (oh = H5O_create_ohdr(f)))
         HGOTO_ERROR(H5E_OHDR, H5E_BADVALUE, FAIL, "can't instantiate object header");
 
     /* Apply object header information in file */
-    if (H5O_apply_ohdr(f, oh, ocpl, size_hint, initial_rc, loc) < 0)
+    if (H5O_apply_ohdr(f, oh, size_hint, initial_rc, loc) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_BADVALUE, FAIL, "can't apply object header to file");
 
 done:
@@ -324,7 +323,7 @@ done:
  *-----------------------------------------------------------------------------
  */
 H5O_t *
-H5O_create_ohdr(H5F_t *f, H5P_genplist_t *ocpl)
+H5O_create_ohdr(H5F_t *f)
 {
     H5O_t  *oh = NULL; /* Object header in Freelist */
     uint8_t oh_flags;  /* Initial status flags */
@@ -333,7 +332,6 @@ H5O_create_ohdr(H5F_t *f, H5P_genplist_t *ocpl)
     FUNC_ENTER_NOAPI(NULL)
 
     assert(f);
-    assert(true == H5P_isa_type(ocpl, H5P_TYPE_OBJECT_CREATE));
 
     /* Check for invalid access request */
     if (0 == (H5F_INTENT(f) & H5F_ACC_RDWR))
@@ -343,16 +341,8 @@ H5O_create_ohdr(H5F_t *f, H5P_genplist_t *ocpl)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTALLOC, NULL, "memory allocation failed");
 
     /* Get any object header status flags set by properties */
-    if (H5P_PLIST_IS_DEFAULT(ocpl)) {
-        /* If the OCPL is the default DCPL, we can get the header flags from the
-         * API context. Otherwise we have to call H5P_get */
-        if (H5CX_get_ohdr_flags(&oh_flags) < 0)
-            HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, NULL, "can't get object header flags");
-    }
-    else {
-        if (H5P_get(ocpl, H5O_CRT_OHDR_FLAGS_NAME, &oh_flags) < 0)
-            HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, NULL, "can't get object header flags");
-    }
+    if (H5CX_get_ohdr_flags(&oh_flags) < 0)
+        HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, NULL, "can't get object header flags");
 
     if (H5O__set_version(f, oh, oh_flags, H5F_STORE_MSG_CRT_IDX(f)) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTSET, NULL, "can't set version of object header");
@@ -381,8 +371,7 @@ done:
  *-----------------------------------------------------------------------------
  */
 herr_t
-H5O_apply_ohdr(H5F_t *f, H5O_t *oh, H5P_genplist_t *ocpl, size_t size_hint, size_t initial_rc,
-               H5O_loc_t *loc_out)
+H5O_apply_ohdr(H5F_t *f, H5O_t *oh, size_t size_hint, size_t initial_rc, H5O_loc_t *loc_out)
 {
     haddr_t  oh_addr;
     size_t   oh_size;
@@ -394,7 +383,6 @@ H5O_apply_ohdr(H5F_t *f, H5O_t *oh, H5P_genplist_t *ocpl, size_t size_hint, size
     assert(f);
     assert(loc_out);
     assert(oh);
-    assert(true == H5P_isa_type(ocpl, H5P_TYPE_OBJECT_CREATE));
 
     /* Allocate at least a reasonable size for the object header */
     size_hint = H5O_ALIGN_F(f, MAX(H5O_MIN_SIZE, size_hint));
@@ -405,10 +393,8 @@ H5O_apply_ohdr(H5F_t *f, H5O_t *oh, H5P_genplist_t *ocpl, size_t size_hint, size
 
 #ifdef H5O_ENABLE_BAD_MESG_COUNT
     /* Check whether the "bad message count" property is set */
-    if (0 < H5P_exist_plist(ocpl, H5O_BAD_MESG_COUNT_NAME))
-        /* Get bad message count flag -- from property list */
-        if (H5P_get(ocpl, H5O_BAD_MESG_COUNT_NAME, &oh->store_bad_mesg_count) < 0)
-            HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, FAIL, "can't get bad message count flag");
+    if (H5CX_get_bad_mesg_count(&oh->store_bad_mesg_count) < 0)
+        HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, FAIL, "can't get bad message count flag");
 #endif /* H5O_ENABLE_BAD_MESG_COUNT */
 
     /* Create object header proxy if doing SWMR writes */
@@ -433,9 +419,9 @@ H5O_apply_ohdr(H5F_t *f, H5O_t *oh, H5P_genplist_t *ocpl, size_t size_hint, size
             oh->flags |= H5O_HDR_ATTR_CRT_ORDER_TRACKED;
 
         /* Get attribute storage phase change values -- from property list */
-        if (H5P_get(ocpl, H5O_CRT_ATTR_MAX_COMPACT_NAME, &oh->max_compact) < 0)
+        if (H5CX_get_attr_max_compact(&oh->max_compact) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get max. # of compact attributes");
-        if (H5P_get(ocpl, H5O_CRT_ATTR_MIN_DENSE_NAME, &oh->min_dense) < 0)
+        if (H5CX_get_attr_min_dense(&oh->min_dense) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get min. # of dense attributes");
 
         /* Check for non-default attribute storage phase change values */

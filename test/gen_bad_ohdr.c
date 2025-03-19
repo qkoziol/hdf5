@@ -57,7 +57,7 @@ main(void)
 
     /* Add property for storing bad message count */
     store_bad_mesg_count = true;
-    if (H5Pinsert2(gcpl, H5O_BAD_MESG_COUNT_NAME, H5O_BAD_MESG_COUNT_SIZE, &store_bad_mesg_count, NULL, NULL,
+    if (H5Pinsert2(gcpl, H5O_CRT_BAD_MESG_COUNT_NAME, H5O_CRT_BAD_MESG_COUNT_SIZE, &store_bad_mesg_count, NULL, NULL,
                    NULL, NULL, NULL, NULL) < 0)
         goto error;
 
@@ -109,7 +109,7 @@ error:
     }
     H5E_END_TRY
 #else  /* H5O_ENABLE_BAD_MESG_COUNT */
-    puts("H5O_BAD_MESG_COUNT compiler macro not defined!");
+    puts("H5O_ENABLE_BAD_MESG_COUNT compiler macro not defined!");
 #endif /* H5O_ENABLE_BAD_MESG_COUNT */
     return 1;
 }

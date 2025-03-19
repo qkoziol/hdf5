@@ -29,6 +29,11 @@ typedef struct H5P_genplist_t H5P_genplist_t;
 /* Library Private Macros */
 /**************************/
 
+/* Library private default property lists */
+
+/* Object creation default property list */
+#define H5P_OBJECT_CREATE_DEFAULT (H5OPEN H5P_LST_OBJECT_CREATE_ID_g)
+
 /* ========  String creation property names ======== */
 #define H5P_STRCRT_CHAR_ENCODING_NAME "character_encoding" /* Character set encoding for string */
 
@@ -138,15 +143,22 @@ H5_DLLVAR H5P_genclass_t *H5P_CLS_LINK_ACCESS_g;
 H5_DLLVAR H5P_genclass_t *H5P_CLS_STRING_CREATE_g;
 
 /* Internal property list classes */
-H5_DLLVAR const struct H5P_libclass_t H5P_CLS_LCRT[1]; /* Link creation */
-H5_DLLVAR const struct H5P_libclass_t H5P_CLS_LACC[1]; /* Link access */
 H5_DLLVAR const struct H5P_libclass_t H5P_CLS_AACC[1]; /* Attribute access */
 H5_DLLVAR const struct H5P_libclass_t H5P_CLS_DACC[1]; /* Dataset access */
-H5_DLLVAR const struct H5P_libclass_t H5P_CLS_GACC[1]; /* Group access */
-H5_DLLVAR const struct H5P_libclass_t H5P_CLS_TACC[1]; /* Named datatype access */
-H5_DLLVAR const struct H5P_libclass_t H5P_CLS_MACC[1]; /* Map access */
+H5_DLLVAR const struct H5P_libclass_t H5P_CLS_DCRT[1]; /* Dataset creation */
 H5_DLLVAR const struct H5P_libclass_t H5P_CLS_FACC[1]; /* File access */
+H5_DLLVAR const struct H5P_libclass_t H5P_CLS_GACC[1]; /* Group access */
+H5_DLLVAR const struct H5P_libclass_t H5P_CLS_GCRT[1]; /* Group creation */
+H5_DLLVAR const struct H5P_libclass_t H5P_CLS_LACC[1]; /* Link access */
+H5_DLLVAR const struct H5P_libclass_t H5P_CLS_LCRT[1]; /* Link creation */
+H5_DLLVAR const struct H5P_libclass_t H5P_CLS_MACC[1]; /* Map access */
 H5_DLLVAR const struct H5P_libclass_t H5P_CLS_OCPY[1]; /* Object copy */
+H5_DLLVAR const struct H5P_libclass_t H5P_CLS_OCRT[1]; /* Object creation */
+H5_DLLVAR const struct H5P_libclass_t H5P_CLS_TACC[1]; /* Named datatype access */
+H5_DLLVAR const struct H5P_libclass_t H5P_CLS_TCRT[1]; /* Named datatype creation */
+
+/* Internal default property list IDs */
+H5_DLLVAR hid_t H5P_LST_OBJECT_CREATE_ID_g;
 
 /******************************/
 /* Library Private Prototypes */

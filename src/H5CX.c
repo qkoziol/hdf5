@@ -65,13 +65,13 @@
             HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, (FAILVAL), "can't get property list");
 
 /* Common macro for the duplicated code to retrieve properties from a property list */
-#define H5CX_RETRIEVE_PROP_COMMON(PL, DEF_PL, PROP_NAME, PROP_FIELD)                                         \
+#define H5CX_RETRIEVE_PROP_COMMON(PL, SUB_PL, DEF_PL, PROP_NAME, PROP_FIELD)                                         \
     {                                                                                                        \
                                                                                                              \
         /* Check for default property list */                                                                \
         if ((*head)->ctx.H5_GLUE(PL, _id) == (DEF_PL))                                                       \
-            H5MM_memcpy(&(*head)->ctx.PROP_FIELD, &H5_GLUE3(H5CX_def_, PL, _cache).PROP_FIELD,               \
-                        sizeof(H5_GLUE3(H5CX_def_, PL, _cache).PROP_FIELD));                                 \
+            H5MM_memcpy(&(*head)->ctx.PROP_FIELD, &H5_GLUE3(H5CX_def_, SUB_PL, _cache).PROP_FIELD,           \
+                        sizeof(H5_GLUE3(H5CX_def_, SUB_PL, _cache).PROP_FIELD));                             \
         else {                                                                                               \
             /* Retrieve the property list */                                                                 \
             H5CX_RETRIEVE_PLIST(PL, FAIL)                                                                    \
@@ -89,14 +89,20 @@
 #define H5CX_RETRIEVE_PROP_VALID(PL, DEF_PL, PROP_NAME, PROP_FIELD)                                          \
     /* Check if the value has been retrieved already */                                                      \
     if (!(*head)->ctx.H5_GLUE(PROP_FIELD, _valid))                                                           \
-    H5CX_RETRIEVE_PROP_COMMON(PL, DEF_PL, PROP_NAME, PROP_FIELD)
+    H5CX_RETRIEVE_PROP_COMMON(PL, PL, DEF_PL, PROP_NAME, PROP_FIELD)
+
+/* Macro for the duplicated code to retrieve a value from a plist if the context value is invalid */
+#define H5CX_RETRIEVE_SUBCLS_PROP_VALID(PL, SUB_PL, DEF_PL, PROP_NAME, PROP_FIELD)                                          \
+    /* Check if the value has been retrieved already */                                                      \
+    if (!(*head)->ctx.H5_GLUE(PROP_FIELD, _valid))                                                           \
+    H5CX_RETRIEVE_PROP_COMMON(PL, SUB_PL, DEF_PL, PROP_NAME, PROP_FIELD)
 
 /* Macro for the duplicated code to retrieve a value from a plist if the context value is invalid, or the
  * library has previously modified the context value for return */
 #define H5CX_RETRIEVE_PROP_VALID_SET(PL, DEF_PL, PROP_NAME, PROP_FIELD)                                      \
     /* Check if the value has been retrieved already */                                                      \
     if (!((*head)->ctx.H5_GLUE(PROP_FIELD, _valid) || (*head)->ctx.H5_GLUE(PROP_FIELD, _set)))               \
-    H5CX_RETRIEVE_PROP_COMMON(PL, DEF_PL, PROP_NAME, PROP_FIELD)
+    H5CX_RETRIEVE_PROP_COMMON(PL, PL, DEF_PL, PROP_NAME, PROP_FIELD)
 
 #if defined(H5_HAVE_PARALLEL) && defined(H5_HAVE_INSTRUMENTED_LIBRARY)
 /* Macro for the duplicated code to set a context field that may not exist as a property */
@@ -191,11 +197,21 @@ typedef struct H5CX_lapl_cache_t {
     size_t nlinks; /* Number of soft / UD links to traverse (H5L_ACS_NLINKS_NAME) */
 } H5CX_lapl_cache_t;
 
+/* Typedef for cached default object creation property list information */
+/* (Same as the cached DXPL struct, above, except for the default OCPL) */
+typedef struct H5CX_ocpl_cache_t {
+#ifdef H5O_ENABLE_BAD_MESG_COUNT
+    bool bad_mesg_count;             /* Write a bad message count to the object header */
+#endif /* H5O_ENABLE_BAD_MESG_COUNT */
+    unsigned attr_max_compact; /* Maximum # of attributes to store in compact form */
+    unsigned attr_min_dense; /* Minimum # of attributes to store in dense form */
+    uint8_t ohdr_flags;       /* Object header flags */
+} H5CX_ocpl_cache_t;
+
 /* Typedef for cached default dataset creation property list information */
 /* (Same as the cached DXPL struct, above, except for the default DCPL) */
 typedef struct H5CX_dcpl_cache_t {
-    bool    do_min_dset_ohdr; /* Whether to minimize dataset object header */
-    uint8_t ohdr_flags;       /* Object header flags */
+    bool    min_dset_ohdr; /* Whether to minimize dataset object header */
 } H5CX_dcpl_cache_t;
 
 /* Typedef for cached default dataset access property list information */
@@ -240,6 +256,9 @@ static H5CX_lcpl_cache_t H5CX_def_lcpl_cache;
 /* Define a "default" link access property list cache structure to use for default LAPLs */
 static H5CX_lapl_cache_t H5CX_def_lapl_cache;
 
+/* Define a "default" object creation property list cache structure to use for default OCPLs */
+static H5CX_ocpl_cache_t H5CX_def_ocpl_cache;
+
 /* Define a "default" dataset creation property list cache structure to use for default DCPLs */
 static H5CX_dcpl_cache_t H5CX_def_dcpl_cache;
 
@@ -268,6 +287,7 @@ H5CX__init_package(void)
     H5P_genplist_t *dxpl;                /* Data transfer property list */
     H5P_genplist_t *lcpl;                /* Link creation property list */
     H5P_genplist_t *lapl;                /* Link access property list */
+    H5P_genplist_t *ocpl;                /* Object creation property list */
     H5P_genplist_t *dcpl;                /* Dataset creation property list */
     H5P_genplist_t *dapl;                /* Dataset access property list */
     H5P_genplist_t *fapl;                /* File access property list */
@@ -411,6 +431,33 @@ H5CX__init_package(void)
     if (H5P_get(lapl, H5L_ACS_NLINKS_NAME, &H5CX_def_lapl_cache.nlinks) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve number of soft / UD links to traverse");
 
+    /* Reset the "default OCPL cache" information */
+    memset(&H5CX_def_ocpl_cache, 0, sizeof(H5CX_ocpl_cache_t));
+
+    /* Get the default OCPL cache information */
+
+    /* Get the default object creation property list */
+    if (NULL == (ocpl = (H5P_genplist_t *)H5I_object(H5P_OBJECT_CREATE_DEFAULT)))
+        HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "not a object create property list");
+
+#ifdef H5O_ENABLE_BAD_MESG_COUNT
+    /* Get the write a bad message count flag */
+    if (H5P_get(ocpl, H5O_CRT_BAD_MESG_COUNT_NAME, &H5CX_def_ocpl_cache.bad_mesg_count) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve write bad message count");
+#endif /* H5O_ENABLE_BAD_MESG_COUNT */
+
+    /* Get maximum # of compact attributes */
+    if (H5P_get(ocpl, H5O_CRT_ATTR_MAX_COMPACT_NAME, &H5CX_def_ocpl_cache.attr_max_compact) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve maximum # of compact attributes");
+
+    /* Get minimum # of dense attributes */
+    if (H5P_get(ocpl, H5O_CRT_ATTR_MIN_DENSE_NAME, &H5CX_def_ocpl_cache.attr_min_dense) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve minimum # of dense attributes");
+
+    /* Get object header flags */
+    if (H5P_get(ocpl, H5O_CRT_OHDR_FLAGS_NAME, &H5CX_def_ocpl_cache.ohdr_flags) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve object header flags");
+
     /* Reset the "default DCPL cache" information */
     memset(&H5CX_def_dcpl_cache, 0, sizeof(H5CX_dcpl_cache_t));
 
@@ -421,12 +468,8 @@ H5CX__init_package(void)
         HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "not a dataset create property list");
 
     /* Get flag to indicate whether to minimize dataset object header */
-    if (H5P_get(dcpl, H5D_CRT_MIN_DSET_HDR_SIZE_NAME, &H5CX_def_dcpl_cache.do_min_dset_ohdr) < 0)
+    if (H5P_get(dcpl, H5D_CRT_MIN_DSET_HDR_SIZE_NAME, &H5CX_def_dcpl_cache.min_dset_ohdr) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve dataset minimize flag");
-
-    /* Get object header flags */
-    if (H5P_get(dcpl, H5O_CRT_OHDR_FLAGS_NAME, &H5CX_def_dcpl_cache.ohdr_flags) < 0)
-        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve object header flags");
 
     /* Reset the "default DAPL cache" information */
     memset(&H5CX_def_dapl_cache, 0, sizeof(H5CX_dapl_cache_t));
@@ -547,7 +590,7 @@ H5CX_push(H5CX_node_t *cnode)
 
     /* Set non-zero context info */
     cnode->ctx.dxpl_id = H5P_DATASET_XFER_DEFAULT;
-    cnode->ctx.dcpl_id = H5P_DATASET_CREATE_DEFAULT;
+    cnode->ctx.ocpl_id = H5P_OBJECT_CREATE_DEFAULT;
     cnode->ctx.dapl_id = H5P_DATASET_ACCESS_DEFAULT;
     cnode->ctx.lcpl_id = H5P_LINK_CREATE_DEFAULT;
     cnode->ctx.lapl_id = H5P_LINK_ACCESS_DEFAULT;
@@ -599,17 +642,17 @@ H5CX_retrieve_state(H5CX_state_t **api_state)
     if (NULL == (*api_state = H5FL_CALLOC(H5CX_state_t)))
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTALLOC, FAIL, "unable to allocate new API context state");
 
-    /* Check for non-default DCPL */
-    if (H5P_DATASET_CREATE_DEFAULT != (*head)->ctx.dcpl_id) {
-        /* Retrieve the DCPL property list */
-        H5CX_RETRIEVE_PLIST(dcpl, FAIL)
+    /* Check for non-default OCPL */
+    if (H5P_OBJECT_CREATE_DEFAULT != (*head)->ctx.ocpl_id) {
+        /* Retrieve the OCPL property list */
+        H5CX_RETRIEVE_PLIST(ocpl, FAIL)
 
-        /* Copy the DCPL ID */
-        if (((*api_state)->dcpl_id = H5P_copy_plist_id((H5P_genplist_t *)(*head)->ctx.dcpl, false)) < 0)
+        /* Copy the OCPL ID */
+        if (((*api_state)->ocpl_id = H5P_copy_plist_id((H5P_genplist_t *)(*head)->ctx.ocpl, false)) < 0)
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy property list");
     } /* end if */
     else
-        (*api_state)->dcpl_id = H5P_DATASET_CREATE_DEFAULT;
+        (*api_state)->ocpl_id = H5P_OBJECT_CREATE_DEFAULT;
 
     /* Check for non-default DXPL */
     if (H5P_DATASET_XFER_DEFAULT != (*head)->ctx.dxpl_id) {
@@ -725,9 +768,9 @@ H5CX_restore_state(const H5CX_state_t *api_state)
     assert(head && *head);
     assert(api_state);
 
-    /* Restore the DCPL info */
-    (*head)->ctx.dcpl_id = api_state->dcpl_id;
-    (*head)->ctx.dcpl    = NULL;
+    /* Restore the OCPL info */
+    (*head)->ctx.ocpl_id = api_state->ocpl_id;
+    (*head)->ctx.ocpl    = NULL;
 
     /* Restore the DXPL info */
     (*head)->ctx.dxpl_id = api_state->dxpl_id;
@@ -780,10 +823,10 @@ H5CX_free_state(H5CX_state_t *api_state)
     /* Sanity check */
     assert(api_state);
 
-    /* Release the DCPL */
-    if (0 != api_state->dcpl_id && H5P_DATASET_CREATE_DEFAULT != api_state->dcpl_id)
-        if (H5I_dec_ref(api_state->dcpl_id) < 0)
-            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTDEC, FAIL, "can't decrement refcount on DCPL");
+    /* Release the OCPL */
+    if (0 != api_state->ocpl_id && H5P_OBJECT_CREATE_DEFAULT != api_state->ocpl_id)
+        if (H5I_dec_ref(api_state->ocpl_id) < 0)
+            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTDEC, FAIL, "can't decrement refcount on OCPL");
 
     /* Release the DXPL */
     if (0 != api_state->dxpl_id && H5P_DATASET_XFER_DEFAULT != api_state->dxpl_id)
@@ -888,32 +931,6 @@ done:
 } /* end H5CX_set_dxpl() */
 
 /*-------------------------------------------------------------------------
- * Function:    H5CX_set_dcpl
- *
- * Purpose:     Sets the DCPL for the current API call context.
- *
- * Return:      <none>
- *
- *-------------------------------------------------------------------------
- */
-void
-H5CX_set_dcpl(hid_t dcpl_id)
-{
-    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
-
-    FUNC_ENTER_NOAPI_NOINIT_NOERR
-
-    /* Sanity check */
-    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
-    assert(head && *head);
-
-    /* Set the API context's DCPL to a new value */
-    (*head)->ctx.dcpl_id = dcpl_id;
-
-    FUNC_LEAVE_NOAPI_VOID
-} /* end H5CX_set_dcpl() */
-
-/*-------------------------------------------------------------------------
  * Function:    H5CX_set_libver_bounds
  *
  * Purpose:     Sets the low/high bounds according to "f" for the current API call context.
@@ -974,9 +991,71 @@ H5CX_set_lcpl(hid_t lcpl_id)
 } /* end H5CX_set_lcpl() */
 
 /*-------------------------------------------------------------------------
+ * Function:    H5CX_set_cpl
+ *
+ * Purpose:     Validates and sets a creation property list
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_set_cpl(hid_t crtpl_id, const H5P_libclass_t *libclass)
+{
+    H5CX_node_t **head = NULL;    /* Pointer to head of API context list */
+    htri_t is_dcpl = false; /* Whether the creation property list is (or is derived from) a dataset creation property list */
+    htri_t is_gcpl = false; /* Whether the creation property list is (or is derived from) a group creation property list */
+    htri_t is_tcpl = false; /* Whether the creation property list is (or is derived from) a datatype creation property list */
+    htri_t is_ocpl = false; /* Whether the creation property list is (or is derived from) an object creation property list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity checks */
+    assert(libclass);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+
+    /* Sanity check the property list class */
+    if (true != H5P_isa_class(crtpl_id, *libclass->class_id))
+        HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "not the required creation property list type");
+
+    /* Check for dataset creation property */
+    if ((is_dcpl = H5P_class_isa(*libclass->pclass, *H5P_CLS_DCRT->pclass)) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for dataset creation class");
+    else if (!is_dcpl) {
+        /* Check for group creation property */
+        if ((is_gcpl = H5P_class_isa(*libclass->pclass, *H5P_CLS_GCRT->pclass)) < 0)
+            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for group creation class");
+        else if (!is_gcpl) {
+            /* Check for datatype creation property */
+            if ((is_tcpl = H5P_class_isa(*libclass->pclass, *H5P_CLS_TCRT->pclass)) < 0)
+                HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for datatype creation class");
+            else if (!is_tcpl) {
+                /* Check for object creation property */
+                /* (Must be last, as other object creation property classes are
+                 *      sub-classes of it)
+                 */
+                if ((is_ocpl = H5P_class_isa(*libclass->pclass, *H5P_CLS_OCRT->pclass)) < 0)
+                    HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for object creation class");
+                else if (!is_ocpl)
+                    HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "unknown creation property class");
+            }
+        }
+    }
+    assert(is_dcpl || is_gcpl || is_tcpl || is_ocpl);
+
+    /* Set object creation property list ID */
+    (*head)->ctx.ocpl_id = crtpl_id;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_set_cpl() */
+
+/*-------------------------------------------------------------------------
  * Function:    H5CX_set_apl
  *
- * Purpose:     Validaties an access property list, and sanity checking &
+ * Purpose:     Validates an access property list, and sanity checking &
  *              setting up collective operations.
  *
  * Return:      Non-negative on success / Negative on failure
@@ -2458,7 +2537,7 @@ done:
 } /* end H5CX_get_libver_bounds() */
 
 /*-------------------------------------------------------------------------
- * Function:    H5CX_get_dset_min_ohdr_flag
+ * Function:    H5CX_get_min_dset_hdr
  *
  * Purpose:     Retrieves the flag that indicates whether the dataset object
  *		header should be minimized
@@ -2468,7 +2547,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5CX_get_dset_min_ohdr_flag(bool *dset_min_ohdr_flag)
+H5CX_get_min_dset_hdr(bool *min_dset_hdr)
 {
     H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
     herr_t        ret_value = SUCCEED; /* Return value */
@@ -2476,20 +2555,19 @@ H5CX_get_dset_min_ohdr_flag(bool *dset_min_ohdr_flag)
     FUNC_ENTER_NOAPI(FAIL)
 
     /* Sanity check */
-    assert(dset_min_ohdr_flag);
+    assert(min_dset_hdr);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.dcpl_id);
+    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(dcpl, H5P_DATASET_CREATE_DEFAULT, H5D_CRT_MIN_DSET_HDR_SIZE_NAME,
-                             do_min_dset_ohdr)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, dcpl, H5P_OBJECT_CREATE_DEFAULT, H5D_CRT_MIN_DSET_HDR_SIZE_NAME, min_dset_ohdr)
 
     /* Get the value */
-    *dset_min_ohdr_flag = (*head)->ctx.do_min_dset_ohdr;
+    *min_dset_hdr = (*head)->ctx.min_dset_ohdr;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5CX_get_dset_min_ohdr_flag() */
+} /* end H5CX_get_min_dset_hdr() */
 
 /*-------------------------------------------------------------------------
  * Function:    H5CX_get_ext_file_prefix
@@ -3289,6 +3367,104 @@ H5CX_set_actual_selection_io_mode(uint32_t actual_selection_io_mode)
     FUNC_LEAVE_NOAPI_VOID
 } /* end H5CX_set_actual_selection_io_mode() */
 
+#ifdef H5O_ENABLE_BAD_MESG_COUNT
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_bad_mesg_count
+ *
+ * Purpose:     Retrieves the write a bad message count flag for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_bad_mesg_count(bool *bad_mesg_count)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(bad_mesg_count);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
+
+    H5CX_RETRIEVE_PROP_VALID(ocpl, H5P_OBJECT_CREATE_DEFAULT, H5O_CRT_BAD_MESG_COUNT_NAME, bad_mesg_count)
+
+    /* Get the value */
+    *bad_mesg_count = (*head)->ctx.bad_mesg_count;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* End H5CX_get_bad_mesg_count() */
+#endif /* H5O_ENABLE_BAD_MESG_COUNT */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_attr_max_compact
+ *
+ * Purpose:     Retrieves the maximum # of compact attributes for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_attr_max_compact(unsigned *attr_max_compact)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(attr_max_compact);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
+
+    H5CX_RETRIEVE_PROP_VALID(ocpl, H5P_OBJECT_CREATE_DEFAULT, H5O_CRT_ATTR_MAX_COMPACT_NAME, attr_max_compact)
+
+    /* Get the value */
+    *attr_max_compact = (*head)->ctx.attr_max_compact;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* End H5CX_get_attr_max_compact() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_attr_min_dense
+ *
+ * Purpose:     Retrieves the minimum # of dense attributes for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_attr_min_dense(unsigned *attr_min_dense)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(attr_min_dense);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
+
+    H5CX_RETRIEVE_PROP_VALID(ocpl, H5P_OBJECT_CREATE_DEFAULT, H5O_CRT_ATTR_MIN_DENSE_NAME, attr_min_dense)
+
+    /* Get the value */
+    *attr_min_dense = (*head)->ctx.attr_min_dense;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* End H5CX_get_attr_min_dense() */
+
 /*-------------------------------------------------------------------------
  * Function:    H5CX_get_ohdr_flags
  *
@@ -3310,9 +3486,9 @@ H5CX_get_ohdr_flags(uint8_t *ohdr_flags)
     assert(ohdr_flags);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.dcpl_id);
+    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(dcpl, H5P_DATASET_CREATE_DEFAULT, H5O_CRT_OHDR_FLAGS_NAME, ohdr_flags)
+    H5CX_RETRIEVE_PROP_VALID(ocpl, H5P_OBJECT_CREATE_DEFAULT, H5O_CRT_OHDR_FLAGS_NAME, ohdr_flags)
 
     /* Get the value */
     *ohdr_flags = (*head)->ctx.ohdr_flags;

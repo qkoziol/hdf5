@@ -150,10 +150,10 @@ H5G_mkroot(H5F_t *f, bool create_root)
      * Create the group pointer
      */
     if (NULL == (f->shared->root_grp = H5FL_CALLOC(H5G_t)))
-        HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, FAIL, "memory allocation failed");
+        HGOTO_ERROR(H5E_SYM, H5E_CANTALLOC, FAIL, "memory allocation failed");
     if (NULL == (f->shared->root_grp->shared = H5FL_CALLOC(H5G_shared_t))) {
         f->shared->root_grp = H5FL_FREE(H5G_t, f->shared->root_grp);
-        HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, FAIL, "memory allocation failed");
+        HGOTO_ERROR(H5E_SYM, H5E_CANTALLOC, FAIL, "memory allocation failed");
     } /* end if */
 
     /* Initialize the root_loc structure to point to fields in the newly created
@@ -168,7 +168,12 @@ H5G_mkroot(H5F_t *f, bool create_root)
      */
     if (create_root) {
         /* Create root group */
-        /* (Pass the FCPL which is a sub-class of the group creation property class) */
+        /* (Uses the FCPL, which is a sub-class of the group creation property class) */
+
+        /* Set the FCPL in the API context for root group creation */
+        if (H5CX_set_cpl(H5P_PLIST_ID(f->shared->fcpl), H5P_CLS_GCRT) < 0)
+            HGOTO_ERROR(H5E_SYM, H5E_CANTSET, FAIL, "can't set creation property list info");
+
         gcrt_info.gcpl       = f->shared->fcpl;
         gcrt_info.cache_type = H5G_NOTHING_CACHED;
         if (H5G__obj_create(f, &gcrt_info, root_loc.oloc /*out*/) < 0)
@@ -178,8 +183,7 @@ H5G_mkroot(H5F_t *f, bool create_root)
 
         /* Decrement refcount on root group's object header in memory */
         if (H5O_dec_rc_by_loc(root_loc.oloc) < 0)
-            HGOTO_ERROR(H5E_SYM, H5E_CANTDEC, FAIL,
-                        "unable to decrement refcount on root group's object header");
+            HGOTO_ERROR(H5E_SYM, H5E_CANTDEC, FAIL, "unable to decrement refcount on root group's object header");
 
         /* Mark superblock dirty, so root group info is flushed */
         sblock_dirty = true;
@@ -189,7 +193,7 @@ H5G_mkroot(H5F_t *f, bool create_root)
         if (f->shared->sblock->super_vers < HDF5_SUPERBLOCK_VERSION_2) {
             /* Allocate space for the root group symbol table entry */
             if (NULL == (f->shared->sblock->root_ent = (H5G_entry_t *)H5MM_calloc(sizeof(H5G_entry_t))))
-                HGOTO_ERROR(H5E_RESOURCE, H5E_CANTALLOC, FAIL, "can't allocate space for symbol table entry");
+                HGOTO_ERROR(H5E_SYM, H5E_CANTALLOC, FAIL, "can't allocate space for symbol table entry");
 
             /* Initialize the root group symbol table entry */
             f->shared->sblock->root_ent->type = gcrt_info.cache_type;
@@ -300,7 +304,7 @@ done:
     /* Mark superblock dirty in cache, if necessary */
     if (sblock_dirty)
         if (H5AC_mark_entry_dirty(f->shared->sblock) < 0)
-            HDONE_ERROR(H5E_FILE, H5E_CANTMARKDIRTY, FAIL, "unable to mark superblock as dirty");
+            HDONE_ERROR(H5E_SYM, H5E_CANTMARKDIRTY, FAIL, "unable to mark superblock as dirty");
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5G_mkroot() */

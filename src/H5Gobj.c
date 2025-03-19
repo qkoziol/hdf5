@@ -151,7 +151,6 @@ H5G__obj_create_real(H5F_t *f, const H5O_ginfo_t *ginfo, const H5O_linfo_t *linf
 {
     size_t          hdr_size;                    /* Size of object header to request */
     bool            use_at_least_v18;            /* Flag indicating the new group format should be used */
-    H5P_genplist_t *gcpl      = gcrt_info->gcpl; /* Group creation property list */
     herr_t          ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -192,14 +191,14 @@ H5G__obj_create_real(H5F_t *f, const H5O_ginfo_t *ginfo, const H5O_linfo_t *linf
         size_t     link_size;        /* Size of a link message */
 
         /* Calculate message size information, for creating group's object header */
-        linfo_size = H5O_msg_size_f(f, gcpl, H5O_LINFO_ID, linfo, (size_t)0);
+        linfo_size = H5O_msg_size_f(f, H5O_LINFO_ID, linfo, (size_t)0);
         assert(linfo_size);
 
-        ginfo_size = H5O_msg_size_f(f, gcpl, H5O_GINFO_ID, ginfo, (size_t)0);
+        ginfo_size = H5O_msg_size_f(f, H5O_GINFO_ID, ginfo, (size_t)0);
         assert(ginfo_size);
 
         if (pline && pline->nused) {
-            pline_size = H5O_msg_size_f(f, gcpl, H5O_PLINE_ID, pline, (size_t)0);
+            pline_size = H5O_msg_size_f(f, H5O_PLINE_ID, pline, (size_t)0);
             assert(pline_size);
         } /* end if */
 
@@ -208,7 +207,7 @@ H5G__obj_create_real(H5F_t *f, const H5O_ginfo_t *ginfo, const H5O_linfo_t *linf
         lnk.corder_valid = linfo->track_corder;
         lnk.cset         = H5T_CSET_ASCII;
         lnk.name         = &null_char;
-        link_size        = H5O_msg_size_f(f, gcpl, H5O_LINK_ID, &lnk, (size_t)ginfo->est_name_len);
+        link_size        = H5O_msg_size_f(f, H5O_LINK_ID, &lnk, (size_t)ginfo->est_name_len);
         assert(link_size);
 
         /* Compute size of header to use for creation */
@@ -240,7 +239,7 @@ H5G__obj_create_real(H5F_t *f, const H5O_ginfo_t *ginfo, const H5O_linfo_t *linf
      * since nothing refers to it yet.	The link count will be
      * incremented if the object is added to the group directed graph.
      */
-    if (H5O_create(f, hdr_size, (size_t)1, gcpl, oloc /*out*/) < 0)
+    if (H5O_create(f, hdr_size, (size_t)1, oloc /*out*/) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTINIT, FAIL, "can't create header");
 
     /* Check for format of group to create */
