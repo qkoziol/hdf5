@@ -636,7 +636,7 @@ H5FD__ioc_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
     file->subf_config.stripe_count  = H5FD_SUBFILING_DEFAULT_STRIPE_COUNT;
 
     /* Get the driver-specific file access properties */
-    if (NULL == (fapl = (H5P_genplist_t *)H5I_object(fapl_id)))
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file access property list");
 
     if (H5FD_mpi_self_initialized_s) {

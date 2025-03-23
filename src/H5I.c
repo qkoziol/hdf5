@@ -876,7 +876,6 @@ H5Iget_name(hid_t id, char *name /*out*/, size_t size)
     H5VL_object_t         *vol_obj = NULL; /* Object stored in ID */
     H5VL_object_get_args_t vol_cb_args;    /* Arguments to VOL callback */
     H5VL_loc_params_t      loc_params;
-    H5P_genplist_t        *def_dxpl;          /* Default dataset transfer property list */
     size_t                 obj_name_len = 0;  /* Length of object's name */
     ssize_t                ret_value    = -1; /* Return value */
 
@@ -885,10 +884,6 @@ H5Iget_name(hid_t id, char *name /*out*/, size_t size)
     /* Get the object pointer */
     if (NULL == (vol_obj = H5VL_vol_object(id)))
         HGOTO_ERROR(H5E_ID, H5E_BADTYPE, (-1), "invalid identifier");
-
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ID, H5E_BADTYPE, (-1), "not a dataset transfer property list");
 
     /* Set location parameters */
     loc_params.type     = H5VL_OBJECT_BY_SELF;
@@ -901,7 +896,7 @@ H5Iget_name(hid_t id, char *name /*out*/, size_t size)
     vol_cb_args.args.get_name.name_len = &obj_name_len;
 
     /* Retrieve object's name */
-    if (H5VL_object_get(vol_obj, &loc_params, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_object_get(vol_obj, &loc_params, &vol_cb_args, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_ID, H5E_CANTGET, (-1), "can't retrieve object name");
 
     /* Set return value */

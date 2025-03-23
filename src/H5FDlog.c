@@ -581,7 +581,7 @@ H5FD__log_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
     }
 
     /* Check for non-default FAPL */
-    if (H5P_FILE_ACCESS_DEFAULT != fapl_id) {
+    if (!H5P_PLIST_IS_DEFAULT(fapl)) {
         /* This step is for h5repart tool only. If user wants to change file driver from
          * family to one that uses single files (sec2, etc.) while using h5repart, this
          * private property should be set so that in the later step, the library can ignore

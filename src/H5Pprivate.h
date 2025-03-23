@@ -104,6 +104,7 @@ typedef struct H5P_libclass_t {
     H5P_genclass_t    **par_pclass;    /* Pointer to global parent class property list class */
     H5P_genclass_t    **pclass;        /* Pointer to global property list class */
     hid_t *const        class_id;      /* Pointer to global property list class ID */
+    H5P_genplist_t    **def_plist;     /* Pointer to global default property list */
     hid_t *const        def_plist_id;  /* Pointer to global default property list ID */
     H5P_reg_prop_func_t reg_prop_func; /* Register class's properties */
 
@@ -159,6 +160,27 @@ H5_DLLVAR const struct H5P_libclass_t H5P_CLS_TCRT[1]; /* Named datatype creatio
 
 /* Internal default property list IDs */
 H5_DLLVAR hid_t H5P_LST_OBJECT_CREATE_ID_g;
+
+/* Internal default property lists */
+H5_DLLVAR H5P_genplist_t *H5P_LST_ATTRIBUTE_ACCESS_g;
+H5_DLLVAR H5P_genplist_t *H5P_LST_ATTRIBUTE_CREATE_g;
+H5_DLLVAR H5P_genplist_t *H5P_LST_DATASET_ACCESS_g;
+H5_DLLVAR H5P_genplist_t *H5P_LST_DATASET_CREATE_g;
+H5_DLLVAR H5P_genplist_t *H5P_LST_DATASET_XFER_g;
+H5_DLLVAR H5P_genplist_t *H5P_LST_DATATYPE_ACCESS_g;
+H5_DLLVAR H5P_genplist_t *H5P_LST_DATATYPE_CREATE_g;
+H5_DLLVAR H5P_genplist_t *H5P_LST_FILE_ACCESS_g;
+H5_DLLVAR H5P_genplist_t *H5P_LST_FILE_CREATE_g;
+H5_DLLVAR H5P_genplist_t *H5P_LST_GROUP_ACCESS_g;
+H5_DLLVAR H5P_genplist_t *H5P_LST_GROUP_CREATE_g;
+H5_DLLVAR H5P_genplist_t *H5P_LST_LINK_ACCESS_g;
+H5_DLLVAR H5P_genplist_t *H5P_LST_LINK_CREATE_g;
+H5_DLLVAR H5P_genplist_t *H5P_LST_MAP_ACCESS_g;
+H5_DLLVAR H5P_genplist_t *H5P_LST_MAP_CREATE_g;
+H5_DLLVAR H5P_genplist_t *H5P_LST_OBJECT_COPY_g;
+H5_DLLVAR H5P_genplist_t *H5P_LST_OBJECT_CREATE_g;
+H5_DLLVAR H5P_genplist_t *H5P_LST_REFERENCE_ACCESS_g;
+H5_DLLVAR H5P_genplist_t *H5P_LST_VOL_INITIALIZE_g;
 
 /******************************/
 /* Library Private Prototypes */

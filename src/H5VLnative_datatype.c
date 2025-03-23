@@ -113,9 +113,9 @@ H5VL__native_datatype_commit(void *obj, const H5VL_loc_params_t *loc_params, con
         H5P_genplist_t *lcpl; /* Link creation property list */
 
         /* H5Tcommit */
-        if (NULL == (tcpl = H5I_object(tcpl_id)))
+        if (NULL == (tcpl = H5P_object_verify(tcpl_id, H5P_TYPE_DATATYPE_CREATE, true)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a property list");
-        if (NULL == (lcpl = H5I_object(lcpl_id)))
+        if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a property list");
         if (H5T__commit_named(&loc, name, type, lcpl, tcpl) < 0)
             HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINIT, NULL, "unable to commit datatype");

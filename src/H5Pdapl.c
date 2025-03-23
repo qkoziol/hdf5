@@ -150,6 +150,7 @@ const H5P_libclass_t H5P_CLS_DACC[1] = {{
     &H5P_CLS_LINK_ACCESS_g,       /* Parent class                 */
     &H5P_CLS_DATASET_ACCESS_g,    /* Pointer to class             */
     &H5P_CLS_DATASET_ACCESS_ID_g, /* Pointer to class ID          */
+    &H5P_LST_DATASET_ACCESS_g,    /* Pointer to default property list */
     &H5P_LST_DATASET_ACCESS_ID_g, /* Pointer to default property list ID */
     H5P__dacc_reg_prop,           /* Default property registration routine */
 
@@ -805,7 +806,6 @@ H5Pget_chunk_cache(hid_t dapl_id, size_t *rdcc_nslots /*out*/, size_t *rdcc_nbyt
                    double *rdcc_w0 /*out*/)
 {
     H5P_genplist_t *dapl;                /* Property list pointer */
-    H5P_genplist_t *def_fapl;            /* Default file access property list */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -814,31 +814,27 @@ H5Pget_chunk_cache(hid_t dapl_id, size_t *rdcc_nslots /*out*/, size_t *rdcc_nbyt
     if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
-    /* Get default file access property list */
-    if (NULL == (def_fapl = (H5P_genplist_t *)H5I_object(H5P_FILE_ACCESS_DEFAULT)))
-        HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for default fapl ID");
-
     /* Get the properties.  If a property is set to the default value, the value
      * from the default fapl is used. */
     if (rdcc_nslots) {
         if (H5P_get(dapl, H5D_ACS_DATA_CACHE_NUM_SLOTS_NAME, rdcc_nslots) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get data cache number of slots");
         if (*rdcc_nslots == H5D_CHUNK_CACHE_NSLOTS_DEFAULT)
-            if (H5P_get(def_fapl, H5F_ACS_DATA_CACHE_NUM_SLOTS_NAME, rdcc_nslots) < 0)
+            if (H5P_get(H5P_LST_FILE_ACCESS_g, H5F_ACS_DATA_CACHE_NUM_SLOTS_NAME, rdcc_nslots) < 0)
                 HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get default data cache number of slots");
     } /* end if */
     if (rdcc_nbytes) {
         if (H5P_get(dapl, H5D_ACS_DATA_CACHE_BYTE_SIZE_NAME, rdcc_nbytes) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get data cache byte size");
         if (*rdcc_nbytes == H5D_CHUNK_CACHE_NBYTES_DEFAULT)
-            if (H5P_get(def_fapl, H5F_ACS_DATA_CACHE_BYTE_SIZE_NAME, rdcc_nbytes) < 0)
+            if (H5P_get(H5P_LST_FILE_ACCESS_g, H5F_ACS_DATA_CACHE_BYTE_SIZE_NAME, rdcc_nbytes) < 0)
                 HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get default data cache byte size");
     } /* end if */
     if (rdcc_w0) {
         if (H5P_get(dapl, H5D_ACS_PREEMPT_READ_CHUNKS_NAME, rdcc_w0) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get preempt read chunks");
         if (*rdcc_w0 < 0)
-            if (H5P_get(def_fapl, H5F_ACS_PREEMPT_READ_CHUNKS_NAME, rdcc_w0) < 0)
+            if (H5P_get(H5P_LST_FILE_ACCESS_g, H5F_ACS_PREEMPT_READ_CHUNKS_NAME, rdcc_w0) < 0)
                 HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get default preempt read chunks");
     } /* end if */
 

@@ -501,7 +501,6 @@ H5Z__check_unregister_group_cb(void H5_ATTR_UNUSED *obj_ptr, hid_t obj_id, void 
     H5Z_object_t         *object  = (H5Z_object_t *)key;
     H5VL_object_t        *vol_obj;     /* Object for loc_id */
     H5VL_group_get_args_t vol_cb_args; /* Arguments to VOL callback */
-    H5P_genplist_t       *def_dxpl;    /* Default dataset transfer property list */
     htri_t                filter_in_pline = false;
     int                   ret_value       = false; /* Return value */
 
@@ -511,16 +510,12 @@ H5Z__check_unregister_group_cb(void H5_ATTR_UNUSED *obj_ptr, hid_t obj_id, void 
     if (NULL == (vol_obj = (H5VL_object_t *)H5I_object_verify(obj_id, H5I_GROUP)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid group identifier");
 
-    /* Get default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Set up VOL callback arguments */
     vol_cb_args.op_type               = H5VL_GROUP_GET_GCPL;
     vol_cb_args.args.get_gcpl.gcpl_id = H5I_INVALID_HID;
 
     /* Get the group creation property list */
-    if (H5VL_group_get(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_group_get(vol_obj, &vol_cb_args, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_PLINE, H5E_CANTGET, FAIL, "unable to get group creation properties");
 
     if ((ocpl_id = vol_cb_args.args.get_gcpl.gcpl_id) < 0)
@@ -567,7 +562,6 @@ H5Z__check_unregister_dset_cb(void H5_ATTR_UNUSED *obj_ptr, hid_t obj_id, void *
     H5Z_object_t           *object  = (H5Z_object_t *)key;
     H5VL_object_t          *vol_obj;     /* Object for loc_id */
     H5VL_dataset_get_args_t vol_cb_args; /* Arguments to VOL callback */
-    H5P_genplist_t         *def_dxpl;    /* Default dataset transfer property list */
     htri_t                  filter_in_pline = false;
     int                     ret_value       = false; /* Return value */
 
@@ -577,16 +571,12 @@ H5Z__check_unregister_dset_cb(void H5_ATTR_UNUSED *obj_ptr, hid_t obj_id, void *
     if (NULL == (vol_obj = (H5VL_object_t *)H5I_object_verify(obj_id, H5I_DATASET)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "invalid dataset identifier");
 
-    /* Get default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_PLINE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Set up VOL callback arguments */
     vol_cb_args.op_type               = H5VL_DATASET_GET_DCPL;
     vol_cb_args.args.get_dcpl.dcpl_id = H5I_INVALID_HID;
 
     /* Get the dataset creation property list */
-    if (H5VL_dataset_get(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_dataset_get(vol_obj, &vol_cb_args, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_PLINE, H5E_CANTGET, FAIL, "unable to get dataset creation properties");
 
     if ((ocpl_id = vol_cb_args.args.get_dcpl.dcpl_id) < 0)
@@ -633,7 +623,6 @@ H5Z__flush_file_cb(void H5_ATTR_UNUSED *obj_ptr, hid_t obj_id, void H5_ATTR_PARA
     H5VL_file_specific_args_t vol_cb_args_specific; /* Arguments to VOL callback */
     H5VL_object_t            *vol_obj;              /* File for file_id */
     H5VL_file_get_args_t      vol_cb_args;          /* Arguments to VOL callback */
-    H5P_genplist_t           *def_dxpl;             /* Default dataset transfer property list pointer */
     bool                      is_native_vol_obj = true;
     unsigned int              intent            = 0;
 
@@ -646,21 +635,16 @@ H5Z__flush_file_cb(void H5_ATTR_UNUSED *obj_ptr, hid_t obj_id, void H5_ATTR_PARA
     if (NULL == (vol_obj = (H5VL_object_t *)H5I_object(obj_id)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid file identifier");
 
-    /* Retrieve the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
-
     /* Get intent */
     vol_cb_args.op_type               = H5VL_FILE_GET_INTENT;
     vol_cb_args.args.get_intent.flags = &intent;
 
     /* Get the flags */
-    if (H5VL_file_get(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_get(vol_obj, &vol_cb_args, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to get file's intent flags");
 
     if (H5VL_object_is_native(vol_obj, &is_native_vol_obj) < 0)
-        HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, H5I_INVALID_HID,
-                    "can't determine if VOL object is native connector object");
+        HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, H5I_INVALID_HID, "can't determine if VOL object is native connector object");
 
     /* Do a global flush if the file is opened for write */
     if (H5F_ACC_RDWR & intent) {
@@ -682,7 +666,7 @@ H5Z__flush_file_cb(void H5_ATTR_UNUSED *obj_ptr, hid_t obj_id, void H5_ATTR_PARA
                     MPI_Comm mpi_comm; /* File's communicator */
 
                     /* Retrieve the file communicator */
-                    if (H5F_mpi_retrieve_comm(obj_id, H5P_DEFAULT, &mpi_comm) < 0)
+                    if (H5F_mpi_retrieve_comm(obj_id, H5P_FILE_ACCESS_DEFAULT, &mpi_comm) < 0)
                         HGOTO_ERROR(H5E_PLINE, H5E_CANTGET, FAIL, "can't get MPI communicator");
 
                     /* Issue the barrier */
@@ -702,7 +686,7 @@ H5Z__flush_file_cb(void H5_ATTR_UNUSED *obj_ptr, hid_t obj_id, void H5_ATTR_PARA
         vol_cb_args_specific.args.flush.scope    = H5F_SCOPE_GLOBAL;
 
         /* Flush the object */
-        if (H5VL_file_specific(vol_obj, &vol_cb_args_specific, def_dxpl, NULL) < 0)
+        if (H5VL_file_specific(vol_obj, &vol_cb_args_specific, NULL) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTFLUSH, FAIL, "unable to flush file hierarchy");
 
     } /* end if */

@@ -337,7 +337,6 @@ done:
 static herr_t
 H5FD__splitter_populate_config(H5FD_splitter_vfd_config_t *vfd_config, H5FD_splitter_fapl_t *fa_out)
 {
-    H5P_genplist_t *def_fapl;            /* Pointer to the default FAPL */
     bool            free_config = false; /* Whether the config was allocated locally and needs to be freed */
     herr_t          ret_value   = SUCCEED;
 
@@ -387,9 +386,6 @@ H5FD__splitter_populate_config(H5FD_splitter_vfd_config_t *vfd_config, H5FD_spli
     strncpy(fa_out->log_file_path, vfd_config->log_file_path, H5FD_SPLITTER_PATH_MAX + 1);
     fa_out->log_file_path[H5FD_SPLITTER_PATH_MAX] = '\0';
 
-    if (NULL == (def_fapl = H5I_object(H5P_FILE_ACCESS_DEFAULT)))
-        HGOTO_ERROR(H5E_VFL, H5E_BADTYPE, FAIL, "not a file access property list");
-
     /* Set non-default channel FAPLs in splitter configuration info */
     if (H5P_DEFAULT != vfd_config->rw_fapl_id) {
         H5P_genplist_t *rw_fapl;
@@ -405,7 +401,7 @@ H5FD__splitter_populate_config(H5FD_splitter_vfd_config_t *vfd_config, H5FD_spli
          * driver might have been replaced with the splitter VFD, which
          * would cause recursion badness.
          */
-        if (NULL == (fa_out->rw_fapl = H5P_copy_plist(def_fapl, false)))
+        if (NULL == (fa_out->rw_fapl = H5P_copy_plist(H5P_LST_FILE_ACCESS_g, false)))
             HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, FAIL, "can't copy property list");
         if (H5P_set_driver_by_value(fa_out->rw_fapl, H5_VFD_SEC2, NULL) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set default driver on R/W channel FAPL");
@@ -424,7 +420,7 @@ H5FD__splitter_populate_config(H5FD_splitter_vfd_config_t *vfd_config, H5FD_spli
          * driver might have been replaced with the splitter VFD, which
          * would cause recursion badness.
          */
-        if (NULL == (fa_out->wo_fapl = H5P_copy_plist(def_fapl, false)))
+        if (NULL == (fa_out->wo_fapl = H5P_copy_plist(H5P_LST_FILE_ACCESS_g, false)))
             HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, FAIL, "can't copy property list");
         if (H5P_set_driver_by_value(fa_out->wo_fapl, H5_VFD_SEC2, NULL) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set default driver on W/O channel FAPL");
@@ -734,7 +730,7 @@ H5FD__splitter_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t max
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, NULL, "bogus maxaddr");
     if (H5FD_ADDR_OVERFLOW(maxaddr))
         HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, NULL, "bogus maxaddr");
-    if (NULL == (fapl = H5I_object(fapl_id)))
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file access property list");
     if (H5FD_SPLITTER_VALUE != H5P_get_driver_value(fapl))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, NULL, "driver is not splitter");
@@ -1415,7 +1411,7 @@ H5FD__splitter_delete(const char *filename, hid_t fapl_id)
     assert(filename);
 
     /* Get the driver info */
-    if (H5P_FILE_ACCESS_DEFAULT == fapl_id) {
+    if (H5P_DEFAULT == fapl_id || H5P_FILE_ACCESS_DEFAULT == fapl_id) {
         if (NULL == (def_fa = H5FL_CALLOC(H5FD_splitter_fapl_t)))
             HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "unable to allocate file access property list struct");
         if (H5FD__splitter_populate_config(NULL, def_fa) < 0)
@@ -1429,7 +1425,7 @@ H5FD__splitter_delete(const char *filename, hid_t fapl_id)
         fa = def_fa;
     }
     else {
-        if (NULL == (fapl = (H5P_genplist_t *)H5I_object(fapl_id)))
+        if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
         if (NULL == (fa = (const H5FD_splitter_fapl_t *)H5P_peek_driver_info(fapl))) {
             if (NULL == (def_fa = H5FL_CALLOC(H5FD_splitter_fapl_t)))
@@ -1439,10 +1435,8 @@ H5FD__splitter_delete(const char *filename, hid_t fapl_id)
 
             /* If W/O path is not set, use base filename with '_wo' suffix */
             if (*def_fa->wo_path == '\0')
-                if (H5FD__splitter_get_default_wo_path(def_fa->wo_path, H5FD_SPLITTER_PATH_MAX + 1,
-                                                       filename) < 0)
-                    HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL,
-                                "can't generate default filename for W/O channel");
+                if (H5FD__splitter_get_default_wo_path(def_fa->wo_path, H5FD_SPLITTER_PATH_MAX + 1, filename) < 0)
+                    HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't generate default filename for W/O channel");
 
             fa = def_fa;
         }

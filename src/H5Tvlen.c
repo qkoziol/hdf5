@@ -281,7 +281,6 @@ H5T__vlen_set_loc(H5T_t *dt, H5VL_object_t *file, H5T_loc_t loc)
             case H5T_LOC_DISK: {
                 H5VL_file_cont_info_t cont_info = {H5VL_CONTAINER_INFO_VERSION, 0, 0, 0};
                 H5VL_file_get_args_t  vol_cb_args; /* Arguments to VOL callback */
-                H5P_genplist_t       *def_dxpl;    /* Dataset transfer property list pointer */
 
                 assert(file);
 
@@ -292,13 +291,8 @@ H5T__vlen_set_loc(H5T_t *dt, H5VL_object_t *file, H5T_loc_t loc)
                 vol_cb_args.op_type                 = H5VL_FILE_GET_CONT_INFO;
                 vol_cb_args.args.get_cont_info.info = &cont_info;
 
-                /* Get the default dataset transfer property list */
-                if (NULL ==
-                    (def_dxpl = H5P_object_verify(H5P_DATASET_XFER_DEFAULT, H5P_TYPE_DATASET_XFER, true)))
-                    HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
-
                 /* Get container info */
-                if (H5VL_file_get(file, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+                if (H5VL_file_get(file, &vol_cb_args, H5_REQUEST_NULL) < 0)
                     HGOTO_ERROR(H5E_DATATYPE, H5E_CANTGET, FAIL, "unable to get container info");
 
                 /* The datatype size is equal to 4 bytes for the sequence length

@@ -284,13 +284,13 @@ DESCRIPTION
 herr_t
 H5CX__init_package(void)
 {
-    H5P_genplist_t *dxpl;                /* Data transfer property list */
-    H5P_genplist_t *lcpl;                /* Link creation property list */
-    H5P_genplist_t *lapl;                /* Link access property list */
-    H5P_genplist_t *ocpl;                /* Object creation property list */
-    H5P_genplist_t *dcpl;                /* Dataset creation property list */
-    H5P_genplist_t *dapl;                /* Dataset access property list */
-    H5P_genplist_t *fapl;                /* File access property list */
+    H5P_genplist_t *dapl = H5P_LST_DATASET_ACCESS_g;                /* Dataset access property list */
+    H5P_genplist_t *dcpl = H5P_LST_DATASET_CREATE_g;                /* Dataset creation property list */
+    H5P_genplist_t *dxpl = H5P_LST_DATASET_XFER_g; /* Default data transfer property list */
+    H5P_genplist_t *fapl = H5P_LST_FILE_ACCESS_g;                /* File access property list */
+    H5P_genplist_t *lcpl = H5P_LST_LINK_CREATE_g;                /* Link creation property list */
+    H5P_genplist_t *lapl = H5P_LST_LINK_ACCESS_g;                /* Link access property list */
+    H5P_genplist_t *ocpl = H5P_LST_OBJECT_CREATE_g;                /* Object creation property list */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -299,10 +299,6 @@ H5CX__init_package(void)
     memset(&H5CX_def_dxpl_cache, 0, sizeof(H5CX_dxpl_cache_t));
 
     /* Get the default DXPL cache information */
-
-    /* Get the default dataset transfer property list */
-    if (NULL == (dxpl = (H5P_genplist_t *)H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Get B-tree split ratios */
     if (H5P_get(dxpl, H5D_XFER_BTREE_SPLIT_RATIO_NAME, &H5CX_def_dxpl_cache.btree_split_ratio) < 0)
@@ -406,10 +402,6 @@ H5CX__init_package(void)
 
     /* Get the default LCPL cache information */
 
-    /* Get the default link creation property list */
-    if (NULL == (lcpl = (H5P_genplist_t *)H5I_object(H5P_LINK_CREATE_DEFAULT)))
-        HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "not a link creation property list");
-
     /* Get link name character encoding */
     if (H5P_get(lcpl, H5P_STRCRT_CHAR_ENCODING_NAME, &H5CX_def_lcpl_cache.encoding) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve link name encoding");
@@ -423,10 +415,6 @@ H5CX__init_package(void)
 
     /* Get the default LAPL cache information */
 
-    /* Get the default link access property list */
-    if (NULL == (lapl = (H5P_genplist_t *)H5I_object(H5P_LINK_ACCESS_DEFAULT)))
-        HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "not a link access property list");
-
     /* Get number of soft / UD links to traverse */
     if (H5P_get(lapl, H5L_ACS_NLINKS_NAME, &H5CX_def_lapl_cache.nlinks) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve number of soft / UD links to traverse");
@@ -435,10 +423,6 @@ H5CX__init_package(void)
     memset(&H5CX_def_ocpl_cache, 0, sizeof(H5CX_ocpl_cache_t));
 
     /* Get the default OCPL cache information */
-
-    /* Get the default object creation property list */
-    if (NULL == (ocpl = (H5P_genplist_t *)H5I_object(H5P_OBJECT_CREATE_DEFAULT)))
-        HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "not a object create property list");
 
 #ifdef H5O_ENABLE_BAD_MESG_COUNT
     /* Get the write a bad message count flag */
@@ -463,10 +447,6 @@ H5CX__init_package(void)
 
     /* Get the default DCPL cache information */
 
-    /* Get the default dataset creation property list */
-    if (NULL == (dcpl = (H5P_genplist_t *)H5I_object(H5P_DATASET_CREATE_DEFAULT)))
-        HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "not a dataset create property list");
-
     /* Get flag to indicate whether to minimize dataset object header */
     if (H5P_get(dcpl, H5D_CRT_MIN_DSET_HDR_SIZE_NAME, &H5CX_def_dcpl_cache.min_dset_ohdr) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve dataset minimize flag");
@@ -475,10 +455,6 @@ H5CX__init_package(void)
     memset(&H5CX_def_dapl_cache, 0, sizeof(H5CX_dapl_cache_t));
 
     /* Get the default DAPL cache information */
-
-    /* Get the default dataset access property list */
-    if (NULL == (dapl = (H5P_genplist_t *)H5I_object(H5P_DATASET_ACCESS_DEFAULT)))
-        HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "not a dataset create property list");
 
     /* Get the prefix for the external file */
     if (H5P_peek(dapl, H5D_ACS_EFILE_PREFIX_NAME, &H5CX_def_dapl_cache.extfile_prefix) < 0)
@@ -492,10 +468,6 @@ H5CX__init_package(void)
     memset(&H5CX_def_fapl_cache, 0, sizeof(H5CX_fapl_cache_t));
 
     /* Get the default FAPL cache information */
-
-    /* Get the default file access property list */
-    if (NULL == (fapl = (H5P_genplist_t *)H5I_object(H5P_FILE_ACCESS_DEFAULT)))
-        HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "not a dataset create property list");
 
     /* Get low_bound */
     if (H5P_get(fapl, H5F_ACS_LIBVER_LOW_BOUND_NAME, &H5CX_def_fapl_cache.low_bound) < 0)
@@ -985,7 +957,8 @@ H5CX_set_lcpl(hid_t lcpl_id)
     assert(head && *head);
 
     /* Set the API context's LCPL to a new value */
-    (*head)->ctx.lcpl_id = lcpl_id;
+    if (H5P_DEFAULT != lcpl_id)
+        (*head)->ctx.lcpl_id = lcpl_id;
 
     FUNC_LEAVE_NOAPI_VOID
 } /* end H5CX_set_lcpl() */
@@ -1003,14 +976,6 @@ herr_t
 H5CX_set_cpl(hid_t crtpl_id, const H5P_libclass_t *libclass)
 {
     H5CX_node_t **head = NULL; /* Pointer to head of API context list */
-    htri_t is_dcpl = false; /* Whether the creation property list is (or is derived from) a dataset creation
-                               property list */
-    htri_t is_gcpl =
-        false; /* Whether the creation property list is (or is derived from) a group creation property list */
-    htri_t is_tcpl = false; /* Whether the creation property list is (or is derived from) a datatype creation
-                               property list */
-    htri_t is_ocpl = false; /* Whether the creation property list is (or is derived from) an object creation
-                               property list */
     herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
@@ -1020,37 +985,49 @@ H5CX_set_cpl(hid_t crtpl_id, const H5P_libclass_t *libclass)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    /* Sanity check the property list class */
-    if (true != H5P_isa_class(crtpl_id, *libclass->class_id))
-        HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "not the required creation property list type");
+    /* Set non-default property list ID */
+    if (H5P_DEFAULT != crtpl_id) {
+        htri_t is_dcpl = false; /* Whether the creation property list is (or is derived from) a dataset creation
+                                   property list */
+        htri_t is_gcpl =
+            false; /* Whether the creation property list is (or is derived from) a group creation property list */
+        htri_t is_tcpl = false; /* Whether the creation property list is (or is derived from) a datatype creation
+                                   property list */
+        htri_t is_ocpl = false; /* Whether the creation property list is (or is derived from) an object creation
+                               property list */
 
-    /* Check for dataset creation property */
-    if ((is_dcpl = H5P_class_isa(*libclass->pclass, *H5P_CLS_DCRT->pclass)) < 0)
-        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for dataset creation class");
-    else if (!is_dcpl) {
-        /* Check for group creation property */
-        if ((is_gcpl = H5P_class_isa(*libclass->pclass, *H5P_CLS_GCRT->pclass)) < 0)
-            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for group creation class");
-        else if (!is_gcpl) {
-            /* Check for datatype creation property */
-            if ((is_tcpl = H5P_class_isa(*libclass->pclass, *H5P_CLS_TCRT->pclass)) < 0)
-                HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for datatype creation class");
-            else if (!is_tcpl) {
-                /* Check for object creation property */
-                /* (Must be last, as other object creation property classes are
-                 *      sub-classes of it)
-                 */
-                if ((is_ocpl = H5P_class_isa(*libclass->pclass, *H5P_CLS_OCRT->pclass)) < 0)
-                    HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for object creation class");
-                else if (!is_ocpl)
-                    HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "unknown creation property class");
+        /* Sanity check the property list class */
+        if (true != H5P_isa_class(crtpl_id, *libclass->class_id))
+            HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "not the required creation property list type");
+
+        /* Check for dataset creation property */
+        if ((is_dcpl = H5P_class_isa(*libclass->pclass, *H5P_CLS_DCRT->pclass)) < 0)
+            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for dataset creation class");
+        else if (!is_dcpl) {
+            /* Check for group creation property */
+            if ((is_gcpl = H5P_class_isa(*libclass->pclass, *H5P_CLS_GCRT->pclass)) < 0)
+                HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for group creation class");
+            else if (!is_gcpl) {
+                /* Check for datatype creation property */
+                if ((is_tcpl = H5P_class_isa(*libclass->pclass, *H5P_CLS_TCRT->pclass)) < 0)
+                    HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for datatype creation class");
+                else if (!is_tcpl) {
+                    /* Check for object creation property */
+                    /* (Must be last, as other object creation property classes are
+                     *      sub-classes of it)
+                     */
+                    if ((is_ocpl = H5P_class_isa(*libclass->pclass, *H5P_CLS_OCRT->pclass)) < 0)
+                        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for object creation class");
+                    else if (!is_ocpl)
+                        HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "unknown creation property class");
+                }
             }
         }
-    }
-    assert(is_dcpl || is_gcpl || is_tcpl || is_ocpl);
+        assert(is_dcpl || is_gcpl || is_tcpl || is_ocpl);
 
-    /* Set object creation property list ID */
-    (*head)->ctx.ocpl_id = crtpl_id;
+        /* Set object creation property list ID */
+        (*head)->ctx.ocpl_id = crtpl_id;
+    } /* end if */
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -1134,7 +1111,7 @@ H5CX_set_apl(hid_t *acspl_id, const H5P_libclass_t *libclass,
             H5P_genplist_t         *plist;        /* Property list pointer */
             H5P_coll_md_read_flag_t md_coll_read; /* Collective metadata read flag */
 
-            /* Get the plist structure for the access property list */
+            /* Get the property list structure for the access property list */
             if (NULL == (plist = (H5P_genplist_t *)H5I_object(*acspl_id)))
                 HGOTO_ERROR(H5E_CONTEXT, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -2119,9 +2096,8 @@ H5CX_get_data_transform(H5Z_data_xform_t **data_transform)
             /* Check if the property list is already available */
             if (NULL == (*head)->ctx.dxpl)
                 /* Get the dataset transfer property list pointer */
-                if (NULL == ((*head)->ctx.dxpl = (H5P_genplist_t *)H5I_object((*head)->ctx.dxpl_id)))
-                    HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL,
-                                "can't get default dataset transfer property list");
+                if (NULL == ((*head)->ctx.dxpl = H5P_object_verify((*head)->ctx.dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+                    HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "can't get default dataset transfer property list");
 
             /* Get data transform info value */
             /* (Note: 'peek', not 'get' - if this turns out to be a problem, we may need
@@ -2174,22 +2150,17 @@ H5CX_get_vlen_alloc_info(H5T_vlen_alloc_info_t *vl_alloc_info)
             /* Check if the property list is already available */
             if (NULL == (*head)->ctx.dxpl)
                 /* Get the dataset transfer property list pointer */
-                if (NULL == ((*head)->ctx.dxpl = (H5P_genplist_t *)H5I_object((*head)->ctx.dxpl_id)))
-                    HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL,
-                                "can't get default dataset transfer property list");
+                if (NULL == ((*head)->ctx.dxpl = H5P_object_verify((*head)->ctx.dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+                    HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "can't get default dataset transfer property list");
 
             /* Get VL datatype alloc info values */
-            if (H5P_get((*head)->ctx.dxpl, H5D_XFER_VLEN_ALLOC_NAME, &(*head)->ctx.vl_alloc_info.alloc_func) <
-                0)
+            if (H5P_get((*head)->ctx.dxpl, H5D_XFER_VLEN_ALLOC_NAME, &(*head)->ctx.vl_alloc_info.alloc_func) < 0)
                 HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve VL datatype alloc info");
-            if (H5P_get((*head)->ctx.dxpl, H5D_XFER_VLEN_ALLOC_INFO_NAME,
-                        &(*head)->ctx.vl_alloc_info.alloc_info) < 0)
+            if (H5P_get((*head)->ctx.dxpl, H5D_XFER_VLEN_ALLOC_INFO_NAME, &(*head)->ctx.vl_alloc_info.alloc_info) < 0)
                 HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve VL datatype alloc info");
-            if (H5P_get((*head)->ctx.dxpl, H5D_XFER_VLEN_FREE_NAME, &(*head)->ctx.vl_alloc_info.free_func) <
-                0)
+            if (H5P_get((*head)->ctx.dxpl, H5D_XFER_VLEN_FREE_NAME, &(*head)->ctx.vl_alloc_info.free_func) < 0)
                 HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve VL datatype alloc info");
-            if (H5P_get((*head)->ctx.dxpl, H5D_XFER_VLEN_FREE_INFO_NAME,
-                        &(*head)->ctx.vl_alloc_info.free_info) < 0)
+            if (H5P_get((*head)->ctx.dxpl, H5D_XFER_VLEN_FREE_INFO_NAME, &(*head)->ctx.vl_alloc_info.free_info) < 0)
                 HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve VL datatype alloc info");
         } /* end else */
 
@@ -2606,9 +2577,8 @@ H5CX_get_ext_file_prefix(const char **extfile_prefix)
             /* Check if the property list is already available */
             if (NULL == (*head)->ctx.dapl)
                 /* Get the dataset access property list pointer */
-                if (NULL == ((*head)->ctx.dapl = (H5P_genplist_t *)H5I_object((*head)->ctx.dapl_id)))
-                    HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL,
-                                "can't get default dataset access property list");
+                if (NULL == ((*head)->ctx.dapl = H5P_object_verify((*head)->ctx.dapl_id, H5P_TYPE_DATASET_ACCESS, true)))
+                    HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "can't get default dataset access property list");
 
             /* Get the prefix for the external file */
             /* (Note: 'peek', not 'get' - if this turns out to be a problem, we may need
@@ -2661,9 +2631,8 @@ H5CX_get_vds_prefix(const char **vds_prefix)
             /* Check if the property list is already available */
             if (NULL == (*head)->ctx.dapl)
                 /* Get the dataset access property list pointer */
-                if (NULL == ((*head)->ctx.dapl = (H5P_genplist_t *)H5I_object((*head)->ctx.dapl_id)))
-                    HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL,
-                                "can't get default dataset access property list");
+                if (NULL == ((*head)->ctx.dapl = H5P_object_verify((*head)->ctx.dapl_id, H5P_TYPE_DATASET_ACCESS, true)))
+                    HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "can't get default dataset access property list");
 
             /* Get the prefix for the VDS */
             /* (Note: 'peek', not 'get' - if this turns out to be a problem, we may need

@@ -722,8 +722,7 @@ H5FD__core_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, NULL, "bogus maxaddr");
     if (CORE_ADDR_OVERFLOW(maxaddr))
         HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, NULL, "maxaddr overflow");
-    assert(H5P_DEFAULT != fapl_id);
-    if (NULL == (fapl = (H5P_genplist_t *)H5I_object(fapl_id)))
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file access property list");
     if (NULL == (fa = (const H5FD_core_fapl_t *)H5P_peek_driver_info(fapl)))
         fa = H5FD__core_get_default_config();
@@ -1246,7 +1245,7 @@ H5FD__core_get_handle(H5FD_t *_file, hid_t fapl_id, void **file_handle)
         H5P_genplist_t *fapl; /* Property list pointer */
 
         /* Get the FAPL */
-        if (NULL == (fapl = (H5P_genplist_t *)H5I_object(fapl_id)))
+        if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
             HGOTO_ERROR(H5E_VFL, H5E_BADTYPE, FAIL, "not a file access property list");
 
         /* Check if private property for retrieving the backing store POSIX
@@ -1708,7 +1707,7 @@ H5FD__core_delete(const char *filename, hid_t fapl_id)
 
     assert(filename);
 
-    if (NULL == (fapl = (H5P_genplist_t *)H5I_object(fapl_id)))
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
     if (NULL == (fa = (const H5FD_core_fapl_t *)H5P_peek_driver_info(fapl)))
         fa = H5FD__core_get_default_config();

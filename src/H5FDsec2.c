@@ -331,7 +331,7 @@ H5FD__sec2_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr
 #endif /* H5_HAVE_WIN32_API */
 
     /* Get the FAPL */
-    if (NULL == (fapl = (H5P_genplist_t *)H5I_object(fapl_id)))
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_VFL, H5E_BADTYPE, NULL, "not a file access property list");
 
     /* Check the file locking flags in the fapl */
@@ -349,7 +349,7 @@ H5FD__sec2_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr
     file->filename[sizeof(file->filename) - 1] = '\0';
 
     /* Check for non-default FAPL */
-    if (H5P_FILE_ACCESS_DEFAULT != fapl_id) {
+    if (!H5P_PLIST_IS_DEFAULT(fapl)) {
 
         /* This step is for h5repart tool only. If user wants to change file driver from
          * family to one that uses single files (sec2, etc.) while using h5repart, this

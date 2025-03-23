@@ -137,6 +137,7 @@ const H5P_libclass_t H5P_CLS_LACC[1] = {{
     &H5P_CLS_ROOT_g,           /* Parent class                 */
     &H5P_CLS_LINK_ACCESS_g,    /* Pointer to class             */
     &H5P_CLS_LINK_ACCESS_ID_g, /* Pointer to class ID          */
+    &H5P_LST_LINK_ACCESS_g,    /* Pointer to default property list */
     &H5P_LST_LINK_ACCESS_ID_g, /* Pointer to default property list ID */
     H5P__lacc_reg_prop,        /* Default property registration routine */
 

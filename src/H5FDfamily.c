@@ -161,7 +161,6 @@ static const H5FD_class_t H5FD_family_g = {
 static herr_t
 H5FD__family_get_default_config(H5FD_family_fapl_t *fa_out)
 {
-    H5P_genplist_t *def_fapl; /* Pointer to default FAPL */
     herr_t          ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
@@ -175,9 +174,7 @@ H5FD__family_get_default_config(H5FD_family_fapl_t *fa_out)
      * default driver might have been replaced with the family VFD, which
      * would cause recursion badness in the child members.
      */
-    if (NULL == (def_fapl = H5I_object(H5P_FILE_ACCESS_DEFAULT)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
-    if (NULL == (fa_out->memb_fapl = H5P_copy_plist(def_fapl, false)))
+    if (NULL == (fa_out->memb_fapl = H5P_copy_plist(H5P_LST_FILE_ACCESS_g, false)))
         HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, FAIL, "can't copy property list");
     if (H5P_set_driver_by_value(fa_out->memb_fapl, H5_VFD_SEC2, NULL) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set default driver on member FAPL");
@@ -345,7 +342,7 @@ H5Pset_fapl_family(hid_t fapl_id, hsize_t msize, hid_t memb_fapl_id)
     /* Check arguments */
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
-    if (H5P_DEFAULT == memb_fapl_id) {
+    if (H5P_DEFAULT == memb_fapl_id || H5P_FILE_ACCESS_DEFAULT == memb_fapl_id) {
         /* Get default configuration for member FAPL */
         if (H5FD__family_get_default_config(&fa) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get default driver configuration info");
@@ -425,8 +422,6 @@ H5Pset_family_offset(hid_t fapl_id, hsize_t offset)
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (H5P_DEFAULT == fapl_id)
-        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "can't modify default property list");
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -459,9 +454,7 @@ H5Pget_family_offset(hid_t fapl_id, hsize_t *offset /*out*/)
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (H5P_DEFAULT == fapl_id)
-        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "can't modify default property list");
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get value */
@@ -722,7 +715,7 @@ H5FD__family_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxad
     /* Initialize file from file access properties */
     if (NULL == (file = (H5FD_family_t *)H5MM_calloc(sizeof(H5FD_family_t))))
         HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "unable to allocate file struct");
-    if (H5P_FILE_ACCESS_DEFAULT == fapl_id) {
+    if (H5P_DEFAULT == fapl_id || H5P_FILE_ACCESS_DEFAULT == fapl_id) {
         /* Get default configuration */
         if (H5FD__family_get_default_config(&file->fa) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get default driver configuration info");
@@ -732,7 +725,7 @@ H5FD__family_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxad
         H5P_genplist_t           *fapl; /* Property list pointer */
         const H5FD_family_fapl_t *fa;
 
-        if (NULL == (fapl = H5I_object(fapl_id)))
+        if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file access property list");
         if (NULL == (fa = (const H5FD_family_fapl_t *)H5P_peek_driver_info(fapl))) {
             if (H5FD__family_get_default_config(&file->fa) < 0)
@@ -1443,7 +1436,7 @@ H5FD__family_delete(const char *filename, hid_t fapl_id)
     /* Get the driver info (for the member fapl)
      * The family_open call accepts H5P_DEFAULT, so we'll accept that here, too.
      */
-    if (H5P_FILE_ACCESS_DEFAULT == fapl_id) {
+    if (H5P_DEFAULT == fapl_id || H5P_FILE_ACCESS_DEFAULT == fapl_id) {
         if (H5FD__family_get_default_config(&default_fa) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get default family VFD configuration");
         memb_fapl      = default_fa.memb_fapl;
@@ -1453,7 +1446,7 @@ H5FD__family_delete(const char *filename, hid_t fapl_id)
         const H5FD_family_fapl_t *fa;
         H5P_genplist_t           *fapl;
 
-        if (NULL == (fapl = H5I_object(fapl_id)))
+        if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get file access property list");
         if (NULL == (fa = (const H5FD_family_fapl_t *)H5P_peek_driver_info(fapl))) {
             if (H5FD__family_get_default_config(&default_fa) < 0)

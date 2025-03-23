@@ -77,7 +77,7 @@ H5VL__native_link_create(H5VL_link_create_args_t *args, void *obj, const H5VL_lo
     FUNC_ENTER_PACKAGE
 
     /* Get the link creation property list */
-    if (NULL == (lcpl = H5I_object(lcpl_id)))
+    if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
 
     switch (args->op_type) {
@@ -188,7 +188,7 @@ H5VL__native_link_copy(void *src_obj, const H5VL_loc_params_t *loc_params1, void
         dst_loc_p = src_loc_p;
 
     /* Copy the link */
-    if (NULL == (lcpl = H5I_object(lcpl_id)))
+    if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
     if (H5L__move(src_loc_p, loc_params1->loc_data.loc_by_name.name, dst_loc_p,
                   loc_params2->loc_data.loc_by_name.name, true, lcpl) < 0)
@@ -233,7 +233,7 @@ H5VL__native_link_move(void *src_obj, const H5VL_loc_params_t *loc_params1, void
         dst_loc_p = src_loc_p;
 
     /* Move the link */
-    if (NULL == (lcpl = H5I_object(lcpl_id)))
+    if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
     if (H5L__move(src_loc_p, loc_params1->loc_data.loc_by_name.name, dst_loc_p,
                   loc_params2->loc_data.loc_by_name.name, false, lcpl) < 0)

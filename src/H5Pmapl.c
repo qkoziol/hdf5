@@ -74,6 +74,7 @@ const H5P_libclass_t H5P_CLS_MACC[1] = {{
     &H5P_CLS_LINK_ACCESS_g,   /* Parent class                 */
     &H5P_CLS_MAP_ACCESS_g,    /* Pointer to class             */
     &H5P_CLS_MAP_ACCESS_ID_g, /* Pointer to class ID          */
+    &H5P_LST_MAP_ACCESS_g,    /* Pointer to default property list */
     &H5P_LST_MAP_ACCESS_ID_g, /* Pointer to default property list ID */
     H5P__macc_reg_prop,       /* Default property registration routine */
 

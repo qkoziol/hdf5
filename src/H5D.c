@@ -45,20 +45,12 @@
 /********************/
 
 /* Helper routines for sync/async API calls */
-static hid_t  H5D__create_api_common(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id,
-                                     H5P_genplist_t *lcpl, H5P_genplist_t *dcpl, H5P_genplist_t *dapl,
-                                     H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
-static hid_t  H5D__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *dapl, H5P_genplist_t *dxpl,
-                                   void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static hid_t  H5D__create_api_common(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, H5P_genplist_t *lcpl, H5P_genplist_t *dcpl, H5P_genplist_t *dapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static hid_t  H5D__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *dapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
 static hid_t  H5D__get_space_api_common(hid_t dset_id, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
-static herr_t H5D__read_api_common(size_t count, hid_t dset_id[], hid_t mem_type_id[], hid_t mem_space_id[],
-                                   hid_t file_space_id[], H5P_genplist_t *dxpl, void *buf[], void **token_ptr,
-                                   H5VL_object_t **_vol_obj_ptr);
-static herr_t H5D__write_api_common(size_t count, hid_t dset_id[], hid_t mem_type_id[], hid_t mem_space_id[],
-                                    hid_t file_space_id[], H5P_genplist_t *dxpl, const void *buf[],
-                                    void **token_ptr, H5VL_object_t **_vol_obj_ptr);
-static herr_t H5D__set_extent_api_common(hid_t dset_id, const hsize_t size[], H5P_genplist_t *dxpl,
-                                         void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static herr_t H5D__read_api_common(size_t count, hid_t dset_id[], hid_t mem_type_id[], hid_t mem_space_id[], hid_t file_space_id[], H5P_genplist_t *dxpl, void *buf[], void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static herr_t H5D__write_api_common(size_t count, hid_t dset_id[], hid_t mem_type_id[], hid_t mem_space_id[], hid_t file_space_id[], H5P_genplist_t *dxpl, const void *buf[], void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static herr_t H5D__set_extent_api_common(hid_t dset_id, const hsize_t size[], void **token_ptr, H5VL_object_t **_vol_obj_ptr);
 
 /*********************/
 /* Package Variables */
@@ -92,9 +84,7 @@ H5FL_BLK_EXTERN(type_conv);
  *-------------------------------------------------------------------------
  */
 static hid_t
-H5D__create_api_common(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, H5P_genplist_t *lcpl,
-                       H5P_genplist_t *dcpl, H5P_genplist_t *dapl, H5P_genplist_t *dxpl, void **token_ptr,
-                       H5VL_object_t **_vol_obj_ptr)
+H5D__create_api_common(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, H5P_genplist_t *lcpl, H5P_genplist_t *dcpl, H5P_genplist_t *dapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
 {
     void           *dset = NULL;        /* New dataset's info */
     hid_t           dapl_id;            /* ID for dataset access property list */
@@ -118,8 +108,7 @@ H5D__create_api_common(hid_t loc_id, const char *name, hid_t type_id, hid_t spac
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, H5I_INVALID_HID, "can't set object access arguments");
 
     /* Create the dataset */
-    if (NULL == (dset = H5VL_dataset_create(*vol_obj_ptr, &loc_params, name, lcpl, type_id, space_id, dcpl,
-                                            dapl, dxpl, token_ptr)))
+    if (NULL == (dset = H5VL_dataset_create(*vol_obj_ptr, &loc_params, name, lcpl, type_id, space_id, dcpl, dapl, token_ptr)))
         HGOTO_ERROR(H5E_DATASET, H5E_CANTCREATE, H5I_INVALID_HID, "unable to create dataset");
 
     /* Get an ID for the dataset */
@@ -128,7 +117,7 @@ H5D__create_api_common(hid_t loc_id, const char *name, hid_t type_id, hid_t spac
 
 done:
     if (H5I_INVALID_HID == ret_value)
-        if (dset && H5VL_dataset_close(*vol_obj_ptr, dxpl, H5_REQUEST_NULL) < 0)
+        if (dset && H5VL_dataset_close(*vol_obj_ptr, H5_REQUEST_NULL) < 0)
             HDONE_ERROR(H5E_DATASET, H5E_CLOSEERROR, H5I_INVALID_HID, "unable to release dataset");
 
     FUNC_LEAVE_NOAPI(ret_value)
@@ -167,14 +156,11 @@ H5Dcreate2(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t 
     H5P_genplist_t *lcpl;                        /* Link creation property list */
     H5P_genplist_t *dcpl;                        /* Dataset creation property list */
     H5P_genplist_t *dapl;                        /* Dataset access property list */
-    H5P_genplist_t *def_dxpl;                    /* Default dataset transfer property list */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Get link creation property list */
-    if (H5P_DEFAULT == lcpl_id)
-        lcpl_id = H5P_LINK_CREATE_DEFAULT;
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
@@ -182,8 +168,6 @@ H5Dcreate2(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t 
     H5CX_set_lcpl(lcpl_id);
 
     /* Get the pointer to the dataset create property list */
-    if (H5P_DEFAULT == dcpl_id)
-        dcpl_id = H5P_DATASET_CREATE_DEFAULT;
     if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
@@ -192,18 +176,11 @@ H5Dcreate2(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t 
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, H5I_INVALID_HID, "can't set creation property list info");
 
     /* Get the pointer to the dataset access property list */
-    if (H5P_DEFAULT == dapl_id)
-        dapl_id = H5P_DATASET_ACCESS_DEFAULT;
     if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, H5I_INVALID_HID, "can't find object for ID");
-
     /* Create the dataset synchronously */
-    if ((ret_value = H5D__create_api_common(loc_id, name, type_id, space_id, lcpl, dcpl, dapl, def_dxpl, NULL,
-                                            NULL)) < 0)
+    if ((ret_value = H5D__create_api_common(loc_id, name, type_id, space_id, lcpl, dcpl, dapl, NULL, NULL)) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTCREATE, H5I_INVALID_HID, "unable to synchronously create dataset");
 
 done:
@@ -228,7 +205,6 @@ H5Dcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
     H5P_genplist_t *lcpl;                        /* Link creation property list */
     H5P_genplist_t *dcpl;                        /* Dataset creation property list */
     H5P_genplist_t *dapl;                        /* Dataset access property list */
-    H5P_genplist_t *def_dxpl;                    /* Default dataset transfer property list */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
@@ -236,8 +212,6 @@ H5Dcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Get link creation property list */
-    if (H5P_DEFAULT == lcpl_id)
-        lcpl_id = H5P_LINK_CREATE_DEFAULT;
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
@@ -245,8 +219,6 @@ H5Dcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
     H5CX_set_lcpl(lcpl_id);
 
     /* Get the pointer to the dataset create property list */
-    if (H5P_DEFAULT == dcpl_id)
-        dcpl_id = H5P_DATASET_CREATE_DEFAULT;
     if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
@@ -255,22 +227,15 @@ H5Dcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, H5I_INVALID_HID, "can't set creation property list info");
 
     /* Get the pointer to the dataset access property list */
-    if (H5P_DEFAULT == dapl_id)
-        dapl_id = H5P_DATASET_ACCESS_DEFAULT;
     if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
-
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, H5I_INVALID_HID, "can't find object for ID");
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Create the dataset asynchronously */
-    if ((ret_value = H5D__create_api_common(loc_id, name, type_id, space_id, lcpl, dcpl, dapl, def_dxpl,
-                                            token_ptr, &vol_obj)) < 0)
+    if ((ret_value = H5D__create_api_common(loc_id, name, type_id, space_id, lcpl, dcpl, dapl, token_ptr, &vol_obj)) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTCREATE, H5I_INVALID_HID, "unable to asynchronously create dataset");
 
     /* If a token was created, add the token to the event set */
@@ -324,23 +289,15 @@ hid_t
 H5Dcreate_anon(hid_t loc_id, hid_t type_id, hid_t space_id, hid_t dcpl_id, hid_t dapl_id)
 {
     void             *dset = NULL;                 /* dset object from VOL connector */
-    H5P_genplist_t   *def_lcpl;                    /* Default link creation property list */
     H5P_genplist_t   *dcpl;                        /* Dataset creation property list */
     H5P_genplist_t   *dapl;                        /* Dataset access property list */
-    H5P_genplist_t   *def_dxpl = NULL;             /* Default dataset transfer property list */
     H5VL_object_t    *vol_obj  = NULL;             /* Object for loc_id */
     H5VL_loc_params_t loc_params;                  /* Location parameters for object access */
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
-    /* Get default link creation property list */
-    if (NULL == (def_lcpl = H5I_object(H5P_LINK_CREATE_DEFAULT)))
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, H5I_INVALID_HID, "can't find object for ID");
-
     /* Check arguments */
-    if (H5P_DEFAULT == dcpl_id)
-        dcpl_id = H5P_DATASET_CREATE_DEFAULT;
     if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
@@ -349,8 +306,6 @@ H5Dcreate_anon(hid_t loc_id, hid_t type_id, hid_t space_id, hid_t dcpl_id, hid_t
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, H5I_INVALID_HID, "can't set creation property list info");
 
     /* Get the pointer to the dataset access property list */
-    if (H5P_DEFAULT == dapl_id)
-        dapl_id = H5P_DATASET_ACCESS_DEFAULT;
     if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
@@ -366,13 +321,8 @@ H5Dcreate_anon(hid_t loc_id, hid_t type_id, hid_t space_id, hid_t dcpl_id, hid_t
     loc_params.type     = H5VL_OBJECT_BY_SELF;
     loc_params.obj_type = H5I_get_type(loc_id);
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, H5I_INVALID_HID, "can't find object for ID");
-
     /* Create the dataset */
-    if (NULL == (dset = H5VL_dataset_create(vol_obj, &loc_params, NULL, def_lcpl, type_id, space_id, dcpl,
-                                            dapl, def_dxpl, H5_REQUEST_NULL)))
+    if (NULL == (dset = H5VL_dataset_create(vol_obj, &loc_params, NULL, H5P_LST_LINK_CREATE_g, type_id, space_id, dcpl, dapl, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, H5I_INVALID_HID, "unable to create dataset");
 
     /* Get an ID for the dataset */
@@ -382,7 +332,7 @@ H5Dcreate_anon(hid_t loc_id, hid_t type_id, hid_t space_id, hid_t dcpl_id, hid_t
 done:
     /* Cleanup on failure */
     if (H5I_INVALID_HID == ret_value)
-        if (dset && H5VL_dataset_close(vol_obj, def_dxpl, H5_REQUEST_NULL) < 0)
+        if (dset && H5VL_dataset_close(vol_obj, H5_REQUEST_NULL) < 0)
             HDONE_ERROR(H5E_DATASET, H5E_CLOSEERROR, H5I_INVALID_HID, "unable to release dataset");
 
     FUNC_LEAVE_API(ret_value)
@@ -399,8 +349,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static hid_t
-H5D__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *dapl, H5P_genplist_t *dxpl,
-                     void **token_ptr, H5VL_object_t **_vol_obj_ptr)
+H5D__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *dapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
 {
     void           *dset = NULL;        /* dset object from VOL connector */
     hid_t           dapl_id;            /* ID for dataset access property list */
@@ -424,7 +373,7 @@ H5D__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *dapl, H5P_g
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, H5I_INVALID_HID, "can't set object access arguments");
 
     /* Open the dataset */
-    if (NULL == (dset = H5VL_dataset_open(*vol_obj_ptr, &loc_params, name, dapl, dxpl, token_ptr)))
+    if (NULL == (dset = H5VL_dataset_open(*vol_obj_ptr, &loc_params, name, dapl, token_ptr)))
         HGOTO_ERROR(H5E_DATASET, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open dataset");
 
     /* Register an atom for the dataset */
@@ -433,7 +382,7 @@ H5D__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *dapl, H5P_g
 
 done:
     if (H5I_INVALID_HID == ret_value)
-        if (dset && H5VL_dataset_close(*vol_obj_ptr, dxpl, H5_REQUEST_NULL) < 0)
+        if (dset && H5VL_dataset_close(*vol_obj_ptr, H5_REQUEST_NULL) < 0)
             HDONE_ERROR(H5E_DATASET, H5E_CLOSEERROR, H5I_INVALID_HID, "unable to release dataset");
 
     FUNC_LEAVE_NOAPI(ret_value)
@@ -458,23 +407,16 @@ hid_t
 H5Dopen2(hid_t loc_id, const char *name, hid_t dapl_id)
 {
     H5P_genplist_t *dapl;                        /* Dataset access property list */
-    H5P_genplist_t *def_dxpl;                    /* Default dataset transfer property list */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Get the pointer to the dataset access property list */
-    if (H5P_DEFAULT == dapl_id)
-        dapl_id = H5P_DATASET_ACCESS_DEFAULT;
     if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, H5I_INVALID_HID, "can't find object for ID");
-
     /* Open the dataset synchronously */
-    if ((ret_value = H5D__open_api_common(loc_id, name, dapl, def_dxpl, NULL, NULL)) < 0)
+    if ((ret_value = H5D__open_api_common(loc_id, name, dapl, NULL, NULL)) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to synchronously open dataset");
 
 done:
@@ -497,7 +439,6 @@ H5Dopen_async(const char *app_file, const char *app_func, unsigned app_line, hid
 {
     H5VL_object_t  *vol_obj = NULL;              /* Object for loc_id */
     H5P_genplist_t *dapl;                        /* Dataset access property list */
-    H5P_genplist_t *def_dxpl;                    /* Default dataset transfer property list */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
@@ -509,17 +450,11 @@ H5Dopen_async(const char *app_file, const char *app_func, unsigned app_line, hid
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Get the pointer to the dataset access property list */
-    if (H5P_DEFAULT == dapl_id)
-        dapl_id = H5P_DATASET_ACCESS_DEFAULT;
     if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, H5I_INVALID_HID, "can't find object for ID");
-
     /* Open the dataset asynchronously */
-    if ((ret_value = H5D__open_api_common(loc_id, name, dapl, def_dxpl, token_ptr, &vol_obj)) < 0)
+    if ((ret_value = H5D__open_api_common(loc_id, name, dapl, token_ptr, &vol_obj)) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to asynchronously open dataset");
 
     /* If a token was created, add the token to the event set */
@@ -646,7 +581,6 @@ H5D__get_space_api_common(hid_t dset_id, void **token_ptr, H5VL_object_t **_vol_
     H5VL_object_t **vol_obj_ptr =
         (_vol_obj_ptr ? _vol_obj_ptr : &tmp_vol_obj);    /* Ptr to object ptr for loc_id */
     H5VL_dataset_get_args_t vol_cb_args;                 /* Arguments to VOL callback */
-    H5P_genplist_t         *def_dxpl;                    /* Default dataset transfer property list */
     hid_t                   ret_value = H5I_INVALID_HID; /* Return value         */
 
     FUNC_ENTER_PACKAGE
@@ -659,12 +593,8 @@ H5D__get_space_api_common(hid_t dset_id, void **token_ptr, H5VL_object_t **_vol_
     vol_cb_args.op_type                 = H5VL_DATASET_GET_SPACE;
     vol_cb_args.args.get_space.space_id = H5I_INVALID_HID;
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, H5I_INVALID_HID, "can't find object for ID");
-
     /* Get the dataspace */
-    if (H5VL_dataset_get(*vol_obj_ptr, &vol_cb_args, def_dxpl, token_ptr) < 0)
+    if (H5VL_dataset_get(*vol_obj_ptr, &vol_cb_args, token_ptr) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, H5I_INVALID_HID, "unable to get dataspace");
 
     /* Set return value */
@@ -763,7 +693,6 @@ H5Dget_space_status(hid_t dset_id, H5D_space_status_t *allocation /*out*/)
 {
     H5VL_object_t          *vol_obj;             /* Object for loc_id */
     H5VL_dataset_get_args_t vol_cb_args;         /* Arguments to VOL callback */
-    H5P_genplist_t         *def_dxpl;            /* Default dataset transfer property list */
     herr_t                  ret_value = SUCCEED; /* Return value         */
 
     FUNC_ENTER_API(FAIL)
@@ -776,12 +705,8 @@ H5Dget_space_status(hid_t dset_id, H5D_space_status_t *allocation /*out*/)
     vol_cb_args.op_type                      = H5VL_DATASET_GET_SPACE_STATUS;
     vol_cb_args.args.get_space_status.status = allocation;
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't find object for ID");
-
     /* Get dataspace status */
-    if (H5VL_dataset_get(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_dataset_get(vol_obj, &vol_cb_args, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "unable to get space status");
 
 done:
@@ -806,7 +731,6 @@ H5Dget_type(hid_t dset_id)
 {
     H5VL_object_t          *vol_obj;                     /* Object for loc_id */
     H5VL_dataset_get_args_t vol_cb_args;                 /* Arguments to VOL callback */
-    H5P_genplist_t         *def_dxpl;                    /* Default dataset transfer property list */
     hid_t                   ret_value = H5I_INVALID_HID; /* Return value         */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -819,12 +743,8 @@ H5Dget_type(hid_t dset_id)
     vol_cb_args.op_type               = H5VL_DATASET_GET_TYPE;
     vol_cb_args.args.get_type.type_id = H5I_INVALID_HID;
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, H5I_INVALID_HID, "can't find object for ID");
-
     /* Get the datatype */
-    if (H5VL_dataset_get(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_dataset_get(vol_obj, &vol_cb_args, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, H5I_INVALID_HID, "unable to get datatype");
 
     /* Set return value */
@@ -852,7 +772,6 @@ H5Dget_create_plist(hid_t dset_id)
 {
     H5VL_object_t          *vol_obj;                     /* Object for loc_id */
     H5VL_dataset_get_args_t vol_cb_args;                 /* Arguments to VOL callback */
-    H5P_genplist_t         *def_dxpl;                    /* Default dataset transfer property list */
     hid_t                   ret_value = H5I_INVALID_HID; /* Return value         */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -865,12 +784,8 @@ H5Dget_create_plist(hid_t dset_id)
     vol_cb_args.op_type               = H5VL_DATASET_GET_DCPL;
     vol_cb_args.args.get_dcpl.dcpl_id = H5I_INVALID_HID;
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, H5I_INVALID_HID, "can't find object for ID");
-
     /* Get the dataset creation property list */
-    if (H5VL_dataset_get(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_dataset_get(vol_obj, &vol_cb_args, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, H5I_INVALID_HID, "unable to get dataset creation properties");
 
     /* Set return value */
@@ -915,7 +830,6 @@ H5Dget_access_plist(hid_t dset_id)
 {
     H5VL_object_t          *vol_obj;                     /* Object for loc_id */
     H5VL_dataset_get_args_t vol_cb_args;                 /* Arguments to VOL callback */
-    H5P_genplist_t         *def_dxpl;                    /* Default dataset transfer property list */
     hid_t                   ret_value = H5I_INVALID_HID; /* Return value         */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -928,12 +842,8 @@ H5Dget_access_plist(hid_t dset_id)
     vol_cb_args.op_type               = H5VL_DATASET_GET_DAPL;
     vol_cb_args.args.get_dapl.dapl_id = H5I_INVALID_HID;
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, H5I_INVALID_HID, "can't find object for ID");
-
     /* Get the dataset access property list */
-    if (H5VL_dataset_get(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_dataset_get(vol_obj, &vol_cb_args, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, H5I_INVALID_HID, "unable to get dataset access properties");
 
     /* Set return value */
@@ -963,7 +873,6 @@ H5Dget_storage_size(hid_t dset_id)
 {
     H5VL_object_t          *vol_obj;          /* Object for loc_id */
     H5VL_dataset_get_args_t vol_cb_args;      /* Arguments to VOL callback */
-    H5P_genplist_t         *def_dxpl;         /* Default dataset transfer property list */
     hsize_t                 storage_size = 0; /* Storage size of dataset */
     hsize_t                 ret_value    = 0; /* Return value                 */
 
@@ -977,12 +886,8 @@ H5Dget_storage_size(hid_t dset_id)
     vol_cb_args.op_type                            = H5VL_DATASET_GET_STORAGE_SIZE;
     vol_cb_args.args.get_storage_size.storage_size = &storage_size;
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, 0, "can't find object for ID");
-
     /* Get the storage size */
-    if (H5VL_dataset_get(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_dataset_get(vol_obj, &vol_cb_args, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, 0, "unable to get storage size");
 
     /* Set return value */
@@ -1009,7 +914,6 @@ H5Dget_offset(hid_t dset_id)
     H5VL_object_t                      *vol_obj;       /* Dataset for this operation   */
     H5VL_optional_args_t                vol_cb_args;   /* Arguments to VOL callback */
     H5VL_native_dataset_optional_args_t dset_opt_args; /* Arguments for optional operation */
-    H5P_genplist_t                     *def_dxpl;      /* Dataset transfer property list pointer */
     haddr_t                             dset_offset = HADDR_UNDEF; /* Dataset's offset */
     haddr_t                             ret_value   = HADDR_UNDEF; /* Return value                 */
 
@@ -1024,12 +928,8 @@ H5Dget_offset(hid_t dset_id)
     vol_cb_args.op_type             = H5VL_NATIVE_DATASET_GET_OFFSET;
     vol_cb_args.args                = &dset_opt_args;
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_DATASET, H5E_BADTYPE, HADDR_UNDEF, "not a dataset transfer property list");
-
     /* Get the offset */
-    if (H5VL_dataset_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_dataset_optional(vol_obj, &vol_cb_args, H5P_LST_DATASET_XFER_g, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, HADDR_UNDEF, "unable to get offset");
 
     /* Set return value */
@@ -1165,8 +1065,6 @@ H5Dread(hid_t dset_id, hid_t mem_type_id, hid_t mem_space_id, hid_t file_space_i
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_FILE, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -1201,8 +1099,6 @@ H5Dread_async(const char *app_file, const char *app_func, unsigned app_line, hid
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -1247,8 +1143,6 @@ H5Dread_multi(size_t count, hid_t dset_id[], hid_t mem_type_id[], hid_t mem_spac
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -1288,8 +1182,6 @@ H5Dread_multi_async(const char *app_file, const char *app_func, unsigned app_lin
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -1345,8 +1237,6 @@ H5Dread_chunk(hid_t dset_id, hid_t dxpl_id, const hsize_t *offset, uint32_t *fil
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "filters cannot be NULL");
 
     /* Get the default dataset transfer property list if the user didn't provide one */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -1495,8 +1385,6 @@ H5Dwrite(hid_t dset_id, hid_t mem_type_id, hid_t mem_space_id, hid_t file_space_
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -1532,8 +1420,6 @@ H5Dwrite_async(const char *app_file, const char *app_func, unsigned app_line, hi
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -1578,8 +1464,6 @@ H5Dwrite_multi(size_t count, hid_t dset_id[], hid_t mem_type_id[], hid_t mem_spa
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -1619,8 +1503,6 @@ H5Dwrite_multi_async(const char *app_file, const char *app_func, unsigned app_li
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -1683,8 +1565,6 @@ H5Dwrite_chunk(hid_t dset_id, hid_t dxpl_id, uint32_t filters, const hsize_t *of
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid data_size - chunks cannot be > 4 GiB");
 
     /* Get the pointer to the dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -2086,7 +1966,6 @@ H5Dvlen_get_buf_size(hid_t dataset_id, hid_t type_id, hid_t space_id, hsize_t *s
     if (supported & H5VL_OPT_QUERY_SUPPORTED) {
         H5VL_optional_args_t                vol_cb_args;   /* Arguments to VOL callback */
         H5VL_native_dataset_optional_args_t dset_opt_args; /* Arguments for optional operation */
-        H5P_genplist_t                     *def_dxpl;      /* Dataset transfer property list pointer */
 
         /* Set up VOL callback arguments */
         dset_opt_args.get_vlen_buf_size.type_id  = type_id;
@@ -2095,12 +1974,8 @@ H5Dvlen_get_buf_size(hid_t dataset_id, hid_t type_id, hid_t space_id, hsize_t *s
         vol_cb_args.op_type                      = H5VL_NATIVE_DATASET_GET_VLEN_BUF_SIZE;
         vol_cb_args.args                         = &dset_opt_args;
 
-        /* Get the pointer to the default dataset transfer property list */
-        if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-            HGOTO_ERROR(H5E_DATASET, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
         /* Make the 'get_vlen_buf_size' callback */
-        if (H5VL_dataset_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+        if (H5VL_dataset_optional(vol_obj, &vol_cb_args, H5P_LST_DATASET_XFER_g, H5_REQUEST_NULL) < 0)
             HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "unable to get vlen buf size");
     } /* end if */
     else {
@@ -2123,8 +1998,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5D__set_extent_api_common(hid_t dset_id, const hsize_t size[], H5P_genplist_t *dxpl, void **token_ptr,
-                           H5VL_object_t **_vol_obj_ptr)
+H5D__set_extent_api_common(hid_t dset_id, const hsize_t size[], void **token_ptr, H5VL_object_t **_vol_obj_ptr)
 {
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
@@ -2149,7 +2023,7 @@ H5D__set_extent_api_common(hid_t dset_id, const hsize_t size[], H5P_genplist_t *
     vol_cb_args.args.set_extent.size = size;
 
     /* Set the extent */
-    if (H5VL_dataset_specific(*vol_obj_ptr, &vol_cb_args, dxpl, token_ptr) < 0)
+    if (H5VL_dataset_specific(*vol_obj_ptr, &vol_cb_args, token_ptr) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "unable to set dataset extent");
 
 done:
@@ -2169,17 +2043,12 @@ done:
 herr_t
 H5Dset_extent(hid_t dset_id, const hsize_t size[])
 {
-    H5P_genplist_t *def_dxpl  = H5I_object(H5P_DATASET_XFER_DEFAULT);
     herr_t          ret_value = SUCCEED; /* Return value                 */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_DATASET, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Change a datset's dimensions synchronously */
-    if ((ret_value = H5D__set_extent_api_common(dset_id, size, def_dxpl, NULL, NULL)) < 0)
+    if ((ret_value = H5D__set_extent_api_common(dset_id, size, NULL, NULL)) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "unable to synchronously change a dataset's dimensions");
 
 done:
@@ -2202,21 +2071,16 @@ H5Dset_extent_async(const char *app_file, const char *app_func, unsigned app_lin
     H5VL_object_t  *vol_obj   = NULL;            /* Object for loc_id */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    H5P_genplist_t *def_dxpl  = H5I_object(H5P_DATASET_XFER_DEFAULT);
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
-
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_DATASET, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Change a datset's dimensions asynchronously */
-    if (H5D__set_extent_api_common(dset_id, size, def_dxpl, token_ptr, &vol_obj) < 0)
+    if (H5D__set_extent_api_common(dset_id, size, token_ptr, &vol_obj) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "unable to asynchronously change a dataset's dimensions");
 
     /* If a token was created, add the token to the event set */
@@ -2245,7 +2109,6 @@ H5Dflush(hid_t dset_id)
 {
     H5VL_object_t               *vol_obj;             /* Object for loc_id */
     H5VL_dataset_specific_args_t vol_cb_args;         /* Arguments to VOL callback */
-    H5P_genplist_t              *def_dxpl;            /* Default dataset transfer property list pointer */
     herr_t                       ret_value = SUCCEED; /* Return value                 */
 
     FUNC_ENTER_API(FAIL)
@@ -2262,15 +2125,11 @@ H5Dflush(hid_t dset_id)
     vol_cb_args.op_type            = H5VL_DATASET_FLUSH;
     vol_cb_args.args.flush.dset_id = dset_id;
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_DATASET, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Flush dataset information cached in memory
      * XXX: Note that we need to pass the ID to the VOL since the H5F_flush_cb_t
      *      callback needs it and that's in the public API.
      */
-    if (H5VL_dataset_specific(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_dataset_specific(vol_obj, &vol_cb_args, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTFLUSH, FAIL, "unable to flush dataset");
 
 done:
@@ -2290,7 +2149,6 @@ herr_t
 H5Drefresh(hid_t dset_id)
 {
     H5VL_object_t               *vol_obj;     /* Object for loc_id */
-    H5P_genplist_t              *def_dxpl;    /* Dataset transfer property list pointer */
     H5VL_dataset_specific_args_t vol_cb_args; /* Arguments to VOL callback */
 
     herr_t ret_value = SUCCEED; /* Return value                 */
@@ -2309,12 +2167,8 @@ H5Drefresh(hid_t dset_id)
     vol_cb_args.op_type              = H5VL_DATASET_REFRESH;
     vol_cb_args.args.refresh.dset_id = dset_id;
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_DATASET, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Refresh the dataset object */
-    if (H5VL_dataset_specific(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_dataset_specific(vol_obj, &vol_cb_args, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTLOAD, FAIL, "unable to refresh dataset");
 
 done:
@@ -2340,7 +2194,6 @@ H5Dformat_convert(hid_t dset_id)
 {
     H5VL_object_t       *vol_obj;             /* Dataset for this operation   */
     H5VL_optional_args_t vol_cb_args;         /* Arguments to VOL callback */
-    H5P_genplist_t      *def_dxpl;            /* Dataset transfer property list pointer */
     herr_t               ret_value = SUCCEED; /* Return value                 */
 
     FUNC_ENTER_API(FAIL)
@@ -2357,12 +2210,8 @@ H5Dformat_convert(hid_t dset_id)
     vol_cb_args.op_type = H5VL_NATIVE_DATASET_FORMAT_CONVERT;
     vol_cb_args.args    = NULL;
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_DATASET, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Convert the dataset */
-    if (H5VL_dataset_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_dataset_optional(vol_obj, &vol_cb_args, H5P_LST_DATASET_XFER_g, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTUPDATE, FAIL, "can't convert dataset format");
 
 done:
@@ -2384,7 +2233,6 @@ H5Dget_chunk_index_type(hid_t dset_id, H5D_chunk_index_t *idx_type /*out*/)
     H5VL_object_t                      *vol_obj;             /* Dataset for this operation   */
     H5VL_optional_args_t                vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_dataset_optional_args_t dset_opt_args;       /* Arguments for optional operation */
-    H5P_genplist_t                     *def_dxpl;            /* Dataset transfer property list pointer */
     herr_t                              ret_value = SUCCEED; /* Return value                 */
 
     FUNC_ENTER_API(FAIL)
@@ -2400,12 +2248,8 @@ H5Dget_chunk_index_type(hid_t dset_id, H5D_chunk_index_t *idx_type /*out*/)
     vol_cb_args.op_type                       = H5VL_NATIVE_DATASET_GET_CHUNK_INDEX_TYPE;
     vol_cb_args.args                          = &dset_opt_args;
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_DATASET, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Get the chunk indexing type */
-    if (H5VL_dataset_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_dataset_optional(vol_obj, &vol_cb_args, H5P_LST_DATASET_XFER_g, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get chunk index type");
 
 done:
@@ -2430,7 +2274,6 @@ H5Dget_chunk_storage_size(hid_t dset_id, const hsize_t *offset, hsize_t *chunk_n
     H5VL_object_t                      *vol_obj;             /* Dataset for this operation   */
     H5VL_optional_args_t                vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_dataset_optional_args_t dset_opt_args;       /* Arguments for optional operation */
-    H5P_genplist_t                     *def_dxpl;            /* Dataset transfer property list pointer */
     herr_t                              ret_value = SUCCEED; /* Return value                 */
 
     FUNC_ENTER_API(FAIL)
@@ -2449,11 +2292,8 @@ H5Dget_chunk_storage_size(hid_t dset_id, const hsize_t *offset, hsize_t *chunk_n
     vol_cb_args.op_type                         = H5VL_NATIVE_DATASET_GET_CHUNK_STORAGE_SIZE;
     vol_cb_args.args                            = &dset_opt_args;
 
-    /* Get the dataset creation property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_DATASET, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
-    if (H5VL_dataset_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    /* Get the chunk storage size */
+    if (H5VL_dataset_optional(vol_obj, &vol_cb_args, H5P_LST_DATASET_XFER_g, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get storage size of chunk");
 
 done:
@@ -2484,7 +2324,6 @@ H5Dget_num_chunks(hid_t dset_id, hid_t fspace_id, hsize_t *nchunks /*out*/)
     H5VL_object_t                      *vol_obj = NULL; /* Dataset for this operation */
     H5VL_optional_args_t                vol_cb_args;    /* Arguments to VOL callback */
     H5VL_native_dataset_optional_args_t dset_opt_args;  /* Arguments for optional operation */
-    H5P_genplist_t                     *def_dxpl;       /* Dataset transfer property list pointer */
     herr_t                              ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
@@ -2501,12 +2340,8 @@ H5Dget_num_chunks(hid_t dset_id, hid_t fspace_id, hsize_t *nchunks /*out*/)
     vol_cb_args.op_type                   = H5VL_NATIVE_DATASET_GET_NUM_CHUNKS;
     vol_cb_args.args                      = &dset_opt_args;
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_DATASET, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Get the number of written chunks */
-    if (H5VL_dataset_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_dataset_optional(vol_obj, &vol_cb_args, H5P_LST_DATASET_XFER_g, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get number of chunks");
 
 done:
@@ -2539,7 +2374,6 @@ H5Dget_chunk_info(hid_t dset_id, hid_t fspace_id, hsize_t chk_index, hsize_t *of
     H5VL_object_t                      *vol_obj = NULL; /* Dataset for this operation */
     H5VL_optional_args_t                vol_cb_args;    /* Arguments to VOL callback */
     H5VL_native_dataset_optional_args_t dset_opt_args;  /* Arguments for optional operation */
-    H5P_genplist_t                     *def_dxpl;       /* Dataset transfer property list pointer */
     hsize_t                             nchunks   = 0;  /* Number of chunks */
     herr_t                              ret_value = SUCCEED;
 
@@ -2558,12 +2392,8 @@ H5Dget_chunk_info(hid_t dset_id, hid_t fspace_id, hsize_t chk_index, hsize_t *of
     vol_cb_args.op_type                   = H5VL_NATIVE_DATASET_GET_NUM_CHUNKS;
     vol_cb_args.args                      = &dset_opt_args;
 
-    /* Get the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_DATASET, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Get the number of written chunks to check range */
-    if (H5VL_dataset_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_dataset_optional(vol_obj, &vol_cb_args, H5P_LST_DATASET_XFER_g, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get number of chunks");
 
     /* Check range for chunk index */
@@ -2581,7 +2411,7 @@ H5Dget_chunk_info(hid_t dset_id, hid_t fspace_id, hsize_t chk_index, hsize_t *of
     vol_cb_args.args                                = &dset_opt_args;
 
     /* Call private function to get the chunk info given the chunk's index */
-    if (H5VL_dataset_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_dataset_optional(vol_obj, &vol_cb_args, H5P_LST_DATASET_XFER_g, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get chunk info by index");
 
 done:
@@ -2613,7 +2443,6 @@ H5Dget_chunk_info_by_coord(hid_t dset_id, const hsize_t *offset, unsigned *filte
     H5VL_object_t                      *vol_obj = NULL; /* Dataset for this operation */
     H5VL_optional_args_t                vol_cb_args;    /* Arguments to VOL callback */
     H5VL_native_dataset_optional_args_t dset_opt_args;  /* Arguments for optional operation */
-    H5P_genplist_t                     *def_dxpl;       /* Dataset transfer property list pointer */
     herr_t                              ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
@@ -2635,12 +2464,8 @@ H5Dget_chunk_info_by_coord(hid_t dset_id, const hsize_t *offset, unsigned *filte
     vol_cb_args.op_type                               = H5VL_NATIVE_DATASET_GET_CHUNK_INFO_BY_COORD;
     vol_cb_args.args                                  = &dset_opt_args;
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_DATASET, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Call private function to get the chunk info given the chunk's index */
-    if (H5VL_dataset_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_dataset_optional(vol_obj, &vol_cb_args, H5P_LST_DATASET_XFER_g, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get chunk info by its logical coordinates");
 
 done:
@@ -2680,8 +2505,6 @@ H5Dchunk_iter(hid_t dset_id, hid_t dxpl_id, H5D_chunk_iter_op_t op, void *op_dat
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid callback to chunk iteration");
 
     /* Get the default dataset transfer property list if the user didn't provide one */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
 

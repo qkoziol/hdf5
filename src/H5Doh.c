@@ -222,8 +222,7 @@ H5O__dset_open(const H5G_loc_t *obj_loc, H5I_type_t *opened_type)
 
     /* Switch to default DAPL if not an actual DAPL in the API context */
     if (!is_dapl && is_lapl)
-        if (NULL == (dapl = H5I_object(H5P_DATASET_ACCESS_DEFAULT)))
-            HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, NULL, "can't get property list");
+        dapl = H5P_LST_DATASET_ACCESS_g;
 
     /* Open the dataset */
     if (NULL == (dset = H5D_open(obj_loc, dapl)))

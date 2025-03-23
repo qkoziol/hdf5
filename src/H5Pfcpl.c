@@ -153,6 +153,7 @@ const H5P_libclass_t H5P_CLS_FCRT[1] = {{
     &H5P_CLS_GROUP_CREATE_g,   /* Parent class                 */
     &H5P_CLS_FILE_CREATE_g,    /* Pointer to class             */
     &H5P_CLS_FILE_CREATE_ID_g, /* Pointer to class ID          */
+    &H5P_LST_FILE_CREATE_g,      /* Pointer to default property list */
     &H5P_LST_FILE_CREATE_ID_g, /* Pointer to default property list ID */
     H5P__fcrt_reg_prop,        /* Default property registration routine */
 

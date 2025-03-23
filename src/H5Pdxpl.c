@@ -234,6 +234,7 @@ const H5P_libclass_t H5P_CLS_DXFR[1] = {{
     &H5P_CLS_ROOT_g,            /* Parent class                 */
     &H5P_CLS_DATASET_XFER_g,    /* Pointer to class             */
     &H5P_CLS_DATASET_XFER_ID_g, /* Pointer to class ID          */
+    &H5P_LST_DATASET_XFER_g,   /* Pointer to default property list */
     &H5P_LST_DATASET_XFER_ID_g, /* Pointer to default property list ID */
     H5P__dxfr_reg_prop,         /* Default property registration routine */
 
@@ -2358,9 +2359,6 @@ H5Pset_selection_io(hid_t dxpl_id, H5D_selection_io_mode_t selection_io_mode)
     FUNC_ENTER_API(FAIL)
 
     /* Check arguments */
-    if (dxpl_id == H5P_DEFAULT)
-        HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "can't set values in default property list");
-
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, false)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADTYPE, FAIL, "not a dxpl");
 
@@ -2554,9 +2552,6 @@ H5Pset_modify_write_buf(hid_t dxpl_id, hbool_t modify_write_buf)
     FUNC_ENTER_API(FAIL)
 
     /* Check arguments */
-    if (dxpl_id == H5P_DEFAULT)
-        HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "can't set values in default property list");
-
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, false)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADTYPE, FAIL, "not a dxpl");
 

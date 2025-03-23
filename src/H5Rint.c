@@ -455,7 +455,7 @@ H5R__get_file_id(const H5R_ref_priv_t *ref)
  *-------------------------------------------------------------------------
  */
 hid_t
-H5R__reopen_file(H5R_ref_priv_t *ref, H5P_genplist_t *fapl, H5P_genplist_t *dxpl)
+H5R__reopen_file(H5R_ref_priv_t *ref, H5P_genplist_t *fapl)
 {
     hid_t                 fapl_id;         /* ID for FAPL */
     void                 *new_file = NULL; /* File object opened */
@@ -486,8 +486,7 @@ H5R__reopen_file(H5R_ref_priv_t *ref, H5P_genplist_t *fapl, H5P_genplist_t *dxpl
 
     /* Open the file */
     /* (Must open file read-write to allow for object modifications) */
-    if (NULL == (new_file = H5VL_file_open(connector_prop.connector, H5R_REF_FILENAME(ref), H5F_ACC_RDWR,
-                                           fapl, dxpl, H5_REQUEST_NULL)))
+    if (NULL == (new_file = H5VL_file_open(connector_prop.connector, H5R_REF_FILENAME(ref), H5F_ACC_RDWR, fapl, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENFILE, H5I_INVALID_HID, "unable to open file");
 
     /* Get an ID for the file */
@@ -510,7 +509,7 @@ H5R__reopen_file(H5R_ref_priv_t *ref, H5P_genplist_t *fapl, H5P_genplist_t *dxpl
         vol_cb_args.args    = NULL;
 
         /* Make the 'post open' callback */
-        if (H5VL_file_optional(vol_obj, &vol_cb_args, dxpl, H5_REQUEST_NULL) < 0)
+        if (H5VL_file_optional(vol_obj, &vol_cb_args, H5_REQUEST_NULL) < 0)
             HGOTO_ERROR(H5E_REFERENCE, H5E_CANTINIT, H5I_INVALID_HID,
                         "unable to make file 'post open' callback");
     } /* end if */

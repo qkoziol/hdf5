@@ -57,7 +57,6 @@ typedef struct H5VL_file_open_find_connector_t {
     const char         *filename;
     const H5VL_class_t *cls;
     H5P_genplist_t     *fapl;
-    H5P_genplist_t     *dxpl;
 } H5VL_file_open_find_connector_t;
 
 /* Typedef for common callback form of registered optional operations */
@@ -1089,7 +1088,7 @@ done:
 void *
 H5VL_attr_create(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, const char *name,
                  hid_t type_id, hid_t space_id, H5P_genplist_t *acpl, H5P_genplist_t *aapl,
-                 H5P_genplist_t *dxpl, void **req)
+                 void **req)
 {
     bool  vol_wrapper_set = false; /* Whether the VOL object wrapping context was set up */
     void *ret_value       = NULL;  /* Return value */
@@ -1102,8 +1101,7 @@ H5VL_attr_create(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_para
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__attr_create(vol_obj->data, loc_params, vol_obj->connector->cls, name,
-                                               type_id, space_id, acpl, aapl, dxpl, req)))
+    if (NULL == (ret_value = H5VL__attr_create(vol_obj->data, loc_params, vol_obj->connector->cls, name, type_id, space_id, acpl, aapl, H5P_LST_DATASET_XFER_g, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, NULL, "attribute create failed");
 
 done:
@@ -1144,20 +1142,14 @@ H5VLattr_create(void *obj, const H5VL_loc_params_t *loc_params, hid_t connector_
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a VOL connector ID");
 
     /* Get the pointer to the dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
-    if (NULL == (dxpl = H5I_object(dxpl_id)))
+    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a dataset transfer property list");
 
     /* Get the pointer to the attribute creation property list */
-    if (H5P_DEFAULT == acpl_id)
-        acpl_id = H5P_ATTRIBUTE_CREATE_DEFAULT;
     if (NULL == (acpl = H5P_object_verify(acpl_id, H5P_TYPE_ATTRIBUTE_CREATE, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not an attribute creation property list");
 
     /* Get the pointer to the attribute access property list */
-    if (H5P_DEFAULT == aapl_id)
-        aapl_id = H5P_ATTRIBUTE_ACCESS_DEFAULT;
     if (NULL == (aapl = H5P_object_verify(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not an attribute access property list");
 
@@ -1218,8 +1210,7 @@ done:
  *-------------------------------------------------------------------------
  */
 void *
-H5VL_attr_open(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, const char *name,
-               H5P_genplist_t *aapl, H5P_genplist_t *dxpl, void **req)
+H5VL_attr_open(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, const char *name, H5P_genplist_t *aapl, void **req)
 {
     bool  vol_wrapper_set = false; /* Whether the VOL object wrapping context was set up */
     void *ret_value       = NULL;  /* Return value */
@@ -1232,8 +1223,7 @@ H5VL_attr_open(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__attr_open(vol_obj->data, loc_params, vol_obj->connector->cls, name, aapl,
-                                             dxpl, req)))
+    if (NULL == (ret_value = H5VL__attr_open(vol_obj->data, loc_params, vol_obj->connector->cls, name, aapl, H5P_LST_DATASET_XFER_g, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPENOBJ, NULL, "attribute open failed");
 
 done:
@@ -1272,14 +1262,10 @@ H5VLattr_open(void *obj, const H5VL_loc_params_t *loc_params, hid_t connector_id
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a VOL connector ID");
 
     /* Get the pointer to the dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
-    if (NULL == (dxpl = H5I_object(dxpl_id)))
+    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADTYPE, NULL, "not a dataset transfer property list");
 
     /* Get the pointer to the attribute access property list */
-    if (H5P_DEFAULT == aapl_id)
-        aapl_id = H5P_ATTRIBUTE_ACCESS_DEFAULT;
     if (NULL == (aapl = H5P_object_verify(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not an attribute access property list");
 
@@ -1338,7 +1324,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_attr_read(const H5VL_object_t *vol_obj, hid_t mem_type_id, void *buf, H5P_genplist_t *dxpl, void **req)
+H5VL_attr_read(const H5VL_object_t *vol_obj, hid_t mem_type_id, void *buf, void **req)
 {
     bool   vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
     herr_t ret_value       = SUCCEED; /* Return value */
@@ -1351,7 +1337,7 @@ H5VL_attr_read(const H5VL_object_t *vol_obj, hid_t mem_type_id, void *buf, H5P_g
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__attr_read(vol_obj->data, vol_obj->connector->cls, mem_type_id, buf, dxpl, req) < 0)
+    if (H5VL__attr_read(vol_obj->data, vol_obj->connector->cls, mem_type_id, buf, H5P_LST_DATASET_XFER_g, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_READERROR, FAIL, "attribute read failed");
 
 done:
@@ -1388,9 +1374,7 @@ H5VLattr_read(void *obj, hid_t connector_id, hid_t mem_type_id, void *buf, hid_t
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a VOL connector ID");
 
     /* Get the pointer to the dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
-    if (NULL == (dxpl = H5I_object(dxpl_id)))
+    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Call the corresponding internal VOL routine */
@@ -1448,8 +1432,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_attr_write(const H5VL_object_t *vol_obj, hid_t mem_type_id, const void *buf, H5P_genplist_t *dxpl,
-                void **req)
+H5VL_attr_write(const H5VL_object_t *vol_obj, hid_t mem_type_id, const void *buf, void **req)
 {
     bool   vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
     herr_t ret_value       = SUCCEED; /* Return value */
@@ -1462,7 +1445,7 @@ H5VL_attr_write(const H5VL_object_t *vol_obj, hid_t mem_type_id, const void *buf
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__attr_write(vol_obj->data, vol_obj->connector->cls, mem_type_id, buf, dxpl, req) < 0)
+    if (H5VL__attr_write(vol_obj->data, vol_obj->connector->cls, mem_type_id, buf, H5P_LST_DATASET_XFER_g, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_WRITEERROR, FAIL, "write failed");
 
 done:
@@ -1500,9 +1483,7 @@ H5VLattr_write(void *obj, hid_t connector_id, hid_t mem_type_id, const void *buf
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a VOL connector ID");
 
     /* Get the pointer to the dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
-    if (NULL == (dxpl = H5I_object(dxpl_id)))
+    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Call the corresponding internal VOL routine */
@@ -1560,7 +1541,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_attr_get(const H5VL_object_t *vol_obj, H5VL_attr_get_args_t *args, H5P_genplist_t *dxpl, void **req)
+H5VL_attr_get(const H5VL_object_t *vol_obj, H5VL_attr_get_args_t *args, void **req)
 {
     bool   vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
     herr_t ret_value       = SUCCEED; /* Return value */
@@ -1573,7 +1554,7 @@ H5VL_attr_get(const H5VL_object_t *vol_obj, H5VL_attr_get_args_t *args, H5P_genp
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__attr_get(vol_obj->data, vol_obj->connector->cls, args, dxpl, req) < 0)
+    if (H5VL__attr_get(vol_obj->data, vol_obj->connector->cls, args, H5P_LST_DATASET_XFER_g, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "attribute get failed");
 
 done:
@@ -1612,9 +1593,7 @@ H5VLattr_get(void *obj, hid_t connector_id, H5VL_attr_get_args_t *args, hid_t dx
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid argument struct");
 
     /* Get the pointer to the dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
-    if (NULL == (dxpl = H5I_object(dxpl_id)))
+    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Call the corresponding internal VOL routine */
@@ -1674,7 +1653,7 @@ done:
  */
 herr_t
 H5VL_attr_specific(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params,
-                   H5VL_attr_specific_args_t *args, H5P_genplist_t *dxpl, void **req)
+                   H5VL_attr_specific_args_t *args, void **req)
 {
     bool   vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
     herr_t ret_value       = SUCCEED; /* Return value */
@@ -1688,8 +1667,7 @@ H5VL_attr_specific(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_pa
 
     /* Call the corresponding internal VOL routine */
     /* (Must return value from callback, for iterators) */
-    if ((ret_value =
-             H5VL__attr_specific(vol_obj->data, loc_params, vol_obj->connector->cls, args, dxpl, req)) < 0)
+    if ((ret_value = H5VL__attr_specific(vol_obj->data, loc_params, vol_obj->connector->cls, args, H5P_LST_DATASET_XFER_g, req)) < 0)
         HERROR(H5E_VOL, H5E_CANTOPERATE, "unable to execute attribute 'specific' callback");
 
 done:
@@ -1727,9 +1705,7 @@ H5VLattr_specific(void *obj, const H5VL_loc_params_t *loc_params, hid_t connecto
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a VOL connector ID");
 
     /* Get the pointer to the dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
-    if (NULL == (dxpl = H5I_object(dxpl_id)))
+    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Call the corresponding internal VOL routine */
@@ -1789,7 +1765,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_attr_optional(const H5VL_object_t *vol_obj, H5VL_optional_args_t *args, H5P_genplist_t *dxpl, void **req)
+H5VL_attr_optional(const H5VL_object_t *vol_obj, H5VL_optional_args_t *args, void **req)
 {
     bool   vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
     herr_t ret_value       = SUCCEED; /* Return value */
@@ -1803,7 +1779,7 @@ H5VL_attr_optional(const H5VL_object_t *vol_obj, H5VL_optional_args_t *args, H5P
 
     /* Call the corresponding internal VOL routine */
     /* (Must return value from callback, for iterators) */
-    if ((ret_value = H5VL__attr_optional(vol_obj->data, vol_obj->connector->cls, args, dxpl, req)) < 0)
+    if ((ret_value = H5VL__attr_optional(vol_obj->data, vol_obj->connector->cls, args, H5P_LST_DATASET_XFER_g, req)) < 0)
         HERROR(H5E_VOL, H5E_CANTOPERATE, "unable to execute attribute optional callback");
 
 done:
@@ -1839,8 +1815,6 @@ H5VLattr_optional(void *obj, hid_t connector_id, H5VL_optional_args_t *args, hid
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid object");
     if (NULL == (connector = H5I_object_verify(connector_id, H5I_VOL)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a VOL connector ID");
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -1876,8 +1850,6 @@ H5VLattr_optional_op(const char *app_file, const char *app_func, unsigned app_li
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -1948,7 +1920,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_attr_close(const H5VL_object_t *vol_obj, H5P_genplist_t *dxpl, void **req)
+H5VL_attr_close(const H5VL_object_t *vol_obj, void **req)
 {
     bool   vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
     herr_t ret_value       = SUCCEED; /* Return value */
@@ -1964,7 +1936,7 @@ H5VL_attr_close(const H5VL_object_t *vol_obj, H5P_genplist_t *dxpl, void **req)
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__attr_close(vol_obj->data, vol_obj->connector->cls, dxpl, req) < 0)
+    if (H5VL__attr_close(vol_obj->data, vol_obj->connector->cls, H5P_LST_DATASET_XFER_g, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTCLOSEOBJ, FAIL, "attribute close failed");
 
 done:
@@ -2001,8 +1973,6 @@ H5VLattr_close(void *obj, hid_t connector_id, hid_t dxpl_id, void **req /*out*/)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a VOL connector ID");
 
     /* Get the pointer to the dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -2066,7 +2036,7 @@ done:
 void *
 H5VL_dataset_create(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, const char *name,
                     H5P_genplist_t *lcpl, hid_t type_id, hid_t space_id, H5P_genplist_t *dcpl,
-                    H5P_genplist_t *dapl, H5P_genplist_t *dxpl, void **req)
+                    H5P_genplist_t *dapl, void **req)
 {
     bool  vol_wrapper_set = false; /* Whether the VOL object wrapping context was set up */
     void *ret_value       = NULL;  /* Return value */
@@ -2079,8 +2049,7 @@ H5VL_dataset_create(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_p
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__dataset_create(vol_obj->data, loc_params, vol_obj->connector->cls, name,
-                                                  lcpl, type_id, space_id, dcpl, dapl, dxpl, req)))
+    if (NULL == (ret_value = H5VL__dataset_create(vol_obj->data, loc_params, vol_obj->connector->cls, name, lcpl, type_id, space_id, dcpl, dapl, H5P_LST_DATASET_XFER_g, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, NULL, "dataset create failed");
 
 done:
@@ -2187,7 +2156,7 @@ done:
  */
 void *
 H5VL_dataset_open(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, const char *name,
-                  H5P_genplist_t *dapl, H5P_genplist_t *dxpl, void **req)
+                  H5P_genplist_t *dapl, void **req)
 {
     bool  vol_wrapper_set = false; /* Whether the VOL object wrapping context was set up */
     void *ret_value       = NULL;  /* Return value */
@@ -2200,8 +2169,7 @@ H5VL_dataset_open(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_par
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__dataset_open(vol_obj->data, loc_params, vol_obj->connector->cls, name,
-                                                dapl, dxpl, req)))
+    if (NULL == (ret_value = H5VL__dataset_open(vol_obj->data, loc_params, vol_obj->connector->cls, name, dapl, H5P_LST_DATASET_XFER_g, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPENOBJ, NULL, "dataset open failed");
 
 done:
@@ -2375,8 +2343,6 @@ H5VLdataset_read(size_t count, void *obj[], hid_t connector_id, hid_t mem_type_i
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a VOL connector ID");
 
     /* Get the pointer to the dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -2515,8 +2481,6 @@ H5VLdataset_write(size_t count, void *obj[], hid_t connector_id, hid_t mem_type_
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a VOL connector ID");
 
     /* Get the pointer to the dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -2576,8 +2540,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_dataset_get(const H5VL_object_t *vol_obj, H5VL_dataset_get_args_t *args, H5P_genplist_t *dxpl,
-                 void **req)
+H5VL_dataset_get(const H5VL_object_t *vol_obj, H5VL_dataset_get_args_t *args, void **req)
 {
     bool   vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
     herr_t ret_value       = SUCCEED; /* Return value */
@@ -2590,7 +2553,7 @@ H5VL_dataset_get(const H5VL_object_t *vol_obj, H5VL_dataset_get_args_t *args, H5
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__dataset_get(vol_obj->data, vol_obj->connector->cls, args, dxpl, req) < 0)
+    if (H5VL__dataset_get(vol_obj->data, vol_obj->connector->cls, args, H5P_LST_DATASET_XFER_g, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "dataset get failed");
 
 done:
@@ -2628,8 +2591,6 @@ H5VLdataset_get(void *obj, hid_t connector_id, H5VL_dataset_get_args_t *args, hi
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a VOL connector ID");
 
     /* Get the pointer to the dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -2688,8 +2649,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_dataset_specific(const H5VL_object_t *vol_obj, H5VL_dataset_specific_args_t *args, H5P_genplist_t *dxpl,
-                      void **req)
+H5VL_dataset_specific(const H5VL_object_t *vol_obj, H5VL_dataset_specific_args_t *args, void **req)
 {
     bool   vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
     herr_t ret_value       = SUCCEED; /* Return value */
@@ -2702,7 +2662,7 @@ H5VL_dataset_specific(const H5VL_object_t *vol_obj, H5VL_dataset_specific_args_t
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__dataset_specific(vol_obj->data, vol_obj->connector->cls, args, dxpl, req) < 0)
+    if (H5VL__dataset_specific(vol_obj->data, vol_obj->connector->cls, args, H5P_LST_DATASET_XFER_g, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "unable to execute dataset specific callback");
 
 done:
@@ -2740,8 +2700,6 @@ H5VLdataset_specific(void *obj, hid_t connector_id, H5VL_dataset_specific_args_t
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a VOL connector ID");
 
     /* Get the pointer to the dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -2852,8 +2810,6 @@ H5VLdataset_optional(void *obj, hid_t connector_id, H5VL_optional_args_t *args, 
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a VOL connector ID");
 
     /* Get the pointer to the dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -2892,8 +2848,6 @@ H5VLdataset_optional_op(const char *app_file, const char *app_func, unsigned app
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Get the pointer to the dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -2964,7 +2918,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_dataset_close(const H5VL_object_t *vol_obj, H5P_genplist_t *dxpl, void **req)
+H5VL_dataset_close(const H5VL_object_t *vol_obj, void **req)
 {
     bool   vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
     herr_t ret_value       = SUCCEED; /* Return value */
@@ -2983,7 +2937,7 @@ H5VL_dataset_close(const H5VL_object_t *vol_obj, H5P_genplist_t *dxpl, void **re
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__dataset_close(vol_obj->data, vol_obj->connector->cls, dxpl, req) < 0)
+    if (H5VL__dataset_close(vol_obj->data, vol_obj->connector->cls, H5P_LST_DATASET_XFER_g, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTCLOSEOBJ, FAIL, "dataset close failed");
 
 done:
@@ -3020,8 +2974,6 @@ H5VLdataset_close(void *obj, hid_t connector_id, hid_t dxpl_id, void **req /*out
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a VOL connector ID");
 
     /* Get the pointer to the dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -3083,9 +3035,7 @@ done:
  *-------------------------------------------------------------------------
  */
 void *
-H5VL_datatype_commit(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, const char *name,
-                     hid_t type_id, H5P_genplist_t *lcpl, H5P_genplist_t *tcpl, H5P_genplist_t *tapl,
-                     H5P_genplist_t *dxpl, void **req)
+H5VL_datatype_commit(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, const char *name, hid_t type_id, H5P_genplist_t *lcpl, H5P_genplist_t *tcpl, H5P_genplist_t *tapl, void **req)
 {
     bool  vol_wrapper_set = false; /* Whether the VOL object wrapping context was set up */
     void *ret_value       = NULL;  /* Return value */
@@ -3098,8 +3048,7 @@ H5VL_datatype_commit(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__datatype_commit(vol_obj->data, loc_params, vol_obj->connector->cls, name,
-                                                   type_id, lcpl, tcpl, tapl, dxpl, req)))
+    if (NULL == (ret_value = H5VL__datatype_commit(vol_obj->data, loc_params, vol_obj->connector->cls, name, type_id, lcpl, tcpl, tapl, H5P_LST_DATASET_XFER_g, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, NULL, "datatype commit failed");
 
 done:
@@ -3206,7 +3155,7 @@ done:
  */
 void *
 H5VL_datatype_open(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, const char *name,
-                   H5P_genplist_t *tapl, H5P_genplist_t *dxpl, void **req)
+                   H5P_genplist_t *tapl, void **req)
 {
     bool  vol_wrapper_set = false; /* Whether the VOL object wrapping context was set up */
     void *ret_value       = NULL;  /* Return value */
@@ -3219,8 +3168,7 @@ H5VL_datatype_open(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_pa
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__datatype_open(vol_obj->data, loc_params, vol_obj->connector->cls, name,
-                                                 tapl, dxpl, req)))
+    if (NULL == (ret_value = H5VL__datatype_open(vol_obj->data, loc_params, vol_obj->connector->cls, name, tapl, H5P_LST_DATASET_XFER_g, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPENOBJ, NULL, "datatype open failed");
 
 done:
@@ -3261,8 +3209,6 @@ H5VLdatatype_open(void *obj, const H5VL_loc_params_t *loc_params, hid_t connecto
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, NULL, "can't find object for ID");
 
     /* Get dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, NULL, "can't find object for ID");
 
@@ -3321,8 +3267,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_datatype_get(const H5VL_object_t *vol_obj, H5VL_datatype_get_args_t *args, H5P_genplist_t *dxpl,
-                  void **req)
+H5VL_datatype_get(const H5VL_object_t *vol_obj, H5VL_datatype_get_args_t *args, void **req)
 {
     bool   vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
     herr_t ret_value       = SUCCEED; /* Return value */
@@ -3335,7 +3280,7 @@ H5VL_datatype_get(const H5VL_object_t *vol_obj, H5VL_datatype_get_args_t *args, 
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__datatype_get(vol_obj->data, vol_obj->connector->cls, args, dxpl, req) < 0)
+    if (H5VL__datatype_get(vol_obj->data, vol_obj->connector->cls, args, H5P_LST_DATASET_XFER_g, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "datatype get failed");
 
 done:
@@ -3373,8 +3318,6 @@ H5VLdatatype_get(void *obj, hid_t connector_id, H5VL_datatype_get_args_t *args, 
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a VOL connector ID");
 
     /* Get dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -3433,8 +3376,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_datatype_specific(const H5VL_object_t *vol_obj, H5VL_datatype_specific_args_t *args,
-                       H5P_genplist_t *dxpl, void **req)
+H5VL_datatype_specific(const H5VL_object_t *vol_obj, H5VL_datatype_specific_args_t *args, void **req)
 {
     bool   vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
     herr_t ret_value       = SUCCEED; /* Return value */
@@ -3447,7 +3389,7 @@ H5VL_datatype_specific(const H5VL_object_t *vol_obj, H5VL_datatype_specific_args
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__datatype_specific(vol_obj->data, vol_obj->connector->cls, args, dxpl, req) < 0)
+    if (H5VL__datatype_specific(vol_obj->data, vol_obj->connector->cls, args, H5P_LST_DATASET_XFER_g, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "unable to execute datatype specific callback");
 
 done:
@@ -3485,8 +3427,6 @@ H5VLdatatype_specific(void *obj, hid_t connector_id, H5VL_datatype_specific_args
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a VOL connector ID");
 
     /* Get dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -3533,42 +3473,6 @@ H5VL__datatype_optional(void *obj, const H5VL_class_t *cls, H5VL_optional_args_t
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5VL__datatype_optional() */
-
-/*-------------------------------------------------------------------------
- * Function:	H5VL_datatype_optional
- *
- * Purpose:	Optional operation specific to connectors.
- *
- * Return:      Success:    Non-negative
- *              Failure:    Negative
- *
- *-------------------------------------------------------------------------
- */
-herr_t
-H5VL_datatype_optional(const H5VL_object_t *vol_obj, H5VL_optional_args_t *args, H5P_genplist_t *dxpl,
-                       void **req)
-{
-    bool   vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
-    herr_t ret_value       = SUCCEED; /* Return value */
-
-    FUNC_ENTER_NOAPI(FAIL)
-
-    /* Set wrapper info in API context */
-    if (H5VL_set_vol_wrapper(vol_obj) < 0)
-        HGOTO_ERROR(H5E_VOL, H5E_CANTSET, FAIL, "can't set VOL wrapper info");
-    vol_wrapper_set = true;
-
-    /* Call the corresponding internal VOL routine */
-    if (H5VL__datatype_optional(vol_obj->data, vol_obj->connector->cls, args, dxpl, req) < 0)
-        HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "unable to execute datatype optional callback");
-
-done:
-    /* Reset object wrapping info in API context */
-    if (vol_wrapper_set && H5VL_reset_vol_wrapper() < 0)
-        HDONE_ERROR(H5E_VOL, H5E_CANTRESET, FAIL, "can't reset VOL wrapper info");
-
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5VL_datatype_optional() */
 
 /*-------------------------------------------------------------------------
  * Function:	H5VL_datatype_optional_op
@@ -3641,8 +3545,6 @@ H5VLdatatype_optional(void *obj, hid_t connector_id, H5VL_optional_args_t *args,
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a VOL connector ID");
 
     /* Get dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -3686,8 +3588,6 @@ H5VLdatatype_optional_op(const char *app_file, const char *app_func, unsigned ap
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Get dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -3753,7 +3653,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_datatype_close(const H5VL_object_t *vol_obj, H5P_genplist_t *dxpl, void **req)
+H5VL_datatype_close(const H5VL_object_t *vol_obj, void **req)
 {
     bool   vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
     herr_t ret_value       = SUCCEED; /* Return value */
@@ -3766,7 +3666,7 @@ H5VL_datatype_close(const H5VL_object_t *vol_obj, H5P_genplist_t *dxpl, void **r
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__datatype_close(vol_obj->data, vol_obj->connector->cls, dxpl, req) < 0)
+    if (H5VL__datatype_close(vol_obj->data, vol_obj->connector->cls, H5P_LST_DATASET_XFER_g, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTCLOSEOBJ, FAIL, "datatype close failed");
 
 done:
@@ -3803,8 +3703,6 @@ H5VLdatatype_close(void *obj, hid_t connector_id, hid_t dxpl_id, void **req /*ou
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a VOL connector ID");
 
     /* Get dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -3871,14 +3769,14 @@ done:
  */
 void *
 H5VL_file_create(const H5VL_connector_t *connector, const char *name, unsigned flags, H5P_genplist_t *fcpl,
-                 H5P_genplist_t *fapl, H5P_genplist_t *dxpl, void **req)
+                 H5P_genplist_t *fapl, void **req)
 {
     void *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_NOAPI(NULL)
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__file_create(connector->cls, name, flags, fcpl, fapl, dxpl, req)))
+    if (NULL == (ret_value = H5VL__file_create(connector->cls, name, flags, fcpl, fapl, H5P_LST_DATASET_XFER_g, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, NULL, "file create failed");
 
 done:
@@ -3918,8 +3816,6 @@ H5VLfile_create(const char *name, unsigned flags, hid_t fcpl_id, hid_t fapl_id, 
         HGOTO_ERROR(H5E_VOL, H5E_CANTGET, NULL, "can't get VOL connector info");
 
     /* Get dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, NULL, "can't find object for ID");
 
@@ -3994,7 +3890,6 @@ H5VL__file_open_find_connector_cb(H5PL_type_t H5_ATTR_UNUSED plugin_type,
     H5VL_connector_t                *connector = NULL;
     const H5VL_class_t              *cls       = (const H5VL_class_t *)plugin_info;
     H5P_genplist_t                  *fapl_copy = NULL;
-    H5P_genplist_t                  *def_vipl; /* Default VOL initialization property list */
     herr_t                           status;
     bool                             is_accessible = false; /* Whether file is accessible */
     herr_t                           ret_value     = H5_ITER_CONT;
@@ -4006,12 +3901,8 @@ H5VL__file_open_find_connector_cb(H5PL_type_t H5_ATTR_UNUSED plugin_type,
     assert(cls);
     assert(plugin_type == H5PL_TYPE_VOL);
 
-    /* Get the default VOL initialization property list */
-    if (NULL == (def_vipl = H5I_object(H5P_VOL_INITIALIZE_DEFAULT)))
-        HGOTO_ERROR(H5E_VOL, H5E_BADTYPE, H5_ITER_ERROR, "not a VOL initialize property list");
-
     /* Attempt to register plugin as a VOL connector */
-    if (NULL == (connector = H5VL__register_connector_by_class(cls, def_vipl)))
+    if (NULL == (connector = H5VL__register_connector_by_class(cls, H5P_LST_VOL_INITIALIZE_g)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTREGISTER, H5_ITER_ERROR, "unable to register VOL connector");
 
     /* Setup FAPL with registered VOL connector */
@@ -4028,7 +3919,7 @@ H5VL__file_open_find_connector_cb(H5PL_type_t H5_ATTR_UNUSED plugin_type,
 
     H5E_PAUSE_ERRORS
         {
-            status = H5VL_file_specific(NULL, &vol_cb_args, udata->dxpl, H5_REQUEST_NULL);
+            status = H5VL_file_specific(NULL, &vol_cb_args, H5_REQUEST_NULL);
         }
     H5E_RESUME_ERRORS
 
@@ -4067,7 +3958,7 @@ done:
  */
 void *
 H5VL_file_open(H5VL_connector_t *connector, const char *name, unsigned flags, H5P_genplist_t *fapl,
-               H5P_genplist_t *dxpl, void **req)
+              void **req)
 {
     H5VL_file_open_find_connector_t find_connector_ud;
     bool                            found_connector = false; /* Whether a compatible connector was found */
@@ -4076,7 +3967,7 @@ H5VL_file_open(H5VL_connector_t *connector, const char *name, unsigned flags, H5
     FUNC_ENTER_NOAPI(NULL)
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__file_open(connector->cls, name, flags, fapl, dxpl, req))) {
+    if (NULL == (ret_value = H5VL__file_open(connector->cls, name, flags, fapl, H5P_LST_DATASET_XFER_g, req))) {
         /* Opening the file failed - Determine whether we should search
          * the plugin path to see if any other VOL connectors are available
          * to attempt to open the file with. This only occurs if the default
@@ -4088,23 +3979,17 @@ H5VL_file_open(H5VL_connector_t *connector, const char *name, unsigned flags, H5
             find_connector_ud.filename = name;
             find_connector_ud.cls      = NULL;
             find_connector_ud.fapl     = fapl;
-            find_connector_ud.dxpl     = dxpl;
 
-            iter_ret = H5PL_iterate(H5PL_ITER_TYPE_VOL, H5VL__file_open_find_connector_cb,
-                                    (void *)&find_connector_ud);
+            iter_ret = H5PL_iterate(H5PL_ITER_TYPE_VOL, H5VL__file_open_find_connector_cb, (void *)&find_connector_ud);
             if (iter_ret < 0)
-                HGOTO_ERROR(H5E_VOL, H5E_BADITER, NULL,
-                            "failed to iterate over available VOL connector plugins");
+                HGOTO_ERROR(H5E_VOL, H5E_BADITER, NULL, "failed to iterate over available VOL connector plugins");
             else if (iter_ret) {
                 /* If one of the available VOL connector plugins is
                  * able to open the file, open the file with it.
                  */
                 found_connector = true;
-                if (NULL == (ret_value = H5VL__file_open(find_connector_ud.cls, name, flags,
-                                                         find_connector_ud.fapl, dxpl, req)))
-                    HGOTO_ERROR(H5E_VOL, H5E_CANTOPENOBJ, NULL,
-                                "can't open file '%s' with VOL connector '%s'", name,
-                                find_connector_ud.cls->name);
+                if (NULL == (ret_value = H5VL__file_open(find_connector_ud.cls, name, flags, find_connector_ud.fapl, H5P_LST_DATASET_XFER_g, req)))
+                    HGOTO_ERROR(H5E_VOL, H5E_CANTOPENOBJ, NULL, "can't open file '%s' with VOL connector '%s'", name, find_connector_ud.cls->name);
             }
             else
                 /* Otherwise, if no VOL connectors are available, throw
@@ -4144,14 +4029,12 @@ H5VLfile_open(const char *name, unsigned flags, hid_t fapl_id, hid_t dxpl_id, vo
     FUNC_ENTER_API_NOINIT
 
     /* Get the VOL info from the fapl */
-    if (NULL == (fapl = H5I_object(fapl_id)))
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file access property list");
     if (H5P_peek(fapl, H5F_ACS_VOL_CONN_NAME, &connector_prop) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTGET, NULL, "can't get VOL connector info");
 
     /* Get the dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, NULL, "can't find object for ID");
 
@@ -4210,7 +4093,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_file_get(const H5VL_object_t *vol_obj, H5VL_file_get_args_t *args, H5P_genplist_t *dxpl, void **req)
+H5VL_file_get(const H5VL_object_t *vol_obj, H5VL_file_get_args_t *args, void **req)
 {
     bool   vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
     herr_t ret_value       = SUCCEED; /* Return value */
@@ -4223,7 +4106,7 @@ H5VL_file_get(const H5VL_object_t *vol_obj, H5VL_file_get_args_t *args, H5P_genp
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__file_get(vol_obj->data, vol_obj->connector->cls, args, dxpl, req) < 0)
+    if (H5VL__file_get(vol_obj->data, vol_obj->connector->cls, args, H5P_LST_DATASET_XFER_g, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "file get failed");
 
 done:
@@ -4260,8 +4143,6 @@ H5VLfile_get(void *obj, hid_t connector_id, H5VL_file_get_args_t *args, hid_t dx
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a VOL connector ID");
 
     /* Get the dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -4320,8 +4201,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_file_specific(const H5VL_object_t *vol_obj, H5VL_file_specific_args_t *args, H5P_genplist_t *dxpl,
-                   void **req)
+H5VL_file_specific(const H5VL_object_t *vol_obj, H5VL_file_specific_args_t *args, void **req)
 {
     const H5VL_class_t *cls;                       /* VOL connector's class struct */
     bool                vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
@@ -4345,7 +4225,7 @@ H5VL_file_specific(const H5VL_object_t *vol_obj, H5VL_file_specific_args_t *args
         }
 
         /* Get the VOL info from the FAPL */
-        if (NULL == (fapl = H5I_object(fapl_id)))
+        if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
             HGOTO_ERROR(H5E_VOL, H5E_BADTYPE, FAIL, "not a file access property list");
         if (H5P_peek(fapl, H5F_ACS_VOL_CONN_NAME, &connector_prop) < 0)
             HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "can't get VOL connector info");
@@ -4367,7 +4247,7 @@ H5VL_file_specific(const H5VL_object_t *vol_obj, H5VL_file_specific_args_t *args
     } /* end else */
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__file_specific(vol_obj ? vol_obj->data : NULL, cls, args, dxpl, req) < 0)
+    if (H5VL__file_specific(vol_obj ? vol_obj->data : NULL, cls, args, H5P_LST_DATASET_XFER_g, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "file specific failed");
 
 done:
@@ -4405,8 +4285,6 @@ H5VLfile_specific(void *obj, hid_t connector_id, H5VL_file_specific_args_t *args
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a VOL connector ID");
 
     /* Get the dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -4465,7 +4343,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_file_optional(const H5VL_object_t *vol_obj, H5VL_optional_args_t *args, H5P_genplist_t *dxpl, void **req)
+H5VL_file_optional(const H5VL_object_t *vol_obj, H5VL_optional_args_t *args, void **req)
 {
     bool   vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
     herr_t ret_value       = SUCCEED; /* Return value */
@@ -4478,7 +4356,7 @@ H5VL_file_optional(const H5VL_object_t *vol_obj, H5VL_optional_args_t *args, H5P
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__file_optional(vol_obj->data, vol_obj->connector->cls, args, dxpl, req) < 0)
+    if (H5VL__file_optional(vol_obj->data, vol_obj->connector->cls, args, H5P_LST_DATASET_XFER_g, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "file optional failed");
 
 done:
@@ -4514,8 +4392,6 @@ H5VLfile_optional(void *obj, hid_t connector_id, H5VL_optional_args_t *args, hid
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid object");
     if (NULL == (connector = H5I_object_verify(connector_id, H5I_VOL)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a VOL connector ID");
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -4550,8 +4426,6 @@ H5VLfile_optional_op(const char *app_file, const char *app_func, unsigned app_li
     FUNC_ENTER_API(FAIL)
 
     /* Get DXPL */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -4625,7 +4499,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_file_close(const H5VL_object_t *vol_obj, H5P_genplist_t *dxpl, void **req)
+H5VL_file_close(const H5VL_object_t *vol_obj, void **req)
 {
     bool   vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
     herr_t ret_value       = SUCCEED; /* Return value */
@@ -4638,7 +4512,7 @@ H5VL_file_close(const H5VL_object_t *vol_obj, H5P_genplist_t *dxpl, void **req)
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__file_close(vol_obj->data, vol_obj->connector->cls, dxpl, req) < 0)
+    if (H5VL__file_close(vol_obj->data, vol_obj->connector->cls, H5P_LST_DATASET_XFER_g, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTCLOSEFILE, FAIL, "file close failed");
 
 done:
@@ -4675,8 +4549,6 @@ H5VLfile_close(void *obj, hid_t connector_id, hid_t dxpl_id, void **req /*out*/)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a VOL connector ID");
 
     /* Get the dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -4738,8 +4610,7 @@ done:
  */
 void *
 H5VL_group_create(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, const char *name,
-                  H5P_genplist_t *lcpl, H5P_genplist_t *gcpl, H5P_genplist_t *gapl, H5P_genplist_t *dxpl,
-                  void **req)
+                  H5P_genplist_t *lcpl, H5P_genplist_t *gcpl, H5P_genplist_t *gapl, void **req)
 {
     bool  vol_wrapper_set = false; /* Whether the VOL object wrapping context was set up */
     void *ret_value       = NULL;  /* Return value */
@@ -4752,8 +4623,7 @@ H5VL_group_create(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_par
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__group_create(vol_obj->data, loc_params, vol_obj->connector->cls, name,
-                                                lcpl, gcpl, gapl, dxpl, req)))
+    if (NULL == (ret_value = H5VL__group_create(vol_obj->data, loc_params, vol_obj->connector->cls, name, lcpl, gcpl, gapl, H5P_LST_DATASET_XFER_g, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, NULL, "group create failed");
 
 done:
@@ -4800,8 +4670,6 @@ H5VLgroup_create(void *obj, const H5VL_loc_params_t *loc_params, hid_t connector
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, NULL, "can't find object for ID");
 
     /* Get the dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, NULL, "can't find object for ID");
 
@@ -4863,7 +4731,7 @@ done:
  */
 void *
 H5VL_group_open(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, const char *name,
-                H5P_genplist_t *gapl, H5P_genplist_t *dxpl, void **req)
+                H5P_genplist_t *gapl, void **req)
 {
     bool  vol_wrapper_set = false; /* Whether the VOL object wrapping context was set up */
     void *ret_value       = NULL;  /* Return value */
@@ -4876,8 +4744,7 @@ H5VL_group_open(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_param
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__group_open(vol_obj->data, loc_params, vol_obj->connector->cls, name, gapl,
-                                              dxpl, req)))
+    if (NULL == (ret_value = H5VL__group_open(vol_obj->data, loc_params, vol_obj->connector->cls, name, gapl, H5P_LST_DATASET_XFER_g, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPENOBJ, NULL, "group open failed");
 
 done:
@@ -4918,8 +4785,6 @@ H5VLgroup_open(void *obj, const H5VL_loc_params_t *loc_params, hid_t connector_i
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, NULL, "can't find object for ID");
 
     /* Get the dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, NULL, "can't find object for ID");
 
@@ -4978,7 +4843,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_group_get(const H5VL_object_t *vol_obj, H5VL_group_get_args_t *args, H5P_genplist_t *dxpl, void **req)
+H5VL_group_get(const H5VL_object_t *vol_obj, H5VL_group_get_args_t *args, void **req)
 {
     bool   vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
     herr_t ret_value       = SUCCEED; /* Return value */
@@ -4991,7 +4856,7 @@ H5VL_group_get(const H5VL_object_t *vol_obj, H5VL_group_get_args_t *args, H5P_ge
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__group_get(vol_obj->data, vol_obj->connector->cls, args, dxpl, req) < 0)
+    if (H5VL__group_get(vol_obj->data, vol_obj->connector->cls, args, H5P_LST_DATASET_XFER_g, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "group get failed");
 
 done:
@@ -5028,8 +4893,6 @@ H5VLgroup_get(void *obj, hid_t connector_id, H5VL_group_get_args_t *args, hid_t 
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a VOL connector ID");
 
     /* Get the dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -5088,8 +4951,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_group_specific(const H5VL_object_t *vol_obj, H5VL_group_specific_args_t *args, H5P_genplist_t *dxpl,
-                    void **req)
+H5VL_group_specific(const H5VL_object_t *vol_obj, H5VL_group_specific_args_t *args, void **req)
 {
     bool   vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
     herr_t ret_value       = SUCCEED; /* Return value */
@@ -5102,7 +4964,7 @@ H5VL_group_specific(const H5VL_object_t *vol_obj, H5VL_group_specific_args_t *ar
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__group_specific(vol_obj->data, vol_obj->connector->cls, args, dxpl, req) < 0)
+    if (H5VL__group_specific(vol_obj->data, vol_obj->connector->cls, args, H5P_LST_DATASET_XFER_g, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "unable to execute group specific callback");
 
 done:
@@ -5140,8 +5002,6 @@ H5VLgroup_specific(void *obj, hid_t connector_id, H5VL_group_specific_args_t *ar
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a VOL connector ID");
 
     /* Get the dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -5201,8 +5061,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_group_optional(const H5VL_object_t *vol_obj, H5VL_optional_args_t *args, H5P_genplist_t *dxpl,
-                    void **req)
+H5VL_group_optional(const H5VL_object_t *vol_obj, H5VL_optional_args_t *args, void **req)
 {
     bool   vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
     herr_t ret_value       = SUCCEED; /* Return value */
@@ -5216,7 +5075,7 @@ H5VL_group_optional(const H5VL_object_t *vol_obj, H5VL_optional_args_t *args, H5
 
     /* Call the corresponding internal VOL routine */
     /* (Must return value from callback, for iterators) */
-    if ((ret_value = H5VL__group_optional(vol_obj->data, vol_obj->connector->cls, args, dxpl, req)) < 0)
+    if ((ret_value = H5VL__group_optional(vol_obj->data, vol_obj->connector->cls, args, H5P_LST_DATASET_XFER_g, req)) < 0)
         HERROR(H5E_VOL, H5E_CANTOPERATE, "unable to execute group optional callback");
 
 done:
@@ -5252,8 +5111,6 @@ H5VLgroup_optional(void *obj, hid_t connector_id, H5VL_optional_args_t *args, hi
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid object");
     if (NULL == (connector = H5I_object_verify(connector_id, H5I_VOL)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a VOL connector ID");
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -5289,8 +5146,6 @@ H5VLgroup_optional_op(const char *app_file, const char *app_func, unsigned app_l
     FUNC_ENTER_API(FAIL)
 
     /* Get DXPL */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -5365,7 +5220,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_group_close(const H5VL_object_t *vol_obj, H5P_genplist_t *dxpl, void **req)
+H5VL_group_close(const H5VL_object_t *vol_obj, void **req)
 {
     bool   vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
     herr_t ret_value       = SUCCEED; /* Return value */
@@ -5378,7 +5233,7 @@ H5VL_group_close(const H5VL_object_t *vol_obj, H5P_genplist_t *dxpl, void **req)
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__group_close(vol_obj->data, vol_obj->connector->cls, dxpl, req) < 0)
+    if (H5VL__group_close(vol_obj->data, vol_obj->connector->cls, H5P_LST_DATASET_XFER_g, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTCLOSEOBJ, FAIL, "group close failed");
 
 done:
@@ -5415,8 +5270,6 @@ H5VLgroup_close(void *obj, hid_t connector_id, hid_t dxpl_id, void **req /*out*/
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a VOL connector ID");
 
     /* Get the dataset transfer property list */
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -5479,9 +5332,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_link_create(H5VL_link_create_args_t *args, const H5VL_object_t *vol_obj,
-                 const H5VL_loc_params_t *loc_params, H5P_genplist_t *lcpl, H5P_genplist_t *lapl,
-                 H5P_genplist_t *dxpl, void **req)
+H5VL_link_create(H5VL_link_create_args_t *args, const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, H5P_genplist_t *lcpl, H5P_genplist_t *lapl, void **req)
 {
     H5VL_object_t tmp_vol_obj;               /* Temporary VOL object */
     bool          vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
@@ -5504,8 +5355,7 @@ H5VL_link_create(H5VL_link_create_args_t *args, const H5VL_object_t *vol_obj,
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__link_create(args, vol_obj->data, loc_params, vol_obj->connector->cls, lcpl, lapl, dxpl, req) <
-        0)
+    if (H5VL__link_create(args, vol_obj->data, loc_params, vol_obj->connector->cls, lcpl, lapl, H5P_LST_DATASET_XFER_g, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, FAIL, "link create failed");
 
 done:
@@ -5607,9 +5457,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_link_copy(const H5VL_object_t *src_vol_obj, const H5VL_loc_params_t *loc_params1,
-               const H5VL_object_t *dst_vol_obj, const H5VL_loc_params_t *loc_params2, H5P_genplist_t *lcpl,
-               H5P_genplist_t *lapl, H5P_genplist_t *dxpl, void **req)
+H5VL_link_copy(const H5VL_object_t *src_vol_obj, const H5VL_loc_params_t *loc_params1, const H5VL_object_t *dst_vol_obj, const H5VL_loc_params_t *loc_params2, H5P_genplist_t *lcpl, H5P_genplist_t *lapl, void **req)
 {
     const H5VL_object_t *vol_obj;                   /* VOL object for object with data */
     bool                 vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
@@ -5625,7 +5473,7 @@ H5VL_link_copy(const H5VL_object_t *src_vol_obj, const H5VL_loc_params_t *loc_pa
 
     /* Call the corresponding internal VOL routine */
     if (H5VL__link_copy(src_vol_obj->data, loc_params1, (dst_vol_obj ? dst_vol_obj->data : NULL), loc_params2,
-                        vol_obj->connector->cls, lcpl, lapl, dxpl, req) < 0)
+                        vol_obj->connector->cls, lcpl, lapl, H5P_LST_DATASET_XFER_g, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTCOPY, FAIL, "link copy failed");
 
 done:
@@ -5729,9 +5577,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_link_move(const H5VL_object_t *src_vol_obj, const H5VL_loc_params_t *loc_params1,
-               const H5VL_object_t *dst_vol_obj, const H5VL_loc_params_t *loc_params2, H5P_genplist_t *lcpl,
-               H5P_genplist_t *lapl, H5P_genplist_t *dxpl, void **req)
+H5VL_link_move(const H5VL_object_t *src_vol_obj, const H5VL_loc_params_t *loc_params1, const H5VL_object_t *dst_vol_obj, const H5VL_loc_params_t *loc_params2, H5P_genplist_t *lcpl, H5P_genplist_t *lapl, void **req)
 {
     const H5VL_object_t *vol_obj;                   /* VOL object for object with data */
     bool                 vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
@@ -5751,7 +5597,7 @@ H5VL_link_move(const H5VL_object_t *src_vol_obj, const H5VL_loc_params_t *loc_pa
 
     /* Call the corresponding internal VOL routine */
     if (H5VL__link_move(src_vol_obj->data, loc_params1, (dst_vol_obj ? dst_vol_obj->data : NULL), loc_params2,
-                        vol_obj->connector->cls, lcpl, lapl, dxpl, req) < 0)
+                        vol_obj->connector->cls, lcpl, lapl, H5P_LST_DATASET_XFER_g, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTMOVE, FAIL, "link move failed");
 
 done:
@@ -5853,8 +5699,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_link_get(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, H5VL_link_get_args_t *args,
-              H5P_genplist_t *dxpl, void **req)
+H5VL_link_get(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, H5VL_link_get_args_t *args, void **req)
 {
     bool   vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
     herr_t ret_value       = SUCCEED; /* Return value */
@@ -5867,7 +5712,7 @@ H5VL_link_get(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params,
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__link_get(vol_obj->data, loc_params, vol_obj->connector->cls, args, dxpl, req) < 0)
+    if (H5VL__link_get(vol_obj->data, loc_params, vol_obj->connector->cls, args, H5P_LST_DATASET_XFER_g, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "link get failed");
 
 done:
@@ -5962,8 +5807,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_link_specific(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params,
-                   H5VL_link_specific_args_t *args, H5P_genplist_t *dxpl, void **req)
+H5VL_link_specific(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, H5VL_link_specific_args_t *args, void **req)
 {
     bool   vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
     herr_t ret_value       = SUCCEED; /* Return value */
@@ -5977,8 +5821,7 @@ H5VL_link_specific(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_pa
 
     /* Call the corresponding internal VOL routine */
     /* (Must return value from callback, for iterators) */
-    if ((ret_value =
-             H5VL__link_specific(vol_obj->data, loc_params, vol_obj->connector->cls, args, dxpl, req)) < 0)
+    if ((ret_value = H5VL__link_specific(vol_obj->data, loc_params, vol_obj->connector->cls, args, H5P_LST_DATASET_XFER_g, req)) < 0)
         HERROR(H5E_VOL, H5E_CANTOPERATE, "unable to execute link specific callback");
 
 done:
@@ -6063,42 +5906,6 @@ done:
 } /* end H5VL__link_optional() */
 
 /*-------------------------------------------------------------------------
- * Function:	H5VL_link_optional
- *
- * Purpose:	Optional operation specific to connectors.
- *
- * Return:      Success:    Non-negative
- *              Failure:    Negative
- *
- *-------------------------------------------------------------------------
- */
-herr_t
-H5VL_link_optional(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params,
-                   H5VL_optional_args_t *args, H5P_genplist_t *dxpl, void **req)
-{
-    bool   vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
-    herr_t ret_value       = SUCCEED; /* Return value */
-
-    FUNC_ENTER_NOAPI(FAIL)
-
-    /* Set wrapper info in API context */
-    if (H5VL_set_vol_wrapper(vol_obj) < 0)
-        HGOTO_ERROR(H5E_VOL, H5E_CANTSET, FAIL, "can't set VOL wrapper info");
-    vol_wrapper_set = true;
-
-    /* Call the corresponding internal VOL routine */
-    if (H5VL__link_optional(vol_obj->data, loc_params, vol_obj->connector->cls, args, dxpl, req) < 0)
-        HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "unable to execute link optional callback");
-
-done:
-    /* Reset object wrapping info in API context */
-    if (vol_wrapper_set && H5VL_reset_vol_wrapper() < 0)
-        HDONE_ERROR(H5E_VOL, H5E_CANTRESET, FAIL, "can't reset VOL wrapper info");
-
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5VL_link_optional() */
-
-/*-------------------------------------------------------------------------
  * Function:    H5VLlink_optional
  *
  * Purpose:     Performs an optional connector-specific operation on a link
@@ -6163,12 +5970,8 @@ H5VLlink_optional_op(const char *app_file, const char *app_func, unsigned app_li
     /* name is verified in H5VL_setup_name_args() */
 
     /* Check the link create property list */
-    if (H5P_DEFAULT == lapl_id)
-        lapl_id = H5P_LINK_ACCESS_DEFAULT;
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -6251,8 +6054,7 @@ done:
  *-------------------------------------------------------------------------
  */
 void *
-H5VL_object_open(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *params, H5I_type_t *opened_type,
-                 H5P_genplist_t *dxpl, void **req)
+H5VL_object_open(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *params, H5I_type_t *opened_type, void **req)
 {
     bool  vol_wrapper_set = false; /* Whether the VOL object wrapping context was set up */
     void *ret_value       = NULL;  /* Return value */
@@ -6265,8 +6067,7 @@ H5VL_object_open(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *params, 
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__object_open(vol_obj->data, params, vol_obj->connector->cls, opened_type,
-                                               dxpl, req)))
+    if (NULL == (ret_value = H5VL__object_open(vol_obj->data, params, vol_obj->connector->cls, opened_type, H5P_LST_DATASET_XFER_g, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPENOBJ, NULL, "object open failed");
 
 done:
@@ -6363,9 +6164,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_object_copy(const H5VL_object_t *src_obj, const H5VL_loc_params_t *src_loc_params, const char *src_name,
-                 const H5VL_object_t *dst_obj, const H5VL_loc_params_t *dst_loc_params, const char *dst_name,
-                 H5P_genplist_t *ocpypl, H5P_genplist_t *lcpl, H5P_genplist_t *dxpl, void **req)
+H5VL_object_copy(const H5VL_object_t *src_obj, const H5VL_loc_params_t *src_loc_params, const char *src_name, const H5VL_object_t *dst_obj, const H5VL_loc_params_t *dst_loc_params, const char *dst_name, H5P_genplist_t *ocpypl, H5P_genplist_t *lcpl, void **req)
 {
     bool   vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
     herr_t ret_value       = SUCCEED; /* Return value */
@@ -6384,7 +6183,7 @@ H5VL_object_copy(const H5VL_object_t *src_obj, const H5VL_loc_params_t *src_loc_
 
     /* Call the corresponding internal VOL routine */
     if (H5VL__object_copy(src_obj->data, src_loc_params, src_name, dst_obj->data, dst_loc_params, dst_name,
-                          src_obj->connector->cls, ocpypl, lcpl, dxpl, req) < 0)
+                          src_obj->connector->cls, ocpypl, lcpl, H5P_LST_DATASET_XFER_g, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTCOPY, FAIL, "object copy failed");
 
 done:
@@ -6487,7 +6286,7 @@ done:
  */
 herr_t
 H5VL_object_get(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params,
-                H5VL_object_get_args_t *args, H5P_genplist_t *dxpl, void **req)
+                H5VL_object_get_args_t *args, void **req)
 {
     bool   vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
     herr_t ret_value       = SUCCEED; /* Return value */
@@ -6500,7 +6299,7 @@ H5VL_object_get(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_param
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__object_get(vol_obj->data, loc_params, vol_obj->connector->cls, args, dxpl, req) < 0)
+    if (H5VL__object_get(vol_obj->data, loc_params, vol_obj->connector->cls, args, H5P_LST_DATASET_XFER_g, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "get failed");
 
 done:
@@ -6595,8 +6394,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_object_specific(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params,
-                     H5VL_object_specific_args_t *args, H5P_genplist_t *dxpl, void **req)
+H5VL_object_specific(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, H5VL_object_specific_args_t *args, void **req)
 {
     bool   vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
     herr_t ret_value       = SUCCEED; /* Return value */
@@ -6610,8 +6408,7 @@ H5VL_object_specific(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_
 
     /* Call the corresponding internal VOL routine */
     /* (Must return value from callback, for iterators) */
-    if ((ret_value =
-             H5VL__object_specific(vol_obj->data, loc_params, vol_obj->connector->cls, args, dxpl, req)) < 0)
+    if ((ret_value = H5VL__object_specific(vol_obj->data, loc_params, vol_obj->connector->cls, args, H5P_LST_DATASET_XFER_g, req)) < 0)
         HERROR(H5E_VOL, H5E_CANTOPERATE, "object specific failed");
 
 done:
@@ -6706,8 +6503,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_object_optional(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params,
-                     H5VL_optional_args_t *args, H5P_genplist_t *dxpl, void **req)
+H5VL_object_optional(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, H5VL_optional_args_t *args, void **req)
 {
     bool   vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
     herr_t ret_value       = SUCCEED; /* Return value */
@@ -6720,7 +6516,7 @@ H5VL_object_optional(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__object_optional(vol_obj->data, loc_params, vol_obj->connector->cls, args, dxpl, req) < 0)
+    if (H5VL__object_optional(vol_obj->data, loc_params, vol_obj->connector->cls, args, H5P_LST_DATASET_XFER_g, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "unable to execute object optional callback");
 
 done:
@@ -6797,12 +6593,8 @@ H5VLobject_optional_op(const char *app_file, const char *app_func, unsigned app_
     /* name is verified in H5VL_setup_name_args() */
 
     /* Check the link create property list */
-    if (H5P_DEFAULT == lapl_id)
-        lapl_id = H5P_LINK_ACCESS_DEFAULT;
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
-    if (H5P_DEFAULT == dxpl_id)
-        dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 

@@ -19,6 +19,7 @@
 /***********/
 /* Headers */
 /***********/
+#include "H5Ppublic.h"
 #include "H5private.h"   /* Generic Functions                        */
 #include "H5CXprivate.h" /* API Contexts                             */
 #include "H5Eprivate.h"  /* Error handling                           */
@@ -648,7 +649,7 @@ H5L__link_cb(H5G_loc_t *grp_loc /*in*/, const char *name, const H5O_link_t H5_AT
                 {
                     /* Make callback */
                     ret_value = (link_class->create_func)(name, grp_id, udata->lnk->u.ud.udata,
-                                                          udata->lnk->u.ud.size, H5P_DEFAULT);
+                                                          udata->lnk->u.ud.size, H5P_LINK_CREATE_DEFAULT);
                 }
             H5_AFTER_USER_CB(FAIL)
             if (ret_value < 0)

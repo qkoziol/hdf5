@@ -105,6 +105,7 @@ const H5P_libclass_t H5P_CLS_OCPY[1] = {{
     &H5P_CLS_ROOT_g,           /* Parent class                 */
     &H5P_CLS_OBJECT_COPY_g,    /* Pointer to class             */
     &H5P_CLS_OBJECT_COPY_ID_g, /* Pointer to class ID          */
+    &H5P_LST_OBJECT_COPY_g,    /* Pointer to default property list */
     &H5P_LST_OBJECT_COPY_ID_g, /* Pointer to default property list ID */
     H5P__ocpy_reg_prop,        /* Default property registration routine */
 

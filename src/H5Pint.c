@@ -18,7 +18,6 @@
 /* Module Setup */
 /****************/
 
-#include "H5Epublic.h"
 #include "H5Pmodule.h" /* This source code file is part of the H5P module */
 
 /***********/
@@ -171,25 +170,45 @@ H5P_genclass_t *H5P_CLS_VOL_INITIALIZE_g      = NULL;
  * at runtime by H5P__init_package() in this source file.
  */
 hid_t H5P_LST_ATTRIBUTE_ACCESS_ID_g = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_ATTRIBUTE_ACCESS_g = NULL;
 hid_t H5P_LST_ATTRIBUTE_CREATE_ID_g = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_ATTRIBUTE_CREATE_g = NULL;
 hid_t H5P_LST_DATASET_ACCESS_ID_g   = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_DATASET_ACCESS_g = NULL;
 hid_t H5P_LST_DATASET_CREATE_ID_g   = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_DATASET_CREATE_g = NULL;
 hid_t H5P_LST_DATASET_XFER_ID_g     = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_DATASET_XFER_g = NULL;
 hid_t H5P_LST_DATATYPE_ACCESS_ID_g  = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_DATATYPE_ACCESS_g = NULL;
 hid_t H5P_LST_DATATYPE_CREATE_ID_g  = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_DATATYPE_CREATE_g = NULL;
 hid_t H5P_LST_FILE_ACCESS_ID_g      = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_FILE_ACCESS_g = NULL;
 hid_t H5P_LST_FILE_CREATE_ID_g      = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_FILE_CREATE_g = NULL;
 hid_t H5P_LST_FILE_MOUNT_ID_g       = H5I_INVALID_HID;
 hid_t H5P_LST_GROUP_ACCESS_ID_g     = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_GROUP_ACCESS_g = NULL;
 hid_t H5P_LST_GROUP_CREATE_ID_g     = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_GROUP_CREATE_g = NULL;
 hid_t H5P_LST_LINK_ACCESS_ID_g      = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_LINK_ACCESS_g = NULL;
 hid_t H5P_LST_LINK_CREATE_ID_g      = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_LINK_CREATE_g = NULL;
 hid_t H5P_LST_MAP_ACCESS_ID_g       = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_MAP_ACCESS_g = NULL;
 hid_t H5P_LST_MAP_CREATE_ID_g       = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_MAP_CREATE_g = NULL;
 hid_t H5P_LST_OBJECT_COPY_ID_g      = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_OBJECT_COPY_g = NULL;
 hid_t H5P_LST_OBJECT_CREATE_ID_g    = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_OBJECT_CREATE_g = NULL;
 hid_t H5P_LST_REFERENCE_ACCESS_ID_g = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_REFERENCE_ACCESS_g = NULL;
 hid_t H5P_LST_VOL_INITIALIZE_ID_g   = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_VOL_INITIALIZE_g = NULL;
+
 
 /* Root property list class library initialization object */
 const H5P_libclass_t H5P_CLS_ROOT[1] = {{
@@ -199,7 +218,8 @@ const H5P_libclass_t H5P_CLS_ROOT[1] = {{
     NULL,               /* Parent class                 */
     &H5P_CLS_ROOT_g,    /* Pointer to class             */
     &H5P_CLS_ROOT_ID_g, /* Pointer to class ID          */
-    NULL,               /* Pointer to default property list ID */
+    NULL,               /* Pointer to default property list */
+    NULL, /* Pointer to default property list ID */
     NULL,               /* Default property registration routine */
 
     NULL, /* Class creation callback      */
@@ -219,6 +239,7 @@ const H5P_libclass_t H5P_CLS_AACC[1] = {{
     &H5P_CLS_LINK_ACCESS_g,         /* Parent class                 */
     &H5P_CLS_ATTRIBUTE_ACCESS_g,    /* Pointer to class             */
     &H5P_CLS_ATTRIBUTE_ACCESS_ID_g, /* Pointer to class ID          */
+    &H5P_LST_ATTRIBUTE_ACCESS_g,    /* Pointer to default property list */
     &H5P_LST_ATTRIBUTE_ACCESS_ID_g, /* Pointer to default property list ID */
     NULL,                           /* Default property registration routine */
 
@@ -239,6 +260,7 @@ const H5P_libclass_t H5P_CLS_ACRT[1] = {{
     &H5P_CLS_STRING_CREATE_g,       /* Parent class                             */
     &H5P_CLS_ATTRIBUTE_CREATE_g,    /* Pointer to class                         */
     &H5P_CLS_ATTRIBUTE_CREATE_ID_g, /* Pointer to class ID                      */
+    &H5P_LST_ATTRIBUTE_CREATE_g,    /* Pointer to default property list */
     &H5P_LST_ATTRIBUTE_CREATE_ID_g, /* Pointer to default property list ID      */
     NULL,                           /* Default property registration routine    */
 
@@ -259,6 +281,7 @@ const H5P_libclass_t H5P_CLS_GACC[1] = {{
     &H5P_CLS_LINK_ACCESS_g,     /* Parent class                 */
     &H5P_CLS_GROUP_ACCESS_g,    /* Pointer to class             */
     &H5P_CLS_GROUP_ACCESS_ID_g, /* Pointer to class ID          */
+    &H5P_LST_GROUP_ACCESS_g,    /* Pointer to default property list */
     &H5P_LST_GROUP_ACCESS_ID_g, /* Pointer to default property list ID */
     NULL,                       /* Default property registration routine */
 
@@ -279,6 +302,7 @@ const H5P_libclass_t H5P_CLS_TCRT[1] = {{
     &H5P_CLS_OBJECT_CREATE_g,      /* Parent class                 */
     &H5P_CLS_DATATYPE_CREATE_g,    /* Pointer to class             */
     &H5P_CLS_DATATYPE_CREATE_ID_g, /* Pointer to class ID          */
+    &H5P_LST_DATATYPE_CREATE_g,    /* Pointer to default property list */
     &H5P_LST_DATATYPE_CREATE_ID_g, /* Pointer to default property list ID */
     NULL,                          /* Default property registration routine */
 
@@ -299,6 +323,7 @@ const H5P_libclass_t H5P_CLS_TACC[1] = {{
     &H5P_CLS_LINK_ACCESS_g,        /* Parent class                 */
     &H5P_CLS_DATATYPE_ACCESS_g,    /* Pointer to class             */
     &H5P_CLS_DATATYPE_ACCESS_ID_g, /* Pointer to class ID          */
+    &H5P_LST_DATATYPE_ACCESS_g,    /* Pointer to default property list */
     &H5P_LST_DATATYPE_ACCESS_ID_g, /* Pointer to default property list ID */
     NULL,                          /* Default property registration routine */
 
@@ -319,6 +344,7 @@ const H5P_libclass_t H5P_CLS_MCRT[1] = {{
     &H5P_CLS_OBJECT_CREATE_g, /* Parent class                 */
     &H5P_CLS_MAP_CREATE_g,    /* Pointer to class             */
     &H5P_CLS_MAP_CREATE_ID_g, /* Pointer to class ID          */
+    &H5P_LST_MAP_CREATE_g,    /* Pointer to default property list */
     &H5P_LST_MAP_CREATE_ID_g, /* Pointer to default property list ID */
     NULL,                     /* Default property registration routine */
 
@@ -339,6 +365,7 @@ const H5P_libclass_t H5P_CLS_VINI[1] = {{
     &H5P_CLS_ROOT_g,              /* Parent class                 */
     &H5P_CLS_VOL_INITIALIZE_g,    /* Pointer to class             */
     &H5P_CLS_VOL_INITIALIZE_ID_g, /* Pointer to class ID          */
+    &H5P_LST_VOL_INITIALIZE_g,    /* Pointer to default property list */
     &H5P_LST_VOL_INITIALIZE_ID_g, /* Pointer to default property list ID */
     NULL,                         /* Default property registration routine */
 
@@ -359,6 +386,7 @@ const H5P_libclass_t H5P_CLS_RACC[1] = {{
     &H5P_CLS_FILE_ACCESS_g,         /* Parent class                         */
     &H5P_CLS_REFERENCE_ACCESS_g,    /* Pointer to class                     */
     &H5P_CLS_REFERENCE_ACCESS_ID_g, /* Pointer to class ID                  */
+    &H5P_LST_REFERENCE_ACCESS_g,    /* Pointer to default property list */
     &H5P_LST_REFERENCE_ACCESS_ID_g, /* Pointer to default property list ID  */
     NULL,                           /* Default property registration routine*/
 
@@ -445,6 +473,35 @@ static H5P_genclass_t **H5P_class_list_s[] = {
     &H5P_CLS_MAP_ACCESS_g,       /* H5P_TYPE_MAP_ACCESS (21) */
     &H5P_CLS_REFERENCE_ACCESS_g, /* H5P_TYPE_REFERENCE_ACCESS (22) */
 };
+
+/* List of all default property lists in the library */
+/* (order here is important and must be the same as the H5P_plist_type_t enum) */
+static H5P_genplist_t **H5P_def_plist_list_s[] = {
+    NULL,                        /* H5P_TYPE_USER (0) */
+    NULL,             /* H5P_TYPE_ROOT (1) */
+    &H5P_LST_OBJECT_CREATE_g,    /* H5P_TYPE_OBJECT_CREATE (2) */
+    &H5P_LST_FILE_CREATE_g,      /* H5P_TYPE_FILE_CREATE (3) */
+    &H5P_LST_FILE_ACCESS_g,      /* H5P_TYPE_FILE_ACCESS (4) */
+    &H5P_LST_DATASET_CREATE_g,   /* H5P_TYPE_DATASET_CREATE (5) */
+    &H5P_LST_DATASET_ACCESS_g,   /* H5P_TYPE_DATASET_ACCESS (6) */
+    &H5P_LST_DATASET_XFER_g,     /* H5P_TYPE_DATASET_XFER (7) */
+    NULL,       /* H5P_TYPE_FILE_MOUNT (8) */
+    &H5P_LST_GROUP_CREATE_g,     /* H5P_TYPE_GROUP_CREATE (9) */
+    &H5P_LST_GROUP_ACCESS_g,     /* H5P_TYPE_GROUP_ACCESS (10) */
+    &H5P_LST_DATATYPE_CREATE_g,  /* H5P_TYPE_DATATYPE_CREATE (11) */
+    &H5P_LST_DATATYPE_ACCESS_g,  /* H5P_TYPE_DATATYPE_ACCESS (12) */
+    NULL,    /* H5P_TYPE_STRING_CREATE (13) */
+    &H5P_LST_ATTRIBUTE_CREATE_g, /* H5P_TYPE_ATTRIBUTE_CREATE (14) */
+    &H5P_LST_OBJECT_COPY_g,      /* H5P_TYPE_OBJECT_COPY (15) */
+    &H5P_LST_LINK_CREATE_g,      /* H5P_TYPE_LINK_CREATE (16) */
+    &H5P_LST_LINK_ACCESS_g,      /* H5P_TYPE_LINK_ACCESS (17) */
+    &H5P_LST_ATTRIBUTE_ACCESS_g, /* H5P_TYPE_ATTRIBUTE_ACCESS (18) */
+    &H5P_LST_VOL_INITIALIZE_g,   /* H5P_TYPE_VOL_INITIALIZE (19) */
+    &H5P_LST_MAP_CREATE_g,       /* H5P_TYPE_MAP_CREATE (20) */
+    &H5P_LST_MAP_ACCESS_g,       /* H5P_TYPE_MAP_ACCESS (21) */
+    &H5P_LST_REFERENCE_ACCESS_g, /* H5P_TYPE_REFERENCE_ACCESS (22) */
+};
+
 /* Declare a free list to manage the H5P_genclass_t struct */
 H5FL_DEFINE_STATIC(H5P_genclass_t);
 
@@ -566,7 +623,7 @@ H5P__init_package(void)
                     HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, FAIL, "can't register property list class");
 
                 /* Only register the default property list if it hasn't been created yet */
-                if (lib_class->def_plist_id && *lib_class->def_plist_id == (-1)) {
+                if (lib_class->def_plist_id && *lib_class->def_plist_id == H5I_INVALID_HID) {
                     H5P_genplist_t *def_plist;
 
                     /* Create the default property list for the new class*/
@@ -576,6 +633,10 @@ H5P__init_package(void)
 
                     /* Set the ID for the default property list for the new class*/
                     *lib_class->def_plist_id = def_plist->plist_id;
+
+                    /* Set the default property list pointer for the new class */
+                    if (lib_class->def_plist)
+                    *lib_class->def_plist = def_plist;
                 } /* end if */
 
                 /* Increment class initialization counters */
@@ -4354,6 +4415,10 @@ done:
     which accept hid_t's without thorough discussion. -QAK
 
     This function is similar (in spirit) to H5I_object_verify()
+    
+    H5P_DEFAULT is a valid value for the plist_id parameter, when the allow_default
+    parameter is true, and will return the default property list for the given type.
+
  EXAMPLES
  REVISION LOG
 --------------------------------------------------------------------------*/
@@ -4365,16 +4430,25 @@ H5P_object_verify(hid_t plist_id, H5P_plist_type_t type, bool allow_default)
 
     FUNC_ENTER_NOAPI(NULL)
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5I_object_verify(plist_id, H5I_GENPROP_LST)))
-        HGOTO_ERROR(H5E_ID, H5E_BADID, NULL, "can't find object for ID");
+    /* Allow H5P_DEFAULT for the plist_id parameter, when allow_default is true */
+    if (H5P_DEFAULT == plist_id) {
+        if (allow_default)
+            plist = *H5P_def_plist_list_s[type];
+        else
+            HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, NULL, "property list is a default list");
+    }
+    else {
+        /* Get the plist structure */
+        if (NULL == (plist = H5I_object_verify(plist_id, H5I_GENPROP_LST)))
+            HGOTO_ERROR(H5E_ID, H5E_BADID, NULL, "can't find object for ID");
 
-    /* Compare the property list's class against the other class */
-    if (H5P_isa_type(plist, type) != true)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTCOMPARE, NULL, "property list is not a member of the class");
+        /* Compare the property list's class against the other class */
+        if (H5P_isa_type(plist, type) != true)
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTCOMPARE, NULL, "property list is not a member of the class");
 
-    if (!allow_default && plist->is_default)
-        HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, NULL, "property list is a default list");
+        if (!allow_default && plist->is_default)
+            HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, NULL, "property list is a default list");
+    }
 
     /* Set the return value */
     ret_value = plist;
@@ -5155,9 +5229,9 @@ done:
     Internal routine to copy a property from one list to another
  USAGE
     herr_t H5P__copy_prop_plist(dst_plist, src_plist, name)
-        hid_t dst_id;               IN: ID of destination property list or class
-        hid_t src_id;               IN: ID of source property list or class
-        const char *name;           IN: Name of property to copy
+        H5P_genplist_t *dst_plist;    IN: Pointer to destination property list
+        H5P_genplist_t *src_plist;    IN: Pointer to source property list
+        const char *name;             IN: Name of property to copy
  RETURNS
     Success: non-negative value.
     Failure: negative value.
@@ -5181,10 +5255,8 @@ done:
  REVISION LOG
 --------------------------------------------------------------------------*/
 herr_t
-H5P__copy_prop_plist(hid_t dst_id, hid_t src_id, const char *name)
+H5P__copy_prop_plist(H5P_genplist_t *dst_plist, H5P_genplist_t *src_plist, const char *name)
 {
-    H5P_genplist_t *dst_plist;           /* Pointer to destination property list */
-    H5P_genplist_t *src_plist;           /* Pointer to source property list */
     H5P_genprop_t  *prop;                /* Temporary property pointer */
     H5P_genprop_t  *new_prop  = NULL;    /* Pointer to new property */
     herr_t          ret_value = SUCCEED; /* return value */
@@ -5192,11 +5264,6 @@ H5P__copy_prop_plist(hid_t dst_id, hid_t src_id, const char *name)
     FUNC_ENTER_PACKAGE
 
     assert(name);
-
-    /* Get the objects to operate on */
-    if (NULL == (src_plist = (H5P_genplist_t *)H5I_object(src_id)) ||
-        NULL == (dst_plist = (H5P_genplist_t *)H5I_object(dst_id)))
-        HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, FAIL, "property object doesn't exist");
 
     /* Get the pointer to the source property */
     if (NULL == (prop = H5P__find_prop_plist(src_plist, name)))
@@ -5258,10 +5325,9 @@ H5P__copy_prop_plist(hid_t dst_id, hid_t src_id, const char *name)
 
 done:
     /* Cleanup, if necessary */
-    if (ret_value < 0) {
+    if (ret_value < 0)
         if (new_prop != NULL)
             H5P__free_prop(new_prop);
-    } /* end if */
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5P__copy_prop_plist() */
@@ -5296,11 +5362,8 @@ done:
  REVISION LOG
 --------------------------------------------------------------------------*/
 herr_t
-H5P__copy_prop_pclass(hid_t dst_id, hid_t src_id, const char *name)
+H5P__copy_prop_pclass(H5P_genclass_t **dst_pclass, H5P_genclass_t *src_pclass, const char *name)
 {
-    H5P_genclass_t *src_pclass;          /* Source property class, containing property to copy */
-    H5P_genclass_t *dst_pclass;          /* Destination property class */
-    H5P_genclass_t *orig_dst_pclass;     /* Original destination property class */
     H5P_genprop_t  *prop;                /* Temporary property pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
@@ -5309,47 +5372,22 @@ H5P__copy_prop_pclass(hid_t dst_id, hid_t src_id, const char *name)
     /* Sanity check */
     assert(name);
 
-    /* Get property list classes */
-    if (NULL == (src_pclass = (H5P_genclass_t *)H5I_object(src_id)))
-        HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, FAIL, "source property class object doesn't exist");
-    if (NULL == (dst_pclass = (H5P_genclass_t *)H5I_object(dst_id)))
-        HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, FAIL, "destination property class object doesn't exist");
-
     /* Get the property from the source */
     if (NULL == (prop = H5P__find_prop_pclass(src_pclass, name)))
         HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, FAIL, "unable to locate property");
 
     /* If the property exists in the destination already */
-    if (H5P__exist_pclass(dst_pclass, name)) {
+    if (H5P__exist_pclass(*dst_pclass, name))
         /* Delete the old property from the destination class */
-        if (H5P__unregister(dst_pclass, name) < 0)
+        if (H5P__unregister(*dst_pclass, name) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTDELETE, FAIL, "unable to remove property");
-    } /* end if */
 
     /* Register the property into the destination */
-    orig_dst_pclass = dst_pclass;
-    if (H5P__register(&dst_pclass, name, prop->size, prop->value, prop->create, prop->set, prop->get,
+    if (H5P__register(dst_pclass, name, prop->size, prop->value, prop->create, prop->set, prop->get,
                       prop->encode, prop->decode, prop->del, prop->copy, prop->cmp, prop->close) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTDELETE, FAIL, "unable to remove property");
 
-    /* Check if the property class changed and needs to be substituted in the ID */
-    if (dst_pclass != orig_dst_pclass) {
-        H5P_genclass_t *old_dst_pclass; /* Old destination property class */
-
-        /* Substitute the new destination property class in the ID */
-        if (NULL == (old_dst_pclass = (H5P_genclass_t *)H5I_subst(dst_id, dst_pclass)))
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "unable to substitute property class in ID");
-        assert(old_dst_pclass == orig_dst_pclass);
-
-        /* Close the previous class */
-        if (H5P__close_class(old_dst_pclass) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, FAIL,
-                        "unable to close original property class after substitution");
-    } /* end if */
-
 done:
-    /* Cleanup, if necessary */
-
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5P__copy_prop_pclass() */
 

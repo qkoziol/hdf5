@@ -241,7 +241,6 @@ H5F_term_package(void)
 static herr_t
 H5F__close_cb(H5VL_object_t *file_vol_obj, void **request)
 {
-    H5P_genplist_t *def_dxpl  = NULL;    /* Default dataset transfer property list */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -249,12 +248,8 @@ H5F__close_cb(H5VL_object_t *file_vol_obj, void **request)
     /* Sanity check */
     assert(file_vol_obj);
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Close the file */
-    if (H5VL_file_close(file_vol_obj, def_dxpl, request) < 0)
+    if (H5VL_file_close(file_vol_obj, request) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTCLOSEFILE, FAIL, "unable to close file");
 
     /* Free the VOL object; it is unnecessary to unwrap the VOL
@@ -859,7 +854,6 @@ H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_op
                      H5P_genplist_t *fapl)
 {
     H5F_t          *src_file = NULL;         /* Source file */
-    H5P_genplist_t *fcpl;                    /* File creation property list */
     H5F_efc_t      *efc              = NULL; /* External file cache */
     char           *full_name        = NULL; /* File name with prefix */
     char           *actual_file_name = NULL; /* File's actual name */
@@ -884,14 +878,10 @@ H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_op
         HGOTO_ERROR(H5E_FILE, H5E_CANTALLOC, FAIL, "memory allocation failed");
     temp_file_name_len = strlen(temp_file_name);
 
-    /* Get the default file creation property list */
-    if (NULL == (fcpl = H5I_object(H5P_FILE_CREATE_DEFAULT)))
-        HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get default file creation property list");
-
     /* Target file_name is an absolute pathname: see RM for detailed description */
     if (H5_CHECK_ABSOLUTE(file_name) || H5_CHECK_ABS_PATH(file_name)) {
         /* Try opening file */
-        if (H5F__efc_open(true, efc, &src_file, file_name, file_intent, fcpl, fapl) < 0)
+        if (H5F__efc_open(true, efc, &src_file, file_name, file_intent, fapl) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, FAIL, "can't try opening file");
 
         /* Adjust temporary file name if file not opened */
@@ -912,7 +902,7 @@ H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_op
     }     /* end if */
     else if (H5_CHECK_ABS_DRIVE(file_name)) {
         /* Try opening file */
-        if (H5F__efc_open(true, efc, &src_file, file_name, file_intent, fcpl, fapl) < 0)
+        if (H5F__efc_open(true, efc, &src_file, file_name, file_intent, fapl) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, FAIL, "can't try opening file");
 
         /* Adjust temporary file name if file not opened */
@@ -955,7 +945,7 @@ H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_op
                     } /* end if */
 
                     /* Try opening file */
-                    if (H5F__efc_open(true, efc, &src_file, full_name, file_intent, fcpl, fapl) < 0)
+                    if (H5F__efc_open(true, efc, &src_file, full_name, file_intent, fapl) < 0)
                         HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, FAIL, "can't try opening file");
 
                     /* Release copy of file name */
@@ -978,7 +968,7 @@ H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_op
             HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't prepend prefix to filename");
 
         /* Try opening file */
-        if (H5F__efc_open(true, efc, &src_file, full_name, file_intent, fcpl, fapl) < 0)
+        if (H5F__efc_open(true, efc, &src_file, full_name, file_intent, fapl) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, FAIL, "can't try opening file");
 
         /* Release name */
@@ -995,7 +985,7 @@ H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_op
                 HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't prepend prefix to filename");
 
             /* Try opening file */
-            if (H5F__efc_open(true, efc, &src_file, full_name, file_intent, fcpl, fapl) < 0)
+            if (H5F__efc_open(true, efc, &src_file, full_name, file_intent, fapl) < 0)
                 HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, FAIL, "can't try opening file");
 
             /* Release name */
@@ -1006,7 +996,7 @@ H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_op
     /* Try the relative file_name stored in temp_file_name */
     if (src_file == NULL) {
         /* Try opening file */
-        if (H5F__efc_open(true, efc, &src_file, temp_file_name, file_intent, fcpl, fapl) < 0)
+        if (H5F__efc_open(true, efc, &src_file, temp_file_name, file_intent, fapl) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, FAIL, "can't try opening file");
     } /* end if */
 
@@ -1030,7 +1020,7 @@ H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_op
         actual_file_name = (char *)H5MM_xfree(actual_file_name);
 
         /* Try opening with the resolved name */
-        if (H5F__efc_open(true, efc, &src_file, full_name, file_intent, fcpl, fapl) < 0)
+        if (H5F__efc_open(true, efc, &src_file, full_name, file_intent, fapl) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, FAIL, "can't try opening file");
 
         /* Release name */
@@ -2698,18 +2688,12 @@ done:
 H5F_t *
 H5F__reopen(H5F_t *f)
 {
-    H5P_genplist_t *fcpl;             /* File creation property list */
-    H5P_genplist_t *fapl;             /* File access property list */
     H5F_t          *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
     /* Get a new "top level" file struct, sharing the same "low level" file struct */
-    if (NULL == (fcpl = H5I_object(H5P_FILE_CREATE_DEFAULT)))
-        HGOTO_ERROR(H5E_FILE, H5E_CANTGET, NULL, "can't get default file creation property list");
-    if (NULL == (fapl = H5I_object(H5P_FILE_ACCESS_DEFAULT)))
-        HGOTO_ERROR(H5E_FILE, H5E_CANTGET, NULL, "can't get default file access property list");
-    if (NULL == (ret_value = H5F__new(f->shared, 0, fcpl, fapl, NULL)))
+    if (NULL == (ret_value = H5F__new(f->shared, 0, H5P_LST_FILE_CREATE_g, H5P_LST_FILE_ACCESS_g, NULL)))
         HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, NULL, "unable to reopen file");
 
     /* Duplicate old file's names */
@@ -4086,16 +4070,11 @@ H5F_get_file_id(H5VL_object_t *vol_obj, H5I_type_t obj_type, bool app_ref)
     void                  *vol_obj_file = NULL; /* File object pointer */
     H5VL_object_get_args_t vol_cb_args;         /* Arguments to VOL callback */
     H5VL_loc_params_t      loc_params;          /* Location parameters */
-    H5P_genplist_t        *def_dxpl;            /* Default dataset transfer property list pointer */
     hid_t                  file_id         = H5I_INVALID_HID; /* File ID for object */
     bool                   vol_wrapper_set = false; /* Whether the VOL object wrapping context was set up */
     hid_t                  ret_value       = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_NOAPI(H5I_INVALID_HID)
-
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
 
     /* Set location parameters */
     loc_params.type     = H5VL_OBJECT_BY_SELF;
@@ -4106,7 +4085,7 @@ H5F_get_file_id(H5VL_object_t *vol_obj, H5I_type_t obj_type, bool app_ref)
     vol_cb_args.args.get_file.file = &vol_obj_file;
 
     /* Retrieve VOL file from object */
-    if (H5VL_object_get(vol_obj, &loc_params, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_object_get(vol_obj, &loc_params, &vol_cb_args, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, H5I_INVALID_HID, "can't retrieve file from object");
 
     /* Check if the file's ID already exists */

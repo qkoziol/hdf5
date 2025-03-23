@@ -1382,13 +1382,49 @@ H5Pcopy_prop(hid_t dst_id, hid_t src_id, const char *name)
 
     /* Compare property lists */
     if (H5I_GENPROP_LST == src_id_type) {
-        if (H5P__copy_prop_plist(dst_id, src_id, name) < 0)
+        H5P_genplist_t *dst_plist;           /* Pointer to destination property list */
+        H5P_genplist_t *src_plist;           /* Pointer to source property list */
+
+       /* Get the objects to operate on */
+        if (NULL == (src_plist = (H5P_genplist_t *)H5I_object(src_id)))
+            HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, FAIL, "property object doesn't exist");
+        if (NULL == (dst_plist = (H5P_genplist_t *)H5I_object(dst_id)))
+            HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, FAIL, "property object doesn't exist");
+
+        /* Copy the property */
+        if (H5P__copy_prop_plist(dst_plist, src_plist, name) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTCOPY, FAIL, "can't copy property between lists");
     } /* end if */
     /* Must be property classes */
     else {
-        if (H5P__copy_prop_pclass(dst_id, src_id, name) < 0)
+        H5P_genclass_t *dst_pclass;           /* Pointer to destination property class */
+        H5P_genclass_t *orig_dst_pclass;     /* Original destination property class */
+        H5P_genclass_t *src_pclass;           /* Pointer to source property class */    
+
+        /* Get property list classes */
+        if (NULL == (src_pclass = (H5P_genclass_t *)H5I_object(src_id)))
+            HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, FAIL, "source property class object doesn't exist");
+        if (NULL == (dst_pclass = (H5P_genclass_t *)H5I_object(dst_id)))
+            HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, FAIL, "destination property class object doesn't exist");
+
+        /* Copy the property */
+        orig_dst_pclass = dst_pclass;
+        if (H5P__copy_prop_pclass(&dst_pclass, src_pclass, name) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTCOPY, FAIL, "can't copy property between classes");
+
+        /* Check if the destination property class actually changed and needs to be substituted in the ID */
+        if (dst_pclass != orig_dst_pclass) {
+            H5P_genclass_t *old_dst_pclass; /* Old destination property class */
+
+            /* Substitute the new destination property class in the ID */
+            if (NULL == (old_dst_pclass = (H5P_genclass_t *)H5I_subst(dst_id, dst_pclass)))
+                HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "unable to substitute property class in ID");
+            assert(old_dst_pclass == orig_dst_pclass);
+
+            /* Close the previous class */
+            if (H5P__close_class(old_dst_pclass) < 0)
+                HGOTO_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, FAIL, "unable to close original property class after substitution");
+        } /* end if */
     } /* end else */
 
 done:

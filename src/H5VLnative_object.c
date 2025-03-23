@@ -151,9 +151,9 @@ H5VL__native_object_copy(void *src_obj, const H5VL_loc_params_t *loc_params1, co
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file or file object");
     if (H5G_loc_real(dst_obj, loc_params2->obj_type, &dst_loc) < 0)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file or file object");
-    if (NULL == (ocpypl = H5I_object(ocpypl_id)))
+    if (NULL == (ocpypl = H5P_object_verify(ocpypl_id, H5P_TYPE_OBJECT_COPY, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
-    if (NULL == (lcpl = H5I_object(lcpl_id)))
+    if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
 
     /* Copy the object */

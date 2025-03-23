@@ -413,6 +413,7 @@ const H5P_libclass_t H5P_CLS_FACC[1] = {{
     &H5P_CLS_ROOT_g,           /* Parent class                 */
     &H5P_CLS_FILE_ACCESS_g,    /* Pointer to class             */
     &H5P_CLS_FILE_ACCESS_ID_g, /* Pointer to class ID          */
+    &H5P_LST_FILE_ACCESS_g,    /* Pointer to default property list */
     &H5P_LST_FILE_ACCESS_ID_g, /* Pointer to default property list ID */
     H5P__facc_reg_prop,        /* Default property registration routine */
 
@@ -1292,8 +1293,6 @@ H5Pget_driver(hid_t fapl_id)
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Get the pointer to the property list object */
-    if (H5P_DEFAULT == fapl_id)
-        fapl_id = H5P_FILE_ACCESS_DEFAULT;
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
@@ -1500,8 +1499,6 @@ H5Pget_driver_cls_value(hid_t fapl_id)
     FUNC_ENTER_API(H5_VFD_INVALID)
 
     /* Get the pointer to the property list object */
-    if (H5P_DEFAULT == fapl_id)
-        fapl_id = H5P_FILE_ACCESS_DEFAULT;
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, H5_VFD_INVALID, "can't find object for ID");
 
@@ -1797,8 +1794,6 @@ H5Pset_multi_type(hid_t fapl_id, H5FD_mem_t type)
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (H5P_DEFAULT == fapl_id)
-        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "can't modify default property list");
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -1831,9 +1826,7 @@ H5Pget_multi_type(hid_t fapl_id, H5FD_mem_t *type /*out*/)
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (H5P_DEFAULT == fapl_id)
-        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "can't modify default property list");
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get value */
@@ -4345,8 +4338,6 @@ H5Pset_mdc_log_options(hid_t fapl_id, hbool_t is_enabled, const char *location, 
     FUNC_ENTER_API(FAIL)
 
     /* Check arguments */
-    if (H5P_DEFAULT == fapl_id)
-        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "can't modify default property list");
     if (!location)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "location cannot be NULL");
 
@@ -4682,8 +4673,6 @@ H5Pget_evict_on_close(hid_t fapl_id, hbool_t *evict_on_close /*out*/)
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (H5P_DEFAULT == fapl_id)
-        fapl_id = H5P_FILE_ACCESS_DEFAULT;
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -4755,8 +4744,6 @@ H5Pget_file_locking(hid_t fapl_id, hbool_t *use_file_locking /*out*/, hbool_t *i
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (H5P_DEFAULT == fapl_id)
-        fapl_id = H5P_FILE_ACCESS_DEFAULT;
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -4990,8 +4977,6 @@ H5Pget_mpi_params(hid_t fapl_id, MPI_Comm *comm /*out*/, MPI_Info *info /*out*/)
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (H5P_DEFAULT == fapl_id)
-        fapl_id = H5P_FILE_ACCESS_DEFAULT;
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -5426,8 +5411,6 @@ H5Pget_coll_metadata_write(hid_t fapl_id, hbool_t *is_collective /*out*/)
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (H5P_DEFAULT == fapl_id)
-        fapl_id = H5P_FILE_ACCESS_DEFAULT;
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -5645,8 +5628,6 @@ H5Pget_vol_id(hid_t fapl_id, hid_t *vol_id /*out*/)
     FUNC_ENTER_API(FAIL)
 
     /* Get property list for ID */
-    if (H5P_DEFAULT == fapl_id)
-        fapl_id = H5P_FILE_ACCESS_DEFAULT;
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
 
@@ -5687,8 +5668,6 @@ H5Pget_vol_info(hid_t fapl_id, void **vol_info /*out*/)
     FUNC_ENTER_API(FAIL)
 
     /* Get property list for ID */
-    if (H5P_DEFAULT == fapl_id)
-        fapl_id = H5P_FILE_ACCESS_DEFAULT;
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
 
@@ -5751,8 +5730,6 @@ H5Pget_vol_cap_flags(hid_t fapl_id, uint64_t *cap_flags)
         H5P_genplist_t       *fapl;           /* Property list pointer */
         H5VL_connector_prop_t connector_prop; /* Property for VOL connector ID & info */
 
-        if (H5P_DEFAULT == fapl_id)
-            fapl_id = H5P_FILE_ACCESS_DEFAULT;
         if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
 
@@ -5984,8 +5961,6 @@ H5Pset_relax_file_integrity_checks(hid_t fapl_id, uint64_t flags)
     FUNC_ENTER_API(FAIL)
 
     /* Check arguments */
-    if (H5P_DEFAULT == fapl_id)
-        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "can't modify default property list");
     if (flags & (uint64_t)~H5F_RFIC_ALL)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid flags");
 
@@ -6017,9 +5992,6 @@ H5Pget_relax_file_integrity_checks(hid_t fapl_id, uint64_t *flags /*out*/)
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
-
-    if (H5P_DEFAULT == fapl_id)
-        fapl_id = H5P_FILE_ACCESS_DEFAULT;
 
     /* Get the property list structure */
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))

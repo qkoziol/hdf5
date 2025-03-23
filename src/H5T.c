@@ -2342,14 +2342,8 @@ H5T__close_cb(H5T_t *dt, void **request)
      * close it through the VOL connector.
      */
     if (NULL != dt->vol_obj) {
-        H5P_genplist_t *def_dxpl; /* Dataset transfer property list */
-
-        /* Get default dataset transfer property list */
-        if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-            HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
-
         /* Close the connector-managed datatype data */
-        if (H5VL_datatype_close(dt->vol_obj, def_dxpl, request) < 0)
+        if (H5VL_datatype_close(dt->vol_obj, request) < 0)
             HGOTO_ERROR(H5E_DATATYPE, H5E_CLOSEERROR, FAIL, "unable to close datatype");
 
         /* Free the VOL object */
@@ -2445,15 +2439,10 @@ H5Tcopy(hid_t obj_id)
         case H5I_DATASET: {
             H5VL_object_t          *vol_obj;     /* Object for obj_id */
             H5VL_dataset_get_args_t vol_cb_args; /* Arguments to VOL callback */
-            H5P_genplist_t         *def_dxpl;    /* Default dataset transfer property list */
 
             /* The argument is a dataset handle */
             if (NULL == (vol_obj = (H5VL_object_t *)H5I_object_verify(obj_id, H5I_DATASET)))
                 HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "type_id is not a dataset ID");
-
-            /* Get the default dataset transfer property list */
-            if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-                HGOTO_ERROR(H5E_VOL, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
             /* Set up VOL callback arguments */
             vol_cb_args.op_type               = H5VL_DATASET_GET_TYPE;
@@ -2462,15 +2451,13 @@ H5Tcopy(hid_t obj_id)
             /* Get the datatype from the dataset
              * NOTE: This will have to be closed after we're done with it.
              */
-            if (H5VL_dataset_get(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
-                HGOTO_ERROR(H5E_DATATYPE, H5E_CANTGET, H5I_INVALID_HID,
-                            "unable to get datatype from the dataset");
+            if (H5VL_dataset_get(vol_obj, &vol_cb_args, H5_REQUEST_NULL) < 0)
+                HGOTO_ERROR(H5E_DATATYPE, H5E_CANTGET, H5I_INVALID_HID, "unable to get datatype from the dataset");
             dset_tid = vol_cb_args.args.get_type.type_id;
 
             /* Unwrap the type ID */
             if (NULL == (dt = (H5T_t *)H5I_object(dset_tid)))
-                HGOTO_ERROR(H5E_DATATYPE, H5E_BADTYPE, H5I_INVALID_HID,
-                            "received invalid datatype from the dataset");
+                HGOTO_ERROR(H5E_DATATYPE, H5E_BADTYPE, H5I_INVALID_HID, "received invalid datatype from the dataset");
         } break;
 
         case H5I_UNINIT:
@@ -6626,14 +6613,9 @@ H5T_convert_committed_datatype(H5T_t *dt, H5F_t *f)
         /* If the datatype is committed through the VOL, close it */
         if (NULL != dt->vol_obj) {
             H5VL_object_t  *vol_obj = dt->vol_obj;
-            H5P_genplist_t *def_dxpl; /* Dataset transfer property list */
-
-            /* Get default dataset transfer property list */
-            if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-                HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
 
             /* Close the datatype through the VOL*/
-            if (H5VL_datatype_close(vol_obj, def_dxpl, H5_REQUEST_NULL) < 0)
+            if (H5VL_datatype_close(vol_obj, H5_REQUEST_NULL) < 0)
                 HGOTO_ERROR(H5E_DATATYPE, H5E_CLOSEERROR, FAIL, "unable to close datatype");
 
             /* Free the datatype and set the VOL object pointer to NULL */

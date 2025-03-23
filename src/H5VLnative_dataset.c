@@ -264,9 +264,9 @@ H5VL__native_dataset_create(void *obj, const H5VL_loc_params_t *loc_params, cons
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a datatype ID");
     if (NULL == (space = (const H5S_t *)H5I_object_verify(space_id, H5I_DATASPACE)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a dataspace ID");
-    if (NULL == (dcpl = H5I_object(dcpl_id)))
+    if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a property list");
-    if (NULL == (dapl = H5I_object(dapl_id)))
+    if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a property list");
 
     /* H5Dcreate_anon */
@@ -280,7 +280,7 @@ H5VL__native_dataset_create(void *obj, const H5VL_loc_params_t *loc_params, cons
         H5P_genplist_t *lcpl; /* Link creation property list */
 
         /* Create the new dataset & get its ID */
-        if (NULL == (lcpl = H5I_object(lcpl_id)))
+        if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a property list");
         if (NULL == (dset = H5D__create_named(&loc, name, type_id, space, lcpl, dcpl, dapl)))
             HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, NULL, "unable to create dataset");
@@ -333,7 +333,7 @@ H5VL__native_dataset_open(void *obj, const H5VL_loc_params_t *loc_params, const 
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file or file object");
 
     /* Open the dataset */
-    if (NULL == (dapl = H5I_object(dapl_id)))
+    if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a property list");
     if (NULL == (dset = H5D__open_name(&loc, name, dapl)))
         HGOTO_ERROR(H5E_DATASET, H5E_CANTOPENOBJ, NULL, "unable to open dataset");

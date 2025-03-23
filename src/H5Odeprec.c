@@ -50,7 +50,6 @@
 
 /* Adapter for using deprecated H5Ovisit1 callbacks with the VOL */
 typedef struct H5O_visit1_adapter_t {
-    H5P_genplist_t *dxpl;         /* Default dataset transfer property list */
     H5O_iterate1_t  real_op;      /* Application callback to invoke */
     unsigned        fields;       /* Original fields passed to H5Ovisit */
     void           *real_op_data; /* Application op_data */
@@ -65,8 +64,7 @@ typedef struct H5O_visit1_adapter_t {
 /********************/
 static herr_t H5O__reset_info1(H5O_info1_t *oinfo);
 static herr_t H5O__iterate1_adapter(hid_t obj_id, const char *name, const H5O_info2_t *oinfo2, void *op_data);
-static herr_t H5O__get_info_old(H5VL_object_t *vol_obj, H5VL_loc_params_t *loc_params, H5P_genplist_t *dxpl,
-                                H5O_info1_t *oinfo, unsigned fields);
+static herr_t H5O__get_info_old(H5VL_object_t *vol_obj, H5VL_loc_params_t *loc_params, H5O_info1_t *oinfo, unsigned fields);
 
 /*********************/
 /* Package Variables */
@@ -193,7 +191,7 @@ H5O__iterate1_adapter(hid_t obj_id, const char *name, const H5O_info2_t *oinfo2,
         vol_cb_args.args                    = &obj_opt_args;
 
         /* Retrieve the object's native information */
-        if (H5VL_object_optional(vol_obj, &loc_params, &vol_cb_args, shim_data->dxpl, H5_REQUEST_NULL) < 0)
+        if (H5VL_object_optional(vol_obj, &loc_params, &vol_cb_args, H5_REQUEST_NULL) < 0)
             HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, FAIL, "can't get native info for object");
 
         /* Set the native fields */
@@ -222,8 +220,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5O__get_info_old(H5VL_object_t *vol_obj, H5VL_loc_params_t *loc_params, H5P_genplist_t *dxpl,
-                  H5O_info1_t *oinfo, unsigned fields)
+H5O__get_info_old(H5VL_object_t *vol_obj, H5VL_loc_params_t *loc_params, H5O_info1_t *oinfo, unsigned fields)
 {
     unsigned dm_fields;           /* Fields for data model query */
     unsigned nat_fields;          /* Fields for native query */
@@ -251,7 +248,7 @@ H5O__get_info_old(H5VL_object_t *vol_obj, H5VL_loc_params_t *loc_params, H5P_gen
         vol_cb_args.args.get_info.fields = dm_fields;
 
         /* Retrieve the object's data model information */
-        if (H5VL_object_get(vol_obj, loc_params, &vol_cb_args, dxpl, H5_REQUEST_NULL) < 0)
+        if (H5VL_object_get(vol_obj, loc_params, &vol_cb_args, H5_REQUEST_NULL) < 0)
             HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, FAIL, "can't get data model info for object");
 
         /* Set the data model fields */
@@ -267,10 +264,8 @@ H5O__get_info_old(H5VL_object_t *vol_obj, H5VL_loc_params_t *loc_params, H5P_gen
                 HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, FAIL, "can't get underlying VOL object");
 
             /* Deserialize VOL object token into object address */
-            if (H5VL_native_token_to_addr(vol_obj_data, loc_params->obj_type, dm_info.token, &oinfo->addr) <
-                0)
-                HGOTO_ERROR(H5E_OHDR, H5E_CANTUNSERIALIZE, FAIL,
-                            "can't deserialize object token into address");
+            if (H5VL_native_token_to_addr(vol_obj_data, loc_params->obj_type, dm_info.token, &oinfo->addr) < 0)
+                HGOTO_ERROR(H5E_OHDR, H5E_CANTUNSERIALIZE, FAIL, "can't deserialize object token into address");
         } /* end if */
         if (fields & H5O_INFO_TIME) {
             oinfo->atime = dm_info.atime;
@@ -296,7 +291,7 @@ H5O__get_info_old(H5VL_object_t *vol_obj, H5VL_loc_params_t *loc_params, H5P_gen
         vol_cb_args.args                    = &obj_opt_args;
 
         /* Retrieve the object's native information */
-        if (H5VL_object_optional(vol_obj, loc_params, &vol_cb_args, dxpl, H5_REQUEST_NULL) < 0)
+        if (H5VL_object_optional(vol_obj, loc_params, &vol_cb_args, H5_REQUEST_NULL) < 0)
             HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, FAIL, "can't get native info for object");
 
         /* Set the native fields */
@@ -352,7 +347,6 @@ H5Oopen_by_addr(hid_t loc_id, haddr_t addr)
     H5I_type_t        opened_type;              /* Opened object type */
     void             *opened_obj = NULL;        /* Opened object */
     H5VL_loc_params_t loc_params;               /* Location parameters */
-    H5P_genplist_t   *def_dxpl;                 /* Default dataset transfer property list */
     H5O_token_t       obj_token = {0};          /* Object token */
     bool              is_native_vol_obj;
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */
@@ -369,8 +363,7 @@ H5Oopen_by_addr(hid_t loc_id, haddr_t addr)
 
     /* Check if the VOL object is a native VOL connector object */
     if (H5VL_object_is_native(vol_obj, &is_native_vol_obj) < 0)
-        HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, H5I_INVALID_HID,
-                    "can't determine if VOL object is native connector object");
+        HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, H5I_INVALID_HID, "can't determine if VOL object is native connector object");
     if (is_native_vol_obj) {
         void *vol_obj_data;
 
@@ -380,16 +373,10 @@ H5Oopen_by_addr(hid_t loc_id, haddr_t addr)
 
         /* This is a native-specific routine that requires serialization of the token */
         if (H5VL_native_addr_to_token(vol_obj_data, vol_obj_type, addr, &obj_token) < 0)
-            HGOTO_ERROR(H5E_OHDR, H5E_CANTSERIALIZE, H5I_INVALID_HID,
-                        "can't serialize address into object token");
+            HGOTO_ERROR(H5E_OHDR, H5E_CANTSERIALIZE, H5I_INVALID_HID, "can't serialize address into object token");
     } /* end if */
     else
-        HGOTO_ERROR(H5E_OHDR, H5E_BADVALUE, H5I_INVALID_HID,
-                    "H5Oopen_by_addr is only meant to be used with the native VOL connector");
-
-    /* Get the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_OHDR, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
+        HGOTO_ERROR(H5E_OHDR, H5E_BADVALUE, H5I_INVALID_HID, "H5Oopen_by_addr is only meant to be used with the native VOL connector");
 
     /* Set up location struct */
     loc_params.type                        = H5VL_OBJECT_BY_TOKEN;
@@ -397,8 +384,7 @@ H5Oopen_by_addr(hid_t loc_id, haddr_t addr)
     loc_params.obj_type                    = vol_obj_type;
 
     /* Open the object */
-    if (NULL ==
-        (opened_obj = H5VL_object_open(vol_obj, &loc_params, &opened_type, def_dxpl, H5_REQUEST_NULL)))
+    if (NULL == (opened_obj = H5VL_object_open(vol_obj, &loc_params, &opened_type, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_OHDR, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open object");
 
     /* Register the object's ID */
@@ -423,7 +409,6 @@ herr_t
 H5Oget_info1(hid_t loc_id, H5O_info1_t *oinfo /*out*/)
 {
     H5VL_object_t    *vol_obj = NULL; /* Object of loc_id */
-    H5P_genplist_t   *def_dxpl;       /* Default dataset transfer property list */
     H5VL_loc_params_t loc_params;
     bool              is_native_vol_obj = false;
     herr_t            ret_value         = SUCCEED; /* Return value */
@@ -442,21 +427,16 @@ H5Oget_info1(hid_t loc_id, H5O_info1_t *oinfo /*out*/)
     if (NULL == (vol_obj = H5VL_vol_object(loc_id)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid location identifier");
 
-    /* Get the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_OHDR, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Check if using native VOL connector */
     if (H5VL_object_is_native(vol_obj, &is_native_vol_obj) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, FAIL, "can't determine if VOL object is native connector object");
 
     /* Must use native VOL connector for this operation */
     if (!is_native_vol_obj)
-        HGOTO_ERROR(H5E_OHDR, H5E_BADVALUE, FAIL,
-                    "Deprecated H5Oget_info1 is only meant to be used with the native VOL connector");
+        HGOTO_ERROR(H5E_OHDR, H5E_BADVALUE, FAIL, "Deprecated H5Oget_info1 is only meant to be used with the native VOL connector");
 
     /* Retrieve the object's information */
-    if (H5O__get_info_old(vol_obj, &loc_params, def_dxpl, oinfo, H5O_INFO_ALL) < 0)
+    if (H5O__get_info_old(vol_obj, &loc_params, oinfo, H5O_INFO_ALL) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, FAIL, "can't get deprecated info for object");
 
 done:
@@ -477,7 +457,6 @@ herr_t
 H5Oget_info_by_name1(hid_t loc_id, const char *name, H5O_info1_t *oinfo /*out*/, hid_t lapl_id)
 {
     H5VL_object_t    *vol_obj = NULL; /* object of loc_id */
-    H5P_genplist_t   *def_dxpl;       /* Default dataset transfer property list */
     H5VL_loc_params_t loc_params;
     bool              is_native_vol_obj = false;
     herr_t            ret_value         = SUCCEED; /* Return value */
@@ -496,10 +475,6 @@ H5Oget_info_by_name1(hid_t loc_id, const char *name, H5O_info1_t *oinfo /*out*/,
     if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, loc_id, false) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTSET, FAIL, "can't set access property list info");
 
-    /* Get the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_OHDR, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Fill out location struct */
     loc_params.type                         = H5VL_OBJECT_BY_NAME;
     loc_params.loc_data.loc_by_name.name    = name;
@@ -516,11 +491,10 @@ H5Oget_info_by_name1(hid_t loc_id, const char *name, H5O_info1_t *oinfo /*out*/,
 
     /* Must use native VOL connector for this operation */
     if (!is_native_vol_obj)
-        HGOTO_ERROR(H5E_OHDR, H5E_BADVALUE, FAIL,
-                    "Deprecated H5Oget_info_by_name1 is only meant to be used with the native VOL connector");
+        HGOTO_ERROR(H5E_OHDR, H5E_BADVALUE, FAIL, "Deprecated H5Oget_info_by_name1 is only meant to be used with the native VOL connector");
 
     /* Retrieve the object's information */
-    if (H5O__get_info_old(vol_obj, &loc_params, def_dxpl, oinfo, H5O_INFO_ALL) < 0)
+    if (H5O__get_info_old(vol_obj, &loc_params, oinfo, H5O_INFO_ALL) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, FAIL, "can't get deprecated info for object");
 
 done:
@@ -543,7 +517,6 @@ H5Oget_info_by_idx1(hid_t loc_id, const char *group_name, H5_index_t idx_type, H
                     hsize_t n, H5O_info1_t *oinfo /*out*/, hid_t lapl_id)
 {
     H5VL_object_t    *vol_obj = NULL; /* object of loc_id */
-    H5P_genplist_t   *def_dxpl;       /* Default dataset transfer property list */
     H5VL_loc_params_t loc_params;
     bool              is_native_vol_obj = false;
     herr_t            ret_value         = SUCCEED; /* Return value */
@@ -563,10 +536,6 @@ H5Oget_info_by_idx1(hid_t loc_id, const char *group_name, H5_index_t idx_type, H
     /* Verify access property list and set up collective metadata if appropriate */
     if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, loc_id, false) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTSET, FAIL, "can't set access property list info");
-
-    /* Get the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_OHDR, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Fill out location struct */
     loc_params.type                         = H5VL_OBJECT_BY_IDX;
@@ -591,7 +560,7 @@ H5Oget_info_by_idx1(hid_t loc_id, const char *group_name, H5_index_t idx_type, H
                     "Deprecated H5Oget_info_by_idx1 is only meant to be used with the native VOL connector");
 
     /* Retrieve the object's information */
-    if (H5O__get_info_old(vol_obj, &loc_params, def_dxpl, oinfo, H5O_INFO_ALL) < 0)
+    if (H5O__get_info_old(vol_obj, &loc_params, oinfo, H5O_INFO_ALL) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, FAIL, "can't get deprecated info for object");
 
 done:
@@ -613,7 +582,6 @@ herr_t
 H5Oget_info2(hid_t loc_id, H5O_info1_t *oinfo /*out*/, unsigned fields)
 {
     H5VL_object_t    *vol_obj;  /* Object of loc_id */
-    H5P_genplist_t   *def_dxpl; /* Default dataset transfer property list */
     H5VL_loc_params_t loc_params;
     bool              is_native_vol_obj;
     herr_t            ret_value = SUCCEED; /* Return value */
@@ -626,10 +594,6 @@ H5Oget_info2(hid_t loc_id, H5O_info1_t *oinfo /*out*/, unsigned fields)
     if (fields & ~H5O_INFO_ALL)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid fields");
 
-    /* Get the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_OHDR, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Set location struct fields */
     loc_params.type     = H5VL_OBJECT_BY_SELF;
     loc_params.obj_type = H5I_get_type(loc_id);
@@ -640,14 +604,12 @@ H5Oget_info2(hid_t loc_id, H5O_info1_t *oinfo /*out*/, unsigned fields)
 
     /* Check if the VOL object is a native VOL connector object */
     if (H5VL_object_is_native(vol_obj, &is_native_vol_obj) < 0)
-        HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, H5I_INVALID_HID,
-                    "can't determine if VOL object is native connector object");
+        HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, H5I_INVALID_HID, "can't determine if VOL object is native connector object");
     if (!is_native_vol_obj)
-        HGOTO_ERROR(H5E_OHDR, H5E_BADVALUE, H5I_INVALID_HID,
-                    "Deprecated H5Oget_info2 is only meant to be used with the native VOL connector");
+        HGOTO_ERROR(H5E_OHDR, H5E_BADVALUE, H5I_INVALID_HID, "Deprecated H5Oget_info2 is only meant to be used with the native VOL connector");
 
     /* Retrieve deprecated info struct */
-    if (H5O__get_info_old(vol_obj, &loc_params, def_dxpl, oinfo, fields) < 0)
+    if (H5O__get_info_old(vol_obj, &loc_params, oinfo, fields) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, FAIL, "can't get deprecated info for object");
 
 done:
@@ -670,7 +632,6 @@ H5Oget_info_by_name2(hid_t loc_id, const char *name, H5O_info1_t *oinfo /*out*/,
                      hid_t lapl_id)
 {
     H5VL_object_t    *vol_obj;  /* Object of loc_id */
-    H5P_genplist_t   *def_dxpl; /* Default dataset transfer property list */
     H5VL_loc_params_t loc_params;
     bool              is_native_vol_obj;
     herr_t            ret_value = SUCCEED; /* Return value */
@@ -691,10 +652,6 @@ H5Oget_info_by_name2(hid_t loc_id, const char *name, H5O_info1_t *oinfo /*out*/,
     if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, loc_id, false) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTSET, FAIL, "can't set access property list info");
 
-    /* Get the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_OHDR, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Fill out location struct */
     loc_params.type                         = H5VL_OBJECT_BY_NAME;
     loc_params.loc_data.loc_by_name.name    = name;
@@ -707,14 +664,12 @@ H5Oget_info_by_name2(hid_t loc_id, const char *name, H5O_info1_t *oinfo /*out*/,
 
     /* Check if the VOL object is a native VOL connector object */
     if (H5VL_object_is_native(vol_obj, &is_native_vol_obj) < 0)
-        HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, H5I_INVALID_HID,
-                    "can't determine if VOL object is native connector object");
+        HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, H5I_INVALID_HID, "can't determine if VOL object is native connector object");
     if (!is_native_vol_obj)
-        HGOTO_ERROR(H5E_OHDR, H5E_BADVALUE, H5I_INVALID_HID,
-                    "Deprecated H5Oget_info_by_name2 is only meant to be used with the native VOL connector");
+        HGOTO_ERROR(H5E_OHDR, H5E_BADVALUE, H5I_INVALID_HID, "Deprecated H5Oget_info_by_name2 is only meant to be used with the native VOL connector");
 
     /* Retrieve deprecated info struct */
-    if (H5O__get_info_old(vol_obj, &loc_params, def_dxpl, oinfo, fields) < 0)
+    if (H5O__get_info_old(vol_obj, &loc_params, oinfo, fields) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, FAIL, "can't get deprecated info for object");
 
 done:
@@ -739,7 +694,6 @@ H5Oget_info_by_idx2(hid_t loc_id, const char *group_name, H5_index_t idx_type, H
                     hsize_t n, H5O_info1_t *oinfo /*out*/, unsigned fields, hid_t lapl_id)
 {
     H5VL_object_t    *vol_obj;  /* Object of loc_id */
-    H5P_genplist_t   *def_dxpl; /* Default dataset transfer property list */
     H5VL_loc_params_t loc_params;
     bool              is_native_vol_obj;
     herr_t            ret_value = SUCCEED; /* Return value */
@@ -762,10 +716,6 @@ H5Oget_info_by_idx2(hid_t loc_id, const char *group_name, H5_index_t idx_type, H
     if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, loc_id, false) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTSET, FAIL, "can't set access property list info");
 
-    /* Get the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_OHDR, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     loc_params.type                         = H5VL_OBJECT_BY_IDX;
     loc_params.loc_data.loc_by_idx.name     = group_name;
     loc_params.loc_data.loc_by_idx.idx_type = idx_type;
@@ -787,7 +737,7 @@ H5Oget_info_by_idx2(hid_t loc_id, const char *group_name, H5_index_t idx_type, H
                     "Deprecated H5Oget_info_by_idx2 is only meant to be used with the native VOL connector");
 
     /* Retrieve deprecated info struct */
-    if (H5O__get_info_old(vol_obj, &loc_params, def_dxpl, oinfo, fields) < 0)
+    if (H5O__get_info_old(vol_obj, &loc_params, oinfo, fields) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, FAIL, "can't get deprecated info for object");
 
 done:
@@ -829,7 +779,6 @@ H5Ovisit1(hid_t obj_id, H5_index_t idx_type, H5_iter_order_t order, H5O_iterate1
     H5VL_object_t              *vol_obj = NULL; /* Object of loc_id */
     H5VL_object_specific_args_t vol_cb_args;    /* Arguments to VOL callback */
     H5VL_loc_params_t           loc_params;     /* Location parameters for object access */
-    H5P_genplist_t             *def_dxpl;       /* Default dataset transfer property list */
     H5O_visit1_adapter_t        shim_data;      /* Adapter for passing app callback & user data */
     bool                        is_native_vol_obj = false;
     herr_t                      ret_value; /* Return value */
@@ -857,16 +806,11 @@ H5Ovisit1(hid_t obj_id, H5_index_t idx_type, H5_iter_order_t order, H5O_iterate1
         HGOTO_ERROR(H5E_OHDR, H5E_BADVALUE, FAIL,
                     "Deprecated H5Ovisit1 is only meant to be used with the native VOL connector");
 
-    /* Get the default transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "not a dataset transfer property list");
-
     /* Set location parameters */
     loc_params.type     = H5VL_OBJECT_BY_SELF;
     loc_params.obj_type = H5I_get_type(obj_id);
 
     /* Set up adapter */
-    shim_data.dxpl         = def_dxpl;
     shim_data.real_op      = op;
     shim_data.fields       = H5O_INFO_ALL;
     shim_data.real_op_data = op_data;
@@ -880,7 +824,7 @@ H5Ovisit1(hid_t obj_id, H5_index_t idx_type, H5_iter_order_t order, H5O_iterate1
     vol_cb_args.args.visit.fields   = H5O_INFO_ALL;
 
     /* Visit the objects */
-    if ((ret_value = H5VL_object_specific(vol_obj, &loc_params, &vol_cb_args, def_dxpl, H5_REQUEST_NULL)) < 0)
+    if ((ret_value = H5VL_object_specific(vol_obj, &loc_params, &vol_cb_args, H5_REQUEST_NULL)) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_BADITER, FAIL, "object visitation failed");
 
 done:
@@ -923,7 +867,6 @@ H5Ovisit_by_name1(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_it
     H5VL_object_t              *vol_obj = NULL; /* Object of loc_id */
     H5VL_object_specific_args_t vol_cb_args;    /* Arguments to VOL callback */
     H5VL_loc_params_t           loc_params;     /* Location parameters for object access */
-    H5P_genplist_t             *def_dxpl;       /* Default dataset transfer property list */
     H5O_visit1_adapter_t        shim_data;      /* Adapter for passing app callback & user data */
     herr_t                      ret_value;      /* Return value */
     bool                        is_native_vol_obj = false;
@@ -959,10 +902,6 @@ H5Ovisit_by_name1(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_it
         HGOTO_ERROR(H5E_OHDR, H5E_BADVALUE, FAIL,
                     "Deprecated H5Ovisit_by_name1 is only meant to be used with the native VOL connector");
 
-    /* Get the default transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "not a dataset transfer property list");
-
     /* Set location parameters */
     loc_params.type                         = H5VL_OBJECT_BY_NAME;
     loc_params.loc_data.loc_by_name.name    = obj_name;
@@ -983,7 +922,7 @@ H5Ovisit_by_name1(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_it
     vol_cb_args.args.visit.fields   = H5O_INFO_ALL;
 
     /* Visit the objects */
-    if ((ret_value = H5VL_object_specific(vol_obj, &loc_params, &vol_cb_args, def_dxpl, H5_REQUEST_NULL)) < 0)
+    if ((ret_value = H5VL_object_specific(vol_obj, &loc_params, &vol_cb_args, H5_REQUEST_NULL)) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_BADITER, FAIL, "object visitation failed");
 
 done:
@@ -1028,7 +967,6 @@ H5Ovisit2(hid_t obj_id, H5_index_t idx_type, H5_iter_order_t order, H5O_iterate1
 {
     H5VL_object_t              *vol_obj;     /* Object of loc_id */
     H5VL_object_specific_args_t vol_cb_args; /* Arguments to VOL callback */
-    H5P_genplist_t             *def_dxpl;    /* Default dataset transfer property list */
     H5VL_loc_params_t           loc_params;  /* Location parameters for object access */
     H5O_visit1_adapter_t        shim_data;   /* Adapter for passing app callback & user data */
     bool                        is_native_vol_obj;
@@ -1053,21 +991,14 @@ H5Ovisit2(hid_t obj_id, H5_index_t idx_type, H5_iter_order_t order, H5O_iterate1
     /* Check if the VOL object is a native VOL connector object */
     if (H5VL_object_is_native(vol_obj, &is_native_vol_obj) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, FAIL, "can't determine if VOL object is native connector object");
-
     if (!is_native_vol_obj)
-        HGOTO_ERROR(H5E_OHDR, H5E_BADVALUE, FAIL,
-                    "Deprecated H5Ovisit2 is only meant to be used with the native VOL connector");
-
-    /* Get the default transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "not a dataset transfer property list");
+        HGOTO_ERROR(H5E_OHDR, H5E_BADVALUE, FAIL, "Deprecated H5Ovisit2 is only meant to be used with the native VOL connector");
 
     /* Set location parameters */
     loc_params.type     = H5VL_OBJECT_BY_SELF;
     loc_params.obj_type = H5I_get_type(obj_id);
 
     /* Set up adapter */
-    shim_data.dxpl         = def_dxpl;
     shim_data.real_op      = op;
     shim_data.fields       = fields;
     shim_data.real_op_data = op_data;
@@ -1081,7 +1012,7 @@ H5Ovisit2(hid_t obj_id, H5_index_t idx_type, H5_iter_order_t order, H5O_iterate1
     vol_cb_args.args.visit.fields   = fields;
 
     /* Visit the objects */
-    if ((ret_value = H5VL_object_specific(vol_obj, &loc_params, &vol_cb_args, def_dxpl, H5_REQUEST_NULL)) < 0)
+    if ((ret_value = H5VL_object_specific(vol_obj, &loc_params, &vol_cb_args, H5_REQUEST_NULL)) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_BADITER, FAIL, "object iteration failed");
 
 done:
@@ -1126,7 +1057,6 @@ H5Ovisit_by_name2(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_it
 {
     H5VL_object_t              *vol_obj;     /* Object of loc_id */
     H5VL_object_specific_args_t vol_cb_args; /* Arguments to VOL callback */
-    H5P_genplist_t             *def_dxpl;    /* Default dataset transfer property list */
     H5VL_loc_params_t           loc_params;  /* Location parameters for object access */
     H5O_visit1_adapter_t        shim_data;   /* Adapter for passing app callback & user data */
     bool                        is_native_vol_obj;
@@ -1163,10 +1093,6 @@ H5Ovisit_by_name2(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_it
         HGOTO_ERROR(H5E_OHDR, H5E_BADVALUE, FAIL,
                     "Deprecated H5Ovisit_by_name2 is only meant to be used with the native VOL connector");
 
-    /* Get the default transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "not a dataset transfer property list");
-
     /* Set location parameters */
     loc_params.type                         = H5VL_OBJECT_BY_NAME;
     loc_params.loc_data.loc_by_name.name    = obj_name;
@@ -1174,7 +1100,6 @@ H5Ovisit_by_name2(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_it
     loc_params.obj_type                     = H5I_get_type(loc_id);
 
     /* Set up adapter */
-    shim_data.dxpl         = def_dxpl;
     shim_data.real_op      = op;
     shim_data.fields       = fields;
     shim_data.real_op_data = op_data;
@@ -1188,7 +1113,7 @@ H5Ovisit_by_name2(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_it
     vol_cb_args.args.visit.fields   = fields;
 
     /* Visit the objects */
-    if ((ret_value = H5VL_object_specific(vol_obj, &loc_params, &vol_cb_args, def_dxpl, H5_REQUEST_NULL)) < 0)
+    if ((ret_value = H5VL_object_specific(vol_obj, &loc_params, &vol_cb_args, H5_REQUEST_NULL)) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_BADITER, FAIL, "object iteration failed");
 
 done:

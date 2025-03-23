@@ -82,7 +82,7 @@ H5VL__native_group_create(void *obj, const H5VL_loc_params_t *loc_params, const 
     /* Check arguments */
     if (H5G_loc_real(obj, loc_params->obj_type, &loc) < 0)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file or file object");
-    if (NULL == (gcpl = H5I_object(gcpl_id)))
+    if (NULL == (gcpl = H5P_object_verify(gcpl_id, H5P_TYPE_GROUP_CREATE, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a property list");
 
     /* if name is NULL then this is from H5Gcreate_anon */
@@ -103,7 +103,7 @@ H5VL__native_group_create(void *obj, const H5VL_loc_params_t *loc_params, const 
         H5P_genplist_t *lcpl; /* Link creation property list */
 
         /* Create the new group & get its ID */
-        if (NULL == (lcpl = H5I_object(lcpl_id)))
+        if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a property list");
         if (NULL == (grp = H5G__create_named(&loc, name, lcpl, gcpl)))
             HGOTO_ERROR(H5E_SYM, H5E_CANTINIT, NULL, "unable to create group");

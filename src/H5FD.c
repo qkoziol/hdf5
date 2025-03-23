@@ -319,8 +319,6 @@ H5FDopen(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
     FUNC_ENTER_API(NULL)
 
     /* Check arguments */
-    if (H5P_DEFAULT == fapl_id)
-        fapl_id = H5P_FILE_ACCESS_DEFAULT;
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file access property list");
 
@@ -1817,8 +1815,7 @@ H5FDdelete(const char *filename, hid_t fapl_id)
     if (!filename || !*filename)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "no file name specified");
 
-    if (H5P_DEFAULT == fapl_id)
-        fapl_id = H5P_FILE_ACCESS_DEFAULT;
+    /* Get the file access property list */
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
 

@@ -654,8 +654,6 @@ H5Pset_fapl_ros3_token(hid_t fapl_id, const char *token)
 
     FUNC_ENTER_API(FAIL)
 
-    if (fapl_id == H5P_DEFAULT)
-        HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "can't set values in default property list");
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADTYPE, FAIL, "not a file access property list");
     if (H5_VFD_ROS3 != H5P_get_driver_value(fapl))

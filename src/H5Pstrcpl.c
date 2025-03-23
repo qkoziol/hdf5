@@ -75,6 +75,7 @@ const H5P_libclass_t H5P_CLS_STRCRT[1] = {{
     &H5P_CLS_ROOT_g,             /* Parent class                 */
     &H5P_CLS_STRING_CREATE_g,    /* Pointer to class             */
     &H5P_CLS_STRING_CREATE_ID_g, /* Pointer to class ID          */
+    NULL,                        /* Pointer to default property list */
     NULL,                        /* Pointer to default property list ID */
     H5P__strcrt_reg_prop,        /* Default property registration routine */
 

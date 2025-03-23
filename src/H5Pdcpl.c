@@ -248,6 +248,7 @@ const H5P_libclass_t H5P_CLS_DCRT[1] = {{
     &H5P_CLS_OBJECT_CREATE_g,     /* Parent class                 */
     &H5P_CLS_DATASET_CREATE_g,    /* Pointer to class             */
     &H5P_CLS_DATASET_CREATE_ID_g, /* Pointer to class ID          */
+    &H5P_LST_DATASET_CREATE_g,      /* Pointer to default property list */
     &H5P_LST_DATASET_CREATE_ID_g, /* Pointer to default property list ID */
     H5P__dcrt_reg_prop,           /* Default property registration routine */
 

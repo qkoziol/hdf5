@@ -252,7 +252,6 @@ H5Fset_mpi_atomicity(hid_t file_id, hbool_t flag)
     H5VL_object_t                   *vol_obj;             /* File info */
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
-    H5P_genplist_t                  *def_dxpl;            /* Dataset transfer property list pointer */
     herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -266,12 +265,8 @@ H5Fset_mpi_atomicity(hid_t file_id, hbool_t flag)
     vol_cb_args.op_type                  = H5VL_NATIVE_FILE_SET_MPI_ATOMICITY;
     vol_cb_args.args                     = &file_opt_args;
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Set atomicity value */
-    if (H5VL_file_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_optional(vol_obj, &vol_cb_args, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "unable to set MPI atomicity");
 
 done:
@@ -327,7 +322,6 @@ H5Fget_mpi_atomicity(hid_t file_id, bool *flag /*out*/)
     H5VL_object_t                   *vol_obj;             /* File info */
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
-    H5P_genplist_t                  *def_dxpl;            /* Dataset transfer property list pointer */
     herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -341,12 +335,8 @@ H5Fget_mpi_atomicity(hid_t file_id, bool *flag /*out*/)
     vol_cb_args.op_type                  = H5VL_NATIVE_FILE_GET_MPI_ATOMICITY;
     vol_cb_args.args                     = &file_opt_args;
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Get atomicity value */
-    if (H5VL_file_optional(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_file_optional(vol_obj, &vol_cb_args, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to get MPI atomicity");
 
 done:

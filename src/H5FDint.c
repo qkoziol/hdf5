@@ -409,7 +409,6 @@ H5FD__set_def_driver(void)
     const char        *driver_env_var;
     const char        *driver_config_env_var = NULL;
     H5FD_driver_t     *driver                = NULL;         /* VFD driver */
-    H5P_genplist_t    *def_fapl;                             /* Default file access property list */
     H5P_genclass_t    *def_fapclass;                         /* Default file access property class */
     H5FD_driver_prop_t def_driver_prop = {NULL, NULL, NULL}; /* VFD driver for default FAPL */
     herr_t             ret_value       = SUCCEED;
@@ -455,16 +454,12 @@ H5FD__set_def_driver(void)
             HGOTO_ERROR(H5E_VFL, H5E_CANTINC, FAIL, "can't increment ref count on VFD driver");
     }
 
-    /* Get default file access property list */
-    if (NULL == (def_fapl = H5I_object(H5P_FILE_ACCESS_DEFAULT)))
-        HGOTO_ERROR(H5E_VFL, H5E_BADID, FAIL, "can't find object for default fapl ID");
-
     /* Set new default VFL driver for default FAPL */
-    if (H5P_set_driver(def_fapl, driver, NULL, driver_config_env_var) < 0)
+    if (H5P_set_driver(H5P_LST_FILE_ACCESS_g, driver, NULL, driver_config_env_var) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set default VFL driver for default FAPL");
 
     /* Get the [updated] driver property to use for the class */
-    if (H5P_peek(def_fapl, H5F_ACS_FILE_DRV_NAME, &def_driver_prop) < 0)
+    if (H5P_peek(H5P_LST_FILE_ACCESS_g, H5F_ACS_FILE_DRV_NAME, &def_driver_prop) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get VFL driver info");
 
     /* Get default file access pclass */
@@ -473,8 +468,7 @@ H5FD__set_def_driver(void)
 
     /* Set new default VFL driver for default file access pclass */
     if (H5P_reset_vfd_class(def_fapclass, &def_driver_prop) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL,
-                    "can't set default VFD driver for default file access property class");
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set default VFD driver for default file access property class");
 
 done:
     /* Release VFD used for default FAPL */

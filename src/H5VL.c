@@ -88,8 +88,6 @@ H5VLregister_connector(const H5VL_class_t *cls, hid_t vipl_id)
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Check VOL initialization property list */
-    if (H5P_DEFAULT == vipl_id)
-        vipl_id = H5P_VOL_INITIALIZE_DEFAULT;
     if (NULL == (vipl = H5P_object_verify(vipl_id, H5P_TYPE_VOL_INITIALIZE, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a VOL initialize property list");
 
@@ -145,8 +143,6 @@ H5VLregister_connector_by_name(const char *name, hid_t vipl_id)
                     "zero-length VOL connector name is disallowed");
 
     /* Check VOL initialization property list */
-    if (H5P_DEFAULT == vipl_id)
-        vipl_id = H5P_VOL_INITIALIZE_DEFAULT;
     if (NULL == (vipl = H5P_object_verify(vipl_id, H5P_TYPE_VOL_INITIALIZE, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a VOL initialize property list");
 
@@ -200,8 +196,6 @@ H5VLregister_connector_by_value(H5VL_class_value_t value, hid_t vipl_id)
                     "negative VOL connector value is disallowed");
 
     /* Check VOL initialization property list */
-    if (H5P_DEFAULT == vipl_id)
-        vipl_id = H5P_VOL_INITIALIZE_DEFAULT;
     if (NULL == (vipl = H5P_object_verify(vipl_id, H5P_TYPE_VOL_INITIALIZE, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a VOL initialize property list");
 

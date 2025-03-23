@@ -43,23 +43,12 @@
 /* Local Prototypes */
 /********************/
 
-static herr_t H5L__create_soft_api_common(const char *link_target, hid_t link_loc_id, const char *link_name,
-                                          H5P_genplist_t *lcpl, H5P_genplist_t *lapl, H5P_genplist_t *dxpl,
-                                          void **token_ptr, H5VL_object_t **_vol_obj_ptr);
-static herr_t H5L__create_hard_api_common(hid_t cur_loc_id, const char *cur_name, hid_t new_loc_id,
-                                          const char *new_name, H5P_genplist_t *lcpl, H5P_genplist_t *lapl,
-                                          H5P_genplist_t *dxpl, void **token_ptr, H5VL_connector_t **conn);
-static herr_t H5L__delete_api_common(hid_t loc_id, const char *name, H5P_genplist_t *lapl,
-                                     H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
-static herr_t H5L__delete_by_idx_api_common(hid_t loc_id, const char *group_name, H5_index_t idx_type,
-                                            H5_iter_order_t order, hsize_t n, H5P_genplist_t *lapl,
-                                            H5P_genplist_t *dxpl, void **token_ptr,
-                                            H5VL_object_t **_vol_obj_ptr);
-static herr_t H5L__exists_api_common(hid_t loc_id, const char *name, bool *exists, H5P_genplist_t *lapl,
-                                     H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
-static herr_t H5L__iterate_api_common(hid_t group_id, H5_index_t idx_type, H5_iter_order_t order,
-                                      hsize_t *idx_p, H5L_iterate2_t op, void *op_data, H5P_genplist_t *dxpl,
-                                      void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static herr_t H5L__create_soft_api_common(const char *link_target, hid_t link_loc_id, const char *link_name, H5P_genplist_t *lcpl, H5P_genplist_t *lapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static herr_t H5L__create_hard_api_common(hid_t cur_loc_id, const char *cur_name, hid_t new_loc_id, const char *new_name, H5P_genplist_t *lcpl, H5P_genplist_t *lapl, void **token_ptr, H5VL_connector_t **conn);
+static herr_t H5L__delete_api_common(hid_t loc_id, const char *name, H5P_genplist_t *lapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static herr_t H5L__delete_by_idx_api_common(hid_t loc_id, const char *group_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t n, H5P_genplist_t *lapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static herr_t H5L__exists_api_common(hid_t loc_id, const char *name, bool *exists, H5P_genplist_t *lapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static herr_t H5L__iterate_api_common(hid_t group_id, H5_index_t idx_type, H5_iter_order_t order, hsize_t *idx_p, H5L_iterate2_t op, void *op_data, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
 
 /*********************/
 /* Package Variables */
@@ -97,7 +86,6 @@ H5Lmove(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *ds
     H5VL_loc_params_t loc_params2;
     H5P_genplist_t   *lcpl;     /* Link creation property list */
     H5P_genplist_t   *lapl;     /* Link access property list */
-    H5P_genplist_t   *def_dxpl; /* Default dataset transfer property list */
     H5I_type_t        src_id_type = H5I_BADID, dst_id_type = H5I_BADID;
     herr_t            ret_value = SUCCEED; /* Return value */
 
@@ -126,8 +114,6 @@ H5Lmove(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *ds
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid group (or file) ID, dst_loc_id");
 
     /* Check the link create property list */
-    if (H5P_DEFAULT == lcpl_id)
-        lcpl_id = H5P_LINK_CREATE_DEFAULT;
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -135,18 +121,12 @@ H5Lmove(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *ds
     H5CX_set_lcpl(lcpl_id);
 
     /* Check the link access property list */
-    if (H5P_DEFAULT == lapl_id)
-        lapl_id = H5P_LINK_ACCESS_DEFAULT;
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
     if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, dst_loc_id, true) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTSET, FAIL, "can't set access property list info");
-
-    /* Get the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_LINK, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Set location parameter for source object */
     loc_params1.type                         = H5VL_OBJECT_BY_NAME;
@@ -181,8 +161,7 @@ H5Lmove(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *ds
     }
 
     /* Move the link */
-    if (H5VL_link_move(vol_obj1, &loc_params1, vol_obj2, &loc_params2, lcpl, lapl, def_dxpl,
-                       H5_REQUEST_NULL) < 0)
+    if (H5VL_link_move(vol_obj1, &loc_params1, vol_obj2, &loc_params2, lcpl, lapl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTMOVE, FAIL, "unable to move link");
 
 done:
@@ -210,7 +189,6 @@ H5Lcopy(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *ds
     H5VL_loc_params_t loc_params2;
     H5P_genplist_t   *lcpl;     /* Link creation property list */
     H5P_genplist_t   *lapl;     /* Link access property list */
-    H5P_genplist_t   *def_dxpl; /* Default dataset transfer property list */
     H5I_type_t        src_id_type = H5I_BADID, dst_id_type = H5I_BADID;
     herr_t            ret_value = SUCCEED; /* Return value */
 
@@ -239,8 +217,6 @@ H5Lcopy(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *ds
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid group (or file) ID, dst_loc_id");
 
     /* Check the link create property list */
-    if (H5P_DEFAULT == lcpl_id)
-        lcpl_id = H5P_LINK_CREATE_DEFAULT;
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -248,19 +224,12 @@ H5Lcopy(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *ds
     H5CX_set_lcpl(lcpl_id);
 
     /* Check the link create property list */
-    if (H5P_DEFAULT == lapl_id)
-        lapl_id = H5P_LINK_ACCESS_DEFAULT;
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, ((src_loc_id != H5L_SAME_LOC) ? src_loc_id : dst_loc_id), true) <
-        0)
+    if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, ((src_loc_id != H5L_SAME_LOC) ? src_loc_id : dst_loc_id), true) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTSET, FAIL, "can't set access property list info");
-
-    /* Get the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_LINK, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Set location parameter for source object */
     loc_params1.type                         = H5VL_OBJECT_BY_NAME;
@@ -295,8 +264,7 @@ H5Lcopy(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *ds
     } /* end if */
 
     /* Copy the link */
-    if (H5VL_link_copy(vol_obj1, &loc_params1, vol_obj2, &loc_params2, lcpl, lapl, def_dxpl,
-                       H5_REQUEST_NULL) < 0)
+    if (H5VL_link_copy(vol_obj1, &loc_params1, vol_obj2, &loc_params2, lcpl, lapl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTMOVE, FAIL, "unable to copy link");
 
 done:
@@ -313,9 +281,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5L__create_soft_api_common(const char *link_target, hid_t link_loc_id, const char *link_name,
-                            H5P_genplist_t *lcpl, H5P_genplist_t *lapl, H5P_genplist_t *dxpl,
-                            void **token_ptr, H5VL_object_t **_vol_obj_ptr)
+H5L__create_soft_api_common(const char *link_target, hid_t link_loc_id, const char *link_name, H5P_genplist_t *lcpl, H5P_genplist_t *lapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
 {
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
@@ -350,7 +316,7 @@ H5L__create_soft_api_common(const char *link_target, hid_t link_loc_id, const ch
     vol_cb_args.args.soft.target = link_target;
 
     /* Create the link */
-    if (H5VL_link_create(&vol_cb_args, *vol_obj_ptr, &loc_params, lcpl, lapl, dxpl, token_ptr) < 0)
+    if (H5VL_link_create(&vol_cb_args, *vol_obj_ptr, &loc_params, lcpl, lapl, token_ptr) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTCREATE, FAIL, "unable to create soft link");
 
 done:
@@ -378,33 +344,23 @@ H5Lcreate_soft(const char *link_target, hid_t link_loc_id, const char *link_name
 {
     H5P_genplist_t *lcpl;                /* Link creation property list */
     H5P_genplist_t *lapl;                /* Link access property list */
-    H5P_genplist_t *def_dxpl;            /* Default dataset transfer property list */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the link creation property list */
-    if (H5P_DEFAULT == lcpl_id)
-        lcpl_id = H5P_LINK_CREATE_DEFAULT;
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
-
-    /* Get the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_LINK, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Set the LCPL for the API context */
     H5CX_set_lcpl(lcpl_id);
 
     /* Get the link access property list */
-    if (H5P_DEFAULT == lapl_id)
-        lapl_id = H5P_LINK_ACCESS_DEFAULT;
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Creates a soft link synchronously */
-    if (H5L__create_soft_api_common(link_target, link_loc_id, link_name, lcpl, lapl, def_dxpl, NULL, NULL) <
-        0)
+    if (H5L__create_soft_api_common(link_target, link_loc_id, link_name, lcpl, lapl, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTCREATE, FAIL, "unable to synchronously create soft link");
 
 done:
@@ -427,7 +383,6 @@ H5Lcreate_soft_async(const char *app_file, const char *app_func, unsigned app_li
     H5VL_object_t  *vol_obj = NULL;              /* Object for loc_id */
     H5P_genplist_t *lcpl;                        /* Link creation property list */
     H5P_genplist_t *lapl;                        /* Link access property list */
-    H5P_genplist_t *def_dxpl;                    /* Default dataset transfer property list */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     herr_t          ret_value = SUCCEED;         /* Return value */
@@ -435,21 +390,13 @@ H5Lcreate_soft_async(const char *app_file, const char *app_func, unsigned app_li
     FUNC_ENTER_API(FAIL)
 
     /* Get the link creation property list */
-    if (H5P_DEFAULT == lcpl_id)
-        lcpl_id = H5P_LINK_CREATE_DEFAULT;
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
-
-    /* Get the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_LINK, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Set the LCPL for the API context */
     H5CX_set_lcpl(lcpl_id);
 
     /* Get the link access property list */
-    if (H5P_DEFAULT == lapl_id)
-        lapl_id = H5P_LINK_ACCESS_DEFAULT;
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -458,8 +405,7 @@ H5Lcreate_soft_async(const char *app_file, const char *app_func, unsigned app_li
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Creates a soft link asynchronously */
-    if (H5L__create_soft_api_common(link_target, link_loc_id, link_name, lcpl, lapl, def_dxpl, token_ptr,
-                                    &vol_obj) < 0)
+    if (H5L__create_soft_api_common(link_target, link_loc_id, link_name, lcpl, lapl, token_ptr, &vol_obj) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTCREATE, FAIL, "unable to asynchronously create soft link");
 
     /* If a token was created, add the token to the event set */
@@ -484,9 +430,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5L__create_hard_api_common(hid_t cur_loc_id, const char *cur_name, hid_t link_loc_id, const char *link_name,
-                            H5P_genplist_t *lcpl, H5P_genplist_t *lapl, H5P_genplist_t *dxpl,
-                            void **token_ptr, H5VL_connector_t **connector)
+H5L__create_hard_api_common(hid_t cur_loc_id, const char *cur_name, hid_t link_loc_id, const char *link_name, H5P_genplist_t *lcpl, H5P_genplist_t *lapl, void **token_ptr, H5VL_connector_t **connector)
 {
     H5VL_object_t          *curr_vol_obj = NULL; /* Object of cur_loc_id */
     H5VL_object_t          *link_vol_obj = NULL; /* Object of link_loc_id */
@@ -552,8 +496,7 @@ H5L__create_hard_api_common(hid_t cur_loc_id, const char *cur_name, hid_t link_l
     vol_cb_args.args.hard.curr_loc_params.loc_data.loc_by_name.lapl_id = lapl_id;
 
     /* Create the link */
-    if (H5VL_link_create(&vol_cb_args, (link_vol_obj ? link_vol_obj : curr_vol_obj), &link_loc_params, lcpl,
-                         lapl, dxpl, token_ptr) < 0)
+    if (H5VL_link_create(&vol_cb_args, (link_vol_obj ? link_vol_obj : curr_vol_obj), &link_loc_params, lcpl, lapl, token_ptr) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTCREATE, FAIL, "unable to create hard link");
 
     /* Set the connector to use for async operations */
@@ -583,33 +526,23 @@ H5Lcreate_hard(hid_t cur_loc_id, const char *cur_name, hid_t new_loc_id, const c
 {
     H5P_genplist_t *lcpl;                /* Link creation property list */
     H5P_genplist_t *lapl;                /* Link access property list */
-    H5P_genplist_t *def_dxpl;            /* Default dataset transfer property list */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the link creation property list */
-    if (H5P_DEFAULT == lcpl_id)
-        lcpl_id = H5P_LINK_CREATE_DEFAULT;
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
-
-    /* Get the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_LINK, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Set the LCPL for the API context */
     H5CX_set_lcpl(lcpl_id);
 
     /* Get the link access property list */
-    if (H5P_DEFAULT == lapl_id)
-        lapl_id = H5P_LINK_ACCESS_DEFAULT;
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Creates a hard link synchronously */
-    if (H5L__create_hard_api_common(cur_loc_id, cur_name, new_loc_id, new_name, lcpl, lapl, def_dxpl, NULL,
-                                    NULL) < 0)
+    if (H5L__create_hard_api_common(cur_loc_id, cur_name, new_loc_id, new_name, lcpl, lapl, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTCREATE, FAIL, "unable to synchronously create hard link");
 
 done:
@@ -638,7 +571,6 @@ H5Lcreate_hard_async(const char *app_file, const char *app_func, unsigned app_li
     H5VL_connector_t *connector = NULL;            /* Connector for operation */
     H5P_genplist_t   *lcpl;                        /* Link creation property list */
     H5P_genplist_t   *lapl;                        /* Link access property list */
-    H5P_genplist_t   *def_dxpl;                    /* Default dataset transfer property list */
     void             *token     = NULL;            /* Request token for async operation        */
     void            **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     herr_t            ret_value = SUCCEED;         /* Return value */
@@ -646,21 +578,13 @@ H5Lcreate_hard_async(const char *app_file, const char *app_func, unsigned app_li
     FUNC_ENTER_API(FAIL)
 
     /* Get the link creation property list */
-    if (H5P_DEFAULT == lcpl_id)
-        lcpl_id = H5P_LINK_CREATE_DEFAULT;
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
-
-    /* Get the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_LINK, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Set the LCPL for the API context */
     H5CX_set_lcpl(lcpl_id);
 
     /* Get the link access property list */
-    if (H5P_DEFAULT == lapl_id)
-        lapl_id = H5P_LINK_ACCESS_DEFAULT;
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -669,8 +593,7 @@ H5Lcreate_hard_async(const char *app_file, const char *app_func, unsigned app_li
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Creates a hard link asynchronously */
-    if (H5L__create_hard_api_common(cur_loc_id, cur_name, new_loc_id, new_name, lcpl, lapl, def_dxpl,
-                                    token_ptr, &connector) < 0)
+    if (H5L__create_hard_api_common(cur_loc_id, cur_name, new_loc_id, new_name, lcpl, lapl, token_ptr, &connector) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTCREATE, FAIL, "unable to asynchronously create hard link");
     assert(connector);
 
@@ -710,7 +633,6 @@ H5Lcreate_external(const char *file_name, const char *obj_name, hid_t link_loc_i
     H5VL_object_t          *vol_obj = NULL;       /* Object of loc_id */
     H5P_genplist_t         *lcpl;                 /* Link creation property list */
     H5P_genplist_t         *lapl;                 /* Link access property list */
-    H5P_genplist_t         *def_dxpl;             /* Default dataset transfer property list */
     H5VL_link_create_args_t vol_cb_args;          /* Arguments to VOL callback */
     H5VL_loc_params_t       loc_params;           /* Location parameters for object access */
     char                   *norm_obj_name = NULL; /* Pointer to normalized current name */
@@ -732,8 +654,6 @@ H5Lcreate_external(const char *file_name, const char *obj_name, hid_t link_loc_i
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "no link name specified");
 
     /* Get the link creation property list */
-    if (H5P_DEFAULT == lcpl_id)
-        lcpl_id = H5P_LINK_CREATE_DEFAULT;
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -741,8 +661,6 @@ H5Lcreate_external(const char *file_name, const char *obj_name, hid_t link_loc_i
     H5CX_set_lcpl(lcpl_id);
 
     /* Get the link access property list */
-    if (H5P_DEFAULT == lapl_id)
-        lapl_id = H5P_LINK_ACCESS_DEFAULT;
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -768,10 +686,6 @@ H5Lcreate_external(const char *file_name, const char *obj_name, hid_t link_loc_i
     p += file_name_len;
     strncpy((char *)p, norm_obj_name, buf_size - (file_name_len + 1)); /* External link's object */
 
-    /* Get the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_LINK, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     loc_params.type                         = H5VL_OBJECT_BY_NAME;
     loc_params.loc_data.loc_by_name.name    = link_name;
     loc_params.loc_data.loc_by_name.lapl_id = lapl_id;
@@ -788,7 +702,7 @@ H5Lcreate_external(const char *file_name, const char *obj_name, hid_t link_loc_i
     vol_cb_args.args.ud.buf_size = buf_size;
 
     /* Create an external link */
-    if (H5VL_link_create(&vol_cb_args, vol_obj, &loc_params, lcpl, lapl, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_link_create(&vol_cb_args, vol_obj, &loc_params, lcpl, lapl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTINIT, FAIL, "unable to create external link");
 
 done:
@@ -826,7 +740,6 @@ H5Lcreate_ud(hid_t link_loc_id, const char *link_name, H5L_type_t link_type, con
     H5VL_object_t          *vol_obj = NULL;      /* Object of loc_id */
     H5P_genplist_t         *lcpl;                /* Link creation property list */
     H5P_genplist_t         *lapl;                /* Link access property list */
-    H5P_genplist_t         *def_dxpl;            /* Default dataset transfer property list */
     H5VL_link_create_args_t vol_cb_args;         /* Arguments to VOL callback */
     H5VL_loc_params_t       loc_params;          /* Location parameters for object access */
     herr_t                  ret_value = SUCCEED; /* Return value */
@@ -842,8 +755,6 @@ H5Lcreate_ud(hid_t link_loc_id, const char *link_name, H5L_type_t link_type, con
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "udata cannot be NULL if udata_size is non-zero");
 
     /* Get the link creation property list */
-    if (H5P_DEFAULT == lcpl_id)
-        lcpl_id = H5P_LINK_CREATE_DEFAULT;
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -851,14 +762,8 @@ H5Lcreate_ud(hid_t link_loc_id, const char *link_name, H5L_type_t link_type, con
     H5CX_set_lcpl(lcpl_id);
 
     /* Get the link access property list */
-    if (H5P_DEFAULT == lapl_id)
-        lapl_id = H5P_LINK_ACCESS_DEFAULT;
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
-
-    /* Get the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_LINK, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Verify access property list and set up collective metadata if appropriate */
     if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, link_loc_id, true) < 0)
@@ -880,7 +785,7 @@ H5Lcreate_ud(hid_t link_loc_id, const char *link_name, H5L_type_t link_type, con
     vol_cb_args.args.ud.buf_size = udata_size;
 
     /* Create user-defined link */
-    if (H5VL_link_create(&vol_cb_args, vol_obj, &loc_params, lcpl, lapl, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_link_create(&vol_cb_args, vol_obj, &loc_params, lcpl, lapl, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTINIT, FAIL, "unable to create link");
 
 done:
@@ -897,8 +802,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5L__delete_api_common(hid_t loc_id, const char *name, H5P_genplist_t *lapl, H5P_genplist_t *dxpl,
-                       void **token_ptr, H5VL_object_t **_vol_obj_ptr)
+H5L__delete_api_common(hid_t loc_id, const char *name, H5P_genplist_t *lapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
 {
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
@@ -920,7 +824,7 @@ H5L__delete_api_common(hid_t loc_id, const char *name, H5P_genplist_t *lapl, H5P
     vol_cb_args.op_type = H5VL_LINK_DELETE;
 
     /* Delete link */
-    if (H5VL_link_specific(*vol_obj_ptr, &loc_params, &vol_cb_args, dxpl, token_ptr) < 0)
+    if (H5VL_link_specific(*vol_obj_ptr, &loc_params, &vol_cb_args, token_ptr) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTDELETE, FAIL, "unable to delete link");
 
 done:
@@ -945,23 +849,16 @@ herr_t
 H5Ldelete(hid_t loc_id, const char *name, hid_t lapl_id)
 {
     H5P_genplist_t *lapl;                /* Link access property list */
-    H5P_genplist_t *def_dxpl;            /* Default dataset transfer property list */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Check the link access property list */
-    if (H5P_DEFAULT == lapl_id)
-        lapl_id = H5P_LINK_ACCESS_DEFAULT;
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
 
-    /* Get the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_LINK, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Delete a link synchronously */
-    if (H5L__delete_api_common(loc_id, name, lapl, def_dxpl, NULL, NULL) < 0)
+    if (H5L__delete_api_common(loc_id, name, lapl, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTDELETE, FAIL, "unable to synchronously delete link");
 
 done:
@@ -985,27 +882,20 @@ H5Ldelete_async(const char *app_file, const char *app_func, unsigned app_line, h
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     H5P_genplist_t *lapl;                        /* Link access property list */
-    H5P_genplist_t *def_dxpl;                    /* Default dataset transfer property list */
     herr_t          ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Check the link access property list */
-    if (H5P_DEFAULT == lapl_id)
-        lapl_id = H5P_LINK_ACCESS_DEFAULT;
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
-
-    /* Get the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_LINK, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Delete a link asynchronously */
-    if (H5L__delete_api_common(loc_id, name, lapl, def_dxpl, token_ptr, &vol_obj) < 0)
+    if (H5L__delete_api_common(loc_id, name, lapl, token_ptr, &vol_obj) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTDELETE, FAIL, "unable to asynchronously delete link");
 
     /* If a token was created, add the token to the event set */
@@ -1031,9 +921,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5L__delete_by_idx_api_common(hid_t loc_id, const char *group_name, H5_index_t idx_type,
-                              H5_iter_order_t order, hsize_t n, H5P_genplist_t *lapl, H5P_genplist_t *dxpl,
-                              void **token_ptr, H5VL_object_t **_vol_obj_ptr)
+H5L__delete_by_idx_api_common(hid_t loc_id, const char *group_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t n, H5P_genplist_t *lapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
 {
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
@@ -1060,7 +948,7 @@ H5L__delete_by_idx_api_common(hid_t loc_id, const char *group_name, H5_index_t i
     vol_cb_args.op_type = H5VL_LINK_DELETE;
 
     /* Delete the link */
-    if (H5VL_link_specific(*vol_obj_ptr, &loc_params, &vol_cb_args, dxpl, token_ptr) < 0)
+    if (H5VL_link_specific(*vol_obj_ptr, &loc_params, &vol_cb_args, token_ptr) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTDELETE, FAIL, "unable to delete link");
 
 done:
@@ -1088,23 +976,16 @@ H5Ldelete_by_idx(hid_t loc_id, const char *group_name, H5_index_t idx_type, H5_i
                  hid_t lapl_id)
 {
     H5P_genplist_t *lapl;                /* Link access property list */
-    H5P_genplist_t *def_dxpl;            /* Default dataset transfer property list */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Check the link access property list */
-    if (H5P_DEFAULT == lapl_id)
-        lapl_id = H5P_LINK_ACCESS_DEFAULT;
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
 
-    /* Get the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_LINK, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Delete a link synchronously */
-    if (H5L__delete_by_idx_api_common(loc_id, group_name, idx_type, order, n, lapl, def_dxpl, NULL, NULL) < 0)
+    if (H5L__delete_by_idx_api_common(loc_id, group_name, idx_type, order, n, lapl, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTDELETE, FAIL, "unable to synchronously delete link");
 
 done:
@@ -1129,28 +1010,20 @@ H5Ldelete_by_idx_async(const char *app_file, const char *app_func, unsigned app_
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     H5P_genplist_t *lapl;                        /* Link access property list */
-    H5P_genplist_t *def_dxpl;                    /* Default dataset transfer property list */
     herr_t          ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Check the link access property list */
-    if (H5P_DEFAULT == lapl_id)
-        lapl_id = H5P_LINK_ACCESS_DEFAULT;
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
-
-    /* Get the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_LINK, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Delete a link asynchronously */
-    if (H5L__delete_by_idx_api_common(loc_id, group_name, idx_type, order, n, lapl, def_dxpl, token_ptr,
-                                      &vol_obj) < 0)
+    if (H5L__delete_by_idx_api_common(loc_id, group_name, idx_type, order, n, lapl, token_ptr, &vol_obj) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTDELETE, FAIL, "unable to asynchronously delete link");
 
     /* If a token was created, add the token to the event set */
@@ -1187,7 +1060,6 @@ H5Lget_val(hid_t loc_id, const char *name, void *buf /*out*/, size_t size, hid_t
     H5VL_object_t       *vol_obj = NULL;      /* object of loc_id */
     H5VL_link_get_args_t vol_cb_args;         /* Arguments to VOL callback */
     H5VL_loc_params_t    loc_params;          /* Location parameters for object access */
-    H5P_genplist_t      *def_dxpl;            /* Default dataset transfer property list */
     herr_t               ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1199,10 +1071,6 @@ H5Lget_val(hid_t loc_id, const char *name, void *buf /*out*/, size_t size, hid_t
     /* Verify access property list and set up collective metadata if appropriate */
     if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, loc_id, false) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTSET, FAIL, "can't set access property list info");
-
-    /* Get the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_LINK, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Set up location struct */
     loc_params.type                         = H5VL_OBJECT_BY_NAME;
@@ -1220,7 +1088,7 @@ H5Lget_val(hid_t loc_id, const char *name, void *buf /*out*/, size_t size, hid_t
     vol_cb_args.args.get_val.buf_size = size;
 
     /* Get the link value */
-    if (H5VL_link_get(vol_obj, &loc_params, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_link_get(vol_obj, &loc_params, &vol_cb_args, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTGET, FAIL, "unable to get link value for '%s'", name);
 
 done:
@@ -1249,7 +1117,6 @@ H5Lget_val_by_idx(hid_t loc_id, const char *group_name, H5_index_t idx_type, H5_
     H5VL_object_t       *vol_obj = NULL;      /* object of loc_id */
     H5VL_link_get_args_t vol_cb_args;         /* Arguments to VOL callback */
     H5VL_loc_params_t    loc_params;          /* Location parameters for object access */
-    H5P_genplist_t      *def_dxpl;            /* Default dataset transfer property list */
     herr_t               ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1265,10 +1132,6 @@ H5Lget_val_by_idx(hid_t loc_id, const char *group_name, H5_index_t idx_type, H5_
     /* Verify access property list and set up collective metadata if appropriate */
     if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, loc_id, false) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTSET, FAIL, "can't set access property list info");
-
-    /* Get the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_LINK, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Set up location struct */
     loc_params.type                         = H5VL_OBJECT_BY_IDX;
@@ -1289,7 +1152,7 @@ H5Lget_val_by_idx(hid_t loc_id, const char *group_name, H5_index_t idx_type, H5_
     vol_cb_args.args.get_val.buf_size = size;
 
     /* Get the link value */
-    if (H5VL_link_get(vol_obj, &loc_params, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_link_get(vol_obj, &loc_params, &vol_cb_args, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTGET, FAIL, "unable to get link value");
 
 done:
@@ -1306,8 +1169,7 @@ done:
  *
  *--------------------------------------------------------------------------*/
 static herr_t
-H5L__exists_api_common(hid_t loc_id, const char *name, bool *exists, H5P_genplist_t *lapl,
-                       H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
+H5L__exists_api_common(hid_t loc_id, const char *name, bool *exists, H5P_genplist_t *lapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
 {
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
@@ -1332,7 +1194,7 @@ H5L__exists_api_common(hid_t loc_id, const char *name, bool *exists, H5P_genplis
     vol_cb_args.args.exists.exists = exists;
 
     /* Check for the existence of the link */
-    if (H5VL_link_specific(*vol_obj_ptr, &loc_params, &vol_cb_args, dxpl, token_ptr) < 0)
+    if (H5VL_link_specific(*vol_obj_ptr, &loc_params, &vol_cb_args, token_ptr) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTGET, FAIL, "unable to get link info");
 
 done:
@@ -1352,25 +1214,18 @@ htri_t
 H5Lexists(hid_t loc_id, const char *name, hid_t lapl_id)
 {
     H5P_genplist_t *lapl;             /* Link access property list */
-    H5P_genplist_t *def_dxpl;         /* Default dataset transfer property list */
     bool            exists;           /* Flag to indicate if link exists */
     htri_t          ret_value = FAIL; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Check the link access property list */
-    if (H5P_DEFAULT == lapl_id)
-        lapl_id = H5P_LINK_ACCESS_DEFAULT;
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
 
-    /* Get the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_LINK, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Synchronously check if a link exists */
     exists = false;
-    if (H5L__exists_api_common(loc_id, name, &exists, lapl, def_dxpl, NULL, NULL) < 0)
+    if (H5L__exists_api_common(loc_id, name, &exists, lapl, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTGET, FAIL, "unable to synchronously check link existence");
 
     /* Set return value */
@@ -1396,27 +1251,20 @@ H5Lexists_async(const char *app_file, const char *app_func, unsigned app_line, h
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     H5P_genplist_t *lapl;                        /* Link access property list */
-    H5P_genplist_t *def_dxpl;                    /* Default dataset transfer property list */
     herr_t          ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Check the link access property list */
-    if (H5P_DEFAULT == lapl_id)
-        lapl_id = H5P_LINK_ACCESS_DEFAULT;
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
-
-    /* Get the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_LINK, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Asynchronously check if a link exists */
-    if (H5L__exists_api_common(loc_id, name, exists, lapl, def_dxpl, token_ptr, &vol_obj) < 0)
+    if (H5L__exists_api_common(loc_id, name, exists, lapl, token_ptr, &vol_obj) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTGET, FAIL, "unable to asynchronously check link existence");
 
     /* If a token was created, add the token to the event set */
@@ -1447,7 +1295,6 @@ H5Lget_info2(hid_t loc_id, const char *name, H5L_info2_t *linfo /*out*/, hid_t l
     H5VL_object_t       *vol_obj = NULL;      /* object of loc_id */
     H5VL_link_get_args_t vol_cb_args;         /* Arguments to VOL callback */
     H5VL_loc_params_t    loc_params;          /* Location parameters for object access */
-    H5P_genplist_t      *def_dxpl;            /* Default dataset transfer property list */
     herr_t               ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1459,10 +1306,6 @@ H5Lget_info2(hid_t loc_id, const char *name, H5L_info2_t *linfo /*out*/, hid_t l
     /* Verify access property list and set up collective metadata if appropriate */
     if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, loc_id, true) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTSET, FAIL, "can't set access property list info");
-
-    /* Get the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_LINK, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Set up location struct */
     loc_params.type                         = H5VL_OBJECT_BY_NAME;
@@ -1479,7 +1322,7 @@ H5Lget_info2(hid_t loc_id, const char *name, H5L_info2_t *linfo /*out*/, hid_t l
     vol_cb_args.args.get_info.linfo = linfo;
 
     /* Get the link information */
-    if (H5VL_link_get(vol_obj, &loc_params, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_link_get(vol_obj, &loc_params, &vol_cb_args, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTGET, FAIL, "unable to get link info");
 
 done:
@@ -1504,7 +1347,6 @@ H5Lget_info_by_idx2(hid_t loc_id, const char *group_name, H5_index_t idx_type, H
     H5VL_object_t       *vol_obj = NULL;      /* object of loc_id */
     H5VL_link_get_args_t vol_cb_args;         /* Arguments to VOL callback */
     H5VL_loc_params_t    loc_params;          /* Location parameters for object access */
-    H5P_genplist_t      *def_dxpl;            /* Default dataset transfer property list */
     herr_t               ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1520,10 +1362,6 @@ H5Lget_info_by_idx2(hid_t loc_id, const char *group_name, H5_index_t idx_type, H
     /* Verify access property list and set up collective metadata if appropriate */
     if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, loc_id, false) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTSET, FAIL, "can't set access property list info");
-
-    /* Get the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_LINK, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Set up location struct */
     loc_params.type                         = H5VL_OBJECT_BY_IDX;
@@ -1543,7 +1381,7 @@ H5Lget_info_by_idx2(hid_t loc_id, const char *group_name, H5_index_t idx_type, H
     vol_cb_args.args.get_info.linfo = linfo;
 
     /* Get the link information */
-    if (H5VL_link_get(vol_obj, &loc_params, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_link_get(vol_obj, &loc_params, &vol_cb_args, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTGET, FAIL, "unable to get link info");
 
 done:
@@ -1694,7 +1532,6 @@ H5Lget_name_by_idx(hid_t loc_id, const char *group_name, H5_index_t idx_type, H5
     H5VL_object_t       *vol_obj = NULL;     /* object of loc_id */
     H5VL_link_get_args_t vol_cb_args;        /* Arguments to VOL callback */
     H5VL_loc_params_t    loc_params;         /* Location parameters for object access */
-    H5P_genplist_t      *def_dxpl;           /* Default dataset transfer property list */
     size_t               link_name_len = 0;  /* Length of the link name string */
     ssize_t              ret_value     = -1; /* Return value */
 
@@ -1707,10 +1544,6 @@ H5Lget_name_by_idx(hid_t loc_id, const char *group_name, H5_index_t idx_type, H5
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, (-1), "invalid index type specified");
     if (order <= H5_ITER_UNKNOWN || order >= H5_ITER_N)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, (-1), "invalid iteration order specified");
-
-    /* Get the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_LINK, H5E_BADTYPE, (-1), "not a dataset transfer property list");
 
     /* Verify access property list and set up collective metadata if appropriate */
     if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, loc_id, true) < 0)
@@ -1736,7 +1569,7 @@ H5Lget_name_by_idx(hid_t loc_id, const char *group_name, H5_index_t idx_type, H5
     vol_cb_args.args.get_name.name_len  = &link_name_len;
 
     /* Get the link information */
-    if (H5VL_link_get(vol_obj, &loc_params, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_link_get(vol_obj, &loc_params, &vol_cb_args, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTGET, (-1), "unable to get link name");
 
     /* Set the return value */
@@ -1756,9 +1589,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5L__iterate_api_common(hid_t group_id, H5_index_t idx_type, H5_iter_order_t order, hsize_t *idx_p,
-                        H5L_iterate2_t op, void *op_data, H5P_genplist_t *dxpl, void **token_ptr,
-                        H5VL_object_t **_vol_obj_ptr)
+H5L__iterate_api_common(hid_t group_id, H5_index_t idx_type, H5_iter_order_t order, hsize_t *idx_p, H5L_iterate2_t op, void *op_data, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
 {
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
@@ -1795,7 +1626,7 @@ H5L__iterate_api_common(hid_t group_id, H5_index_t idx_type, H5_iter_order_t ord
     vol_cb_args.args.iterate.op_data   = op_data;
 
     /* Iterate over the links */
-    if ((ret_value = H5VL_link_specific(*vol_obj_ptr, &loc_params, &vol_cb_args, dxpl, token_ptr)) < 0)
+    if ((ret_value = H5VL_link_specific(*vol_obj_ptr, &loc_params, &vol_cb_args, token_ptr)) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_BADITER, FAIL, "link iteration failed");
 
 done:
@@ -1824,18 +1655,12 @@ herr_t
 H5Literate2(hid_t group_id, H5_index_t idx_type, H5_iter_order_t order, hsize_t *idx_p, H5L_iterate2_t op,
             void *op_data)
 {
-    H5P_genplist_t *def_dxpl;  /* Default dataset transfer property list */
     herr_t          ret_value; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_LINK, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Iterate over links synchronously */
-    if ((ret_value = H5L__iterate_api_common(group_id, idx_type, order, idx_p, op, op_data, def_dxpl, NULL,
-                                             NULL)) < 0)
+    if ((ret_value = H5L__iterate_api_common(group_id, idx_type, order, idx_p, op, op_data, NULL, NULL)) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_BADITER, FAIL, "synchronous link iteration failed");
 
 done:
@@ -1866,22 +1691,16 @@ H5Literate_async(const char *app_file, const char *app_func, unsigned app_line, 
     H5VL_object_t  *vol_obj   = NULL;            /* Object for loc_id */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    H5P_genplist_t *def_dxpl;                    /* Default dataset transfer property list */
     herr_t          ret_value;                   /* Return value */
 
     FUNC_ENTER_API(FAIL)
-
-    /* Get the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_LINK, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Iterate over links asynchronously */
-    if ((ret_value = H5L__iterate_api_common(group_id, idx_type, order, idx_p, op, op_data, def_dxpl,
-                                             token_ptr, &vol_obj)) < 0)
+    if ((ret_value = H5L__iterate_api_common(group_id, idx_type, order, idx_p, op, op_data, token_ptr, &vol_obj)) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_BADITER, FAIL, "asynchronous link iteration failed");
 
     /* If a token was created, add the token to the event set */
@@ -1922,7 +1741,6 @@ H5Literate_by_name2(hid_t loc_id, const char *group_name, H5_index_t idx_type, H
     H5VL_object_t            *vol_obj = NULL; /* Object of loc_id */
     H5VL_link_specific_args_t vol_cb_args;    /* Arguments to VOL callback */
     H5VL_loc_params_t         loc_params;     /* Location parameters for object access */
-    H5P_genplist_t           *def_dxpl;       /* Default dataset transfer property list */
     herr_t                    ret_value;      /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1947,10 +1765,6 @@ H5Literate_by_name2(hid_t loc_id, const char *group_name, H5_index_t idx_type, H
     if (NULL == (vol_obj = H5VL_vol_object(loc_id)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid location identifier");
 
-    /* Get the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_LINK, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Set location struct fields */
     loc_params.type                         = H5VL_OBJECT_BY_NAME;
     loc_params.obj_type                     = H5I_get_type(loc_id);
@@ -1967,7 +1781,7 @@ H5Literate_by_name2(hid_t loc_id, const char *group_name, H5_index_t idx_type, H
     vol_cb_args.args.iterate.op_data   = op_data;
 
     /* Iterate over the links */
-    if ((ret_value = H5VL_link_specific(vol_obj, &loc_params, &vol_cb_args, def_dxpl, H5_REQUEST_NULL)) < 0)
+    if ((ret_value = H5VL_link_specific(vol_obj, &loc_params, &vol_cb_args, H5_REQUEST_NULL)) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_BADITER, FAIL, "link iteration failed");
 
 done:
@@ -2005,7 +1819,6 @@ H5Lvisit2(hid_t group_id, H5_index_t idx_type, H5_iter_order_t order, H5L_iterat
     H5VL_object_t            *vol_obj = NULL; /* Object of loc_id */
     H5VL_link_specific_args_t vol_cb_args;    /* Arguments to VOL callback */
     H5VL_loc_params_t         loc_params;     /* Location parameters for object access */
-    H5P_genplist_t           *def_dxpl;       /* Default dataset transfer property list */
     H5I_type_t                id_type;        /* Type of ID */
     herr_t                    ret_value;      /* Return value */
 
@@ -2030,10 +1843,6 @@ H5Lvisit2(hid_t group_id, H5_index_t idx_type, H5_iter_order_t order, H5L_iterat
     if (NULL == (vol_obj = H5VL_vol_object(group_id)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid location identifier");
 
-    /* Get the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_LINK, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Set up VOL callback arguments */
     vol_cb_args.op_type                = H5VL_LINK_ITER;
     vol_cb_args.args.iterate.recursive = true;
@@ -2044,7 +1853,7 @@ H5Lvisit2(hid_t group_id, H5_index_t idx_type, H5_iter_order_t order, H5L_iterat
     vol_cb_args.args.iterate.op_data   = op_data;
 
     /* Iterate over the links */
-    if ((ret_value = H5VL_link_specific(vol_obj, &loc_params, &vol_cb_args, def_dxpl, H5_REQUEST_NULL)) < 0)
+    if ((ret_value = H5VL_link_specific(vol_obj, &loc_params, &vol_cb_args, H5_REQUEST_NULL)) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_BADITER, FAIL, "link visitation failed");
 
 done:
@@ -2083,7 +1892,6 @@ H5Lvisit_by_name2(hid_t loc_id, const char *group_name, H5_index_t idx_type, H5_
     H5VL_object_t            *vol_obj = NULL; /* Object of loc_id */
     H5VL_link_specific_args_t vol_cb_args;    /* Arguments to VOL callback */
     H5VL_loc_params_t         loc_params;     /* Location parameters for object access */
-    H5P_genplist_t           *def_dxpl;       /* Default dataset transfer property list */
     herr_t                    ret_value;      /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2103,10 +1911,6 @@ H5Lvisit_by_name2(hid_t loc_id, const char *group_name, H5_index_t idx_type, H5_
     /* Verify access property list and set up collective metadata if appropriate */
     if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, loc_id, false) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTSET, FAIL, "can't set access property list info");
-
-    /* Get the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_LINK, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* get the location object */
     if (NULL == (vol_obj = H5VL_vol_object(loc_id)))
@@ -2128,7 +1932,7 @@ H5Lvisit_by_name2(hid_t loc_id, const char *group_name, H5_index_t idx_type, H5_
     vol_cb_args.args.iterate.op_data   = op_data;
 
     /* Visit the links */
-    if ((ret_value = H5VL_link_specific(vol_obj, &loc_params, &vol_cb_args, def_dxpl, H5_REQUEST_NULL)) < 0)
+    if ((ret_value = H5VL_link_specific(vol_obj, &loc_params, &vol_cb_args, H5_REQUEST_NULL)) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_BADITER, FAIL, "link visitation failed");
 
 done:

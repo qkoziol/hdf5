@@ -347,7 +347,6 @@ done:
 herr_t
 H5VL__set_def_conn(void)
 {
-    H5P_genplist_t       *def_fapl;                    /* Default file access property list */
     H5P_genclass_t       *def_fapclass;                /* Default file access property class */
     H5VL_connector_prop_t def_vol_prop = {NULL, NULL}; /* VOL connector for default FAPL */
     const char           *env_var;                     /* Environment variable for default VOL connector */
@@ -390,15 +389,9 @@ H5VL__set_def_conn(void)
                 HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "can't get VOL connector ID");
         } /* end else-if */
         else {
-            H5P_genplist_t *def_vipl; /* Default VOL initialization property list */
-
-            /* Get the default VOL initialization property list */
-            if (NULL == (def_vipl = H5I_object(H5P_VOL_INITIALIZE_DEFAULT)))
-                HGOTO_ERROR(H5E_VOL, H5E_BADTYPE, FAIL, "not a VOL initialize property list");
-
             /* Register the VOL connector */
             /* (NOTE: No provisions for vipl_id currently) */
-            if (NULL == (connector = H5VL__register_connector_by_name(tok, def_vipl)))
+            if (NULL == (connector = H5VL__register_connector_by_name(tok, H5P_LST_VOL_INITIALIZE_g)))
                 HGOTO_ERROR(H5E_VOL, H5E_CANTREGISTER, FAIL, "can't register connector");
         } /* end else */
 
@@ -416,16 +409,12 @@ H5VL__set_def_conn(void)
             HGOTO_ERROR(H5E_VOL, H5E_CANTINC, FAIL, "can't increment ref count on VFD driver");
     } /* end else */
 
-    /* Get default file access plist */
-    if (NULL == (def_fapl = H5I_object(H5P_FILE_ACCESS_DEFAULT)))
-        HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for default fapl ID");
-
     /* Change the default VOL for the default FAPL */
-    if (H5P_set_vol(def_fapl, connector, vol_info) < 0)
+    if (H5P_set_vol(H5P_LST_FILE_ACCESS_g, connector, vol_info) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTSET, FAIL, "can't set default VOL connector for default FAPL");
 
     /* Get the [updated] connector property to use for the class */
-    if (H5P_peek(def_fapl, H5F_ACS_VOL_CONN_NAME, &def_vol_prop) < 0)
+    if (H5P_peek(H5P_LST_FILE_ACCESS_g, H5F_ACS_VOL_CONN_NAME, &def_vol_prop) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "can't get VOL connector info");
 
     /* Get default file access pclass */
@@ -434,8 +423,7 @@ H5VL__set_def_conn(void)
 
     /* Change the default VOL for the default file access pclass */
     if (H5P_reset_vol_class(def_fapclass, &def_vol_prop) < 0)
-        HGOTO_ERROR(H5E_VOL, H5E_CANTSET, FAIL,
-                    "can't set default VOL connector for default file access property class");
+        HGOTO_ERROR(H5E_VOL, H5E_CANTSET, FAIL, "can't set default VOL connector for default file access property class");
 
 done:
     /* Release VOL connector used for default FAPL */
@@ -1168,7 +1156,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_close_object(H5VL_object_t *vol_obj, H5I_type_t type, H5P_genplist_t *dxpl)
+H5VL_close_object(H5VL_object_t *vol_obj, H5I_type_t type)
 {
     herr_t ret_value = SUCCEED; /* Return value */
 
@@ -1181,13 +1169,13 @@ H5VL_close_object(H5VL_object_t *vol_obj, H5I_type_t type, H5P_genplist_t *dxpl)
     switch (type) {
         case H5I_GROUP:
             /* Close the group */
-            if (H5VL_group_close(vol_obj, dxpl, H5_REQUEST_NULL) < 0)
+            if (H5VL_group_close(vol_obj, H5_REQUEST_NULL) < 0)
                 HGOTO_ERROR(H5E_VOL, H5E_CLOSEERROR, FAIL, "unable to close group");
             break;
 
         case H5I_DATASET:
             /* Close the dataset */
-            if (H5VL_dataset_close(vol_obj, dxpl, H5_REQUEST_NULL) < 0)
+            if (H5VL_dataset_close(vol_obj, H5_REQUEST_NULL) < 0)
                 HGOTO_ERROR(H5E_VOL, H5E_CLOSEERROR, FAIL, "unable to close dataset");
             break;
 
@@ -1199,7 +1187,7 @@ H5VL_close_object(H5VL_object_t *vol_obj, H5I_type_t type, H5P_genplist_t *dxpl)
             vol_cb_args.args    = NULL;
 
             /* Close the map */
-            if (H5VL_optional(vol_obj, &vol_cb_args, dxpl, H5_REQUEST_NULL) < 0)
+            if (H5VL_optional(vol_obj, &vol_cb_args, H5P_LST_DATASET_XFER_g, H5_REQUEST_NULL) < 0)
                 HGOTO_ERROR(H5E_VOL, H5E_CLOSEERROR, FAIL, "unable to close map");
 
             break;
@@ -1207,7 +1195,7 @@ H5VL_close_object(H5VL_object_t *vol_obj, H5I_type_t type, H5P_genplist_t *dxpl)
 
         case H5I_DATATYPE:
             /* Close the connector-managed datatype data */
-            if (H5VL_datatype_close(vol_obj, dxpl, H5_REQUEST_NULL) < 0)
+            if (H5VL_datatype_close(vol_obj, H5_REQUEST_NULL) < 0)
                 HGOTO_ERROR(H5E_VOL, H5E_CLOSEERROR, FAIL, "unable to close datatype");
             break;
 
@@ -1323,15 +1311,10 @@ H5VL_file_is_same(const H5VL_object_t *vol_obj1, const H5VL_object_t *vol_obj2, 
     else {
         void                     *obj2;        /* Terminal object for second file */
         H5VL_file_specific_args_t vol_cb_args; /* Arguments to VOL callback */
-        H5P_genplist_t           *def_dxpl;    /* Default transfer property list */
 
         /* Get unwrapped (terminal) object for vol_obj2 */
         if (NULL == (obj2 = H5VL_object_data(vol_obj2)))
             HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "can't get unwrapped object");
-
-        /* Set up default transfer property list */
-        if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-            HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "can't get default transfer property list");
 
         /* Set up VOL callback arguments */
         vol_cb_args.op_type                 = H5VL_FILE_IS_EQUAL;
@@ -1339,7 +1322,7 @@ H5VL_file_is_same(const H5VL_object_t *vol_obj1, const H5VL_object_t *vol_obj2, 
         vol_cb_args.args.is_equal.same_file = same_file;
 
         /* Make 'are files equal' callback */
-        if (H5VL_file_specific(vol_obj1, &vol_cb_args, def_dxpl, NULL) < 0)
+        if (H5VL_file_specific(vol_obj1, &vol_cb_args, NULL) < 0)
             HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "file specific failed");
     } /* end else */
 

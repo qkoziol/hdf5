@@ -46,46 +46,21 @@
 /********************/
 
 /* Helper routines for sync/async API calls */
-static hid_t  H5A__create_common(H5VL_object_t *vol_obj, H5VL_loc_params_t *loc_params, const char *attr_name,
-                                 hid_t type_id, hid_t space_id, H5P_genplist_t *acpl, H5P_genplist_t *aapl,
-                                 H5P_genplist_t *dxpl, void **token_ptr);
-static hid_t  H5A__create_api_common(hid_t loc_id, const char *attr_name, hid_t type_id, hid_t space_id,
-                                     H5P_genplist_t *acpl, H5P_genplist_t *aapl, H5P_genplist_t *dxpl,
-                                     void **token_ptr, H5VL_object_t **_vol_obj_ptr);
-static hid_t  H5A__create_by_name_api_common(hid_t loc_id, const char *obj_name, const char *attr_name,
-                                             hid_t type_id, hid_t space_id, H5P_genplist_t *acpl,
-                                             H5P_genplist_t *aapl, H5P_genplist_t *lapl, H5P_genplist_t *dxpl,
-                                             void **token_ptr, H5VL_object_t **_vol_obj_ptr);
-static hid_t  H5A__open_common(H5VL_object_t *vol_obj, H5VL_loc_params_t *loc_params, const char *attr_name,
-                               H5P_genplist_t *aapl, H5P_genplist_t *dxpl, void **token_ptr);
-static hid_t  H5A__open_api_common(hid_t loc_id, const char *attr_name, H5P_genplist_t *aapl,
-                                   H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
-static hid_t  H5A__open_by_name_api_common(hid_t loc_id, const char *obj_name, const char *attr_name,
-                                           H5P_genplist_t *aapl, H5P_genplist_t *lapl, H5P_genplist_t *dxpl,
-                                           void **token_ptr, H5VL_object_t **_vol_obj_ptr);
-static hid_t  H5A__open_by_idx_api_common(hid_t loc_id, const char *obj_name, H5_index_t idx_type,
-                                          H5_iter_order_t order, hsize_t n, H5P_genplist_t *aapl,
-                                          H5P_genplist_t *lapl, H5P_genplist_t *dxpl, void **token_ptr,
-                                          H5VL_object_t **_vol_obj_ptr);
-static herr_t H5A__write_api_common(hid_t attr_id, hid_t type_id, const void *buf, H5P_genplist_t *dxpl,
-                                    void **token_ptr, H5VL_object_t **_vol_obj_ptr);
-static herr_t H5A__read_api_common(hid_t attr_id, hid_t dtype_id, void *buf, H5P_genplist_t *dxpl,
-                                   void **token_ptr, H5VL_object_t **_vol_obj_ptr);
-static herr_t H5A__rename_common(H5VL_object_t *vol_obj, H5VL_loc_params_t *loc_params, const char *old_name,
-                                 const char *new_name, H5P_genplist_t *dxpl, void **token_ptr);
-static herr_t H5A__rename_api_common(hid_t loc_id, const char *old_name, const char *new_name,
-                                     H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
-static herr_t H5A__rename_by_name_api_common(hid_t loc_id, const char *obj_name, const char *old_attr_name,
-                                             const char *new_attr_name, H5P_genplist_t *lapl,
-                                             H5P_genplist_t *dxpl, void **token_ptr,
-                                             H5VL_object_t **_vol_obj_ptr);
-static herr_t H5A__exists_common(H5VL_object_t *vol_obj, H5VL_loc_params_t *loc_params, const char *attr_name,
-                                 bool *attr_exists, H5P_genplist_t *dxpl, void **token_ptr);
-static herr_t H5A__exists_api_common(hid_t obj_id, const char *attr_name, bool *attr_exists,
-                                     H5P_genplist_t *dxpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
-static herr_t H5A__exists_by_name_api_common(hid_t obj_id, const char *obj_name, const char *attr_name,
-                                             bool *attr_exists, H5P_genplist_t *lapl, H5P_genplist_t *dxpl,
-                                             void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static hid_t  H5A__create_common(H5VL_object_t *vol_obj, H5VL_loc_params_t *loc_params, const char *attr_name, hid_t type_id, hid_t space_id, H5P_genplist_t *acpl, H5P_genplist_t *aapl, void **token_ptr);
+static hid_t  H5A__create_api_common(hid_t loc_id, const char *attr_name, hid_t type_id, hid_t space_id, H5P_genplist_t *acpl, H5P_genplist_t *aapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static hid_t  H5A__create_by_name_api_common(hid_t loc_id, const char *obj_name, const char *attr_name, hid_t type_id, hid_t space_id, H5P_genplist_t *acpl, H5P_genplist_t *aapl, H5P_genplist_t *lapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static hid_t  H5A__open_common(H5VL_object_t *vol_obj, H5VL_loc_params_t *loc_params, const char *attr_name, H5P_genplist_t *aapl, void **token_ptr);
+static hid_t  H5A__open_api_common(hid_t loc_id, const char *attr_name, H5P_genplist_t *aapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static hid_t  H5A__open_by_name_api_common(hid_t loc_id, const char *obj_name, const char *attr_name, H5P_genplist_t *aapl, H5P_genplist_t *lapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static hid_t  H5A__open_by_idx_api_common(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t n, H5P_genplist_t *aapl, H5P_genplist_t *lapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static herr_t H5A__write_api_common(hid_t attr_id, hid_t type_id, const void *buf, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static herr_t H5A__read_api_common(hid_t attr_id, hid_t dtype_id, void *buf, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static herr_t H5A__rename_common(H5VL_object_t *vol_obj, H5VL_loc_params_t *loc_params, const char *old_name, const char *new_name, void **token_ptr);
+static herr_t H5A__rename_api_common(hid_t loc_id, const char *old_name, const char *new_name, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static herr_t H5A__rename_by_name_api_common(hid_t loc_id, const char *obj_name, const char *old_attr_name, const char *new_attr_name, H5P_genplist_t *lapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static herr_t H5A__exists_common(H5VL_object_t *vol_obj, H5VL_loc_params_t *loc_params, const char *attr_name, bool *attr_exists, void **token_ptr);
+static herr_t H5A__exists_api_common(hid_t obj_id, const char *attr_name, bool *attr_exists, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static herr_t H5A__exists_by_name_api_common(hid_t obj_id, const char *obj_name, const char *attr_name, bool *attr_exists, H5P_genplist_t *lapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
 
 /*********************/
 /* Package Variables */
@@ -112,7 +87,7 @@ static herr_t H5A__exists_by_name_api_common(hid_t obj_id, const char *obj_name,
 static hid_t
 H5A__create_common(H5VL_object_t *vol_obj, H5VL_loc_params_t *loc_params, const char *attr_name,
                    hid_t type_id, hid_t space_id, H5P_genplist_t *acpl, H5P_genplist_t *aapl,
-                   H5P_genplist_t *dxpl, void **token_ptr)
+                   void **token_ptr)
 {
     void *attr      = NULL;            /* Attribute created */
     hid_t ret_value = H5I_INVALID_HID; /* Return value */
@@ -125,8 +100,7 @@ H5A__create_common(H5VL_object_t *vol_obj, H5VL_loc_params_t *loc_params, const 
     assert(attr_name);
 
     /* Create the attribute */
-    if (NULL == (attr = H5VL_attr_create(vol_obj, loc_params, attr_name, type_id, space_id, acpl, aapl, dxpl,
-                                         token_ptr)))
+    if (NULL == (attr = H5VL_attr_create(vol_obj, loc_params, attr_name, type_id, space_id, acpl, aapl, token_ptr)))
         HGOTO_ERROR(H5E_ATTR, H5E_CANTINIT, H5I_INVALID_HID, "unable to create attribute");
 
     /* Register the new attribute and get an ID for it */
@@ -136,7 +110,7 @@ H5A__create_common(H5VL_object_t *vol_obj, H5VL_loc_params_t *loc_params, const 
 done:
     /* Cleanup on failure */
     if (H5I_INVALID_HID == ret_value)
-        if (attr && H5VL_attr_close(vol_obj, dxpl, H5_REQUEST_NULL) < 0)
+        if (attr && H5VL_attr_close(vol_obj, H5_REQUEST_NULL) < 0)
             HDONE_ERROR(H5E_ATTR, H5E_CLOSEERROR, H5I_INVALID_HID, "can't close attribute");
 
     FUNC_LEAVE_NOAPI(ret_value)
@@ -153,9 +127,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static hid_t
-H5A__create_api_common(hid_t loc_id, const char *attr_name, hid_t type_id, hid_t space_id,
-                       H5P_genplist_t *acpl, H5P_genplist_t *aapl, H5P_genplist_t *dxpl, void **token_ptr,
-                       H5VL_object_t **_vol_obj_ptr)
+H5A__create_api_common(hid_t loc_id, const char *attr_name, hid_t type_id, hid_t space_id, H5P_genplist_t *acpl, H5P_genplist_t *aapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
 {
     hid_t           aapl_id;            /* ID for attribute access property list */
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
@@ -180,8 +152,7 @@ H5A__create_api_common(hid_t loc_id, const char *attr_name, hid_t type_id, hid_t
         HGOTO_ERROR(H5E_ATTR, H5E_CANTSET, H5I_INVALID_HID, "can't set object access arguments");
 
     /* Create the attribute */
-    if ((ret_value = H5A__create_common(*vol_obj_ptr, &loc_params, attr_name, type_id, space_id, acpl, aapl,
-                                        dxpl, token_ptr)) < 0)
+    if ((ret_value = H5A__create_common(*vol_obj_ptr, &loc_params, attr_name, type_id, space_id, acpl, aapl, token_ptr)) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTCREATE, H5I_INVALID_HID, "unable to create attribute");
 
 done:
@@ -224,32 +195,22 @@ done:
 hid_t
 H5Acreate2(hid_t loc_id, const char *attr_name, hid_t type_id, hid_t space_id, hid_t acpl_id, hid_t aapl_id)
 {
-    H5P_genplist_t *def_dxpl;                    /* Default dataset transfer property list */
-    H5P_genplist_t *acpl;                        /* Attribute creation property list */
+    H5P_genplist_t *acpl;                        /* Attribute creatproperty list */
     H5P_genplist_t *aapl;                        /* Attribute access property list */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Get the pointer to the attribute creation property list */
-    if (H5P_DEFAULT == acpl_id)
-        acpl_id = H5P_ATTRIBUTE_CREATE_DEFAULT;
     if (NULL == (acpl = H5P_object_verify(acpl_id, H5P_TYPE_ATTRIBUTE_CREATE, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute creation property list");
 
     /* Get the pointer to the attribute access property list */
-    if (H5P_DEFAULT == aapl_id)
-        aapl_id = H5P_ATTRIBUTE_ACCESS_DEFAULT;
     if (NULL == (aapl = H5P_object_verify(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute access property list");
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
-
     /* Create the attribute synchronously */
-    if ((ret_value = H5A__create_api_common(loc_id, attr_name, type_id, space_id, acpl, aapl, def_dxpl, NULL,
-                                            NULL)) < 0)
+    if ((ret_value = H5A__create_api_common(loc_id, attr_name, type_id, space_id, acpl, aapl, NULL, NULL)) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTCREATE, H5I_INVALID_HID, "unable to synchronously create attribute");
 
 done:
@@ -274,7 +235,6 @@ H5Acreate_async(const char *app_file, const char *app_func, unsigned app_line, h
     H5VL_object_t  *vol_obj   = NULL;            /* Object for loc_id */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    H5P_genplist_t *def_dxpl;                    /* Default dataset transfer property list */
     H5P_genplist_t *acpl;                        /* Attribute creation property list */
     H5P_genplist_t *aapl;                        /* Attribute access property list */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
@@ -282,28 +242,19 @@ H5Acreate_async(const char *app_file, const char *app_func, unsigned app_line, h
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Get the pointer to the attribute creation property list */
-    if (H5P_DEFAULT == acpl_id)
-        acpl_id = H5P_ATTRIBUTE_CREATE_DEFAULT;
     if (NULL == (acpl = H5P_object_verify(acpl_id, H5P_TYPE_ATTRIBUTE_CREATE, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute creation property list");
 
     /* Get the pointer to the attribute access property list */
-    if (H5P_DEFAULT == aapl_id)
-        aapl_id = H5P_ATTRIBUTE_ACCESS_DEFAULT;
     if (NULL == (aapl = H5P_object_verify(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute access property list");
-
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Create the attribute asynchronously */
-    if ((ret_value = H5A__create_api_common(loc_id, attr_name, type_id, space_id, acpl, aapl, def_dxpl,
-                                            token_ptr, &vol_obj)) < 0)
+    if ((ret_value = H5A__create_api_common(loc_id, attr_name, type_id, space_id, acpl, aapl, token_ptr, &vol_obj)) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTCREATE, H5I_INVALID_HID, "unable to asynchronously create attribute");
 
     /* If a token was created, add the token to the event set */
@@ -332,10 +283,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static hid_t
-H5A__create_by_name_api_common(hid_t loc_id, const char *obj_name, const char *attr_name, hid_t type_id,
-                               hid_t space_id, H5P_genplist_t *acpl, H5P_genplist_t *aapl,
-                               H5P_genplist_t *lapl, H5P_genplist_t *dxpl, void **token_ptr,
-                               H5VL_object_t **_vol_obj_ptr)
+H5A__create_by_name_api_common(hid_t loc_id, const char *obj_name, const char *attr_name, hid_t type_id, hid_t space_id, H5P_genplist_t *acpl, H5P_genplist_t *aapl, H5P_genplist_t *lapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
 {
     hid_t           aapl_id;            /* ID for attribute access property list */
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
@@ -365,8 +313,7 @@ H5A__create_by_name_api_common(hid_t loc_id, const char *obj_name, const char *a
         HGOTO_ERROR(H5E_ATTR, H5E_CANTSET, H5I_INVALID_HID, "can't set attribute access property list info");
 
     /* Create the attribute */
-    if ((ret_value = H5A__create_common(*vol_obj_ptr, &loc_params, attr_name, type_id, space_id, acpl, aapl,
-                                        dxpl, token_ptr)) < 0)
+    if ((ret_value = H5A__create_common(*vol_obj_ptr, &loc_params, attr_name, type_id, space_id, acpl, aapl, token_ptr)) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTCREATE, H5I_INVALID_HID, "unable to create attribute");
 
 done:
@@ -408,7 +355,6 @@ H5Acreate_by_name(hid_t loc_id, const char *obj_name, const char *attr_name, hid
                   hid_t acpl_id, hid_t aapl_id, hid_t lapl_id)
 {
     H5P_genplist_t *lapl;                        /* Link access property list */
-    H5P_genplist_t *def_dxpl;                    /* Default dataset transfer property list */
     H5P_genplist_t *acpl;                        /* Attribute creation property list */
     H5P_genplist_t *aapl;                        /* Attribute access property list */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
@@ -416,30 +362,19 @@ H5Acreate_by_name(hid_t loc_id, const char *obj_name, const char *attr_name, hid
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Check the link access property list */
-    if (H5P_DEFAULT == lapl_id)
-        lapl_id = H5P_LINK_ACCESS_DEFAULT;
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Get the pointer to the attribute creation property list */
-    if (H5P_DEFAULT == acpl_id)
-        acpl_id = H5P_ATTRIBUTE_CREATE_DEFAULT;
     if (NULL == (acpl = H5P_object_verify(acpl_id, H5P_TYPE_ATTRIBUTE_CREATE, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute creation property list");
 
     /* Get the pointer to the attribute access property list */
-    if (H5P_DEFAULT == aapl_id)
-        aapl_id = H5P_ATTRIBUTE_ACCESS_DEFAULT;
     if (NULL == (aapl = H5P_object_verify(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute access property list");
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
-
     /* Create the attribute synchronously */
-    if ((ret_value = H5A__create_by_name_api_common(loc_id, obj_name, attr_name, type_id, space_id, acpl,
-                                                    aapl, lapl, def_dxpl, NULL, NULL)) < 0)
+    if ((ret_value = H5A__create_by_name_api_common(loc_id, obj_name, attr_name, type_id, space_id, acpl, aapl, lapl, NULL, NULL)) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTCREATE, H5I_INVALID_HID, "unable to synchronously create attribute");
 
 done:
@@ -465,7 +400,6 @@ H5Acreate_by_name_async(const char *app_file, const char *app_func, unsigned app
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     H5P_genplist_t *lapl;                        /* Link access property list */
-    H5P_genplist_t *def_dxpl;                    /* Default dataset transfer property list */
     H5P_genplist_t *acpl;                        /* Attribute creation property list */
     H5P_genplist_t *aapl;                        /* Attribute access property list */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
@@ -473,34 +407,23 @@ H5Acreate_by_name_async(const char *app_file, const char *app_func, unsigned app
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Check the link access property list */
-    if (H5P_DEFAULT == lapl_id)
-        lapl_id = H5P_LINK_ACCESS_DEFAULT;
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Get the pointer to the attribute creation property list */
-    if (H5P_DEFAULT == acpl_id)
-        acpl_id = H5P_ATTRIBUTE_CREATE_DEFAULT;
     if (NULL == (acpl = H5P_object_verify(acpl_id, H5P_TYPE_ATTRIBUTE_CREATE, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute creation property list");
 
     /* Get the pointer to the attribute access property list */
-    if (H5P_DEFAULT == aapl_id)
-        aapl_id = H5P_ATTRIBUTE_ACCESS_DEFAULT;
     if (NULL == (aapl = H5P_object_verify(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute access property list");
-
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Create the attribute asynchronously */
-    if ((ret_value = H5A__create_by_name_api_common(loc_id, obj_name, attr_name, type_id, space_id, acpl,
-                                                    aapl, lapl, def_dxpl, token_ptr, &vol_obj)) < 0)
+    if ((ret_value = H5A__create_by_name_api_common(loc_id, obj_name, attr_name, type_id, space_id, acpl, aapl, lapl, token_ptr, &vol_obj)) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTCREATE, H5I_INVALID_HID, "unable to asynchronously create attribute");
 
     /* If a token was created, add the token to the event set */
@@ -529,8 +452,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static hid_t
-H5A__open_common(H5VL_object_t *vol_obj, H5VL_loc_params_t *loc_params, const char *attr_name,
-                 H5P_genplist_t *aapl, H5P_genplist_t *dxpl, void **token_ptr)
+H5A__open_common(H5VL_object_t *vol_obj, H5VL_loc_params_t *loc_params, const char *attr_name, H5P_genplist_t *aapl, void **token_ptr)
 {
     void *attr      = NULL; /* attr object from VOL connector */
     hid_t ret_value = H5I_INVALID_HID;
@@ -542,7 +464,7 @@ H5A__open_common(H5VL_object_t *vol_obj, H5VL_loc_params_t *loc_params, const ch
     assert(loc_params);
 
     /* Open the attribute */
-    if (NULL == (attr = H5VL_attr_open(vol_obj, loc_params, attr_name, aapl, dxpl, token_ptr)))
+    if (NULL == (attr = H5VL_attr_open(vol_obj, loc_params, attr_name, aapl, token_ptr)))
         HGOTO_ERROR(H5E_ATTR, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open attribute: '%s'", attr_name);
 
     /* Register the attribute and get an ID for it */
@@ -552,7 +474,7 @@ H5A__open_common(H5VL_object_t *vol_obj, H5VL_loc_params_t *loc_params, const ch
 done:
     /* Cleanup on failure */
     if (H5I_INVALID_HID == ret_value)
-        if (attr && H5VL_attr_close(vol_obj, dxpl, H5_REQUEST_NULL) < 0)
+        if (attr && H5VL_attr_close(vol_obj, H5_REQUEST_NULL) < 0)
             HDONE_ERROR(H5E_ATTR, H5E_CLOSEERROR, H5I_INVALID_HID, "can't close attribute");
 
     FUNC_LEAVE_NOAPI(ret_value)
@@ -569,8 +491,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static hid_t
-H5A__open_api_common(hid_t loc_id, const char *attr_name, H5P_genplist_t *aapl, H5P_genplist_t *dxpl,
-                     void **token_ptr, H5VL_object_t **_vol_obj_ptr)
+H5A__open_api_common(hid_t loc_id, const char *attr_name, H5P_genplist_t *aapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
 {
     hid_t           aapl_id;            /* ID for attribute access property list */
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
@@ -595,7 +516,7 @@ H5A__open_api_common(hid_t loc_id, const char *attr_name, H5P_genplist_t *aapl, 
         HGOTO_ERROR(H5E_ATTR, H5E_CANTSET, H5I_INVALID_HID, "can't set object access arguments");
 
     /* Open the attribute */
-    if ((ret_value = H5A__open_common(*vol_obj_ptr, &loc_params, attr_name, aapl, dxpl, token_ptr)) < 0)
+    if ((ret_value = H5A__open_common(*vol_obj_ptr, &loc_params, attr_name, aapl, token_ptr)) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open attribute: '%s'", attr_name);
 
 done:
@@ -625,23 +546,16 @@ hid_t
 H5Aopen(hid_t loc_id, const char *attr_name, hid_t aapl_id)
 {
     H5P_genplist_t *aapl;     /* Attribute access property list */
-    H5P_genplist_t *def_dxpl; /* Default dataset transfer property list */
     hid_t           ret_value = H5I_INVALID_HID;
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Get the pointer to the attribute access property list */
-    if (H5P_DEFAULT == aapl_id)
-        aapl_id = H5P_ATTRIBUTE_ACCESS_DEFAULT;
     if (NULL == (aapl = H5P_object_verify(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute access property list");
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
-
     /* Open the attribute synchronously */
-    if ((ret_value = H5A__open_api_common(loc_id, attr_name, aapl, def_dxpl, NULL, NULL)) < 0)
+    if ((ret_value = H5A__open_api_common(loc_id, attr_name, aapl, NULL, NULL)) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTCREATE, H5I_INVALID_HID, "unable to synchronously open attribute");
 
 done:
@@ -666,14 +580,11 @@ H5Aopen_async(const char *app_file, const char *app_func, unsigned app_line, hid
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     H5P_genplist_t *aapl;                        /* Attribute access property list */
-    H5P_genplist_t *def_dxpl;                    /* Default dataset transfer property list */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Get the pointer to the attribute access property list */
-    if (H5P_DEFAULT == aapl_id)
-        aapl_id = H5P_ATTRIBUTE_ACCESS_DEFAULT;
     if (NULL == (aapl = H5P_object_verify(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute access property list");
 
@@ -681,12 +592,8 @@ H5Aopen_async(const char *app_file, const char *app_func, unsigned app_line, hid
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
-
     /* Open the attribute asynchronously */
-    if ((ret_value = H5A__open_api_common(loc_id, attr_name, aapl, def_dxpl, token_ptr, &vol_obj)) < 0)
+    if ((ret_value = H5A__open_api_common(loc_id, attr_name, aapl, token_ptr, &vol_obj)) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTCREATE, H5I_INVALID_HID, "unable to asynchronously open attribute");
 
     /* If a token was created, add the token to the event set */
@@ -715,9 +622,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static hid_t
-H5A__open_by_name_api_common(hid_t loc_id, const char *obj_name, const char *attr_name, H5P_genplist_t *aapl,
-                             H5P_genplist_t *lapl, H5P_genplist_t *dxpl, void **token_ptr,
-                             H5VL_object_t **_vol_obj_ptr)
+H5A__open_by_name_api_common(hid_t loc_id, const char *obj_name, const char *attr_name, H5P_genplist_t *aapl, H5P_genplist_t *lapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
 {
     hid_t           aapl_id;            /* ID for attribute access property list */
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
@@ -746,7 +651,7 @@ H5A__open_by_name_api_common(hid_t loc_id, const char *obj_name, const char *att
         HGOTO_ERROR(H5E_ATTR, H5E_CANTSET, H5I_INVALID_HID, "can't set attribute access property list info");
 
     /* Open the attribute */
-    if ((ret_value = H5A__open_common(*vol_obj_ptr, &loc_params, attr_name, aapl, dxpl, token_ptr)) < 0)
+    if ((ret_value = H5A__open_common(*vol_obj_ptr, &loc_params, attr_name, aapl, token_ptr)) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open attribute: '%s'", attr_name);
 
 done:
@@ -779,30 +684,20 @@ H5Aopen_by_name(hid_t loc_id, const char *obj_name, const char *attr_name, hid_t
 {
     H5P_genplist_t *aapl;     /* Attribute access property list */
     H5P_genplist_t *lapl;     /* Link access property list */
-    H5P_genplist_t *def_dxpl; /* Default dataset transfer property list */
     hid_t           ret_value = H5I_INVALID_HID;
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Get the pointer to the attribute access property list */
-    if (H5P_DEFAULT == aapl_id)
-        aapl_id = H5P_ATTRIBUTE_ACCESS_DEFAULT;
     if (NULL == (aapl = H5P_object_verify(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute access property list");
 
     /* Check the link access property list */
-    if (H5P_DEFAULT == lapl_id)
-        lapl_id = H5P_LINK_ACCESS_DEFAULT;
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
-
-    /* Open the attribute by name asynchronously */
-    if ((ret_value =
-             H5A__open_by_name_api_common(loc_id, obj_name, attr_name, aapl, lapl, def_dxpl, NULL, NULL)) < 0)
+    /* Open the attribute by name synchronously */
+    if ((ret_value = H5A__open_by_name_api_common(loc_id, obj_name, attr_name, aapl, lapl, NULL, NULL)) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to synchronously open attribute");
 
 done:
@@ -828,34 +723,24 @@ H5Aopen_by_name_async(const char *app_file, const char *app_func, unsigned app_l
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     H5P_genplist_t *aapl;                        /* Attribute access property list */
     H5P_genplist_t *lapl;                        /* Link access property list */
-    H5P_genplist_t *def_dxpl;                    /* Default dataset transfer property list */
     hid_t           ret_value = H5I_INVALID_HID;
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Get the pointer to the attribute access property list */
-    if (H5P_DEFAULT == aapl_id)
-        aapl_id = H5P_ATTRIBUTE_ACCESS_DEFAULT;
     if (NULL == (aapl = H5P_object_verify(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute access property list");
 
     /* Check the link access property list */
-    if (H5P_DEFAULT == lapl_id)
-        lapl_id = H5P_LINK_ACCESS_DEFAULT;
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
-
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Open the attribute by name asynchronously */
-    if ((ret_value = H5A__open_by_name_api_common(loc_id, obj_name, attr_name, aapl, lapl, def_dxpl,
-                                                  token_ptr, &vol_obj)) < 0)
+    if ((ret_value = H5A__open_by_name_api_common(loc_id, obj_name, attr_name, aapl, lapl, token_ptr, &vol_obj)) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to asynchronously open attribute");
 
     /* If a token was created, add the token to the event set */
@@ -884,9 +769,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static hid_t
-H5A__open_by_idx_api_common(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_iter_order_t order,
-                            hsize_t n, H5P_genplist_t *aapl, H5P_genplist_t *lapl, H5P_genplist_t *dxpl,
-                            void **token_ptr, H5VL_object_t **_vol_obj_ptr)
+H5A__open_by_idx_api_common(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t n, H5P_genplist_t *aapl, H5P_genplist_t *lapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
 {
     hid_t           aapl_id;            /* ID for attribute access property list */
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
@@ -917,7 +800,7 @@ H5A__open_by_idx_api_common(hid_t loc_id, const char *obj_name, H5_index_t idx_t
         HGOTO_ERROR(H5E_ATTR, H5E_CANTSET, H5I_INVALID_HID, "can't set attribute access property list info");
 
     /* Open the attribute */
-    if ((ret_value = H5A__open_common(*vol_obj_ptr, &loc_params, NULL, aapl, dxpl, token_ptr)) < 0)
+    if ((ret_value = H5A__open_common(*vol_obj_ptr, &loc_params, NULL, aapl, token_ptr)) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open attribute");
 
 done:
@@ -954,30 +837,20 @@ H5Aopen_by_idx(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_iter_
 {
     H5P_genplist_t *aapl;                        /* Attribute access property list */
     H5P_genplist_t *lapl;                        /* Link access property list */
-    H5P_genplist_t *def_dxpl;                    /* Default dataset transfer property list */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Get the pointer to the attribute access property list */
-    if (H5P_DEFAULT == aapl_id)
-        aapl_id = H5P_ATTRIBUTE_ACCESS_DEFAULT;
     if (NULL == (aapl = H5P_object_verify(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute access property list");
 
     /* Check the link access property list */
-    if (H5P_DEFAULT == lapl_id)
-        lapl_id = H5P_LINK_ACCESS_DEFAULT;
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
-
     /* Open the attribute by idx synchronously */
-    if ((ret_value = H5A__open_by_idx_api_common(loc_id, obj_name, idx_type, order, n, aapl, lapl, def_dxpl,
-                                                 NULL, NULL)) < 0)
+    if ((ret_value = H5A__open_by_idx_api_common(loc_id, obj_name, idx_type, order, n, aapl, lapl, NULL, NULL)) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTCREATE, H5I_INVALID_HID, "unable to synchronously open attribute");
 
 done:
@@ -1004,34 +877,24 @@ H5Aopen_by_idx_async(const char *app_file, const char *app_func, unsigned app_li
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     H5P_genplist_t *aapl;                        /* Attribute access property list */
     H5P_genplist_t *lapl;                        /* Link access property list */
-    H5P_genplist_t *def_dxpl;                    /* Default dataset transfer property list */
     hid_t           ret_value = H5I_INVALID_HID;
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Get the pointer to the attribute access property list */
-    if (H5P_DEFAULT == aapl_id)
-        aapl_id = H5P_ATTRIBUTE_ACCESS_DEFAULT;
     if (NULL == (aapl = H5P_object_verify(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute access property list");
 
     /* Check the link access property list */
-    if (H5P_DEFAULT == lapl_id)
-        lapl_id = H5P_LINK_ACCESS_DEFAULT;
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
-
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Open the attribute by idx asynchronously */
-    if ((ret_value = H5A__open_by_idx_api_common(loc_id, obj_name, idx_type, order, n, aapl, lapl, def_dxpl,
-                                                 token_ptr, &vol_obj)) < 0)
+    if ((ret_value = H5A__open_by_idx_api_common(loc_id, obj_name, idx_type, order, n, aapl, lapl, token_ptr, &vol_obj)) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTCREATE, H5I_INVALID_HID, "unable to asynchronously open attribute");
 
     /* If a token was created, add the token to the event set */
@@ -1058,8 +921,7 @@ done:
     Non-negative on success/Negative on failure
 --------------------------------------------------------------------------*/
 static herr_t
-H5A__write_api_common(hid_t attr_id, hid_t type_id, const void *buf, H5P_genplist_t *dxpl, void **token_ptr,
-                      H5VL_object_t **_vol_obj_ptr)
+H5A__write_api_common(hid_t attr_id, hid_t type_id, const void *buf, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
 {
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
@@ -1079,7 +941,7 @@ H5A__write_api_common(hid_t attr_id, hid_t type_id, const void *buf, H5P_genplis
         HGOTO_ERROR(H5E_ATTR, H5E_CANTGET, FAIL, "can't get VOL object for attribute");
 
     /* Write the attribute data */
-    if (H5VL_attr_write(*vol_obj_ptr, type_id, buf, dxpl, token_ptr) < 0)
+    if (H5VL_attr_write(*vol_obj_ptr, type_id, buf, token_ptr) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_WRITEERROR, FAIL, "unable to write attribute");
 
 done:
@@ -1105,17 +967,12 @@ done:
 herr_t
 H5Awrite(hid_t attr_id, hid_t dtype_id, const void *buf)
 {
-    H5P_genplist_t *def_dxpl;            /* Default dataset transfer property list */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
-
     /* Synchronously write the data */
-    if (H5A__write_api_common(attr_id, dtype_id, buf, def_dxpl, NULL, NULL) < 0)
+    if (H5A__write_api_common(attr_id, dtype_id, buf, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_WRITEERROR, FAIL, "can't synchronously write data");
 
 done:
@@ -1137,7 +994,6 @@ H5Awrite_async(const char *app_file, const char *app_func, unsigned app_line, hi
     H5VL_object_t  *vol_obj   = NULL;            /* Object for attr_id */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    H5P_genplist_t *def_dxpl;                    /* Default dataset transfer property list */
     herr_t          ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1146,12 +1002,8 @@ H5Awrite_async(const char *app_file, const char *app_func, unsigned app_line, hi
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
-
     /* Asynchronously write the data */
-    if (H5A__write_api_common(attr_id, dtype_id, buf, def_dxpl, token_ptr, &vol_obj) < 0)
+    if (H5A__write_api_common(attr_id, dtype_id, buf, token_ptr, &vol_obj) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_WRITEERROR, FAIL, "can't asynchronously write data");
 
     /* If a token was created, add the token to the event set */
@@ -1175,8 +1027,7 @@ done:
  *      Non-negative on success/Negative on failure
  *--------------------------------------------------------------------------*/
 static herr_t
-H5A__read_api_common(hid_t attr_id, hid_t dtype_id, void *buf, H5P_genplist_t *dxpl, void **token_ptr,
-                     H5VL_object_t **_vol_obj_ptr)
+H5A__read_api_common(hid_t attr_id, hid_t dtype_id, void *buf, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
 {
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
@@ -1196,7 +1047,7 @@ H5A__read_api_common(hid_t attr_id, hid_t dtype_id, void *buf, H5P_genplist_t *d
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not an attribute");
 
     /* Read the attribute data */
-    if (H5VL_attr_read(*vol_obj_ptr, dtype_id, buf, dxpl, token_ptr) < 0)
+    if (H5VL_attr_read(*vol_obj_ptr, dtype_id, buf, token_ptr) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_READERROR, FAIL, "unable to read attribute");
 
 done:
@@ -1222,17 +1073,12 @@ done:
 herr_t
 H5Aread(hid_t attr_id, hid_t dtype_id, void *buf /*out*/)
 {
-    H5P_genplist_t *def_dxpl;            /* Default dataset transfer property list */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
-
     /* Synchronously read the data */
-    if (H5A__read_api_common(attr_id, dtype_id, buf, def_dxpl, NULL, NULL) < 0)
+    if (H5A__read_api_common(attr_id, dtype_id, buf, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_READERROR, FAIL, "can't synchronously read data");
 
 done:
@@ -1254,7 +1100,6 @@ H5Aread_async(const char *app_file, const char *app_func, unsigned app_line, hid
     H5VL_object_t  *vol_obj   = NULL;            /* Object for attr_id */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    H5P_genplist_t *def_dxpl;                    /* Default dataset transfer property list */
     herr_t          ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1263,12 +1108,8 @@ H5Aread_async(const char *app_file, const char *app_func, unsigned app_line, hid
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
-
     /* Asynchronously read the data */
-    if (H5A__read_api_common(attr_id, dtype_id, buf, def_dxpl, token_ptr, &vol_obj) < 0)
+    if (H5A__read_api_common(attr_id, dtype_id, buf, token_ptr, &vol_obj) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_READERROR, FAIL, "can't asynchronously read data");
 
     /* If a token was created, add the token to the event set */
@@ -1304,7 +1145,6 @@ H5Aget_space(hid_t attr_id)
 {
     H5VL_object_t       *vol_obj = NULL;              /* Attribute object for ID */
     H5VL_attr_get_args_t vol_cb_args;                 /* Arguments to VOL callback */
-    H5P_genplist_t      *def_dxpl;                    /* Default dataset transfer property list */
     hid_t                ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -1317,12 +1157,8 @@ H5Aget_space(hid_t attr_id)
     vol_cb_args.op_type                 = H5VL_ATTR_GET_SPACE;
     vol_cb_args.args.get_space.space_id = H5I_INVALID_HID;
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
-
     /* Get the dataspace */
-    if (H5VL_attr_get(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_attr_get(vol_obj, &vol_cb_args, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTGET, H5I_INVALID_HID, "unable to get dataspace of attribute");
 
     /* Set the return value */
@@ -1353,7 +1189,6 @@ H5Aget_type(hid_t attr_id)
 {
     H5VL_object_t       *vol_obj = NULL;              /* Attribute object for ID */
     H5VL_attr_get_args_t vol_cb_args;                 /* Arguments to VOL callback */
-    H5P_genplist_t      *def_dxpl;                    /* Default dataset transfer property list */
     hid_t                ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -1366,12 +1201,8 @@ H5Aget_type(hid_t attr_id)
     vol_cb_args.op_type               = H5VL_ATTR_GET_TYPE;
     vol_cb_args.args.get_type.type_id = H5I_INVALID_HID;
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
-
     /* Get the datatype */
-    if (H5VL_attr_get(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_attr_get(vol_obj, &vol_cb_args, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTGET, H5I_INVALID_HID, "unable to get datatype of attribute");
 
     /* Set the return value */
@@ -1405,7 +1236,6 @@ H5Aget_create_plist(hid_t attr_id)
 {
     H5VL_object_t       *vol_obj = NULL;              /* Attribute object for ID */
     H5VL_attr_get_args_t vol_cb_args;                 /* Arguments to VOL callback */
-    H5P_genplist_t      *def_dxpl;                    /* Default dataset transfer property list */
     hid_t                ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -1420,14 +1250,9 @@ H5Aget_create_plist(hid_t attr_id)
     vol_cb_args.op_type               = H5VL_ATTR_GET_ACPL;
     vol_cb_args.args.get_acpl.acpl_id = H5I_INVALID_HID;
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not a dataset transfer property list");
-
     /* Get the acpl */
-    if (H5VL_attr_get(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
-        HGOTO_ERROR(H5E_ATTR, H5E_CANTGET, H5I_INVALID_HID,
-                    "unable to get creation property list for attribute");
+    if (H5VL_attr_get(vol_obj, &vol_cb_args, H5_REQUEST_NULL) < 0)
+        HGOTO_ERROR(H5E_ATTR, H5E_CANTGET, H5I_INVALID_HID, "unable to get creation property list for attribute");
 
     /* Set the return value */
     ret_value = vol_cb_args.args.get_acpl.acpl_id;
@@ -1462,7 +1287,6 @@ H5Aget_name(hid_t attr_id, size_t buf_size, char *buf /*out*/)
 {
     H5VL_object_t       *vol_obj = NULL;     /* Attribute object for ID */
     H5VL_attr_get_args_t vol_cb_args;        /* Arguments to VOL callback */
-    H5P_genplist_t      *def_dxpl;           /* Default dataset transfer property list */
     size_t               attr_name_len = 0;  /* Length of attribute name */
     ssize_t              ret_value     = -1; /* Return value */
 
@@ -1482,12 +1306,8 @@ H5Aget_name(hid_t attr_id, size_t buf_size, char *buf /*out*/)
     vol_cb_args.args.get_name.buf                 = buf;
     vol_cb_args.args.get_name.attr_name_len       = &attr_name_len;
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, (-1), "not a dataset transfer property list");
-
     /* Get the attribute name */
-    if (H5VL_attr_get(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_attr_get(vol_obj, &vol_cb_args, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTGET, (-1), "unable to get attribute name");
 
     /* Set the return value */
@@ -1529,7 +1349,6 @@ H5Aget_name_by_idx(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_i
 {
     H5VL_object_t       *vol_obj = NULL;    /* Attribute object for ID */
     H5VL_attr_get_args_t vol_cb_args;       /* Arguments to VOL callback */
-    H5P_genplist_t      *def_dxpl;          /* Pointer to the default dataset transfer property list */
     size_t               attr_name_len = 0; /* Length of attribute name */
     ssize_t              ret_value;         /* Return value */
 
@@ -1568,12 +1387,8 @@ H5Aget_name_by_idx(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_i
     vol_cb_args.args.get_name.buf                                     = name;
     vol_cb_args.args.get_name.attr_name_len                           = &attr_name_len;
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, (-1), "not a dataset transfer property list");
-
     /* Get the name */
-    if (H5VL_attr_get(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_attr_get(vol_obj, &vol_cb_args, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTGET, (-1), "unable to get name");
 
     /* Set the return value */
@@ -1602,7 +1417,6 @@ H5Aget_storage_size(hid_t attr_id)
 {
     H5VL_object_t       *vol_obj = NULL;   /* Attribute object for ID */
     H5VL_attr_get_args_t vol_cb_args;      /* Arguments to VOL callback */
-    H5P_genplist_t      *def_dxpl;         /* Default dataset transfer property list */
     hsize_t              storage_size = 0; /* Storage size of attribute */
     hsize_t              ret_value;        /* Return value */
 
@@ -1616,12 +1430,8 @@ H5Aget_storage_size(hid_t attr_id)
     vol_cb_args.op_type                         = H5VL_ATTR_GET_STORAGE_SIZE;
     vol_cb_args.args.get_storage_size.data_size = &storage_size;
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, 0, "not a dataset transfer property list");
-
     /* Get the storage size */
-    if (H5VL_attr_get(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_attr_get(vol_obj, &vol_cb_args, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTGET, 0, "unable to get storage size");
 
     /* Set the return value */
@@ -1646,7 +1456,6 @@ H5Aget_info(hid_t attr_id, H5A_info_t *ainfo /*out*/)
 {
     H5VL_object_t       *vol_obj = NULL;      /* Attribute object for ID */
     H5VL_attr_get_args_t vol_cb_args;         /* Arguments to VOL callback */
-    H5P_genplist_t      *def_dxpl;            /* Default dataset transfer property list */
     herr_t               ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1664,12 +1473,8 @@ H5Aget_info(hid_t attr_id, H5A_info_t *ainfo /*out*/)
     vol_cb_args.args.get_info.attr_name           = NULL;
     vol_cb_args.args.get_info.ainfo               = ainfo;
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Get the attribute information */
-    if (H5VL_attr_get(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_attr_get(vol_obj, &vol_cb_args, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTGET, FAIL, "unable to get attribute info");
 
 done:
@@ -1692,7 +1497,6 @@ H5Aget_info_by_name(hid_t loc_id, const char *obj_name, const char *attr_name, H
 {
     H5VL_object_t       *vol_obj = NULL;      /* Attribute object for ID */
     H5VL_attr_get_args_t vol_cb_args;         /* Arguments to VOL callback */
-    H5P_genplist_t      *def_dxpl;            /* Default dataset transfer property list */
     herr_t               ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1724,12 +1528,8 @@ H5Aget_info_by_name(hid_t loc_id, const char *obj_name, const char *attr_name, H
     vol_cb_args.args.get_info.attr_name                               = attr_name;
     vol_cb_args.args.get_info.ainfo                                   = ainfo;
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Get the attribute information */
-    if (H5VL_attr_get(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_attr_get(vol_obj, &vol_cb_args, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTGET, FAIL, "unable to get attribute info");
 
 done:
@@ -1753,7 +1553,6 @@ H5Aget_info_by_idx(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_i
 {
     H5VL_object_t       *vol_obj = NULL;      /* Attribute object for ID */
     H5VL_attr_get_args_t vol_cb_args;         /* Arguments to VOL callback */
-    H5P_genplist_t      *def_dxpl;            /* Default dataset transfer property list */
     herr_t               ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1790,12 +1589,8 @@ H5Aget_info_by_idx(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_i
     vol_cb_args.args.get_info.attr_name                               = NULL;
     vol_cb_args.args.get_info.ainfo                                   = ainfo;
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Get the attribute information */
-    if (H5VL_attr_get(vol_obj, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_attr_get(vol_obj, &vol_cb_args, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTGET, FAIL, "unable to get attribute info");
 
 done:
@@ -1812,7 +1607,7 @@ done:
 --------------------------------------------------------------------------*/
 static herr_t
 H5A__rename_common(H5VL_object_t *vol_obj, H5VL_loc_params_t *loc_params, const char *old_name,
-                   const char *new_name, H5P_genplist_t *dxpl, void **token_ptr)
+                   const char *new_name, void **token_ptr)
 {
     herr_t ret_value = SUCCEED; /* Return value */
 
@@ -1834,9 +1629,8 @@ H5A__rename_common(H5VL_object_t *vol_obj, H5VL_loc_params_t *loc_params, const 
         vol_cb_args.args.rename.new_name = new_name;
 
         /* Rename the attribute */
-        if (H5VL_attr_specific(vol_obj, loc_params, &vol_cb_args, dxpl, token_ptr) < 0)
-            HGOTO_ERROR(H5E_ATTR, H5E_CANTRENAME, FAIL, "can't rename attribute from '%s' to '%s'", old_name,
-                        new_name);
+        if (H5VL_attr_specific(vol_obj, loc_params, &vol_cb_args, token_ptr) < 0)
+            HGOTO_ERROR(H5E_ATTR, H5E_CANTRENAME, FAIL, "can't rename attribute from '%s' to '%s'", old_name, new_name);
     }
 
 done:
@@ -1852,8 +1646,7 @@ done:
     Non-negative on success/Negative on failure
 --------------------------------------------------------------------------*/
 static herr_t
-H5A__rename_api_common(hid_t loc_id, const char *old_name, const char *new_name, H5P_genplist_t *dxpl,
-                       void **token_ptr, H5VL_object_t **_vol_obj_ptr)
+H5A__rename_api_common(hid_t loc_id, const char *old_name, const char *new_name, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
 {
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
@@ -1880,7 +1673,7 @@ H5A__rename_api_common(hid_t loc_id, const char *old_name, const char *new_name,
         HGOTO_ERROR(H5E_ATTR, H5E_CANTSET, FAIL, "can't set object access arguments");
 
     /* Rename the attribute */
-    if (H5A__rename_common(*vol_obj_ptr, &loc_params, old_name, new_name, dxpl, token_ptr) < 0)
+    if (H5A__rename_common(*vol_obj_ptr, &loc_params, old_name, new_name, token_ptr) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTRENAME, FAIL, "can't rename attribute");
 
 done:
@@ -1900,17 +1693,12 @@ done:
 herr_t
 H5Arename(hid_t loc_id, const char *old_name, const char *new_name)
 {
-    H5P_genplist_t *def_dxpl;            /* Default dataset transfer property list */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Synchronously rename the attribute */
-    if (H5A__rename_api_common(loc_id, old_name, new_name, def_dxpl, NULL, NULL) < 0)
+    if (H5A__rename_api_common(loc_id, old_name, new_name, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTRENAME, FAIL, "can't synchronously rename attribute");
 
 done:
@@ -1932,21 +1720,16 @@ H5Arename_async(const char *app_file, const char *app_func, unsigned app_line, h
     H5VL_object_t  *vol_obj   = NULL;            /* Object for loc_id */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    H5P_genplist_t *def_dxpl;                    /* Default dataset transfer property list */
     herr_t          ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API(FAIL)
-
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Asynchronously rename the attribute */
-    if (H5A__rename_api_common(loc_id, old_name, new_name, def_dxpl, token_ptr, &vol_obj) < 0)
+    if (H5A__rename_api_common(loc_id, old_name, new_name, token_ptr, &vol_obj) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTRENAME, FAIL, "can't asynchronously rename attribute");
 
     /* If a token was created, add the token to the event set */
@@ -1970,9 +1753,7 @@ done:
     Non-negative on success/Negative on failure
 --------------------------------------------------------------------------*/
 static herr_t
-H5A__rename_by_name_api_common(hid_t loc_id, const char *obj_name, const char *old_name, const char *new_name,
-                               H5P_genplist_t *lapl, H5P_genplist_t *dxpl, void **token_ptr,
-                               H5VL_object_t **_vol_obj_ptr)
+H5A__rename_by_name_api_common(hid_t loc_id, const char *obj_name, const char *old_name, const char *new_name, H5P_genplist_t *lapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
 {
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
@@ -2001,7 +1782,7 @@ H5A__rename_by_name_api_common(hid_t loc_id, const char *obj_name, const char *o
         HGOTO_ERROR(H5E_ATTR, H5E_CANTSET, FAIL, "can't set object access arguments");
 
     /* Rename the attribute */
-    if (H5A__rename_common(*vol_obj_ptr, &loc_params, old_name, new_name, dxpl, token_ptr) < 0)
+    if (H5A__rename_common(*vol_obj_ptr, &loc_params, old_name, new_name, token_ptr) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTRENAME, FAIL, "can't rename attribute");
 
 done:
@@ -2023,24 +1804,16 @@ H5Arename_by_name(hid_t loc_id, const char *obj_name, const char *old_attr_name,
                   hid_t lapl_id)
 {
     H5P_genplist_t *lapl;                /* Link access property list */
-    H5P_genplist_t *def_dxpl;            /* Default dataset transfer property list */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Check the link access property list */
-    if (H5P_DEFAULT == lapl_id)
-        lapl_id = H5P_LINK_ACCESS_DEFAULT;
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, FAIL, "can't find object for ID");
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Synchronously rename the attribute */
-    if (H5A__rename_by_name_api_common(loc_id, obj_name, old_attr_name, new_attr_name, lapl, def_dxpl, NULL,
-                                       NULL) < 0)
+    if (H5A__rename_by_name_api_common(loc_id, obj_name, old_attr_name, new_attr_name, lapl, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTRENAME, FAIL, "can't synchronously rename attribute");
 
 done:
@@ -2064,28 +1837,20 @@ H5Arename_by_name_async(const char *app_file, const char *app_func, unsigned app
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     H5P_genplist_t *lapl;                        /* Link access property list */
-    H5P_genplist_t *def_dxpl;                    /* Default dataset transfer property list */
     herr_t          ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Check the link access property list */
-    if (H5P_DEFAULT == lapl_id)
-        lapl_id = H5P_LINK_ACCESS_DEFAULT;
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, FAIL, "can't find object for ID");
-
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Asynchronously rename the attribute */
-    if (H5A__rename_by_name_api_common(loc_id, obj_name, old_attr_name, new_attr_name, lapl, def_dxpl,
-                                       token_ptr, &vol_obj) < 0)
+    if (H5A__rename_by_name_api_common(loc_id, obj_name, old_attr_name, new_attr_name, lapl, token_ptr, &vol_obj) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTRENAME, FAIL, "can't synchronously rename attribute");
 
     /* If a token was created, add the token to the event set */
@@ -2148,7 +1913,6 @@ H5Aiterate2(hid_t loc_id, H5_index_t idx_type, H5_iter_order_t order, hsize_t *i
     H5VL_object_t            *vol_obj = NULL; /* Object for loc_id */
     H5VL_loc_params_t         loc_params;     /* Location parameters for object access */
     H5VL_attr_specific_args_t vol_cb_args;    /* Arguments to VOL callback */
-    H5P_genplist_t           *def_dxpl;       /* Default dataset transfer property list */
     herr_t                    ret_value;      /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2177,12 +1941,8 @@ H5Aiterate2(hid_t loc_id, H5_index_t idx_type, H5_iter_order_t order, hsize_t *i
     vol_cb_args.args.iterate.op       = op;
     vol_cb_args.args.iterate.op_data  = op_data;
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Iterate over attributes */
-    if ((ret_value = H5VL_attr_specific(vol_obj, &loc_params, &vol_cb_args, def_dxpl, H5_REQUEST_NULL)) < 0)
+    if ((ret_value = H5VL_attr_specific(vol_obj, &loc_params, &vol_cb_args, H5_REQUEST_NULL)) < 0)
         HERROR(H5E_ATTR, H5E_BADITER, "error iterating over attributes");
 
 done:
@@ -2239,7 +1999,6 @@ H5Aiterate_by_name(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_i
     H5VL_object_t            *vol_obj = NULL;      /* Object for loc_id */
     H5VL_loc_params_t         loc_params;          /* Location parameters for object access */
     H5VL_attr_specific_args_t vol_cb_args;         /* Arguments to VOL callback */
-    H5P_genplist_t           *def_dxpl;            /* Default dataset transfer property list */
     herr_t                    ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2276,12 +2035,8 @@ H5Aiterate_by_name(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_i
     vol_cb_args.args.iterate.op       = op;
     vol_cb_args.args.iterate.op_data  = op_data;
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Iterate over attributes */
-    if ((ret_value = H5VL_attr_specific(vol_obj, &loc_params, &vol_cb_args, def_dxpl, H5_REQUEST_NULL)) < 0)
+    if ((ret_value = H5VL_attr_specific(vol_obj, &loc_params, &vol_cb_args, H5_REQUEST_NULL)) < 0)
         HERROR(H5E_ATTR, H5E_BADITER, "attribute iteration failed");
 
 done:
@@ -2308,7 +2063,6 @@ H5Adelete(hid_t loc_id, const char *name)
     H5VL_object_t            *vol_obj = NULL;      /* Object for loc_id */
     H5VL_loc_params_t         loc_params;          /* Location parameters for object access */
     H5VL_attr_specific_args_t vol_cb_args;         /* Arguments to VOL callback */
-    H5P_genplist_t           *def_dxpl;            /* Default dataset transfer property list */
     herr_t                    ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2337,12 +2091,8 @@ H5Adelete(hid_t loc_id, const char *name)
     vol_cb_args.op_type       = H5VL_ATTR_DELETE;
     vol_cb_args.args.del.name = name;
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Delete the attribute */
-    if (H5VL_attr_specific(vol_obj, &loc_params, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_attr_specific(vol_obj, &loc_params, &vol_cb_args, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTDELETE, FAIL, "unable to delete attribute");
 
 done:
@@ -2371,7 +2121,6 @@ H5Adelete_by_name(hid_t loc_id, const char *obj_name, const char *attr_name, hid
     H5VL_object_t            *vol_obj = NULL;      /* Object for loc_id */
     H5VL_loc_params_t         loc_params;          /* Location parameters for object access */
     H5VL_attr_specific_args_t vol_cb_args;         /* Arguments to VOL callback */
-    H5P_genplist_t           *def_dxpl;            /* Default dataset transfer property list */
     herr_t                    ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2402,12 +2151,8 @@ H5Adelete_by_name(hid_t loc_id, const char *obj_name, const char *attr_name, hid
     vol_cb_args.op_type       = H5VL_ATTR_DELETE;
     vol_cb_args.args.del.name = attr_name;
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Delete the attribute */
-    if (H5VL_attr_specific(vol_obj, &loc_params, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_attr_specific(vol_obj, &loc_params, &vol_cb_args, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTDELETE, FAIL, "unable to delete attribute");
 
 done:
@@ -2445,7 +2190,6 @@ H5Adelete_by_idx(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_ite
     H5VL_object_t            *vol_obj = NULL;      /* Object for loc_id */
     H5VL_loc_params_t         loc_params;          /* Location parameters for object access */
     H5VL_attr_specific_args_t vol_cb_args;         /* Arguments to VOL callback */
-    H5P_genplist_t           *def_dxpl;            /* Default dataset transfer property list */
     herr_t                    ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2480,12 +2224,8 @@ H5Adelete_by_idx(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_ite
     vol_cb_args.args.delete_by_idx.order    = order;
     vol_cb_args.args.delete_by_idx.n        = n;
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Delete the attribute */
-    if (H5VL_attr_specific(vol_obj, &loc_params, &vol_cb_args, def_dxpl, H5_REQUEST_NULL) < 0)
+    if (H5VL_attr_specific(vol_obj, &loc_params, &vol_cb_args, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTDELETE, FAIL, "unable to delete attribute");
 
 done:
@@ -2594,7 +2334,7 @@ done:
  *--------------------------------------------------------------------------*/
 static herr_t
 H5A__exists_common(H5VL_object_t *vol_obj, H5VL_loc_params_t *loc_params, const char *attr_name,
-                   bool *attr_exists, H5P_genplist_t *dxpl, void **token_ptr)
+                   bool *attr_exists, void **token_ptr)
 {
     H5VL_attr_specific_args_t vol_cb_args;         /* Arguments to VOL callback */
     herr_t                    ret_value = SUCCEED; /* Return value */
@@ -2615,7 +2355,7 @@ H5A__exists_common(H5VL_object_t *vol_obj, H5VL_loc_params_t *loc_params, const 
     vol_cb_args.args.exists.exists = attr_exists;
 
     /* Check if the attribute exists */
-    if (H5VL_attr_specific(vol_obj, loc_params, &vol_cb_args, dxpl, token_ptr) < 0)
+    if (H5VL_attr_specific(vol_obj, loc_params, &vol_cb_args, token_ptr) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTGET, FAIL, "unable to determine if attribute exists");
 
 done:
@@ -2631,8 +2371,7 @@ done:
  *      Non-negative on success/Negative on failure
  *--------------------------------------------------------------------------*/
 static herr_t
-H5A__exists_api_common(hid_t obj_id, const char *attr_name, bool *attr_exists, H5P_genplist_t *dxpl,
-                       void **token_ptr, H5VL_object_t **_vol_obj_ptr)
+H5A__exists_api_common(hid_t obj_id, const char *attr_name, bool *attr_exists, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
 {
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
@@ -2655,7 +2394,7 @@ H5A__exists_api_common(hid_t obj_id, const char *attr_name, bool *attr_exists, H
         HGOTO_ERROR(H5E_ATTR, H5E_CANTSET, FAIL, "can't set object access arguments");
 
     /* Check if the attribute exists */
-    if (H5A__exists_common(*vol_obj_ptr, &loc_params, attr_name, attr_exists, dxpl, token_ptr) < 0)
+    if (H5A__exists_common(*vol_obj_ptr, &loc_params, attr_name, attr_exists, token_ptr) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTGET, FAIL, "unable to determine if attribute exists");
 
 done:
@@ -2676,19 +2415,14 @@ done:
 htri_t
 H5Aexists(hid_t obj_id, const char *attr_name)
 {
-    H5P_genplist_t *def_dxpl;         /* Default dataset transfer property list */
     bool            exists;           /* Flag for attribute existence */
     htri_t          ret_value = FAIL; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Synchronously check if an attribute exists */
     exists = false;
-    if (H5A__exists_api_common(obj_id, attr_name, &exists, def_dxpl, NULL, NULL) < 0)
+    if (H5A__exists_api_common(obj_id, attr_name, &exists, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTGET, FAIL, "can't synchronously check if attribute exists");
 
     /* Set return value */
@@ -2713,21 +2447,16 @@ H5Aexists_async(const char *app_file, const char *app_func, unsigned app_line, h
     H5VL_object_t  *vol_obj   = NULL;            /* Object for loc_id */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    H5P_genplist_t *def_dxpl;                    /* Default dataset transfer property list */
     herr_t          ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API(FAIL)
-
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Asynchronously check if an attribute exists */
-    if (H5A__exists_api_common(obj_id, attr_name, attr_exists, def_dxpl, token_ptr, &vol_obj) < 0)
+    if (H5A__exists_api_common(obj_id, attr_name, attr_exists, token_ptr, &vol_obj) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTGET, FAIL, "can't asynchronously check if attribute exists");
 
     /* If a token was created, add the token to the event set */
@@ -2751,9 +2480,7 @@ done:
  *      Non-negative on success/Negative on failure
  *--------------------------------------------------------------------------*/
 static herr_t
-H5A__exists_by_name_api_common(hid_t loc_id, const char *obj_name, const char *attr_name, bool *attr_exists,
-                               H5P_genplist_t *lapl, H5P_genplist_t *dxpl, void **token_ptr,
-                               H5VL_object_t **_vol_obj_ptr)
+H5A__exists_by_name_api_common(hid_t loc_id, const char *obj_name, const char *attr_name, bool *attr_exists, H5P_genplist_t *lapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
 {
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
@@ -2777,7 +2504,7 @@ H5A__exists_by_name_api_common(hid_t loc_id, const char *obj_name, const char *a
         HGOTO_ERROR(H5E_ATTR, H5E_CANTSET, FAIL, "can't set object access arguments");
 
     /* Check if the attribute exists */
-    if (H5A__exists_common(*vol_obj_ptr, &loc_params, attr_name, attr_exists, dxpl, token_ptr) < 0)
+    if (H5A__exists_common(*vol_obj_ptr, &loc_params, attr_name, attr_exists, token_ptr) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTGET, FAIL, "unable to determine if attribute exists");
 
 done:
@@ -2798,25 +2525,18 @@ htri_t
 H5Aexists_by_name(hid_t loc_id, const char *obj_name, const char *attr_name, hid_t lapl_id)
 {
     H5P_genplist_t *lapl;             /* Link access property list */
-    H5P_genplist_t *def_dxpl;         /* Default dataset transfer property list */
     bool            exists;           /* Flag for attribute existence */
     htri_t          ret_value = FAIL; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Check the link access property list */
-    if (H5P_DEFAULT == lapl_id)
-        lapl_id = H5P_LINK_ACCESS_DEFAULT;
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, FAIL, "can't find object for ID");
 
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
-
     /* Synchronously check if an attribute exists */
     exists = false;
-    if (H5A__exists_by_name_api_common(loc_id, obj_name, attr_name, &exists, lapl, def_dxpl, NULL, NULL) < 0)
+    if (H5A__exists_by_name_api_common(loc_id, obj_name, attr_name, &exists, lapl, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTGET, FAIL, "can't synchronously determine if attribute exists by name");
 
     /* Set return value */
@@ -2843,30 +2563,21 @@ H5Aexists_by_name_async(const char *app_file, const char *app_func, unsigned app
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     H5P_genplist_t *lapl;                        /* Link access property list */
-    H5P_genplist_t *def_dxpl;                    /* Default dataset transfer property list */
     herr_t          ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Check the link access property list */
-    if (H5P_DEFAULT == lapl_id)
-        lapl_id = H5P_LINK_ACCESS_DEFAULT;
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, FAIL, "can't find object for ID");
-
-    /* Get the pointer to the default dataset transfer property list */
-    if (NULL == (def_dxpl = H5I_object(H5P_DATASET_XFER_DEFAULT)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Asynchronously check if an attribute exists */
-    if (H5A__exists_by_name_api_common(loc_id, obj_name, attr_name, attr_exists, lapl, def_dxpl, token_ptr,
-                                       &vol_obj) < 0)
-        HGOTO_ERROR(H5E_ATTR, H5E_CANTGET, FAIL,
-                    "can't asynchronously determine if attribute exists by name");
+    if (H5A__exists_by_name_api_common(loc_id, obj_name, attr_name, attr_exists, lapl, token_ptr, &vol_obj) < 0)
+        HGOTO_ERROR(H5E_ATTR, H5E_CANTGET, FAIL, "can't asynchronously determine if attribute exists by name");
 
     /* If a token was created, add the token to the event set */
     if (NULL != token)

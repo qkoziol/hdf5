@@ -381,13 +381,9 @@ H5O_refresh_metadata_reopen(hid_t oid, H5P_genplist_t *apl, H5G_loc_t *obj_loc,
             hid_t apl_id;
 
             /* Check for default access property list */
-            if (NULL == apl) {
-                apl_id = H5P_LST_DATASET_ACCESS_ID_g;
-                if (NULL == (apl = H5I_object(apl_id)))
-                    HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, FAIL, "can't get default property list");
-            }
-            else
-                apl_id = H5P_PLIST_ID(apl);
+            if (NULL == apl)
+                apl = H5P_LST_DATASET_ACCESS_g;
+            apl_id = H5P_PLIST_ID(apl);
 
             /* Set dataset access property list in API context if appropriate */
             if (H5CX_set_apl(&apl_id, H5P_CLS_DACC, oid, true) < 0)

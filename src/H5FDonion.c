@@ -402,15 +402,9 @@ H5Pset_fapl_onion(hid_t fapl_id, const H5FD_onion_fapl_info_t *info)
     if (info->page_size < 1)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid info page size");
 
-    if (H5P_DEFAULT == info->backing_fapl_id) {
-        if (NULL ==
-            (fa.backing_fapl = H5P_object_verify(H5P_FILE_ACCESS_DEFAULT, H5P_TYPE_FILE_ACCESS, true)))
-            HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "invalid backing fapl id");
-    }
-    else {
-        if (NULL == (fa.backing_fapl = H5P_object_verify(info->backing_fapl_id, H5P_TYPE_FILE_ACCESS, true)))
-            HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "invalid backing fapl id");
-    }
+    /* Get the backing store FAPL */
+    if (NULL == (fa.backing_fapl = H5P_object_verify(info->backing_fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+        HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "invalid backing fapl id");
 
     /* The only backing fapl that is currently supported is sec2 */
     if (H5FD_SEC2_VALUE != H5P_get_driver_value(fa.backing_fapl))
@@ -1060,8 +1054,7 @@ H5FD__onion_open(const char *filename, unsigned flags, hid_t fapl_id, haddr_t ma
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, NULL, "invalid file name");
     if (0 == maxaddr || HADDR_UNDEF == maxaddr)
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, NULL, "bogus maxaddr");
-    assert(H5P_DEFAULT != fapl_id);
-    if (NULL == (fapl = (H5P_genplist_t *)H5I_object(fapl_id)))
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file access property list");
 
     /* This VFD can be invoked by either H5Pset_fapl_onion() or

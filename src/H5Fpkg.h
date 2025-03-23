@@ -459,8 +459,7 @@ H5_DLL herr_t H5F__set_mpi_atomicity(H5F_t *file, bool flag);
 
 /* External file cache routines */
 H5_DLL H5F_efc_t *H5F__efc_create(unsigned max_nfiles);
-H5_DLL herr_t     H5F__efc_open(bool try, H5F_efc_t *efc, H5F_t **file, const char *name, unsigned flags,
-                                H5P_genplist_t *fcpl, H5P_genplist_t *fapl);
+H5_DLL herr_t     H5F__efc_open(bool try, H5F_efc_t *efc, H5F_t **file, const char *name, unsigned flags, H5P_genplist_t *fapl);
 H5_DLL unsigned   H5F__efc_max_nfiles(H5F_efc_t *efc);
 H5_DLL herr_t     H5F__efc_release(H5F_efc_t *efc);
 H5_DLL herr_t     H5F__efc_destroy(H5F_efc_t *efc);
