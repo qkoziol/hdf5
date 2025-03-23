@@ -352,7 +352,8 @@ H5VL__native_file_specific(void *obj, H5VL_file_specific_args_t *args, hid_t H5_
         case H5VL_FILE_IS_ACCESSIBLE: {
             H5P_genplist_t *fapl; /* File access property list */
 
-            if (NULL == (fapl = H5P_object_verify(args->args.is_accessible.fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+            if (NULL ==
+                (fapl = H5P_object_verify(args->args.is_accessible.fapl_id, H5P_TYPE_FILE_ACCESS, true)))
                 HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get file access property list");
             if (H5F__is_hdf5(args->args.is_accessible.filename, fapl, args->args.is_accessible.accessible) <
                 0)

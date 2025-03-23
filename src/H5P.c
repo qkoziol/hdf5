@@ -1382,10 +1382,10 @@ H5Pcopy_prop(hid_t dst_id, hid_t src_id, const char *name)
 
     /* Compare property lists */
     if (H5I_GENPROP_LST == src_id_type) {
-        H5P_genplist_t *dst_plist;           /* Pointer to destination property list */
-        H5P_genplist_t *src_plist;           /* Pointer to source property list */
+        H5P_genplist_t *dst_plist; /* Pointer to destination property list */
+        H5P_genplist_t *src_plist; /* Pointer to source property list */
 
-       /* Get the objects to operate on */
+        /* Get the objects to operate on */
         if (NULL == (src_plist = (H5P_genplist_t *)H5I_object(src_id)))
             HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, FAIL, "property object doesn't exist");
         if (NULL == (dst_plist = (H5P_genplist_t *)H5I_object(dst_id)))
@@ -1397,9 +1397,9 @@ H5Pcopy_prop(hid_t dst_id, hid_t src_id, const char *name)
     } /* end if */
     /* Must be property classes */
     else {
-        H5P_genclass_t *dst_pclass;           /* Pointer to destination property class */
-        H5P_genclass_t *orig_dst_pclass;     /* Original destination property class */
-        H5P_genclass_t *src_pclass;           /* Pointer to source property class */    
+        H5P_genclass_t *dst_pclass;      /* Pointer to destination property class */
+        H5P_genclass_t *orig_dst_pclass; /* Original destination property class */
+        H5P_genclass_t *src_pclass;      /* Pointer to source property class */
 
         /* Get property list classes */
         if (NULL == (src_pclass = (H5P_genclass_t *)H5I_object(src_id)))
@@ -1423,9 +1423,10 @@ H5Pcopy_prop(hid_t dst_id, hid_t src_id, const char *name)
 
             /* Close the previous class */
             if (H5P__close_class(old_dst_pclass) < 0)
-                HGOTO_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, FAIL, "unable to close original property class after substitution");
+                HGOTO_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, FAIL,
+                            "unable to close original property class after substitution");
         } /* end if */
-    } /* end else */
+    }     /* end else */
 
 done:
     FUNC_LEAVE_API(ret_value)

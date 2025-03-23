@@ -169,46 +169,45 @@ H5P_genclass_t *H5P_CLS_VOL_INITIALIZE_g      = NULL;
  * Predefined property lists for each predefined class. These are initialized
  * at runtime by H5P__init_package() in this source file.
  */
-hid_t H5P_LST_ATTRIBUTE_ACCESS_ID_g = H5I_INVALID_HID;
-H5P_genplist_t *H5P_LST_ATTRIBUTE_ACCESS_g = NULL;
-hid_t H5P_LST_ATTRIBUTE_CREATE_ID_g = H5I_INVALID_HID;
-H5P_genplist_t *H5P_LST_ATTRIBUTE_CREATE_g = NULL;
-hid_t H5P_LST_DATASET_ACCESS_ID_g   = H5I_INVALID_HID;
-H5P_genplist_t *H5P_LST_DATASET_ACCESS_g = NULL;
-hid_t H5P_LST_DATASET_CREATE_ID_g   = H5I_INVALID_HID;
-H5P_genplist_t *H5P_LST_DATASET_CREATE_g = NULL;
-hid_t H5P_LST_DATASET_XFER_ID_g     = H5I_INVALID_HID;
-H5P_genplist_t *H5P_LST_DATASET_XFER_g = NULL;
-hid_t H5P_LST_DATATYPE_ACCESS_ID_g  = H5I_INVALID_HID;
-H5P_genplist_t *H5P_LST_DATATYPE_ACCESS_g = NULL;
-hid_t H5P_LST_DATATYPE_CREATE_ID_g  = H5I_INVALID_HID;
-H5P_genplist_t *H5P_LST_DATATYPE_CREATE_g = NULL;
-hid_t H5P_LST_FILE_ACCESS_ID_g      = H5I_INVALID_HID;
-H5P_genplist_t *H5P_LST_FILE_ACCESS_g = NULL;
-hid_t H5P_LST_FILE_CREATE_ID_g      = H5I_INVALID_HID;
-H5P_genplist_t *H5P_LST_FILE_CREATE_g = NULL;
-hid_t H5P_LST_FILE_MOUNT_ID_g       = H5I_INVALID_HID;
-hid_t H5P_LST_GROUP_ACCESS_ID_g     = H5I_INVALID_HID;
-H5P_genplist_t *H5P_LST_GROUP_ACCESS_g = NULL;
-hid_t H5P_LST_GROUP_CREATE_ID_g     = H5I_INVALID_HID;
-H5P_genplist_t *H5P_LST_GROUP_CREATE_g = NULL;
-hid_t H5P_LST_LINK_ACCESS_ID_g      = H5I_INVALID_HID;
-H5P_genplist_t *H5P_LST_LINK_ACCESS_g = NULL;
-hid_t H5P_LST_LINK_CREATE_ID_g      = H5I_INVALID_HID;
-H5P_genplist_t *H5P_LST_LINK_CREATE_g = NULL;
-hid_t H5P_LST_MAP_ACCESS_ID_g       = H5I_INVALID_HID;
-H5P_genplist_t *H5P_LST_MAP_ACCESS_g = NULL;
-hid_t H5P_LST_MAP_CREATE_ID_g       = H5I_INVALID_HID;
-H5P_genplist_t *H5P_LST_MAP_CREATE_g = NULL;
-hid_t H5P_LST_OBJECT_COPY_ID_g      = H5I_INVALID_HID;
-H5P_genplist_t *H5P_LST_OBJECT_COPY_g = NULL;
-hid_t H5P_LST_OBJECT_CREATE_ID_g    = H5I_INVALID_HID;
-H5P_genplist_t *H5P_LST_OBJECT_CREATE_g = NULL;
-hid_t H5P_LST_REFERENCE_ACCESS_ID_g = H5I_INVALID_HID;
-H5P_genplist_t *H5P_LST_REFERENCE_ACCESS_g = NULL;
-hid_t H5P_LST_VOL_INITIALIZE_ID_g   = H5I_INVALID_HID;
-H5P_genplist_t *H5P_LST_VOL_INITIALIZE_g = NULL;
-
+hid_t           H5P_LST_ATTRIBUTE_ACCESS_ID_g = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_ATTRIBUTE_ACCESS_g    = NULL;
+hid_t           H5P_LST_ATTRIBUTE_CREATE_ID_g = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_ATTRIBUTE_CREATE_g    = NULL;
+hid_t           H5P_LST_DATASET_ACCESS_ID_g   = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_DATASET_ACCESS_g      = NULL;
+hid_t           H5P_LST_DATASET_CREATE_ID_g   = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_DATASET_CREATE_g      = NULL;
+hid_t           H5P_LST_DATASET_XFER_ID_g     = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_DATASET_XFER_g        = NULL;
+hid_t           H5P_LST_DATATYPE_ACCESS_ID_g  = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_DATATYPE_ACCESS_g     = NULL;
+hid_t           H5P_LST_DATATYPE_CREATE_ID_g  = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_DATATYPE_CREATE_g     = NULL;
+hid_t           H5P_LST_FILE_ACCESS_ID_g      = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_FILE_ACCESS_g         = NULL;
+hid_t           H5P_LST_FILE_CREATE_ID_g      = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_FILE_CREATE_g         = NULL;
+hid_t           H5P_LST_FILE_MOUNT_ID_g       = H5I_INVALID_HID;
+hid_t           H5P_LST_GROUP_ACCESS_ID_g     = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_GROUP_ACCESS_g        = NULL;
+hid_t           H5P_LST_GROUP_CREATE_ID_g     = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_GROUP_CREATE_g        = NULL;
+hid_t           H5P_LST_LINK_ACCESS_ID_g      = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_LINK_ACCESS_g         = NULL;
+hid_t           H5P_LST_LINK_CREATE_ID_g      = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_LINK_CREATE_g         = NULL;
+hid_t           H5P_LST_MAP_ACCESS_ID_g       = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_MAP_ACCESS_g          = NULL;
+hid_t           H5P_LST_MAP_CREATE_ID_g       = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_MAP_CREATE_g          = NULL;
+hid_t           H5P_LST_OBJECT_COPY_ID_g      = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_OBJECT_COPY_g         = NULL;
+hid_t           H5P_LST_OBJECT_CREATE_ID_g    = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_OBJECT_CREATE_g       = NULL;
+hid_t           H5P_LST_REFERENCE_ACCESS_ID_g = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_REFERENCE_ACCESS_g    = NULL;
+hid_t           H5P_LST_VOL_INITIALIZE_ID_g   = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_VOL_INITIALIZE_g      = NULL;
 
 /* Root property list class library initialization object */
 const H5P_libclass_t H5P_CLS_ROOT[1] = {{
@@ -219,7 +218,7 @@ const H5P_libclass_t H5P_CLS_ROOT[1] = {{
     &H5P_CLS_ROOT_g,    /* Pointer to class             */
     &H5P_CLS_ROOT_ID_g, /* Pointer to class ID          */
     NULL,               /* Pointer to default property list */
-    NULL, /* Pointer to default property list ID */
+    NULL,               /* Pointer to default property list ID */
     NULL,               /* Default property registration routine */
 
     NULL, /* Class creation callback      */
@@ -478,19 +477,19 @@ static H5P_genclass_t **H5P_class_list_s[] = {
 /* (order here is important and must be the same as the H5P_plist_type_t enum) */
 static H5P_genplist_t **H5P_def_plist_list_s[] = {
     NULL,                        /* H5P_TYPE_USER (0) */
-    NULL,             /* H5P_TYPE_ROOT (1) */
+    NULL,                        /* H5P_TYPE_ROOT (1) */
     &H5P_LST_OBJECT_CREATE_g,    /* H5P_TYPE_OBJECT_CREATE (2) */
     &H5P_LST_FILE_CREATE_g,      /* H5P_TYPE_FILE_CREATE (3) */
     &H5P_LST_FILE_ACCESS_g,      /* H5P_TYPE_FILE_ACCESS (4) */
     &H5P_LST_DATASET_CREATE_g,   /* H5P_TYPE_DATASET_CREATE (5) */
     &H5P_LST_DATASET_ACCESS_g,   /* H5P_TYPE_DATASET_ACCESS (6) */
     &H5P_LST_DATASET_XFER_g,     /* H5P_TYPE_DATASET_XFER (7) */
-    NULL,       /* H5P_TYPE_FILE_MOUNT (8) */
+    NULL,                        /* H5P_TYPE_FILE_MOUNT (8) */
     &H5P_LST_GROUP_CREATE_g,     /* H5P_TYPE_GROUP_CREATE (9) */
     &H5P_LST_GROUP_ACCESS_g,     /* H5P_TYPE_GROUP_ACCESS (10) */
     &H5P_LST_DATATYPE_CREATE_g,  /* H5P_TYPE_DATATYPE_CREATE (11) */
     &H5P_LST_DATATYPE_ACCESS_g,  /* H5P_TYPE_DATATYPE_ACCESS (12) */
-    NULL,    /* H5P_TYPE_STRING_CREATE (13) */
+    NULL,                        /* H5P_TYPE_STRING_CREATE (13) */
     &H5P_LST_ATTRIBUTE_CREATE_g, /* H5P_TYPE_ATTRIBUTE_CREATE (14) */
     &H5P_LST_OBJECT_COPY_g,      /* H5P_TYPE_OBJECT_COPY (15) */
     &H5P_LST_LINK_CREATE_g,      /* H5P_TYPE_LINK_CREATE (16) */
@@ -636,7 +635,7 @@ H5P__init_package(void)
 
                     /* Set the default property list pointer for the new class */
                     if (lib_class->def_plist)
-                    *lib_class->def_plist = def_plist;
+                        *lib_class->def_plist = def_plist;
                 } /* end if */
 
                 /* Increment class initialization counters */
@@ -4415,7 +4414,7 @@ done:
     which accept hid_t's without thorough discussion. -QAK
 
     This function is similar (in spirit) to H5I_object_verify()
-    
+
     H5P_DEFAULT is a valid value for the plist_id parameter, when the allow_default
     parameter is true, and will return the default property list for the given type.
 
@@ -5257,9 +5256,9 @@ done:
 herr_t
 H5P__copy_prop_plist(H5P_genplist_t *dst_plist, H5P_genplist_t *src_plist, const char *name)
 {
-    H5P_genprop_t  *prop;                /* Temporary property pointer */
-    H5P_genprop_t  *new_prop  = NULL;    /* Pointer to new property */
-    herr_t          ret_value = SUCCEED; /* return value */
+    H5P_genprop_t *prop;                /* Temporary property pointer */
+    H5P_genprop_t *new_prop  = NULL;    /* Pointer to new property */
+    herr_t         ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -5364,8 +5363,8 @@ done:
 herr_t
 H5P__copy_prop_pclass(H5P_genclass_t **dst_pclass, H5P_genclass_t *src_pclass, const char *name)
 {
-    H5P_genprop_t  *prop;                /* Temporary property pointer */
-    herr_t          ret_value = SUCCEED; /* return value */
+    H5P_genprop_t *prop;                /* Temporary property pointer */
+    herr_t         ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_PACKAGE
 

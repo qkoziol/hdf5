@@ -413,8 +413,8 @@ H5T__ref_mem_getsize(H5VL_object_t H5_ATTR_UNUSED *src_file, const void *src_buf
     const H5R_ref_priv_t *src_ref = (const H5R_ref_priv_t *)src_buf;
     char                 *file_name_buf_dyn =
         NULL; /* Pointer to dynamically allocated buffer for file name, if static buffer is too small */
-    unsigned        flags = 0;     /* References flags */
-    size_t          ret_value = 0; /* Return value */
+    unsigned flags     = 0; /* References flags */
+    size_t   ret_value = 0; /* Return value */
 
     FUNC_ENTER_PACKAGE
     H5T_REF_LOG_DEBUG("");

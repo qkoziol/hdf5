@@ -82,7 +82,7 @@ herr_t
 H5Sencode1(hid_t obj_id, void *buf, size_t *nalloc)
 {
     H5S_t *dspace;
-    herr_t ret_value    = SUCCEED;
+    herr_t ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
 

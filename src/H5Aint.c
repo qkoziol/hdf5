@@ -1271,7 +1271,7 @@ H5A__shared_free(H5A_t *attr)
 static herr_t
 H5A__close_cb(H5VL_object_t *attr_vol_obj, void **request)
 {
-    herr_t          ret_value = SUCCEED; /* Return value */
+    herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 

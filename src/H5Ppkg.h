@@ -164,7 +164,8 @@ H5_DLL int    H5P__iterate_plist(const H5P_genplist_t *plist, bool iter_all_prop
 H5_DLL int    H5P__iterate_pclass(const H5P_genclass_t *pclass, int *idx, H5P_iterate_int_t iter_func,
                                   void *iter_data);
 H5_DLL herr_t H5P__copy_prop_plist(H5P_genplist_t *dst_plist, H5P_genplist_t *src_plist, const char *name);
-H5_DLL herr_t H5P__copy_prop_pclass(H5P_genclass_t **dst_pclass, H5P_genclass_t *src_pclass, const char *name);
+H5_DLL herr_t H5P__copy_prop_pclass(H5P_genclass_t **dst_pclass, H5P_genclass_t *src_pclass,
+                                    const char *name);
 H5_DLL herr_t H5P__unregister(H5P_genclass_t *pclass, const char *name);
 H5_DLL char  *H5P__get_class_path(H5P_genclass_t *pclass);
 H5_DLL H5P_genclass_t *H5P__open_class_path(const char *path);

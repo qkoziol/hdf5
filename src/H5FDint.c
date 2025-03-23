@@ -468,7 +468,8 @@ H5FD__set_def_driver(void)
 
     /* Set new default VFL driver for default file access pclass */
     if (H5P_reset_vfd_class(def_fapclass, &def_driver_prop) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set default VFD driver for default file access property class");
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL,
+                    "can't set default VFD driver for default file access property class");
 
 done:
     /* Release VFD used for default FAPL */

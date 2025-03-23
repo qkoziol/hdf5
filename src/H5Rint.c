@@ -486,7 +486,8 @@ H5R__reopen_file(H5R_ref_priv_t *ref, H5P_genplist_t *fapl)
 
     /* Open the file */
     /* (Must open file read-write to allow for object modifications) */
-    if (NULL == (new_file = H5VL_file_open(connector_prop.connector, H5R_REF_FILENAME(ref), H5F_ACC_RDWR, fapl, H5_REQUEST_NULL)))
+    if (NULL == (new_file = H5VL_file_open(connector_prop.connector, H5R_REF_FILENAME(ref), H5F_ACC_RDWR,
+                                           fapl, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENFILE, H5I_INVALID_HID, "unable to open file");
 
     /* Get an ID for the file */

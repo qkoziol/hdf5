@@ -62,7 +62,8 @@ struct H5F_efc_t {
 };
 
 /* Private prototypes */
-static herr_t H5F__efc_open_file(bool try, H5F_t **file, const char *name, unsigned flags, H5P_genplist_t *fapl);
+static herr_t H5F__efc_open_file(bool try, H5F_t **file, const char *name, unsigned flags,
+                                 H5P_genplist_t *fapl);
 static herr_t H5F__efc_release_real(H5F_efc_t *efc);
 static herr_t H5F__efc_remove_ent(H5F_efc_t *efc, H5F_efc_ent_t *ent);
 static void   H5F__efc_try_close_tag1(H5F_shared_t *sf, H5F_shared_t **tail);

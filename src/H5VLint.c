@@ -423,7 +423,8 @@ H5VL__set_def_conn(void)
 
     /* Change the default VOL for the default file access pclass */
     if (H5P_reset_vol_class(def_fapclass, &def_vol_prop) < 0)
-        HGOTO_ERROR(H5E_VOL, H5E_CANTSET, FAIL, "can't set default VOL connector for default file access property class");
+        HGOTO_ERROR(H5E_VOL, H5E_CANTSET, FAIL,
+                    "can't set default VOL connector for default file access property class");
 
 done:
     /* Release VOL connector used for default FAPL */

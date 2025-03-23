@@ -337,8 +337,8 @@ done:
 static herr_t
 H5FD__splitter_populate_config(H5FD_splitter_vfd_config_t *vfd_config, H5FD_splitter_fapl_t *fa_out)
 {
-    bool            free_config = false; /* Whether the config was allocated locally and needs to be freed */
-    herr_t          ret_value   = SUCCEED;
+    bool   free_config = false; /* Whether the config was allocated locally and needs to be freed */
+    herr_t ret_value   = SUCCEED;
 
     FUNC_ENTER_PACKAGE
 
@@ -1435,8 +1435,10 @@ H5FD__splitter_delete(const char *filename, hid_t fapl_id)
 
             /* If W/O path is not set, use base filename with '_wo' suffix */
             if (*def_fa->wo_path == '\0')
-                if (H5FD__splitter_get_default_wo_path(def_fa->wo_path, H5FD_SPLITTER_PATH_MAX + 1, filename) < 0)
-                    HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't generate default filename for W/O channel");
+                if (H5FD__splitter_get_default_wo_path(def_fa->wo_path, H5FD_SPLITTER_PATH_MAX + 1,
+                                                       filename) < 0)
+                    HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL,
+                                "can't generate default filename for W/O channel");
 
             fa = def_fa;
         }

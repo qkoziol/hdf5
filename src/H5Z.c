@@ -644,7 +644,8 @@ H5Z__flush_file_cb(void H5_ATTR_UNUSED *obj_ptr, hid_t obj_id, void H5_ATTR_PARA
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to get file's intent flags");
 
     if (H5VL_object_is_native(vol_obj, &is_native_vol_obj) < 0)
-        HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, H5I_INVALID_HID, "can't determine if VOL object is native connector object");
+        HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, H5I_INVALID_HID,
+                    "can't determine if VOL object is native connector object");
 
     /* Do a global flush if the file is opened for write */
     if (H5F_ACC_RDWR & intent) {

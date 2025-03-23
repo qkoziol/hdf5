@@ -1087,8 +1087,7 @@ done:
  */
 void *
 H5VL_attr_create(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, const char *name,
-                 hid_t type_id, hid_t space_id, H5P_genplist_t *acpl, H5P_genplist_t *aapl,
-                 void **req)
+                 hid_t type_id, hid_t space_id, H5P_genplist_t *acpl, H5P_genplist_t *aapl, void **req)
 {
     bool  vol_wrapper_set = false; /* Whether the VOL object wrapping context was set up */
     void *ret_value       = NULL;  /* Return value */
@@ -1101,7 +1100,8 @@ H5VL_attr_create(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_para
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__attr_create(vol_obj->data, loc_params, vol_obj->connector->cls, name, type_id, space_id, acpl, aapl, H5P_LST_DATASET_XFER_g, req)))
+    if (NULL == (ret_value = H5VL__attr_create(vol_obj->data, loc_params, vol_obj->connector->cls, name,
+                                               type_id, space_id, acpl, aapl, H5P_LST_DATASET_XFER_g, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, NULL, "attribute create failed");
 
 done:
@@ -1210,7 +1210,8 @@ done:
  *-------------------------------------------------------------------------
  */
 void *
-H5VL_attr_open(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, const char *name, H5P_genplist_t *aapl, void **req)
+H5VL_attr_open(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, const char *name,
+               H5P_genplist_t *aapl, void **req)
 {
     bool  vol_wrapper_set = false; /* Whether the VOL object wrapping context was set up */
     void *ret_value       = NULL;  /* Return value */
@@ -1223,7 +1224,8 @@ H5VL_attr_open(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__attr_open(vol_obj->data, loc_params, vol_obj->connector->cls, name, aapl, H5P_LST_DATASET_XFER_g, req)))
+    if (NULL == (ret_value = H5VL__attr_open(vol_obj->data, loc_params, vol_obj->connector->cls, name, aapl,
+                                             H5P_LST_DATASET_XFER_g, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPENOBJ, NULL, "attribute open failed");
 
 done:
@@ -1337,7 +1339,8 @@ H5VL_attr_read(const H5VL_object_t *vol_obj, hid_t mem_type_id, void *buf, void 
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__attr_read(vol_obj->data, vol_obj->connector->cls, mem_type_id, buf, H5P_LST_DATASET_XFER_g, req) < 0)
+    if (H5VL__attr_read(vol_obj->data, vol_obj->connector->cls, mem_type_id, buf, H5P_LST_DATASET_XFER_g,
+                        req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_READERROR, FAIL, "attribute read failed");
 
 done:
@@ -1445,7 +1448,8 @@ H5VL_attr_write(const H5VL_object_t *vol_obj, hid_t mem_type_id, const void *buf
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__attr_write(vol_obj->data, vol_obj->connector->cls, mem_type_id, buf, H5P_LST_DATASET_XFER_g, req) < 0)
+    if (H5VL__attr_write(vol_obj->data, vol_obj->connector->cls, mem_type_id, buf, H5P_LST_DATASET_XFER_g,
+                         req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_WRITEERROR, FAIL, "write failed");
 
 done:
@@ -1667,7 +1671,8 @@ H5VL_attr_specific(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_pa
 
     /* Call the corresponding internal VOL routine */
     /* (Must return value from callback, for iterators) */
-    if ((ret_value = H5VL__attr_specific(vol_obj->data, loc_params, vol_obj->connector->cls, args, H5P_LST_DATASET_XFER_g, req)) < 0)
+    if ((ret_value = H5VL__attr_specific(vol_obj->data, loc_params, vol_obj->connector->cls, args,
+                                         H5P_LST_DATASET_XFER_g, req)) < 0)
         HERROR(H5E_VOL, H5E_CANTOPERATE, "unable to execute attribute 'specific' callback");
 
 done:
@@ -1779,7 +1784,8 @@ H5VL_attr_optional(const H5VL_object_t *vol_obj, H5VL_optional_args_t *args, voi
 
     /* Call the corresponding internal VOL routine */
     /* (Must return value from callback, for iterators) */
-    if ((ret_value = H5VL__attr_optional(vol_obj->data, vol_obj->connector->cls, args, H5P_LST_DATASET_XFER_g, req)) < 0)
+    if ((ret_value = H5VL__attr_optional(vol_obj->data, vol_obj->connector->cls, args, H5P_LST_DATASET_XFER_g,
+                                         req)) < 0)
         HERROR(H5E_VOL, H5E_CANTOPERATE, "unable to execute attribute optional callback");
 
 done:
@@ -2049,7 +2055,9 @@ H5VL_dataset_create(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_p
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__dataset_create(vol_obj->data, loc_params, vol_obj->connector->cls, name, lcpl, type_id, space_id, dcpl, dapl, H5P_LST_DATASET_XFER_g, req)))
+    if (NULL ==
+        (ret_value = H5VL__dataset_create(vol_obj->data, loc_params, vol_obj->connector->cls, name, lcpl,
+                                          type_id, space_id, dcpl, dapl, H5P_LST_DATASET_XFER_g, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, NULL, "dataset create failed");
 
 done:
@@ -2169,7 +2177,8 @@ H5VL_dataset_open(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_par
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__dataset_open(vol_obj->data, loc_params, vol_obj->connector->cls, name, dapl, H5P_LST_DATASET_XFER_g, req)))
+    if (NULL == (ret_value = H5VL__dataset_open(vol_obj->data, loc_params, vol_obj->connector->cls, name,
+                                                dapl, H5P_LST_DATASET_XFER_g, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPENOBJ, NULL, "dataset open failed");
 
 done:
@@ -3035,7 +3044,9 @@ done:
  *-------------------------------------------------------------------------
  */
 void *
-H5VL_datatype_commit(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, const char *name, hid_t type_id, H5P_genplist_t *lcpl, H5P_genplist_t *tcpl, H5P_genplist_t *tapl, void **req)
+H5VL_datatype_commit(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, const char *name,
+                     hid_t type_id, H5P_genplist_t *lcpl, H5P_genplist_t *tcpl, H5P_genplist_t *tapl,
+                     void **req)
 {
     bool  vol_wrapper_set = false; /* Whether the VOL object wrapping context was set up */
     void *ret_value       = NULL;  /* Return value */
@@ -3048,7 +3059,8 @@ H5VL_datatype_commit(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__datatype_commit(vol_obj->data, loc_params, vol_obj->connector->cls, name, type_id, lcpl, tcpl, tapl, H5P_LST_DATASET_XFER_g, req)))
+    if (NULL == (ret_value = H5VL__datatype_commit(vol_obj->data, loc_params, vol_obj->connector->cls, name,
+                                                   type_id, lcpl, tcpl, tapl, H5P_LST_DATASET_XFER_g, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, NULL, "datatype commit failed");
 
 done:
@@ -3168,7 +3180,8 @@ H5VL_datatype_open(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_pa
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__datatype_open(vol_obj->data, loc_params, vol_obj->connector->cls, name, tapl, H5P_LST_DATASET_XFER_g, req)))
+    if (NULL == (ret_value = H5VL__datatype_open(vol_obj->data, loc_params, vol_obj->connector->cls, name,
+                                                 tapl, H5P_LST_DATASET_XFER_g, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPENOBJ, NULL, "datatype open failed");
 
 done:
@@ -3389,7 +3402,8 @@ H5VL_datatype_specific(const H5VL_object_t *vol_obj, H5VL_datatype_specific_args
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__datatype_specific(vol_obj->data, vol_obj->connector->cls, args, H5P_LST_DATASET_XFER_g, req) < 0)
+    if (H5VL__datatype_specific(vol_obj->data, vol_obj->connector->cls, args, H5P_LST_DATASET_XFER_g, req) <
+        0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "unable to execute datatype specific callback");
 
 done:
@@ -3776,7 +3790,8 @@ H5VL_file_create(const H5VL_connector_t *connector, const char *name, unsigned f
     FUNC_ENTER_NOAPI(NULL)
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__file_create(connector->cls, name, flags, fcpl, fapl, H5P_LST_DATASET_XFER_g, req)))
+    if (NULL ==
+        (ret_value = H5VL__file_create(connector->cls, name, flags, fcpl, fapl, H5P_LST_DATASET_XFER_g, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, NULL, "file create failed");
 
 done:
@@ -3958,7 +3973,7 @@ done:
  */
 void *
 H5VL_file_open(H5VL_connector_t *connector, const char *name, unsigned flags, H5P_genplist_t *fapl,
-              void **req)
+               void **req)
 {
     H5VL_file_open_find_connector_t find_connector_ud;
     bool                            found_connector = false; /* Whether a compatible connector was found */
@@ -3967,7 +3982,8 @@ H5VL_file_open(H5VL_connector_t *connector, const char *name, unsigned flags, H5
     FUNC_ENTER_NOAPI(NULL)
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__file_open(connector->cls, name, flags, fapl, H5P_LST_DATASET_XFER_g, req))) {
+    if (NULL ==
+        (ret_value = H5VL__file_open(connector->cls, name, flags, fapl, H5P_LST_DATASET_XFER_g, req))) {
         /* Opening the file failed - Determine whether we should search
          * the plugin path to see if any other VOL connectors are available
          * to attempt to open the file with. This only occurs if the default
@@ -3980,16 +3996,22 @@ H5VL_file_open(H5VL_connector_t *connector, const char *name, unsigned flags, H5
             find_connector_ud.cls      = NULL;
             find_connector_ud.fapl     = fapl;
 
-            iter_ret = H5PL_iterate(H5PL_ITER_TYPE_VOL, H5VL__file_open_find_connector_cb, (void *)&find_connector_ud);
+            iter_ret = H5PL_iterate(H5PL_ITER_TYPE_VOL, H5VL__file_open_find_connector_cb,
+                                    (void *)&find_connector_ud);
             if (iter_ret < 0)
-                HGOTO_ERROR(H5E_VOL, H5E_BADITER, NULL, "failed to iterate over available VOL connector plugins");
+                HGOTO_ERROR(H5E_VOL, H5E_BADITER, NULL,
+                            "failed to iterate over available VOL connector plugins");
             else if (iter_ret) {
                 /* If one of the available VOL connector plugins is
                  * able to open the file, open the file with it.
                  */
                 found_connector = true;
-                if (NULL == (ret_value = H5VL__file_open(find_connector_ud.cls, name, flags, find_connector_ud.fapl, H5P_LST_DATASET_XFER_g, req)))
-                    HGOTO_ERROR(H5E_VOL, H5E_CANTOPENOBJ, NULL, "can't open file '%s' with VOL connector '%s'", name, find_connector_ud.cls->name);
+                if (NULL ==
+                    (ret_value = H5VL__file_open(find_connector_ud.cls, name, flags, find_connector_ud.fapl,
+                                                 H5P_LST_DATASET_XFER_g, req)))
+                    HGOTO_ERROR(H5E_VOL, H5E_CANTOPENOBJ, NULL,
+                                "can't open file '%s' with VOL connector '%s'", name,
+                                find_connector_ud.cls->name);
             }
             else
                 /* Otherwise, if no VOL connectors are available, throw
@@ -4623,7 +4645,8 @@ H5VL_group_create(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_par
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__group_create(vol_obj->data, loc_params, vol_obj->connector->cls, name, lcpl, gcpl, gapl, H5P_LST_DATASET_XFER_g, req)))
+    if (NULL == (ret_value = H5VL__group_create(vol_obj->data, loc_params, vol_obj->connector->cls, name,
+                                                lcpl, gcpl, gapl, H5P_LST_DATASET_XFER_g, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, NULL, "group create failed");
 
 done:
@@ -4744,7 +4767,8 @@ H5VL_group_open(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_param
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__group_open(vol_obj->data, loc_params, vol_obj->connector->cls, name, gapl, H5P_LST_DATASET_XFER_g, req)))
+    if (NULL == (ret_value = H5VL__group_open(vol_obj->data, loc_params, vol_obj->connector->cls, name, gapl,
+                                              H5P_LST_DATASET_XFER_g, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPENOBJ, NULL, "group open failed");
 
 done:
@@ -5075,7 +5099,8 @@ H5VL_group_optional(const H5VL_object_t *vol_obj, H5VL_optional_args_t *args, vo
 
     /* Call the corresponding internal VOL routine */
     /* (Must return value from callback, for iterators) */
-    if ((ret_value = H5VL__group_optional(vol_obj->data, vol_obj->connector->cls, args, H5P_LST_DATASET_XFER_g, req)) < 0)
+    if ((ret_value = H5VL__group_optional(vol_obj->data, vol_obj->connector->cls, args,
+                                          H5P_LST_DATASET_XFER_g, req)) < 0)
         HERROR(H5E_VOL, H5E_CANTOPERATE, "unable to execute group optional callback");
 
 done:
@@ -5332,7 +5357,8 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_link_create(H5VL_link_create_args_t *args, const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, H5P_genplist_t *lcpl, H5P_genplist_t *lapl, void **req)
+H5VL_link_create(H5VL_link_create_args_t *args, const H5VL_object_t *vol_obj,
+                 const H5VL_loc_params_t *loc_params, H5P_genplist_t *lcpl, H5P_genplist_t *lapl, void **req)
 {
     H5VL_object_t tmp_vol_obj;               /* Temporary VOL object */
     bool          vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
@@ -5355,7 +5381,8 @@ H5VL_link_create(H5VL_link_create_args_t *args, const H5VL_object_t *vol_obj, co
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__link_create(args, vol_obj->data, loc_params, vol_obj->connector->cls, lcpl, lapl, H5P_LST_DATASET_XFER_g, req) < 0)
+    if (H5VL__link_create(args, vol_obj->data, loc_params, vol_obj->connector->cls, lcpl, lapl,
+                          H5P_LST_DATASET_XFER_g, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, FAIL, "link create failed");
 
 done:
@@ -5457,7 +5484,9 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_link_copy(const H5VL_object_t *src_vol_obj, const H5VL_loc_params_t *loc_params1, const H5VL_object_t *dst_vol_obj, const H5VL_loc_params_t *loc_params2, H5P_genplist_t *lcpl, H5P_genplist_t *lapl, void **req)
+H5VL_link_copy(const H5VL_object_t *src_vol_obj, const H5VL_loc_params_t *loc_params1,
+               const H5VL_object_t *dst_vol_obj, const H5VL_loc_params_t *loc_params2, H5P_genplist_t *lcpl,
+               H5P_genplist_t *lapl, void **req)
 {
     const H5VL_object_t *vol_obj;                   /* VOL object for object with data */
     bool                 vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
@@ -5577,7 +5606,9 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_link_move(const H5VL_object_t *src_vol_obj, const H5VL_loc_params_t *loc_params1, const H5VL_object_t *dst_vol_obj, const H5VL_loc_params_t *loc_params2, H5P_genplist_t *lcpl, H5P_genplist_t *lapl, void **req)
+H5VL_link_move(const H5VL_object_t *src_vol_obj, const H5VL_loc_params_t *loc_params1,
+               const H5VL_object_t *dst_vol_obj, const H5VL_loc_params_t *loc_params2, H5P_genplist_t *lcpl,
+               H5P_genplist_t *lapl, void **req)
 {
     const H5VL_object_t *vol_obj;                   /* VOL object for object with data */
     bool                 vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
@@ -5699,7 +5730,8 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_link_get(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, H5VL_link_get_args_t *args, void **req)
+H5VL_link_get(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, H5VL_link_get_args_t *args,
+              void **req)
 {
     bool   vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
     herr_t ret_value       = SUCCEED; /* Return value */
@@ -5712,7 +5744,8 @@ H5VL_link_get(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params,
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__link_get(vol_obj->data, loc_params, vol_obj->connector->cls, args, H5P_LST_DATASET_XFER_g, req) < 0)
+    if (H5VL__link_get(vol_obj->data, loc_params, vol_obj->connector->cls, args, H5P_LST_DATASET_XFER_g,
+                       req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "link get failed");
 
 done:
@@ -5807,7 +5840,8 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_link_specific(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, H5VL_link_specific_args_t *args, void **req)
+H5VL_link_specific(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params,
+                   H5VL_link_specific_args_t *args, void **req)
 {
     bool   vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
     herr_t ret_value       = SUCCEED; /* Return value */
@@ -5821,7 +5855,8 @@ H5VL_link_specific(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_pa
 
     /* Call the corresponding internal VOL routine */
     /* (Must return value from callback, for iterators) */
-    if ((ret_value = H5VL__link_specific(vol_obj->data, loc_params, vol_obj->connector->cls, args, H5P_LST_DATASET_XFER_g, req)) < 0)
+    if ((ret_value = H5VL__link_specific(vol_obj->data, loc_params, vol_obj->connector->cls, args,
+                                         H5P_LST_DATASET_XFER_g, req)) < 0)
         HERROR(H5E_VOL, H5E_CANTOPERATE, "unable to execute link specific callback");
 
 done:
@@ -6054,7 +6089,8 @@ done:
  *-------------------------------------------------------------------------
  */
 void *
-H5VL_object_open(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *params, H5I_type_t *opened_type, void **req)
+H5VL_object_open(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *params, H5I_type_t *opened_type,
+                 void **req)
 {
     bool  vol_wrapper_set = false; /* Whether the VOL object wrapping context was set up */
     void *ret_value       = NULL;  /* Return value */
@@ -6067,7 +6103,8 @@ H5VL_object_open(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *params, 
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (NULL == (ret_value = H5VL__object_open(vol_obj->data, params, vol_obj->connector->cls, opened_type, H5P_LST_DATASET_XFER_g, req)))
+    if (NULL == (ret_value = H5VL__object_open(vol_obj->data, params, vol_obj->connector->cls, opened_type,
+                                               H5P_LST_DATASET_XFER_g, req)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPENOBJ, NULL, "object open failed");
 
 done:
@@ -6164,7 +6201,9 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_object_copy(const H5VL_object_t *src_obj, const H5VL_loc_params_t *src_loc_params, const char *src_name, const H5VL_object_t *dst_obj, const H5VL_loc_params_t *dst_loc_params, const char *dst_name, H5P_genplist_t *ocpypl, H5P_genplist_t *lcpl, void **req)
+H5VL_object_copy(const H5VL_object_t *src_obj, const H5VL_loc_params_t *src_loc_params, const char *src_name,
+                 const H5VL_object_t *dst_obj, const H5VL_loc_params_t *dst_loc_params, const char *dst_name,
+                 H5P_genplist_t *ocpypl, H5P_genplist_t *lcpl, void **req)
 {
     bool   vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
     herr_t ret_value       = SUCCEED; /* Return value */
@@ -6299,7 +6338,8 @@ H5VL_object_get(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_param
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__object_get(vol_obj->data, loc_params, vol_obj->connector->cls, args, H5P_LST_DATASET_XFER_g, req) < 0)
+    if (H5VL__object_get(vol_obj->data, loc_params, vol_obj->connector->cls, args, H5P_LST_DATASET_XFER_g,
+                         req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "get failed");
 
 done:
@@ -6394,7 +6434,8 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_object_specific(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, H5VL_object_specific_args_t *args, void **req)
+H5VL_object_specific(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params,
+                     H5VL_object_specific_args_t *args, void **req)
 {
     bool   vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
     herr_t ret_value       = SUCCEED; /* Return value */
@@ -6408,7 +6449,8 @@ H5VL_object_specific(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_
 
     /* Call the corresponding internal VOL routine */
     /* (Must return value from callback, for iterators) */
-    if ((ret_value = H5VL__object_specific(vol_obj->data, loc_params, vol_obj->connector->cls, args, H5P_LST_DATASET_XFER_g, req)) < 0)
+    if ((ret_value = H5VL__object_specific(vol_obj->data, loc_params, vol_obj->connector->cls, args,
+                                           H5P_LST_DATASET_XFER_g, req)) < 0)
         HERROR(H5E_VOL, H5E_CANTOPERATE, "object specific failed");
 
 done:
@@ -6503,7 +6545,8 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_object_optional(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params, H5VL_optional_args_t *args, void **req)
+H5VL_object_optional(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params,
+                     H5VL_optional_args_t *args, void **req)
 {
     bool   vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
     herr_t ret_value       = SUCCEED; /* Return value */
@@ -6516,7 +6559,8 @@ H5VL_object_optional(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_
     vol_wrapper_set = true;
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__object_optional(vol_obj->data, loc_params, vol_obj->connector->cls, args, H5P_LST_DATASET_XFER_g, req) < 0)
+    if (H5VL__object_optional(vol_obj->data, loc_params, vol_obj->connector->cls, args,
+                              H5P_LST_DATASET_XFER_g, req) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "unable to execute object optional callback");
 
 done:

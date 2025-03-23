@@ -55,10 +55,17 @@
 /********************/
 
 /* Helper routines for sync/async API calls */
-static hid_t  H5O__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *lapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
-static hid_t  H5O__open_by_idx_api_common(hid_t loc_id, const char *group_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t n, H5P_genplist_t *lapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
-static herr_t H5O__get_info_by_name_api_common(hid_t loc_id, const char *name, H5O_info2_t *oinfo /*out*/, unsigned fields, H5P_genplist_t *lapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
-static herr_t H5O__copy_api_common(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *dst_name, H5P_genplist_t *ocpypl, H5P_genplist_t *lcpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static hid_t  H5O__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *lapl, void **token_ptr,
+                                   H5VL_object_t **_vol_obj_ptr);
+static hid_t  H5O__open_by_idx_api_common(hid_t loc_id, const char *group_name, H5_index_t idx_type,
+                                          H5_iter_order_t order, hsize_t n, H5P_genplist_t *lapl,
+                                          void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static herr_t H5O__get_info_by_name_api_common(hid_t loc_id, const char *name, H5O_info2_t *oinfo /*out*/,
+                                               unsigned fields, H5P_genplist_t *lapl, void **token_ptr,
+                                               H5VL_object_t **_vol_obj_ptr);
+static herr_t H5O__copy_api_common(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id,
+                                   const char *dst_name, H5P_genplist_t *ocpypl, H5P_genplist_t *lcpl,
+                                   void **token_ptr, H5VL_object_t **_vol_obj_ptr);
 static herr_t H5O__flush_api_common(hid_t obj_id, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
 static herr_t H5O__refresh_api_common(hid_t oid, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
 static htri_t H5O__close_check_type(hid_t object_id);
@@ -86,7 +93,8 @@ static htri_t H5O__close_check_type(hid_t object_id);
  *-------------------------------------------------------------------------
  */
 static hid_t
-H5O__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *lapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
+H5O__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *lapl, void **token_ptr,
+                     H5VL_object_t **_vol_obj_ptr)
 {
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
@@ -140,7 +148,7 @@ done:
 hid_t
 H5Oopen(hid_t loc_id, const char *name, hid_t lapl_id)
 {
-    H5P_genplist_t *lapl;     /* Link access property list */
+    H5P_genplist_t *lapl; /* Link access property list */
     hid_t           ret_value = H5I_INVALID_HID;
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -217,7 +225,8 @@ done:
  *-------------------------------------------------------------------------
  */
 static hid_t
-H5O__open_by_idx_api_common(hid_t loc_id, const char *group_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t n, H5P_genplist_t *lapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
+H5O__open_by_idx_api_common(hid_t loc_id, const char *group_name, H5_index_t idx_type, H5_iter_order_t order,
+                            hsize_t n, H5P_genplist_t *lapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
 {
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
@@ -272,7 +281,7 @@ hid_t
 H5Oopen_by_idx(hid_t loc_id, const char *group_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t n,
                hid_t lapl_id)
 {
-    H5P_genplist_t *lapl;     /* Link access property list */
+    H5P_genplist_t *lapl; /* Link access property list */
     hid_t           ret_value = H5I_INVALID_HID;
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -282,7 +291,8 @@ H5Oopen_by_idx(hid_t loc_id, const char *group_name, H5_index_t idx_type, H5_ite
         HGOTO_ERROR(H5E_OHDR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Open the object synchronously */
-    if ((ret_value = H5O__open_by_idx_api_common(loc_id, group_name, idx_type, order, n, lapl, NULL, NULL)) < 0)
+    if ((ret_value = H5O__open_by_idx_api_common(loc_id, group_name, idx_type, order, n, lapl, NULL, NULL)) <
+        0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to synchronously open object");
 
 done:
@@ -321,7 +331,8 @@ H5Oopen_by_idx_async(const char *app_file, const char *app_func, unsigned app_li
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Open the object asynchronously */
-    if ((ret_value = H5O__open_by_idx_api_common(loc_id, group_name, idx_type, order, n, lapl, token_ptr, &vol_obj)) < 0)
+    if ((ret_value = H5O__open_by_idx_api_common(loc_id, group_name, idx_type, order, n, lapl, token_ptr,
+                                                 &vol_obj)) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to asynchronously open object");
 
     /* If a token was created, add the token to the event set */
@@ -378,8 +389,7 @@ H5Oopen_by_token(hid_t loc_id, H5O_token_t token)
     loc_params.obj_type                    = vol_obj_type;
 
     /* Open the object */
-    if (NULL ==
-        (opened_obj = H5VL_object_open(vol_obj, &loc_params, &opened_type, H5_REQUEST_NULL)))
+    if (NULL == (opened_obj = H5VL_object_open(vol_obj, &loc_params, &opened_type, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_OHDR, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open object");
 
     /* Register the object's ID */
@@ -400,7 +410,9 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5O__copy_api_common(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *dst_name, H5P_genplist_t *ocpypl, H5P_genplist_t *lcpl, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
+H5O__copy_api_common(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *dst_name,
+                     H5P_genplist_t *ocpypl, H5P_genplist_t *lcpl, void **token_ptr,
+                     H5VL_object_t **_vol_obj_ptr)
 {
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
@@ -429,7 +441,8 @@ H5O__copy_api_common(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, c
     loc_params2.obj_type = H5I_get_type(dst_loc_id);
 
     /* Copy the object */
-    if (H5VL_object_copy(vol_obj1, &loc_params1, src_name, *vol_obj_ptr, &loc_params2, dst_name, ocpypl, lcpl, token_ptr) < 0)
+    if (H5VL_object_copy(vol_obj1, &loc_params1, src_name, *vol_obj_ptr, &loc_params2, dst_name, ocpypl, lcpl,
+                         token_ptr) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTCOPY, FAIL, "unable to copy object");
 
 done:
@@ -574,7 +587,8 @@ H5Ocopy_async(const char *app_file, const char *app_func, unsigned app_line, hid
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* To copy an object asynchronously */
-    if (H5O__copy_api_common(src_loc_id, src_name, dst_loc_id, dst_name, ocpypl, lcpl, token_ptr, &vol_obj) < 0)
+    if (H5O__copy_api_common(src_loc_id, src_name, dst_loc_id, dst_name, ocpypl, lcpl, token_ptr, &vol_obj) <
+        0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTCOPY, FAIL, "unable to asynchronously copy object");
 
     /* If a token was created, add the token to the event set */
@@ -638,7 +652,7 @@ done:
 herr_t
 H5Oflush(hid_t obj_id)
 {
-    herr_t          ret_value = SUCCEED; /* Return value     */
+    herr_t ret_value = SUCCEED; /* Return value     */
 
     FUNC_ENTER_API(FAIL)
 
@@ -662,10 +676,10 @@ done:
 herr_t
 H5Oflush_async(const char *app_file, const char *app_func, unsigned app_line, hid_t obj_id, hid_t es_id)
 {
-    H5VL_object_t  *vol_obj   = NULL;            /* Object for loc_id */
-    void           *token     = NULL;            /* Request token for async operation        */
-    void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    herr_t          ret_value = SUCCEED;         /* Return value */
+    H5VL_object_t *vol_obj   = NULL;            /* Object for loc_id */
+    void          *token     = NULL;            /* Request token for async operation        */
+    void         **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
+    herr_t         ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -738,7 +752,7 @@ done:
 herr_t
 H5Orefresh(hid_t oid)
 {
-    herr_t          ret_value = SUCCEED; /* Return value     */
+    herr_t ret_value = SUCCEED; /* Return value     */
 
     FUNC_ENTER_API(FAIL)
 
@@ -762,10 +776,10 @@ done:
 herr_t
 H5Orefresh_async(const char *app_file, const char *app_func, unsigned app_line, hid_t oid, hid_t es_id)
 {
-    H5VL_object_t  *vol_obj   = NULL;            /* Object for loc_id */
-    void           *token     = NULL;            /* Request token for async operation        */
-    void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    herr_t          ret_value = SUCCEED;         /* Return value */
+    H5VL_object_t *vol_obj   = NULL;            /* Object for loc_id */
+    void          *token     = NULL;            /* Request token for async operation        */
+    void         **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
+    herr_t         ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -1101,7 +1115,8 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5O__get_info_by_name_api_common(hid_t loc_id, const char *name, H5O_info2_t *oinfo /*out*/, unsigned fields, H5P_genplist_t *lapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
+H5O__get_info_by_name_api_common(hid_t loc_id, const char *name, H5O_info2_t *oinfo /*out*/, unsigned fields,
+                                 H5P_genplist_t *lapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
 {
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =

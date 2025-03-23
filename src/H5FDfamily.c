@@ -161,7 +161,7 @@ static const H5FD_class_t H5FD_family_g = {
 static herr_t
 H5FD__family_get_default_config(H5FD_family_fapl_t *fa_out)
 {
-    herr_t          ret_value = SUCCEED;
+    herr_t ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
 

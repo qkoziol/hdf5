@@ -241,7 +241,7 @@ H5F_term_package(void)
 static herr_t
 H5F__close_cb(H5VL_object_t *file_vol_obj, void **request)
 {
-    herr_t          ret_value = SUCCEED; /* Return value */
+    herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -853,13 +853,13 @@ H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_op
                      const char *prop_prefix, const char *file_name, unsigned file_intent,
                      H5P_genplist_t *fapl)
 {
-    H5F_t          *src_file = NULL;         /* Source file */
-    H5F_efc_t      *efc              = NULL; /* External file cache */
-    char           *full_name        = NULL; /* File name with prefix */
-    char           *actual_file_name = NULL; /* File's actual name */
-    char           *temp_file_name   = NULL; /* Temporary pointer to file name */
-    size_t          temp_file_name_len;      /* Length of temporary file name */
-    herr_t          ret_value = SUCCEED;     /* Return value */
+    H5F_t     *src_file         = NULL; /* Source file */
+    H5F_efc_t *efc              = NULL; /* External file cache */
+    char      *full_name        = NULL; /* File name with prefix */
+    char      *actual_file_name = NULL; /* File's actual name */
+    char      *temp_file_name   = NULL; /* Temporary pointer to file name */
+    size_t     temp_file_name_len;      /* Length of temporary file name */
+    herr_t     ret_value = SUCCEED;     /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
@@ -2688,7 +2688,7 @@ done:
 H5F_t *
 H5F__reopen(H5F_t *f)
 {
-    H5F_t          *ret_value = NULL; /* Return value */
+    H5F_t *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -4067,9 +4067,9 @@ done:
 hid_t
 H5F_get_file_id(H5VL_object_t *vol_obj, H5I_type_t obj_type, bool app_ref)
 {
-    void                  *vol_obj_file = NULL; /* File object pointer */
-    H5VL_object_get_args_t vol_cb_args;         /* Arguments to VOL callback */
-    H5VL_loc_params_t      loc_params;          /* Location parameters */
+    void                  *vol_obj_file = NULL;               /* File object pointer */
+    H5VL_object_get_args_t vol_cb_args;                       /* Arguments to VOL callback */
+    H5VL_loc_params_t      loc_params;                        /* Location parameters */
     hid_t                  file_id         = H5I_INVALID_HID; /* File ID for object */
     bool                   vol_wrapper_set = false; /* Whether the VOL object wrapping context was set up */
     hid_t                  ret_value       = H5I_INVALID_HID; /* Return value */

@@ -260,7 +260,7 @@ H5G_term_package(void)
 static herr_t
 H5G__close_cb(H5VL_object_t *grp_vol_obj, void **request)
 {
-    herr_t          ret_value = SUCCEED; /* Return value */
+    herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 

@@ -190,7 +190,7 @@ NOTES
 herr_t
 H5D__init_package(void)
 {
-    herr_t          ret_value = SUCCEED; /* Return value */
+    herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -330,7 +330,7 @@ H5D_term_package(void)
 static herr_t
 H5D__close_cb(H5VL_object_t *dset_vol_obj, void **request)
 {
-    herr_t          ret_value = SUCCEED; /* Return value */
+    herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -1668,13 +1668,13 @@ done:
 static herr_t
 H5D__open_oid(H5D_t *dataset, H5P_genplist_t *dapl)
 {
-    H5O_fill_t     *fill_prop = NULL;          /* Pointer to dataset's fill value info */
-    unsigned        alloc_time_state;          /* Allocation time state */
-    htri_t          msg_exists;                /* Whether a particular type of message exists */
-    bool            layout_init       = false; /* Flag to indicate that chunk information was initialized */
-    bool            must_init_storage = false;
-    bool            fill_init         = false;   /* Flag to indicate that fill information was initialized */
-    herr_t          ret_value         = SUCCEED; /* Return value */
+    H5O_fill_t *fill_prop = NULL;          /* Pointer to dataset's fill value info */
+    unsigned    alloc_time_state;          /* Allocation time state */
+    htri_t      msg_exists;                /* Whether a particular type of message exists */
+    bool        layout_init       = false; /* Flag to indicate that chunk information was initialized */
+    bool        must_init_storage = false;
+    bool        fill_init         = false;   /* Flag to indicate that fill information was initialized */
+    herr_t      ret_value         = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE_TAG(dataset->oloc.addr)
 
@@ -3755,7 +3755,8 @@ H5D_get_access_plist(const H5D_t *dset)
             HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, NULL, "can't set data cache number of slots");
 
         /* Set the data cache byte size to the value of the default FAPL */
-        if (H5P_get(H5P_LST_DATASET_ACCESS_g, H5D_ACS_DATA_CACHE_BYTE_SIZE_NAME, &def_chunk_info.nbytes_max) < 0)
+        if (H5P_get(H5P_LST_DATASET_ACCESS_g, H5D_ACS_DATA_CACHE_BYTE_SIZE_NAME, &def_chunk_info.nbytes_max) <
+            0)
             HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, NULL, "can't get data cache byte size");
         if (H5P_set(new_dapl, H5D_ACS_DATA_CACHE_BYTE_SIZE_NAME, &def_chunk_info.nbytes_max) < 0)
             HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, NULL, "can't set data cache byte size");

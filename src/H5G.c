@@ -347,7 +347,7 @@ H5Gcreate_anon(hid_t loc_id, hid_t gcpl_id, hid_t gapl_id)
     void             *grp = NULL;                  /* Structure for new group */
     H5P_genplist_t   *gcpl;                        /* Group creation property list */
     H5P_genplist_t   *gapl;                        /* Group access property list */
-    H5VL_object_t    *vol_obj  = NULL;             /* Object for loc_id */
+    H5VL_object_t    *vol_obj = NULL;              /* Object for loc_id */
     H5VL_loc_params_t loc_params;                  /* Location parameters for object access */
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */
 
@@ -376,7 +376,8 @@ H5Gcreate_anon(hid_t loc_id, hid_t gcpl_id, hid_t gapl_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "invalid location identifier");
 
     /* Create the group */
-    if (NULL == (grp = H5VL_group_create(vol_obj, &loc_params, NULL, H5P_LST_LINK_CREATE_g, gcpl, gapl, H5_REQUEST_NULL)))
+    if (NULL == (grp = H5VL_group_create(vol_obj, &loc_params, NULL, H5P_LST_LINK_CREATE_g, gcpl, gapl,
+                                         H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_SYM, H5E_CANTINIT, H5I_INVALID_HID, "unable to create group");
 
     /* Get an ID for the group */
@@ -703,7 +704,8 @@ H5G__get_info_by_name_api_common(hid_t loc_id, const char *name, H5G_info_t *gro
 
     /* Set up VOL callback & object access arguments */
     vol_cb_args.op_type = H5VL_GROUP_GET_INFO;
-    if (H5VL_setup_name_args(loc_id, name, false, lapl, vol_obj_ptr, &vol_cb_args.args.get_info.loc_params) < 0)
+    if (H5VL_setup_name_args(loc_id, name, false, lapl, vol_obj_ptr, &vol_cb_args.args.get_info.loc_params) <
+        0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTSET, FAIL, "can't set object access arguments");
     vol_cb_args.args.get_info.ginfo = group_info;
 
@@ -819,7 +821,8 @@ H5G__get_info_by_idx_api_common(hid_t loc_id, const char *group_name, H5_index_t
 
     /* Set up VOL callback & object access arguments */
     vol_cb_args.op_type = H5VL_GROUP_GET_INFO;
-    if (H5VL_setup_idx_args(loc_id, group_name, idx_type, order, n, false, lapl, vol_obj_ptr, &vol_cb_args.args.get_info.loc_params) < 0)
+    if (H5VL_setup_idx_args(loc_id, group_name, idx_type, order, n, false, lapl, vol_obj_ptr,
+                            &vol_cb_args.args.get_info.loc_params) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTSET, FAIL, "can't set object access arguments");
     vol_cb_args.args.get_info.ginfo = group_info;
 

@@ -2452,12 +2452,14 @@ H5Tcopy(hid_t obj_id)
              * NOTE: This will have to be closed after we're done with it.
              */
             if (H5VL_dataset_get(vol_obj, &vol_cb_args, H5_REQUEST_NULL) < 0)
-                HGOTO_ERROR(H5E_DATATYPE, H5E_CANTGET, H5I_INVALID_HID, "unable to get datatype from the dataset");
+                HGOTO_ERROR(H5E_DATATYPE, H5E_CANTGET, H5I_INVALID_HID,
+                            "unable to get datatype from the dataset");
             dset_tid = vol_cb_args.args.get_type.type_id;
 
             /* Unwrap the type ID */
             if (NULL == (dt = (H5T_t *)H5I_object(dset_tid)))
-                HGOTO_ERROR(H5E_DATATYPE, H5E_BADTYPE, H5I_INVALID_HID, "received invalid datatype from the dataset");
+                HGOTO_ERROR(H5E_DATATYPE, H5E_BADTYPE, H5I_INVALID_HID,
+                            "received invalid datatype from the dataset");
         } break;
 
         case H5I_UNINIT:
@@ -6612,7 +6614,7 @@ H5T_convert_committed_datatype(H5T_t *dt, H5F_t *f)
 
         /* If the datatype is committed through the VOL, close it */
         if (NULL != dt->vol_obj) {
-            H5VL_object_t  *vol_obj = dt->vol_obj;
+            H5VL_object_t *vol_obj = dt->vol_obj;
 
             /* Close the datatype through the VOL*/
             if (H5VL_datatype_close(vol_obj, H5_REQUEST_NULL) < 0)

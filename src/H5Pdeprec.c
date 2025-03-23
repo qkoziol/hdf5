@@ -492,8 +492,8 @@ done:
 herr_t
 H5Pencode1(hid_t plist_id, void *buf, size_t *nalloc)
 {
-    H5P_genplist_t *plist; /* Property list to query */
-    herr_t          ret_value    = SUCCEED; /* return value */
+    H5P_genplist_t *plist;               /* Property list to query */
+    herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
