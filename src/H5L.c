@@ -126,7 +126,7 @@ H5Lmove(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *ds
     /* Check the link create property list */
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
-    lcpl_id = H5P_PLIST_ID(lcpl);  /* Allow for application passing H5P_DEFAULT */
+    lcpl_id = H5P_PLIST_ID(lcpl); /* Allow for application passing H5P_DEFAULT */
 
     /* Set the LCPL for the API context */
     H5CX_set_lcpl(lcpl_id);
@@ -134,7 +134,7 @@ H5Lmove(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *ds
     /* Check the link access property list */
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
-    lapl_id = H5P_PLIST_ID(lapl);  /* Allow for application passing H5P_DEFAULT */
+    lapl_id = H5P_PLIST_ID(lapl); /* Allow for application passing H5P_DEFAULT */
 
     /* Verify access property list and set up collective metadata if appropriate */
     if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, dst_loc_id, true) < 0)
@@ -231,7 +231,7 @@ H5Lcopy(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *ds
     /* Check the link create property list */
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
-    lcpl_id = H5P_PLIST_ID(lcpl);  /* Allow for application passing H5P_DEFAULT */
+    lcpl_id = H5P_PLIST_ID(lcpl); /* Allow for application passing H5P_DEFAULT */
 
     /* Set the LCPL for the API context */
     H5CX_set_lcpl(lcpl_id);
@@ -239,10 +239,11 @@ H5Lcopy(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *ds
     /* Check the link create property list */
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
-    lapl_id = H5P_PLIST_ID(lapl);  /* Allow for application passing H5P_DEFAULT */
+    lapl_id = H5P_PLIST_ID(lapl); /* Allow for application passing H5P_DEFAULT */
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, ((src_loc_id != H5L_SAME_LOC) ? src_loc_id : dst_loc_id), true) < 0)
+    if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, ((src_loc_id != H5L_SAME_LOC) ? src_loc_id : dst_loc_id), true) <
+        0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Set location parameter for source object */
@@ -676,7 +677,7 @@ H5Lcreate_external(const char *file_name, const char *obj_name, hid_t link_loc_i
     /* Get the link creation property list */
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
-    lcpl_id = H5P_PLIST_ID(lcpl);  /* Allow for application passing H5P_DEFAULT */
+    lcpl_id = H5P_PLIST_ID(lcpl); /* Allow for application passing H5P_DEFAULT */
 
     /* Set the LCPL for the API context */
     H5CX_set_lcpl(lcpl_id);
@@ -684,7 +685,7 @@ H5Lcreate_external(const char *file_name, const char *obj_name, hid_t link_loc_i
     /* Get the link access property list */
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
-    lapl_id = H5P_PLIST_ID(lapl);  /* Allow for application passing H5P_DEFAULT */
+    lapl_id = H5P_PLIST_ID(lapl); /* Allow for application passing H5P_DEFAULT */
 
     /* Verify access property list and set up collective metadata if appropriate */
     if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, link_loc_id, true) < 0)
@@ -779,7 +780,7 @@ H5Lcreate_ud(hid_t link_loc_id, const char *link_name, H5L_type_t link_type, con
     /* Get the link creation property list */
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
-    lcpl_id = H5P_PLIST_ID(lcpl);  /* Allow for application passing H5P_DEFAULT */
+    lcpl_id = H5P_PLIST_ID(lcpl); /* Allow for application passing H5P_DEFAULT */
 
     /* Set the LCPL for the API context */
     H5CX_set_lcpl(lcpl_id);
@@ -787,7 +788,7 @@ H5Lcreate_ud(hid_t link_loc_id, const char *link_name, H5L_type_t link_type, con
     /* Get the link access property list */
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
-    lapl_id = H5P_PLIST_ID(lapl);  /* Allow for application passing H5P_DEFAULT */
+    lapl_id = H5P_PLIST_ID(lapl); /* Allow for application passing H5P_DEFAULT */
 
     /* Verify access property list and set up collective metadata if appropriate */
     if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, link_loc_id, true) < 0)

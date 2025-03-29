@@ -65,7 +65,7 @@
             HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, (FAILVAL), "can't get property list");
 
 /* Common macro for the duplicated code to retrieve properties from a property list */
-#define H5CX_RETRIEVE_PROP_COMMON(PL, MTHD, SUB_PL, DEF_PL, PROP_NAME, PROP_FIELD)                                 \
+#define H5CX_RETRIEVE_PROP_COMMON(PL, MTHD, SUB_PL, DEF_PL, PROP_NAME, PROP_FIELD)                           \
     {                                                                                                        \
                                                                                                              \
         /* Check for default property list */                                                                \
@@ -77,7 +77,8 @@
             H5CX_RETRIEVE_PLIST(PL, FAIL)                                                                    \
                                                                                                              \
             /* Get the property */                                                                           \
-            if (H5_UNLIKELY(H5_GLUE(H5P_, MTHD)((*head)->ctx.PL, (PROP_NAME), &(*head)->ctx.PROP_FIELD) < 0))            \
+            if (H5_UNLIKELY(H5_GLUE(H5P_, MTHD)((*head)->ctx.PL, (PROP_NAME), &(*head)->ctx.PROP_FIELD) <    \
+                            0))                                                                              \
                 HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't retrieve value from API context");        \
         } /* end else */                                                                                     \
                                                                                                              \
@@ -92,7 +93,7 @@
     H5CX_RETRIEVE_PROP_COMMON(PL, get, PL, DEF_PL, PROP_NAME, PROP_FIELD)
 
 /* Macro for the duplicated code to "peek" a value from a plist if the context value is invalid */
-#define H5CX_PEEK_PROP_VALID(PL, DEF_PL, PROP_NAME, PROP_FIELD)                                          \
+#define H5CX_PEEK_PROP_VALID(PL, DEF_PL, PROP_NAME, PROP_FIELD)                                              \
     /* Check if the value has been retrieved already */                                                      \
     if (!(*head)->ctx.H5_GLUE(PROP_FIELD, _valid))                                                           \
     H5CX_RETRIEVE_PROP_COMMON(PL, peek, PL, DEF_PL, PROP_NAME, PROP_FIELD)
@@ -201,33 +202,34 @@ typedef struct H5CX_lcpl_cache_t {
 /* (Same as the cached DXPL struct, above, except for the default LAPL) */
 typedef struct H5CX_lapl_cache_t {
     const char *elink_prefix; /* Prefix for external link prefix (H5L_ACS_ELINK_PREFIX_NAME) */
-    size_t nlinks; /* Number of soft / UD links to traverse (H5L_ACS_NLINKS_NAME) */
+    size_t      nlinks;       /* Number of soft / UD links to traverse (H5L_ACS_NLINKS_NAME) */
 } H5CX_lapl_cache_t;
 
 /* Typedef for cached default object creation property list information */
 /* (Same as the cached DXPL struct, above, except for the default OCPL) */
 typedef struct H5CX_ocpl_cache_t {
 #ifdef H5O_ENABLE_BAD_MESG_COUNT
-    bool bad_mesg_count;       /* Write a bad message count to the object header */
-#endif                         /* H5O_ENABLE_BAD_MESG_COUNT */
-    unsigned attr_max_compact; /* Maximum # of attributes to store in compact form */
-    unsigned attr_min_dense;   /* Minimum # of attributes to store in dense form */
-    uint8_t  ohdr_flags;       /* Object header flags */
-    H5O_pline_t pline;         /* Filter pipeline for object creation */
+    bool bad_mesg_count;          /* Write a bad message count to the object header */
+#endif                            /* H5O_ENABLE_BAD_MESG_COUNT */
+    unsigned    attr_max_compact; /* Maximum # of attributes to store in compact form */
+    unsigned    attr_min_dense;   /* Minimum # of attributes to store in dense form */
+    uint8_t     ohdr_flags;       /* Object header flags */
+    H5O_pline_t pline;            /* Filter pipeline for object creation */
 } H5CX_ocpl_cache_t;
 
 /* Typedef for cached default object copy property list information */
 /* (Same as the cached DXPL struct, above, except for the default OCPYPL) */
 typedef struct H5CX_ocpypl_cache_t {
-    H5O_copy_dtype_merge_list_t *comm_dtype_merge_list; /* Committed datatype merge list for object copy (H5O_CPY_MERGE_COMM_DT_LIST_NAME) */
+    H5O_copy_dtype_merge_list_t *comm_dtype_merge_list; /* Committed datatype merge list for object copy
+                                                           (H5O_CPY_MERGE_COMM_DT_LIST_NAME) */
 } H5CX_ocpypl_cache_t;
 
 /* Typedef for cached default dataset creation property list information */
 /* (Same as the cached DXPL struct, above, except for the default DCPL) */
 typedef struct H5CX_dcpl_cache_t {
-    bool min_dset_ohdr; /* Whether to minimize dataset object header */
-    H5O_pline_t pline; /* Filter pipeline for dataset creation */
-    H5O_layout_t layout; /* Storage layout for dataset creation */
+    bool         min_dset_ohdr; /* Whether to minimize dataset object header */
+    H5O_pline_t  pline;         /* Filter pipeline for dataset creation */
+    H5O_layout_t layout;        /* Storage layout for dataset creation */
 } H5CX_dcpl_cache_t;
 
 /* Typedef for cached default dataset access property list information */
@@ -241,13 +243,13 @@ typedef struct H5CX_dapl_cache_t {
 /* (Same as the cached DXPL struct, above, except for the default FAPL) */
 typedef struct H5CX_fapl_cache_t {
 #ifdef H5_HAVE_PARALLEL
-    MPI_Comm mpi_comm;   /* MPI communicator */
-#endif /* H5_HAVE_PARALLEL */
-    H5VL_connector_prop_t vol_connector_prop;  /* Property for VOL connector & info */
-    H5FD_driver_prop_t driver_prop; /* Property for driver, info & configuration string */
-    H5FD_file_image_info_t file_image_info; /* Property for file image info */
-    H5F_libver_t low_bound;  /* low_bound property for H5Pset_libver_bounds() */
-    H5F_libver_t high_bound; /* high_bound property for H5Pset_libver_bounds */
+    MPI_Comm mpi_comm;                         /* MPI communicator */
+#endif                                         /* H5_HAVE_PARALLEL */
+    H5VL_connector_prop_t  vol_connector_prop; /* Property for VOL connector & info */
+    H5FD_driver_prop_t     driver_prop;        /* Property for driver, info & configuration string */
+    H5FD_file_image_info_t file_image_info;    /* Property for file image info */
+    H5F_libver_t           low_bound;          /* low_bound property for H5Pset_libver_bounds() */
+    H5F_libver_t           high_bound;         /* high_bound property for H5Pset_libver_bounds */
 } H5CX_fapl_cache_t;
 
 /********************/
@@ -557,8 +559,8 @@ done:
 herr_t
 H5CX_init_phase2(void)
 {
-    H5P_genplist_t *fapl      = H5P_LST_FILE_ACCESS_g;    /* File access property list */
-    herr_t ret_value = SUCCEED; /* Return value */
+    H5P_genplist_t *fapl      = H5P_LST_FILE_ACCESS_g; /* File access property list */
+    herr_t          ret_value = SUCCEED;               /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
@@ -574,7 +576,9 @@ H5CX_init_phase2(void)
             void *new_connector_info = NULL; /* Copy of connector info */
 
             /* Allocate and copy connector info */
-            if (H5VL_copy_connector_info(H5CX_def_fapl_cache.vol_connector_prop.connector, &new_connector_info, H5CX_def_fapl_cache.vol_connector_prop.connector_info) < 0)
+            if (H5VL_copy_connector_info(H5CX_def_fapl_cache.vol_connector_prop.connector,
+                                         &new_connector_info,
+                                         H5CX_def_fapl_cache.vol_connector_prop.connector_info) < 0)
                 HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "connector info copy failed");
             H5CX_def_fapl_cache.vol_connector_prop.connector_info = new_connector_info;
         } /* end if */
@@ -623,7 +627,8 @@ H5CX_top_term_package(void)
         if (H5CX_def_fapl_cache.vol_connector_prop.connector) {
             /* Clean up any VOL connector info */
             if (H5CX_def_fapl_cache.vol_connector_prop.connector_info) {
-                (void)H5VL_free_connector_info(H5CX_def_fapl_cache.vol_connector_prop.connector, H5CX_def_fapl_cache.vol_connector_prop.connector_info);
+                (void)H5VL_free_connector_info(H5CX_def_fapl_cache.vol_connector_prop.connector,
+                                               H5CX_def_fapl_cache.vol_connector_prop.connector_info);
                 H5CX_def_fapl_cache.vol_connector_prop.connector_info = NULL;
             }
 
@@ -632,7 +637,7 @@ H5CX_top_term_package(void)
             H5CX_def_fapl_cache.vol_connector_prop.connector = NULL;
 
             n++; /*H5VL*/
-        } /* end if */
+        }        /* end if */
 
         /* Release the VFD property, if it was set */
         if (H5CX_def_fapl_cache.driver_prop.driver) {
@@ -640,7 +645,7 @@ H5CX_top_term_package(void)
             (void)H5FD_driver_prop_free(&H5CX_def_fapl_cache.driver_prop);
 
             n++; /*H5FD*/
-        } /* end if */
+        }        /* end if */
 
         /* Mark closed */
         if (0 == n)
@@ -734,15 +739,15 @@ H5CX_push(H5CX_node_t *cnode)
     assert(head);
 
     /* Set non-zero context info */
-    cnode->ctx.dxpl_id = H5P_DATASET_XFER_DEFAULT;
-    cnode->ctx.ocpl_id = H5P_OBJECT_CREATE_DEFAULT;
+    cnode->ctx.dxpl_id   = H5P_DATASET_XFER_DEFAULT;
+    cnode->ctx.ocpl_id   = H5P_OBJECT_CREATE_DEFAULT;
     cnode->ctx.ocpypl_id = H5P_OBJECT_COPY_DEFAULT;
-    cnode->ctx.dapl_id = H5P_DATASET_ACCESS_DEFAULT;
-    cnode->ctx.lcpl_id = H5P_LINK_CREATE_DEFAULT;
-    cnode->ctx.lapl_id = H5P_LINK_ACCESS_DEFAULT;
-    cnode->ctx.fapl_id = H5P_FILE_ACCESS_DEFAULT;
-    cnode->ctx.tag     = H5AC__INVALID_TAG;
-    cnode->ctx.ring    = H5AC_RING_USER;
+    cnode->ctx.dapl_id   = H5P_DATASET_ACCESS_DEFAULT;
+    cnode->ctx.lcpl_id   = H5P_LINK_CREATE_DEFAULT;
+    cnode->ctx.lapl_id   = H5P_LINK_ACCESS_DEFAULT;
+    cnode->ctx.fapl_id   = H5P_FILE_ACCESS_DEFAULT;
+    cnode->ctx.tag       = H5AC__INVALID_TAG;
+    cnode->ctx.ring      = H5AC_RING_USER;
 
 #ifdef H5_HAVE_PARALLEL
     cnode->ctx.btype = MPI_BYTE;
@@ -1057,26 +1062,26 @@ H5CX__reset_dxpl(H5CX_node_t *head)
 
     /* Reset the cached data */
     if (head->ctx.dxpl_id != H5P_DATASET_XFER_DEFAULT) {
-        head->ctx.max_temp_buf_valid = false;
-        head->ctx.tconv_buf_valid = false;
-        head->ctx.bkgr_buf_valid = false;
-        head->ctx.bkgr_buf_type_valid = false;
+        head->ctx.max_temp_buf_valid      = false;
+        head->ctx.tconv_buf_valid         = false;
+        head->ctx.bkgr_buf_valid          = false;
+        head->ctx.bkgr_buf_type_valid     = false;
         head->ctx.btree_split_ratio_valid = false;
-        head->ctx.vec_size_valid = false;
+        head->ctx.vec_size_valid          = false;
 #ifdef H5_HAVE_PARALLEL
-        head->ctx.io_xfer_mode_valid = false;
-        head->ctx.mpio_coll_opt_valid = false;
-        head->ctx.mpio_chunk_opt_mode_valid = false;
-        head->ctx.mpio_chunk_opt_num_valid = false;
+        head->ctx.io_xfer_mode_valid         = false;
+        head->ctx.mpio_coll_opt_valid        = false;
+        head->ctx.mpio_chunk_opt_mode_valid  = false;
+        head->ctx.mpio_chunk_opt_num_valid   = false;
         head->ctx.mpio_chunk_opt_ratio_valid = false;
 #endif /* H5_HAVE_PARALLEL */
-        head->ctx.err_detect_valid = false;
-        head->ctx.filter_cb_valid = false;
-        head->ctx.data_transform_valid = false;
-        head->ctx.vl_alloc_info_valid = false;
-        head->ctx.dt_conv_cb_valid = false;
+        head->ctx.err_detect_valid        = false;
+        head->ctx.filter_cb_valid         = false;
+        head->ctx.data_transform_valid    = false;
+        head->ctx.vl_alloc_info_valid     = false;
+        head->ctx.dt_conv_cb_valid        = false;
         head->ctx.selection_io_mode_valid = false;
-        head->ctx.modify_write_buf_valid = false;
+        head->ctx.modify_write_buf_valid  = false;
     }
 
     head->ctx.dxpl = NULL;
@@ -1174,7 +1179,7 @@ H5CX__reset_lcpl(H5CX_node_t *head)
 
     /* Reset the cached data */
     if (head->ctx.lcpl_id != H5P_LINK_CREATE_DEFAULT) {
-        head->ctx.encoding_valid = false;
+        head->ctx.encoding_valid           = false;
         head->ctx.intermediate_group_valid = false;
     }
 
@@ -1306,11 +1311,12 @@ H5CX_set_apl(hid_t *acspl_id, const H5P_libclass_t *libclass,
 #endif /* H5_HAVE_PARALLEL */
                      is_collective)
 {
-    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
     htri_t is_lapl; /* Whether the access property list is (or is derived from) a link access property list */
-    htri_t is_dapl; /* Whether the access property list is (or is derived from) a dataset access property list */
+    htri_t
+        is_dapl; /* Whether the access property list is (or is derived from) a dataset access property list */
     htri_t is_fapl; /* Whether the access property list is (or is derived from) a file access property list */
-    herr_t        ret_value = SUCCEED; /* Return value */
+    herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
@@ -1419,10 +1425,10 @@ H5CX__reset_fapl(H5CX_node_t *head)
         head->ctx.mpi_comm_valid = false;
 #endif /* H5_HAVE_PARALLEL */
         head->ctx.vol_connector_prop_valid = false;
-        head->ctx.driver_prop_valid = false;
-        head->ctx.file_image_info_valid = false;
-        head->ctx.low_bound_valid = false;
-        head->ctx.high_bound_valid = false;
+        head->ctx.driver_prop_valid        = false;
+        head->ctx.file_image_info_valid    = false;
+        head->ctx.low_bound_valid          = false;
+        head->ctx.high_bound_valid         = false;
     }
 
     head->ctx.fapl = NULL;
@@ -1442,7 +1448,7 @@ H5CX__reset_fapl(H5CX_node_t *head)
 void
 H5CX_set_fapl(hid_t fapl_id)
 {
-    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
@@ -1471,7 +1477,7 @@ H5CX_set_fapl(hid_t fapl_id)
 void
 H5CX_set_ocpypl(hid_t ocpypl_id)
 {
-    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
@@ -4021,8 +4027,8 @@ H5CX__reset_ocpl(H5CX_node_t *head)
         head->ctx.bad_mesg_count_valid = false;
 #endif /* H5O_ENABLE_BAD_MESG_COUNT */
         head->ctx.attr_max_compact_valid = false;
-        head->ctx.attr_min_dense_valid = false;
-        head->ctx.ohdr_flags_valid = false;
+        head->ctx.attr_min_dense_valid   = false;
+        head->ctx.ohdr_flags_valid       = false;
         if (head->ctx.pline_valid) {
             H5O_msg_reset(H5O_PLINE_ID, &head->ctx.pline);
             head->ctx.pline_valid = false;
@@ -4061,7 +4067,8 @@ H5CX_peek_comm_dtype_merge_list(H5O_copy_dtype_merge_list_t **comm_dtype_merge_l
      * H5P_peek instead of H5P_get.  This prevents invocation of the property's
      * library-defined copy callback
      */
-    H5CX_PEEK_PROP_VALID(ocpypl, H5P_OBJECT_COPY_DEFAULT, H5O_CPY_MERGE_COMM_DT_LIST_NAME, comm_dtype_merge_list)
+    H5CX_PEEK_PROP_VALID(ocpypl, H5P_OBJECT_COPY_DEFAULT, H5O_CPY_MERGE_COMM_DT_LIST_NAME,
+                         comm_dtype_merge_list)
 
     /* Get the value */
     *comm_dtype_merge_list = (*head)->ctx.comm_dtype_merge_list;

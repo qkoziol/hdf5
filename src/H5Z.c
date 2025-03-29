@@ -863,7 +863,8 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5Z__prepare_prelude_callback_dcpl(H5P_genplist_t *dcpl, const H5O_layout_t *layout, const H5O_pline_t *pline, const hid_t type_id, H5Z_prelude_type_t prelude_type)
+H5Z__prepare_prelude_callback_dcpl(H5P_genplist_t *dcpl, const H5O_layout_t *layout, const H5O_pline_t *pline,
+                                   const hid_t type_id, H5Z_prelude_type_t prelude_type)
 {
     hid_t  space_id  = -1;      /* ID for dataspace describing chunk */
     herr_t ret_value = SUCCEED; /* Return value */

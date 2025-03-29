@@ -197,9 +197,9 @@ done:
 herr_t
 H5F__efc_open(bool try, H5F_efc_t *efc, H5F_t **_file, const char *name, unsigned flags, H5P_genplist_t *fapl)
 {
-    H5F_efc_ent_t        *ent       = NULL;    /* Entry for target file in efc */
-    bool                  open_file = false;   /* Whether ent->file needs to be closed in case of error */
-    herr_t                ret_value = SUCCEED; /* Return value */
+    H5F_efc_ent_t *ent       = NULL;    /* Entry for target file in efc */
+    bool           open_file = false;   /* Whether ent->file needs to be closed in case of error */
+    herr_t         ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 

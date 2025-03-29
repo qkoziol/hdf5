@@ -381,8 +381,8 @@ H5FD__splitter_populate_config(H5FD_splitter_vfd_config_t *vfd_config, H5FD_spli
     }
     if (H5P_DEFAULT != vfd_config->wo_fapl_id) {
         H5P_genplist_t *wo_fapl;
-        H5FD_driver_t     *wo_driver;
-        unsigned long      wo_driver_flags = 0;
+        H5FD_driver_t  *wo_driver;
+        unsigned long   wo_driver_flags = 0;
 
         if (NULL == (wo_fapl = H5P_object_verify(vfd_config->wo_fapl_id, H5P_TYPE_FILE_ACCESS, true)))
             HGOTO_ERROR(H5E_VFL, H5E_BADTYPE, FAIL, "not a file access property list");

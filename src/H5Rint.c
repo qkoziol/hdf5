@@ -459,7 +459,7 @@ H5R__reopen_file(H5R_ref_priv_t *ref, H5P_genplist_t *fapl)
 {
     hid_t                 fapl_id;         /* ID for FAPL */
     void                 *new_file = NULL; /* File object opened */
-    H5VL_connector_prop_t connector_prop;               /* Property for VOL connector ID & info */
+    H5VL_connector_prop_t connector_prop;  /* Property for VOL connector ID & info */
     H5VL_object_t        *vol_obj = NULL;  /* VOL object for file */
     uint64_t              supported;       /* Whether 'post open' operation is supported by VOL connector */
     hid_t                 ret_value = H5I_INVALID_HID;

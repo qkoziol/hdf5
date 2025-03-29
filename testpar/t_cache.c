@@ -3641,13 +3641,15 @@ setup_cache_for_test(hid_t *fid_ptr, H5F_t **file_ptr_ptr, H5C_t **cache_ptr_ptr
         config.version = H5AC__CURR_CACHE_CONFIG_VERSION;
 
         if (H5AC_get_cache_auto_resize_config(cache_ptr, &config) != SUCCEED)
-            fprintf(stdout, "%d:%s: H5AC_get_cache_auto_resize_config(1) failed.\n", world_mpi_rank, __func__);
+            fprintf(stdout, "%d:%s: H5AC_get_cache_auto_resize_config(1) failed.\n", world_mpi_rank,
+                    __func__);
         else {
             config.rpt_fcn_enabled         = enable_rpt_fcn;
             config.metadata_write_strategy = metadata_write_strategy;
 
             if (H5AC_set_cache_auto_resize_config(cache_ptr, &config) != SUCCEED)
-                fprintf(stdout, "%d:%s: H5AC_set_cache_auto_resize_config() failed.\n", world_mpi_rank, __func__);
+                fprintf(stdout, "%d:%s: H5AC_set_cache_auto_resize_config() failed.\n", world_mpi_rank,
+                        __func__);
             else if (enable_rpt_fcn)
                 fprintf(stdout, "%d:%s: rpt_fcn enabled.\n", world_mpi_rank, __func__);
         }
@@ -3667,7 +3669,8 @@ setup_cache_for_test(hid_t *fid_ptr, H5F_t **file_ptr_ptr, H5C_t **cache_ptr_ptr
         else if (((H5AC_aux_t *)(cache_ptr->aux_ptr))->metadata_write_strategy != metadata_write_strategy) {
             nerrors++;
             if (verbose)
-                fprintf(stdout, "%d:%s: bad cache_ptr->aux_ptr->metadata_write_strategy\n", world_mpi_rank, __func__);
+                fprintf(stdout, "%d:%s: bad cache_ptr->aux_ptr->metadata_write_strategy\n", world_mpi_rank,
+                        __func__);
         }
     }
 
@@ -3679,7 +3682,8 @@ setup_cache_for_test(hid_t *fid_ptr, H5F_t **file_ptr_ptr, H5C_t **cache_ptr_ptr
         test_config.version = H5AC__CURR_CACHE_CONFIG_VERSION;
 
         if (H5AC_get_cache_auto_resize_config(cache_ptr, &test_config) != SUCCEED)
-            fprintf(stdout, "%d:%s: H5AC_get_cache_auto_resize_config(2) failed.\n", world_mpi_rank, __func__);
+            fprintf(stdout, "%d:%s: H5AC_get_cache_auto_resize_config(2) failed.\n", world_mpi_rank,
+                    __func__);
         else if (test_config.metadata_write_strategy != metadata_write_strategy) {
             nerrors++;
             if (verbose)
@@ -3735,7 +3739,8 @@ setup_cache_for_test(hid_t *fid_ptr, H5F_t **file_ptr_ptr, H5C_t **cache_ptr_ptr
         if (H5AC__set_sync_point_done_callback(cache_ptr, verify_writes) != SUCCEED) {
             nerrors++;
             if (verbose)
-                fprintf(stdout, "%d:%s: H5AC__set_sync_point_done_callback failed.\n", world_mpi_rank, __func__);
+                fprintf(stdout, "%d:%s: H5AC__set_sync_point_done_callback failed.\n", world_mpi_rank,
+                        __func__);
         }
     }
 
@@ -3929,8 +3934,8 @@ setup_rand(void)
 static bool
 take_down_cache(hid_t fid, H5C_t *cache_ptr)
 {
-    H5CX_node_t         api_ctx = {{0}, NULL}; /* API context node to push */
-    bool success = true; /* will set to false if appropriate. */
+    H5CX_node_t api_ctx = {{0}, NULL}; /* API context node to push */
+    bool        success = true;        /* will set to false if appropriate. */
 
     /* flush the file -- this should write out any remaining test
      * entries in the cache.
@@ -3955,7 +3960,8 @@ take_down_cache(hid_t fid, H5C_t *cache_ptr)
             success = false;
             nerrors++;
             if (verbose)
-                fprintf(stdout, "%d:%s: H5AC__set_sync_point_done_callback failed.\n", world_mpi_rank, __func__);
+                fprintf(stdout, "%d:%s: H5AC__set_sync_point_done_callback failed.\n", world_mpi_rank,
+                        __func__);
         }
     }
 

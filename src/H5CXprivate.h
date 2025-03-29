@@ -38,13 +38,13 @@
 
 /* API context state */
 typedef struct H5CX_state_t {
-    hid_t                 dxpl_id;            /* DXPL for operation */
-    hid_t                 fapl_id;            /* FAPL for operation */
-    hid_t                 lapl_id;            /* LAPL for operation */
-    hid_t                 lcpl_id;            /* LCPL for operation */
-    hid_t                 ocpl_id;            /* DCPL/GCPL/TCPL for operation */
-    hid_t                 ocpypl_id;         /* OCPYPL for operation */
-    void                 *vol_wrap_ctx;       /* VOL connector's "wrap context" for creating IDs */
+    hid_t dxpl_id;      /* DXPL for operation */
+    hid_t fapl_id;      /* FAPL for operation */
+    hid_t lapl_id;      /* LAPL for operation */
+    hid_t lcpl_id;      /* LCPL for operation */
+    hid_t ocpl_id;      /* DCPL/GCPL/TCPL for operation */
+    hid_t ocpypl_id;    /* OCPYPL for operation */
+    void *vol_wrap_ctx; /* VOL connector's "wrap context" for creating IDs */
 
 #ifdef H5_HAVE_PARALLEL
     /* Internal: Parallel I/O settings */
@@ -245,10 +245,10 @@ typedef struct H5CX_t {
     bool     intermediate_group_valid; /* Whether create intermediate group flag is valid */
 
     /* Cached LAPL properties */
-    const char *elink_prefix; /* Prefix for external link prefix (H5L_ACS_ELINK_PREFIX_NAME) */
-    bool   elink_prefix_valid; /* Whether the prefix for external link prefix is valid */
-    size_t nlinks;       /* Number of soft / UD links to traverse (H5L_ACS_NLINKS_NAME) */
-    bool   nlinks_valid; /* Whether number of soft / UD links to traverse is valid */
+    const char *elink_prefix;       /* Prefix for external link prefix (H5L_ACS_ELINK_PREFIX_NAME) */
+    bool        elink_prefix_valid; /* Whether the prefix for external link prefix is valid */
+    size_t      nlinks;             /* Number of soft / UD links to traverse (H5L_ACS_NLINKS_NAME) */
+    bool        nlinks_valid;       /* Whether number of soft / UD links to traverse is valid */
 
     /* Cached OCPL properties */
 #ifdef H5O_ENABLE_BAD_MESG_COUNT
@@ -260,20 +260,21 @@ typedef struct H5CX_t {
     bool     attr_max_compact_valid; /* Whether the min dense attrs value is valid */
     unsigned attr_min_dense;         /* Minimum # of attributes to store in dense form */
     bool attr_min_dense_valid; /* Whether the min dense attrs value is valid (H5O_CRT_ATTR_MIN_DENSE_NAME) */
-    uint8_t ohdr_flags;        /* Object header flags (H5O_CRT_OHDR_FLAGS_NAME) */
-    bool    ohdr_flags_valid;  /* Whether the object headers flags are valid */
-    H5O_pline_t pline;         /* Filter pipeline for object creation (H5O_CRT_PLINE_NAME) */
-    bool    pline_valid;       /* Whether the filter pipeline for object creation is valid */
+    uint8_t     ohdr_flags;    /* Object header flags (H5O_CRT_OHDR_FLAGS_NAME) */
+    bool        ohdr_flags_valid; /* Whether the object headers flags are valid */
+    H5O_pline_t pline;            /* Filter pipeline for object creation (H5O_CRT_PLINE_NAME) */
+    bool        pline_valid;      /* Whether the filter pipeline for object creation is valid */
 
     /* Cached OCPYPL properties */
-    H5O_copy_dtype_merge_list_t *comm_dtype_merge_list; /* Committed datatype merge list for object copy (H5O_CPY_MERGE_COMM_DT_LIST_NAME) */
+    H5O_copy_dtype_merge_list_t *comm_dtype_merge_list; /* Committed datatype merge list for object copy
+                                                           (H5O_CPY_MERGE_COMM_DT_LIST_NAME) */
     bool comm_dtype_merge_list_valid; /* Whether the committed datatype merge list for object copy is valid */
 
     /* Cached DCPL properties */
     bool min_dset_ohdr;       /* Whether to minimize dataset object header (H5D_CRT_MIN_DSET_HDR_SIZE_NAME) */
     bool min_dset_ohdr_valid; /* Whether minimize dataset object header flag is valid */
-    H5O_layout_t layout;     /* Storage layout for object creation (H5D_CRT_LAYOUT_NAME) */
-    bool layout_valid;       /* Whether the storage layout for object creation is valid */
+    H5O_layout_t layout;      /* Storage layout for object creation (H5D_CRT_LAYOUT_NAME) */
+    bool         layout_valid; /* Whether the storage layout for object creation is valid */
 
     /* Cached DAPL properties */
     const char *extfile_prefix;       /* Prefix for external file (H5D_ACS_EFILE_PREFIX_NAME) */
@@ -283,24 +284,26 @@ typedef struct H5CX_t {
 
     /* Cached FAPL properties */
 #ifdef H5_HAVE_PARALLEL
-    MPI_Comm mpi_comm;   /* MPI communicator (H5F_ACS_MPI_COMM_NAME) */
-    bool mpi_comm_valid; /* Whether the MPI communicator is valid */
-#endif /* H5_HAVE_PARALLEL */
-    H5VL_connector_prop_t vol_connector_prop; /* Property for VOL connector ID & info (H5F_ACS_VOL_CONN_NAME) */
-    bool  vol_connector_prop_valid;           /* Whether property for VOL connector ID & info is valid */
-    H5FD_driver_prop_t driver_prop; /* Property for driver, info & configuration string (H5F_ACS_FILE_DRV_NAME) */
-    bool  driver_prop_valid;           /* Whether property for driver, info & configuration string is valid */
+    MPI_Comm mpi_comm;       /* MPI communicator (H5F_ACS_MPI_COMM_NAME) */
+    bool     mpi_comm_valid; /* Whether the MPI communicator is valid */
+#endif                       /* H5_HAVE_PARALLEL */
+    H5VL_connector_prop_t
+         vol_connector_prop;       /* Property for VOL connector ID & info (H5F_ACS_VOL_CONN_NAME) */
+    bool vol_connector_prop_valid; /* Whether property for VOL connector ID & info is valid */
+    H5FD_driver_prop_t
+         driver_prop;       /* Property for driver, info & configuration string (H5F_ACS_FILE_DRV_NAME) */
+    bool driver_prop_valid; /* Whether property for driver, info & configuration string is valid */
     H5FD_file_image_info_t file_image_info; /* Property for file image info (H5F_ACS_FILE_IMAGE_INFO_NAME) */
-    bool  file_image_info_valid;       /* Whether property for file image info is valid */
-    H5F_libver_t low_bound;       /* low_bound property for H5Pset_libver_bounds()
-                                     (H5F_ACS_LIBVER_LOW_BOUND_NAME) */
-    bool         low_bound_valid; /* Whether low_bound property is valid */
-    H5F_libver_t high_bound;      /* high_bound property for H5Pset_libver_bounds
-                                     (H5F_ACS_LIBVER_HIGH_BOUND_NAME) */
-    bool high_bound_valid;        /* Whether high_bound property is valid */
+    bool                   file_image_info_valid; /* Whether property for file image info is valid */
+    H5F_libver_t           low_bound;             /* low_bound property for H5Pset_libver_bounds()
+                                                     (H5F_ACS_LIBVER_LOW_BOUND_NAME) */
+    bool         low_bound_valid;                 /* Whether low_bound property is valid */
+    H5F_libver_t high_bound;                      /* high_bound property for H5Pset_libver_bounds
+                                                     (H5F_ACS_LIBVER_HIGH_BOUND_NAME) */
+    bool high_bound_valid;                        /* Whether high_bound property is valid */
 
     /* Cached VOL settings */
-    void *vol_wrap_ctx;                       /* VOL connector's "wrap context" for creating IDs */
+    void *vol_wrap_ctx;       /* VOL connector's "wrap context" for creating IDs */
     bool  vol_wrap_ctx_valid; /* Whether VOL connector's "wrap context" for creating IDs is valid */
 } H5CX_t;
 

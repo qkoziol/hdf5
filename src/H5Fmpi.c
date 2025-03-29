@@ -358,8 +358,8 @@ herr_t
 H5F_loc_mpi_retrieve_comm(hid_t loc_id, MPI_Comm *mpi_comm)
 {
     H5G_loc_t loc;
-    H5F_t    *f = NULL;
-    herr_t ret_value = SUCCEED;
+    H5F_t    *f         = NULL;
+    herr_t    ret_value = SUCCEED;
 
     FUNC_ENTER_NOAPI(FAIL)
 

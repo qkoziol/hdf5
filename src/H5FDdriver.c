@@ -1929,8 +1929,8 @@ done:
 herr_t
 H5FD_delete(const char *filename, H5P_genplist_t *fapl)
 {
-    H5FD_driver_t     *driver;              /* VFD for file */
-    herr_t             ret_value = SUCCEED; /* Return value */
+    H5FD_driver_t *driver;              /* VFD for file */
+    herr_t         ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 

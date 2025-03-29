@@ -159,7 +159,7 @@ H5Tcommit2(hid_t loc_id, const char *name, hid_t type_id, hid_t lcpl_id, hid_t t
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
     if (NULL == (tcpl = H5P_object_verify(tcpl_id, H5P_TYPE_DATATYPE_CREATE, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
-    tcpl_id = H5P_PLIST_ID(tcpl);  /* Allow for application passing H5P_DEFAULT */
+    tcpl_id = H5P_PLIST_ID(tcpl); /* Allow for application passing H5P_DEFAULT */
     if (NULL == (tapl = H5P_object_verify(tapl_id, H5P_TYPE_DATATYPE_ACCESS, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -206,7 +206,7 @@ H5Tcommit_async(const char *app_file, const char *app_func, unsigned app_line, h
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
     if (NULL == (tcpl = H5P_object_verify(tcpl_id, H5P_TYPE_DATATYPE_CREATE, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
-    tcpl_id = H5P_PLIST_ID(tcpl);  /* Allow for application passing H5P_DEFAULT */
+    tcpl_id = H5P_PLIST_ID(tcpl); /* Allow for application passing H5P_DEFAULT */
     if (NULL == (tapl = H5P_object_verify(tapl_id, H5P_TYPE_DATATYPE_ACCESS, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -354,10 +354,10 @@ H5Tcommit_anon(hid_t loc_id, hid_t type_id, hid_t tcpl_id, hid_t tapl_id)
     /* Get property lists */
     if (NULL == (tcpl = H5P_object_verify(tcpl_id, H5P_TYPE_DATATYPE_CREATE, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
-    tcpl_id = H5P_PLIST_ID(tcpl);  /* Allow for application passing H5P_DEFAULT */
+    tcpl_id = H5P_PLIST_ID(tcpl); /* Allow for application passing H5P_DEFAULT */
     if (NULL == (tapl = H5P_object_verify(tapl_id, H5P_TYPE_DATATYPE_ACCESS, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
-    tapl_id = H5P_PLIST_ID(tapl);  /* Allow for application passing H5P_DEFAULT */
+    tapl_id = H5P_PLIST_ID(tapl); /* Allow for application passing H5P_DEFAULT */
 
     /* Verify access property list and set up collective metadata if appropriate */
     if (H5CX_set_apl(&tapl_id, H5P_CLS_TACC, loc_id, true) < 0)

@@ -568,7 +568,9 @@ H5D__write(size_t count, H5D_dset_io_info_t *dset_info)
 
         /* All filters in the DCPL must have encoding enabled. */
         if (!dset_info[i].dset->shared->checked_filters) {
-            if (H5Z_can_apply(dset_info[i].dset->shared->dcpl, &dset_info[i].dset->shared->layout, &dset_info[i].dset->shared->dcpl_cache.pline, dset_info[i].dset->shared->type_id) < 0)
+            if (H5Z_can_apply(dset_info[i].dset->shared->dcpl, &dset_info[i].dset->shared->layout,
+                              &dset_info[i].dset->shared->dcpl_cache.pline,
+                              dset_info[i].dset->shared->type_id) < 0)
                 HGOTO_ERROR(H5E_PLINE, H5E_CANAPPLY, FAIL, "can't apply filters");
 
             dset_info[i].dset->shared->checked_filters = true;

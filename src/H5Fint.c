@@ -853,15 +853,15 @@ H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_op
                      const char *prop_prefix, const char *file_name, unsigned file_intent,
                      H5P_genplist_t *fapl)
 {
-    H5F_t     *src_file         = NULL; /* Source file */
-    H5F_efc_t *efc              = NULL; /* External file cache */
-    hid_t                 old_fapl_id = H5I_INVALID_HID;         /* ID for old FAPL in API context */
-    hid_t                 fapl_id;         /* ID for FAPL */
-    char      *full_name        = NULL; /* File name with prefix */
-    char      *actual_file_name = NULL; /* File's actual name */
-    char      *temp_file_name   = NULL; /* Temporary pointer to file name */
-    size_t     temp_file_name_len;      /* Length of temporary file name */
-    herr_t     ret_value = SUCCEED;     /* Return value */
+    H5F_t     *src_file    = NULL;            /* Source file */
+    H5F_efc_t *efc         = NULL;            /* External file cache */
+    hid_t      old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
+    hid_t      fapl_id;                       /* ID for FAPL */
+    char      *full_name        = NULL;       /* File name with prefix */
+    char      *actual_file_name = NULL;       /* File's actual name */
+    char      *temp_file_name   = NULL;       /* Temporary pointer to file name */
+    size_t     temp_file_name_len;            /* Length of temporary file name */
+    herr_t     ret_value = SUCCEED;           /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 

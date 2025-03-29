@@ -118,7 +118,7 @@ H5Dcreate1(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t 
     /* Get the pointer to the dataset create property list */
     if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
-    dcpl_id = H5P_PLIST_ID(dcpl);  /* Allow for application passing H5P_DEFAULT */
+    dcpl_id = H5P_PLIST_ID(dcpl); /* Allow for application passing H5P_DEFAULT */
 
     /* Set the DCPL for the API context */
     if (H5CX_set_cpl(dcpl_id, H5P_CLS_DCRT) < 0)

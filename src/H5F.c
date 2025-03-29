@@ -555,7 +555,7 @@ H5F__create_api_common(const char *filename, unsigned flags, H5P_genplist_t *fcp
 {
     hid_t                 fapl_id;                     /* ID for FAPL */
     void                 *new_file = NULL;             /* File struct for new file                 */
-    H5VL_connector_prop_t connector_prop;               /* Property for VOL connector ID & info */
+    H5VL_connector_prop_t connector_prop;              /* Property for VOL connector ID & info */
     hid_t                 ret_value = H5I_INVALID_HID; /* Return value                             */
 
     FUNC_ENTER_PACKAGE
@@ -757,7 +757,7 @@ H5F__open_api_common(const char *filename, unsigned flags, H5P_genplist_t *fapl,
 {
     hid_t                 fapl_id;                     /* ID for FAPL */
     void                 *new_file = NULL;             /* File struct for new file                 */
-    H5VL_connector_prop_t connector_prop;               /* Property for VOL connector ID & info */
+    H5VL_connector_prop_t connector_prop;              /* Property for VOL connector ID & info */
     hid_t                 ret_value = H5I_INVALID_HID; /* Return value                             */
 
     FUNC_ENTER_PACKAGE

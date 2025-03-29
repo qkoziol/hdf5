@@ -2974,7 +2974,8 @@ H5D__check_filters(H5D_t *dataset)
             if (fill->fill_time == H5D_FILL_TIME_ALLOC ||
                 (fill->fill_time == H5D_FILL_TIME_IFSET && fill_status == H5D_FILL_VALUE_USER_DEFINED)) {
                 /* Filters must have encoding enabled. Ensure that all filters can be applied */
-                if (H5Z_can_apply(dataset->shared->dcpl, &dataset->shared->layout, &dataset->shared->dcpl_cache.pline, dataset->shared->type_id) < 0)
+                if (H5Z_can_apply(dataset->shared->dcpl, &dataset->shared->layout,
+                                  &dataset->shared->dcpl_cache.pline, dataset->shared->type_id) < 0)
                     HGOTO_ERROR(H5E_PLINE, H5E_CANAPPLY, FAIL, "can't apply filters");
 
                 dataset->shared->checked_filters = true;

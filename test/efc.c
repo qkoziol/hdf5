@@ -2644,13 +2644,13 @@ error:
 int
 main(void)
 {
-    unsigned              nerrors = 0; /* track errors */
-    hid_t                 fapl_id;
-    hid_t                 fcpl_id;
-    H5P_genplist_t       *fcpl;                         /* File creation property list pointer for FAPL */
-    H5CX_node_t           api_ctx        = {{0}, NULL}; /* API context node to push */
-    bool                  api_ctx_pushed = false;       /* Whether API context pushed */
-    int                   i;                            /* iterator */
+    unsigned        nerrors = 0; /* track errors */
+    hid_t           fapl_id;
+    hid_t           fcpl_id;
+    H5P_genplist_t *fcpl;                         /* File creation property list pointer for FAPL */
+    H5CX_node_t     api_ctx        = {{0}, NULL}; /* API context node to push */
+    bool            api_ctx_pushed = false;       /* Whether API context pushed */
+    int             i;                            /* iterator */
 
     /* Test Setup */
     puts("Testing the external file cache");
