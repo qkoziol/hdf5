@@ -85,7 +85,7 @@ H5FD_sb_size(H5FD_int_t *fh)
 {
     hsize_t ret_value = 0;
 
-    FUNC_ENTER_NOAPI(0)
+    FUNC_ENTER_NOAPI_NOERR
 
     /* Sanity checks */
     assert(fh);
@@ -103,7 +103,6 @@ H5FD_sb_size(H5FD_int_t *fh)
         H5_AFTER_USER_CB_NOERR(0)
     }
 
-done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FD__sb_size() */
 
@@ -215,7 +214,7 @@ H5FD_fapl_get(H5FD_int_t *fh)
 {
     void *ret_value = NULL;
 
-    FUNC_ENTER_NOAPI(NULL)
+    FUNC_ENTER_NOAPI_NOERR
 
     /* Sanity checks */
     assert(fh);
@@ -233,7 +232,6 @@ H5FD_fapl_get(H5FD_int_t *fh)
         H5_AFTER_USER_CB_NOERR(NULL)
     }
 
-done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FD_fapl_get() */
 
@@ -475,7 +473,7 @@ H5FD_cmp(const H5FD_int_t *fh1, const H5FD_int_t *fh2)
 {
     int ret_value = -1; /* Return value */
 
-    FUNC_ENTER_NOAPI(-1) /* return value is arbitrary */
+    FUNC_ENTER_NOAPI_NOERR
 
     if ((!fh1 || !fh1->driver->cls) && (!fh2 || !fh2->driver->cls))
         HGOTO_DONE(0);
