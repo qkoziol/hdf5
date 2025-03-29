@@ -638,7 +638,7 @@ H5_DLL MPI_Info H5F_mpi_get_info(const H5F_t *f);
 H5_DLL int      H5F_shared_mpi_get_size(const H5F_shared_t *f_sh);
 H5_DLL int      H5F_mpi_get_size(const H5F_t *f);
 H5_DLL herr_t   H5F_loc_mpi_retrieve_comm(hid_t loc_id, MPI_Comm *mpi_comm);
-H5_DLL herr_t   H5F_mpi_retrieve_comm(hid_t loc_id, hid_t acspl_id, MPI_Comm *mpi_comm);
+H5_DLL herr_t   H5F_mpi_retrieve_comm(hid_t loc_id, MPI_Comm *mpi_comm);
 H5_DLL herr_t   H5F_mpi_get_file_block_type(bool commit, MPI_Datatype *new_type, bool *new_type_derived);
 H5_DLL bool     H5F_get_coll_metadata_reads(const H5F_t *f);
 H5_DLL bool     H5F_shared_get_coll_metadata_reads(const H5F_shared_t *f_sh);

@@ -1387,8 +1387,10 @@ H5CX_set_apl(hid_t *acspl_id, const H5P_libclass_t *libclass,
         if (H5_coll_api_sanity_check_g) {
             MPI_Comm mpi_comm; /* File communicator */
 
-            /* Retrieve the MPI communicator from the loc_id or the fapl_id */
-            if (H5F_mpi_retrieve_comm(loc_id, *acspl_id, &mpi_comm) < 0)
+            /* Retrieve the MPI communicator from the loc_id or the fapl_id
+             * just pushed in the API context.
+             */
+            if (H5F_mpi_retrieve_comm(loc_id, &mpi_comm) < 0)
                 HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't get MPI communicator");
 
             /* issue the barrier */

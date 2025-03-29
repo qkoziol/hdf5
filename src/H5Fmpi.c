@@ -399,7 +399,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5F_mpi_retrieve_comm(hid_t loc_id, hid_t fapl_id, MPI_Comm *mpi_comm)
+H5F_mpi_retrieve_comm(hid_t loc_id, MPI_Comm *mpi_comm)
 {
     herr_t ret_value = SUCCEED;
 
