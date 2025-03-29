@@ -125,8 +125,8 @@ H5G__obj_create(H5F_t *f, H5G_obj_create_t *gcrt_info, H5O_loc_t *oloc /*out*/)
         HGOTO_ERROR(H5E_SYM, H5E_CANTGET, FAIL, "can't get group info");
 
     /* Get the pipeline property */
-    if (H5P_peek(gcrt_info->gcpl, H5O_CRT_PIPELINE_NAME, &pline) < 0)
-        HGOTO_ERROR(H5E_SYM, H5E_CANTGET, FAIL, "can't get group info");
+    if (H5CX_peek_pline(&pline) < 0)
+        HGOTO_ERROR(H5E_SYM, H5E_CANTGET, FAIL, "can't get filter pipeline info");
 
     /* Call the "real" group creation routine now */
     if (H5G__obj_create_real(f, &ginfo, &linfo, &pline, gcrt_info, oloc) < 0)

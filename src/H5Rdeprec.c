@@ -601,6 +601,13 @@ H5Rdereference2(hid_t obj_id, hid_t oapl_id, H5R_type_t ref_type, const void *re
     if (ref_type != H5R_OBJECT1 && ref_type != H5R_DATASET_REGION1)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, H5I_INVALID_HID, "invalid reference type");
 
+    /* Check the object access property list */
+    /* (the OAPL is treated as a DAPL currently) */
+    if (H5P_DEFAULT == oapl_id)
+        oapl_id = H5P_DATASET_ACCESS_DEFAULT;
+    else if (true != H5P_isa_class(oapl_id, H5P_DATASET_ACCESS))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not file access property list");
+
     /* Verify access property list and set up collective metadata if appropriate */
     if (H5CX_set_apl(&oapl_id, H5P_CLS_DACC, obj_id, false) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTSET, H5I_INVALID_HID, "can't set access property list info");

@@ -1807,6 +1807,7 @@ H5_DLL int H5A_term_package(void);
 H5_DLL int H5A_top_term_package(void);
 H5_DLL int H5AC_term_package(void);
 H5_DLL int H5CX_term_package(void);
+H5_DLL int H5CX_top_term_package(void);
 H5_DLL int H5D_term_package(void);
 H5_DLL int H5D_top_term_package(void);
 H5_DLL int H5E_term_package(void);

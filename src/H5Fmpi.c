@@ -344,6 +344,48 @@ done:
 } /* end H5Fget_mpi_atomicity() */
 
 /*-------------------------------------------------------------------------
+ * Function:    H5F_loc_mpi_retrieve_comm
+ *
+ * Purpose:     Retrieves an MPI communicator from the file the location ID
+ *              is in.
+ *
+ * Return:      Success:    Non-negative
+ *              Failure:    Negative
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5F_loc_mpi_retrieve_comm(hid_t loc_id, MPI_Comm *mpi_comm)
+{
+    H5G_loc_t loc;
+    H5F_t    *f = NULL;
+    herr_t ret_value = SUCCEED;
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(mpi_comm);
+
+    /* Set value to return to invalid MPI comm */
+    *mpi_comm = MPI_COMM_NULL;
+
+    /* Retrieve the file structure */
+    if (H5G_loc(loc_id, &loc) < 0)
+        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a location");
+    f = loc.oloc->file;
+    assert(f);
+
+    /* Check if MPIO driver is used */
+    if (H5F_SHARED_HAS_FEATURE(f->shared, H5FD_FEAT_HAS_MPI))
+        /* retrieve the file communicator */
+        if (MPI_COMM_NULL == (*mpi_comm = H5F_mpi_get_comm(f)))
+            HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get MPI communicator");
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5F_loc_mpi_retrieve_comm */
+
+/*-------------------------------------------------------------------------
  * Function:    H5F_mpi_retrieve_comm
  *
  * Purpose:     Retrieves an MPI communicator from the file the location ID
@@ -372,39 +414,24 @@ H5F_mpi_retrieve_comm(hid_t loc_id, hid_t fapl_id, MPI_Comm *mpi_comm)
     /* if the loc_id is valid, then get the comm from the file
        attached to the loc_id */
     if (H5I_INVALID_HID != loc_id) {
-        H5G_loc_t loc;
-        H5F_t    *f = NULL;
-
-        /* Retrieve the file structure */
-        if (H5G_loc(loc_id, &loc) < 0)
-            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a location");
-        f = loc.oloc->file;
-        assert(f);
-
-        /* Check if MPIO driver is used */
-        if (H5F_SHARED_HAS_FEATURE(f->shared, H5FD_FEAT_HAS_MPI)) {
-            /* retrieve the file communicator */
-            if (MPI_COMM_NULL == (*mpi_comm = H5F_mpi_get_comm(f)))
-                HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get MPI communicator");
-        }
+        if (H5F_loc_mpi_retrieve_comm(loc_id, mpi_comm) < 0)
+            HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get MPI communicator");
     }
     /* otherwise, this is from H5Fopen or H5Fcreate and has to be collective */
     else {
         H5FD_driver_prop_t driver_prop; /* Property for driver ID & info */
-        H5P_genplist_t    *fapl;        /* Property list pointer */
         unsigned long      driver_feat_flags;
 
-        if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
-            HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not a file access list");
-
-        if (H5P_peek(fapl, H5F_ACS_FILE_DRV_NAME, &driver_prop) < 0)
+        /* Get driver feature flags */
+        if (H5CX_peek_driver_prop(&driver_prop) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get driver ID & info");
-
         if (H5FD_driver_query(driver_prop.driver, &driver_feat_flags) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get driver feature flags");
 
+        /* Check if MPI is supported */
         if (driver_feat_flags & H5FD_FEAT_HAS_MPI)
-            if (H5P_peek(fapl, H5F_ACS_MPI_PARAMS_COMM_NAME, mpi_comm) < 0)
+            /* Get the MPI communicator from the API context */
+            if (H5CX_peek_mpi_comm(mpi_comm) < 0)
                 HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get MPI communicator");
     }
 

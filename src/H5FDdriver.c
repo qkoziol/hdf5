@@ -23,6 +23,7 @@
 /* Module Setup */
 /****************/
 
+#include "H5CXprivate.h"
 #include "H5FDmodule.h" /* This source code file is part of the H5FD module */
 
 /***********/
@@ -300,7 +301,6 @@ H5FD_open(bool try, H5FD_int_t **_fh, const char *name, unsigned flags, H5P_genp
     H5FD_int_t            *fh   = NULL;         /* File handle */
     H5FD_t                *file = NULL;         /* File opened */
     H5FD_driver_t         *driver;              /* VFD for file */
-    H5FD_driver_prop_t     driver_prop;         /* Property for driver ID & info */
     unsigned long          driver_flags = 0;    /* File-inspecific driver feature flags */
     H5FD_file_image_info_t file_image_info;     /* Initial file image */
     herr_t                 ret_value = SUCCEED; /* Return value */
@@ -315,11 +315,8 @@ H5FD_open(bool try, H5FD_int_t **_fh, const char *name, unsigned flags, H5P_genp
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "zero format address range");
 
     /* Get the VFD to open the file with */
-    if (H5P_peek(fapl, H5F_ACS_FILE_DRV_NAME, &driver_prop) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get driver ID & info");
-
-    /* Get driver info */
-    driver = driver_prop.driver;
+    if (NULL == (driver = H5P_peek_driver(fapl)))
+        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "unable to retrieve VFL driver");
     if (NULL == driver->cls->open)
         HGOTO_ERROR(H5E_VFL, H5E_UNSUPPORTED, FAIL, "file driver has no `open' method");
 
@@ -328,7 +325,7 @@ H5FD_open(bool try, H5FD_int_t **_fh, const char *name, unsigned flags, H5P_genp
         HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "can't query VFD flags");
 
     /* Get initial file image info */
-    if (H5P_peek(fapl, H5F_ACS_FILE_IMAGE_INFO_NAME, &file_image_info) < 0)
+    if (H5CX_peek_file_image_info(&file_image_info) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get file image info");
 
     /* If an image is provided, make sure the driver supports this feature */
@@ -1933,7 +1930,6 @@ herr_t
 H5FD_delete(const char *filename, H5P_genplist_t *fapl)
 {
     H5FD_driver_t     *driver;              /* VFD for file */
-    H5FD_driver_prop_t driver_prop;         /* Property for driver ID & info */
     herr_t             ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
@@ -1942,12 +1938,9 @@ H5FD_delete(const char *filename, H5P_genplist_t *fapl)
 
     assert(filename);
 
-    /* Get the VFD to open the file with */
-    if (H5P_peek(fapl, H5F_ACS_FILE_DRV_NAME, &driver_prop) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get driver & info");
-
-    /* Get driver info */
-    driver = driver_prop.driver;
+    /* Get the VFD to delete the file with */
+    if (NULL == (driver = H5P_peek_driver(fapl)))
+        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "unable to retrieve VFL driver");
     if (NULL == driver->cls->del)
         HGOTO_ERROR(H5E_VFL, H5E_UNSUPPORTED, FAIL, "file driver has no 'del' method");
 

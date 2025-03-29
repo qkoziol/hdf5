@@ -253,6 +253,10 @@ H5_init_library(void)
      *   so that the default VFD and default VOL connector can be set up in the
      *   default FAPL.
      *
+     * The API context interface needs to finish initializing after the VOL
+     *   interface, so that the default VFD and default VOL connector can be
+     *   retrieved from the default FAPL and cached in the default API context.
+     *
      */
     if (H5FL_init() < 0)
         HGOTO_ERROR(H5E_FUNC, H5E_CANTINIT, FAIL, "unable to initialize free list interface");
@@ -261,13 +265,15 @@ H5_init_library(void)
     if (H5FD_init_phase1() < 0)
         HGOTO_ERROR(H5E_FUNC, H5E_CANTINIT, FAIL, "unable to initialize phase 1 of VFL interface");
     if (H5VL_init_phase1() < 0)
-        HGOTO_ERROR(H5E_FUNC, H5E_CANTINIT, FAIL, "unable to initialize phase 1 of vol interface");
+        HGOTO_ERROR(H5E_FUNC, H5E_CANTINIT, FAIL, "unable to initialize phase 1 of VOL interface");
     if (H5P_init() < 0)
         HGOTO_ERROR(H5E_FUNC, H5E_CANTINIT, FAIL, "unable to initialize property list interface");
     if (H5FD_init_phase2() < 0)
         HGOTO_ERROR(H5E_FUNC, H5E_CANTINIT, FAIL, "unable to initialize phase 2 of VFL interface");
     if (H5VL_init_phase2() < 0)
-        HGOTO_ERROR(H5E_FUNC, H5E_CANTINIT, FAIL, "unable to initialize phase 2 of vol interface");
+        HGOTO_ERROR(H5E_FUNC, H5E_CANTINIT, FAIL, "unable to initialize phase 2 of VOL interface");
+    if (H5CX_init_phase2() < 0)
+        HGOTO_ERROR(H5E_FUNC, H5E_CANTINIT, FAIL, "unable to initialize phase 2 of API context interface");
     if (H5L_init() < 0)
         HGOTO_ERROR(H5E_FUNC, H5E_CANTINIT, FAIL, "unable to initialize link interface");
     if (H5O_init() < 0)
@@ -426,6 +432,8 @@ H5_term_library(void)
          */
         if (pending == 0) {
             pending += DOWN(AC);
+            /* Shut down the "top" of the API context, which caches pluggable components */
+            pending += DOWN(CX_top);
             /* Shut down the "pluggable" interfaces, before the plugin framework */
             pending += DOWN(Z);
             pending += DOWN(FD);

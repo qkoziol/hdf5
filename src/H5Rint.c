@@ -459,7 +459,7 @@ H5R__reopen_file(H5R_ref_priv_t *ref, H5P_genplist_t *fapl)
 {
     hid_t                 fapl_id;         /* ID for FAPL */
     void                 *new_file = NULL; /* File object opened */
-    H5VL_connector_prop_t connector_prop;  /* Property for VOL connector ID & info     */
+    H5VL_connector_prop_t connector_prop;               /* Property for VOL connector ID & info */
     H5VL_object_t        *vol_obj = NULL;  /* VOL object for file */
     uint64_t              supported;       /* Whether 'post open' operation is supported by VOL connector */
     hid_t                 ret_value = H5I_INVALID_HID;
@@ -473,16 +473,12 @@ H5R__reopen_file(H5R_ref_priv_t *ref, H5P_genplist_t *fapl)
     if (H5CX_set_apl(&fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, true) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTSET, H5I_INVALID_HID, "can't set access property list info");
 
-    /* Get the VOL info from the fapl */
-    if (H5P_peek(fapl, H5F_ACS_VOL_CONN_NAME, &connector_prop) < 0)
-        HGOTO_ERROR(H5E_REFERENCE, H5E_CANTGET, H5I_INVALID_HID, "can't get VOL connector info");
+    /* Retrieve the connector property */
+    if (H5CX_peek_vol_connector_prop(&connector_prop) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get VOL connector from API context");
 
-    /* Stash a copy of the "top-level" connector property, before any pass-through
-     *  connectors modify or unwrap it.
-     */
-    if (H5CX_set_vol_connector_prop(&connector_prop) < 0)
-        HGOTO_ERROR(H5E_REFERENCE, H5E_CANTSET, H5I_INVALID_HID,
-                    "can't set VOL connector info in API context");
+    /* Sanity check */
+    assert(connector_prop.connector);
 
     /* Open the file */
     /* (Must open file read-write to allow for object modifications) */

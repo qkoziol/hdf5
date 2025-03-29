@@ -667,7 +667,7 @@ H5Z__flush_file_cb(void H5_ATTR_UNUSED *obj_ptr, hid_t obj_id, void H5_ATTR_PARA
                     MPI_Comm mpi_comm; /* File's communicator */
 
                     /* Retrieve the file communicator */
-                    if (H5F_mpi_retrieve_comm(obj_id, H5P_FILE_ACCESS_DEFAULT, &mpi_comm) < 0)
+                    if (H5F_loc_mpi_retrieve_comm(obj_id, &mpi_comm) < 0)
                         HGOTO_ERROR(H5E_PLINE, H5E_CANTGET, FAIL, "can't get MPI communicator");
 
                     /* Issue the barrier */
@@ -863,7 +863,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5Z__prepare_prelude_callback_dcpl(H5P_genplist_t *dcpl, hid_t type_id, H5Z_prelude_type_t prelude_type)
+H5Z__prepare_prelude_callback_dcpl(H5P_genplist_t *dcpl, const H5O_layout_t *layout, const H5O_pline_t *pline, const hid_t type_id, H5Z_prelude_type_t prelude_type)
 {
     hid_t  space_id  = -1;      /* ID for dataspace describing chunk */
     herr_t ret_value = SUCCEED; /* Return value */
@@ -874,30 +874,18 @@ H5Z__prepare_prelude_callback_dcpl(H5P_genplist_t *dcpl, hid_t type_id, H5Z_prel
 
     /* Check if the property list is non-default */
     if (!H5P_PLIST_IS_DEFAULT(dcpl)) {
-        H5O_layout_t dcpl_layout;
-
-        /* Peek at the layout information */
-        if (H5P_peek(dcpl, H5D_CRT_LAYOUT_NAME, &dcpl_layout) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't retrieve layout");
-
         /* Check if the dataset is chunked */
-        if (H5D_CHUNKED == dcpl_layout.type) {
-            H5O_pline_t dcpl_pline; /* Object's I/O pipeline information */
-
-            /* Get I/O pipeline information */
-            if (H5P_peek(dcpl, H5O_CRT_PIPELINE_NAME, &dcpl_pline) < 0)
-                HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't retrieve pipeline filter");
-
+        if (H5D_CHUNKED == layout->type) {
             /* Check if the chunks have filters */
-            if (dcpl_pline.nused > 0) {
+            if (pline->nused > 0) {
                 hsize_t chunk_dims[H5O_LAYOUT_NDIMS]; /* Size of chunk dimensions */
                 H5S_t  *space;                        /* Dataspace describing chunk */
                 size_t  u;                            /* Local index variable */
 
                 /* Create a dataspace for a chunk & set the extent */
-                for (u = 0; u < dcpl_layout.u.chunk.ndims; u++)
-                    chunk_dims[u] = dcpl_layout.u.chunk.dim[u];
-                if (NULL == (space = H5S_create_simple(dcpl_layout.u.chunk.ndims, chunk_dims, NULL)))
+                for (u = 0; u < layout->u.chunk.ndims; u++)
+                    chunk_dims[u] = layout->u.chunk.dim[u];
+                if (NULL == (space = H5S_create_simple(layout->u.chunk.ndims, chunk_dims, NULL)))
                     HGOTO_ERROR(H5E_DATASPACE, H5E_CANTCREATE, FAIL, "can't create simple dataspace");
 
                 /* Get ID for dataspace to pass to filter routines */
@@ -907,7 +895,7 @@ H5Z__prepare_prelude_callback_dcpl(H5P_genplist_t *dcpl, hid_t type_id, H5Z_prel
                 }
 
                 /* Make the callbacks */
-                if (H5Z__prelude_callback(&dcpl_pline, dcpl, type_id, space_id, prelude_type) < 0)
+                if (H5Z__prelude_callback(pline, dcpl, type_id, space_id, prelude_type) < 0)
                     HGOTO_ERROR(H5E_PLINE, H5E_CANAPPLY, FAIL, "unable to apply filter");
             }
         }
@@ -936,14 +924,14 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Z_can_apply(H5P_genplist_t *dcpl, hid_t type_id)
+H5Z_can_apply(H5P_genplist_t *dcpl, const H5O_layout_t *layout, const H5O_pline_t *pline, hid_t type_id)
 {
     herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
     /* Make "can apply" callbacks for filters in pipeline */
-    if (H5Z__prepare_prelude_callback_dcpl(dcpl, type_id, H5Z_PRELUDE_CAN_APPLY) < 0)
+    if (H5Z__prepare_prelude_callback_dcpl(dcpl, layout, pline, type_id, H5Z_PRELUDE_CAN_APPLY) < 0)
         HGOTO_ERROR(H5E_PLINE, H5E_CANAPPLY, FAIL, "unable to apply filter");
 
 done:
@@ -966,14 +954,14 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Z_set_local(H5P_genplist_t *dcpl, hid_t type_id)
+H5Z_set_local(H5P_genplist_t *dcpl, const H5O_layout_t *layout, const H5O_pline_t *pline, hid_t type_id)
 {
     herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
     /* Make "set local" callbacks for filters in pipeline */
-    if (H5Z__prepare_prelude_callback_dcpl(dcpl, type_id, H5Z_PRELUDE_SET_LOCAL) < 0)
+    if (H5Z__prepare_prelude_callback_dcpl(dcpl, layout, pline, type_id, H5Z_PRELUDE_SET_LOCAL) < 0)
         HGOTO_ERROR(H5E_PLINE, H5E_SETLOCAL, FAIL, "local filter parameters not set");
 
 done:
@@ -1061,19 +1049,14 @@ done:
  *-------------------------------------------------------------------------
  */
 htri_t
-H5Z_ignore_filters(H5P_genplist_t *dcpl, const H5T_t *type, const H5S_t *space)
+H5Z_ignore_filters(const H5O_pline_t *pline, const H5T_t *type, const H5S_t *space)
 {
-    H5O_pline_t pline;                   /* Object's I/O pipeline information */
     H5S_class_t space_class;             /* To check class of space */
     H5T_class_t type_class;              /* To check if type is VL */
     bool        bad_for_filters = false; /* Suitable to have filters */
     htri_t      ret_value       = false; /* true for ignoring filters */
 
     FUNC_ENTER_NOAPI(FAIL)
-
-    /* Get pipeline information */
-    if (H5P_peek(dcpl, H5O_CRT_PIPELINE_NAME, &pline) < 0)
-        HGOTO_ERROR(H5E_PLINE, H5E_CANTGET, FAIL, "can't retrieve pipeline filter");
 
     /* Get datatype and dataspace classes for quick access */
     space_class = H5S_GET_EXTENT_TYPE(space);
@@ -1087,11 +1070,10 @@ H5Z_ignore_filters(H5P_genplist_t *dcpl, const H5T_t *type, const H5S_t *space)
        then report a failure, otherwise, set flag that they can be ignored */
     if (bad_for_filters) {
         size_t ii;
-        if (pline.nused > 0) {
-            for (ii = 0; ii < pline.nused; ii++) {
-                if (!(pline.filter[ii].flags & H5Z_FLAG_OPTIONAL))
+        if (pline->nused > 0) {
+            for (ii = 0; ii < pline->nused; ii++)
+                if (!(pline->filter[ii].flags & H5Z_FLAG_OPTIONAL))
                     HGOTO_ERROR(H5E_PLINE, H5E_CANTFILTER, FAIL, "not suitable for filters");
-            }
 
             /* All filters are optional, we can ignore them */
             ret_value = true;

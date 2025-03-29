@@ -2648,8 +2648,6 @@ main(void)
     hid_t                 fapl_id;
     hid_t                 fcpl_id;
     H5P_genplist_t       *fcpl;                         /* File creation property list pointer for FAPL */
-    H5P_genplist_t       *fapl;                         /* Property list pointer for FAPL */
-    H5VL_connector_prop_t connector_prop;               /* Property for VOL connector ID & info */
     H5CX_node_t           api_ctx        = {{0}, NULL}; /* API context node to push */
     bool                  api_ctx_pushed = false;       /* Whether API context pushed */
     int                   i;                            /* iterator */
@@ -2679,14 +2677,8 @@ main(void)
         FAIL_STACK_ERROR;
     api_ctx_pushed = true;
 
-    /* Get the VOL info from the fapl */
-    fapl = (H5P_genplist_t *)H5I_object(fapl_id);
-    H5P_peek(fapl, H5F_ACS_VOL_CONN_NAME, &connector_prop);
-
-    /* Stash a copy of the "top-level" connector property, before any pass-through
-     *  connectors modify or unwrap it.
-     */
-    H5CX_set_vol_connector_prop(&connector_prop);
+    /* Set the FAPL (and VOL connector) */
+    H5CX_set_apl(&fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, true);
 
     /* Test Functions */
     nerrors += test_single(fcpl, fapl_id);

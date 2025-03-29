@@ -133,9 +133,10 @@ H5_DLL herr_t         H5FD_locate_signature(H5FD_int_t *fh, haddr_t *sig_addr);
 H5_DLL herr_t         H5FD_sb_load(H5FD_int_t *fh, const char *name, const uint8_t *buf);
 H5_DLL H5FD_driver_t *H5FD_get_driver_by_name(const char *name, bool is_api);
 H5_DLL H5FD_driver_t *H5FD_get_driver_by_value(H5FD_class_value_t value, bool is_api);
+H5_DLL herr_t         H5FD_driver_prop_clone(H5FD_driver_prop_t *driver_prop);
 H5_DLL herr_t         H5FD_driver_prop_cmp(int *cmp_value, const H5FD_driver_prop_t *prop1,
                                            const H5FD_driver_prop_t *prop2);
-H5_DLL herr_t         H5FD_driver_prop_free(const H5FD_driver_prop_t *driver_prop);
+H5_DLL herr_t         H5FD_driver_prop_free(H5FD_driver_prop_t *driver_prop);
 H5_DLL herr_t         H5FD_cmp_driver_cls(int *cmp_value, const H5FD_class_t *cls1, const H5FD_class_t *cls2);
 H5_DLL herr_t         H5FD_driver_query(const H5FD_driver_t *driver, unsigned long *flags /*out*/);
 H5_DLL herr_t  H5FD_check_plugin_load(const H5FD_class_t *cls, const union H5PL_key_t *key, bool *success);

@@ -1514,72 +1514,6 @@ done:
 } /* end H5Pget_driver_cls_value() */
 
 /*-------------------------------------------------------------------------
- * Function:    H5P__file_driver_copy
- *
- * Purpose:     Copy file driver ID & info.
- *
- * Note:        This is an "in-place" copy, since this routine gets called
- *              after the top-level copy has been performed and this routine
- *              finishes the "deep" part of the copy.
- *
- * Return:      Success:        Non-negative
- *              Failure:        Negative
- *
- *-------------------------------------------------------------------------
- */
-static herr_t
-H5P__file_driver_copy(void *value)
-{
-    herr_t ret_value = SUCCEED; /* Return value */
-
-    FUNC_ENTER_PACKAGE
-
-    if (value) {
-        H5FD_driver_prop_t *driver_prop = (H5FD_driver_prop_t *)value; /* Driver ID & info struct */
-
-        /* Copy the driver & info, if there is one */
-        if (driver_prop->driver) {
-            /* Increment the reference count on driver and copy driver info */
-            if (H5FD__driver_inc_rc(driver_prop->driver) < 0)
-                HGOTO_ERROR(H5E_PLIST, H5E_CANTINC, FAIL, "unable to increment ref count on VFL driver");
-
-            /* Copy driver info, if it exists */
-            if (driver_prop->driver_info) {
-                void *new_pl; /* Copy of driver info */
-
-                /* Allow the driver to copy or do it ourselves */
-                if (driver_prop->driver->cls->fapl_copy) {
-                    if (NULL == (new_pl = (driver_prop->driver->cls->fapl_copy)(driver_prop->driver_info)))
-                        HGOTO_ERROR(H5E_PLIST, H5E_CANTCOPY, FAIL, "driver info copy failed");
-                } /* end if */
-                else if (driver_prop->driver->cls->fapl_size > 0) {
-                    if (NULL == (new_pl = H5MM_malloc(driver_prop->driver->cls->fapl_size)))
-                        HGOTO_ERROR(H5E_PLIST, H5E_CANTALLOC, FAIL, "driver info allocation failed");
-                    H5MM_memcpy(new_pl, driver_prop->driver_info, driver_prop->driver->cls->fapl_size);
-                } /* end else-if */
-                else
-                    HGOTO_ERROR(H5E_PLIST, H5E_UNSUPPORTED, FAIL, "no way to copy driver info");
-
-                /* Set the driver info for the copy */
-                driver_prop->driver_info = new_pl;
-            } /* end if */
-
-            /* Copy driver configuration string, if it exists */
-            if (driver_prop->driver_config_str) {
-                char *new_config_str = NULL;
-
-                if (NULL == (new_config_str = H5MM_strdup(driver_prop->driver_config_str)))
-                    HGOTO_ERROR(H5E_PLIST, H5E_CANTCOPY, FAIL, "driver configuration string copy failed");
-                driver_prop->driver_config_str = new_config_str;
-            } /* end if */
-        }     /* end if */
-    }         /* end if */
-
-done:
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5P__file_driver_copy() */
-
-/*-------------------------------------------------------------------------
  * Function:    H5P__facc_file_driver_create
  *
  * Purpose:     Create callback for the file driver ID & info property.
@@ -1597,7 +1531,7 @@ H5P__facc_file_driver_create(const char H5_ATTR_UNUSED *name, size_t H5_ATTR_UNU
     FUNC_ENTER_PACKAGE
 
     /* Make copy of file driver */
-    if (H5P__file_driver_copy(value) < 0)
+    if (H5FD_driver_prop_clone(value) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTCOPY, FAIL, "can't copy file driver");
 
 done:
@@ -1626,7 +1560,7 @@ H5P__facc_file_driver_set(hid_t H5_ATTR_UNUSED prop_id, const char H5_ATTR_UNUSE
     assert(value);
 
     /* Make copy of file driver ID & info */
-    if (H5P__file_driver_copy(value) < 0)
+    if (H5FD_driver_prop_clone(value) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTCOPY, FAIL, "can't copy file driver");
 
 done:
@@ -1655,7 +1589,7 @@ H5P__facc_file_driver_get(hid_t H5_ATTR_UNUSED prop_id, const char H5_ATTR_UNUSE
     assert(value);
 
     /* Make copy of file driver */
-    if (H5P__file_driver_copy(value) < 0)
+    if (H5FD_driver_prop_clone(value) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTCOPY, FAIL, "can't copy file driver");
 
 done:
@@ -1706,7 +1640,7 @@ H5P__facc_file_driver_copy(const char H5_ATTR_UNUSED *name, size_t H5_ATTR_UNUSE
     FUNC_ENTER_PACKAGE
 
     /* Make copy of file driver */
-    if (H5P__file_driver_copy(value) < 0)
+    if (H5FD_driver_prop_clone(value) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTCOPY, FAIL, "can't copy file driver");
 
 done:

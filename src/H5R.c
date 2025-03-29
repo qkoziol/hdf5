@@ -46,14 +46,10 @@
 /********************/
 
 /* Helper routines for sync/async API calls */
-static void *H5R__open_common(H5R_ref_t *ref_ptr, hid_t file_id, hid_t oapl_id, void **token_ptr,
-                              H5VL_object_t **vol_obj_ptr, H5I_type_t *opened_type);
-static hid_t H5R__open_object_api_common(H5R_ref_t *ref_ptr, hid_t file_id, hid_t oapl_id, void **token_ptr,
-                                         H5VL_object_t **_vol_obj_ptr);
-static hid_t H5R__open_region_api_common(H5R_ref_t *ref_ptr, hid_t file_id, hid_t oapl_id, void **token_ptr,
-                                         H5VL_object_t **_vol_obj_ptr);
-static hid_t H5R__open_attr_api_common(H5R_ref_t *ref_ptr, hid_t file_id, H5P_genplist_t *aapl,
-                                       void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static void *H5R__open_common(H5R_ref_t *ref_ptr, hid_t file_id, H5P_genplist_t *dapl, void **token_ptr, H5VL_object_t **vol_obj_ptr, H5I_type_t *opened_type);
+static hid_t H5R__open_object_api_common(H5R_ref_t *ref_ptr, hid_t file_id, H5P_genplist_t *dapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static hid_t H5R__open_region_api_common(H5R_ref_t *ref_ptr, hid_t file_id, H5P_genplist_t *dapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static hid_t H5R__open_attr_api_common(H5R_ref_t *ref_ptr, hid_t file_id, H5P_genplist_t *aapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
 
 /*********************/
 /* Package Variables */
@@ -484,21 +480,18 @@ done:
  *-------------------------------------------------------------------------
  */
 static void *
-H5R__open_common(H5R_ref_t *ref_ptr, hid_t file_id, hid_t oapl_id, void **token_ptr,
-                 H5VL_object_t **vol_obj_ptr, H5I_type_t *opened_type)
+H5R__open_common(H5R_ref_t *ref_ptr, hid_t file_id, H5P_genplist_t *dapl, void **token_ptr, H5VL_object_t **vol_obj_ptr, H5I_type_t *opened_type)
 {
+    hid_t dapl_id;                      /* ID for DAPL */
     H5VL_loc_params_t loc_params;       /* Location parameters */
     H5O_token_t       obj_token = {0};  /* Object token */
     void             *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
-    /* Check args */
-    if (oapl_id < 0)
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a property list");
-
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&oapl_id, H5P_CLS_DACC, file_id, false) < 0)
+    dapl_id = H5P_PLIST_ID(dapl);
+    if (H5CX_set_apl(&dapl_id, H5P_CLS_DACC, file_id, false) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTSET, NULL, "can't set access property list info");
 
     /* Get object token */
@@ -527,7 +520,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static hid_t
-H5R__open_object_api_common(H5R_ref_t *ref_ptr, hid_t file_id, hid_t oapl_id, void **token_ptr,
+H5R__open_object_api_common(H5R_ref_t *ref_ptr, hid_t file_id, H5P_genplist_t *dapl, void **token_ptr,
                             H5VL_object_t **_vol_obj_ptr)
 {
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for file_id */
@@ -540,8 +533,7 @@ H5R__open_object_api_common(H5R_ref_t *ref_ptr, hid_t file_id, hid_t oapl_id, vo
     FUNC_ENTER_PACKAGE
 
     /* Open object */
-    if (NULL ==
-        (opened_obj = H5R__open_common(ref_ptr, file_id, oapl_id, token_ptr, vol_obj_ptr, &opened_type)))
+    if (NULL == (opened_obj = H5R__open_common(ref_ptr, file_id, dapl, token_ptr, vol_obj_ptr, &opened_type)))
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open object");
 
     /* Register object */
@@ -566,6 +558,7 @@ hid_t
 H5Ropen_object(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t oapl_id)
 {
     hid_t file_id;                     /* Reference file ID */
+    H5P_genplist_t *dapl; /* Dataset access property list */
     hid_t ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -579,6 +572,11 @@ H5Ropen_object(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t oapl_id)
         H5R__get_type((const H5R_ref_priv_t *)ref_ptr) >= H5R_MAXTYPE)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, H5I_INVALID_HID, "invalid reference type");
 
+    /* Get the object access property list */
+    /* (the OAPL is treated as a DAPL currently) */
+    if (NULL == (dapl = H5P_object_verify(oapl_id, H5P_TYPE_DATASET_ACCESS, true)))
+        HGOTO_ERROR(H5E_OHDR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+
     /* Retrieve file_id from reference */
     if (H5I_INVALID_HID == (file_id = H5R__get_file_id((const H5R_ref_priv_t *)ref_ptr))) {
         H5P_genplist_t *rapl; /* Property list for RAPL */
@@ -591,7 +589,7 @@ H5Ropen_object(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t oapl_id)
     }
 
     /* Open the dataset synchronously */
-    if ((ret_value = H5R__open_object_api_common(ref_ptr, file_id, oapl_id, NULL, NULL)) < 0)
+    if ((ret_value = H5R__open_object_api_common(ref_ptr, file_id, dapl, NULL, NULL)) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open object synchronously");
 
 done:
@@ -615,6 +613,7 @@ H5Ropen_object_async(const char *app_file, const char *app_func, unsigned app_li
     void          *token     = NULL;            /* Request token for async operation        */
     void         **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     hid_t          file_id;                     /* Reference file ID */
+    H5P_genplist_t *dapl; /* Dataset access property list */
     hid_t          ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -627,6 +626,11 @@ H5Ropen_object_async(const char *app_file, const char *app_func, unsigned app_li
     if (H5R__get_type((const H5R_ref_priv_t *)ref_ptr) <= H5R_BADTYPE ||
         H5R__get_type((const H5R_ref_priv_t *)ref_ptr) >= H5R_MAXTYPE)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, H5I_INVALID_HID, "invalid reference type");
+
+    /* Get the object access property list */
+    /* (the OAPL is treated as a DAPL currently) */
+    if (NULL == (dapl = H5P_object_verify(oapl_id, H5P_TYPE_DATASET_ACCESS, true)))
+        HGOTO_ERROR(H5E_OHDR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -644,7 +648,7 @@ H5Ropen_object_async(const char *app_file, const char *app_func, unsigned app_li
     }
 
     /* Open the object asynchronously */
-    if ((ret_value = H5R__open_object_api_common(ref_ptr, file_id, oapl_id, token_ptr, &vol_obj)) < 0)
+    if ((ret_value = H5R__open_object_api_common(ref_ptr, file_id, dapl, token_ptr, &vol_obj)) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open object asynchronously");
 
     /* If a token was created, add the token to the event set */
@@ -673,7 +677,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static hid_t
-H5R__open_region_api_common(H5R_ref_t *ref_ptr, hid_t file_id, hid_t oapl_id, void **token_ptr,
+H5R__open_region_api_common(H5R_ref_t *ref_ptr, hid_t file_id, H5P_genplist_t *dapl, void **token_ptr,
                             H5VL_object_t **_vol_obj_ptr)
 {
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for file_id */
@@ -690,8 +694,7 @@ H5R__open_region_api_common(H5R_ref_t *ref_ptr, hid_t file_id, hid_t oapl_id, vo
     FUNC_ENTER_PACKAGE
 
     /* Open object */
-    if (NULL ==
-        (opened_obj = H5R__open_common(ref_ptr, file_id, oapl_id, token_ptr, vol_obj_ptr, &opened_type)))
+    if (NULL == (opened_obj = H5R__open_common(ref_ptr, file_id, dapl, token_ptr, vol_obj_ptr, &opened_type)))
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open object");
 
     /* Create a VOL object for the opened object */
@@ -700,8 +703,7 @@ H5R__open_region_api_common(H5R_ref_t *ref_ptr, hid_t file_id, hid_t oapl_id, vo
 
     /* Only dataset objects be used for region references */
     if (H5I_DATASET != opened_type)
-        HGOTO_ERROR(H5E_REFERENCE, H5E_BADVALUE, H5I_INVALID_HID,
-                    "non-dataset object for region reference, type: %u", (unsigned)opened_type);
+        HGOTO_ERROR(H5E_REFERENCE, H5E_BADVALUE, H5I_INVALID_HID, "non-dataset object for region reference, type: %u", (unsigned)opened_type);
 
     /* Set up VOL callback arguments */
     vol_cb_args.op_type                 = H5VL_DATASET_GET_SPACE;
@@ -749,6 +751,7 @@ hid_t
 H5Ropen_region(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t oapl_id)
 {
     hid_t file_id;                     /* Reference file ID */
+    H5P_genplist_t *dapl; /* Dataset access property list */
     hid_t ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -762,6 +765,11 @@ H5Ropen_region(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t oapl_id)
         (H5R__get_type((const H5R_ref_priv_t *)ref_ptr) != H5R_DATASET_REGION2))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, H5I_INVALID_HID, "invalid reference type");
 
+    /* Get the object access property list */
+    /* (the OAPL is treated as a DAPL currently) */
+    if (NULL == (dapl = H5P_object_verify(oapl_id, H5P_TYPE_DATASET_ACCESS, true)))
+        HGOTO_ERROR(H5E_OHDR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+
     /* Retrieve file_id from reference */
     if (H5I_INVALID_HID == (file_id = H5R__get_file_id((const H5R_ref_priv_t *)ref_ptr))) {
         H5P_genplist_t *rapl; /* Property list for RAPL */
@@ -774,7 +782,7 @@ H5Ropen_region(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t oapl_id)
     }
 
     /* Open the region synchronously */
-    if ((ret_value = H5R__open_region_api_common(ref_ptr, file_id, oapl_id, NULL, NULL)) < 0)
+    if ((ret_value = H5R__open_region_api_common(ref_ptr, file_id, dapl, NULL, NULL)) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open region synchronously");
 
 done:
@@ -798,6 +806,7 @@ H5Ropen_region_async(const char *app_file, const char *app_func, unsigned app_li
     void          *token     = NULL;            /* Request token for async operation */
     void         **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation */
     hid_t          file_id;                     /* Reference file ID */
+    H5P_genplist_t *dapl; /* Dataset access property list */
     hid_t          ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -810,6 +819,11 @@ H5Ropen_region_async(const char *app_file, const char *app_func, unsigned app_li
     if ((H5R__get_type((const H5R_ref_priv_t *)ref_ptr) != H5R_DATASET_REGION1) &&
         (H5R__get_type((const H5R_ref_priv_t *)ref_ptr) != H5R_DATASET_REGION2))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, H5I_INVALID_HID, "invalid reference type");
+
+    /* Get the object access property list */
+    /* (the OAPL is treated as a DAPL currently) */
+    if (NULL == (dapl = H5P_object_verify(oapl_id, H5P_TYPE_DATASET_ACCESS, true)))
+        HGOTO_ERROR(H5E_OHDR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -827,7 +841,7 @@ H5Ropen_region_async(const char *app_file, const char *app_func, unsigned app_li
     }
 
     /* Open the region asynchronously */
-    if ((ret_value = H5R__open_region_api_common(ref_ptr, file_id, oapl_id, token_ptr, &vol_obj)) < 0)
+    if ((ret_value = H5R__open_region_api_common(ref_ptr, file_id, dapl, token_ptr, &vol_obj)) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open region asynchronously");
 
     /* If a token was created, add the token to the event set */
@@ -873,8 +887,7 @@ H5R__open_attr_api_common(H5R_ref_t *ref_ptr, hid_t file_id, H5P_genplist_t *aap
     FUNC_ENTER_PACKAGE
 
     /* Open object */
-    if (NULL ==
-        (opened_obj = H5R__open_common(ref_ptr, file_id, H5P_DEFAULT, token_ptr, vol_obj_ptr, &opened_type)))
+    if (NULL == (opened_obj = H5R__open_common(ref_ptr, file_id, H5P_LST_DATASET_ACCESS_g, token_ptr, vol_obj_ptr, &opened_type)))
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open object");
 
     /* Create a VOL object for the opened object */

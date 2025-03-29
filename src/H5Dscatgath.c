@@ -585,7 +585,7 @@ H5D__scatgath_read(const H5D_io_info_t *io_info, const H5D_dset_io_info_t *dset_
                 H5Z_data_xform_t *data_transform; /* Data transform info */
 
                 /* Retrieve info from API context */
-                if (H5CX_get_data_transform(&data_transform) < 0)
+                if (H5CX_peek_data_transform(&data_transform) < 0)
                     HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get data transform info");
 
                 if (H5Z_xform_eval(data_transform, tmp_buf, smine_nelmts, dset_info->type_info.mem_type) < 0)
@@ -761,7 +761,7 @@ H5D__scatgath_write(const H5D_io_info_t *io_info, const H5D_dset_io_info_t *dset
                 H5Z_data_xform_t *data_transform; /* Data transform info */
 
                 /* Retrieve info from API context */
-                if (H5CX_get_data_transform(&data_transform) < 0)
+                if (H5CX_peek_data_transform(&data_transform) < 0)
                     HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get data transform info");
 
                 if (H5Z_xform_eval(data_transform, tmp_buf, smine_nelmts, dset_info->type_info.mem_type) < 0)
@@ -984,7 +984,7 @@ H5D__scatgath_read_select(H5D_io_info_t *io_info)
                     H5Z_data_xform_t *data_transform; /* Data transform info */
 
                     /* Retrieve info from API context */
-                    if (H5CX_get_data_transform(&data_transform) < 0)
+                    if (H5CX_peek_data_transform(&data_transform) < 0)
                         HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get data transform info");
 
                     if (H5Z_xform_eval(data_transform, tmp_bufs[i],
@@ -1218,7 +1218,7 @@ H5D__scatgath_write_select(H5D_io_info_t *io_info)
                         H5Z_data_xform_t *data_transform; /* Data transform info */
 
                         /* Retrieve info from API context */
-                        if (H5CX_get_data_transform(&data_transform) < 0)
+                        if (H5CX_peek_data_transform(&data_transform) < 0)
                             HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get data transform info");
 
                         if (H5Z_xform_eval(data_transform, tmp_write_buf,
@@ -1277,7 +1277,7 @@ H5D__scatgath_write_select(H5D_io_info_t *io_info)
                     H5Z_data_xform_t *data_transform; /* Data transform info */
 
                     /* Retrieve info from API context */
-                    if (H5CX_get_data_transform(&data_transform) < 0)
+                    if (H5CX_peek_data_transform(&data_transform) < 0)
                         HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get data transform info");
 
                     if (H5Z_xform_eval(data_transform, tmp_write_buf,

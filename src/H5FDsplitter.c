@@ -349,37 +349,10 @@ H5FD__splitter_populate_config(H5FD_splitter_vfd_config_t *vfd_config, H5FD_spli
     if (!vfd_config) {
         if (NULL == (vfd_config = H5MM_calloc(sizeof(H5FD_splitter_vfd_config_t))))
             HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "unable to allocate file access property list struct");
-
-        /* Set non-zero values */
-        vfd_config->magic   = H5FD_SPLITTER_MAGIC;
-        vfd_config->version = H5FD_CURR_SPLITTER_VFD_CONFIG_VERSION;
-
         free_config = true;
     }
 
-    /* Make sure that the W/O channel supports write-only capability.
-     * Some drivers (e.g. family or multi) do revision of the superblock
-     * in-memory, causing problems in that channel.
-     * Uses the feature flag H5FD_FEAT_DEFAULT_VFD_COMPATIBLE as the
-     * determining attribute.
-     */
-    if (H5P_DEFAULT != vfd_config->wo_fapl_id) {
-        H5FD_driver_t     *wo_driver;
-        H5FD_driver_prop_t wo_driver_prop;
-        H5P_genplist_t    *wo_fapl;
-        unsigned long      wo_driver_flags = 0;
-
-        if (NULL == (wo_fapl = H5P_object_verify(vfd_config->wo_fapl_id, H5P_TYPE_FILE_ACCESS, true)))
-            HGOTO_ERROR(H5E_VFL, H5E_BADTYPE, FAIL, "not a file access property list");
-        if (H5P_peek(wo_fapl, H5F_ACS_FILE_DRV_NAME, &wo_driver_prop) < 0)
-            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get driver ID & info");
-        wo_driver = wo_driver_prop.driver;
-        if (H5FD_driver_query(wo_driver, &wo_driver_flags) < 0)
-            HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "can't query VFD flags");
-        if (0 == (H5FD_FEAT_DEFAULT_VFD_COMPATIBLE & wo_driver_flags))
-            HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "unsuitable W/O driver");
-    } /* end if */
-
+    /* Copy paths */
     fa_out->ignore_wo_errs = vfd_config->ignore_wo_errs;
     strncpy(fa_out->wo_path, vfd_config->wo_path, H5FD_SPLITTER_PATH_MAX + 1);
     fa_out->wo_path[H5FD_SPLITTER_PATH_MAX] = '\0';
@@ -408,9 +381,25 @@ H5FD__splitter_populate_config(H5FD_splitter_vfd_config_t *vfd_config, H5FD_spli
     }
     if (H5P_DEFAULT != vfd_config->wo_fapl_id) {
         H5P_genplist_t *wo_fapl;
+        H5FD_driver_t     *wo_driver;
+        unsigned long      wo_driver_flags = 0;
 
         if (NULL == (wo_fapl = H5P_object_verify(vfd_config->wo_fapl_id, H5P_TYPE_FILE_ACCESS, true)))
             HGOTO_ERROR(H5E_VFL, H5E_BADTYPE, FAIL, "not a file access property list");
+
+        /* Make sure that the W/O channel supports write-only capability.
+         * Some drivers (e.g. family or multi) do revision of the superblock
+         * in-memory, causing problems in that channel.
+         * Uses the feature flag H5FD_FEAT_DEFAULT_VFD_COMPATIBLE as the
+         * determining attribute.
+         */
+        if (NULL == (wo_driver = H5P_peek_driver(wo_fapl)))
+            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "unable to retrieve VFL driver");
+        if (H5FD_driver_query(wo_driver, &wo_driver_flags) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "can't query VFD flags");
+        if (0 == (H5FD_FEAT_DEFAULT_VFD_COMPATIBLE & wo_driver_flags))
+            HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "unsuitable W/O driver");
+
         if (NULL == (fa_out->wo_fapl = H5P_copy_plist(wo_fapl, false)))
             HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, FAIL, "can't copy property list");
     }

@@ -199,7 +199,6 @@ H5F__efc_open(bool try, H5F_efc_t *efc, H5F_t **_file, const char *name, unsigne
 {
     H5F_efc_ent_t        *ent       = NULL;    /* Entry for target file in efc */
     bool                  open_file = false;   /* Whether ent->file needs to be closed in case of error */
-    H5VL_connector_prop_t connector_prop;      /* Property for VOL connector ID & info        */
     herr_t                ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -210,16 +209,6 @@ H5F__efc_open(bool try, H5F_efc_t *efc, H5F_t **_file, const char *name, unsigne
 
     /* Reset 'out' parameter */
     *_file = NULL;
-
-    /* Get the VOL info from the fapl */
-    if (H5P_peek(fapl, H5F_ACS_VOL_CONN_NAME, &connector_prop) < 0)
-        HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get VOL connector info");
-
-    /* Stash a copy of the "top-level" connector property, before any pass-through
-     *  connectors modify or unwrap it.
-     */
-    if (H5CX_set_vol_connector_prop(&connector_prop) < 0)
-        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set VOL connector info in API context");
 
     /* Check if the EFC exists.  If it does not, just open the file.  We
      * support this so clients do not have to make 2 different calls depending

@@ -112,7 +112,7 @@ H5L__extern_traverse(const char H5_ATTR_UNUSED *link_name, hid_t cur_group, cons
     char               local_group_name[H5L_EXT_TRAVERSE_BUF_SIZE]; /* Local buffer to hold group name */
     H5P_genplist_t    *fapl         = NULL;                         /* File access property list pointer */
     H5F_close_degree_t fc_degree    = H5F_CLOSE_WEAK;               /* File close degree for target file */
-    char              *elink_prefix = NULL;                         /* Pointer to elink prefix */
+    const char        *elink_prefix = NULL;                         /* Pointer to elink prefix */
     hid_t              ret_value    = H5I_INVALID_HID;              /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -209,7 +209,7 @@ H5L__extern_traverse(const char H5_ATTR_UNUSED *link_name, hid_t cur_group, cons
         HGOTO_ERROR(H5E_LINK, H5E_CANTSET, H5I_INVALID_HID, "can't set file close degree");
 
     /* Get the current elink prefix */
-    if (H5P_peek(lapl, H5L_ACS_ELINK_PREFIX_NAME, &elink_prefix) < 0)
+    if (H5CX_peek_elink_prefix(&elink_prefix) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTGET, H5I_INVALID_HID, "can't get external link prefix");
 
     /* Search for the target file */

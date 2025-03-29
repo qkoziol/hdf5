@@ -737,7 +737,7 @@ H5FD__core_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr
         o_flags |= O_EXCL;
 
     /* Retrieve initial file image info */
-    if (H5P_peek(fapl, H5F_ACS_FILE_IMAGE_INFO_NAME, &file_image_info) < 0)
+    if (H5CX_peek_file_image_info(&file_image_info) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, NULL, "can't get initial file image info");
 
     /* If the file image exists and this is an open, make sure the file doesn't exist */

@@ -22,6 +22,7 @@
 #ifdef H5_HAVE_PARALLEL
 #include "H5FDprivate.h" /* File drivers                         */
 #endif                   /* H5_HAVE_PARALLEL */
+#include "H5Oprivate.h"  /* Object headers                       */
 #include "H5Pprivate.h"  /* Property lists                       */
 #include "H5Tprivate.h"  /* Datatypes                            */
 #include "H5Tconv.h"     /* Datatype conversions                 */
@@ -37,12 +38,13 @@
 
 /* API context state */
 typedef struct H5CX_state_t {
-    hid_t                 ocpl_id;            /* DCPL/GCPL/TCPL for operation */
     hid_t                 dxpl_id;            /* DXPL for operation */
+    hid_t                 fapl_id;            /* FAPL for operation */
     hid_t                 lapl_id;            /* LAPL for operation */
     hid_t                 lcpl_id;            /* LCPL for operation */
+    hid_t                 ocpl_id;            /* DCPL/GCPL/TCPL for operation */
+    hid_t                 ocpypl_id;         /* OCPYPL for operation */
     void                 *vol_wrap_ctx;       /* VOL connector's "wrap context" for creating IDs */
-    H5VL_connector_prop_t vol_connector_prop; /* VOL connector property */
 
 #ifdef H5_HAVE_PARALLEL
     /* Internal: Parallel I/O settings */
@@ -110,6 +112,10 @@ typedef struct H5CX_t {
     /* OCPL */
     hid_t           ocpl_id; /* OCPL (i.e. DCPL, GCPL, or TCPL) ID for API operation */
     H5P_genplist_t *ocpl;    /* Object Creation Property List */
+
+    /* OCPYPL */
+    hid_t           ocpypl_id; /* OCPYPL ID for API operation */
+    H5P_genplist_t *ocpypl;    /* Object Copy Property List */
 
     /* DAPL */
     hid_t           dapl_id; /* DAPL ID for API operation */
@@ -239,6 +245,8 @@ typedef struct H5CX_t {
     bool     intermediate_group_valid; /* Whether create intermediate group flag is valid */
 
     /* Cached LAPL properties */
+    const char *elink_prefix; /* Prefix for external link prefix (H5L_ACS_ELINK_PREFIX_NAME) */
+    bool   elink_prefix_valid; /* Whether the prefix for external link prefix is valid */
     size_t nlinks;       /* Number of soft / UD links to traverse (H5L_ACS_NLINKS_NAME) */
     bool   nlinks_valid; /* Whether number of soft / UD links to traverse is valid */
 
@@ -254,10 +262,18 @@ typedef struct H5CX_t {
     bool attr_min_dense_valid; /* Whether the min dense attrs value is valid (H5O_CRT_ATTR_MIN_DENSE_NAME) */
     uint8_t ohdr_flags;        /* Object header flags (H5O_CRT_OHDR_FLAGS_NAME) */
     bool    ohdr_flags_valid;  /* Whether the object headers flags are valid */
+    H5O_pline_t pline;         /* Filter pipeline for object creation (H5O_CRT_PLINE_NAME) */
+    bool    pline_valid;       /* Whether the filter pipeline for object creation is valid */
+
+    /* Cached OCPYPL properties */
+    H5O_copy_dtype_merge_list_t *comm_dtype_merge_list; /* Committed datatype merge list for object copy (H5O_CPY_MERGE_COMM_DT_LIST_NAME) */
+    bool comm_dtype_merge_list_valid; /* Whether the committed datatype merge list for object copy is valid */
 
     /* Cached DCPL properties */
     bool min_dset_ohdr;       /* Whether to minimize dataset object header (H5D_CRT_MIN_DSET_HDR_SIZE_NAME) */
     bool min_dset_ohdr_valid; /* Whether minimize dataset object header flag is valid */
+    H5O_layout_t layout;     /* Storage layout for object creation (H5D_CRT_LAYOUT_NAME) */
+    bool layout_valid;       /* Whether the storage layout for object creation is valid */
 
     /* Cached DAPL properties */
     const char *extfile_prefix;       /* Prefix for external file (H5D_ACS_EFILE_PREFIX_NAME) */
@@ -266,6 +282,16 @@ typedef struct H5CX_t {
     bool        vds_prefix_valid;     /* Whether the prefix for VDS is valid           */
 
     /* Cached FAPL properties */
+#ifdef H5_HAVE_PARALLEL
+    MPI_Comm mpi_comm;   /* MPI communicator (H5F_ACS_MPI_COMM_NAME) */
+    bool mpi_comm_valid; /* Whether the MPI communicator is valid */
+#endif /* H5_HAVE_PARALLEL */
+    H5VL_connector_prop_t vol_connector_prop; /* Property for VOL connector ID & info (H5F_ACS_VOL_CONN_NAME) */
+    bool  vol_connector_prop_valid;           /* Whether property for VOL connector ID & info is valid */
+    H5FD_driver_prop_t driver_prop; /* Property for driver, info & configuration string (H5F_ACS_FILE_DRV_NAME) */
+    bool  driver_prop_valid;           /* Whether property for driver, info & configuration string is valid */
+    H5FD_file_image_info_t file_image_info; /* Property for file image info (H5F_ACS_FILE_IMAGE_INFO_NAME) */
+    bool  file_image_info_valid;       /* Whether property for file image info is valid */
     H5F_libver_t low_bound;       /* low_bound property for H5Pset_libver_bounds()
                                      (H5F_ACS_LIBVER_LOW_BOUND_NAME) */
     bool         low_bound_valid; /* Whether low_bound property is valid */
@@ -274,10 +300,6 @@ typedef struct H5CX_t {
     bool high_bound_valid;        /* Whether high_bound property is valid */
 
     /* Cached VOL settings */
-    H5VL_connector_prop_t vol_connector_prop; /* Property for VOL connector ID & info
-                               This is treated as an independent field with
-                               no relation to the property H5F_ACS_VOL_CONN_NAME stored on the FAPL */
-    bool  vol_connector_prop_valid;           /* Whether property for VOL connector ID & info is valid */
     void *vol_wrap_ctx;                       /* VOL connector's "wrap context" for creating IDs */
     bool  vol_wrap_ctx_valid; /* Whether VOL connector's "wrap context" for creating IDs is valid */
 } H5CX_t;
@@ -300,6 +322,9 @@ typedef struct H5CX_node_t {
 /* Library-private Function Prototypes */
 /***************************************/
 
+/* Utility functions */
+H5_DLL herr_t H5CX_init_phase2(void);
+
 /* Library private routines */
 H5_DLL herr_t H5CX_push(H5CX_node_t *cnode);
 H5_DLL herr_t H5CX_pop(bool update_dxpl_props);
@@ -318,15 +343,16 @@ H5_DLL void   H5CX_set_lcpl(hid_t lcpl_id);
 H5_DLL herr_t H5CX_set_libver_bounds(H5F_t *f);
 H5_DLL herr_t H5CX_set_apl(hid_t *acspl_id, const struct H5P_libclass_t *libclass, hid_t loc_id,
                            bool is_collective);
+H5_DLL void   H5CX_set_fapl(hid_t fapl_id);
+H5_DLL void   H5CX_set_ocpypl(hid_t ocpypl_id);
 H5_DLL herr_t H5CX_set_loc(hid_t loc_id);
 H5_DLL herr_t H5CX_set_vol_wrap_ctx(void *wrap_ctx);
-H5_DLL herr_t H5CX_set_vol_connector_prop(const H5VL_connector_prop_t *vol_connector_prop);
 
 /* "Getter" routines for API context info */
+H5_DLL hid_t       H5CX_get_fapl(void);
 H5_DLL hid_t       H5CX_get_dxpl(void);
 H5_DLL hid_t       H5CX_get_lapl(void);
 H5_DLL herr_t      H5CX_get_vol_wrap_ctx(void **wrap_ctx);
-H5_DLL herr_t      H5CX_get_vol_connector_prop(H5VL_connector_prop_t *vol_connector_prop);
 H5_DLL haddr_t     H5CX_get_tag(void);
 H5_DLL H5AC_ring_t H5CX_get_ring(void);
 #ifdef H5_HAVE_PARALLEL
@@ -354,7 +380,7 @@ H5_DLL herr_t H5CX_get_mpio_chunk_opt_ratio(unsigned *mpio_chunk_opt_ratio);
 #endif /* H5_HAVE_PARALLEL */
 H5_DLL herr_t H5CX_get_err_detect(H5Z_EDC_t *err_detect);
 H5_DLL herr_t H5CX_get_filter_cb(H5Z_cb_t *filter_cb);
-H5_DLL herr_t H5CX_get_data_transform(H5Z_data_xform_t **data_transform);
+H5_DLL herr_t H5CX_peek_data_transform(H5Z_data_xform_t **data_transform);
 H5_DLL herr_t H5CX_get_vlen_alloc_info(H5T_vlen_alloc_info_t *vl_alloc_info);
 H5_DLL herr_t H5CX_get_dt_conv_cb(H5T_conv_cb_t *cb_struct);
 H5_DLL herr_t H5CX_get_selection_io_mode(H5D_selection_io_mode_t *selection_io_mode);
@@ -368,6 +394,7 @@ H5_DLL herr_t H5CX_get_encoding(H5T_cset_t *encoding);
 H5_DLL herr_t H5CX_get_intermediate_group(unsigned *crt_intermed_group);
 
 /* "Getter" routines for LAPL properties cached in API context */
+H5_DLL herr_t H5CX_peek_elink_prefix(const char **elink_prefix);
 H5_DLL herr_t H5CX_get_nlinks(size_t *nlinks);
 
 /* "Getter" routines for OCPL properties cached in API context */
@@ -377,15 +404,27 @@ H5_DLL herr_t H5CX_get_bad_mesg_count(bool *bad_mesg_count);
 H5_DLL herr_t H5CX_get_attr_max_compact(unsigned *attr_max_compact);
 H5_DLL herr_t H5CX_get_attr_min_dense(unsigned *attr_min_dense);
 H5_DLL herr_t H5CX_get_ohdr_flags(uint8_t *ohdr_flags);
+H5_DLL herr_t H5CX_get_pline(H5O_pline_t *pline);
+H5_DLL herr_t H5CX_peek_pline(H5O_pline_t *pline);
+
+/* "Getter" routines for OCPYPL properties cached in API context */
+H5_DLL herr_t H5CX_peek_comm_dtype_merge_list(H5O_copy_dtype_merge_list_t **comm_dtype_merge_list);
 
 /* "Getter" routines for DCPL properties cached in API context */
 H5_DLL herr_t H5CX_get_min_dset_hdr(bool *dset_min_ohdr);
+H5_DLL herr_t H5CX_get_layout(H5O_layout_t *layout);
 
 /* "Getter" routines for DAPL properties cached in API context */
-H5_DLL herr_t H5CX_get_ext_file_prefix(const char **prefix_extfile);
-H5_DLL herr_t H5CX_get_vds_prefix(const char **prefix_vds);
+H5_DLL herr_t H5CX_peek_ext_file_prefix(const char **prefix_extfile);
+H5_DLL herr_t H5CX_peek_vds_prefix(const char **prefix_vds);
 
 /* "Getter" routines for FAPL properties cached in API context */
+#ifdef H5_HAVE_PARALLEL
+H5_DLL herr_t H5CX_peek_mpi_comm(MPI_Comm *mpi_comm);
+#endif /* H5_HAVE_PARALLEL */
+H5_DLL herr_t H5CX_peek_vol_connector_prop(H5VL_connector_prop_t *vol_connector_prop);
+H5_DLL herr_t H5CX_peek_driver_prop(H5FD_driver_prop_t *driver_prop);
+H5_DLL herr_t H5CX_peek_file_image_info(H5FD_file_image_info_t *file_image_info);
 H5_DLL herr_t H5CX_get_libver_bounds(H5F_libver_t *low_bound, H5F_libver_t *high_bound);
 
 /* "Setter" routines for API context info */

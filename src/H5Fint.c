@@ -327,7 +327,7 @@ H5F__set_vol_conn(H5F_t *file)
     /* Retrieve a copy of the "top-level" connector property, before any pass-through
      *  connectors modified or unwrapped it.
      */
-    if (H5CX_get_vol_connector_prop(&connector_prop) < 0)
+    if (H5CX_peek_vol_connector_prop(&connector_prop) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get VOL connector info from API context");
 
     /* Sanity check */
@@ -855,6 +855,8 @@ H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_op
 {
     H5F_t     *src_file         = NULL; /* Source file */
     H5F_efc_t *efc              = NULL; /* External file cache */
+    hid_t                 old_fapl_id = H5I_INVALID_HID;         /* ID for old FAPL in API context */
+    hid_t                 fapl_id;         /* ID for FAPL */
     char      *full_name        = NULL; /* File name with prefix */
     char      *actual_file_name = NULL; /* File's actual name */
     char      *temp_file_name   = NULL; /* Temporary pointer to file name */
@@ -877,6 +879,15 @@ H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_op
     if (NULL == (temp_file_name = H5MM_strdup(file_name)))
         HGOTO_ERROR(H5E_FILE, H5E_CANTALLOC, FAIL, "memory allocation failed");
     temp_file_name_len = strlen(temp_file_name);
+
+    /* Retrieve the current FAPL in the API context */
+    if ((old_fapl_id = H5CX_get_fapl()) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get file access property list");
+
+    /* Verify access property list and set up collective metadata if appropriate */
+    fapl_id = H5P_PLIST_ID(fapl);
+    if (H5CX_set_apl(&fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, true) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Target file_name is an absolute pathname: see RM for detailed description */
     if (H5_CHECK_ABSOLUTE(file_name) || H5_CHECK_ABS_PATH(file_name)) {
@@ -1035,6 +1046,10 @@ H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_op
         HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, FAIL, "can't open file");
 
 done:
+    /* Restore previous FAPL in the API contxt */
+    if (old_fapl_id > 0)
+        H5CX_set_fapl(old_fapl_id);
+
     if (ret_value < 0)
         if (src_file && H5F_efc_close(primary_file, src_file) < 0)
             HDONE_ERROR(H5E_FILE, H5E_CANTCLOSEFILE, FAIL, "can't close source file");
@@ -1818,7 +1833,7 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
     H5F_shared_t      *shared = NULL; /* Shared part of `file'    */
     H5FD_int_t        *fh     = NULL; /* VFD file handle          */
     unsigned           tent_flags;    /* Tentative flags          */
-    H5FD_driver_t     *drvr;          /* file driver */
+    H5FD_driver_prop_t driver_prop;   /* file driver properties */
     H5F_close_degree_t fc_degree;     /* file close degree        */
     size_t             page_buf_size;
     unsigned           page_buf_min_meta_perc = 0;
@@ -1845,8 +1860,8 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
      * Otherwise it is the application's responsibility to never open the
      * same file more than once at a time.
      */
-    if (NULL == (drvr = H5P_peek_driver(fapl)))
-        HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to retrieve VFL class");
+    if (H5CX_peek_driver_prop(&driver_prop) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to retrieve VFL driver property");
 
     /* Check if we are using file locking */
     if (H5F__check_if_using_file_locks(fapl, &use_file_locking, &ignore_disabled_locks) < 0)
@@ -1863,7 +1878,7 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
      * application's responsibility to prevent this situation (there's no
      * way for us to detect it here anyway).
      */
-    if (H5FD_DRVR_HAS_CMP(drvr)) {
+    if (H5FD_DRVR_HAS_CMP(driver_prop.driver)) {
         tent_flags = flags & ~(H5F_ACC_CREAT | H5F_ACC_TRUNC | H5F_ACC_EXCL);
 
         /*
@@ -1987,7 +2002,7 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
         } /* end if */
 
         /* Need to set status_flags in the superblock if the driver has a 'lock' method */
-        if (H5FD_DRVR_HAS_LOCK(drvr))
+        if (H5FD_DRVR_HAS_LOCK(driver_prop.driver))
             set_status_flags = true;
     } /* end else */
 

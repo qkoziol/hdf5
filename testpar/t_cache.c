@@ -3604,35 +3604,29 @@ setup_cache_for_test(hid_t *fid_ptr, H5F_t **file_ptr_ptr, H5C_t **cache_ptr_ptr
 
     if (fid < 0) {
         nerrors++;
-        if (verbose) {
+        if (verbose)
             fprintf(stdout, "%d:%s: H5Fcreate() failed.\n", world_mpi_rank, __func__);
-        }
     }
     else if (H5Fflush(fid, H5F_SCOPE_GLOBAL) < 0) {
         nerrors++;
-        if (verbose) {
+        if (verbose)
             fprintf(stdout, "%d:%s: H5Fflush() failed.\n", world_mpi_rank, __func__);
-        }
     }
-    else {
+    else
         file_ptr = (H5F_t *)H5VL_object_verify(fid, H5I_FILE);
-    }
 
     if (file_ptr == NULL) {
         nerrors++;
-        if (verbose) {
+        if (verbose)
             fprintf(stdout, "%d:%s: Can't get file_ptr.\n", world_mpi_rank, __func__);
-        }
     }
-    else {
+    else
         cache_ptr = file_ptr->shared->cache;
-    }
 
     if (cache_ptr == NULL) {
         nerrors++;
-        if (verbose) {
+        if (verbose)
             fprintf(stdout, "%d:%s: Can't get cache_ptr.\n", world_mpi_rank, __func__);
-        }
     }
     else {
         cache_ptr->ignore_tags = true;
@@ -3644,28 +3638,18 @@ setup_cache_for_test(hid_t *fid_ptr, H5F_t **file_ptr_ptr, H5C_t **cache_ptr_ptr
     }
 
     if (success) {
-
         config.version = H5AC__CURR_CACHE_CONFIG_VERSION;
 
-        if (H5AC_get_cache_auto_resize_config(cache_ptr, &config) != SUCCEED) {
-
-            fprintf(stdout, "%d:%s: H5AC_get_cache_auto_resize_config(1) failed.\n", world_mpi_rank,
-                    __func__);
-        }
+        if (H5AC_get_cache_auto_resize_config(cache_ptr, &config) != SUCCEED)
+            fprintf(stdout, "%d:%s: H5AC_get_cache_auto_resize_config(1) failed.\n", world_mpi_rank, __func__);
         else {
-
             config.rpt_fcn_enabled         = enable_rpt_fcn;
             config.metadata_write_strategy = metadata_write_strategy;
 
-            if (H5AC_set_cache_auto_resize_config(cache_ptr, &config) != SUCCEED) {
-
-                fprintf(stdout, "%d:%s: H5AC_set_cache_auto_resize_config() failed.\n", world_mpi_rank,
-                        __func__);
-            }
-            else if (enable_rpt_fcn) {
-
+            if (H5AC_set_cache_auto_resize_config(cache_ptr, &config) != SUCCEED)
+                fprintf(stdout, "%d:%s: H5AC_set_cache_auto_resize_config() failed.\n", world_mpi_rank, __func__);
+            else if (enable_rpt_fcn)
                 fprintf(stdout, "%d:%s: rpt_fcn enabled.\n", world_mpi_rank, __func__);
-            }
         }
     }
 
@@ -3674,22 +3658,16 @@ setup_cache_for_test(hid_t *fid_ptr, H5F_t **file_ptr_ptr, H5C_t **cache_ptr_ptr
      * we can't do our usual checks in the serial case.
      */
 
-    if (success) /* verify that the metadata write strategy is as expected */
-    {
+    if (success) { /* verify that the metadata write strategy is as expected */
         if (cache_ptr->aux_ptr == NULL) {
-
             nerrors++;
-            if (verbose) {
+            if (verbose)
                 fprintf(stdout, "%d:%s: cache_ptr->aux_ptr == NULL.\n", world_mpi_rank, __func__);
-            }
         }
         else if (((H5AC_aux_t *)(cache_ptr->aux_ptr))->metadata_write_strategy != metadata_write_strategy) {
-
             nerrors++;
-            if (verbose) {
-                fprintf(stdout, "%d:%s: bad cache_ptr->aux_ptr->metadata_write_strategy\n", world_mpi_rank,
-                        __func__);
-            }
+            if (verbose)
+                fprintf(stdout, "%d:%s: bad cache_ptr->aux_ptr->metadata_write_strategy\n", world_mpi_rank, __func__);
         }
     }
 
@@ -3698,22 +3676,14 @@ setup_cache_for_test(hid_t *fid_ptr, H5F_t **file_ptr_ptr, H5C_t **cache_ptr_ptr
      */
 
     if (success) {
-
         test_config.version = H5AC__CURR_CACHE_CONFIG_VERSION;
 
-        if (H5AC_get_cache_auto_resize_config(cache_ptr, &test_config) != SUCCEED) {
-
-            fprintf(stdout, "%d:%s: H5AC_get_cache_auto_resize_config(2) failed.\n", world_mpi_rank,
-                    __func__);
-        }
+        if (H5AC_get_cache_auto_resize_config(cache_ptr, &test_config) != SUCCEED)
+            fprintf(stdout, "%d:%s: H5AC_get_cache_auto_resize_config(2) failed.\n", world_mpi_rank, __func__);
         else if (test_config.metadata_write_strategy != metadata_write_strategy) {
-
             nerrors++;
-
-            if (verbose) {
-
+            if (verbose)
                 fprintf(stdout, "%d:%s: unexpected metadata_write_strategy.\n", world_mpi_rank, __func__);
-            }
         }
     }
 
@@ -3723,73 +3693,56 @@ setup_cache_for_test(hid_t *fid_ptr, H5F_t **file_ptr_ptr, H5C_t **cache_ptr_ptr
      * cause a spurious failure.
      */
     if (success) { /* allocate space for test entries */
-
         actual_base_addr = H5MF_alloc(file_ptr, H5FD_MEM_DEFAULT, (hsize_t)(max_addr + BASE_ADDR));
-
         if (actual_base_addr == HADDR_UNDEF) {
-
             success = false;
             nerrors++;
-
-            if (verbose) {
+            if (verbose)
                 fprintf(stdout, "%d:%s: H5MF_alloc() failed.\n", world_mpi_rank, __func__);
-            }
         }
         else if (actual_base_addr > BASE_ADDR) {
-
             /* If this happens, must increase BASE_ADDR so that the
              * actual_base_addr is <= BASE_ADDR.  This should only happen
              * if the size of the superblock is increase.
              */
             success = false;
             nerrors++;
-
-            if (verbose) {
+            if (verbose)
                 fprintf(stdout, "%d:%s: actual_base_addr > BASE_ADDR.\n", world_mpi_rank, __func__);
-            }
         }
     }
 
     /* flush the file again -- space allocation dirtied superblock */
     if (success) {
-
         if (H5Fflush(fid, H5F_SCOPE_GLOBAL) < 0) {
             nerrors++;
-            if (verbose) {
+            if (verbose)
                 fprintf(stdout, "%d:%s: second H5Fflush() failed.\n", world_mpi_rank, __func__);
-            }
         }
     }
 
 #if DO_SYNC_AFTER_WRITE
-
     if (success) {
-
         if (H5AC__set_write_done_callback(cache_ptr, do_sync) != SUCCEED) {
-
             nerrors++;
-            if (verbose) {
+            if (verbose)
                 fprintf(stdout, "%d:%s: H5C_set_write_done_callback failed.\n", world_mpi_rank, __func__);
-            }
         }
     }
-
 #endif /* DO_SYNC_AFTER_WRITE */
 
     if (success) {
-
         if (H5AC__set_sync_point_done_callback(cache_ptr, verify_writes) != SUCCEED) {
-
             nerrors++;
-            if (verbose) {
-                fprintf(stdout, "%d:%s: H5AC__set_sync_point_done_callback failed.\n", world_mpi_rank,
-                        __func__);
-            }
+            if (verbose)
+                fprintf(stdout, "%d:%s: H5AC__set_sync_point_done_callback failed.\n", world_mpi_rank, __func__);
         }
     }
 
-    return (success);
+    /* Pop API context */
+    H5CX_pop(false);
 
+    return (success);
 } /* setup_cache_for_test() */
 
 /*****************************************************************************
@@ -3976,19 +3929,21 @@ setup_rand(void)
 static bool
 take_down_cache(hid_t fid, H5C_t *cache_ptr)
 {
+    H5CX_node_t         api_ctx = {{0}, NULL}; /* API context node to push */
     bool success = true; /* will set to false if appropriate. */
 
     /* flush the file -- this should write out any remaining test
      * entries in the cache.
      */
-    if ((success) && (H5Fflush(fid, H5F_SCOPE_GLOBAL) < 0)) {
-
+    if (success && H5Fflush(fid, H5F_SCOPE_GLOBAL) < 0) {
         success = false;
         nerrors++;
-        if (verbose) {
+        if (verbose)
             fprintf(stdout, "%d:%s: H5Fflush() failed.\n", world_mpi_rank, __func__);
-        }
     }
+
+    /* Push API context */
+    H5CX_push(&api_ctx);
 
     /* Now reset the sync point done callback.  Must do this as with
      * the SWMR mods, the cache will do additional I/O on file close
@@ -3996,46 +3951,35 @@ take_down_cache(hid_t fid, H5C_t *cache_ptr)
      * of entry writes.
      */
     if (success) {
-
         if (H5AC__set_sync_point_done_callback(cache_ptr, NULL) != SUCCEED) {
-
             success = false;
             nerrors++;
-            if (verbose) {
-                fprintf(stdout, "%d:%s: H5AC__set_sync_point_done_callback failed.\n", world_mpi_rank,
-                        __func__);
-            }
-        }
-    }
-
-    /* close the file */
-    if ((success) && (H5Fclose(fid) < 0)) {
-
-        success = false;
-        nerrors++;
-        if (verbose) {
-            fprintf(stdout, "%d:%s: H5Fclose() failed.\n", world_mpi_rank, __func__);
+            if (verbose)
+                fprintf(stdout, "%d:%s: H5AC__set_sync_point_done_callback failed.\n", world_mpi_rank, __func__);
         }
     }
 
     /* Pop API context */
     H5CX_pop(false);
 
+    /* close the file */
+    if (success && H5Fclose(fid) < 0) {
+        success = false;
+        nerrors++;
+        if (verbose)
+            fprintf(stdout, "%d:%s: H5Fclose() failed.\n", world_mpi_rank, __func__);
+    }
+
     if (success) {
-
         if (world_mpi_rank == world_server_mpi_rank) {
-
             if (HDremove(filenames[0]) < 0) {
-
                 success = false;
                 nerrors++;
-                if (verbose) {
+                if (verbose)
                     fprintf(stdout, "%d:%s: HDremove() failed.\n", world_mpi_rank, __func__);
-                }
             }
         }
         else {
-
             /* verify that there have been no further writes of test
              * entries during the close
              */

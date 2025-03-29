@@ -1083,7 +1083,7 @@ H5D__build_file_prefix(const H5D_t *dset, H5F_prefix_open_t prefix_type, char **
         prefix = H5D_prefix_vds_env;
 
         if (prefix == NULL || *prefix == '\0') {
-            if (H5CX_get_vds_prefix(&prefix) < 0)
+            if (H5CX_peek_vds_prefix(&prefix) < 0)
                 HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get the prefix for vds file");
         }
     }
@@ -1091,7 +1091,7 @@ H5D__build_file_prefix(const H5D_t *dset, H5F_prefix_open_t prefix_type, char **
         prefix = H5D_prefix_ext_env;
 
         if (prefix == NULL || *prefix == '\0') {
-            if (H5CX_get_ext_file_prefix(&prefix) < 0)
+            if (H5CX_peek_ext_file_prefix(&prefix) < 0)
                 HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get the prefix for the external file");
         }
     }
@@ -1217,42 +1217,45 @@ H5D__create(H5F_t *file, hid_t type_id, const H5S_t *space, H5P_genplist_t *dcpl
         H5O_efl_t    *efl;                    /* Dataset's external file list info */
         htri_t        ignore_filters = false; /* Ignore optional filters or not */
 
-        if ((ignore_filters = H5Z_ignore_filters(new_dset->shared->dcpl, dt, space)) < 0)
-            HGOTO_ERROR(H5E_ARGS, H5E_CANTINIT, NULL, "H5Z_has_optional_filter() failed");
-
-        if (false == ignore_filters) {
-            /* Check if the filters in the DCPL can be applied to this dataset */
-            if (H5Z_can_apply(new_dset->shared->dcpl, new_dset->shared->type_id) < 0)
-                HGOTO_ERROR(H5E_ARGS, H5E_CANTINIT, NULL, "I/O filters can't operate on this dataset");
-
-            /* Make the "set local" filter callbacks for this dataset */
-            if (H5Z_set_local(new_dset->shared->dcpl, new_dset->shared->type_id) < 0)
-                HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, NULL, "unable to set local filter parameters");
-        } /* ignore_filters */
-
         /* Retrieve the properties we need */
         pline = &new_dset->shared->dcpl_cache.pline;
-        if (H5P_get(new_dset->shared->dcpl, H5O_CRT_PIPELINE_NAME, pline) < 0)
+        if (H5CX_get_pline(pline) < 0)
             HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, NULL, "can't retrieve pipeline filter");
         pline_copied = true;
         layout       = &new_dset->shared->layout;
-        if (H5P_get(new_dset->shared->dcpl, H5D_CRT_LAYOUT_NAME, layout) < 0)
+        if (H5CX_get_layout(layout) < 0)
             HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, NULL, "can't retrieve layout");
         layout_copied = true;
-        fill          = &new_dset->shared->dcpl_cache.fill;
-        if (H5P_get(new_dset->shared->dcpl, H5D_CRT_FILL_VALUE_NAME, fill) < 0)
-            HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, NULL, "can't retrieve fill value info");
-        fill_copied = true;
-        efl         = &new_dset->shared->dcpl_cache.efl;
-        if (H5P_get(new_dset->shared->dcpl, H5D_CRT_EXT_FILE_LIST_NAME, efl) < 0)
-            HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, NULL, "can't retrieve external file list");
-        efl_copied = true;
 
+        if ((ignore_filters = H5Z_ignore_filters(pline, dt, space)) < 0)
+            HGOTO_ERROR(H5E_ARGS, H5E_CANTINIT, NULL, "H5Z_has_optional_filter() failed");
         if (false == ignore_filters) {
             /* Check that chunked layout is used if filters are enabled */
             if (pline->nused > 0 && H5D_CHUNKED != layout->type)
                 HGOTO_ERROR(H5E_DATASET, H5E_BADVALUE, NULL, "filters can only be used with chunked layout");
+
+            /* Check if the filters in the DCPL can be applied to this dataset */
+            if (H5Z_can_apply(new_dset->shared->dcpl, layout, pline, new_dset->shared->type_id) < 0)
+                HGOTO_ERROR(H5E_ARGS, H5E_CANTINIT, NULL, "I/O filters can't operate on this dataset");
+
+            /* Make the "set local" filter callbacks for this dataset */
+            if (H5Z_set_local(new_dset->shared->dcpl, layout, pline, new_dset->shared->type_id) < 0)
+                HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, NULL, "unable to set local filter parameters");
+
+            /* Need to re-acquire the pipeline filter, because the "set local" filter callbacks
+             * may have modified it.  And, we must get it from the DCPL itself, not the API
+             * context, because the "set local" callback will have modified it there.
+             */
+            if (H5O_msg_reset(H5O_PLINE_ID, pline) < 0)
+                HGOTO_ERROR(H5E_DATASET, H5E_CANTRESET, NULL, "unable to reset I/O pipeline info");
+            if (H5P_get(new_dset->shared->dcpl, H5O_CRT_PIPELINE_NAME, pline) < 0)
+                HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, NULL, "can't retrieve pipeline filter");
         }
+
+        fill = &new_dset->shared->dcpl_cache.fill;
+        if (H5P_get(new_dset->shared->dcpl, H5D_CRT_FILL_VALUE_NAME, fill) < 0)
+            HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, NULL, "can't retrieve fill value info");
+        fill_copied = true;
 
         /* Check if the alloc_time is the default and error out */
         if (fill->alloc_time == H5D_ALLOC_TIME_DEFAULT)
@@ -1261,6 +1264,11 @@ H5D__create(H5F_t *file, hid_t type_id, const H5S_t *space, H5P_genplist_t *dcpl
         /* Don't allow compact datasets to allocate space later */
         if (layout->type == H5D_COMPACT && fill->alloc_time != H5D_ALLOC_TIME_EARLY)
             HGOTO_ERROR(H5E_DATASET, H5E_BADVALUE, NULL, "compact dataset must have early space allocation");
+
+        efl = &new_dset->shared->dcpl_cache.efl;
+        if (H5P_get(new_dset->shared->dcpl, H5D_CRT_EXT_FILE_LIST_NAME, efl) < 0)
+            HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, NULL, "can't retrieve external file list");
+        efl_copied = true;
     } /* end if */
 
     /* Set the version for the I/O pipeline message */
@@ -2966,7 +2974,7 @@ H5D__check_filters(H5D_t *dataset)
             if (fill->fill_time == H5D_FILL_TIME_ALLOC ||
                 (fill->fill_time == H5D_FILL_TIME_IFSET && fill_status == H5D_FILL_VALUE_USER_DEFINED)) {
                 /* Filters must have encoding enabled. Ensure that all filters can be applied */
-                if (H5Z_can_apply(dataset->shared->dcpl, dataset->shared->type_id) < 0)
+                if (H5Z_can_apply(dataset->shared->dcpl, &dataset->shared->layout, &dataset->shared->dcpl_cache.pline, dataset->shared->type_id) < 0)
                     HGOTO_ERROR(H5E_PLINE, H5E_CANAPPLY, FAIL, "can't apply filters");
 
                 dataset->shared->checked_filters = true;

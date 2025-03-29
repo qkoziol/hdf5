@@ -956,6 +956,67 @@ done:
 } /* end H5FD__is_driver_registered_by_value() */
 
 /*-------------------------------------------------------------------------
+ * Function:   H5FD_driver_prop_clone
+ *
+ * Purpose:    In-place clone of driver property contents.
+ *
+ * Note:        This is an "in-place" copy, since this routine gets called
+ *              after a top-level copy has been performed and this routine
+ *              finishes the "deep" part of the copy.
+ *
+ * Return:     Non-negative on success/Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5FD_driver_prop_clone(H5FD_driver_prop_t *driver_prop)
+{
+    herr_t ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Clone the driver property */
+    if (driver_prop->driver) {
+        /* Increment the reference count on driver and copy driver info */
+        if (H5FD__driver_inc_rc(driver_prop->driver) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTINC, FAIL, "unable to increment ref count on VFL driver");
+
+        /* Copy driver info, if it exists */
+        if (driver_prop->driver_info) {
+            void *new_pl; /* Copy of driver info */
+
+            /* Allow the driver to copy or do it ourselves */
+            if (driver_prop->driver->cls->fapl_copy) {
+                if (NULL == (new_pl = (driver_prop->driver->cls->fapl_copy)(driver_prop->driver_info)))
+                    HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, FAIL, "driver info copy failed");
+            } /* end if */
+            else if (driver_prop->driver->cls->fapl_size > 0) {
+                if (NULL == (new_pl = H5MM_malloc(driver_prop->driver->cls->fapl_size)))
+                    HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "driver info allocation failed");
+                H5MM_memcpy(new_pl, driver_prop->driver_info, driver_prop->driver->cls->fapl_size);
+            } /* end else-if */
+            else
+                HGOTO_ERROR(H5E_VFL, H5E_UNSUPPORTED, FAIL, "no way to copy driver info");
+
+            /* Set the driver info for the copy */
+            driver_prop->driver_info = new_pl;
+        } /* end if */
+
+        /* Copy driver configuration string, if it exists */
+        if (driver_prop->driver_config_str) {
+            char *new_config_str = NULL;
+
+            if (NULL == (new_config_str = H5MM_strdup(driver_prop->driver_config_str)))
+                HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, FAIL, "driver configuration string copy failed");
+            driver_prop->driver_config_str = new_config_str;
+        } /* end if */
+    }     /* end if */
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5FD_driver_prop_clone() */
+
+/*-------------------------------------------------------------------------
  * Function:    H5FD_driver_prop_cmp
  *
  * Purpose:     Compare two VFD driver properties.
@@ -1028,7 +1089,7 @@ done:
 /*-------------------------------------------------------------------------
  * Function:    H5FD_driver_prop_free
  *
- * Purpose:     Free VFL driver property
+ * Purpose:     Free contents of a VFL driver property
  *
  * Return:      Success:        Non-negative
  *              Failure:        Negative
@@ -1036,7 +1097,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5FD_driver_prop_free(const H5FD_driver_prop_t *driver_prop)
+H5FD_driver_prop_free(H5FD_driver_prop_t *driver_prop)
 {
     herr_t ret_value = SUCCEED; /* Return value */
 
@@ -1044,18 +1105,21 @@ H5FD_driver_prop_free(const H5FD_driver_prop_t *driver_prop)
 
     if (driver_prop) {
         if (driver_prop->driver) {
-
             /* Free the driver info, if it exists */
-            if (driver_prop->driver_info)
+            if (driver_prop->driver_info) {
                 if (H5FD_free_driver_info(driver_prop->driver, driver_prop->driver_info) < 0)
                     HGOTO_ERROR(H5E_VFL, H5E_CANTFREE, FAIL, "driver info free request failed");
+                driver_prop->driver_info = NULL;
+            }
 
             /* Free the driver configuration string, if it exists */
             H5MM_xfree_const(driver_prop->driver_config_str);
+            driver_prop->driver_config_str = NULL;
 
             /* Decrement reference count for driver */
             if (H5FD__driver_dec_rc(driver_prop->driver) < 0)
                 HGOTO_ERROR(H5E_VFL, H5E_CANTDEC, FAIL, "can't decrement reference count for driver ID");
+            driver_prop->driver = NULL;
         }
     }
 

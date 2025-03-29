@@ -956,7 +956,7 @@ H5O__copy_header(const H5O_loc_t *oloc_src, H5O_loc_t *oloc_dst /*out */, H5P_ge
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get object copy flag");
 
     /* Retrieve the merge committed datatype list */
-    if (H5P_peek(ocpypl, H5O_CPY_MERGE_COMM_DT_LIST_NAME, &dt_list) < 0)
+    if (H5CX_peek_comm_dtype_merge_list(&dt_list) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get merge committed datatype list");
 
     /* Get callback info */
