@@ -27,7 +27,7 @@
 /* Headers */
 /***********/
 #include "H5private.h"   /* Generic Functions                    */
-#include "H5CXprivate.h" /* API Contexts                         */
+#include "H5CXpkg.h"     /* API Contexts                         */
 #include "H5Dprivate.h"  /* Datasets                             */
 #include "H5Eprivate.h"  /* Error handling                       */
 #include "H5FLprivate.h" /* Free Lists                           */
@@ -40,32 +40,41 @@
 /* Local Macros */
 /****************/
 
-#ifdef H5_HAVE_THREADSAFE_API
-/*
- * The per-thread API context.
- *
- * In order for this macro to work, H5CX_get_my_context() must be preceded
- * by "H5CX_node_t **ctx =".
- */
-#define H5CX_get_my_context() H5TS_get_api_ctx_ptr()
-#else /* H5_HAVE_THREADSAFE_API */
-/*
- * The current API context.
- */
-#define H5CX_get_my_context() (&H5CX_head_g)
-#endif /* H5_HAVE_THREADSAFE_API */
-
 /* Common macro for the retrieving the pointer to a property list */
-#define H5CX_RETRIEVE_PLIST(PL, FAILVAL)                                                                     \
+#define H5CX_RETRIEVE_PLIST(PL, ERR_RET)                                                                     \
     /* Check if the property list is already available */                                                    \
     if (NULL == (*head)->ctx.PL)                                                                             \
         /* Get the property list pointer */                                                                  \
         if (H5_UNLIKELY(NULL ==                                                                              \
                         ((*head)->ctx.PL = (H5P_genplist_t *)H5I_object((*head)->ctx.H5_GLUE(PL, _id)))))    \
-            HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, (FAILVAL), "can't get property list");
+            HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, ERR_RET, "can't get property list");
+
+/* Common macro for the duplicated code to retrieve a property from a property list */
+#define H5CX_RETRIEVE_PROP(PL, MTHD, PROP_NAME, PROP_FIELD, ERR_RET)                           \
+    /* Get/peek the property */                                                                           \
+    if (H5_UNLIKELY(H5_GLUE(H5P_, MTHD)((*head)->ctx.PL, (PROP_NAME), &(*head)->ctx.PROP_FIELD) < 0)) \
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, ERR_RET, "can't retrieve value from API context");
+
+/* Macros to inline testing / not testing for property existance before retrieving it */
+#define H5CX_TEST_YES_PROP(PL, MTHD, PROP_NAME, PROP_FIELD, ERR_RET) \
+    {                                                                                                        \
+        htri_t check_prop = 0; /* Whether the property exists in the API context's DXPL */                   \
+                                                                                                             \
+        /* Check if property exists in PL */                                                               \
+        if (H5_UNLIKELY((check_prop = H5P_exist_plist((*head)->ctx.PL, PROP_NAME)) < 0))               \
+            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, ERR_RET, "error checking for property");                  \
+                                                                                                             \
+        /* If property exists, retrieve it */                               \
+        if (check_prop > 0)                                       \
+            H5CX_RETRIEVE_PROP(PL, MTHD, PROP_NAME, PROP_FIELD, ERR_RET) \
+    }
+#define H5CX_TEST_NO_PROP(PL, MTHD, PROP_NAME, PROP_FIELD, ERR_RET) \
+    /* Get/peek the property */  \
+    H5CX_RETRIEVE_PROP(PL, MTHD, PROP_NAME, PROP_FIELD, ERR_RET)
+#define H5CX_TEST_GET_PROP(TST, PL, MTHD, PROP_NAME, PROP_FIELD, ERR_RET) H5_GLUE3(H5CX_TEST_, TST, _PROP)(PL, MTHD, PROP_NAME, PROP_FIELD, ERR_RET)
 
 /* Common macro for the duplicated code to retrieve properties from a property list */
-#define H5CX_RETRIEVE_PROP_COMMON(PL, MTHD, SUB_PL, DEF_PL, PROP_NAME, PROP_FIELD)                           \
+#define H5CX_RETRIEVE_PROP_COMMON(PL, TST, MTHD, SUB_PL, DEF_PL, PROP_NAME, PROP_FIELD, ERR_RET)                           \
     {                                                                                                        \
                                                                                                              \
         /* Check for default property list */                                                                \
@@ -74,12 +83,10 @@
                         sizeof(H5_GLUE3(H5CX_def_, SUB_PL, _cache).PROP_FIELD));                             \
         else {                                                                                               \
             /* Retrieve the property list */                                                                 \
-            H5CX_RETRIEVE_PLIST(PL, FAIL)                                                                    \
+            H5CX_RETRIEVE_PLIST(PL, ERR_RET)                                                                    \
                                                                                                              \
-            /* Get the property */                                                                           \
-            if (H5_UNLIKELY(H5_GLUE(H5P_, MTHD)((*head)->ctx.PL, (PROP_NAME), &(*head)->ctx.PROP_FIELD) <    \
-                            0))                                                                              \
-                HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't retrieve value from API context");        \
+            /* Retrieve the property, possibly testing for existence */                                                                      \
+            H5CX_TEST_GET_PROP(TST, PL, MTHD, PROP_NAME, PROP_FIELD, ERR_RET) \
         } /* end else */                                                                                     \
                                                                                                              \
         /* Mark the field as valid */                                                                        \
@@ -90,26 +97,38 @@
 #define H5CX_RETRIEVE_PROP_VALID(PL, DEF_PL, PROP_NAME, PROP_FIELD)                                          \
     /* Check if the value has been retrieved already */                                                      \
     if (!(*head)->ctx.H5_GLUE(PROP_FIELD, _valid))                                                           \
-    H5CX_RETRIEVE_PROP_COMMON(PL, get, PL, DEF_PL, PROP_NAME, PROP_FIELD)
+    H5CX_RETRIEVE_PROP_COMMON(PL, NO, get, PL, DEF_PL, PROP_NAME, PROP_FIELD, FAIL)
+
+/* Macro for the duplicated code to test for and retrieve a value from a plist if the context value is invalid */
+#define H5CX_TEST_RETRIEVE_PROP_VALID(PL, DEF_PL, PROP_NAME, PROP_FIELD)                                          \
+    /* Check if the value has been retrieved already */                                                      \
+    if (!(*head)->ctx.H5_GLUE(PROP_FIELD, _valid))                                                           \
+    H5CX_RETRIEVE_PROP_COMMON(PL, YES, get, PL, DEF_PL, PROP_NAME, PROP_FIELD, FAIL)
 
 /* Macro for the duplicated code to "peek" a value from a plist if the context value is invalid */
 #define H5CX_PEEK_PROP_VALID(PL, DEF_PL, PROP_NAME, PROP_FIELD)                                              \
     /* Check if the value has been retrieved already */                                                      \
     if (!(*head)->ctx.H5_GLUE(PROP_FIELD, _valid))                                                           \
-    H5CX_RETRIEVE_PROP_COMMON(PL, peek, PL, DEF_PL, PROP_NAME, PROP_FIELD)
+    H5CX_RETRIEVE_PROP_COMMON(PL, NO, peek, PL, DEF_PL, PROP_NAME, PROP_FIELD, FAIL)
+
+/* Macro for the duplicated code to "peek" a value from a plist if the context value is invalid */
+#define H5CX_PEEK_PROP_VALID_ERR(PL, DEF_PL, PROP_NAME, PROP_FIELD, ERR_RET)                                              \
+    /* Check if the value has been retrieved already */                                                      \
+    if (!(*head)->ctx.H5_GLUE(PROP_FIELD, _valid))                                                           \
+    H5CX_RETRIEVE_PROP_COMMON(PL, NO, peek, PL, DEF_PL, PROP_NAME, PROP_FIELD, ERR_RET)
 
 /* Macro for the duplicated code to retrieve a value from a plist if the context value is invalid */
 #define H5CX_RETRIEVE_SUBCLS_PROP_VALID(PL, SUB_PL, DEF_PL, PROP_NAME, PROP_FIELD)                           \
     /* Check if the value has been retrieved already */                                                      \
     if (!(*head)->ctx.H5_GLUE(PROP_FIELD, _valid))                                                           \
-    H5CX_RETRIEVE_PROP_COMMON(PL, get, SUB_PL, DEF_PL, PROP_NAME, PROP_FIELD)
+    H5CX_RETRIEVE_PROP_COMMON(PL, NO, get, SUB_PL, DEF_PL, PROP_NAME, PROP_FIELD, FAIL)
 
 /* Macro for the duplicated code to retrieve a value from a plist if the context value is invalid, or the
  * library has previously modified the context value for return */
 #define H5CX_RETRIEVE_PROP_VALID_SET(PL, DEF_PL, PROP_NAME, PROP_FIELD)                                      \
     /* Check if the value has been retrieved already */                                                      \
     if (!((*head)->ctx.H5_GLUE(PROP_FIELD, _valid) || (*head)->ctx.H5_GLUE(PROP_FIELD, _set)))               \
-    H5CX_RETRIEVE_PROP_COMMON(PL, get, PL, DEF_PL, PROP_NAME, PROP_FIELD)
+    H5CX_RETRIEVE_PROP_COMMON(PL, NO, get, PL, DEF_PL, PROP_NAME, PROP_FIELD, FAIL)
 
 #if defined(H5_HAVE_PARALLEL) && defined(H5_HAVE_INSTRUMENTED_LIBRARY)
 /* Macro for the duplicated code to set a context field that may not exist as a property */
@@ -201,6 +220,9 @@ typedef struct H5CX_lcpl_cache_t {
 /* Typedef for cached default link access property list information */
 /* (Same as the cached DXPL struct, above, except for the default LAPL) */
 typedef struct H5CX_lapl_cache_t {
+#ifdef H5_HAVE_PARALLEL
+    H5P_coll_md_read_flag_t lapl_coll_md_read;       /* Property for collective metadata read */
+#endif                                         /* H5_HAVE_PARALLEL */
     const char *elink_prefix; /* Prefix for external link prefix (H5L_ACS_ELINK_PREFIX_NAME) */
     size_t      nlinks;       /* Number of soft / UD links to traverse (H5L_ACS_NLINKS_NAME) */
 } H5CX_lapl_cache_t;
@@ -244,19 +266,55 @@ typedef struct H5CX_dapl_cache_t {
 typedef struct H5CX_fapl_cache_t {
 #ifdef H5_HAVE_PARALLEL
     MPI_Comm mpi_comm;                         /* MPI communicator */
-#endif                                         /* H5_HAVE_PARALLEL */
+    MPI_Info mpi_info;                         /* MPI info */
+    H5P_coll_md_read_flag_t fapl_coll_md_read;       /* Property for collective metadata read */
+    bool coll_md_write;       /* Property for collective metadata write */
+#ifdef H5_HAVE_SUBFILING_VFD
+    H5FD_subfiling_params_t sf_ioc_params; /* Property for subfiling IOC parameters */
+#endif /* H5_HAVE_SUBFILING_VFD */
+#endif /* H5_HAVE_PARALLEL */
     H5VL_connector_prop_t  vol_connector_prop; /* Property for VOL connector & info */
     H5FD_driver_prop_t     driver_prop;        /* Property for driver, info & configuration string */
     H5FD_file_image_info_t file_image_info;    /* Property for file image info */
     H5F_libver_t           low_bound;          /* low_bound property for H5Pset_libver_bounds() */
     H5F_libver_t           high_bound;         /* high_bound property for H5Pset_libver_bounds */
+    bool                   use_file_locking;   /* use_file_locking property for H5Pset_file_locking() */
+    bool                   ignore_disabled_locks; /* ignore_disabled_locks property for H5Pset_file_locking() */
+    hsize_t                align_bound;        /* alignment property for H5Pset_alignment() */
+    hsize_t                align_threshold;    /* threshold property for H5Pset_alignment() */
+    bool                   clear_status_flags; /* Private property used by h5clear */
+    unsigned               gc_ref;             /* Property for garbage collection of references */
+    bool                   use_mdc_logging;    /* Property for metadata cache logging enabled */
+    char                   *mdc_log_location;   /* Property for metadata cache log location */
+    bool                   start_mdc_logging_on_access; /* Property for starting metadata cache logging on access */
+    unsigned               mdc_read_attempts;    /* Property for metadata cache read attempts */
+    hsize_t                meta_alloc_block_size;    /* Property for metadata allocation block size */
+    H5AC_cache_config_t    mdc_init_config;    /* Property for metadata cache initialization configuration */
+    H5AC_cache_image_config_t mdc_image_config; /* Property for metadata cache image configuration */
+    H5F_object_flush_t     object_flush_strategy; /* Property for object flush strategy */
+    size_t pb_size;        /* Property for page buffer size */
+    unsigned pb_min_meta_perc; /* Property for minimum metadata percentage */
+    unsigned pb_min_raw_perc;  /* Property for minimum raw percentage */
+    size_t rdcc_nbytes;      /* Property for size of the raw data cache */
+    size_t rdcc_nslots;      /* Property for number of slots in the raw data cache */
+    double rdcc_w0;           /* Property for chunk cache preemption factor */
+    unsigned efc_size;        /* Property for size of the external file cache */
+    H5F_close_degree_t close_degree; /* Property for file close degree */
+    bool evict_on_close;    /* Property for evicting an object's metadata on close */
+    uint64_t rfic_flags;    /* Property for relaxed file integrity checks */
+    hsize_t sdata_block_size; /* Property for "small" raw data block size */
+    size_t sieve_buf_size;   /* Property for sieve buffer size */
+    bool null_fsm_addr;      /* Property for null file space map address */
+    bool skip_eof_check;      /* Property for skipping EOF check */
+    bool fam_to_single; /* Property to convert family to single file */
+    hsize_t fam_offset; /* Property for family offset */
+    hsize_t fam_newsize; /* Property for size of new family file */
 } H5CX_fapl_cache_t;
 
 /********************/
 /* Local Prototypes */
 /********************/
 static void H5CX__reset_dxpl(H5CX_node_t *head);
-static void H5CX__reset_fapl(H5CX_node_t *head);
 static void H5CX__reset_lcpl(H5CX_node_t *head);
 static void H5CX__reset_ocpl(H5CX_node_t *head);
 
@@ -272,7 +330,7 @@ bool H5_PKG_INIT_VAR = false;
 /*******************/
 
 #ifndef H5_HAVE_THREADSAFE_API
-static H5CX_node_t *H5CX_head_g = NULL; /* Pointer to head of context stack */
+H5CX_node_t *H5CX_head_g = NULL; /* Pointer to head of context stack */
 #endif                                  /* H5_HAVE_THREADSAFE_API */
 
 /* Define a "default" dataset transfer property list cache structure to use for default DXPLs */
@@ -450,6 +508,12 @@ H5CX__init_package(void)
 
     /* Get the default LAPL cache information */
 
+#ifdef H5_HAVE_PARALLEL
+    /* Get the collective metadata read flag */
+    if (H5P_get(lapl, H5_COLL_MD_READ_FLAG_NAME, &H5CX_def_lapl_cache.lapl_coll_md_read) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve collective metadata read flag property");
+#endif /* H5_HAVE_PARALLEL */
+
     /* Get the prefix for external links */
     if (H5P_peek(lapl, H5L_ACS_ELINK_PREFIX_NAME, &H5CX_def_lapl_cache.elink_prefix) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve prefix for external links");
@@ -529,18 +593,147 @@ H5CX__init_package(void)
     /* Get MPI communicator */
     if (H5P_get(fapl, H5F_ACS_MPI_PARAMS_COMM_NAME, &H5CX_def_fapl_cache.mpi_comm) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve MPI communicator");
+
+    /* Get MPI info */
+    if (H5P_get(fapl, H5F_ACS_MPI_PARAMS_INFO_NAME, &H5CX_def_fapl_cache.mpi_info) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve MPI info");
+
+    /* Get the collective metadata read flag */
+    if (H5P_get(fapl, H5_COLL_MD_READ_FLAG_NAME, &H5CX_def_fapl_cache.fapl_coll_md_read) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve collective metadata read flag property");
+
+    /* Get the collective metadata write flag */
+    if (H5P_get(fapl, H5F_ACS_COLL_MD_WRITE_FLAG_NAME, &H5CX_def_fapl_cache.coll_md_write) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve collective metadata write flag property");
+
+#ifdef H5_HAVE_SUBFILING_VFD
+    /* Get the subfiling IOC parameters */
+    if (H5P_get(fapl, H5F_ACS_SUBFILING_CONFIG_PROP_NAME, &H5CX_def_fapl_cache.sf_ioc_params) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve subfiling IOC parameters");
+#endif /* H5_HAVE_SUBFILING_VFD */
 #endif /* H5_HAVE_PARALLEL */
 
     /* Get file image info */
     if (H5P_get(fapl, H5F_ACS_FILE_IMAGE_INFO_NAME, &H5CX_def_fapl_cache.file_image_info) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve file image info");
 
-    /* Get low_bound */
+    /* Get file format lower & upper bounds */
     if (H5P_get(fapl, H5F_ACS_LIBVER_LOW_BOUND_NAME, &H5CX_def_fapl_cache.low_bound) < 0)
-        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve dataset minimize flag");
-
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve file format lower bound");
     if (H5P_get(fapl, H5F_ACS_LIBVER_HIGH_BOUND_NAME, &H5CX_def_fapl_cache.high_bound) < 0)
-        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve dataset minimize flag");
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve file format upper bound");
+
+    /* Get file locking properties */
+    if (H5P_get(fapl, H5F_ACS_USE_FILE_LOCKING_NAME, &H5CX_def_fapl_cache.use_file_locking) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve use file locking flag");
+    if (H5P_get(fapl, H5F_ACS_IGNORE_DISABLED_FILE_LOCKS_NAME, &H5CX_def_fapl_cache.ignore_disabled_locks) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve ignore disabled file locks flag");
+
+    /* Get alignment properties */
+    if (H5P_get(fapl, H5F_ACS_ALIGN_NAME, &H5CX_def_fapl_cache.align_bound) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve alignment bound");
+    if (H5P_get(fapl, H5F_ACS_ALIGN_THRHD_NAME, &H5CX_def_fapl_cache.align_threshold) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve alignment threshold");
+
+    /* Get clear status flags property */
+    if (H5P_get(fapl, H5F_ACS_CLEAR_STATUS_FLAGS_NAME, &H5CX_def_fapl_cache.clear_status_flags) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve clear status flags property");
+
+    /* Get the garbage collection reference property */
+    if (H5P_get(fapl, H5F_ACS_GARBG_COLCT_REF_NAME, &H5CX_def_fapl_cache.gc_ref) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve garbage collection reference property");
+
+    /* Get the use metadata cache logging property */
+    if (H5P_get(fapl, H5F_ACS_USE_MDC_LOGGING_NAME, &H5CX_def_fapl_cache.use_mdc_logging) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve use metadata cache logging property");
+
+    /* Get the metadata cache log location property */
+    if (H5P_peek(fapl, H5F_ACS_MDC_LOG_LOCATION_NAME, &H5CX_def_fapl_cache.mdc_log_location) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve metadata cache log location property");
+
+    /* Get the start metadata cache logging on access property */
+    if (H5P_get(fapl, H5F_ACS_START_MDC_LOG_ON_ACCESS_NAME, &H5CX_def_fapl_cache.start_mdc_logging_on_access) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve start metadata cache logging on access property");
+
+    /* Get the metadata cache read attempts property */
+    if (H5P_get(fapl, H5F_ACS_METADATA_READ_ATTEMPTS_NAME, &H5CX_def_fapl_cache.mdc_read_attempts) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve metadata cache read attempts property");
+
+    /* Get the metadata allocation block size property */
+    if (H5P_get(fapl, H5F_ACS_META_BLOCK_SIZE_NAME, &H5CX_def_fapl_cache.meta_alloc_block_size) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve metadata allocation block size property");
+
+    /* Get the metadata cache initialization configuration property */
+    if (H5P_get(fapl, H5F_ACS_META_CACHE_INIT_CONFIG_NAME, &H5CX_def_fapl_cache.mdc_init_config) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve metadata cache initial configuration property");
+
+    /* Get the metadata cache image initial configuration property */
+    if (H5P_get(fapl, H5F_ACS_META_CACHE_INIT_IMAGE_CONFIG_NAME, &H5CX_def_fapl_cache.mdc_image_config) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve metadata cache image initial configuration property");
+
+    /* Get the object flush strategy property */
+    if (H5P_get(fapl, H5F_ACS_OBJECT_FLUSH_CB_NAME, &H5CX_def_fapl_cache.object_flush_strategy) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve object flush strategy property");
+
+    /* Get the page buffer properties */
+    if (H5P_get(fapl, H5F_ACS_PAGE_BUFFER_SIZE_NAME, &H5CX_def_fapl_cache.pb_size) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve page buffer size property");
+    if (H5P_get(fapl, H5F_ACS_PAGE_BUFFER_MIN_META_PERC_NAME, &H5CX_def_fapl_cache.pb_min_meta_perc) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve minimum metadata percentage property");
+    if (H5P_get(fapl, H5F_ACS_PAGE_BUFFER_MIN_RAW_PERC_NAME, &H5CX_def_fapl_cache.pb_min_raw_perc) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve minimum raw percentage property");
+
+    /* Get the raw data chunk cache properties */
+    if (H5P_get(fapl, H5F_ACS_DATA_CACHE_NUM_SLOTS_NAME, &H5CX_def_fapl_cache.rdcc_nslots) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve raw data cache number of slots property");
+    if (H5P_get(fapl, H5F_ACS_DATA_CACHE_BYTE_SIZE_NAME, &H5CX_def_fapl_cache.rdcc_nbytes) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve raw data cache byte size property");
+    if (H5P_get(fapl, H5F_ACS_PREEMPT_READ_CHUNKS_NAME, &H5CX_def_fapl_cache.rdcc_w0) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve raw data cache preemption factor property");
+
+    /* Get the size of the external link file cache */
+    if (H5P_get(fapl, H5F_ACS_EFC_SIZE_NAME, &H5CX_def_fapl_cache.efc_size) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve external file cache size property");
+
+    /* Get the file close degree property */
+    if (H5P_get(fapl, H5F_ACS_CLOSE_DEGREE_NAME, &H5CX_def_fapl_cache.close_degree) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve file close degree property");
+
+    /* Get the evict on close property */
+    if (H5P_get(fapl, H5F_ACS_EVICT_ON_CLOSE_FLAG_NAME, &H5CX_def_fapl_cache.evict_on_close) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve evict on close property");
+
+    /* Get the relaxed file integrity checks property */
+    if (H5P_get(fapl, H5F_ACS_RFIC_FLAGS_NAME, &H5CX_def_fapl_cache.rfic_flags) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve relaxed file integrity checks property");
+
+    /* Get the "small" raw data block size property */
+    if (H5P_get(fapl, H5F_ACS_SDATA_BLOCK_SIZE_NAME, &H5CX_def_fapl_cache.sdata_block_size) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve 'small' raw data block size property");
+
+    /* Get the sieve buffer size property */
+    if (H5P_get(fapl, H5F_ACS_SIEVE_BUF_SIZE_NAME, &H5CX_def_fapl_cache.sieve_buf_size) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve sieve buffer size property");
+
+    /* Get the null file space map address property */
+    if (H5P_get(fapl, H5F_ACS_NULL_FSM_ADDR_NAME, &H5CX_def_fapl_cache.null_fsm_addr) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve null file space map address property");
+
+    /* Get the skip EOF check property */
+    if (H5P_get(fapl, H5F_ACS_SKIP_EOF_CHECK_NAME, &H5CX_def_fapl_cache.skip_eof_check) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve skip EOF check property");
+
+    /* Get the family to single file property */
+    if (H5P_get(fapl, H5F_ACS_FAMILY_TO_SINGLE_NAME, &H5CX_def_fapl_cache.fam_to_single) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve family to single file property");
+
+    /* Get the family offset property */
+    if (H5P_get(fapl, H5F_ACS_FAMILY_OFFSET_NAME, &H5CX_def_fapl_cache.fam_offset) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve family offset property");
+
+    /* Get the size of the new family file */
+    if (H5P_get(fapl, H5F_ACS_FAMILY_NEWSIZE_NAME, &H5CX_def_fapl_cache.fam_newsize) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve family new size property");
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -752,6 +945,9 @@ H5CX_push(H5CX_node_t *cnode)
 #ifdef H5_HAVE_PARALLEL
     cnode->ctx.btype = MPI_BYTE;
     cnode->ctx.ftype = MPI_BYTE;
+#ifdef H5_HAVE_SUBFILING_VFD
+    cnode->ctx.sf_stub_file_id = H5FD_SUBFILING_BAD_FILE_ID;
+#endif
 #endif
 
     /* Push context node onto stack */
@@ -1313,9 +1509,9 @@ H5CX_set_apl(hid_t *acspl_id, const H5P_libclass_t *libclass,
 {
     H5CX_node_t **head = NULL; /* Pointer to head of API context list */
     htri_t is_lapl; /* Whether the access property list is (or is derived from) a link access property list */
-    htri_t
-        is_dapl; /* Whether the access property list is (or is derived from) a dataset access property list */
-    htri_t is_fapl; /* Whether the access property list is (or is derived from) a file access property list */
+#ifdef H5_HAVE_PARALLEL
+    bool is_default = false; /* Whether the access property list is the default */
+#endif /* H5_HAVE_PARALLEL */
     herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
@@ -1334,23 +1530,55 @@ H5CX_set_apl(hid_t *acspl_id, const H5P_libclass_t *libclass,
 #endif /* H5CX_DEBUG*/
 
     /* Check for link access property and set API context if so */
-    if ((is_lapl = H5P_class_isa(*libclass->pclass, *H5P_CLS_LACC->pclass)) < 0)
-        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for link access class");
-    else if (is_lapl)
+    if (H5P_LST_LINK_ACCESS_ID_g == *acspl_id || H5P_LST_DATASET_ACCESS_ID_g == *acspl_id ||
+            H5P_LST_ATTRIBUTE_ACCESS_ID_g == *acspl_id || H5P_LST_DATATYPE_ACCESS_ID_g == *acspl_id ||
+            H5P_LST_GROUP_ACCESS_ID_g == *acspl_id || H5P_LST_MAP_ACCESS_ID_g == *acspl_id) {
+#ifdef H5_HAVE_PARALLEL
+        is_default = true;
+#endif /* H5_HAVE_PARALLEL */
         (*head)->ctx.lapl_id = *acspl_id;
+    }
+    else {
+        if ((is_lapl = H5P_class_isa(*libclass->pclass, *H5P_CLS_LACC->pclass)) < 0)
+            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for link access class");
+        else if (is_lapl)
+            (*head)->ctx.lapl_id = *acspl_id;
+    }
 
     /* Check for dataset access property and set API context if so */
-    if ((is_dapl = H5P_class_isa(*libclass->pclass, *H5P_CLS_DACC->pclass)) < 0)
-        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for dataset access class");
-    else if (is_dapl)
+    /* Note: DAPL's are a subclass of LAPLs, so this might set both the lapl_id and the dapl_id */
+    if (H5P_LST_DATASET_ACCESS_ID_g == *acspl_id) {
+#ifdef H5_HAVE_PARALLEL
+        is_default = true;
+#endif /* H5_HAVE_PARALLEL */
         (*head)->ctx.dapl_id = *acspl_id;
+    }
+    else {
+        htri_t is_dapl; /* Whether the access property list is (or is derived from) a dataset access property list */
+
+        if ((is_dapl = H5P_class_isa(*libclass->pclass, *H5P_CLS_DACC->pclass)) < 0)
+            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for dataset access class");
+        else if (is_dapl)
+            (*head)->ctx.dapl_id = *acspl_id;
+    }
 
     /* Check for file access property and set API context if so */
-    if ((is_fapl = H5P_class_isa(*libclass->pclass, *H5P_CLS_FACC->pclass)) < 0)
-        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for file access class");
-    else if (is_fapl) {
+    if (H5P_LST_FILE_ACCESS_ID_g == *acspl_id) {
+#ifdef H5_HAVE_PARALLEL
+        is_default = true;
+#endif /* H5_HAVE_PARALLEL */
         H5CX__reset_fapl(*head);
         (*head)->ctx.fapl_id = *acspl_id;
+    }
+    else {
+        htri_t is_fapl; /* Whether the access property list is (or is derived from) a file access property list */
+
+        if ((is_fapl = H5P_class_isa(*libclass->pclass, *H5P_CLS_FACC->pclass)) < 0)
+            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for file access class");
+        else if (is_fapl) {
+            H5CX__reset_fapl(*head);
+            (*head)->ctx.fapl_id = *acspl_id;
+        }
     }
 
 #ifdef H5_HAVE_PARALLEL
@@ -1358,17 +1586,18 @@ H5CX_set_apl(hid_t *acspl_id, const H5P_libclass_t *libclass,
      * modify the structural metadata in a file), check if the application
      * specified a collective metadata read for just this operation.
      */
-    if (!is_collective) {
-        H5P_genplist_t         *plist;        /* Property list pointer */
+    if (!is_collective && !is_default) {
         H5P_coll_md_read_flag_t md_coll_read; /* Collective metadata read flag */
 
-        /* Get the property list structure for the access property list */
-        if (NULL == (plist = (H5P_genplist_t *)H5I_object(*acspl_id)))
-            HGOTO_ERROR(H5E_CONTEXT, H5E_BADID, FAIL, "can't find object for ID");
-
-        /* Get the collective metadata read flag */
-        if (H5P_peek(plist, H5_COLL_MD_READ_FLAG_NAME, &md_coll_read) < 0)
-            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't get core collective metadata read flag");
+        /* LAPL's (and their derived subclasses) take precedence over FAPL's */
+        if (is_lapl) {
+            if (H5CX_get_lapl_coll_md_read(&md_coll_read) < 0)
+                HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't get LAPL's collective metadata read flag");
+        }
+        else {
+            if (H5CX_get_fapl_coll_md_read(&md_coll_read) < 0)
+                HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't get FAPL's collective metadata read flag");
+        }
 
         /* If collective metadata read requested, set collective metadata read flag */
         if (H5P_USER_TRUE == md_coll_read)
@@ -1413,7 +1642,7 @@ done:
  *
  *-------------------------------------------------------------------------
  */
-static void
+void
 H5CX__reset_fapl(H5CX_node_t *head)
 {
     FUNC_ENTER_PACKAGE_NOERR
@@ -1424,13 +1653,56 @@ H5CX__reset_fapl(H5CX_node_t *head)
     /* Reset the cached data */
     if (head->ctx.fapl_id != H5P_FILE_ACCESS_DEFAULT) {
 #ifdef H5_HAVE_PARALLEL
-        head->ctx.mpi_comm_valid = false;
+        if (head->ctx.mpi_comm_valid) {
+            (void)H5_mpi_comm_free(&head->ctx.mpi_comm);
+            head->ctx.mpi_comm_valid = false;
+        }
+        if (head->ctx.mpi_info_valid) {
+            (void)H5_mpi_info_free(&head->ctx.mpi_info);
+            head->ctx.mpi_info_valid = false;
+        }
+        head->ctx.fapl_coll_md_read_valid = false;
+        head->ctx.coll_md_write_valid = false;
+#ifdef H5_HAVE_SUBFILING_VFD
+        head->ctx.sf_ioc_params_valid = false;
+#endif /* H5_HAVE_SUBFILING_VFD */
 #endif /* H5_HAVE_PARALLEL */
         head->ctx.vol_connector_prop_valid = false;
         head->ctx.driver_prop_valid        = false;
         head->ctx.file_image_info_valid    = false;
         head->ctx.low_bound_valid          = false;
         head->ctx.high_bound_valid         = false;
+        head->ctx.use_file_locking_valid   = false;
+        head->ctx.ignore_disabled_locks_valid = false;
+        head->ctx.align_bound_valid        = false;
+        head->ctx.align_threshold_valid    = false;
+        head->ctx.clear_status_flags_valid = false;
+        head->ctx.gc_ref_valid             = false;
+        head->ctx.use_mdc_logging_valid    = false;
+        head->ctx.mdc_log_location_valid   = false;
+        head->ctx.start_mdc_logging_on_access_valid = false;
+        head->ctx.mdc_read_attempts_valid    = false;
+        head->ctx.meta_alloc_block_size_valid = false;
+        head->ctx.mdc_init_config_valid      = false;
+        head->ctx.mdc_image_config_valid     = false;
+        head->ctx.object_flush_strategy_valid = false;
+        head->ctx.pb_size_valid                = false;
+        head->ctx.pb_min_meta_perc_valid       = false;
+        head->ctx.pb_min_raw_perc_valid        = false;
+        head->ctx.rdcc_nbytes_valid            = false;
+        head->ctx.rdcc_nslots_valid            = false;
+        head->ctx.rdcc_w0_valid                = false;
+        head->ctx.efc_size_valid               = false;
+        head->ctx.close_degree_valid           = false;
+        head->ctx.evict_on_close_valid         = false;
+        head->ctx.rfic_flags_valid             = false;
+        head->ctx.sdata_block_size_valid       = false;
+        head->ctx.sieve_buf_size_valid         = false;
+        head->ctx.null_fsm_addr_valid          = false;
+        head->ctx.skip_eof_check_valid         = false;
+        head->ctx.fam_to_single_valid          = false;
+        head->ctx.fam_offset_valid             = false;
+        head->ctx.fam_newsize_valid            = false;
     }
 
     head->ctx.fapl = NULL;
@@ -1534,7 +1806,7 @@ H5CX_set_loc(hid_t
 
         /* Retrieve the MPI communicator from the loc_id or the fapl_id */
         if (H5F_loc_mpi_retrieve_comm(loc_id, &mpi_comm) < 0)
-            HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get MPI communicator");
+            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't get MPI communicator");
 
         /* issue the barrier */
         if (mpi_comm != MPI_COMM_NULL)
@@ -1705,6 +1977,39 @@ done:
 
 #ifdef H5_HAVE_PARALLEL
 /*-------------------------------------------------------------------------
+ * Function:    H5CX_get_mpi_comm
+ *
+ * Purpose:     Retrieves the MPI communicator for an operation.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_mpi_comm(MPI_Comm *mpi_comm)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(mpi_comm);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+
+    /* Get the MPI communicator */
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_MPI_PARAMS_COMM_NAME, mpi_comm)
+
+    /* Make a copy of the MPI communicator */
+    if (H5_mpi_comm_dup((*head)->ctx.mpi_comm, mpi_comm) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "unable to duplicate MPI communicator");
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_mpi_comm() */
+
+/*-------------------------------------------------------------------------
  * Function:    H5CX_peek_mpi_comm
  *
  * Purpose:     Shallow copy the MPI communicator for an operation.
@@ -1726,11 +2031,7 @@ H5CX_peek_mpi_comm(MPI_Comm *mpi_comm)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    /* This getter does not use H5CX_RETRIEVE_PROP_VALID in order to use
-     * H5P_peek instead of H5P_get.  This prevents invocation of the property's
-     * library-defined copy callback
-     */
-    H5CX_PEEK_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_MPI_PARAMS_COMM_NAME, mpi_comm)
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_MPI_PARAMS_COMM_NAME, mpi_comm)
 
     /* Get the MPI communicator */
     *mpi_comm = (*head)->ctx.mpi_comm;
@@ -1738,6 +2039,70 @@ H5CX_peek_mpi_comm(MPI_Comm *mpi_comm)
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5CX_peek_mpi_comm() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_mpi_info
+ *
+ * Purpose:     Retrieves the MPI info object for an operation.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_mpi_info(MPI_Info *mpi_info)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(mpi_info);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+
+    /* Get the MPI info object */
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_MPI_PARAMS_INFO_NAME, mpi_info)
+
+    /* Make a copy of the MPI info object */
+    if (H5_mpi_info_dup((*head)->ctx.mpi_info, mpi_info) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "unable to duplicate MPI info object");
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_mpi_info() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_peek_mpi_info
+ *
+ * Purpose:     Shallow copy the MPI info object for an operation.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_peek_mpi_info(MPI_Info *mpi_info)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(mpi_info);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_MPI_PARAMS_INFO_NAME, mpi_info)
+
+    /* Get the MPI info object */
+    *mpi_info = (*head)->ctx.mpi_info;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_peek_mpi_info() */
 #endif /* H5_HAVE_PARALLEL */
 
 /*-------------------------------------------------------------------------
@@ -1778,7 +2143,7 @@ done:
 /*-------------------------------------------------------------------------
  * Function:    H5CX_peek_driver_prop
  *
- * Purpose:     Retrieves the VOL connector ID & info for an operation.
+ * Purpose:     Retrieves the VFD driver property for an operation.
  *
  * Return:      Non-negative on success / Negative on failure
  *
@@ -1809,6 +2174,108 @@ H5CX_peek_driver_prop(H5FD_driver_prop_t *driver_prop)
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5CX_peek_driver_prop() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_peek_driver
+ *
+ * Purpose:     Retrieves the VFD driver struct for an operation.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+H5FD_driver_t *
+H5CX_peek_driver(void)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    H5FD_driver_t *ret_value = NULL; /* Return value */
+
+    FUNC_ENTER_NOAPI(NULL)
+
+    /* Sanity check */
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+
+    /* This getter does not use H5CX_RETRIEVE_PROP_VALID in order to use
+     * H5P_peek instead of H5P_get.  This prevents invocation of the property's
+     * library-defined copy callback
+     */
+    H5CX_PEEK_PROP_VALID_ERR(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FILE_DRV_NAME, driver_prop, NULL)
+
+    /* Set the return value */
+    ret_value = (*head)->ctx.driver_prop.driver;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_peek_driver() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_peek_driver_info
+ *
+ * Purpose:     Retrieves the VFD driver info for an operation.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+const void *
+H5CX_peek_driver_info(void)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    const void *ret_value = NULL; /* Return value */
+
+    FUNC_ENTER_NOAPI(NULL)
+
+    /* Sanity check */
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+
+    /* This getter does not use H5CX_RETRIEVE_PROP_VALID in order to use
+     * H5P_peek instead of H5P_get.  This prevents invocation of the property's
+     * library-defined copy callback
+     */
+    H5CX_PEEK_PROP_VALID_ERR(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FILE_DRV_NAME, driver_prop, NULL)
+
+    /* Set the return value */
+    ret_value = (*head)->ctx.driver_prop.driver_info;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_peek_driver_info() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_peek_driver_config_str
+ *
+ * Purpose:     Retrieves the VFD driver config string for an operation.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+const char *
+H5CX_peek_driver_config_str(void)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    const char *ret_value = NULL; /* Return value */
+
+    FUNC_ENTER_NOAPI(NULL)
+
+    /* Sanity check */
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+
+    /* This getter does not use H5CX_RETRIEVE_PROP_VALID in order to use
+     * H5P_peek instead of H5P_get.  This prevents invocation of the property's
+     * library-defined copy callback
+     */
+    H5CX_PEEK_PROP_VALID_ERR(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FILE_DRV_NAME, driver_prop, NULL)
+
+    /* Set the return value */
+    ret_value = (*head)->ctx.driver_prop.driver_config_str;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_peek_driver_config_str() */
 
 /*-------------------------------------------------------------------------
  * Function:    H5CX_peek_file_image_info
@@ -1898,6 +2365,62 @@ H5CX_get_ring(void)
 
     FUNC_LEAVE_NOAPI(ring)
 } /* end H5CX_get_ring() */
+
+#ifdef H5_HAVE_SUBFILING_VFD
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_sf_stub_file_id
+ *
+ * Purpose:     Retrieves the stub file ID for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+uint64_t
+H5CX_get_sf_stub_file_id(void)
+{
+    H5CX_node_t **head = NULL;          /* Pointer to head of API context list */
+    uint64_t     sf_stub_file_id = H5FD_SUBFILING_BAD_FILE_ID; /* Current metadata cache ring for entries */
+
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    /* Sanity check */
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+
+    /* Set return value */
+    sf_stub_file_id = (*head)->ctx.sf_stub_file_id;
+
+    FUNC_LEAVE_NOAPI(sf_stub_file_id)
+} /* end H5CX_get_sf_stub_file_id() */
+#endif /* H5_HAVE_SUBFILING_VFD */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_want_posix_fd
+ *
+ * Purpose:     Retrieves the want POSIX file descriptor flag for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+bool
+H5CX_get_want_posix_fd(void)
+{
+    H5CX_node_t **head = NULL;          /* Pointer to head of API context list */
+    bool          want_posix_fd = false; /* Current metadata cache ring for entries */
+
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    /* Sanity check */
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+
+    /* Set return value */
+    want_posix_fd = (*head)->ctx.want_posix_fd;
+
+    FUNC_LEAVE_NOAPI(want_posix_fd)
+} /* end H5CX_get_want_posix_fd() */
 
 #ifdef H5_HAVE_PARALLEL
 /*-------------------------------------------------------------------------
@@ -2873,6 +3396,40 @@ done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5CX_get_create_intermediate_group() */
 
+#ifdef H5_HAVE_PARALLEL
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_lapl_coll_md_read
+ *
+ * Purpose:     Retrieves the LAPL'scollective metadata read flag for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_lapl_coll_md_read(H5P_coll_md_read_flag_t *coll_md_read)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(coll_md_read);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.lapl_id);
+
+    H5CX_RETRIEVE_PROP_VALID(lapl, H5P_LINK_ACCESS_DEFAULT, H5_COLL_MD_READ_FLAG_NAME, lapl_coll_md_read)
+
+    /* Get the value */
+    *coll_md_read = (*head)->ctx.lapl_coll_md_read;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_lapl_coll_md_read() */
+#endif /* H5_HAVE_PARALLEL */
+
 /*-------------------------------------------------------------------------
  * Function:    H5CX_peek_elink_prefix
  *
@@ -2975,6 +3532,982 @@ H5CX_get_libver_bounds(H5F_libver_t *low_bound, H5F_libver_t *high_bound)
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5CX_get_libver_bounds() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_use_file_locking
+ *
+ * Purpose:     Retrieves the use file locking flag for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_use_file_locking(bool *use_file_locking)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(use_file_locking);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
+
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_USE_FILE_LOCKING_NAME, use_file_locking)
+
+    /* Get the value */
+    *use_file_locking = (*head)->ctx.use_file_locking;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_use_file_locking() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_ignore_disabled_locks
+ *
+ * Purpose:     Retrieves the ignore disabled locks flag for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_ignore_disabled_locks(bool *ignore_disabled_locks)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(ignore_disabled_locks);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
+
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_IGNORE_DISABLED_FILE_LOCKS_NAME, ignore_disabled_locks)
+
+    /* Get the value */
+    *ignore_disabled_locks = (*head)->ctx.ignore_disabled_locks;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_ignore_disabled_locks() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_alignment
+ *
+ * Purpose:     Retrieves the alignment properties for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_alignment(hsize_t *align_bound, hsize_t *align_threshold)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(align_bound);
+    assert(align_threshold);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
+
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_ALIGN_NAME, align_bound)
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_ALIGN_THRHD_NAME, align_threshold)
+
+    /* Get the values */
+    *align_bound = (*head)->ctx.align_bound;
+    *align_threshold = (*head)->ctx.align_threshold;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_alignment() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_clear_status_flags
+ *
+ * Purpose:     Retrieves the clear status flags for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_test_get_clear_status_flags(bool *clear_status_flags)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(clear_status_flags);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
+
+     H5CX_TEST_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_CLEAR_STATUS_FLAGS_NAME, clear_status_flags)
+
+    /* Get the value */
+    *clear_status_flags = (*head)->ctx.clear_status_flags;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_clear_status_flags() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_gc_ref
+ *
+ * Purpose:     Retrieves the garbage collection reference properties for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_gc_ref(unsigned *gc_ref)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(gc_ref);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
+
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_GARBG_COLCT_REF_NAME, gc_ref)
+
+    /* Get the value */
+    *gc_ref = (*head)->ctx.gc_ref;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_gc_ref() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_use_mdc_logging
+ *
+ * Purpose:     Retrieves the use metadata cache logging flag for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_use_mdc_logging(bool *use_mdc_logging)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(use_mdc_logging);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
+
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_USE_MDC_LOGGING_NAME, use_mdc_logging)
+
+    /* Get the value */
+    *use_mdc_logging = (*head)->ctx.use_mdc_logging;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_use_mdc_logging() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_peek_mdc_log_location
+ *
+ * Purpose:     Retrieves the metadata cache log location for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_peek_mdc_log_location(char **mdc_log_location)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(mdc_log_location);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
+
+    H5CX_PEEK_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_MDC_LOG_LOCATION_NAME, mdc_log_location)
+
+    /* Get the value */
+    *mdc_log_location = (*head)->ctx.mdc_log_location;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_peek_mdc_log_location() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_start_mdc_logging_on_access
+ *
+ * Purpose:     Retrieves the start metadata cache logging on access flag for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_start_mdc_logging_on_access(bool *start_mdc_logging_on_access)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(start_mdc_logging_on_access);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
+
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_START_MDC_LOG_ON_ACCESS_NAME, start_mdc_logging_on_access)
+
+    /* Get the value */
+    *start_mdc_logging_on_access = (*head)->ctx.start_mdc_logging_on_access;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_start_mdc_logging_on_access() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_metadata_read_attempts
+ *
+ * Purpose:     Retrieves the metadata cache read attempts for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_metadata_read_attempts(unsigned *mdc_read_attempts)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(mdc_read_attempts);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
+
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_METADATA_READ_ATTEMPTS_NAME, mdc_read_attempts)
+
+    /* Get the value */
+    *mdc_read_attempts = (*head)->ctx.mdc_read_attempts;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_metadata_read_attempts() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_meta_alloc_block_size
+ *
+ * Purpose:     Retrieves the metadata allocation block size for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_meta_alloc_block_size(hsize_t *meta_alloc_block_size)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(meta_alloc_block_size);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
+
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_META_BLOCK_SIZE_NAME, meta_alloc_block_size)
+
+    /* Get the value */
+    *meta_alloc_block_size = (*head)->ctx.meta_alloc_block_size;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_meta_alloc_block_size() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_mdc_init_config
+ *
+ * Purpose:     Retrieves the metadata cache initialization configuration for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_mdc_init_config(H5AC_cache_config_t *mdc_init_config)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(mdc_init_config);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
+
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_META_CACHE_INIT_CONFIG_NAME, mdc_init_config)
+
+    /* Get the value */
+    H5MM_memcpy(mdc_init_config, &(*head)->ctx.mdc_init_config, sizeof(*mdc_init_config));
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_mdc_init_config() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_mdc_image_config
+ *
+ * Purpose:     Retrieves the metadata cache image initial configuration for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_mdc_image_config(H5AC_cache_image_config_t *mdc_image_config)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(mdc_image_config);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
+
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_META_CACHE_INIT_IMAGE_CONFIG_NAME, mdc_image_config)
+
+    /* Get the value */
+    H5MM_memcpy(mdc_image_config, &(*head)->ctx.mdc_image_config, sizeof(*mdc_image_config));
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_mdc_image_config() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_object_flush_strategy
+ *
+ * Purpose:     Retrieves the object flush strategy for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_object_flush_strategy(H5F_object_flush_t *object_flush_strategy)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(object_flush_strategy);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
+
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_OBJECT_FLUSH_CB_NAME, object_flush_strategy)
+
+    /* Get the value */
+    H5MM_memcpy(object_flush_strategy, &(*head)->ctx.object_flush_strategy, sizeof(*object_flush_strategy));
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_object_flush_strategy() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_page_buffer_size
+ *
+ * Purpose:     Retrieves the page buffer size for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_page_buffer_size(size_t *page_buf_size)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(page_buf_size);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
+
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_PAGE_BUFFER_SIZE_NAME, pb_size)
+
+    /* Get the values */
+    *page_buf_size = (*head)->ctx.pb_size;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_page_buffer_size() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_page_buffer_percs
+ *
+ * Purpose:     Retrieves the page buffer percentages for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_page_buffer_percs(unsigned *min_meta_perc, unsigned *min_raw_perc)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(min_meta_perc);
+    assert(min_raw_perc);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
+
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_PAGE_BUFFER_MIN_META_PERC_NAME, pb_min_meta_perc)
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_PAGE_BUFFER_MIN_RAW_PERC_NAME, pb_min_raw_perc)
+
+    /* Get the values */
+    *min_meta_perc = (*head)->ctx.pb_min_meta_perc;
+    *min_raw_perc = (*head)->ctx.pb_min_raw_perc;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_page_buffer_percs() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_rdcc_info
+ *
+ * Purpose:     Retrieves the raw data chunk cache info for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_rdcc_info(size_t *nslots, size_t *nbytes, double *w0)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(nslots);
+    assert(nbytes);
+    assert(w0);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
+
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_DATA_CACHE_NUM_SLOTS_NAME, rdcc_nslots)
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_DATA_CACHE_BYTE_SIZE_NAME, rdcc_nbytes)
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_PREEMPT_READ_CHUNKS_NAME, rdcc_w0)
+
+    /* Get the values */
+    *nslots = (*head)->ctx.rdcc_nslots;
+    *nbytes = (*head)->ctx.rdcc_nbytes;
+    *w0 = (*head)->ctx.rdcc_w0;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_rdcc_info() */
+
+#ifdef H5_HAVE_PARALLEL
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_fapl_coll_md_read
+ *
+ * Purpose:     Retrieves the FAPL's collective metadata read flag for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_fapl_coll_md_read(H5P_coll_md_read_flag_t *coll_md_read)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(coll_md_read);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
+
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5_COLL_MD_READ_FLAG_NAME, fapl_coll_md_read)
+
+    /* Get the value */
+    *coll_md_read = (*head)->ctx.fapl_coll_md_read;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_fapl_coll_md_read() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_coll_md_write
+ *
+ * Purpose:     Retrieves the collective metadata write flag for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_coll_md_write(bool *coll_md_write)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(coll_md_write);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
+
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_COLL_MD_WRITE_FLAG_NAME, coll_md_write)
+
+    /* Get the value */
+    *coll_md_write = (*head)->ctx.coll_md_write;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_coll_md_write() */
+
+#ifdef H5_HAVE_SUBFILING_VFD
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_sf_ioc_params
+ *
+ * Purpose:     Retrieves the subfiling IOC parameters for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_sf_ioc_params(H5FD_subfiling_params_t *sf_ioc_params)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(sf_ioc_params);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
+
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_SUBFILING_CONFIG_PROP_NAME, sf_ioc_params)
+
+    /* Get the value */
+    *sf_ioc_params = (*head)->ctx.sf_ioc_params;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_sf_ioc_params() */
+#endif /* H5_HAVE_SUBFILING_VFD */
+#endif /* H5_HAVE_PARALLEL */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_efc_size
+ *
+ * Purpose:     Retrieves the size of the external file cache for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_efc_size(unsigned *efc_size)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(efc_size);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
+
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_EFC_SIZE_NAME, efc_size)
+
+    /* Get the value */
+    *efc_size = (*head)->ctx.efc_size;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_efc_size() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_close_degree
+ *
+ * Purpose:     Retrieves the file close degree for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_close_degree(H5F_close_degree_t *close_degree)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(close_degree);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
+
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_CLOSE_DEGREE_NAME, close_degree)
+
+    /* Get the value */
+    *close_degree = (*head)->ctx.close_degree;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_close_degree() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_evict_on_close
+ *
+ * Purpose:     Retrieves the evict on close property for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_evict_on_close(bool *evict_on_close)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(evict_on_close);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
+
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_EVICT_ON_CLOSE_FLAG_NAME, evict_on_close)
+
+    /* Get the value */
+    *evict_on_close = (*head)->ctx.evict_on_close;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_evict_on_close() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_rfic_flags
+ *
+ * Purpose:     Retrieves the relaxed file integrity checks property for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_rfic_flags(uint64_t *rfic_flags)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(rfic_flags);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
+
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_RFIC_FLAGS_NAME, rfic_flags)
+
+    /* Get the value */
+    *rfic_flags = (*head)->ctx.rfic_flags;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_rfic_flags() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_sdata_block_size
+ *
+ * Purpose:     Retrieves the "small" raw data block size property for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_sdata_block_size(hsize_t *sdata_block_size)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(sdata_block_size);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
+
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_SDATA_BLOCK_SIZE_NAME, sdata_block_size)
+
+    /* Get the value */
+    *sdata_block_size = (*head)->ctx.sdata_block_size;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_sdata_block_size() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_sieve_buf_size
+ *
+ * Purpose:     Retrieves the sieve buffer size property for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_sieve_buf_size(size_t *sieve_buf_size)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(sieve_buf_size);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
+
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_SIEVE_BUF_SIZE_NAME, sieve_buf_size)
+
+    /* Get the value */
+    *sieve_buf_size = (*head)->ctx.sieve_buf_size;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_sieve_buf_size() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_null_fsm_addr
+ *
+ * Purpose:     Retrieves the null file space map address property for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_null_fsm_addr(bool *null_fsm_addr)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(null_fsm_addr);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
+
+    H5CX_TEST_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_NULL_FSM_ADDR_NAME, null_fsm_addr)
+
+    /* Get the value */
+    *null_fsm_addr = (*head)->ctx.null_fsm_addr;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_null_fsm_addr() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_skip_eof_check
+ *
+ * Purpose:     Retrieves the skip EOF check property for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_skip_eof_check(bool *skip_eof_check)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(skip_eof_check);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
+
+    H5CX_TEST_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_SKIP_EOF_CHECK_NAME, skip_eof_check)
+
+    /* Get the value */
+    *skip_eof_check = (*head)->ctx.skip_eof_check;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_skip_eof_check() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_family_to_single
+ *
+ * Purpose:     Retrieves the family to single file property for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_family_to_single(bool *fam_to_single)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(fam_to_single);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
+
+    H5CX_TEST_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FAMILY_TO_SINGLE_NAME, fam_to_single)
+
+    /* Get the value */
+    *fam_to_single = (*head)->ctx.fam_to_single;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_family_to_single() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_family_offset
+ *
+ * Purpose:     Retrieves the family offset property for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_family_offset(hsize_t *fam_offset)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(fam_offset);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
+
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FAMILY_OFFSET_NAME, fam_offset)
+
+    /* Get the value */
+    *fam_offset = (*head)->ctx.fam_offset;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_family_offset() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_family_newsize
+ *
+ * Purpose:     Retrieves the size of the new family file property for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_family_newsize(hsize_t *fam_newsize)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(fam_newsize);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
+
+    H5CX_TEST_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FAMILY_NEWSIZE_NAME, fam_newsize)
+
+    /* Get the value */
+    *fam_newsize = (*head)->ctx.fam_newsize;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_family_newsize() */
 
 /*-------------------------------------------------------------------------
  * Function:    H5CX_get_min_dset_hdr
@@ -3166,8 +4699,59 @@ H5CX_set_ring(H5AC_ring_t ring)
     FUNC_LEAVE_NOAPI_VOID
 } /* end H5CX_set_ring() */
 
-#ifdef H5_HAVE_PARALLEL
+#ifdef H5_HAVE_SUBFILING_VFD
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_set_sf_stub_file_id
+ *
+ * Purpose:     Sets the stub file ID for the current API call context.
+ *
+ * Return:      <none>
+ *
+ *-------------------------------------------------------------------------
+ */
+void
+H5CX_set_sf_stub_file_id(uint64_t sf_stub_file_id)
+{
+    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
 
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    /* Sanity check */
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+
+    (*head)->ctx.sf_stub_file_id = sf_stub_file_id;
+
+    FUNC_LEAVE_NOAPI_VOID
+} /* end H5CX_set_sf_stub_file_id() */
+#endif /* H5_HAVE_SUBFILING_VFD */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_set_want_posix_fd
+ *
+ * Purpose:     Sets the want POSIX file descriptor flag for the current API call context.
+ *
+ * Return:      <none>
+ *
+ *-------------------------------------------------------------------------
+ */
+void
+H5CX_set_want_posix_fd(bool want_posix_fd)
+{
+    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
+
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    /* Sanity check */
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+
+    (*head)->ctx.want_posix_fd = want_posix_fd;
+
+    FUNC_LEAVE_NOAPI_VOID
+} /* end H5CX_set_want_posix_fd() */
+
+#ifdef H5_HAVE_PARALLEL
 /*-------------------------------------------------------------------------
  * Function:    H5CX_set_coll_metadata_read
  *
@@ -3402,6 +4986,68 @@ H5CX_set_nlinks(size_t nlinks)
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5CX_set_nlinks() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_set_mdc_init_config
+ *
+ * Purpose:     Sets the initial metadata cache configuration for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_set_mdc_init_config(H5AC_cache_config_t *mdc_init_config)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+
+    /* Set the API context value */
+    H5MM_memcpy(&(*head)->ctx.mdc_init_config, mdc_init_config, sizeof(*mdc_init_config));
+
+    /* Mark the value as valid */
+    (*head)->ctx.mdc_init_config_valid = true;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_set_mdc_init_config() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_set_close_degree
+ *
+ * Purpose:     Sets the file close degree for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_set_close_degree(H5F_close_degree_t close_degree)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+
+    /* Set the API context value */
+    (*head)->ctx.close_degree = close_degree;
+
+    /* Mark the value as valid */
+    (*head)->ctx.close_degree_valid = true;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_set_close_degree() */
 
 #ifdef H5_HAVE_PARALLEL
 
@@ -4135,6 +5781,8 @@ H5CX_pop(bool update_dxpl_props)
      */
     if (H5P_OBJECT_CREATE_DEFAULT != (*head)->ctx.ocpl_id)
         H5CX__reset_ocpl(*head);
+    if (H5P_FILE_ACCESS_DEFAULT != (*head)->ctx.fapl_id)
+        H5CX__reset_fapl(*head);
 
     /* Pop the top context node from the stack */
     (*head) = (*head)->next;

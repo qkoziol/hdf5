@@ -239,7 +239,7 @@ static herr_t  H5FD__hdfs_query(const H5FD_t *_f1, unsigned long *flags);
 static haddr_t H5FD__hdfs_get_eoa(const H5FD_t *_file, H5FD_mem_t type);
 static herr_t  H5FD__hdfs_set_eoa(H5FD_t *_file, H5FD_mem_t type, haddr_t addr);
 static haddr_t H5FD__hdfs_get_eof(const H5FD_t *_file, H5FD_mem_t type);
-static herr_t  H5FD__hdfs_get_handle(H5FD_t *_file, hid_t fapl, void **file_handle);
+static herr_t  H5FD__hdfs_get_handle(H5FD_t *_file, hid_t fapl_id, void **file_handle);
 static herr_t  H5FD__hdfs_read(H5FD_t *_file, H5FD_mem_t type, hid_t fapl_id, haddr_t addr, size_t size,
                                void *buf);
 static herr_t  H5FD__hdfs_write(H5FD_t *_file, H5FD_mem_t type, hid_t fapl_id, haddr_t addr, size_t size,
@@ -247,6 +247,7 @@ static herr_t  H5FD__hdfs_write(H5FD_t *_file, H5FD_mem_t type, hid_t fapl_id, h
 static herr_t  H5FD__hdfs_truncate(H5FD_t *_file, hid_t dxpl_id, bool closing);
 
 static herr_t H5FD__hdfs_validate_config(const H5FD_hdfs_fapl_t *fa);
+static herr_t H5FD__get_fapl_hdfs(H5P_genplist_t *fapl, H5FD_hdfs_fapl_t *fa_dst);
 
 static const H5FD_class_t H5FD_hdfs_g = {
     H5FD_CLASS_VERSION,       /* struct version       */
@@ -603,6 +604,40 @@ done:
 } /* H5Pset_fapl_hdfs() */
 
 /*-------------------------------------------------------------------------
+ * Function:    H5FD__get_fapl_hdfs
+ *
+ * Purpose:     Returns information about the hdfs file access property
+ *              list though the function arguments.
+ *
+ * Return:      Success:        Non-negative
+ *              Failure:        Negative
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t
+H5FD__get_fapl_hdfs(H5P_genplist_t *fapl, H5FD_hdfs_fapl_t *fa_dst /*out*/)
+{
+    const H5FD_hdfs_fapl_t *fa_src;
+    herr_t                  ret_value = SUCCEED;
+
+    FUNC_ENTER_PACKAGE
+
+    /* Sanity checks */
+    assert(fa_dst);
+    assert(H5_VFD_HDFS == H5P_get_driver_value(fapl));
+
+    /* Get pointer to HDFS info */
+    if (NULL == (fa_src = (const H5FD_hdfs_fapl_t *)H5P_peek_driver_info(fapl)))
+        HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "bad VFL driver info");
+
+    /* Copy the hdfs fapl data out */
+    H5MM_memcpy(fa_dst, fa_src, sizeof(H5FD_hdfs_fapl_t));
+
+done:
+    FUNC_LEAVE_API(ret_value)
+} /* H5FD__get_fapl_hdfs() */
+
+/*-------------------------------------------------------------------------
  * Function:    H5Pget_fapl_hdfs
  *
  * Purpose:     Returns information about the hdfs file access property
@@ -617,7 +652,6 @@ done:
 herr_t
 H5Pget_fapl_hdfs(hid_t fapl_id, H5FD_hdfs_fapl_t *fa_dst /*out*/)
 {
-    const H5FD_hdfs_fapl_t *fa_src    = NULL;
     H5P_genplist_t         *fapl      = NULL;
     herr_t                  ret_value = SUCCEED;
 
@@ -627,20 +661,17 @@ H5Pget_fapl_hdfs(hid_t fapl_id, H5FD_hdfs_fapl_t *fa_dst /*out*/)
     fprintf(stdout, "called %s.\n", __func__);
 #endif
 
+    /* Check arguments */
     if (fa_dst == NULL)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "fa_dst ptr is NULL");
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access list");
-
     if (H5_VFD_HDFS != H5P_get_driver_value(fapl))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "incorrect VFL driver");
 
-    fa_src = (const H5FD_hdfs_fapl_t *)H5P_peek_driver_info(fapl);
-    if (fa_src == NULL)
-        HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "bad VFL driver info");
-
-    /* Copy the hdfs fapl data out */
-    H5MM_memcpy(fa_dst, fa_src, sizeof(H5FD_hdfs_fapl_t));
+    /* Get the HDFS info */
+    if (H5FD__get_fapl_hdfs(fapl, fa_dst) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get HDFS info");
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -721,10 +752,11 @@ done:
 static H5FD_t *
 H5FD__hdfs_open(const char *path, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
 {
-    H5FD_t          *ret_value = NULL;
     H5FD_hdfs_t     *file      = NULL;
+    H5P_genplist_t *fapl;
     hdfs_t          *handle    = NULL;
     H5FD_hdfs_fapl_t fa;
+    H5FD_t          *ret_value = NULL;
 
     FUNC_ENTER_PACKAGE
 
@@ -744,10 +776,12 @@ H5FD__hdfs_open(const char *path, unsigned flags, hid_t fapl_id, haddr_t maxaddr
         HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, NULL, "bogus maxaddr");
     if (flags != H5F_ACC_RDONLY)
         HGOTO_ERROR(H5E_ARGS, H5E_UNSUPPORTED, NULL, "only Read-Only access allowed");
-    if (fapl_id == H5P_DEFAULT || fapl_id == H5P_FILE_ACCESS_DEFAULT)
-        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, NULL, "fapl cannot be H5P_DEFAULT");
-    if (FAIL == H5Pget_fapl_hdfs(fapl_id, &fa))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, NULL, "can't get property list");
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file access list");
+
+    /* Get the HDFS info */
+    if (FAIL == H5FD__get_fapl_hdfs(fapl, &fa))
+        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get HDFS info");
 
     handle = H5FD__hdfs_handle_open(path, fa.namenode_name, fa.namenode_port, fa.user_name,
                                     fa.kerberos_ticket_cache, fa.stream_buffer_size);
@@ -1303,7 +1337,7 @@ H5FD__hdfs_get_eof(const H5FD_t *_file, H5FD_mem_t H5_ATTR_UNUSED type)
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5FD__hdfs_get_handle(H5FD_t *_file, hid_t H5_ATTR_UNUSED fapl, void **file_handle)
+H5FD__hdfs_get_handle(H5FD_t *_file, hid_t H5_ATTR_UNUSED fapl_id, void **file_handle)
 {
     H5FD_hdfs_t *file      = (H5FD_hdfs_t *)_file;
     herr_t       ret_value = SUCCEED;

@@ -54,7 +54,7 @@
 /* Local Prototypes */
 /********************/
 #ifndef H5_NO_DEPRECATED_SYMBOLS
-static herr_t H5P__get_file_space(H5P_genplist_t *plist, H5F_file_space_type_t *strategy, hsize_t *threshold);
+static herr_t H5P__get_file_space(H5P_genplist_t *fcpl, H5F_file_space_type_t *strategy, hsize_t *threshold);
 #endif /* H5_NO_DEPRECATED_SYMBOLS */
 
 /*********************/
@@ -441,21 +441,21 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pget_version(hid_t plist_id, unsigned *super /*out*/, unsigned *freelist /*out*/, unsigned *stab /*out*/,
+H5Pget_version(hid_t fcpl_id, unsigned *super /*out*/, unsigned *freelist /*out*/, unsigned *stab /*out*/,
                unsigned *shhdr /*out*/)
 {
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *fcpl;               /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_TYPE_FILE_CREATE, true)))
+    /* Get the property list structure */
+    if (NULL == (fcpl = H5P_object_verify(fcpl_id, H5P_TYPE_FILE_CREATE, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get values */
     if (super)
-        if (H5P_get(plist, H5F_CRT_SUPER_VERS_NAME, super) < 0)
+        if (H5P_get(fcpl, H5F_CRT_SUPER_VERS_NAME, super) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get superblock version");
     if (freelist)
         *freelist = HDF5_FREESPACE_VERSION; /* (hard-wired) */
@@ -519,10 +519,10 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pset_file_space(hid_t plist_id, H5F_file_space_type_t strategy, hsize_t threshold)
+H5Pset_file_space(hid_t fcpl_id, H5F_file_space_type_t strategy, hsize_t threshold)
 {
 
-    H5P_genplist_t       *plist;                                        /* Property list pointer */
+    H5P_genplist_t       *fcpl;                                        /* Property list pointer */
     H5F_fspace_strategy_t new_strategy;                                 /* File space strategy type */
     bool                  new_persist   = H5F_FREE_SPACE_PERSIST_DEF;   /* Persisting free-space or not */
     hsize_t               new_threshold = H5F_FREE_SPACE_THRESHOLD_DEF; /* Free-space section threshold */
@@ -536,8 +536,8 @@ H5Pset_file_space(hid_t plist_id, H5F_file_space_type_t strategy, hsize_t thresh
     if ((unsigned)in_strategy >= H5F_FILE_SPACE_NTYPES)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid strategy");
 
-    /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_TYPE_FILE_CREATE, false)))
+    /* Get the property list structure */
+    if (NULL == (fcpl = H5P_object_verify(fcpl_id, H5P_TYPE_FILE_CREATE, false)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
 
     /*
@@ -548,10 +548,10 @@ H5Pset_file_space(hid_t plist_id, H5F_file_space_type_t strategy, hsize_t thresh
      *      the existing threshold is retained.
      */
     if (!in_strategy)
-        if (H5P__get_file_space(plist, &in_strategy, NULL) < 0)
+        if (H5P__get_file_space(fcpl, &in_strategy, NULL) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get file space strategy");
     if (!in_threshold)
-        if (H5P__get_file_space(plist, NULL, &in_threshold) < 0)
+        if (H5P__get_file_space(fcpl, NULL, &in_threshold) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get free-space threshold");
 
     switch (in_strategy) {
@@ -580,7 +580,7 @@ H5Pset_file_space(hid_t plist_id, H5F_file_space_type_t strategy, hsize_t thresh
             HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid file space strategy");
     }
 
-    if (H5P__set_file_space_strategy(plist, new_strategy, new_persist, new_threshold) < 0)
+    if (H5P__set_file_space_strategy(fcpl, new_strategy, new_persist, new_threshold) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set file space strategy");
 
 done:
@@ -597,7 +597,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5P__get_file_space(H5P_genplist_t *plist, H5F_file_space_type_t *strategy, hsize_t *threshold)
+H5P__get_file_space(H5P_genplist_t *fcpl, H5F_file_space_type_t *strategy, hsize_t *threshold)
 {
     H5F_fspace_strategy_t new_strategy;        /* File space strategy type */
     bool                  new_persist;         /* Persisting free-space or not */
@@ -607,7 +607,7 @@ H5P__get_file_space(H5P_genplist_t *plist, H5F_file_space_type_t *strategy, hsiz
     FUNC_ENTER_PACKAGE
 
     /* Get current file space info */
-    if (H5P__get_file_space_strategy(plist, &new_strategy, &new_persist, &new_threshold) < 0)
+    if (H5P__get_file_space_strategy(fcpl, &new_strategy, &new_persist, &new_threshold) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get file space strategy values");
 
     /* Get value(s) */
@@ -653,19 +653,19 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pget_file_space(hid_t plist_id, H5F_file_space_type_t *strategy /*out*/, hsize_t *threshold /*out*/)
+H5Pget_file_space(hid_t fcpl_id, H5F_file_space_type_t *strategy /*out*/, hsize_t *threshold /*out*/)
 {
-    H5P_genplist_t *plist;               /* Property list pointer */
+    H5P_genplist_t *fcpl;               /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the plist structure */
-    if (NULL == (plist = H5P_object_verify(plist_id, H5P_TYPE_FILE_CREATE, true)))
+    if (NULL == (fcpl = H5P_object_verify(fcpl_id, H5P_TYPE_FILE_CREATE, true)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get current file space info */
-    if (H5P__get_file_space(plist, strategy, threshold) < 0)
+    if (H5P__get_file_space(fcpl, strategy, threshold) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get file space strategy");
 
 done:

@@ -25,7 +25,7 @@
 #include "H5Eprivate.h"  /* Error handling           */
 #include "H5Fprivate.h"  /* File access              */
 #include "H5FDpkg.h"     /* File drivers             */
-#include "H5FDsec2.h"    /* Sec2 file driver         */
+#include "H5FDsec2_private.h"    /* sec2 file driver         */
 #include "H5FLprivate.h" /* Free Lists               */
 #include "H5Iprivate.h"  /* IDs                      */
 #include "H5Pprivate.h"  /* Property lists           */
@@ -257,7 +257,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static H5FD_t *
-H5FD__sec2_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
+H5FD__sec2_open(const char *name, unsigned flags, hid_t H5_ATTR_UNUSED fapl_id, haddr_t maxaddr)
 {
     H5FD_sec2_t *file = NULL; /* sec2 VFD info            */
     int          fd   = -1;   /* File descriptor          */
@@ -266,7 +266,6 @@ H5FD__sec2_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr
     struct _BY_HANDLE_FILE_INFORMATION fileinfo;
 #endif
     h5_stat_t       sb;
-    H5P_genplist_t *fapl;             /* Property list pointer */
     H5FD_t         *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -330,36 +329,26 @@ H5FD__sec2_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr
     file->inode  = sb.st_ino;
 #endif /* H5_HAVE_WIN32_API */
 
-    /* Get the FAPL */
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
-        HGOTO_ERROR(H5E_VFL, H5E_BADTYPE, NULL, "not a file access property list");
-
-    /* Check the file locking flags in the fapl */
+    /* Check the file locking flags in the FAPL */
     if (H5FD_ignore_disabled_file_locks_p != FAIL)
         /* The environment variable was set, so use that preferentially */
         file->ignore_disabled_file_locks = H5FD_ignore_disabled_file_locks_p;
-    else {
+    else
         /* Use the value in the property list */
-        if (H5P_get(fapl, H5F_ACS_IGNORE_DISABLED_FILE_LOCKS_NAME, &file->ignore_disabled_file_locks) < 0)
+        if (H5CX_get_ignore_disabled_locks(&file->ignore_disabled_file_locks) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get ignore disabled file locks property");
-    }
 
     /* Retain a copy of the name used to open the file, for possible error reporting */
     strncpy(file->filename, name, sizeof(file->filename) - 1);
     file->filename[sizeof(file->filename) - 1] = '\0';
 
-    /* Check for non-default FAPL */
-    if (!H5P_PLIST_IS_DEFAULT(fapl)) {
-
-        /* This step is for h5repart tool only. If user wants to change file driver from
-         * family to one that uses single files (sec2, etc.) while using h5repart, this
-         * private property should be set so that in the later step, the library can ignore
-         * the family driver information saved in the superblock.
-         */
-        if (H5P_exist_plist(fapl, H5F_ACS_FAMILY_TO_SINGLE_NAME) > 0)
-            if (H5P_get(fapl, H5F_ACS_FAMILY_TO_SINGLE_NAME, &file->fam_to_single) < 0)
-                HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get property of changing family to single");
-    } /* end if */
+    /* This step is for h5repart tool only. If user wants to change file driver from
+     * family to one that uses single files (sec2, etc.) while using h5repart, this
+     * private property should be set so that in the later step, the library can ignore
+     * the family driver information saved in the superblock.
+     */
+    if (H5CX_get_family_to_single(&file->fam_to_single) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get property of changing family to single");
 
     /* Set return value */
     ret_value = (H5FD_t *)file;

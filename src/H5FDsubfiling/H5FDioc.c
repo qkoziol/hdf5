@@ -24,6 +24,7 @@
 #include "H5FDpkg.h"     /* File drivers                 */
 #include "H5FDioc_pkg.h" /* I/O concentrator file driver */
 #include "H5FDmpio.h"    /* MPI I/O VFD                  */
+#include "H5FDsubfiling_private.h" /* Subfiling VFD                            */
 #include "H5FLprivate.h" /* Free Lists                   */
 #include "H5Iprivate.h"  /* IDs                          */
 #include "H5MMprivate.h" /* Memory management            */
@@ -627,7 +628,7 @@ H5FD__ioc_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
         HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "unable to allocate file struct");
     file->comm       = MPI_COMM_NULL;
     file->info       = MPI_INFO_NULL;
-    file->file_id    = UINT64_MAX;
+    file->file_id    = H5FD_SUBFILING_BAD_FILE_ID;
     file->context_id = -1;
 
     /* Initialize file pointer's subfiling parameters */
@@ -647,9 +648,9 @@ H5FD__ioc_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
     }
     else {
         /* Get the MPI communicator and info object from the property list */
-        if (H5P_get(fapl, H5F_ACS_MPI_PARAMS_COMM_NAME, &file->comm) < 0)
+        if (H5CX_get_mpi_comm(&file->comm) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get MPI communicator");
-        if (H5P_get(fapl, H5F_ACS_MPI_PARAMS_INFO_NAME, &file->info) < 0)
+        if (H5CX_get_mpi_info(&file->info) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get MPI info object");
 
         if (file->comm == MPI_COMM_NULL)
@@ -668,8 +669,7 @@ H5FD__ioc_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
     if (MPI_SUCCESS != (mpi_code = MPI_Comm_size(file->comm, &file->mpi_size)))
         HMPI_GOTO_ERROR(NULL, "MPI_Comm_size failed", mpi_code);
 
-    config_ptr = H5P_peek_driver_info(fapl);
-    if (!config_ptr || (H5P_FILE_ACCESS_DEFAULT == fapl_id)) {
+    if (NULL == (config_ptr = H5CX_peek_driver_info())) {
         if (H5FD__subfiling_get_default_ioc_config(&default_config) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get default IOC VFD configuration");
         config_ptr = &default_config;
@@ -694,18 +694,14 @@ H5FD__ioc_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
         ioc_flags |= O_EXCL;
 
     /* Retrieve the subfiling configuration for the current file */
-    if (H5FD__subfiling_get_config_prop(fapl, &file->subf_config) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get subfiling configuration from FAPL");
+    if (H5CX_get_sf_ioc_params(&file->subf_config) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get subfiling configuration property from FAPL");
     if (H5FD__subfiling_validate_config_params(&file->subf_config) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, NULL, "invalid subfiling configuration");
 
     /* Retrieve the HDF5 stub file ID for the current file */
-    if (H5FD__subfiling_get_file_id_prop(fapl, &file->file_id) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get stub file ID from FAPL");
-    if (file->file_id == UINT64_MAX)
-        HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, NULL,
-                    "subfiling stub file ID property was missing from FAPL - IOC VFD wasn't correctly "
-                    "stacked under the subfiling VFD and cannot currently be used alone");
+    if (H5FD_SUBFILING_BAD_FILE_ID == (file->file_id = H5CX_get_sf_stub_file_id()))
+        HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, NULL, "subfiling stub file ID property is not set in API context - IOC VFD wasn't correctly stacked under the subfiling VFD and cannot currently be used alone");
 
     /*
      * Open the subfiles for this HDF5 file. A subfiling context ID will be
@@ -1136,7 +1132,6 @@ H5FD__ioc_truncate(H5FD_t *_file, hid_t H5_ATTR_UNUSED dxpl_id, bool H5_ATTR_UNU
 static herr_t
 H5FD__ioc_delete(const char *name, hid_t fapl_id)
 {
-    H5P_genplist_t *fapl;
     MPI_Comm        comm          = MPI_COMM_NULL;
     MPI_Info        info          = MPI_INFO_NULL;
     FILE           *config_file   = NULL;
@@ -1154,18 +1149,14 @@ H5FD__ioc_delete(const char *name, hid_t fapl_id)
         if (H5FD__ioc_init() < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, FAIL, "can't initialize driver");
 
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
-    assert(H5FD_IOC_VALUE == H5P_get_driver_value(fapl));
-
     if (H5FD_mpi_self_initialized_s)
         comm = MPI_COMM_WORLD;
     else {
         /* Get the MPI communicator and info from the fapl */
-        if (H5P_get(fapl, H5F_ACS_MPI_PARAMS_INFO_NAME, &info) < 0)
-            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get MPI info object");
-        if (H5P_get(fapl, H5F_ACS_MPI_PARAMS_COMM_NAME, &comm) < 0)
+        if (H5CX_peek_mpi_comm(&comm) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get MPI communicator");
+        if (H5CX_peek_mpi_info(&info) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get MPI info object");
     }
 
     /* Get the MPI rank of this process */
@@ -1258,14 +1249,6 @@ done:
         if (comm_size > 1)
             if (MPI_SUCCESS != (mpi_code = MPI_Barrier(comm)))
                 HMPI_DONE_ERROR(FAIL, "MPI_Barrier failed", mpi_code);
-    }
-
-    if (!H5FD_mpi_self_initialized_s) {
-        /* Free duplicated MPI Communicator and Info objects */
-        if (H5_mpi_comm_free(&comm) < 0)
-            HDONE_ERROR(H5E_VFL, H5E_CANTFREE, FAIL, "unable to free MPI communicator");
-        if (H5_mpi_info_free(&info) < 0)
-            HDONE_ERROR(H5E_VFL, H5E_CANTFREE, FAIL, "unable to free MPI info object");
     }
 
     H5MM_free(tmp_filename);

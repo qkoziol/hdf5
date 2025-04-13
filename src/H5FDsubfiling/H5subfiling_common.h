@@ -47,13 +47,6 @@
 
 /*
  * Name of the HDF5 FAPL property that the Subfiling VFD
- * uses to pass its configuration down to the underlying
- * IOC VFD
- */
-#define H5F_ACS_SUBFILING_CONFIG_PROP_NAME "H5FD_SUBFILING_CONFIG_PROP"
-
-/*
- * Name of the HDF5 FAPL property that the Subfiling VFD
  * uses to pass the HDF5 stub file's Inode value to the
  * underlying IOC VFD
  */
@@ -256,47 +249,20 @@ typedef struct {
 /* MPI Datatype used to send/receive an RPC message */
 extern MPI_Datatype H5_subfiling_rpc_msg_type;
 
-/*
- * Utility routine to hack around casting away const
- */
-static inline void *
-H5FD__subfiling_cast_to_void(const void *data)
-{
-    union {
-        const void *const_ptr_to_data;
-        void       *ptr_to_data;
-    } eliminate_const_warning;
-    eliminate_const_warning.const_ptr_to_data = data;
-    return eliminate_const_warning.ptr_to_data;
-}
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-H5_DLL herr_t H5FD__subfiling_open_stub_file(const char *name, unsigned flags, MPI_Comm file_comm,
-                                             H5FD_int_t **file_ptr, uint64_t *file_id);
-H5_DLL herr_t H5FD__subfiling_open_subfiles(const char *base_filename, uint64_t file_id,
-                                            H5FD_subfiling_params_t *subfiling_config, int file_acc_flags,
-                                            MPI_Comm file_comm, int64_t *context_id_out);
+H5_DLL herr_t H5FD__subfiling_open_stub_file(const char *name, unsigned flags, MPI_Comm file_comm, H5FD_int_t **file_ptr, uint64_t *file_id);
+H5_DLL herr_t H5FD__subfiling_open_subfiles(const char *base_filename, uint64_t file_id, H5FD_subfiling_params_t *subfiling_config, int file_acc_flags, MPI_Comm file_comm, int64_t *context_id_out);
 H5_DLL herr_t H5FD__subfiling_close_subfiles(int64_t subfiling_context_id, MPI_Comm file_comm);
-
 H5_DLL void  *H5FD__subfiling_get_object(int64_t object_id);
 H5_DLL herr_t H5FD__subfiling_free_object(int64_t object_id);
-H5_DLL herr_t H5FD__subfiling_get_config_from_file(FILE *config_file, int64_t *stripe_size,
-                                                   int64_t *num_subfiles);
+H5_DLL herr_t H5FD__subfiling_get_config_from_file(FILE *config_file, int64_t *stripe_size, int64_t *num_subfiles);
 H5_DLL herr_t H5FD__subfiling_resolve_pathname(const char *filepath, MPI_Comm comm, char **resolved_filepath);
-
-H5_DLL herr_t H5FD__subfiling_set_config_prop(H5P_genplist_t                *fapl,
-                                              const H5FD_subfiling_params_t *vfd_config);
-H5_DLL herr_t H5FD__subfiling_get_config_prop(H5P_genplist_t *fapl, H5FD_subfiling_params_t *vfd_config);
-H5_DLL herr_t H5FD__subfiling_set_file_id_prop(H5P_genplist_t *fapl, uint64_t file_id);
-H5_DLL herr_t H5FD__subfiling_get_file_id_prop(H5P_genplist_t *fapl, uint64_t *file_id);
 H5_DLL herr_t H5FD__subfile_fid_to_context(uint64_t file_id, int64_t *context_id_out);
-
 H5_DLL herr_t H5FD__subfiling_validate_config_params(const H5FD_subfiling_params_t *subf_config);
 H5_DLL herr_t H5FD__subfiling_get_default_ioc_config(H5FD_ioc_config_t *config);
-
 H5_DLL herr_t H5FD__subfiling_terminate(void);
 
 #ifdef H5_SUBFILING_DEBUG

@@ -143,6 +143,7 @@ done:
 htri_t
 H5Fis_hdf5(const char *name)
 {
+    hid_t fapl_id = H5P_FILE_ACCESS_DEFAULT;
     H5VL_file_specific_args_t vol_cb_args;           /* Arguments to VOL callback */
     bool                      is_accessible = false; /* Whether file is accessible */
     htri_t                    ret_value;             /* Return value */
@@ -153,10 +154,14 @@ H5Fis_hdf5(const char *name)
     if (!name || !*name)
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, (-1), "no file name specified");
 
+    /* Verify access property list and set up collective metadata if appropriate */
+    if (H5CX_set_apl(&fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, true) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set access property list info");
+
     /* Set up VOL callback arguments */
     vol_cb_args.op_type                       = H5VL_FILE_IS_ACCESSIBLE;
     vol_cb_args.args.is_accessible.filename   = name;
-    vol_cb_args.args.is_accessible.fapl_id    = H5P_FILE_ACCESS_DEFAULT;
+    vol_cb_args.args.is_accessible.fapl_id    = fapl_id;
     vol_cb_args.args.is_accessible.accessible = &is_accessible;
 
     /* Check if file is accessible */

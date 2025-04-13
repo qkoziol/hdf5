@@ -111,7 +111,6 @@ H5L__extern_traverse(const char H5_ATTR_UNUSED *link_name, hid_t cur_group, cons
     char              *parent_group_name = NULL;     /* Temporary pointer to group name */
     char               local_group_name[H5L_EXT_TRAVERSE_BUF_SIZE]; /* Local buffer to hold group name */
     H5P_genplist_t    *fapl         = NULL;                         /* File access property list pointer */
-    H5F_close_degree_t fc_degree    = H5F_CLOSE_WEAK;               /* File close degree for target file */
     const char        *elink_prefix = NULL;                         /* Pointer to elink prefix */
     hid_t              ret_value    = H5I_INVALID_HID;              /* Return value */
 
@@ -204,10 +203,6 @@ H5L__extern_traverse(const char H5_ATTR_UNUSED *link_name, hid_t cur_group, cons
             HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, H5I_INVALID_HID, "invalid file open flags");
     } /* end if */
 
-    /* Set file close degree for new file to "weak" */
-    if (H5P_set(fapl, H5F_ACS_CLOSE_DEGREE_NAME, &fc_degree) < 0)
-        HGOTO_ERROR(H5E_LINK, H5E_CANTSET, H5I_INVALID_HID, "can't set file close degree");
-
     /* Get the current elink prefix */
     if (H5CX_peek_elink_prefix(&elink_prefix) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTGET, H5I_INVALID_HID, "can't get external link prefix");
@@ -237,7 +232,7 @@ done:
     /* XXX (VOL MERGE): Probably also want to consider closing ext_obj here on failures */
     /* Release resources */
     if (fapl && H5P_release(fapl) < 0)
-        HDONE_ERROR(H5E_ID, H5E_CANTCLOSEOBJ, H5I_INVALID_HID, "unable to close file access property list");
+        HDONE_ERROR(H5E_LINK, H5E_CANTCLOSEOBJ, H5I_INVALID_HID, "unable to close file access property list");
     if (ext_file && H5F_efc_close(loc.oloc->file, ext_file) < 0)
         HDONE_ERROR(H5E_LINK, H5E_CANTCLOSEFILE, H5I_INVALID_HID, "problem closing external file");
     if (parent_group_name && parent_group_name != local_group_name)

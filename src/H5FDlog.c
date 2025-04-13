@@ -414,10 +414,9 @@ H5FD__log_fapl_free(void *_fa)
  *-------------------------------------------------------------------------
  */
 static H5FD_t *
-H5FD__log_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
+H5FD__log_open(const char *name, unsigned flags, hid_t H5_ATTR_UNUSED fapl_id, haddr_t maxaddr)
 {
     H5FD_log_t            *file = NULL;
-    H5P_genplist_t        *fapl; /* Property list */
     const H5FD_log_fapl_t *fa;   /* File access property list information */
     H5FD_log_fapl_t        default_fa = H5FD_log_default_config_g;
     int                    fd         = -1; /* File descriptor */
@@ -457,9 +456,7 @@ H5FD__log_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
         o_flags |= O_EXCL;
 
     /* Get the driver specific information */
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file access property list");
-    if (NULL == (fa = (const H5FD_log_fapl_t *)H5P_peek_driver_info(fapl)))
+    if (NULL == (fa = (const H5FD_log_fapl_t *)H5CX_peek_driver_info()))
         /* Use default driver configuration*/
         fa = &default_fa;
 
@@ -574,23 +571,10 @@ H5FD__log_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
     if (H5FD_ignore_disabled_file_locks_p != FAIL)
         /* The environment variable was set, so use that preferentially */
         file->ignore_disabled_file_locks = H5FD_ignore_disabled_file_locks_p;
-    else {
+    else
         /* Use the value in the property list */
-        if (H5P_get(fapl, H5F_ACS_IGNORE_DISABLED_FILE_LOCKS_NAME, &file->ignore_disabled_file_locks) < 0)
+        if (H5CX_get_ignore_disabled_locks(&file->ignore_disabled_file_locks) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get ignore disabled file locks property");
-    }
-
-    /* Check for non-default FAPL */
-    if (!H5P_PLIST_IS_DEFAULT(fapl)) {
-        /* This step is for h5repart tool only. If user wants to change file driver from
-         * family to one that uses single files (sec2, etc.) while using h5repart, this
-         * private property should be set so that in the later step, the library can ignore
-         * the family driver information saved in the superblock.
-         */
-        if (H5P_exist_plist(fapl, H5F_ACS_FAMILY_TO_SINGLE_NAME) > 0)
-            if (H5P_get(fapl, H5F_ACS_FAMILY_TO_SINGLE_NAME, &file->fam_to_single) < 0)
-                HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get property of changing family to single");
-    }
 
     /* Set return value */
     ret_value = (H5FD_t *)file;

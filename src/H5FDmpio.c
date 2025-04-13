@@ -910,9 +910,9 @@ H5FD__mpio_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t H5_ATTR
         comm = MPI_COMM_WORLD;
     else {
         /* Get the MPI communicator and info object from the property list */
-        if (H5P_get(fapl, H5F_ACS_MPI_PARAMS_COMM_NAME, &comm) < 0)
+        if (H5CX_get_mpi_comm(&comm) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get MPI communicator");
-        if (H5P_get(fapl, H5F_ACS_MPI_PARAMS_INFO_NAME, &info) < 0)
+        if (H5CX_get_mpi_info(&info) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get MPI info object");
     }
 
@@ -3812,9 +3812,8 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5FD__mpio_delete(const char *filename, hid_t fapl_id)
+H5FD__mpio_delete(const char *filename, hid_t H5_ATTR_UNUSED fapl_id)
 {
-    H5P_genplist_t *fapl; /* Property list pointer */
     MPI_Comm        comm     = MPI_COMM_NULL;
     MPI_Info        info     = MPI_INFO_NULL;
     int             mpi_rank = INT_MAX;
@@ -3830,18 +3829,14 @@ H5FD__mpio_delete(const char *filename, hid_t fapl_id)
         if (H5FD__mpio_init() < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, FAIL, "can't initialize driver");
 
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
-    assert(H5FD_MPIO_VALUE == H5P_get_driver_value(fapl));
-
     if (H5FD_mpi_self_initialized_s)
         comm = MPI_COMM_WORLD;
     else {
         /* Get the MPI communicator and info from the fapl */
-        if (H5P_get(fapl, H5F_ACS_MPI_PARAMS_INFO_NAME, &info) < 0)
-            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get MPI info object");
-        if (H5P_get(fapl, H5F_ACS_MPI_PARAMS_COMM_NAME, &comm) < 0)
+        if (H5CX_peek_mpi_comm(&comm) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get MPI communicator");
+        if (H5CX_peek_mpi_info(&info) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get MPI info object");
     }
 
     /* Get the MPI rank of this process */
@@ -3866,12 +3861,6 @@ H5FD__mpio_delete(const char *filename, hid_t fapl_id)
         HMPI_GOTO_ERROR(FAIL, "MPI_Barrier failed", mpi_code)
 
 done:
-    /* Free duplicated MPI Communicator and Info objects */
-    if (H5_mpi_comm_free(&comm) < 0)
-        HDONE_ERROR(H5E_VFL, H5E_CANTFREE, FAIL, "unable to free MPI communicator");
-    if (H5_mpi_info_free(&info) < 0)
-        HDONE_ERROR(H5E_VFL, H5E_CANTFREE, FAIL, "unable to free MPI info object");
-
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FD__mpio_delete() */
 

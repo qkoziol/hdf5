@@ -427,7 +427,7 @@ H5_DLL herr_t H5F__mount_count_ids(H5F_t *f, unsigned *nopen_files, unsigned *no
 
 /* Superblock related routines */
 H5_DLL herr_t H5F__super_init(H5F_t *f);
-H5_DLL herr_t H5F__super_read(H5F_t *f, H5P_genplist_t *fapl, bool initial_read);
+H5_DLL herr_t H5F__super_read(H5F_t *f, bool initial_read);
 H5_DLL herr_t H5F__super_size(H5F_t *f, hsize_t *super_size, hsize_t *super_ext_size);
 H5_DLL herr_t H5F__super_free(H5F_super_t *sblock);
 

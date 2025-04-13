@@ -101,6 +101,7 @@ IDE_GENERATED_PROPERTIES ("H5C" "${H5C_HDRS}" "${H5C_SOURCES}" )
 
 set (H5CX_SOURCES
     ${HDF5_SRC_DIR}/H5CX.c
+    ${HDF5_SRC_DIR}/H5CXtest.c
 )
 set (H5CX_HDRS
 )
@@ -890,6 +891,7 @@ set (H5_PRIVATE_HEADERS
     ${HDF5_SRC_DIR}/H5Cpkg.h
     ${HDF5_SRC_DIR}/H5Cprivate.h
 
+    ${HDF5_SRC_DIR}/H5CXpkg.h
     ${HDF5_SRC_DIR}/H5CXprivate.h
 
     ${HDF5_SRC_DIR}/H5Dpkg.h

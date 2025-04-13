@@ -344,7 +344,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static H5FD_t *
-H5FD__direct_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
+H5FD__direct_open(const char *name, unsigned flags, hid_t H5_ATTR_UNUSED fapl_id, haddr_t maxaddr)
 {
     int                       o_flags;
     int                       fd   = (-1);
@@ -356,7 +356,6 @@ H5FD__direct_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxad
     struct _BY_HANDLE_FILE_INFORMATION fileinfo;
 #endif
     h5_stat_t       sb;
-    H5P_genplist_t *fapl; /* Property list */
     void           *buf1, *buf2;
     H5FD_t         *ret_value = NULL;
 
@@ -398,9 +397,7 @@ H5FD__direct_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxad
         HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "unable to allocate file struct");
 
     /* Get the driver specific information */
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file access property list");
-    if (NULL == (fa = (const H5FD_direct_fapl_t *)H5P_peek_driver_info(fapl))) {
+    if (NULL == (fa = (const H5FD_direct_fapl_t *)H5CX_peek_driver_info())) {
         if (H5FD__direct_populate_config(0, 0, 0, &default_fa) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTSET, NULL, "can't initialize driver configuration info");
         fa = &default_fa;
@@ -427,11 +424,10 @@ H5FD__direct_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxad
     if (H5FD_ignore_disabled_file_locks_p != FAIL)
         /* The environment variable was set, so use that preferentially */
         file->ignore_disabled_file_locks = H5FD_ignore_disabled_file_locks_p;
-    else {
+    else
         /* Use the value in the property list */
-        if (H5P_get(fapl, H5F_ACS_IGNORE_DISABLED_FILE_LOCKS_NAME, &file->ignore_disabled_file_locks) < 0)
+        if (H5CX_get_ignore_disabled_locks(&file->ignore_disabled_file_locks) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get ignore disabled file locks property");
-    }
 
     /* Try to decide if data alignment is required.  The reason to check it here
      * is to handle correctly the case that the file is in a different file system

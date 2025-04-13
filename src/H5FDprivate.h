@@ -165,7 +165,7 @@ H5_DLL herr_t  H5FD_free(H5FD_int_t *fh, H5FD_mem_t type, struct H5F_t *f, haddr
 H5_DLL haddr_t H5FD_get_eoa(const H5FD_int_t *fh, H5FD_mem_t type);
 H5_DLL herr_t  H5FD_set_eoa(H5FD_int_t *fh, H5FD_mem_t type, haddr_t addr);
 H5_DLL haddr_t H5FD_get_eof(const H5FD_int_t *fh, H5FD_mem_t type);
-H5_DLL herr_t  H5FD_get_vfd_handle(H5FD_int_t *fh, H5P_genplist_t *fapl, void **file_handle);
+H5_DLL herr_t  H5FD_get_vfd_handle(H5FD_int_t *fh, const H5P_genplist_t *fapl, void **file_handle);
 H5_DLL herr_t  H5FD_read(H5FD_int_t *fh, H5FD_mem_t type, haddr_t addr, size_t size, void *buf /*out*/);
 H5_DLL herr_t  H5FD_read_vector(H5FD_int_t *fh, uint32_t count, H5FD_mem_t types[], haddr_t addrs[],
                                 size_t sizes[], void *bufs[] /* out */);

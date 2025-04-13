@@ -699,12 +699,11 @@ done:
  *-------------------------------------------------------------------------
  */
 static H5FD_t *
-H5FD__core_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
+H5FD__core_open(const char *name, unsigned flags, hid_t H5_ATTR_UNUSED fapl_id, haddr_t maxaddr)
 {
     int                     o_flags;
     H5FD_core_t            *file = NULL;
     const H5FD_core_fapl_t *fa   = NULL;
-    H5P_genplist_t         *fapl; /* Property list pointer */
 #ifdef H5_HAVE_WIN32_API
     struct _BY_HANDLE_FILE_INFORMATION fileinfo;
 #endif
@@ -722,9 +721,7 @@ H5FD__core_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, NULL, "bogus maxaddr");
     if (CORE_ADDR_OVERFLOW(maxaddr))
         HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, NULL, "maxaddr overflow");
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file access property list");
-    if (NULL == (fa = (const H5FD_core_fapl_t *)H5P_peek_driver_info(fapl)))
+    if (NULL == (fa = (const H5FD_core_fapl_t *)H5CX_peek_driver_info()))
         fa = H5FD__core_get_default_config();
 
     /* Build the open flags */
@@ -796,11 +793,10 @@ H5FD__core_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr
     if (H5FD_ignore_disabled_file_locks_p != FAIL)
         /* The environment variable was set, so use that preferentially */
         file->ignore_disabled_file_locks = H5FD_ignore_disabled_file_locks_p;
-    else {
+    else
         /* Use the value in the property list */
-        if (H5P_get(fapl, H5F_ACS_IGNORE_DISABLED_FILE_LOCKS_NAME, &file->ignore_disabled_file_locks) < 0)
+        if (H5CX_get_ignore_disabled_locks(&file->ignore_disabled_file_locks) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get ignore disabled file locks property");
-    }
 
     if (fd >= 0) {
         /* Retrieve information for determining uniqueness of file */
@@ -1242,29 +1238,16 @@ H5FD__core_get_handle(H5FD_t *_file, hid_t fapl_id, void **file_handle)
 
     /* Check for non-default FAPL */
     if (H5P_FILE_ACCESS_DEFAULT != fapl_id && H5P_DEFAULT != fapl_id) {
-        H5P_genplist_t *fapl; /* Property list pointer */
+        bool want_posix_fd; /* Setting for retrieving file descriptor from core VFD */
 
-        /* Get the FAPL */
-        if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
-            HGOTO_ERROR(H5E_VFL, H5E_BADTYPE, FAIL, "not a file access property list");
-
-        /* Check if private property for retrieving the backing store POSIX
-         * file descriptor is set.  (This should not be set except within the
-         * library)  QAK - 2009/12/04
+        /* Check if private API context flag for retrieving the backing store POSIX file descriptor
+        * is set.  (This should not be set except within the library) QAK - 2009/12/04
          */
-        if (H5P_exist_plist(fapl, H5F_ACS_WANT_POSIX_FD_NAME) > 0) {
-            bool want_posix_fd; /* Setting for retrieving file descriptor from core VFD */
+        want_posix_fd = H5CX_get_want_posix_fd();
 
-            /* Get property */
-            if (H5P_get(fapl, H5F_ACS_WANT_POSIX_FD_NAME, &want_posix_fd) < 0)
-                HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get property of retrieving file descriptor");
-
-            /* If property is set, pass back the file descriptor instead of the memory address */
-            if (want_posix_fd)
-                *file_handle = &(file->fd);
-            else
-                *file_handle = &(file->mem);
-        } /* end if */
+        /* If flag is set, pass back the file descriptor instead of the memory address */
+        if (want_posix_fd)
+            *file_handle = &(file->fd);
         else
             *file_handle = &(file->mem);
     } /* end if */
@@ -1697,19 +1680,16 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5FD__core_delete(const char *filename, hid_t fapl_id)
+H5FD__core_delete(const char *filename, hid_t H5_ATTR_UNUSED fapl_id)
 {
     const H5FD_core_fapl_t *fa = NULL;
-    H5P_genplist_t         *fapl;                /* Property list pointer */
     herr_t                  ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
     assert(filename);
 
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
-    if (NULL == (fa = (const H5FD_core_fapl_t *)H5P_peek_driver_info(fapl)))
+    if (NULL == (fa = (const H5FD_core_fapl_t *)H5CX_peek_driver_info()))
         fa = H5FD__core_get_default_config();
 
     if (fa->backing_store)

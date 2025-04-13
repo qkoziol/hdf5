@@ -101,7 +101,7 @@ static herr_t  H5FD__splitter_free(H5FD_t *_file, H5FD_mem_t type, hid_t dxpl_id
 static haddr_t H5FD__splitter_get_eoa(const H5FD_t *_file, H5FD_mem_t H5_ATTR_UNUSED type);
 static herr_t  H5FD__splitter_set_eoa(H5FD_t *_file, H5FD_mem_t H5_ATTR_UNUSED type, haddr_t addr);
 static haddr_t H5FD__splitter_get_eof(const H5FD_t *_file, H5FD_mem_t H5_ATTR_UNUSED type);
-static herr_t  H5FD__splitter_get_handle(H5FD_t *_file, hid_t H5_ATTR_UNUSED fapl, void **file_handle);
+static herr_t  H5FD__splitter_get_handle(H5FD_t *_file, hid_t H5_ATTR_UNUSED fapl_id, void **file_handle);
 static herr_t  H5FD__splitter_read(H5FD_t *_file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, size_t size,
                                    void *buf);
 static herr_t  H5FD__splitter_write(H5FD_t *_file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, size_t size,
@@ -700,12 +700,13 @@ done:
  *-------------------------------------------------------------------------
  */
 static H5FD_t *
-H5FD__splitter_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
+H5FD__splitter_open(const char *name, unsigned flags, hid_t H5_ATTR_UNUSED fapl_id, haddr_t maxaddr)
 {
     H5FD_splitter_t            *file      = NULL; /* Splitter VFD info */
     const H5FD_splitter_fapl_t *fa        = NULL; /* Driver-specific property list */
     H5FD_splitter_fapl_t       *def_fa    = NULL;
-    H5P_genplist_t             *fapl      = NULL;
+    hid_t      old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
+    hid_t      under_fapl_id;                       /* ID for member FAPL */
     H5FD_t                     *ret_value = NULL;
 
     FUNC_ENTER_PACKAGE
@@ -719,17 +720,12 @@ H5FD__splitter_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t max
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, NULL, "bogus maxaddr");
     if (H5FD_ADDR_OVERFLOW(maxaddr))
         HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, NULL, "bogus maxaddr");
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file access property list");
-    if (H5FD_SPLITTER_VALUE != H5P_get_driver_value(fapl))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, NULL, "driver is not splitter");
 
     if (NULL == (file = H5FL_CALLOC(H5FD_splitter_t)))
         HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "unable to allocate file struct");
 
     /* Get the driver-specific file access properties */
-    fa = (const H5FD_splitter_fapl_t *)H5P_peek_driver_info(fapl);
-    if (NULL == fa) {
+    if (NULL == (fa = (const H5FD_splitter_fapl_t *)H5CX_peek_driver_info())) {
         if (NULL == (def_fa = H5FL_CALLOC(H5FD_splitter_fapl_t)))
             HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "unable to allocate file access property list struct");
         if (H5FD__splitter_populate_config(NULL, def_fa) < 0)
@@ -765,8 +761,22 @@ H5FD__splitter_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t max
                 HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL, "unable to open log file");
         } /* end if logfile path given */
 
+    /* Retrieve the current FAPL in the API context */
+    if ((old_fapl_id = H5CX_get_fapl()) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get file access property list");
+
+    /* Verify access property list and set up collective metadata if appropriate */
+    under_fapl_id = H5P_PLIST_ID(file->fa.rw_fapl);
+    if (H5CX_set_apl(&under_fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, false) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, NULL, "can't set access property list info");
+
     if (H5FD_open(false, &file->rw_file, name, flags, file->fa.rw_fapl, HADDR_UNDEF) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL, "unable to open R/W file");
+
+    /* Verify access property list and set up collective metadata if appropriate */
+    under_fapl_id = H5P_PLIST_ID(file->fa.wo_fapl);
+    if (H5CX_set_apl(&under_fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, false) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, NULL, "can't set access property list info");
 
     if (H5FD_open(false, &file->wo_file, fa->wo_path, flags, file->fa.wo_fapl, HADDR_UNDEF) < 0)
         H5FD_SPLITTER_WO_ERROR(file, __func__, H5E_VFL, H5E_CANTOPENFILE, NULL, "unable to open W/O file")
@@ -775,6 +785,10 @@ H5FD__splitter_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t max
     ret_value = (H5FD_t *)file;
 
 done:
+    /* Restore previous FAPL in the API contxt */
+    if (old_fapl_id > 0)
+        H5CX_set_fapl(old_fapl_id);
+
     if (def_fa && H5FD__splitter_fapl_free(def_fa) < 0)
         HDONE_ERROR(H5E_VFL, H5E_CANTFREE, NULL, "unable to free split file FAPL");
 
@@ -1099,7 +1113,7 @@ H5FD__splitter_cmp(const H5FD_t *_f1, const H5FD_t *_f2)
  *--------------------------------------------------------------------------
  */
 static herr_t
-H5FD__splitter_get_handle(H5FD_t *_file, hid_t H5_ATTR_UNUSED fapl, void **file_handle)
+H5FD__splitter_get_handle(H5FD_t *_file, hid_t H5_ATTR_UNUSED fapl_id, void **file_handle)
 {
     H5FD_splitter_t *file      = (H5FD_splitter_t *)_file;
     herr_t           ret_value = SUCCEED; /* Return value */
@@ -1392,7 +1406,8 @@ H5FD__splitter_delete(const char *filename, hid_t fapl_id)
 {
     const H5FD_splitter_fapl_t *fa     = NULL;
     H5FD_splitter_fapl_t       *def_fa = NULL;
-    H5P_genplist_t             *fapl;
+    hid_t      old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
+    hid_t      under_fapl_id;                       /* ID for member FAPL */
     herr_t                      ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
@@ -1414,9 +1429,7 @@ H5FD__splitter_delete(const char *filename, hid_t fapl_id)
         fa = def_fa;
     }
     else {
-        if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
-            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
-        if (NULL == (fa = (const H5FD_splitter_fapl_t *)H5P_peek_driver_info(fapl))) {
+        if (NULL == (fa = (const H5FD_splitter_fapl_t *)H5CX_peek_driver_info())) {
             if (NULL == (def_fa = H5FL_CALLOC(H5FD_splitter_fapl_t)))
                 HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "unable to allocate FAPL struct");
             if (H5FD__splitter_populate_config(NULL, def_fa) < 0)
@@ -1424,21 +1437,38 @@ H5FD__splitter_delete(const char *filename, hid_t fapl_id)
 
             /* If W/O path is not set, use base filename with '_wo' suffix */
             if (*def_fa->wo_path == '\0')
-                if (H5FD__splitter_get_default_wo_path(def_fa->wo_path, H5FD_SPLITTER_PATH_MAX + 1,
-                                                       filename) < 0)
-                    HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL,
-                                "can't generate default filename for W/O channel");
+                if (H5FD__splitter_get_default_wo_path(def_fa->wo_path, H5FD_SPLITTER_PATH_MAX + 1, filename) < 0)
+                    HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't generate default filename for W/O channel");
 
             fa = def_fa;
         }
     }
 
+    /* Retrieve the current FAPL in the API context */
+    if ((old_fapl_id = H5CX_get_fapl()) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get file access property list");
+
+    /* Verify access property list and set up collective metadata if appropriate */
+    under_fapl_id = H5P_PLIST_ID(fa->rw_fapl);
+    if (H5CX_set_apl(&under_fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, false) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set access property list info");
+
     if (H5FD_delete(filename, fa->rw_fapl) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTDELETEFILE, FAIL, "unable to delete file");
+
+    /* Verify access property list and set up collective metadata if appropriate */
+    under_fapl_id = H5P_PLIST_ID(fa->wo_fapl);
+    if (H5CX_set_apl(&under_fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, false) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set access property list info");
+
     if (H5FD_delete(fa->wo_path, fa->wo_fapl) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTDELETEFILE, FAIL, "unable to delete W/O channel file");
 
 done:
+    /* Restore previous FAPL in the API contxt */
+    if (old_fapl_id > 0)
+        H5CX_set_fapl(old_fapl_id);
+
     if (def_fa && H5FD__splitter_fapl_free(def_fa) < 0)
         HDONE_ERROR(H5E_VFL, H5E_CANTFREE, FAIL, "unable to free split file FAPL");
 

@@ -2183,27 +2183,10 @@ H5D__virtual_init(H5F_t *f, const H5D_t *dset)
 
     /* Retrieve VDS file FAPL to layout */
     if (NULL == storage->source_fapl) {
-        H5F_close_degree_t close_degree = H5F_CLOSE_WEAK; /* Close degree for source files */
-
         /* Get a copy of the FAPL, to open source files with */
         if (NULL == (storage->source_fapl = H5F_get_access_plist(f, false)))
             HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get fapl");
-
-        /* Source files must always be opened with H5F_CLOSE_WEAK close degree */
-        if (H5P_set(storage->source_fapl, H5F_ACS_CLOSE_DEGREE_NAME, &close_degree) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set file close degree");
     } /* end if */
-#ifndef NDEBUG
-    else {
-        H5F_close_degree_t close_degree; /* Close degree for source files */
-
-        /* Verify H5F_CLOSE_WEAK close degree is set */
-        if (H5P_get(storage->source_fapl, H5F_ACS_CLOSE_DEGREE_NAME, &close_degree) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get file close degree");
-
-        assert(close_degree == H5F_CLOSE_WEAK);
-    }  /* end else */
-#endif /* NDEBUG */
 
     /* Copy DAPL to layout */
     if (NULL == storage->source_dapl)

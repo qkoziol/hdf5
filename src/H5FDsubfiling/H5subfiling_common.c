@@ -22,6 +22,7 @@
 #include "H5Iprivate.h"  /* IDs                      */
 #include "H5MMprivate.h" /* Memory management        */
 #include "H5TSprivate.h" /* Threadsafety             */
+#include "H5FDsubfiling_private.h" /* Subfiling VFD                            */
 #include "H5subfiling_common.h"
 
 typedef struct {            /* Format of a context map entry  */
@@ -487,8 +488,9 @@ herr_t
 H5FD__subfiling_open_stub_file(const char *name, unsigned flags, MPI_Comm file_comm, H5FD_int_t **file_ptr,
                                uint64_t *file_id)
 {
+    hid_t      old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
     H5P_genplist_t *fapl          = NULL;
-    uint64_t        stub_file_id  = UINT64_MAX;
+    uint64_t        stub_file_id  = H5FD_SUBFILING_BAD_FILE_ID;
     bool            bcasted_inode = false;
     H5FD_int_t     *stub_file     = NULL;
     int             mpi_rank      = 0;
@@ -513,8 +515,13 @@ H5FD__subfiling_open_stub_file(const char *name, unsigned flags, MPI_Comm file_c
     if (!file_ptr && mpi_rank == 0)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "NULL stub file pointer");
 
+    /* Retrieve the current FAPL in the API context */
+    if ((old_fapl_id = H5CX_get_fapl()) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get file access property list");
+
     /* Open stub file on MPI rank 0 only */
     if (mpi_rank == 0) {
+        hid_t      fapl_id;                       /* ID for FAPL */
         h5_stat_t st;
         MPI_Comm  stub_comm = MPI_COMM_SELF;
         MPI_Info  stub_info = MPI_INFO_NULL;
@@ -530,6 +537,11 @@ H5FD__subfiling_open_stub_file(const char *name, unsigned flags, MPI_Comm file_c
             HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set MPI info object");
         if (H5P_set_driver(fapl, H5FD_MPIO_driver_g, NULL, NULL) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set MPI I/O driver on FAPL");
+
+        /* Verify access property list and set up collective metadata if appropriate */
+        fapl_id = H5P_PLIST_ID(fapl);
+        if (H5CX_set_apl(&fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, true) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set access property list info");
 
         if (H5FD_open(false, &stub_file, name, flags, fapl, HADDR_UNDEF) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, FAIL, "couldn't open HDF5 stub file");
@@ -550,7 +562,7 @@ H5FD__subfiling_open_stub_file(const char *name, unsigned flags, MPI_Comm file_c
             HMPI_GOTO_ERROR(FAIL, "MPI_Bcast failed", mpi_code);
     bcasted_inode = true;
 
-    if (stub_file_id == UINT64_MAX)
+    if (stub_file_id == H5FD_SUBFILING_BAD_FILE_ID)
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "couldn't get inode value for HDF5 stub file");
 
     if (file_ptr)
@@ -558,6 +570,10 @@ H5FD__subfiling_open_stub_file(const char *name, unsigned flags, MPI_Comm file_c
     *file_id = stub_file_id;
 
 done:
+    /* Restore previous FAPL in the API contxt */
+    if (old_fapl_id > 0)
+        H5CX_set_fapl(old_fapl_id);
+
     if (fapl && H5P_release(fapl) < 0)
         HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "can't close FAPL ID");
 
@@ -1870,7 +1886,7 @@ H5FD__subfiling_init_open_file_map(void)
 
         sf_file_map_size = DEFAULT_FILE_MAP_ENTRIES;
         for (int i = 0; i < sf_file_map_size; i++) {
-            sf_open_file_map[i].file_id       = UINT64_MAX;
+            sf_open_file_map[i].file_id       = H5FD_SUBFILING_BAD_FILE_ID;
             sf_open_file_map[i].sf_context_id = -1;
         }
     }
@@ -1919,7 +1935,7 @@ H5FD__subfiling_record_fid_map_entry(uint64_t file_id, int64_t subfile_context_i
             HGOTO_DONE(SUCCEED);
         }
 
-        if (sf_open_file_map[index].file_id == UINT64_MAX) {
+        if (sf_open_file_map[index].file_id == H5FD_SUBFILING_BAD_FILE_ID) {
             sf_open_file_map[index].file_id       = file_id;
             sf_open_file_map[index].sf_context_id = subfile_context_id;
 
@@ -1946,7 +1962,7 @@ H5FD__subfiling_record_fid_map_entry(uint64_t file_id, int64_t subfile_context_i
         sf_file_map_size *= 2;
 
         for (int i = index; i < sf_file_map_size; i++)
-            sf_open_file_map[i].file_id = UINT64_MAX;
+            sf_open_file_map[i].file_id = H5FD_SUBFILING_BAD_FILE_ID;
 
         if (next_index)
             *next_index = index;
@@ -1995,7 +2011,7 @@ H5FD__subfiling_clear_fid_map_entry(uint64_t file_id, int64_t sf_context_id)
                 HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "couldn't get subfiling context object");
 
             if (sf_context->file_ref == 0 || sf_context->file_ref == 1) {
-                sf_open_file_map[i].file_id       = UINT64_MAX;
+                sf_open_file_map[i].file_id       = H5FD_SUBFILING_BAD_FILE_ID;
                 sf_open_file_map[i].sf_context_id = -1;
             }
 
@@ -2083,7 +2099,7 @@ H5FD__subfiling_ioc_open_files(int64_t file_context_id, int file_acc_flags)
     if (NULL == (sf_context = H5FD__subfiling_get_object(file_context_id)))
         HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, FAIL, "couldn't get subfiling object from context ID");
 
-    assert(sf_context->h5_file_id != UINT64_MAX);
+    assert(sf_context->h5_file_id != H5FD_SUBFILING_BAD_FILE_ID);
     assert(sf_context->h5_filename);
     assert(sf_context->sf_fids);
     assert(sf_context->sf_num_subfiles > 0);
@@ -2218,7 +2234,7 @@ H5FD__subfiling_create_config_file(subfiling_context_t *sf_context, const char *
     assert(config_dir);
     assert(subfile_dir);
 
-    if (sf_context->h5_file_id == UINT64_MAX)
+    if (sf_context->h5_file_id == H5FD_SUBFILING_BAD_FILE_ID)
         HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "invalid HDF5 file ID %" PRIu64, sf_context->h5_file_id);
     if (*base_filename == '\0')
         HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "invalid base HDF5 filename '%s'", base_filename);
@@ -2336,7 +2352,7 @@ H5FD__subfiling_open_config_file(const char *base_filename, const char *config_d
 
     assert(base_filename);
     assert(config_dir);
-    assert(file_id != UINT64_MAX);
+    assert(file_id != H5FD_SUBFILING_BAD_FILE_ID);
     assert(mode);
     assert(config_file_out);
 
@@ -2658,7 +2674,7 @@ H5FD__subfiling_close_subfiles(int64_t subfiling_context_id, MPI_Comm file_comm)
     }
 
     /* The map from file handle to subfiling context can now be cleared */
-    if (sf_context->h5_file_id != UINT64_MAX)
+    if (sf_context->h5_file_id != H5FD_SUBFILING_BAD_FILE_ID)
         H5FD__subfiling_clear_fid_map_entry(sf_context->h5_file_id, sf_context->sf_context_id);
 
     if (sf_context->topology->rank_is_ioc)
@@ -2714,176 +2730,6 @@ done:
 }
 
 /*-------------------------------------------------------------------------
- * Function:    H5FD__subfiling_set_config_prop
- *
- * Purpose:     Sets the specified Subfiling VFD configuration as a
- *              property on the given FAPL pointer. The Subfiling VFD uses
- *              this property to pass its configuration down to the IOC VFD
- *              without needing each IOC VFD to include it as part of its
- *              public configuration.
- *
- * Return:      Non-negative on success/Negative on failure
- *
- *-------------------------------------------------------------------------
- */
-herr_t
-H5FD__subfiling_set_config_prop(H5P_genplist_t *fapl, const H5FD_subfiling_params_t *vfd_config)
-{
-    htri_t prop_exists = FAIL;
-    herr_t ret_value   = SUCCEED;
-
-    FUNC_ENTER_PACKAGE
-
-    if (!fapl)
-        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "NULL FAPL pointer");
-    if (!vfd_config)
-        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid subfiling configuration pointer");
-
-    if ((prop_exists = H5P_exist_plist(fapl, H5F_ACS_SUBFILING_CONFIG_PROP_NAME)) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL,
-                    "can't check if subfiling configuration property exists in FAPL");
-
-    if (prop_exists) {
-        if (H5P_set(fapl, H5F_ACS_SUBFILING_CONFIG_PROP_NAME, vfd_config) < 0)
-            HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set subfiling configuration property on FAPL");
-    }
-    else
-        /*
-         * Cast away const since H5P_insert doesn't match the signature
-         * for "value" as H5P_set
-         */
-        if (H5P_insert(fapl, H5F_ACS_SUBFILING_CONFIG_PROP_NAME, sizeof(H5FD_subfiling_params_t),
-                       H5FD__subfiling_cast_to_void(vfd_config), NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-                       NULL) < 0)
-            HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL,
-                        "unable to register subfiling configuration property in FAPL");
-
-done:
-    FUNC_LEAVE_NOAPI(ret_value)
-}
-
-/*-------------------------------------------------------------------------
- * Function:    H5FD__subfiling_get_config_prop
- *
- * Purpose:     Retrieves the Subfiling VFD configuration from the given
- *              FAPL pointer. The Subfiling VFD uses this property to pass
- *              its configuration down to the IOC VFD without needing each
- *              IOC VFD to include it as part of its public configuration.
- *
- * Return:      Non-negative on success/Negative on failure
- *
- *-------------------------------------------------------------------------
- */
-herr_t
-H5FD__subfiling_get_config_prop(H5P_genplist_t *fapl, H5FD_subfiling_params_t *vfd_config)
-{
-    htri_t prop_exists = FAIL;
-    herr_t ret_value   = SUCCEED;
-
-    FUNC_ENTER_PACKAGE
-
-    if (!fapl)
-        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "NULL FAPL pointer");
-    if (!vfd_config)
-        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid subfiling configuration pointer");
-
-    if ((prop_exists = H5P_exist_plist(fapl, H5F_ACS_SUBFILING_CONFIG_PROP_NAME)) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL,
-                    "can't check if subfiling configuration property exists in FAPL");
-
-    if (prop_exists) {
-        if (H5P_get(fapl, H5F_ACS_SUBFILING_CONFIG_PROP_NAME, vfd_config) < 0)
-            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get subfiling configuration property from FAPL");
-    }
-    else {
-        vfd_config->ioc_selection = SELECT_IOC_ONE_PER_NODE;
-        vfd_config->stripe_size   = H5FD_SUBFILING_DEFAULT_STRIPE_SIZE;
-        vfd_config->stripe_count  = H5FD_SUBFILING_DEFAULT_STRIPE_COUNT;
-    }
-
-done:
-    FUNC_LEAVE_NOAPI(ret_value)
-}
-
-/*-------------------------------------------------------------------------
- * Function:    H5FD__subfiling_set_file_id_prop
- *
- * Purpose:     Sets the specified file ID (Inode) value as a property on
- *              the given FAPL pointer. The Subfiling VFD uses this
- *              property to pass the HDF5 stub file ID value down to the
- *              IOC VFD.
- *
- * Return:      Non-negative on success/Negative on failure
- *
- *-------------------------------------------------------------------------
- */
-herr_t
-H5FD__subfiling_set_file_id_prop(H5P_genplist_t *fapl, uint64_t file_id)
-{
-    htri_t prop_exists = FAIL;
-    herr_t ret_value   = SUCCEED;
-
-    FUNC_ENTER_PACKAGE
-
-    if (!fapl)
-        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "NULL FAPL pointer");
-    if (file_id == UINT64_MAX)
-        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid file ID value");
-
-    if ((prop_exists = H5P_exist_plist(fapl, H5F_ACS_SUBFILING_STUB_FILE_ID_NAME)) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't check if file ID property exists in FAPL");
-
-    if (prop_exists) {
-        if (H5P_set(fapl, H5F_ACS_SUBFILING_STUB_FILE_ID_NAME, &file_id) < 0)
-            HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set file ID property on FAPL");
-    }
-    else if (H5P_insert(fapl, H5F_ACS_SUBFILING_STUB_FILE_ID_NAME, sizeof(uint64_t), &file_id, NULL, NULL,
-                        NULL, NULL, NULL, NULL, NULL, NULL) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "unable to register file ID property in FAPL");
-
-done:
-    FUNC_LEAVE_NOAPI(ret_value)
-}
-
-/*-------------------------------------------------------------------------
- * Function:    H5FD__subfiling_get_file_id_prop
- *
- * Purpose:     Retrieves the file ID (Inode) value from the given FAPL
- *              pointer. The Subfiling VFD uses this property to pass the
- *              HDF5 stub file ID value down to the IOC VFD.
- *
- * Return:      Non-negative on success/Negative on failure
- *
- *-------------------------------------------------------------------------
- */
-herr_t
-H5FD__subfiling_get_file_id_prop(H5P_genplist_t *fapl, uint64_t *file_id)
-{
-    htri_t prop_exists = FAIL;
-    herr_t ret_value   = SUCCEED;
-
-    FUNC_ENTER_PACKAGE
-
-    if (!fapl)
-        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "NULL FAPL pointer");
-    if (!file_id)
-        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "NULL file ID pointer");
-
-    if ((prop_exists = H5P_exist_plist(fapl, H5F_ACS_SUBFILING_STUB_FILE_ID_NAME)) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't check if file ID property exists in FAPL");
-
-    if (prop_exists) {
-        if (H5P_get(fapl, H5F_ACS_SUBFILING_STUB_FILE_ID_NAME, file_id) < 0)
-            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get file ID property from FAPL");
-    }
-    else
-        *file_id = UINT64_MAX;
-
-done:
-    FUNC_LEAVE_NOAPI(ret_value)
-}
-
-/*-------------------------------------------------------------------------
  * Function:    H5FD__subfile_fid_to_context
  *
  * Purpose:     This is a basic lookup function which returns the subfiling
@@ -2910,8 +2756,10 @@ H5FD__subfile_fid_to_context(uint64_t file_id, int64_t *context_id_out)
         HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, FAIL, "couldn't initialize open file mapping");
 
     for (int i = 0; i < sf_file_map_size; i++)
-        if (sf_open_file_map[i].file_id == file_id)
+        if (sf_open_file_map[i].file_id == file_id) {
             *context_id_out = sf_open_file_map[i].sf_context_id;
+            break;
+        }
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)

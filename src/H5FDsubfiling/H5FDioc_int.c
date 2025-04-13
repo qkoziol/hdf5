@@ -55,6 +55,18 @@ H5FD__ioc_calculate_target_ioc(int64_t file_offset, int64_t stripe_size, int num
     FUNC_LEAVE_NOAPI_VOID
 }
 
+/* Utility routine to hack around casting away const */
+static void *
+H5FD__ioc_cast_to_void(const void *data)
+{
+    union {
+        const void *const_ptr_to_data;
+        void       *ptr_to_data;
+    } eliminate_const_warning;
+    eliminate_const_warning.const_ptr_to_data = data;
+    return eliminate_const_warning.ptr_to_data;
+}
+
 /*-------------------------------------------------------------------------
  * Function:    H5FD__ioc_write_independent_async
  *
@@ -157,7 +169,7 @@ H5FD__ioc_write_independent_async(int64_t context_id, int64_t offset, int64_t el
     sf_io_request->context_id      = context_id;
     sf_io_request->offset          = offset;
     sf_io_request->elements        = elements;
-    sf_io_request->data            = H5FD__subfiling_cast_to_void(data);
+    sf_io_request->data            = H5FD__ioc_cast_to_void(data);
     sf_io_request->io_transfer_req = MPI_REQUEST_NULL;
     sf_io_request->io_comp_req     = MPI_REQUEST_NULL;
     sf_io_request->io_comp_tag     = -1;

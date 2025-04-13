@@ -27,6 +27,15 @@
 /* Library Private Macros */
 /**************************/
 
+/*
+ * Name of the HDF5 FAPL property that the Subfiling VFD uses to pass its
+ * configuration down to the underlying IOC VFD
+ */
+#define H5F_ACS_SUBFILING_CONFIG_PROP_NAME "H5FD_SUBFILING_CONFIG_PROP"
+
+/* Value of invalid stub file ID */
+#define H5FD_SUBFILING_BAD_FILE_ID UINT64_MAX
+
 /****************************/
 /* Library Private Typedefs */
 /****************************/

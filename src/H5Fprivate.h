@@ -236,9 +236,6 @@ typedef struct H5F_t H5F_t;
 #define H5F_ACS_MULTI_TYPE_NAME        "multi_type"        /* Data type in multi file driver */
 #define H5F_ACS_LIBVER_LOW_BOUND_NAME  "libver_low_bound"  /* 'low' bound of library format versions */
 #define H5F_ACS_LIBVER_HIGH_BOUND_NAME "libver_high_bound" /* 'high' bound of library format versions */
-#define H5F_ACS_WANT_POSIX_FD_NAME                                                                           \
-    "want_posix_fd" /* Internal: query the file descriptor from the core VFD, instead of the memory address  \
-                     */
 #define H5F_ACS_METADATA_READ_ATTEMPTS_NAME "metadata_read_attempts" /* # of metadata read attempts */
 #define H5F_ACS_OBJECT_FLUSH_CB_NAME        "object_flush_cb"        /* Object flush callback */
 #define H5F_ACS_EFC_SIZE_NAME               "efc_size"               /* Size of external file cache */
@@ -566,7 +563,7 @@ H5_DLL bool    H5F_has_feature(const H5F_t *f, unsigned feature);
 H5_DLL haddr_t H5F_shared_get_eoa(const H5F_shared_t *f_sh, H5FD_mem_t type);
 H5_DLL haddr_t H5F_get_eoa(const H5F_t *f, H5FD_mem_t type);
 H5_DLL herr_t  H5F_shared_get_file_driver(const H5F_shared_t *f_sh, H5FD_int_t **file_handle);
-H5_DLL herr_t  H5F_get_vfd_handle(const H5F_t *file, H5P_genplist_t *fapl, void **file_handle);
+H5_DLL herr_t  H5F_get_vfd_handle(const H5F_t *file, const H5P_genplist_t *fapl, void **file_handle);
 H5_DLL bool    H5F_has_vector_select_io(const H5F_t *f, bool is_write);
 
 /* File mounting routines */

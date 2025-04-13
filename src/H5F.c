@@ -439,6 +439,10 @@ H5Fget_vfd_handle(hid_t file_id, hid_t fapl_id, void **file_handle /*out*/)
     else if (true != H5P_isa_class(fapl_id, H5P_FILE_ACCESS))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not file access property list");
 
+    /* Verify access property list and set up collective metadata if appropriate */
+    if (H5CX_set_apl(&fapl_id, H5P_CLS_FACC, file_id, false) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set file access property list");
+
     /* Get the file object */
     if (NULL == (vol_obj = H5VL_vol_object_verify(file_id, H5I_FILE)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid file identifier");
@@ -485,6 +489,10 @@ H5Fis_accessible(const char *filename, hid_t fapl_id)
         fapl_id = H5P_FILE_ACCESS_DEFAULT;
     else if (true != H5P_isa_class(fapl_id, H5P_FILE_ACCESS))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not file access property list");
+
+    /* Verify access property list and set up collective metadata if appropriate */
+    if (H5CX_set_apl(&fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, true) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Set up VOL callback arguments */
     vol_cb_args.op_type                       = H5VL_FILE_IS_ACCESSIBLE;

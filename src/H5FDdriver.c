@@ -313,7 +313,7 @@ H5FD_open(bool try, H5FD_int_t **_fh, const char *name, unsigned flags, H5P_genp
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "zero format address range");
 
     /* Get the VFD to open the file with */
-    if (NULL == (driver = H5P_peek_driver(fapl)))
+    if (NULL == (driver = H5CX_peek_driver()))
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "unable to retrieve VFL driver");
     if (NULL == driver->cls->open)
         HGOTO_ERROR(H5E_VFL, H5E_UNSUPPORTED, FAIL, "file driver has no `open' method");
@@ -376,10 +376,8 @@ H5FD_open(bool try, H5FD_int_t **_fh, const char *name, unsigned flags, H5P_genp
     file->driver_id = H5I_INVALID_HID;
     file->cls     = driver->cls;
     file->maxaddr = maxaddr;
-    if (H5P_get(fapl, H5F_ACS_ALIGN_THRHD_NAME, &file->threshold) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get alignment threshold");
-    if (H5P_get(fapl, H5F_ACS_ALIGN_NAME, &file->alignment) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get alignment");
+    if (H5CX_get_alignment(&file->alignment, &file->threshold) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get alignment info");
 
     /* Increment the global serial number & assign it to this H5FD_t object */
     if (++H5FD_file_serial_no_p == 0)
@@ -737,7 +735,7 @@ done:
  *--------------------------------------------------------------------------
  */
 herr_t
-H5FD_get_vfd_handle(H5FD_int_t *fh, H5P_genplist_t *fapl, void **file_handle)
+H5FD_get_vfd_handle(H5FD_int_t *fh, const H5P_genplist_t *fapl, void **file_handle)
 {
     herr_t ret_value = SUCCEED;
 
@@ -1937,7 +1935,7 @@ H5FD_delete(const char *filename, H5P_genplist_t *fapl)
     assert(filename);
 
     /* Get the VFD to delete the file with */
-    if (NULL == (driver = H5P_peek_driver(fapl)))
+    if (NULL == (driver = H5CX_peek_driver()))
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "unable to retrieve VFL driver");
     if (NULL == driver->cls->del)
         HGOTO_ERROR(H5E_VFL, H5E_UNSUPPORTED, FAIL, "file driver has no 'del' method");

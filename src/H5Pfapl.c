@@ -42,6 +42,10 @@
 
 /* Includes needed to set default VFD driver & VOL connector */
 #include "H5FDsec2_private.h"   /* sec2 VFD driver */
+#include "H5FDfamily_private.h" /* family VFD driver */
+#ifdef H5_HAVE_SUBFILING_VFD
+#include "H5FDsubfiling_private.h" /* subfiling VFD driver */
+#endif
 #include "H5VLnative_private.h" /* Native VOL connector                     */
 
 /****************/
@@ -126,10 +130,8 @@
 #define H5F_ACS_FAMILY_OFFSET_DEF  0
 #define H5F_ACS_FAMILY_OFFSET_ENC  H5P__encode_hsize_t
 #define H5F_ACS_FAMILY_OFFSET_DEC  H5P__decode_hsize_t
-/* Definition for new member size of family driver. It's private
- * property only used by h5repart */
+/* Definition for new member size of family driver. It's a private property only used by h5repart */
 #define H5F_ACS_FAMILY_NEWSIZE_SIZE sizeof(hsize_t)
-#define H5F_ACS_FAMILY_NEWSIZE_DEF  0
 /* Definition for whether to convert family to a single-file driver.
  * It's a private property only used by h5repart.
  */
@@ -140,6 +142,18 @@
 #define H5F_ACS_MULTI_TYPE_DEF  H5FD_MEM_DEFAULT
 #define H5F_ACS_MULTI_TYPE_ENC  H5P__facc_multi_type_enc
 #define H5F_ACS_MULTI_TYPE_DEC  H5P__facc_multi_type_dec
+#ifdef H5_HAVE_SUBFILING_VFD
+/* Private properties for subfiling & IOC VFDs */
+
+/* Property that the Subfiling VFD uses to pass its configuration down to the
+ * underlying IOC VFD
+ */
+#define H5F_ACS_SUBFILING_CONFIG_PROP_SIZE sizeof(H5FD_subfiling_params_t)
+#define H5F_ACS_SUBFILING_CONFIG_PROP_DEF \
+    { \
+        SELECT_IOC_ONE_PER_NODE, H5FD_SUBFILING_DEFAULT_STRIPE_SIZE, H5FD_SUBFILING_DEFAULT_STRIPE_COUNT \
+    }
+#endif
 
 /* Definition for "low" bound of library format versions */
 #define H5F_ACS_LIBVER_LOW_BOUND_SIZE sizeof(H5F_libver_t)
@@ -153,11 +167,6 @@
 #define H5F_ACS_LIBVER_HIGH_BOUND_ENC  H5P__facc_libver_type_enc
 #define H5F_ACS_LIBVER_HIGH_BOUND_DEC  H5P__facc_libver_type_dec
 
-/* Definition for whether to query the file descriptor from the core VFD
- * instead of the memory address.  (Private to library)
- */
-#define H5F_ACS_WANT_POSIX_FD_SIZE sizeof(bool)
-#define H5F_ACS_WANT_POSIX_FD_DEF  false
 /* Definition for external file cache size */
 #define H5F_ACS_EFC_SIZE_SIZE sizeof(unsigned)
 #define H5F_ACS_EFC_SIZE_DEF  0
@@ -460,14 +469,16 @@ static const hsize_t H5F_def_family_newsize_g =
 static const bool H5F_def_family_to_single_g = H5F_ACS_FAMILY_TO_SINGLE_DEF; /* Default ?? for family VFD */
 static const H5FD_mem_t H5F_def_mem_type_g =
     H5F_ACS_MULTI_TYPE_DEF; /* Default file space type for multi VFD */
+#ifdef H5_HAVE_SUBFILING_VFD
+static const H5FD_subfiling_params_t H5F_def_subfiling_config_g =
+    H5F_ACS_SUBFILING_CONFIG_PROP_DEF; /* Default configuration for subfiling VFD */
+#endif
 
 static const H5F_libver_t H5F_def_libver_low_bound_g =
     H5F_ACS_LIBVER_LOW_BOUND_DEF; /* Default setting for "low" bound of format version */
 static const H5F_libver_t H5F_def_libver_high_bound_g =
     H5F_ACS_LIBVER_HIGH_BOUND_DEF; /* Default setting for "high" bound of format version */
 
-static const bool H5F_def_want_posix_fd_g =
-    H5F_ACS_WANT_POSIX_FD_DEF; /* Default setting for retrieving 'handle' from core VFD */
 static const unsigned H5F_def_efc_size_g = H5F_ACS_EFC_SIZE_DEF; /* Default external file cache size */
 static const H5FD_file_image_info_t H5F_def_file_image_info_g =
     H5F_ACS_FILE_IMAGE_INFO_DEF; /* Default file image info and callbacks */
@@ -631,6 +642,14 @@ H5P__facc_reg_prop(H5P_genclass_t *pclass)
                            NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class");
 
+#ifdef H5_HAVE_SUBFILING_VFD
+    /* Register the subfiling VFD configuration info */
+    /* (Note: this property should not have an encode/decode callback -QAK) */
+    if (H5P__register_real(pclass, H5F_ACS_SUBFILING_CONFIG_PROP_NAME, H5F_ACS_SUBFILING_CONFIG_PROP_SIZE,
+                           &H5F_def_subfiling_config_g, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class");
+#endif
+
     /* Register the 'low' bound of library format versions */
     if (H5P__register_real(pclass, H5F_ACS_LIBVER_LOW_BOUND_NAME, H5F_ACS_LIBVER_LOW_BOUND_SIZE,
                            &H5F_def_libver_low_bound_g, NULL, NULL, NULL, H5F_ACS_LIBVER_LOW_BOUND_ENC,
@@ -641,14 +660,6 @@ H5P__facc_reg_prop(H5P_genclass_t *pclass)
     if (H5P__register_real(pclass, H5F_ACS_LIBVER_HIGH_BOUND_NAME, H5F_ACS_LIBVER_HIGH_BOUND_SIZE,
                            &H5F_def_libver_high_bound_g, NULL, NULL, NULL, H5F_ACS_LIBVER_HIGH_BOUND_ENC,
                            H5F_ACS_LIBVER_HIGH_BOUND_DEC, NULL, NULL, NULL, NULL) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class");
-
-    /* Register the private property of whether to retrieve the file descriptor from the core VFD */
-    /* (used internally to the library only) */
-    /* (Note: this property should not have an encode/decode callback -QAK) */
-    if (H5P__register_real(pclass, H5F_ACS_WANT_POSIX_FD_NAME, H5F_ACS_WANT_POSIX_FD_SIZE,
-                           &H5F_def_want_posix_fd_g, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-                           NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class");
 
     /* Register the external file cache size */
@@ -4779,23 +4790,23 @@ H5P__decode_coll_md_read_flag_t(const void **_pp, void *_value)
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pset_all_coll_metadata_ops(hid_t fapl_id, hbool_t is_collective)
+H5Pset_all_coll_metadata_ops(hid_t apl_id, hbool_t is_collective)
 {
-    H5P_genplist_t         *fapl;                /* Property list pointer */
+    H5P_genplist_t         *apl;                /* Property list pointer */
     H5P_coll_md_read_flag_t coll_meta_read;      /* Property value */
     herr_t                  ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5I_object_verify(fapl_id, H5I_GENPROP_LST)))
+    if (NULL == (apl = H5I_object_verify(apl_id, H5I_GENPROP_LST)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
 
     /* Compare the property list's class against the other class */
     /* (Dataset, group, attribute, and named datatype access property lists
      *  are sub-classes of link access property lists -QAK)
      */
-    if (true != H5P_isa_type(fapl, H5P_TYPE_LINK_ACCESS) && true != H5P_isa_type(fapl, H5P_TYPE_FILE_ACCESS))
+    if (true != H5P_isa_type(apl, H5P_TYPE_LINK_ACCESS) && true != H5P_isa_type(apl, H5P_TYPE_FILE_ACCESS))
         HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, FAIL, "property list is not an access property list");
 
     /* set property to either true if > 0, or false otherwise */
@@ -4805,7 +4816,7 @@ H5Pset_all_coll_metadata_ops(hid_t fapl_id, hbool_t is_collective)
         coll_meta_read = H5P_USER_FALSE;
 
     /* Set values */
-    if (H5P_set(fapl, H5_COLL_MD_READ_FLAG_NAME, &coll_meta_read) < 0)
+    if (H5P_set(apl, H5_COLL_MD_READ_FLAG_NAME, &coll_meta_read) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set collective metadata read flag");
 
 done:
@@ -4827,22 +4838,22 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pget_all_coll_metadata_ops(hid_t fapl_id, hbool_t *is_collective /*out*/)
+H5Pget_all_coll_metadata_ops(hid_t apl_id, hbool_t *is_collective /*out*/)
 {
-    H5P_genplist_t *fapl;                /* Property list pointer */
+    H5P_genplist_t *apl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5I_object_verify(fapl_id, H5I_GENPROP_LST)))
+    if (NULL == (apl = H5I_object_verify(apl_id, H5I_GENPROP_LST)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
 
     /* Compare the property list's class against the other class */
     /* (Dataset, group, attribute, and named datatype access property lists
      *  are sub-classes of link access property lists -QAK)
      */
-    if (true != H5P_isa_type(fapl, H5P_TYPE_LINK_ACCESS) && true != H5P_isa_type(fapl, H5P_TYPE_FILE_ACCESS))
+    if (true != H5P_isa_type(apl, H5P_TYPE_LINK_ACCESS) && true != H5P_isa_type(apl, H5P_TYPE_FILE_ACCESS))
         HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, FAIL, "property list is not an access property list");
 
     /* Get value */
@@ -4850,7 +4861,7 @@ H5Pget_all_coll_metadata_ops(hid_t fapl_id, hbool_t *is_collective /*out*/)
         H5P_coll_md_read_flag_t
             internal_flag; /* property setting. we need to convert to either true or false */
 
-        if (H5P_get(fapl, H5_COLL_MD_READ_FLAG_NAME, &internal_flag) < 0)
+        if (H5P_get(apl, H5_COLL_MD_READ_FLAG_NAME, &internal_flag) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get core collective metadata read flag");
 
         if (internal_flag < 0)
