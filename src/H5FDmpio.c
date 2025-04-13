@@ -3814,11 +3814,11 @@ done:
 static herr_t
 H5FD__mpio_delete(const char *filename, hid_t H5_ATTR_UNUSED fapl_id)
 {
-    MPI_Comm        comm     = MPI_COMM_NULL;
-    MPI_Info        info     = MPI_INFO_NULL;
-    int             mpi_rank = INT_MAX;
-    int             mpi_code;            /* MPI return code */
-    herr_t          ret_value = SUCCEED; /* Return value */
+    MPI_Comm comm     = MPI_COMM_NULL;
+    MPI_Info info     = MPI_INFO_NULL;
+    int      mpi_rank = INT_MAX;
+    int      mpi_code;            /* MPI return code */
+    herr_t   ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 

@@ -652,8 +652,8 @@ done:
 herr_t
 H5Pget_fapl_hdfs(hid_t fapl_id, H5FD_hdfs_fapl_t *fa_dst /*out*/)
 {
-    H5P_genplist_t         *fapl      = NULL;
-    herr_t                  ret_value = SUCCEED;
+    H5P_genplist_t *fapl      = NULL;
+    herr_t          ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
 
@@ -752,9 +752,9 @@ done:
 static H5FD_t *
 H5FD__hdfs_open(const char *path, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
 {
-    H5FD_hdfs_t     *file      = NULL;
-    H5P_genplist_t *fapl;
-    hdfs_t          *handle    = NULL;
+    H5FD_hdfs_t     *file = NULL;
+    H5P_genplist_t  *fapl;
+    hdfs_t          *handle = NULL;
     H5FD_hdfs_fapl_t fa;
     H5FD_t          *ret_value = NULL;
 

@@ -149,9 +149,9 @@
  * underlying IOC VFD
  */
 #define H5F_ACS_SUBFILING_CONFIG_PROP_SIZE sizeof(H5FD_subfiling_params_t)
-#define H5F_ACS_SUBFILING_CONFIG_PROP_DEF \
-    { \
-        SELECT_IOC_ONE_PER_NODE, H5FD_SUBFILING_DEFAULT_STRIPE_SIZE, H5FD_SUBFILING_DEFAULT_STRIPE_COUNT \
+#define H5F_ACS_SUBFILING_CONFIG_PROP_DEF                                                                    \
+    {                                                                                                        \
+        SELECT_IOC_ONE_PER_NODE, H5FD_SUBFILING_DEFAULT_STRIPE_SIZE, H5FD_SUBFILING_DEFAULT_STRIPE_COUNT     \
     }
 #endif
 
@@ -646,7 +646,8 @@ H5P__facc_reg_prop(H5P_genclass_t *pclass)
     /* Register the subfiling VFD configuration info */
     /* (Note: this property should not have an encode/decode callback -QAK) */
     if (H5P__register_real(pclass, H5F_ACS_SUBFILING_CONFIG_PROP_NAME, H5F_ACS_SUBFILING_CONFIG_PROP_SIZE,
-                           &H5F_def_subfiling_config_g, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
+                           &H5F_def_subfiling_config_g, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                           NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class");
 #endif
 
@@ -4792,7 +4793,7 @@ H5P__decode_coll_md_read_flag_t(const void **_pp, void *_value)
 herr_t
 H5Pset_all_coll_metadata_ops(hid_t apl_id, hbool_t is_collective)
 {
-    H5P_genplist_t         *apl;                /* Property list pointer */
+    H5P_genplist_t         *apl;                 /* Property list pointer */
     H5P_coll_md_read_flag_t coll_meta_read;      /* Property value */
     herr_t                  ret_value = SUCCEED; /* return value */
 
@@ -4840,7 +4841,7 @@ done:
 herr_t
 H5Pget_all_coll_metadata_ops(hid_t apl_id, hbool_t *is_collective /*out*/)
 {
-    H5P_genplist_t *apl;                /* Property list pointer */
+    H5P_genplist_t *apl;                 /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)

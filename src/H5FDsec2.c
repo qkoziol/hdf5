@@ -21,14 +21,14 @@
 
 #include "H5FDmodule.h" /* This source code file is part of the H5FD module */
 
-#include "H5private.h"   /* Generic Functions        */
-#include "H5Eprivate.h"  /* Error handling           */
-#include "H5Fprivate.h"  /* File access              */
-#include "H5FDpkg.h"     /* File drivers             */
-#include "H5FDsec2_private.h"    /* sec2 file driver         */
-#include "H5FLprivate.h" /* Free Lists               */
-#include "H5Iprivate.h"  /* IDs                      */
-#include "H5Pprivate.h"  /* Property lists           */
+#include "H5private.h"        /* Generic Functions        */
+#include "H5Eprivate.h"       /* Error handling           */
+#include "H5Fprivate.h"       /* File access              */
+#include "H5FDpkg.h"          /* File drivers             */
+#include "H5FDsec2_private.h" /* sec2 file driver         */
+#include "H5FLprivate.h"      /* Free Lists               */
+#include "H5Iprivate.h"       /* IDs                      */
+#include "H5Pprivate.h"       /* Property lists           */
 
 /* The driver identification number, initialized at runtime */
 hid_t          H5FD_SEC2_id_g     = H5I_INVALID_HID;
@@ -265,8 +265,8 @@ H5FD__sec2_open(const char *name, unsigned flags, hid_t H5_ATTR_UNUSED fapl_id, 
 #ifdef H5_HAVE_WIN32_API
     struct _BY_HANDLE_FILE_INFORMATION fileinfo;
 #endif
-    h5_stat_t       sb;
-    H5FD_t         *ret_value = NULL; /* Return value */
+    h5_stat_t sb;
+    H5FD_t   *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE
 

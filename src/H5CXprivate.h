@@ -135,7 +135,7 @@ typedef struct H5CX_t {
 
     /* Internal: Metadata cache info */
     H5AC_ring_t ring; /* Current metadata cache ring for entries */
-    
+
     /* Internal: Want POSIX file descriptor from core VFD*/
     bool want_posix_fd; /* Whether to want the POSIX file descriptor from get_vfd_handle call to core VFD */
 
@@ -147,9 +147,9 @@ typedef struct H5CX_t {
     bool         mpi_file_flushing;  /* Whether an MPI-opened file is being flushed */
     bool         rank0_bcast;        /* Whether a dataset meets read-with-rank0-and-bcast requirements */
 #ifdef H5_HAVE_SUBFILING_VFD
-    uint64_t     sf_stub_file_id;    /* Stub file ID for subfiling/IOC VFDs */
-#endif                               /* H5_HAVE_SUBFILING_VFD */
-#endif                               /* H5_HAVE_PARALLEL */
+    uint64_t sf_stub_file_id; /* Stub file ID for subfiling/IOC VFDs */
+#endif                        /* H5_HAVE_SUBFILING_VFD */
+#endif                        /* H5_HAVE_PARALLEL */
 
     /* Cached DXPL properties */
     size_t    max_temp_buf;         /* Maximum temporary buffer size (H5D_XFER_MAX_TEMP_BUF_NAME) .*/
@@ -214,8 +214,9 @@ typedef struct H5CX_t {
 
     /* Cached LAPL properties */
 #ifdef H5_HAVE_PARALLEL
-    H5P_coll_md_read_flag_t lapl_coll_md_read; /* Property for collective metadata read (H5_COLL_MD_READ_FLAG_NAME) */
-#endif                 /* H5_HAVE_PARALLEL */
+    H5P_coll_md_read_flag_t
+        lapl_coll_md_read;    /* Property for collective metadata read (H5_COLL_MD_READ_FLAG_NAME) */
+#endif                        /* H5_HAVE_PARALLEL */
     const char *elink_prefix; /* Prefix for external link prefix (H5L_ACS_ELINK_PREFIX_NAME) */
     size_t      nlinks;       /* Number of soft / UD links to traverse (H5L_ACS_NLINKS_NAME) */
 
@@ -245,11 +246,13 @@ typedef struct H5CX_t {
 #ifdef H5_HAVE_PARALLEL
     MPI_Comm mpi_comm; /* MPI communicator (H5F_ACS_MPI_COMM_NAME) */
     MPI_Info mpi_info; /* MPI info (H5F_ACS_MPI_INFO_NAME) */
-    H5P_coll_md_read_flag_t fapl_coll_md_read; /* Property for collective metadata read (H5_COLL_MD_READ_FLAG_NAME) */
-    bool coll_md_write; /* Property for collective metadata write (H5F_ACS_COLL_MD_WRITE_FLAG_NAME) */
+    H5P_coll_md_read_flag_t
+         fapl_coll_md_read; /* Property for collective metadata read (H5_COLL_MD_READ_FLAG_NAME) */
+    bool coll_md_write;     /* Property for collective metadata write (H5F_ACS_COLL_MD_WRITE_FLAG_NAME) */
 #ifdef H5_HAVE_SUBFILING_VFD
-    H5FD_subfiling_params_t sf_ioc_params; /* Property for subfiling IOC parameters (H5F_ACS_SUBFILING_CONFIG_PROP_NAME) */
-#endif /* H5_HAVE_SUBFILING_VFD */
+    H5FD_subfiling_params_t
+        sf_ioc_params; /* Property for subfiling IOC parameters (H5F_ACS_SUBFILING_CONFIG_PROP_NAME) */
+#endif                 /* H5_HAVE_SUBFILING_VFD */
 #endif                 /* H5_HAVE_PARALLEL */
     H5VL_connector_prop_t
         vol_connector_prop; /* Property for VOL connector ID & info (H5F_ACS_VOL_CONN_NAME) */
@@ -259,38 +262,49 @@ typedef struct H5CX_t {
     H5F_libver_t
         low_bound; /* low_bound property for H5Pset_libver_bounds() (H5F_ACS_LIBVER_LOW_BOUND_NAME) */
     H5F_libver_t
-        high_bound; /* high_bound property for H5Pset_libver_bounds (H5F_ACS_LIBVER_HIGH_BOUND_NAME) */
+         high_bound;       /* high_bound property for H5Pset_libver_bounds (H5F_ACS_LIBVER_HIGH_BOUND_NAME) */
     bool use_file_locking; /* Property to use file locking (H5F_ACS_USE_FILE_LOCKING_NAME) */
-    bool ignore_disabled_locks; /* Property to ignore disabled file locks (H5F_ACS_IGNORE_DISABLED_FILE_LOCKS_NAME) */
-    hsize_t align_bound; /* alignment property (H5F_ACS_ALIGNMENT_NAME) */
-    hsize_t align_threshold; /* alignment threshold property (H5F_ACS_ALIGN_THRHD_NAME) */
-    bool clear_status_flags; /* Private property used by h5clear (H5F_ACS_CLEAR_STATUS_FLAGS_NAME) */
+    bool ignore_disabled_locks;  /* Property to ignore disabled file locks
+                                    (H5F_ACS_IGNORE_DISABLED_FILE_LOCKS_NAME) */
+    hsize_t  align_bound;        /* alignment property (H5F_ACS_ALIGNMENT_NAME) */
+    hsize_t  align_threshold;    /* alignment threshold property (H5F_ACS_ALIGN_THRHD_NAME) */
+    bool     clear_status_flags; /* Private property used by h5clear (H5F_ACS_CLEAR_STATUS_FLAGS_NAME) */
     unsigned gc_ref; /* Property for garbage collection of references (H5F_ACS_GARBG_COLCT_REF_NAME) */
-    bool use_mdc_logging; /* Property for metadata cache logging enabled (H5F_ACS_USE_MDC_LOGGING_NAME) */
-    char *mdc_log_location; /* Property for metadata cache log location (H5F_ACS_MDC_LOG_LOCATION_NAME) */
-    bool start_mdc_logging_on_access; /* Property for starting metadata cache logging on access (H5F_ACS_START_MDC_LOG_ON_ACCESS_NAME) */
-    unsigned mdc_read_attempts; /* Property for metadata cache read attempts (H5F_ACS_METADATA_READ_ATTEMPTS_NAME) */
-    hsize_t meta_alloc_block_size; /* Property for metadata allocation block size (H5F_ACS_META_BLOCK_SIZE_NAME) */
-    H5AC_cache_config_t mdc_init_config; /* Property for metadata cache initialization configuration (H5F_ACS_META_CACHE_INIT_CONFIG_NAME) */
-    H5AC_cache_image_config_t mdc_image_config; /* Property for metadata cache image initial configuration (H5F_ACS_META_CACHE_INIT_IMAGE_CONFIG_NAME) */
-    H5F_object_flush_t object_flush_strategy; /* Property for object flush strategy (H5F_ACS_OBJECT_FLUSH_CB_NAME) */
-    size_t pb_size; /* Property for page buffer size (H5F_ACS_PAGE_BUFFER_SIZE_NAME) */
-    unsigned pb_min_meta_perc; /* Property for minimum metadata percentage (H5F_ACS_PAGE_BUFFER_MIN_META_PERC_NAME) */
-    unsigned pb_min_raw_perc; /* Property for minimum raw percentage (H5F_ACS_PAGE_BUFFER_MIN_RAW_PERC_NAME) */
-    size_t rdcc_nbytes; /* Property for size of the raw data cache (H5F_ACS_DATA_CACHE_BYTE_SIZE_NAME) */
-    size_t rdcc_nslots; /* Property for number of slots in the raw data cache (H5F_ACS_DATA_CACHE_NUM_SLOTS_NAME) */
-    double rdcc_w0; /* Property for chunk cache preemption factor (H5F_ACS_PREEMPT_READ_CHUNKS_NAME) */
+    bool     use_mdc_logging; /* Property for metadata cache logging enabled (H5F_ACS_USE_MDC_LOGGING_NAME) */
+    char    *mdc_log_location; /* Property for metadata cache log location (H5F_ACS_MDC_LOG_LOCATION_NAME) */
+    bool     start_mdc_logging_on_access;       /* Property for starting metadata cache logging on access
+                                                   (H5F_ACS_START_MDC_LOG_ON_ACCESS_NAME) */
+    unsigned mdc_read_attempts;                 /* Property for metadata cache read attempts
+                                                   (H5F_ACS_METADATA_READ_ATTEMPTS_NAME) */
+    hsize_t meta_alloc_block_size;              /* Property for metadata allocation block size
+                                                   (H5F_ACS_META_BLOCK_SIZE_NAME) */
+    H5AC_cache_config_t mdc_init_config;        /* Property for metadata cache initialization configuration
+                                                   (H5F_ACS_META_CACHE_INIT_CONFIG_NAME) */
+    H5AC_cache_image_config_t mdc_image_config; /* Property for metadata cache image initial configuration
+                                                   (H5F_ACS_META_CACHE_INIT_IMAGE_CONFIG_NAME) */
+    H5F_object_flush_t
+             object_flush_strategy; /* Property for object flush strategy (H5F_ACS_OBJECT_FLUSH_CB_NAME) */
+    size_t   pb_size;               /* Property for page buffer size (H5F_ACS_PAGE_BUFFER_SIZE_NAME) */
+    unsigned pb_min_meta_perc;      /* Property for minimum metadata percentage
+                                       (H5F_ACS_PAGE_BUFFER_MIN_META_PERC_NAME) */
+    unsigned
+           pb_min_raw_perc; /* Property for minimum raw percentage (H5F_ACS_PAGE_BUFFER_MIN_RAW_PERC_NAME) */
+    size_t rdcc_nbytes;     /* Property for size of the raw data cache (H5F_ACS_DATA_CACHE_BYTE_SIZE_NAME) */
+    size_t rdcc_nslots;     /* Property for number of slots in the raw data cache
+                               (H5F_ACS_DATA_CACHE_NUM_SLOTS_NAME) */
+    double   rdcc_w0;  /* Property for chunk cache preemption factor (H5F_ACS_PREEMPT_READ_CHUNKS_NAME) */
     unsigned efc_size; /* Property for size of the external file cache (H5F_ACS_EFC_SIZE_NAME) */
-    H5F_close_degree_t close_degree; /* Property for file close degree (H5F_ACS_CLOSE_DEGREE_NAME) */
-    bool evict_on_close; /* Property for evicting an object's metadata on close (H5F_ACS_EVICT_ON_CLOSE_FLAG_NAME) */
-    uint64_t rfic_flags; /* Property for relaxed file integrity checks (H5F_ACS_RFIC_FLAGS_NAME) */
-    hsize_t sdata_block_size; /* Property for "small" raw data block size (H5F_ACS_SDATA_BLOCK_SIZE_NAME) */
-    size_t sieve_buf_size; /* Property for sieve buffer size (H5F_ACS_SIEVE_BUF_SIZE_NAME) */
-    bool null_fsm_addr; /* Property for null file space map address (H5F_ACS_NULL_FSM_ADDR_NAME) */
-    bool skip_eof_check; /* Property for skipping EOF check (H5F_ACS_SKIP_EOF_CHECK_NAME) */
-    bool fam_to_single; /* Property for converting family to single file (H5F_ACS_FAMILY_TO_SINGLE_NAME) */
-    hsize_t fam_offset; /* Property for family offset (H5F_ACS_FAMILY_OFFSET_NAME) */
-    hsize_t fam_newsize; /* Property for size of new family file (H5F_ACS_FAMILY_NEWSIZE_NAME) */
+    H5F_close_degree_t close_degree;   /* Property for file close degree (H5F_ACS_CLOSE_DEGREE_NAME) */
+    bool               evict_on_close; /* Property for evicting an object's metadata on close
+                                          (H5F_ACS_EVICT_ON_CLOSE_FLAG_NAME) */
+    uint64_t rfic_flags;       /* Property for relaxed file integrity checks (H5F_ACS_RFIC_FLAGS_NAME) */
+    hsize_t  sdata_block_size; /* Property for "small" raw data block size (H5F_ACS_SDATA_BLOCK_SIZE_NAME) */
+    size_t   sieve_buf_size;   /* Property for sieve buffer size (H5F_ACS_SIEVE_BUF_SIZE_NAME) */
+    bool     null_fsm_addr;    /* Property for null file space map address (H5F_ACS_NULL_FSM_ADDR_NAME) */
+    bool     skip_eof_check;   /* Property for skipping EOF check (H5F_ACS_SKIP_EOF_CHECK_NAME) */
+    bool    fam_to_single; /* Property for converting family to single file (H5F_ACS_FAMILY_TO_SINGLE_NAME) */
+    hsize_t fam_offset;    /* Property for family offset (H5F_ACS_FAMILY_OFFSET_NAME) */
+    hsize_t fam_newsize;   /* Property for size of new family file (H5F_ACS_FAMILY_NEWSIZE_NAME) */
 
     /* Cached VOL settings */
     void *vol_wrap_ctx; /* VOL connector's "wrap context" for creating IDs */
@@ -360,9 +374,9 @@ typedef struct H5CX_t {
     /* Cached LAPL properties */
 #ifdef H5_HAVE_PARALLEL
     bool lapl_coll_md_read_valid : 1; /* Whether collective metadata read property is valid */
-#endif                                 /* H5_HAVE_PARALLEL */
-    bool elink_prefix_valid : 1; /* Whether the prefix for external link prefix is valid */
-    bool nlinks_valid : 1;       /* Whether number of soft / UD links to traverse is valid */
+#endif                                /* H5_HAVE_PARALLEL */
+    bool elink_prefix_valid : 1;      /* Whether the prefix for external link prefix is valid */
+    bool nlinks_valid : 1;            /* Whether number of soft / UD links to traverse is valid */
 
     /* Cached OCPL properties */
 #ifdef H5O_ENABLE_BAD_MESG_COUNT
@@ -389,13 +403,13 @@ typedef struct H5CX_t {
 
     /* Cached FAPL properties */
 #ifdef H5_HAVE_PARALLEL
-    bool mpi_comm_valid : 1;           /* Whether the MPI communicator is valid */
+    bool mpi_comm_valid : 1;          /* Whether the MPI communicator is valid */
     bool mpi_info_valid : 1;          /* Whether the MPI info object is valid */
     bool fapl_coll_md_read_valid : 1; /* Whether collective metadata read property is valid */
-    bool coll_md_write_valid : 1; /* Whether collective metadata write property is valid */
+    bool coll_md_write_valid : 1;     /* Whether collective metadata write property is valid */
 #ifdef H5_HAVE_SUBFILING_VFD
-    bool sf_ioc_params_valid : 1; /* Whether subfiling IOC parameters property is valid */
-#endif /* H5_HAVE_SUBFILING_VFD */
+    bool sf_ioc_params_valid : 1;      /* Whether subfiling IOC parameters property is valid */
+#endif                                 /* H5_HAVE_SUBFILING_VFD */
 #endif                                 /* H5_HAVE_PARALLEL */
     bool vol_connector_prop_valid : 1; /* Whether property for VOL connector ID & info is valid */
     bool driver_prop_valid : 1;        /* Whether property for driver, info & configuration string is valid */
@@ -403,36 +417,38 @@ typedef struct H5CX_t {
     bool low_bound_valid : 1;          /* Whether low_bound property is valid */
     bool high_bound_valid : 1;         /* Whether high_bound property is valid */
     bool use_file_locking_valid : 1;   /* Whether use_file_locking property is valid */
-    bool ignore_disabled_locks_valid : 1; /* Whether ignore_disabled_locks property is valid */
-    bool align_bound_valid : 1;        /* Whether alignment bound property is valid */
-    bool align_threshold_valid : 1;    /* Whether alignment threshold property is valid */
-    bool clear_status_flags_valid : 1; /* Whether clear_status_flags property is valid */
-    bool gc_ref_valid : 1; /* Whether gc_ref property is valid */
-    bool use_mdc_logging_valid : 1; /* Whether use_mdc_logging property is valid */
-    bool mdc_log_location_valid : 1; /* Whether mdc_log_location property is valid */
+    bool ignore_disabled_locks_valid : 1;       /* Whether ignore_disabled_locks property is valid */
+    bool align_bound_valid : 1;                 /* Whether alignment bound property is valid */
+    bool align_threshold_valid : 1;             /* Whether alignment threshold property is valid */
+    bool clear_status_flags_valid : 1;          /* Whether clear_status_flags property is valid */
+    bool gc_ref_valid : 1;                      /* Whether gc_ref property is valid */
+    bool use_mdc_logging_valid : 1;             /* Whether use_mdc_logging property is valid */
+    bool mdc_log_location_valid : 1;            /* Whether mdc_log_location property is valid */
     bool start_mdc_logging_on_access_valid : 1; /* Whether start_mdc_logging_on_access property is valid */
-    bool mdc_read_attempts_valid : 1; /* Whether metadata cache read attempts property is valid */
-    bool meta_alloc_block_size_valid : 1; /* Whether metadata allocation block size property is valid */
-    bool mdc_init_config_valid : 1; /* Whether metadata cache initialization configuration property is valid */
-    bool mdc_image_config_valid : 1; /* Whether metadata cache image initial configuration property is valid */
+    bool mdc_read_attempts_valid : 1;           /* Whether metadata cache read attempts property is valid */
+    bool meta_alloc_block_size_valid : 1;       /* Whether metadata allocation block size property is valid */
+    bool
+        mdc_init_config_valid : 1; /* Whether metadata cache initialization configuration property is valid */
+    bool
+        mdc_image_config_valid : 1; /* Whether metadata cache image initial configuration property is valid */
     bool object_flush_strategy_valid : 1; /* Whether object flush strategy property is valid */
-    bool pb_size_valid : 1; /* Whether page buffer size property is valid */
-    bool pb_min_meta_perc_valid : 1; /* Whether minimum metadata percentage property is valid */
-    bool pb_min_raw_perc_valid : 1; /* Whether minimum raw percentage property is valid */
-    bool rdcc_nbytes_valid : 1; /* Whether raw data cache byte size property is valid */
-    bool rdcc_nslots_valid : 1; /* Whether raw data cache number of slots property is valid */
-    bool rdcc_w0_valid : 1; /* Whether raw data cache preemption factor property is valid */
-    bool efc_size_valid : 1; /* Whether external file cache size property is valid */
-    bool close_degree_valid : 1; /* Whether file close degree property is valid */
-    bool evict_on_close_valid : 1; /* Whether evict on close property is valid */
-    bool rfic_flags_valid : 1; /* Whether relaxed file integrity checks property is valid */
-    bool sdata_block_size_valid : 1; /* Whether "small" raw data block size property is valid */
-    bool sieve_buf_size_valid : 1; /* Whether sieve buffer size property is valid */
-    bool null_fsm_addr_valid : 1; /* Whether null file space map address property is valid */
-    bool skip_eof_check_valid : 1; /* Whether skip EOF check property is valid */
-    bool fam_to_single_valid : 1; /* Whether family to single file property is valid */
-    bool fam_offset_valid : 1; /* Whether family offset property is valid */
-    bool fam_newsize_valid : 1; /* Whether family new size property is valid */
+    bool pb_size_valid : 1;               /* Whether page buffer size property is valid */
+    bool pb_min_meta_perc_valid : 1;      /* Whether minimum metadata percentage property is valid */
+    bool pb_min_raw_perc_valid : 1;       /* Whether minimum raw percentage property is valid */
+    bool rdcc_nbytes_valid : 1;           /* Whether raw data cache byte size property is valid */
+    bool rdcc_nslots_valid : 1;           /* Whether raw data cache number of slots property is valid */
+    bool rdcc_w0_valid : 1;               /* Whether raw data cache preemption factor property is valid */
+    bool efc_size_valid : 1;              /* Whether external file cache size property is valid */
+    bool close_degree_valid : 1;          /* Whether file close degree property is valid */
+    bool evict_on_close_valid : 1;        /* Whether evict on close property is valid */
+    bool rfic_flags_valid : 1;            /* Whether relaxed file integrity checks property is valid */
+    bool sdata_block_size_valid : 1;      /* Whether "small" raw data block size property is valid */
+    bool sieve_buf_size_valid : 1;        /* Whether sieve buffer size property is valid */
+    bool null_fsm_addr_valid : 1;         /* Whether null file space map address property is valid */
+    bool skip_eof_check_valid : 1;        /* Whether skip EOF check property is valid */
+    bool fam_to_single_valid : 1;         /* Whether family to single file property is valid */
+    bool fam_offset_valid : 1;            /* Whether family offset property is valid */
+    bool fam_newsize_valid : 1;           /* Whether family new size property is valid */
 
     /* Cached VOL settings */
     bool vol_wrap_ctx_valid : 1; /* Whether VOL connector's "wrap context" for creating IDs is valid */
@@ -571,40 +587,40 @@ H5_DLL herr_t H5CX_get_coll_md_write(bool *coll_md_write);
 H5_DLL herr_t H5CX_get_sf_ioc_params(H5FD_subfiling_params_t *sf_ioc_params);
 #endif /* H5_HAVE_SUBFILING_VFD */
 #endif /* H5_HAVE_PARALLEL */
-H5_DLL herr_t H5CX_peek_vol_connector_prop(H5VL_connector_prop_t *vol_connector_prop);
-H5_DLL herr_t H5CX_peek_driver_prop(H5FD_driver_prop_t *driver_prop);
+H5_DLL herr_t         H5CX_peek_vol_connector_prop(H5VL_connector_prop_t *vol_connector_prop);
+H5_DLL herr_t         H5CX_peek_driver_prop(H5FD_driver_prop_t *driver_prop);
 H5_DLL H5FD_driver_t *H5CX_peek_driver(void);
-H5_DLL const void *H5CX_peek_driver_info(void);
-H5_DLL const char *H5CX_peek_driver_config_str(void);
-H5_DLL herr_t H5CX_peek_file_image_info(H5FD_file_image_info_t *file_image_info);
-H5_DLL herr_t H5CX_get_libver_bounds(H5F_libver_t *low_bound, H5F_libver_t *high_bound);
-H5_DLL herr_t H5CX_get_use_file_locking(bool *use_file_locking);
-H5_DLL herr_t H5CX_get_ignore_disabled_locks(bool *ignore_disabled_locks);
-H5_DLL herr_t H5CX_get_alignment(hsize_t *align_bound, hsize_t *align_threshold);
-H5_DLL herr_t H5CX_test_get_clear_status_flags(bool *clear_status_flags);
-H5_DLL herr_t H5CX_get_gc_ref(unsigned *gc_ref);
-H5_DLL herr_t H5CX_get_use_mdc_logging(bool *use_mdc_logging);
-H5_DLL herr_t H5CX_peek_mdc_log_location(char **mdc_log_location);
-H5_DLL herr_t H5CX_get_start_mdc_logging_on_access(bool *start_mdc_logging_on_access);
-H5_DLL herr_t H5CX_get_metadata_read_attempts(unsigned *mdc_read_attempts);
-H5_DLL herr_t H5CX_get_meta_alloc_block_size(hsize_t *meta_alloc_block_size);
-H5_DLL herr_t H5CX_get_mdc_init_config(H5AC_cache_config_t *mdc_init_config);
-H5_DLL herr_t H5CX_get_mdc_image_config(H5AC_cache_image_config_t *mdc_image_config);
-H5_DLL herr_t H5CX_get_object_flush_strategy(H5F_object_flush_t *object_flush_strategy);
-H5_DLL herr_t H5CX_get_page_buffer_size(size_t *page_buf_size);
-H5_DLL herr_t H5CX_get_page_buffer_percs(unsigned *min_meta_perc, unsigned *min_raw_perc);
-H5_DLL herr_t H5CX_get_rdcc_info(size_t *nslots, size_t *nbytes, double *w0);
-H5_DLL herr_t H5CX_get_efc_size(unsigned *efc_size);
-H5_DLL herr_t H5CX_get_close_degree(H5F_close_degree_t *close_degree);
-H5_DLL herr_t H5CX_get_evict_on_close(bool *evict_on_close);
-H5_DLL herr_t H5CX_get_rfic_flags(uint64_t *rfic_flags);
-H5_DLL herr_t H5CX_get_sdata_block_size(hsize_t *sdata_block_size);
-H5_DLL herr_t H5CX_get_sieve_buf_size(size_t *sieve_buf_size);
-H5_DLL herr_t H5CX_get_null_fsm_addr(bool *null_fsm_addr);
-H5_DLL herr_t H5CX_get_skip_eof_check(bool *skip_eof_check);
-H5_DLL herr_t H5CX_get_family_to_single(bool *fam_to_single);
-H5_DLL herr_t H5CX_get_family_offset(hsize_t *fam_offset);
-H5_DLL herr_t H5CX_get_family_newsize(hsize_t *fam_newsize);
+H5_DLL const void    *H5CX_peek_driver_info(void);
+H5_DLL const char    *H5CX_peek_driver_config_str(void);
+H5_DLL herr_t         H5CX_peek_file_image_info(H5FD_file_image_info_t *file_image_info);
+H5_DLL herr_t         H5CX_get_libver_bounds(H5F_libver_t *low_bound, H5F_libver_t *high_bound);
+H5_DLL herr_t         H5CX_get_use_file_locking(bool *use_file_locking);
+H5_DLL herr_t         H5CX_get_ignore_disabled_locks(bool *ignore_disabled_locks);
+H5_DLL herr_t         H5CX_get_alignment(hsize_t *align_bound, hsize_t *align_threshold);
+H5_DLL herr_t         H5CX_test_get_clear_status_flags(bool *clear_status_flags);
+H5_DLL herr_t         H5CX_get_gc_ref(unsigned *gc_ref);
+H5_DLL herr_t         H5CX_get_use_mdc_logging(bool *use_mdc_logging);
+H5_DLL herr_t         H5CX_peek_mdc_log_location(char **mdc_log_location);
+H5_DLL herr_t         H5CX_get_start_mdc_logging_on_access(bool *start_mdc_logging_on_access);
+H5_DLL herr_t         H5CX_get_metadata_read_attempts(unsigned *mdc_read_attempts);
+H5_DLL herr_t         H5CX_get_meta_alloc_block_size(hsize_t *meta_alloc_block_size);
+H5_DLL herr_t         H5CX_get_mdc_init_config(H5AC_cache_config_t *mdc_init_config);
+H5_DLL herr_t         H5CX_get_mdc_image_config(H5AC_cache_image_config_t *mdc_image_config);
+H5_DLL herr_t         H5CX_get_object_flush_strategy(H5F_object_flush_t *object_flush_strategy);
+H5_DLL herr_t         H5CX_get_page_buffer_size(size_t *page_buf_size);
+H5_DLL herr_t         H5CX_get_page_buffer_percs(unsigned *min_meta_perc, unsigned *min_raw_perc);
+H5_DLL herr_t         H5CX_get_rdcc_info(size_t *nslots, size_t *nbytes, double *w0);
+H5_DLL herr_t         H5CX_get_efc_size(unsigned *efc_size);
+H5_DLL herr_t         H5CX_get_close_degree(H5F_close_degree_t *close_degree);
+H5_DLL herr_t         H5CX_get_evict_on_close(bool *evict_on_close);
+H5_DLL herr_t         H5CX_get_rfic_flags(uint64_t *rfic_flags);
+H5_DLL herr_t         H5CX_get_sdata_block_size(hsize_t *sdata_block_size);
+H5_DLL herr_t         H5CX_get_sieve_buf_size(size_t *sieve_buf_size);
+H5_DLL herr_t         H5CX_get_null_fsm_addr(bool *null_fsm_addr);
+H5_DLL herr_t         H5CX_get_skip_eof_check(bool *skip_eof_check);
+H5_DLL herr_t         H5CX_get_family_to_single(bool *fam_to_single);
+H5_DLL herr_t         H5CX_get_family_offset(hsize_t *fam_offset);
+H5_DLL herr_t         H5CX_get_family_newsize(hsize_t *fam_newsize);
 
 /* "Setter" routines for API context info */
 H5_DLL void H5CX_set_tag(haddr_t tag);
@@ -617,7 +633,7 @@ H5_DLL herr_t H5CX_set_mpio_coll_opt(H5FD_mpio_collective_opt_t mpio_coll_opt);
 H5_DLL void   H5CX_set_mpi_file_flushing(bool flushing);
 H5_DLL void   H5CX_set_mpio_rank0_bcast(bool rank0_bcast);
 #ifdef H5_HAVE_SUBFILING_VFD
-H5_DLL void   H5CX_set_sf_stub_file_id(uint64_t sf_stub_file_id);
+H5_DLL void H5CX_set_sf_stub_file_id(uint64_t sf_stub_file_id);
 #endif /* H5_HAVE_SUBFILING_VFD */
 #endif /* H5_HAVE_PARALLEL */
 

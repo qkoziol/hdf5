@@ -16,12 +16,12 @@
 
 #include "H5FDmodule.h" /* This source code file is part of the H5FD module */
 
-#include "H5private.h"   /* Generic Functions        */
-#include "H5Eprivate.h"  /* Error handling           */
-#include "H5FDpkg.h"     /* File drivers             */
-#include "H5Iprivate.h"  /* IDs                      */
-#include "H5MMprivate.h" /* Memory management        */
-#include "H5TSprivate.h" /* Threadsafety             */
+#include "H5private.h"             /* Generic Functions        */
+#include "H5Eprivate.h"            /* Error handling           */
+#include "H5FDpkg.h"               /* File drivers             */
+#include "H5Iprivate.h"            /* IDs                      */
+#include "H5MMprivate.h"           /* Memory management        */
+#include "H5TSprivate.h"           /* Threadsafety             */
 #include "H5FDsubfiling_private.h" /* Subfiling VFD                            */
 #include "H5subfiling_common.h"
 
@@ -488,7 +488,7 @@ herr_t
 H5FD__subfiling_open_stub_file(const char *name, unsigned flags, MPI_Comm file_comm, H5FD_int_t **file_ptr,
                                uint64_t *file_id)
 {
-    hid_t      old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
+    hid_t           old_fapl_id   = H5I_INVALID_HID; /* ID for old FAPL in API context */
     H5P_genplist_t *fapl          = NULL;
     uint64_t        stub_file_id  = H5FD_SUBFILING_BAD_FILE_ID;
     bool            bcasted_inode = false;
@@ -521,7 +521,7 @@ H5FD__subfiling_open_stub_file(const char *name, unsigned flags, MPI_Comm file_c
 
     /* Open stub file on MPI rank 0 only */
     if (mpi_rank == 0) {
-        hid_t      fapl_id;                       /* ID for FAPL */
+        hid_t     fapl_id; /* ID for FAPL */
         h5_stat_t st;
         MPI_Comm  stub_comm = MPI_COMM_SELF;
         MPI_Info  stub_info = MPI_INFO_NULL;

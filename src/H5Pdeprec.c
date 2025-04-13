@@ -444,7 +444,7 @@ herr_t
 H5Pget_version(hid_t fcpl_id, unsigned *super /*out*/, unsigned *freelist /*out*/, unsigned *stab /*out*/,
                unsigned *shhdr /*out*/)
 {
-    H5P_genplist_t *fcpl;               /* Property list pointer */
+    H5P_genplist_t *fcpl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -522,7 +522,7 @@ herr_t
 H5Pset_file_space(hid_t fcpl_id, H5F_file_space_type_t strategy, hsize_t threshold)
 {
 
-    H5P_genplist_t       *fcpl;                                        /* Property list pointer */
+    H5P_genplist_t       *fcpl;                                         /* Property list pointer */
     H5F_fspace_strategy_t new_strategy;                                 /* File space strategy type */
     bool                  new_persist   = H5F_FREE_SPACE_PERSIST_DEF;   /* Persisting free-space or not */
     hsize_t               new_threshold = H5F_FREE_SPACE_THRESHOLD_DEF; /* Free-space section threshold */
@@ -655,7 +655,7 @@ done:
 herr_t
 H5Pget_file_space(hid_t fcpl_id, H5F_file_space_type_t *strategy /*out*/, hsize_t *threshold /*out*/)
 {
-    H5P_genplist_t *fcpl;               /* Property list pointer */
+    H5P_genplist_t *fcpl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)

@@ -355,9 +355,9 @@ H5FD__direct_open(const char *name, unsigned flags, hid_t H5_ATTR_UNUSED fapl_id
     HFILE                              filehandle;
     struct _BY_HANDLE_FILE_INFORMATION fileinfo;
 #endif
-    h5_stat_t       sb;
-    void           *buf1, *buf2;
-    H5FD_t         *ret_value = NULL;
+    h5_stat_t sb;
+    void     *buf1, *buf2;
+    H5FD_t   *ret_value = NULL;
 
     FUNC_ENTER_PACKAGE
 

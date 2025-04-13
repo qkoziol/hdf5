@@ -30,14 +30,14 @@
 
 #include "H5FDmodule.h" /* This source code file is part of the H5FD module */
 
-#include "H5private.h"   /* Generic Functions                       */
-#include "H5Eprivate.h"  /* Error handling                          */
-#include "H5Fprivate.h"  /* File access                             */
-#include "H5FDfamily_private.h"  /* Family file driver                      */
-#include "H5FDpkg.h"     /* File drivers                            */
-#include "H5Iprivate.h"  /* IDs                                     */
-#include "H5MMprivate.h" /* Memory management                       */
-#include "H5Pprivate.h"  /* Property lists                          */
+#include "H5private.h"          /* Generic Functions                       */
+#include "H5Eprivate.h"         /* Error handling                          */
+#include "H5Fprivate.h"         /* File access                             */
+#include "H5FDfamily_private.h" /* Family file driver                      */
+#include "H5FDpkg.h"            /* File drivers                            */
+#include "H5Iprivate.h"         /* IDs                                     */
+#include "H5MMprivate.h"        /* Memory management                       */
+#include "H5Pprivate.h"         /* Property lists                          */
 
 /* The size of the member name buffers */
 #define H5FD_FAM_MEMB_NAME_BUF_SIZE 4096
@@ -696,16 +696,16 @@ H5_GCC_CLANG_DIAG_OFF("format-nonliteral")
 static H5FD_t *
 H5FD__family_open(const char *name, unsigned flags, hid_t H5_ATTR_UNUSED fapl_id, haddr_t maxaddr)
 {
-    H5FD_family_t *file      = NULL;
-    char          *memb_name = NULL, *temp = NULL;
-    hsize_t        eof            = HADDR_UNDEF;
-    bool           default_config = false;
-    unsigned       t_flags        = flags & ~H5F_ACC_CREAT;
+    H5FD_family_t            *file      = NULL;
+    char                     *memb_name = NULL, *temp = NULL;
+    hsize_t                   eof            = HADDR_UNDEF;
+    bool                      default_config = false;
+    unsigned                  t_flags        = flags & ~H5F_ACC_CREAT;
     const H5FD_family_fapl_t *fa;
-    hid_t      old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
-    H5F_close_degree_t old_fc_degree;     /* file close degree        */
-    hid_t      memb_fapl_id;                       /* ID for member FAPL */
-    H5FD_t        *ret_value      = NULL;
+    hid_t                     old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
+    H5F_close_degree_t        old_fc_degree;                 /* file close degree        */
+    hid_t                     memb_fapl_id;                  /* ID for member FAPL */
+    H5FD_t                   *ret_value = NULL;
 
     FUNC_ENTER_PACKAGE
 
@@ -720,13 +720,13 @@ H5FD__family_open(const char *name, unsigned flags, hid_t H5_ATTR_UNUSED fapl_id
         HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "unable to allocate file struct");
 
     if (NULL == (fa = (const H5FD_family_fapl_t *)H5CX_peek_driver_info())) {
-//fprintf(stderr, "%s:%u\n", __func__, __LINE__);
+        // fprintf(stderr, "%s:%u\n", __func__, __LINE__);
         if (H5FD__family_get_default_config(&file->fa) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get default family VFD configuration");
         default_config = true;
     }
     else {
-//fprintf(stderr, "%s:%u\n", __func__, __LINE__);
+        // fprintf(stderr, "%s:%u\n", __func__, __LINE__);
         if (NULL == (file->fa.memb_fapl = H5P_copy_plist(fa->memb_fapl, false)))
             HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, NULL, "unable to copy member FAPL");
         file->fa.memb_size = fa->memb_size; /* Actual member size to be updated later */
@@ -762,25 +762,25 @@ H5FD__family_open(const char *name, unsigned flags, hid_t H5_ATTR_UNUSED fapl_id
         else
             HGOTO_ERROR(H5E_VFL, H5E_FILEEXISTS, NULL, "file names not unique");
     }
-{
-    H5CX_get_close_degree(&old_fc_degree);
-//    fprintf(stderr, "%s:%u - old_fc_degree: %d\n", __func__, __LINE__, old_fc_degree);
-}
+    {
+        H5CX_get_close_degree(&old_fc_degree);
+        //    fprintf(stderr, "%s:%u - old_fc_degree: %d\n", __func__, __LINE__, old_fc_degree);
+    }
 
     /* Retrieve the current FAPL in the API context */
     if ((old_fapl_id = H5CX_get_fapl()) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get file access property list");
 
-fprintf(stderr, "%s:%u\n", __func__, __LINE__);
+    fprintf(stderr, "%s:%u\n", __func__, __LINE__);
     /* Verify access property list and set up collective metadata if appropriate */
     memb_fapl_id = H5P_PLIST_ID(file->fa.memb_fapl);
     if (H5CX_set_apl(&memb_fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, false) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, NULL, "can't set access property list info");
-{
-    H5F_close_degree_t fc_degree;     /* file close degree        */
-    H5CX_get_close_degree(&fc_degree);
-//    fprintf(stderr, "%s:%u - fc_degree: %d\n", __func__, __LINE__, fc_degree);
-}
+    {
+        H5F_close_degree_t fc_degree; /* file close degree        */
+        H5CX_get_close_degree(&fc_degree);
+        //    fprintf(stderr, "%s:%u - fc_degree: %d\n", __func__, __LINE__, fc_degree);
+    }
 
     /* Open all the family members */
     while (1) {
@@ -835,11 +835,11 @@ done:
         H5CX_set_fapl(old_fapl_id);
         H5CX_set_close_degree(old_fc_degree);
     }
-{
-    H5F_close_degree_t fc_degree;     /* file close degree        */
-    H5CX_get_close_degree(&fc_degree);
-//    fprintf(stderr, "%s:%u - fc_degree: %d\n", __func__, __LINE__, fc_degree);
-}
+    {
+        H5F_close_degree_t fc_degree; /* file close degree        */
+        H5CX_get_close_degree(&fc_degree);
+        //    fprintf(stderr, "%s:%u - fc_degree: %d\n", __func__, __LINE__, fc_degree);
+    }
 
     /* Release resources */
     if (memb_name)
@@ -1033,13 +1033,13 @@ H5_GCC_CLANG_DIAG_OFF("format-nonliteral")
 static herr_t
 H5FD__family_set_eoa(H5FD_t *_file, H5FD_mem_t type, haddr_t abs_eoa)
 {
-    H5FD_family_t *file      = (H5FD_family_t *)_file;
-    haddr_t        addr      = abs_eoa;
-    char          *memb_name = NULL;
-    hid_t      old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
-    hid_t      memb_fapl_id;                       /* ID for member FAPL */
-    unsigned       u;                   /* Local index variable */
-    herr_t         ret_value = SUCCEED; /* Return value */
+    H5FD_family_t *file        = (H5FD_family_t *)_file;
+    haddr_t        addr        = abs_eoa;
+    char          *memb_name   = NULL;
+    hid_t          old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
+    hid_t          memb_fapl_id;                  /* ID for member FAPL */
+    unsigned       u;                             /* Local index variable */
+    herr_t         ret_value = SUCCEED;           /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -1457,8 +1457,8 @@ H5FD__family_delete(const char *filename, hid_t fapl_id)
     H5FD_family_fapl_t default_fa;
     bool               default_config = false;
     H5P_genplist_t    *memb_fapl      = NULL;
-    hid_t      old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
-    hid_t      memb_fapl_id;                       /* ID for member FAPL */
+    hid_t              old_fapl_id    = H5I_INVALID_HID; /* ID for old FAPL in API context */
+    hid_t              memb_fapl_id;                     /* ID for member FAPL */
     unsigned           current_member;
     char              *member_name = NULL;
     char              *temp        = NULL;

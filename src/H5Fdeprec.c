@@ -143,7 +143,7 @@ done:
 htri_t
 H5Fis_hdf5(const char *name)
 {
-    hid_t fapl_id = H5P_FILE_ACCESS_DEFAULT;
+    hid_t                     fapl_id = H5P_FILE_ACCESS_DEFAULT;
     H5VL_file_specific_args_t vol_cb_args;           /* Arguments to VOL callback */
     bool                      is_accessible = false; /* Whether file is accessible */
     htri_t                    ret_value;             /* Return value */

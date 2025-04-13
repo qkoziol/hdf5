@@ -702,11 +702,11 @@ done:
 static H5FD_t *
 H5FD__splitter_open(const char *name, unsigned flags, hid_t H5_ATTR_UNUSED fapl_id, haddr_t maxaddr)
 {
-    H5FD_splitter_t            *file      = NULL; /* Splitter VFD info */
-    const H5FD_splitter_fapl_t *fa        = NULL; /* Driver-specific property list */
-    H5FD_splitter_fapl_t       *def_fa    = NULL;
-    hid_t      old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
-    hid_t      under_fapl_id;                       /* ID for member FAPL */
+    H5FD_splitter_t            *file        = NULL; /* Splitter VFD info */
+    const H5FD_splitter_fapl_t *fa          = NULL; /* Driver-specific property list */
+    H5FD_splitter_fapl_t       *def_fa      = NULL;
+    hid_t                       old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
+    hid_t                       under_fapl_id;                 /* ID for member FAPL */
     H5FD_t                     *ret_value = NULL;
 
     FUNC_ENTER_PACKAGE
@@ -1404,10 +1404,10 @@ done:
 static herr_t
 H5FD__splitter_delete(const char *filename, hid_t fapl_id)
 {
-    const H5FD_splitter_fapl_t *fa     = NULL;
-    H5FD_splitter_fapl_t       *def_fa = NULL;
-    hid_t      old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
-    hid_t      under_fapl_id;                       /* ID for member FAPL */
+    const H5FD_splitter_fapl_t *fa          = NULL;
+    H5FD_splitter_fapl_t       *def_fa      = NULL;
+    hid_t                       old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
+    hid_t                       under_fapl_id;                 /* ID for member FAPL */
     herr_t                      ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
@@ -1437,8 +1437,10 @@ H5FD__splitter_delete(const char *filename, hid_t fapl_id)
 
             /* If W/O path is not set, use base filename with '_wo' suffix */
             if (*def_fa->wo_path == '\0')
-                if (H5FD__splitter_get_default_wo_path(def_fa->wo_path, H5FD_SPLITTER_PATH_MAX + 1, filename) < 0)
-                    HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't generate default filename for W/O channel");
+                if (H5FD__splitter_get_default_wo_path(def_fa->wo_path, H5FD_SPLITTER_PATH_MAX + 1,
+                                                       filename) < 0)
+                    HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL,
+                                "can't generate default filename for W/O channel");
 
             fa = def_fa;
         }

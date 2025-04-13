@@ -1241,7 +1241,7 @@ H5FD__core_get_handle(H5FD_t *_file, hid_t fapl_id, void **file_handle)
         bool want_posix_fd; /* Setting for retrieving file descriptor from core VFD */
 
         /* Check if private API context flag for retrieving the backing store POSIX file descriptor
-        * is set.  (This should not be set except within the library) QAK - 2009/12/04
+         * is set.  (This should not be set except within the library) QAK - 2009/12/04
          */
         want_posix_fd = H5CX_get_want_posix_fd();
 
@@ -1682,7 +1682,7 @@ done:
 static herr_t
 H5FD__core_delete(const char *filename, hid_t H5_ATTR_UNUSED fapl_id)
 {
-    const H5FD_core_fapl_t *fa = NULL;
+    const H5FD_core_fapl_t *fa        = NULL;
     herr_t                  ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE

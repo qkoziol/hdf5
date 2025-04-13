@@ -18,17 +18,17 @@
 
 #include "H5FDmodule.h" /* This source code file is part of the H5FD module */
 
-#include "H5private.h"   /* Generic Functions            */
-#include "H5Eprivate.h"  /* Error handling               */
-#include "H5Fprivate.h"  /* File access                  */
-#include "H5FDpkg.h"     /* File drivers                 */
-#include "H5FDioc_pkg.h" /* I/O concentrator file driver */
-#include "H5FDmpio.h"    /* MPI I/O VFD                  */
+#include "H5private.h"             /* Generic Functions            */
+#include "H5Eprivate.h"            /* Error handling               */
+#include "H5Fprivate.h"            /* File access                  */
+#include "H5FDpkg.h"               /* File drivers                 */
+#include "H5FDioc_pkg.h"           /* I/O concentrator file driver */
+#include "H5FDmpio.h"              /* MPI I/O VFD                  */
 #include "H5FDsubfiling_private.h" /* Subfiling VFD                            */
-#include "H5FLprivate.h" /* Free Lists                   */
-#include "H5Iprivate.h"  /* IDs                          */
-#include "H5MMprivate.h" /* Memory management            */
-#include "H5Pprivate.h"  /* Property lists               */
+#include "H5FLprivate.h"           /* Free Lists                   */
+#include "H5Iprivate.h"            /* IDs                          */
+#include "H5MMprivate.h"           /* Memory management            */
+#include "H5Pprivate.h"            /* Property lists               */
 
 /* The driver identification number, initialized at runtime */
 hid_t          H5FD_IOC_id_g     = H5I_INVALID_HID;
@@ -701,7 +701,9 @@ H5FD__ioc_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
 
     /* Retrieve the HDF5 stub file ID for the current file */
     if (H5FD_SUBFILING_BAD_FILE_ID == (file->file_id = H5CX_get_sf_stub_file_id()))
-        HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, NULL, "subfiling stub file ID property is not set in API context - IOC VFD wasn't correctly stacked under the subfiling VFD and cannot currently be used alone");
+        HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, NULL,
+                    "subfiling stub file ID property is not set in API context - IOC VFD wasn't correctly "
+                    "stacked under the subfiling VFD and cannot currently be used alone");
 
     /*
      * Open the subfiles for this HDF5 file. A subfiling context ID will be
@@ -1132,15 +1134,15 @@ H5FD__ioc_truncate(H5FD_t *_file, hid_t H5_ATTR_UNUSED dxpl_id, bool H5_ATTR_UNU
 static herr_t
 H5FD__ioc_delete(const char *name, hid_t fapl_id)
 {
-    MPI_Comm        comm          = MPI_COMM_NULL;
-    MPI_Info        info          = MPI_INFO_NULL;
-    FILE           *config_file   = NULL;
-    char           *tmp_filename  = NULL;
-    char           *base_filename = NULL;
-    char           *file_dirname  = NULL;
-    int             mpi_rank      = INT_MAX;
-    int             mpi_code;
-    herr_t          ret_value = SUCCEED;
+    MPI_Comm comm          = MPI_COMM_NULL;
+    MPI_Info info          = MPI_INFO_NULL;
+    FILE    *config_file   = NULL;
+    char    *tmp_filename  = NULL;
+    char    *base_filename = NULL;
+    char    *file_dirname  = NULL;
+    int      mpi_rank      = INT_MAX;
+    int      mpi_code;
+    herr_t   ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
 

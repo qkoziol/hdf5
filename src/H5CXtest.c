@@ -24,9 +24,9 @@
 /***********/
 /* Headers */
 /***********/
-#include "H5private.h"   /* Generic Functions                        */
-#include "H5CXpkg.h"     /* API Contexts                             */
-#include "H5Eprivate.h"  /* Error handling                           */
+#include "H5private.h"  /* Generic Functions                        */
+#include "H5CXpkg.h"    /* API Contexts                             */
+#include "H5Eprivate.h" /* Error handling                           */
 
 /****************/
 /* Local Macros */
@@ -73,4 +73,3 @@ H5CX_reset_fapl_test(void)
 
     FUNC_LEAVE_NOAPI_VOID
 } /* end H5CX_reset_fapl_test() */
-

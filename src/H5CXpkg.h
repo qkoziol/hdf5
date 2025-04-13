@@ -46,11 +46,9 @@
 #define H5CX_get_my_context() (&H5CX_head_g)
 #endif /* H5_HAVE_THREADSAFE_API */
 
-
 /****************************/
 /* Package Private Typedefs */
 /****************************/
-
 
 /*****************************/
 /* Package Private Variables */
@@ -58,8 +56,7 @@
 
 #ifndef H5_HAVE_THREADSAFE_API
 H5_DLLVAR H5CX_node_t *H5CX_head_g; /* Pointer to head of context stack */
-#endif /* H5_HAVE_THREADSAFE_API */
-
+#endif                              /* H5_HAVE_THREADSAFE_API */
 
 /******************************/
 /* Package Private Prototypes */

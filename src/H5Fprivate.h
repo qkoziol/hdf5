@@ -233,9 +233,9 @@ typedef struct H5F_t H5F_t;
 #define H5F_ACS_FAMILY_TO_SINGLE_NAME                                                                        \
     "family_to_single" /* Whether to convert family to a single-file driver.  (private property only used by \
                           h5repart) */
-#define H5F_ACS_MULTI_TYPE_NAME        "multi_type"        /* Data type in multi file driver */
-#define H5F_ACS_LIBVER_LOW_BOUND_NAME  "libver_low_bound"  /* 'low' bound of library format versions */
-#define H5F_ACS_LIBVER_HIGH_BOUND_NAME "libver_high_bound" /* 'high' bound of library format versions */
+#define H5F_ACS_MULTI_TYPE_NAME             "multi_type"        /* Data type in multi file driver */
+#define H5F_ACS_LIBVER_LOW_BOUND_NAME       "libver_low_bound"  /* 'low' bound of library format versions */
+#define H5F_ACS_LIBVER_HIGH_BOUND_NAME      "libver_high_bound" /* 'high' bound of library format versions */
 #define H5F_ACS_METADATA_READ_ATTEMPTS_NAME "metadata_read_attempts" /* # of metadata read attempts */
 #define H5F_ACS_OBJECT_FLUSH_CB_NAME        "object_flush_cb"        /* Object flush callback */
 #define H5F_ACS_EFC_SIZE_NAME               "efc_size"               /* Size of external file cache */

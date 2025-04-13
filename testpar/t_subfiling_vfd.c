@@ -23,7 +23,7 @@
 
 #include "testpar.h"
 #include "H5srcdir.h"
-#include "H5Fprivate.h"  /* Files                                    */
+#include "H5Fprivate.h" /* Files                                    */
 #include "H5MMprivate.h"
 
 #ifdef H5_HAVE_SUBFILING_VFD

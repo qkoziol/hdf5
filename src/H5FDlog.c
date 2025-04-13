@@ -417,7 +417,7 @@ static H5FD_t *
 H5FD__log_open(const char *name, unsigned flags, hid_t H5_ATTR_UNUSED fapl_id, haddr_t maxaddr)
 {
     H5FD_log_t            *file = NULL;
-    const H5FD_log_fapl_t *fa;   /* File access property list information */
+    const H5FD_log_fapl_t *fa; /* File access property list information */
     H5FD_log_fapl_t        default_fa = H5FD_log_default_config_g;
     int                    fd         = -1; /* File descriptor */
     int                    o_flags;         /* Flags for open() call */

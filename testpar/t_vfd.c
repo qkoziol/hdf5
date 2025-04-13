@@ -20,7 +20,7 @@
 #include "H5FDsubfiling.h"
 #include "H5FDioc.h"
 #endif
-#include "H5Fprivate.h"  /* Files                                    */
+#include "H5Fprivate.h" /* Files                                    */
 
 /* Must be a power of 2.  Reducing it below 1024 may cause problems */
 #define INTS_PER_RANK 1024

@@ -507,7 +507,7 @@ H5Pset_fapl_subfiling(hid_t fapl_id, const H5FD_subfiling_config_t *vfd_config)
         if (H5P_peek(fapl, H5F_ACS_MPI_PARAMS_COMM_NAME, &comm) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get MPI communicator from fapl");
         if (comm == MPI_COMM_NULL)
-            comm      = MPI_COMM_WORLD;
+            comm = MPI_COMM_WORLD;
         if (H5P_peek(fapl, H5F_ACS_MPI_PARAMS_INFO_NAME, &info) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get MPI info from fapl");
 
@@ -663,7 +663,7 @@ H5FD__subfiling_get_default_info(H5P_genplist_t *fapl, H5FD_subfiling_fapl_t *fa
     if (H5P_peek(fapl, H5F_ACS_MPI_PARAMS_INFO_NAME, &info) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get MPI info from fapl");
     if (comm == MPI_COMM_NULL) {
-        comm      = MPI_COMM_WORLD;
+        comm = MPI_COMM_WORLD;
 
         /* Set MPI_COMM_WORLD on FAPL if no MPI parameters were set */
         if (H5P_set(fapl, H5F_ACS_MPI_PARAMS_COMM_NAME, &comm) < 0)
@@ -1147,8 +1147,8 @@ H5FD__subfiling_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t ma
     const H5FD_subfiling_fapl_t *fa   = NULL; /* Driver-specific property list */
     H5FD_subfiling_fapl_t        default_fa;  /* Default driver info, if not set */
     H5P_genplist_t              *fapl        = NULL;
-    hid_t      old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
-    hid_t      ioc_fapl_id;                       /* ID for FAPL */
+    hid_t                        old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
+    hid_t                        ioc_fapl_id;                   /* ID for FAPL */
     bool                         bcasted_eof = false;
     int64_t                      sf_eof      = -1;
     int                          mpi_code; /* MPI return code */
@@ -1241,7 +1241,8 @@ H5FD__subfiling_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t ma
      * Create/open the HDF5 stub file and get its inode value for
      * the internal mapping from file inode to subfiling context.
      */
-    if (H5FD__subfiling_open_stub_file(file->file_path, flags, file->comm, &file->stub_file, &file->file_id) < 0)
+    if (H5FD__subfiling_open_stub_file(file->file_path, flags, file->comm, &file->stub_file, &file->file_id) <
+        0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL, "can't open HDF5 stub file");
 
     /* Set stub file ID on IOC fapl so it can reuse on open */
@@ -1829,8 +1830,8 @@ H5FD__subfiling_delete(const char *name, hid_t fapl_id)
 {
     const H5FD_subfiling_fapl_t *subfiling_fa = NULL;
     H5FD_subfiling_fapl_t        default_fa;
-    hid_t      old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
-    hid_t      ioc_fapl_id;                       /* ID for FAPL */
+    hid_t                        old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
+    hid_t                        ioc_fapl_id;                   /* ID for FAPL */
     herr_t                       ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
@@ -1841,7 +1842,7 @@ H5FD__subfiling_delete(const char *name, hid_t fapl_id)
             HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, FAIL, "can't initialize driver");
 
     if (NULL == (subfiling_fa = H5CX_peek_driver_info())) {
-        H5P_genplist_t              *fapl      = NULL;
+        H5P_genplist_t *fapl = NULL;
 
         if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");

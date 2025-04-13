@@ -28,7 +28,7 @@
 /**************************/
 
 /* Definition for new member size of family driver. It's a private property only used by h5repart */
-#define H5F_ACS_FAMILY_NEWSIZE_DEF  0
+#define H5F_ACS_FAMILY_NEWSIZE_DEF 0
 
 /****************************/
 /* Library Private Typedefs */

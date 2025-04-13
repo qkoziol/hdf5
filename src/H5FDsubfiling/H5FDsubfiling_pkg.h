@@ -24,7 +24,7 @@
 /* Public header */
 
 /* Private headers */
-#include "H5private.h" /* Generic Functions                        */
+#include "H5private.h"             /* Generic Functions                        */
 #include "H5FDsubfiling_private.h" /* Subfiling VFD                            */
 #include "H5subfiling_common.h"
 
