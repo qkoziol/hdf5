@@ -90,17 +90,23 @@ typedef struct H5CX_cached_dxpl_flags_t {
     bool mpio_global_no_coll_cause_set : 1;   /* Whether global reason for breaking collective I/O is set */
     bool mpio_global_no_coll_cause_valid : 1; /* Whether global reason for breaking collective I/O is valid */
 #ifdef H5_HAVE_INSTRUMENTED_LIBRARY
-    bool mpio_coll_chunk_link_hard_set : 1;  /* Whether instrumented "collective chunk link hard" value is set */
-    bool mpio_coll_chunk_multi_hard_set : 1; /* Whether instrumented "collective chunk multi hard" value is set */
-    bool mpio_coll_chunk_link_num_true_set : 1; /* Whether instrumented "collective chunk link num true" value is set */
-    bool mpio_coll_chunk_link_num_false_set : 1;   /* Whether instrumented "collective chunk link num false" value is set */
-    bool mpio_coll_chunk_multi_ratio_coll_set : 1; /* Whether instrumented "collective chunk multi ratio coll" value is set */
-    bool mpio_coll_chunk_multi_ratio_ind_set : 1;  /* Whether instrumented "collective chunk multi ratio ind" value is set */
+    bool mpio_coll_chunk_link_hard_set : 1;  /* Whether instrumented "collective chunk link hard" value is set
+                                              */
+    bool mpio_coll_chunk_multi_hard_set : 1; /* Whether instrumented "collective chunk multi hard" value is
+                                                set */
+    bool mpio_coll_chunk_link_num_true_set : 1; /* Whether instrumented "collective chunk link num true" value
+                                                   is set */
+    bool mpio_coll_chunk_link_num_false_set : 1;   /* Whether instrumented "collective chunk link num false"
+                                                      value is set */
+    bool mpio_coll_chunk_multi_ratio_coll_set : 1; /* Whether instrumented "collective chunk multi ratio coll"
+                                                      value is set */
+    bool mpio_coll_chunk_multi_ratio_ind_set : 1;  /* Whether instrumented "collective chunk multi ratio ind"
+                                                      value is set */
     bool mpio_coll_rank0_bcast_set : 1; /* Whether instrumented "collective rank 0 broadcast" value is set */
 #endif                                  /* H5_HAVE_INSTRUMENTED_LIBRARY */
 #endif                                  /* H5_HAVE_PARALLEL */
     bool no_selection_io_cause_set : 1; /* Whether reason for not performing selection I/O is set */
-    bool no_selection_io_cause_valid : 1; /* Whether reason for not performing selection I/O is valid */
+    bool no_selection_io_cause_valid : 1;    /* Whether reason for not performing selection I/O is valid */
     bool actual_selection_io_mode_set : 1;   /* Whether actual selection I/O mode is set */
     bool actual_selection_io_mode_valid : 1; /* Whether actual selection I/O mode is valid */
     bool dset_io_selection_valid : 1;        /* Whether dataset I/O selection is valid */
@@ -118,24 +124,27 @@ typedef struct H5CX_cached_lapl_flags_t {
     bool lapl_coll_md_read_valid : 1; /* Whether collective metadata read property is valid */
 #endif                                /* H5_HAVE_PARALLEL */
     bool elink_prefix_valid : 1;      /* Whether the prefix for external link prefix is valid */
-    bool elink_cb_info_valid : 1;      /* Whether the prefix for external link callback is valid */
+    bool elink_cb_info_valid : 1;     /* Whether the prefix for external link callback is valid */
     bool nlinks_valid : 1;            /* Whether number of soft / UD links to traverse is valid */
 } H5CX_cached_lapl_flags_t;
 
 /* 'valid' & 'set' flags for cached OCPL properties */
 typedef struct H5CX_cached_ocpl_flags_t {
 #ifdef H5O_ENABLE_BAD_MESG_COUNT
-    bool bad_mesg_count_valid : 1; /* Whether the write a bad message count to the object header flag is valid */
+    bool bad_mesg_count_valid : 1; /* Whether the write a bad message count to the object header flag is valid
+                                    */
 #endif                             /* H5O_ENABLE_BAD_MESG_COUNT */
     bool attr_max_compact_valid : 1; /* Whether the min dense attrs value is valid */
-    bool attr_min_dense_valid : 1; /* Whether the min dense attrs value is valid (H5O_CRT_ATTR_MIN_DENSE_NAME) */
+    bool attr_min_dense_valid : 1; /* Whether the min dense attrs value is valid (H5O_CRT_ATTR_MIN_DENSE_NAME)
+                                    */
     bool ohdr_flags_valid : 1;     /* Whether the object headers flags are valid */
     bool pline_valid : 1;          /* Whether the filter pipeline for object creation is valid */
 } H5CX_cached_ocpl_flags_t;
 
 /* 'valid' & 'set' flags for cached OCPYPL properties */
 typedef struct H5CX_cached_ocpypl_flags_t {
-    bool comm_dtype_merge_list_valid : 1; /* Whether the committed datatype merge list for object copy is valid */
+    bool comm_dtype_merge_list_valid : 1; /* Whether the committed datatype merge list for object copy is
+                                             valid */
 } H5CX_cached_ocpypl_flags_t;
 
 /* 'valid' & 'set' flags for cached DCPL properties */
@@ -177,8 +186,10 @@ typedef struct H5CX_cached_fapl_flags_t {
     bool start_mdc_logging_on_access_valid : 1; /* Whether start_mdc_logging_on_access property is valid */
     bool mdc_read_attempts_valid : 1;           /* Whether metadata cache read attempts property is valid */
     bool meta_alloc_block_size_valid : 1;       /* Whether metadata allocation block size property is valid */
-    bool mdc_init_config_valid : 1; /* Whether metadata cache initialization configuration property is valid */
-    bool mdc_image_config_valid : 1; /* Whether metadata cache image initial configuration property is valid */
+    bool
+        mdc_init_config_valid : 1; /* Whether metadata cache initialization configuration property is valid */
+    bool
+        mdc_image_config_valid : 1; /* Whether metadata cache image initial configuration property is valid */
     bool object_flush_strategy_valid : 1; /* Whether object flush strategy property is valid */
     bool pb_size_valid : 1;               /* Whether page buffer size property is valid */
     bool pb_min_meta_perc_valid : 1;      /* Whether minimum metadata percentage property is valid */
@@ -357,11 +368,11 @@ typedef struct H5CX_t {
     /* Cached LAPL properties */
 #ifdef H5_HAVE_PARALLEL
     H5P_coll_md_read_flag_t
-        lapl_coll_md_read;    /* Property for collective metadata read (H5_COLL_MD_READ_FLAG_NAME) */
-#endif                        /* H5_HAVE_PARALLEL */
-    const char *elink_prefix; /* Prefix for external link prefix (H5L_ACS_ELINK_PREFIX_NAME) */
-    H5L_elink_cb_t  elink_cb_info;  /* External link callback info struct (H5L_ACS_ELINK_CB_NAME) */
-    size_t      nlinks;       /* Number of soft / UD links to traverse (H5L_ACS_NLINKS_NAME) */
+        lapl_coll_md_read;        /* Property for collective metadata read (H5_COLL_MD_READ_FLAG_NAME) */
+#endif                            /* H5_HAVE_PARALLEL */
+    const char    *elink_prefix;  /* Prefix for external link prefix (H5L_ACS_ELINK_PREFIX_NAME) */
+    H5L_elink_cb_t elink_cb_info; /* External link callback info struct (H5L_ACS_ELINK_CB_NAME) */
+    size_t         nlinks;        /* Number of soft / UD links to traverse (H5L_ACS_NLINKS_NAME) */
 
     /* Cached OCPL properties */
 #ifdef H5O_ENABLE_BAD_MESG_COUNT
@@ -458,14 +469,14 @@ typedef struct H5CX_t {
      *********************************************************************/
 
     /* Flags for each type of cached properties */
-    H5CX_cached_dxpl_flags_t dxpl_flags;
-    H5CX_cached_lcpl_flags_t lcpl_flags;
-    H5CX_cached_lapl_flags_t lapl_flags;
-    H5CX_cached_ocpl_flags_t ocpl_flags;
+    H5CX_cached_dxpl_flags_t   dxpl_flags;
+    H5CX_cached_lcpl_flags_t   lcpl_flags;
+    H5CX_cached_lapl_flags_t   lapl_flags;
+    H5CX_cached_ocpl_flags_t   ocpl_flags;
     H5CX_cached_ocpypl_flags_t ocpypl_flags;
-    H5CX_cached_dcpl_flags_t dcpl_flags;
-    H5CX_cached_dapl_flags_t dapl_flags;
-    H5CX_cached_fapl_flags_t fapl_flags;
+    H5CX_cached_dcpl_flags_t   dcpl_flags;
+    H5CX_cached_dapl_flags_t   dapl_flags;
+    H5CX_cached_fapl_flags_t   fapl_flags;
 
     /* Flags for cached VOL settings */
     bool vol_wrap_ctx_valid : 1; /* Whether VOL connector's "wrap context" for creating IDs is valid */

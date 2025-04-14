@@ -285,12 +285,13 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5FD_open_wrap(bool try, H5FD_int_t **_fh, const char *name, unsigned flags, H5P_genplist_t *fapl, haddr_t maxaddr)
+H5FD_open_wrap(bool try, H5FD_int_t **_fh, const char *name, unsigned flags, H5P_genplist_t *fapl,
+               haddr_t maxaddr)
 {
-    hid_t                     old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
-    H5F_close_degree_t        old_fc_degree;                 /* file close degree        */
-    hid_t                     new_fapl_id;                  /* ID for new FAPL */
-    herr_t                 ret_value = SUCCEED; /* Return value */
+    hid_t              old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
+    H5F_close_degree_t old_fc_degree;                 /* file close degree        */
+    hid_t              new_fapl_id;                   /* ID for new FAPL */
+    herr_t             ret_value = SUCCEED;           /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
@@ -308,7 +309,7 @@ H5FD_open_wrap(bool try, H5FD_int_t **_fh, const char *name, unsigned flags, H5P
     if (H5FD_open(try, _fh, name, flags, fapl, maxaddr) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, FAIL, "can't open file");
 
-done :
+done:
     /* Restore previous FAPL in the API context */
     if (old_fapl_id > 0) {
         H5CX_set_fapl(old_fapl_id);
@@ -785,9 +786,9 @@ done:
 herr_t
 H5FD_get_vfd_handle_wrap(H5FD_int_t *fh, const H5P_genplist_t *fapl, void **file_handle)
 {
-    hid_t                     old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
-    hid_t                     new_fapl_id;                  /* ID for new FAPL */
-    herr_t                 ret_value = SUCCEED; /* Return value */
+    hid_t  old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
+    hid_t  new_fapl_id;                   /* ID for new FAPL */
+    herr_t ret_value = SUCCEED;           /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
@@ -804,7 +805,7 @@ H5FD_get_vfd_handle_wrap(H5FD_int_t *fh, const H5P_genplist_t *fapl, void **file
     if (H5FD_get_vfd_handle(fh, fapl, file_handle) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get file handle");
 
-done :
+done:
     /* Restore previous FAPL in the API context */
     if (old_fapl_id > 0)
         H5CX_set_fapl(old_fapl_id);
@@ -2014,9 +2015,9 @@ done:
 herr_t
 H5FD_delete_wrap(const char *filename, H5P_genplist_t *fapl)
 {
-    hid_t                     old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
-    hid_t                     new_fapl_id;                  /* ID for new FAPL */
-    herr_t                 ret_value = SUCCEED; /* Return value */
+    hid_t  old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
+    hid_t  new_fapl_id;                   /* ID for new FAPL */
+    herr_t ret_value = SUCCEED;           /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
@@ -2033,7 +2034,7 @@ H5FD_delete_wrap(const char *filename, H5P_genplist_t *fapl)
     if (H5FD_delete(filename, fapl) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTDELETEFILE, FAIL, "can't delete file");
 
-done :
+done:
     /* Restore previous FAPL in the API context */
     if (old_fapl_id > 0)
         H5CX_set_fapl(old_fapl_id);

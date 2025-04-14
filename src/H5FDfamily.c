@@ -780,13 +780,13 @@ H5FD__family_open(const char *name, unsigned flags, hid_t H5_ATTR_UNUSED fapl_id
          * Allow H5F_ACC_CREAT only on the first family member.
          */
         if (0 == file->nmembs) {
-            if (H5FD_open_wrap(false, &file->memb[file->nmembs], memb_name, (0 == file->nmembs ? flags : t_flags),
-                          file->fa.memb_fapl, HADDR_UNDEF) < 0)
+            if (H5FD_open_wrap(false, &file->memb[file->nmembs], memb_name,
+                               (0 == file->nmembs ? flags : t_flags), file->fa.memb_fapl, HADDR_UNDEF) < 0)
                 HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL, "unable to open member file");
         }
         else {
-            if (H5FD_open_wrap(true, &file->memb[file->nmembs], memb_name, (0 == file->nmembs ? flags : t_flags),
-                          file->fa.memb_fapl, HADDR_UNDEF) < 0)
+            if (H5FD_open_wrap(true, &file->memb[file->nmembs], memb_name,
+                               (0 == file->nmembs ? flags : t_flags), file->fa.memb_fapl, HADDR_UNDEF) < 0)
                 HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL, "unable to open member file");
 
             if (!file->memb[file->nmembs])
@@ -998,11 +998,11 @@ H5_GCC_CLANG_DIAG_OFF("format-nonliteral")
 static herr_t
 H5FD__family_set_eoa(H5FD_t *_file, H5FD_mem_t type, haddr_t abs_eoa)
 {
-    H5FD_family_t *file        = (H5FD_family_t *)_file;
-    haddr_t        addr        = abs_eoa;
-    char          *memb_name   = NULL;
-    unsigned       u;                             /* Local index variable */
-    herr_t         ret_value = SUCCEED;           /* Return value */
+    H5FD_family_t *file      = (H5FD_family_t *)_file;
+    haddr_t        addr      = abs_eoa;
+    char          *memb_name = NULL;
+    unsigned       u;                   /* Local index variable */
+    herr_t         ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -1028,8 +1028,8 @@ H5FD__family_set_eoa(H5FD_t *_file, H5FD_mem_t type, haddr_t abs_eoa)
             file->nmembs = MAX(file->nmembs, u + 1);
             snprintf(memb_name, H5FD_FAM_MEMB_NAME_BUF_SIZE, file->name, u);
             H5_CHECK_OVERFLOW(file->fa.memb_size, hsize_t, haddr_t);
-            if (H5FD_open_wrap(false, &file->memb[u], memb_name, file->flags | H5F_ACC_CREAT, file->fa.memb_fapl,
-                          (haddr_t)file->fa.memb_size) < 0)
+            if (H5FD_open_wrap(false, &file->memb[u], memb_name, file->flags | H5F_ACC_CREAT,
+                               file->fa.memb_fapl, (haddr_t)file->fa.memb_size) < 0)
                 HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, FAIL, "unable to open member file");
         } /* end if */
 

@@ -91,45 +91,46 @@
         } /* end else */                                                                                     \
                                                                                                              \
         /* Mark the field as valid */                                                                        \
-        (*head)->ctx.H5_GLUE(SUB_PL, _flags).H5_GLUE(PROP_FIELD, _valid) = true;                                                     \
+        (*head)->ctx.H5_GLUE(SUB_PL, _flags).H5_GLUE(PROP_FIELD, _valid) = true;                             \
     }
 
 /* Macro for the duplicated code to retrieve a value from a plist if the context value is invalid */
 #define H5CX_RETRIEVE_PROP_VALID(PL, DEF_PL, PROP_NAME, PROP_FIELD)                                          \
     /* Check if the value has been retrieved already */                                                      \
-    if (!(*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                                           \
+    if (!(*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                       \
     H5CX_RETRIEVE_PROP_COMMON(PL, NO, get, PL, DEF_PL, PROP_NAME, PROP_FIELD, FAIL)
 
 /* Macro for the duplicated code to test for and retrieve a value from a plist if the context value is invalid
  */
 #define H5CX_TEST_RETRIEVE_PROP_VALID(PL, DEF_PL, PROP_NAME, PROP_FIELD)                                     \
     /* Check if the value has been retrieved already */                                                      \
-    if (!(*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                                           \
+    if (!(*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                       \
     H5CX_RETRIEVE_PROP_COMMON(PL, YES, get, PL, DEF_PL, PROP_NAME, PROP_FIELD, FAIL)
 
 /* Macro for the duplicated code to "peek" a value from a plist if the context value is invalid */
 #define H5CX_PEEK_PROP_VALID(PL, DEF_PL, PROP_NAME, PROP_FIELD)                                              \
     /* Check if the value has been retrieved already */                                                      \
-    if (!(*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                                           \
+    if (!(*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                       \
     H5CX_RETRIEVE_PROP_COMMON(PL, NO, peek, PL, DEF_PL, PROP_NAME, PROP_FIELD, FAIL)
 
 /* Macro for the duplicated code to "peek" a value from a plist if the context value is invalid */
 #define H5CX_PEEK_PROP_VALID_ERR(PL, DEF_PL, PROP_NAME, PROP_FIELD, ERR_RET)                                 \
     /* Check if the value has been retrieved already */                                                      \
-    if (!(*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                                           \
+    if (!(*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                       \
     H5CX_RETRIEVE_PROP_COMMON(PL, NO, peek, PL, DEF_PL, PROP_NAME, PROP_FIELD, ERR_RET)
 
 /* Macro for the duplicated code to retrieve a value from a plist if the context value is invalid */
 #define H5CX_RETRIEVE_SUBCLS_PROP_VALID(PL, SUB_PL, DEF_PL, PROP_NAME, PROP_FIELD)                           \
     /* Check if the value has been retrieved already */                                                      \
-    if (!(*head)->ctx.H5_GLUE(SUB_PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                                           \
+    if (!(*head)->ctx.H5_GLUE(SUB_PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                   \
     H5CX_RETRIEVE_PROP_COMMON(PL, NO, get, SUB_PL, DEF_PL, PROP_NAME, PROP_FIELD, FAIL)
 
 /* Macro for the duplicated code to retrieve a value from a plist if the context value is invalid, or the
  * library has previously modified the context value for return */
 #define H5CX_RETRIEVE_PROP_VALID_SET(PL, DEF_PL, PROP_NAME, PROP_FIELD)                                      \
     /* Check if the value has been retrieved already */                                                      \
-    if (!((*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _valid) || (*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _set)))               \
+    if (!((*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _valid) ||                                    \
+          (*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _set)))                                       \
     H5CX_RETRIEVE_PROP_COMMON(PL, NO, get, PL, DEF_PL, PROP_NAME, PROP_FIELD, FAIL)
 
 #if defined(H5_HAVE_PARALLEL) && defined(H5_HAVE_INSTRUMENTED_LIBRARY)
@@ -139,7 +140,7 @@
         htri_t check_prop = 0; /* Whether the property exists in the API context's DXPL */                   \
                                                                                                              \
         /* Check if property exists in DXPL */                                                               \
-        if (!(*head)->ctx.dxpl_flags.H5_GLUE(PROP_FIELD, _set)) {                                                       \
+        if (!(*head)->ctx.dxpl_flags.H5_GLUE(PROP_FIELD, _set)) {                                            \
             /* Retrieve the dataset transfer property list */                                                \
             H5CX_RETRIEVE_PLIST(dxpl, FAIL)                                                                  \
                                                                                                              \
@@ -148,17 +149,17 @@
         } /* end if */                                                                                       \
                                                                                                              \
         /* If property was already set or exists (for first set), update it */                               \
-        if ((*head)->ctx.dxpl_flags.H5_GLUE(PROP_FIELD, _set) || check_prop > 0) {                                      \
+        if ((*head)->ctx.dxpl_flags.H5_GLUE(PROP_FIELD, _set) || check_prop > 0) {                           \
             /* Cache the value for later, marking it to set in DXPL when context popped */                   \
-            (*head)->ctx.PROP_FIELD                = PROP_FIELD;                                             \
-            (*head)->ctx.dxpl_flags.H5_GLUE(PROP_FIELD, _set) = true;                                                   \
+            (*head)->ctx.PROP_FIELD                           = PROP_FIELD;                                  \
+            (*head)->ctx.dxpl_flags.H5_GLUE(PROP_FIELD, _set) = true;                                        \
         } /* end if */                                                                                       \
     }
 #endif /* defined(H5_HAVE_PARALLEL) && defined(H5_HAVE_INSTRUMENTED_LIBRARY) */
 
 /* Macro for the duplicated code to test and set properties for a property list from the context */
 #define H5CX_SET_PROP(PROP_NAME, PROP_FIELD)                                                                 \
-    if ((*head)->ctx.dxpl_flags.H5_GLUE(PROP_FIELD, _set)) {                                                            \
+    if ((*head)->ctx.dxpl_flags.H5_GLUE(PROP_FIELD, _set)) {                                                 \
         /* Retrieve the dataset transfer property list */                                                    \
         H5CX_RETRIEVE_PLIST(dxpl, FAIL)                                                                      \
                                                                                                              \
@@ -225,9 +226,9 @@ typedef struct H5CX_lapl_cache_t {
 #ifdef H5_HAVE_PARALLEL
     H5P_coll_md_read_flag_t lapl_coll_md_read; /* Property for collective metadata read */
 #endif                                         /* H5_HAVE_PARALLEL */
-    const char *elink_prefix; /* Prefix for external link prefix (H5L_ACS_ELINK_PREFIX_NAME) */
-    H5L_elink_cb_t  elink_cb_info;  /* External link callback info struct (H5L_ACS_ELINK_CB_NAME) */
-    size_t      nlinks;       /* Number of soft / UD links to traverse (H5L_ACS_NLINKS_NAME) */
+    const char    *elink_prefix;  /* Prefix for external link prefix (H5L_ACS_ELINK_PREFIX_NAME) */
+    H5L_elink_cb_t elink_cb_info; /* External link callback info struct (H5L_ACS_ELINK_CB_NAME) */
+    size_t         nlinks;        /* Number of soft / UD links to traverse (H5L_ACS_NLINKS_NAME) */
 } H5CX_lapl_cache_t;
 
 /* Typedef for cached default object creation property list information */
@@ -3202,9 +3203,10 @@ H5CX_get_actual_selection_io_mode(uint32_t *actual_selection_io_mode)
 
     /* This property is a special case - we want to wipe out any previous setting.  Copy the default setting
      * if it has not been set yet. */
-    if ((*head)->ctx.dxpl_id != H5P_DATASET_XFER_DEFAULT && !(*head)->ctx.dxpl_flags.actual_selection_io_mode_set &&
+    if ((*head)->ctx.dxpl_id != H5P_DATASET_XFER_DEFAULT &&
+        !(*head)->ctx.dxpl_flags.actual_selection_io_mode_set &&
         !(*head)->ctx.dxpl_flags.actual_selection_io_mode_valid) {
-        (*head)->ctx.actual_selection_io_mode     = H5CX_def_dxpl_cache.actual_selection_io_mode;
+        (*head)->ctx.actual_selection_io_mode                = H5CX_def_dxpl_cache.actual_selection_io_mode;
         (*head)->ctx.dxpl_flags.actual_selection_io_mode_set = true;
     }
     H5CX_RETRIEVE_PROP_VALID_SET(dxpl, H5P_DATASET_XFER_DEFAULT, H5D_XFER_ACTUAL_SELECTION_IO_MODE_NAME,
@@ -5065,7 +5067,7 @@ H5CX_set_mpio_actual_chunk_opt(H5D_mpio_actual_chunk_opt_mode_t mpio_actual_chun
     assert(!((*head)->ctx.dxpl_id == H5P_DEFAULT || (*head)->ctx.dxpl_id == H5P_DATASET_XFER_DEFAULT));
 
     /* Cache the value for later, marking it to set in DXPL when context popped */
-    (*head)->ctx.mpio_actual_chunk_opt     = mpio_actual_chunk_opt;
+    (*head)->ctx.mpio_actual_chunk_opt                = mpio_actual_chunk_opt;
     (*head)->ctx.dxpl_flags.mpio_actual_chunk_opt_set = true;
 
     FUNC_LEAVE_NOAPI_VOID
@@ -5093,7 +5095,7 @@ H5CX_set_mpio_actual_io_mode(H5D_mpio_actual_io_mode_t mpio_actual_io_mode)
     assert(!((*head)->ctx.dxpl_id == H5P_DEFAULT || (*head)->ctx.dxpl_id == H5P_DATASET_XFER_DEFAULT));
 
     /* Cache the value for later, marking it to set in DXPL when context popped */
-    (*head)->ctx.mpio_actual_io_mode     = mpio_actual_io_mode;
+    (*head)->ctx.mpio_actual_io_mode                = mpio_actual_io_mode;
     (*head)->ctx.dxpl_flags.mpio_actual_io_mode_set = true;
 
     FUNC_LEAVE_NOAPI_VOID
@@ -5123,7 +5125,7 @@ H5CX_set_mpio_local_no_coll_cause(uint32_t mpio_local_no_coll_cause)
     /* If we're using the default DXPL, don't modify it */
     if ((*head)->ctx.dxpl_id != H5P_DATASET_XFER_DEFAULT) {
         /* Cache the value for later, marking it to set in DXPL when context popped */
-        (*head)->ctx.mpio_local_no_coll_cause     = mpio_local_no_coll_cause;
+        (*head)->ctx.mpio_local_no_coll_cause                = mpio_local_no_coll_cause;
         (*head)->ctx.dxpl_flags.mpio_local_no_coll_cause_set = true;
     } /* end if */
 
@@ -5154,7 +5156,7 @@ H5CX_set_mpio_global_no_coll_cause(uint32_t mpio_global_no_coll_cause)
     /* If we're using the default DXPL, don't modify it */
     if ((*head)->ctx.dxpl_id != H5P_DATASET_XFER_DEFAULT) {
         /* Cache the value for later, marking it to set in DXPL when context popped */
-        (*head)->ctx.mpio_global_no_coll_cause     = mpio_global_no_coll_cause;
+        (*head)->ctx.mpio_global_no_coll_cause                = mpio_global_no_coll_cause;
         (*head)->ctx.dxpl_flags.mpio_global_no_coll_cause_set = true;
     } /* end if */
 
@@ -5403,7 +5405,7 @@ H5CX_set_no_selection_io_cause(uint32_t no_selection_io_cause)
     /* If we're using the default DXPL, don't modify it */
     if ((*head)->ctx.dxpl_id != H5P_DATASET_XFER_DEFAULT) {
         /* Cache the value for later, marking it to set in DXPL when context popped */
-        (*head)->ctx.no_selection_io_cause     = no_selection_io_cause;
+        (*head)->ctx.no_selection_io_cause                = no_selection_io_cause;
         (*head)->ctx.dxpl_flags.no_selection_io_cause_set = true;
     } /* end if */
 
@@ -5435,7 +5437,7 @@ H5CX_set_actual_selection_io_mode(uint32_t actual_selection_io_mode)
     /* If we're using the default DXPL, don't modify it */
     if ((*head)->ctx.dxpl_id != H5P_DATASET_XFER_DEFAULT) {
         /* Cache the value for later, marking it to set in DXPL when context popped */
-        (*head)->ctx.actual_selection_io_mode     = actual_selection_io_mode;
+        (*head)->ctx.actual_selection_io_mode                = actual_selection_io_mode;
         (*head)->ctx.dxpl_flags.actual_selection_io_mode_set = true;
     }
 
@@ -5733,8 +5735,9 @@ H5CX_pop(bool update_dxpl_props)
          * it was never set by the library, in that case it indicates no I/O was performed and we don't want
          * to leave the (possibly incorrect) old value in the property list, so set from the default property
          * list */
-        if ((*head)->ctx.dxpl_id != H5P_DATASET_XFER_DEFAULT && !(*head)->ctx.dxpl_flags.actual_selection_io_mode_set) {
-            (*head)->ctx.actual_selection_io_mode     = H5CX_def_dxpl_cache.actual_selection_io_mode;
+        if ((*head)->ctx.dxpl_id != H5P_DATASET_XFER_DEFAULT &&
+            !(*head)->ctx.dxpl_flags.actual_selection_io_mode_set) {
+            (*head)->ctx.actual_selection_io_mode = H5CX_def_dxpl_cache.actual_selection_io_mode;
             (*head)->ctx.dxpl_flags.actual_selection_io_mode_set = true;
         }
 

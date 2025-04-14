@@ -154,8 +154,8 @@ H5_DLL hsize_t H5FD_sb_size(H5FD_int_t *file);
 H5_DLL herr_t  H5FD_sb_encode(H5FD_int_t *file, char *name /*out*/, uint8_t *buf);
 H5_DLL void   *H5FD_fapl_get(H5FD_int_t *fh);
 H5_DLL herr_t  H5FD_free_driver_info(const H5FD_driver_t *driver, const void *driver_info);
-H5_DLL herr_t H5FD_open_wrap(bool attempt, H5FD_int_t **fh, const char *name, unsigned flags, H5P_genplist_t *fapl,
-                        haddr_t maxaddr);
+H5_DLL herr_t  H5FD_open_wrap(bool attempt, H5FD_int_t **fh, const char *name, unsigned flags,
+                              H5P_genplist_t *fapl, haddr_t maxaddr);
 H5_DLL herr_t H5FD_open(bool attempt, H5FD_int_t **fh, const char *name, unsigned flags, H5P_genplist_t *fapl,
                         haddr_t maxaddr);
 H5_DLL herr_t H5FD_close(H5FD_int_t *fh);

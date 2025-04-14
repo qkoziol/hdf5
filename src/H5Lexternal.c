@@ -144,7 +144,8 @@ H5L__extern_traverse(const char H5_ATTR_UNUSED *link_name, hid_t cur_group, cons
         HGOTO_ERROR(H5E_LINK, H5E_CANTGET, H5I_INVALID_HID, "can't get fapl for links");
     if (NULL == fapl)
         if (NULL == (fapl = H5F_get_access_plist(loc.oloc->file, false)))
-            HGOTO_ERROR(H5E_LINK, H5E_CANTGET, H5I_INVALID_HID, "can't get parent's file access property list");
+            HGOTO_ERROR(H5E_LINK, H5E_CANTGET, H5I_INVALID_HID,
+                        "can't get parent's file access property list");
 
     /* Get the access flags set for lapl_id, if any */
     if (H5P_get(lapl, H5L_ACS_ELINK_FLAGS_NAME, &intent) < 0)
@@ -177,7 +178,8 @@ H5L__extern_traverse(const char H5_ATTR_UNUSED *link_name, hid_t cur_group, cons
         /* Check if we need to allocate larger buffer */
         if (group_name_len > sizeof(local_group_name)) {
             if (NULL == (parent_group_name = (char *)H5MM_malloc(group_name_len)))
-                HGOTO_ERROR(H5E_LINK, H5E_CANTALLOC, H5I_INVALID_HID, "can't allocate buffer to hold group name, group_name_len = %zu", group_name_len);
+                HGOTO_ERROR(H5E_LINK, H5E_CANTALLOC, H5I_INVALID_HID,
+                            "can't allocate buffer to hold group name, group_name_len = %zu", group_name_len);
         } /* end if */
         else
             parent_group_name = local_group_name;
@@ -189,7 +191,8 @@ H5L__extern_traverse(const char H5_ATTR_UNUSED *link_name, hid_t cur_group, cons
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
-                ret_value = (cb_info.func)(parent_file_name, parent_group_name, file_name, obj_name, &intent, H5P_PLIST_ID(fapl), cb_info.user_data);
+                ret_value = (cb_info.func)(parent_file_name, parent_group_name, file_name, obj_name, &intent,
+                                           H5P_PLIST_ID(fapl), cb_info.user_data);
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
@@ -205,8 +208,10 @@ H5L__extern_traverse(const char H5_ATTR_UNUSED *link_name, hid_t cur_group, cons
         HGOTO_ERROR(H5E_LINK, H5E_CANTGET, H5I_INVALID_HID, "can't get external link prefix");
 
     /* Search for the target file */
-    if (H5F_prefix_open_file(false, &ext_file, loc.oloc->file, H5F_PREFIX_ELINK, elink_prefix, file_name, intent, fapl) < 0)
-        HGOTO_ERROR(H5E_LINK, H5E_CANTOPENFILE, H5I_INVALID_HID, "unable to open external file, external link file name = '%s'", file_name);
+    if (H5F_prefix_open_file(false, &ext_file, loc.oloc->file, H5F_PREFIX_ELINK, elink_prefix, file_name,
+                             intent, fapl) < 0)
+        HGOTO_ERROR(H5E_LINK, H5E_CANTOPENFILE, H5I_INVALID_HID,
+                    "unable to open external file, external link file name = '%s'", file_name);
 
     /* Retrieve the "group location" for the file's root group */
     if (H5G_root_loc(ext_file, &root_loc) < 0)

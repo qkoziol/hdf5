@@ -702,9 +702,9 @@ done:
 static H5FD_t *
 H5FD__splitter_open(const char *name, unsigned flags, hid_t H5_ATTR_UNUSED fapl_id, haddr_t maxaddr)
 {
-    H5FD_splitter_t            *file        = NULL; /* Splitter VFD info */
-    const H5FD_splitter_fapl_t *fa          = NULL; /* Driver-specific property list */
-    H5FD_splitter_fapl_t       *def_fa      = NULL;
+    H5FD_splitter_t            *file      = NULL; /* Splitter VFD info */
+    const H5FD_splitter_fapl_t *fa        = NULL; /* Driver-specific property list */
+    H5FD_splitter_fapl_t       *def_fa    = NULL;
     H5FD_t                     *ret_value = NULL;
 
     FUNC_ENTER_PACKAGE
@@ -1384,8 +1384,8 @@ done:
 static herr_t
 H5FD__splitter_delete(const char *filename, hid_t fapl_id)
 {
-    const H5FD_splitter_fapl_t *fa          = NULL;
-    H5FD_splitter_fapl_t       *def_fa      = NULL;
+    const H5FD_splitter_fapl_t *fa        = NULL;
+    H5FD_splitter_fapl_t       *def_fa    = NULL;
     herr_t                      ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
