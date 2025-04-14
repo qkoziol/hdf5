@@ -705,8 +705,6 @@ H5FD__splitter_open(const char *name, unsigned flags, hid_t H5_ATTR_UNUSED fapl_
     H5FD_splitter_t            *file        = NULL; /* Splitter VFD info */
     const H5FD_splitter_fapl_t *fa          = NULL; /* Driver-specific property list */
     H5FD_splitter_fapl_t       *def_fa      = NULL;
-    hid_t                       old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
-    hid_t                       under_fapl_id;                 /* ID for member FAPL */
     H5FD_t                     *ret_value = NULL;
 
     FUNC_ENTER_PACKAGE
@@ -761,34 +759,16 @@ H5FD__splitter_open(const char *name, unsigned flags, hid_t H5_ATTR_UNUSED fapl_
                 HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL, "unable to open log file");
         } /* end if logfile path given */
 
-    /* Retrieve the current FAPL in the API context */
-    if ((old_fapl_id = H5CX_get_fapl()) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get file access property list");
-
-    /* Verify access property list and set up collective metadata if appropriate */
-    under_fapl_id = H5P_PLIST_ID(file->fa.rw_fapl);
-    if (H5CX_set_apl(&under_fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, false) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, NULL, "can't set access property list info");
-
-    if (H5FD_open(false, &file->rw_file, name, flags, file->fa.rw_fapl, HADDR_UNDEF) < 0)
+    if (H5FD_open_wrap(false, &file->rw_file, name, flags, file->fa.rw_fapl, HADDR_UNDEF) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL, "unable to open R/W file");
 
-    /* Verify access property list and set up collective metadata if appropriate */
-    under_fapl_id = H5P_PLIST_ID(file->fa.wo_fapl);
-    if (H5CX_set_apl(&under_fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, false) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, NULL, "can't set access property list info");
-
-    if (H5FD_open(false, &file->wo_file, fa->wo_path, flags, file->fa.wo_fapl, HADDR_UNDEF) < 0)
+    if (H5FD_open_wrap(false, &file->wo_file, fa->wo_path, flags, file->fa.wo_fapl, HADDR_UNDEF) < 0)
         H5FD_SPLITTER_WO_ERROR(file, __func__, H5E_VFL, H5E_CANTOPENFILE, NULL, "unable to open W/O file")
 
     /* Set return value */
     ret_value = (H5FD_t *)file;
 
 done:
-    /* Restore previous FAPL in the API contxt */
-    if (old_fapl_id > 0)
-        H5CX_set_fapl(old_fapl_id);
-
     if (def_fa && H5FD__splitter_fapl_free(def_fa) < 0)
         HDONE_ERROR(H5E_VFL, H5E_CANTFREE, NULL, "unable to free split file FAPL");
 
@@ -1128,7 +1108,7 @@ H5FD__splitter_get_handle(H5FD_t *_file, hid_t H5_ATTR_UNUSED fapl_id, void **fi
     assert(file_handle);
 
     /* Only do for R/W channel */
-    if (H5FD_get_vfd_handle(file->rw_file, file->fa.rw_fapl, file_handle) < 0)
+    if (H5FD_get_vfd_handle_wrap(file->rw_file, file->fa.rw_fapl, file_handle) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "unable to get handle of R/W file");
 
 done:
@@ -1406,8 +1386,6 @@ H5FD__splitter_delete(const char *filename, hid_t fapl_id)
 {
     const H5FD_splitter_fapl_t *fa          = NULL;
     H5FD_splitter_fapl_t       *def_fa      = NULL;
-    hid_t                       old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
-    hid_t                       under_fapl_id;                 /* ID for member FAPL */
     herr_t                      ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
@@ -1446,31 +1424,13 @@ H5FD__splitter_delete(const char *filename, hid_t fapl_id)
         }
     }
 
-    /* Retrieve the current FAPL in the API context */
-    if ((old_fapl_id = H5CX_get_fapl()) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get file access property list");
-
-    /* Verify access property list and set up collective metadata if appropriate */
-    under_fapl_id = H5P_PLIST_ID(fa->rw_fapl);
-    if (H5CX_set_apl(&under_fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, false) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set access property list info");
-
-    if (H5FD_delete(filename, fa->rw_fapl) < 0)
+    if (H5FD_delete_wrap(filename, fa->rw_fapl) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTDELETEFILE, FAIL, "unable to delete file");
 
-    /* Verify access property list and set up collective metadata if appropriate */
-    under_fapl_id = H5P_PLIST_ID(fa->wo_fapl);
-    if (H5CX_set_apl(&under_fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, false) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set access property list info");
-
-    if (H5FD_delete(fa->wo_path, fa->wo_fapl) < 0)
+    if (H5FD_delete_wrap(fa->wo_path, fa->wo_fapl) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTDELETEFILE, FAIL, "unable to delete W/O channel file");
 
 done:
-    /* Restore previous FAPL in the API contxt */
-    if (old_fapl_id > 0)
-        H5CX_set_fapl(old_fapl_id);
-
     if (def_fa && H5FD__splitter_fapl_free(def_fa) < 0)
         HDONE_ERROR(H5E_VFL, H5E_CANTFREE, FAIL, "unable to free split file FAPL");
 

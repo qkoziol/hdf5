@@ -1147,8 +1147,6 @@ H5FD__subfiling_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t ma
     const H5FD_subfiling_fapl_t *fa   = NULL; /* Driver-specific property list */
     H5FD_subfiling_fapl_t        default_fa;  /* Default driver info, if not set */
     H5P_genplist_t              *fapl        = NULL;
-    hid_t                        old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
-    hid_t                        ioc_fapl_id;                   /* ID for FAPL */
     bool                         bcasted_eof = false;
     int64_t                      sf_eof      = -1;
     int                          mpi_code; /* MPI return code */
@@ -1248,17 +1246,8 @@ H5FD__subfiling_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t ma
     /* Set stub file ID on IOC fapl so it can reuse on open */
     H5CX_set_sf_stub_file_id(file->file_id);
 
-    /* Retrieve the current FAPL in the API context */
-    if ((old_fapl_id = H5CX_get_fapl()) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get file access property list");
-
-    /* Verify access property list and set up collective metadata if appropriate */
-    ioc_fapl_id = H5P_PLIST_ID(file->fa.ioc_fapl);
-    if (H5CX_set_apl(&ioc_fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, true) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, NULL, "can't set access property list info");
-
     /* Open the HDF5 file's subfiles */
-    if (H5FD_open(false, &file->sf_file, name, flags, file->fa.ioc_fapl, HADDR_UNDEF) < 0)
+    if (H5FD_open_wrap(false, &file->sf_file, name, flags, file->fa.ioc_fapl, HADDR_UNDEF) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL, "unable to open IOC file");
 
     /* Get a copy of the context ID for later use */
@@ -1282,10 +1271,6 @@ H5FD__subfiling_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t ma
     ret_value = (H5FD_t *)file;
 
 done:
-    /* Restore previous FAPL in the API contxt */
-    if (old_fapl_id > 0)
-        H5CX_set_fapl(old_fapl_id);
-
     if (fa == &default_fa)
         if (H5P_release(fa->ioc_fapl) < 0)
             HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, NULL, "can't close IOC FAPL");
@@ -1545,7 +1530,7 @@ H5FD__subfiling_get_handle(H5FD_t *_file, hid_t H5_ATTR_UNUSED fapl, void **file
     if (!file_handle)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "file handle not valid");
 
-    if (H5FD_get_vfd_handle(file->sf_file, file->fa.ioc_fapl, file_handle) < 0)
+    if (H5FD_get_vfd_handle_wrap(file->sf_file, file->fa.ioc_fapl, file_handle) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get subfile handle");
 
 done:
@@ -1830,8 +1815,6 @@ H5FD__subfiling_delete(const char *name, hid_t fapl_id)
 {
     const H5FD_subfiling_fapl_t *subfiling_fa = NULL;
     H5FD_subfiling_fapl_t        default_fa;
-    hid_t                        old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
-    hid_t                        ioc_fapl_id;                   /* ID for FAPL */
     herr_t                       ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
@@ -1852,23 +1835,10 @@ H5FD__subfiling_delete(const char *name, hid_t fapl_id)
         subfiling_fa = &default_fa;
     }
 
-    /* Retrieve the current FAPL in the API context */
-    if ((old_fapl_id = H5CX_get_fapl()) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get file access property list");
-
-    /* Verify access property list and set up collective metadata if appropriate */
-    ioc_fapl_id = H5P_PLIST_ID(subfiling_fa->ioc_fapl);
-    if (H5CX_set_apl(&ioc_fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, false) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set access property list info");
-
-    if (H5FD_delete(name, subfiling_fa->ioc_fapl) < 0)
+    if (H5FD_delete_wrap(name, subfiling_fa->ioc_fapl) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTDELETE, FAIL, "unable to delete file");
 
 done:
-    /* Restore previous FAPL in the API contxt */
-    if (old_fapl_id > 0)
-        H5CX_set_fapl(old_fapl_id);
-
     if (subfiling_fa == &default_fa)
         if (H5P_release(subfiling_fa->ioc_fapl) < 0)
             HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "unable to close IOC FAPL");

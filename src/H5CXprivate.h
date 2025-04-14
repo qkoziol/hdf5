@@ -22,6 +22,7 @@
 #ifdef H5_HAVE_PARALLEL
 #include "H5FDprivate.h" /* File drivers                         */
 #endif                   /* H5_HAVE_PARALLEL */
+#include "H5Lprivate.h"  /* Links                                */
 #include "H5Oprivate.h"  /* Object headers                       */
 #include "H5Pprivate.h"  /* Property lists                       */
 #include "H5Tprivate.h"  /* Datatypes                            */
@@ -56,6 +57,147 @@ typedef struct H5CX_state_t {
     bool coll_metadata_read; /* Whether to use collective I/O for metadata read */
 #endif                       /* H5_HAVE_PARALLEL */
 } H5CX_state_t;
+
+/* 'valid' & 'set' flags for cached DXPL properties */
+typedef struct H5CX_cached_dxpl_flags_t {
+    bool max_temp_buf_valid : 1;      /* Whether maximum temporary buffer size is valid */
+    bool tconv_buf_valid : 1;         /* Whether temporary conversion buffer is valid */
+    bool bkgr_buf_valid : 1;          /* Whether background conversion buffer is valid */
+    bool bkgr_buf_type_valid : 1;     /* Whether background buffer type is valid */
+    bool btree_split_ratio_valid : 1; /* Whether B-tree split ratios are valid */
+    bool vec_size_valid : 1;          /* Whether hyperslab vector is valid */
+#ifdef H5_HAVE_PARALLEL
+    bool io_xfer_mode_valid : 1;         /* Whether parallel transfer mode is valid */
+    bool mpio_coll_opt_valid : 1;        /* Whether parallel transfer option is valid */
+    bool mpio_chunk_opt_mode_valid : 1;  /* Whether collective chunk option is valid */
+    bool mpio_chunk_opt_num_valid : 1;   /* Whether collective chunk threshold is valid */
+    bool mpio_chunk_opt_ratio_valid : 1; /* Whether collective chunk ratio is valid */
+#endif                                   /* H5_HAVE_PARALLEL */
+    bool err_detect_valid : 1;           /* Whether error detection info is valid */
+    bool filter_cb_valid : 1;            /* Whether filter callback function is valid */
+    bool data_transform_valid : 1;       /* Whether data transform info is valid */
+    bool vl_alloc_info_valid : 1;        /* Whether VL datatype alloc info is valid */
+    bool dt_conv_cb_valid : 1;           /* Whether datatype conversion struct is valid */
+    bool selection_io_mode_valid : 1;    /* Whether selection I/O mode is valid */
+    bool modify_write_buf_valid : 1;     /* Whether the modify_write_buf field is valid */
+
+    /* Return-only DXPL properties to return to application */
+#ifdef H5_HAVE_PARALLEL
+    bool mpio_actual_chunk_opt_set : 1;    /* Whether chunk optimization mode used for parallel I/O is set */
+    bool mpio_actual_io_mode_set : 1;      /* Whether actual I/O mode used for parallel I/O is set */
+    bool mpio_local_no_coll_cause_set : 1; /* Whether local reason for breaking collective I/O is set */
+    bool mpio_local_no_coll_cause_valid : 1;  /* Whether local reason for breaking collective I/O is valid */
+    bool mpio_global_no_coll_cause_set : 1;   /* Whether global reason for breaking collective I/O is set */
+    bool mpio_global_no_coll_cause_valid : 1; /* Whether global reason for breaking collective I/O is valid */
+#ifdef H5_HAVE_INSTRUMENTED_LIBRARY
+    bool mpio_coll_chunk_link_hard_set : 1;  /* Whether instrumented "collective chunk link hard" value is set */
+    bool mpio_coll_chunk_multi_hard_set : 1; /* Whether instrumented "collective chunk multi hard" value is set */
+    bool mpio_coll_chunk_link_num_true_set : 1; /* Whether instrumented "collective chunk link num true" value is set */
+    bool mpio_coll_chunk_link_num_false_set : 1;   /* Whether instrumented "collective chunk link num false" value is set */
+    bool mpio_coll_chunk_multi_ratio_coll_set : 1; /* Whether instrumented "collective chunk multi ratio coll" value is set */
+    bool mpio_coll_chunk_multi_ratio_ind_set : 1;  /* Whether instrumented "collective chunk multi ratio ind" value is set */
+    bool mpio_coll_rank0_bcast_set : 1; /* Whether instrumented "collective rank 0 broadcast" value is set */
+#endif                                  /* H5_HAVE_INSTRUMENTED_LIBRARY */
+#endif                                  /* H5_HAVE_PARALLEL */
+    bool no_selection_io_cause_set : 1; /* Whether reason for not performing selection I/O is set */
+    bool no_selection_io_cause_valid : 1; /* Whether reason for not performing selection I/O is valid */
+    bool actual_selection_io_mode_set : 1;   /* Whether actual selection I/O mode is set */
+    bool actual_selection_io_mode_valid : 1; /* Whether actual selection I/O mode is valid */
+    bool dset_io_selection_valid : 1;        /* Whether dataset I/O selection is valid */
+} H5CX_cached_dxpl_flags_t;
+
+/* 'valid' & 'set' flags for cached DXPL properties */
+typedef struct H5CX_cached_lcpl_flags_t {
+    bool encoding_valid : 1;           /* Whether link name character encoding is valid */
+    bool intermediate_group_valid : 1; /* Whether create intermediate group flag is valid */
+} H5CX_cached_lcpl_flags_t;
+
+/* 'valid' & 'set' flags for cached LAPL properties */
+typedef struct H5CX_cached_lapl_flags_t {
+#ifdef H5_HAVE_PARALLEL
+    bool lapl_coll_md_read_valid : 1; /* Whether collective metadata read property is valid */
+#endif                                /* H5_HAVE_PARALLEL */
+    bool elink_prefix_valid : 1;      /* Whether the prefix for external link prefix is valid */
+    bool elink_cb_info_valid : 1;      /* Whether the prefix for external link callback is valid */
+    bool nlinks_valid : 1;            /* Whether number of soft / UD links to traverse is valid */
+} H5CX_cached_lapl_flags_t;
+
+/* 'valid' & 'set' flags for cached OCPL properties */
+typedef struct H5CX_cached_ocpl_flags_t {
+#ifdef H5O_ENABLE_BAD_MESG_COUNT
+    bool bad_mesg_count_valid : 1; /* Whether the write a bad message count to the object header flag is valid */
+#endif                             /* H5O_ENABLE_BAD_MESG_COUNT */
+    bool attr_max_compact_valid : 1; /* Whether the min dense attrs value is valid */
+    bool attr_min_dense_valid : 1; /* Whether the min dense attrs value is valid (H5O_CRT_ATTR_MIN_DENSE_NAME) */
+    bool ohdr_flags_valid : 1;     /* Whether the object headers flags are valid */
+    bool pline_valid : 1;          /* Whether the filter pipeline for object creation is valid */
+} H5CX_cached_ocpl_flags_t;
+
+/* 'valid' & 'set' flags for cached OCPYPL properties */
+typedef struct H5CX_cached_ocpypl_flags_t {
+    bool comm_dtype_merge_list_valid : 1; /* Whether the committed datatype merge list for object copy is valid */
+} H5CX_cached_ocpypl_flags_t;
+
+/* 'valid' & 'set' flags for cached DCPL properties */
+typedef struct H5CX_cached_dcpl_flags_t {
+    bool min_dset_ohdr_valid : 1; /* Whether minimize dataset object header flag is valid */
+    bool layout_valid : 1;        /* Whether the storage layout for object creation is valid */
+} H5CX_cached_dcpl_flags_t;
+
+/* 'valid' & 'set' flags for cached DAPL properties */
+typedef struct H5CX_cached_dapl_flags_t {
+    bool extfile_prefix_valid : 1; /* Whether the prefix for external file is valid */
+    bool vds_prefix_valid : 1;     /* Whether the prefix for VDS is valid           */
+} H5CX_cached_dapl_flags_t;
+
+/* 'valid' & 'set' flags for cached FAPL properties */
+typedef struct H5CX_cached_fapl_flags_t {
+#ifdef H5_HAVE_PARALLEL
+    bool mpi_comm_valid : 1;          /* Whether the MPI communicator is valid */
+    bool mpi_info_valid : 1;          /* Whether the MPI info object is valid */
+    bool fapl_coll_md_read_valid : 1; /* Whether collective metadata read property is valid */
+    bool coll_md_write_valid : 1;     /* Whether collective metadata write property is valid */
+#ifdef H5_HAVE_SUBFILING_VFD
+    bool sf_ioc_params_valid : 1;      /* Whether subfiling IOC parameters property is valid */
+#endif                                 /* H5_HAVE_SUBFILING_VFD */
+#endif                                 /* H5_HAVE_PARALLEL */
+    bool vol_connector_prop_valid : 1; /* Whether property for VOL connector ID & info is valid */
+    bool driver_prop_valid : 1;        /* Whether property for driver, info & configuration string is valid */
+    bool file_image_info_valid : 1;    /* Whether property for file image info is valid */
+    bool low_bound_valid : 1;          /* Whether low_bound property is valid */
+    bool high_bound_valid : 1;         /* Whether high_bound property is valid */
+    bool use_file_locking_valid : 1;   /* Whether use_file_locking property is valid */
+    bool ignore_disabled_locks_valid : 1;       /* Whether ignore_disabled_locks property is valid */
+    bool align_bound_valid : 1;                 /* Whether alignment bound property is valid */
+    bool align_threshold_valid : 1;             /* Whether alignment threshold property is valid */
+    bool clear_status_flags_valid : 1;          /* Whether clear_status_flags property is valid */
+    bool gc_ref_valid : 1;                      /* Whether gc_ref property is valid */
+    bool use_mdc_logging_valid : 1;             /* Whether use_mdc_logging property is valid */
+    bool mdc_log_location_valid : 1;            /* Whether mdc_log_location property is valid */
+    bool start_mdc_logging_on_access_valid : 1; /* Whether start_mdc_logging_on_access property is valid */
+    bool mdc_read_attempts_valid : 1;           /* Whether metadata cache read attempts property is valid */
+    bool meta_alloc_block_size_valid : 1;       /* Whether metadata allocation block size property is valid */
+    bool mdc_init_config_valid : 1; /* Whether metadata cache initialization configuration property is valid */
+    bool mdc_image_config_valid : 1; /* Whether metadata cache image initial configuration property is valid */
+    bool object_flush_strategy_valid : 1; /* Whether object flush strategy property is valid */
+    bool pb_size_valid : 1;               /* Whether page buffer size property is valid */
+    bool pb_min_meta_perc_valid : 1;      /* Whether minimum metadata percentage property is valid */
+    bool pb_min_raw_perc_valid : 1;       /* Whether minimum raw percentage property is valid */
+    bool rdcc_nbytes_valid : 1;           /* Whether raw data cache byte size property is valid */
+    bool rdcc_nslots_valid : 1;           /* Whether raw data cache number of slots property is valid */
+    bool rdcc_w0_valid : 1;               /* Whether raw data cache preemption factor property is valid */
+    bool efc_size_valid : 1;              /* Whether external file cache size property is valid */
+    bool close_degree_valid : 1;          /* Whether file close degree property is valid */
+    bool evict_on_close_valid : 1;        /* Whether evict on close property is valid */
+    bool rfic_flags_valid : 1;            /* Whether relaxed file integrity checks property is valid */
+    bool sdata_block_size_valid : 1;      /* Whether "small" raw data block size property is valid */
+    bool sieve_buf_size_valid : 1;        /* Whether sieve buffer size property is valid */
+    bool null_fsm_addr_valid : 1;         /* Whether null file space map address property is valid */
+    bool skip_eof_check_valid : 1;        /* Whether skip EOF check property is valid */
+    bool fam_to_single_valid : 1;         /* Whether family to single file property is valid */
+    bool fam_offset_valid : 1;            /* Whether family offset property is valid */
+    bool fam_newsize_valid : 1;           /* Whether family new size property is valid */
+} H5CX_cached_fapl_flags_t;
 
 /* Typedef for context about each API call, as it proceeds */
 /* Fields in this struct are of several types:
@@ -218,6 +360,7 @@ typedef struct H5CX_t {
         lapl_coll_md_read;    /* Property for collective metadata read (H5_COLL_MD_READ_FLAG_NAME) */
 #endif                        /* H5_HAVE_PARALLEL */
     const char *elink_prefix; /* Prefix for external link prefix (H5L_ACS_ELINK_PREFIX_NAME) */
+    H5L_elink_cb_t  elink_cb_info;  /* External link callback info struct (H5L_ACS_ELINK_CB_NAME) */
     size_t      nlinks;       /* Number of soft / UD links to traverse (H5L_ACS_NLINKS_NAME) */
 
     /* Cached OCPL properties */
@@ -306,7 +449,7 @@ typedef struct H5CX_t {
     hsize_t fam_offset;    /* Property for family offset (H5F_ACS_FAMILY_OFFSET_NAME) */
     hsize_t fam_newsize;   /* Property for size of new family file (H5F_ACS_FAMILY_NEWSIZE_NAME) */
 
-    /* Cached VOL settings */
+    /* Internal: Cached VOL settings */
     void *vol_wrap_ctx; /* VOL connector's "wrap context" for creating IDs */
 
     /*********************************************************************
@@ -314,143 +457,17 @@ typedef struct H5CX_t {
      * which helps to keep the size of the struct down.                  *
      *********************************************************************/
 
-    /* Cached DXPL properties */
-    bool max_temp_buf_valid : 1;      /* Whether maximum temporary buffer size is valid */
-    bool tconv_buf_valid : 1;         /* Whether temporary conversion buffer is valid */
-    bool bkgr_buf_valid : 1;          /* Whether background conversion buffer is valid */
-    bool bkgr_buf_type_valid : 1;     /* Whether background buffer type is valid */
-    bool btree_split_ratio_valid : 1; /* Whether B-tree split ratios are valid */
-    bool vec_size_valid : 1;          /* Whether hyperslab vector is valid */
-#ifdef H5_HAVE_PARALLEL
-    bool io_xfer_mode_valid : 1;         /* Whether parallel transfer mode is valid */
-    bool mpio_coll_opt_valid : 1;        /* Whether parallel transfer option is valid */
-    bool mpio_chunk_opt_mode_valid : 1;  /* Whether collective chunk option is valid */
-    bool mpio_chunk_opt_num_valid : 1;   /* Whether collective chunk threshold is valid */
-    bool mpio_chunk_opt_ratio_valid : 1; /* Whether collective chunk ratio is valid */
-#endif                                   /* H5_HAVE_PARALLEL */
-    bool err_detect_valid : 1;           /* Whether error detection info is valid */
-    bool filter_cb_valid : 1;            /* Whether filter callback function is valid */
-    bool data_transform_valid : 1;       /* Whether data transform info is valid */
-    bool vl_alloc_info_valid : 1;        /* Whether VL datatype alloc info is valid */
-    bool dt_conv_cb_valid : 1;           /* Whether datatype conversion struct is valid */
-    bool selection_io_mode_valid : 1;    /* Whether selection I/O mode is valid */
-    bool modify_write_buf_valid : 1;     /* Whether the modify_write_buf field is valid */
+    /* Flags for each type of cached properties */
+    H5CX_cached_dxpl_flags_t dxpl_flags;
+    H5CX_cached_lcpl_flags_t lcpl_flags;
+    H5CX_cached_lapl_flags_t lapl_flags;
+    H5CX_cached_ocpl_flags_t ocpl_flags;
+    H5CX_cached_ocpypl_flags_t ocpypl_flags;
+    H5CX_cached_dcpl_flags_t dcpl_flags;
+    H5CX_cached_dapl_flags_t dapl_flags;
+    H5CX_cached_fapl_flags_t fapl_flags;
 
-    /* Return-only DXPL properties to return to application */
-#ifdef H5_HAVE_PARALLEL
-    bool mpio_actual_chunk_opt_set : 1;    /* Whether chunk optimization mode used for parallel I/O is set */
-    bool mpio_actual_io_mode_set : 1;      /* Whether actual I/O mode used for parallel I/O is set */
-    bool mpio_local_no_coll_cause_set : 1; /* Whether local reason for breaking collective I/O is set */
-    bool mpio_local_no_coll_cause_valid : 1;  /* Whether local reason for breaking collective I/O is valid */
-    bool mpio_global_no_coll_cause_set : 1;   /* Whether global reason for breaking collective I/O is set */
-    bool mpio_global_no_coll_cause_valid : 1; /* Whether global reason for breaking collective I/O is valid */
-#ifdef H5_HAVE_INSTRUMENTED_LIBRARY
-    bool mpio_coll_chunk_link_hard_set : 1;  /* Whether instrumented "collective chunk link hard" value is set
-                                              */
-    bool mpio_coll_chunk_multi_hard_set : 1; /* Whether instrumented "collective chunk multi hard" value is
-                                                set */
-    bool mpio_coll_chunk_link_num_true_set : 1; /* Whether instrumented "collective chunk link num true" value
-                                                   is set */
-    bool mpio_coll_chunk_link_num_false_set : 1;   /* Whether instrumented "collective chunk link num false"
-                                                      value is set */
-    bool mpio_coll_chunk_multi_ratio_coll_set : 1; /* Whether instrumented "collective chunk multi ratio coll"
-                                                      value is set */
-    bool mpio_coll_chunk_multi_ratio_ind_set : 1;  /* Whether instrumented "collective chunk multi ratio ind"
-                                                      value is set */
-    bool mpio_coll_rank0_bcast_set : 1; /* Whether instrumented "collective rank 0 broadcast" value is set */
-#endif                                  /* H5_HAVE_INSTRUMENTED_LIBRARY */
-#endif                                  /* H5_HAVE_PARALLEL */
-    bool no_selection_io_cause_set : 1; /* Whether reason for not performing selection I/O is set */
-    bool no_selection_io_cause_valid : 1; /* Whether reason for not performing selection I/O is valid */
-
-    bool actual_selection_io_mode_set : 1;   /* Whether actual selection I/O mode is set */
-    bool actual_selection_io_mode_valid : 1; /* Whether actual selection I/O mode is valid */
-    bool dset_io_selection_valid : 1;        /* Whether dataset I/O selection is valid */
-
-    /* Cached LCPL properties */
-    bool encoding_valid : 1;           /* Whether link name character encoding is valid */
-    bool intermediate_group_valid : 1; /* Whether create intermediate group flag is valid */
-
-    /* Cached LAPL properties */
-#ifdef H5_HAVE_PARALLEL
-    bool lapl_coll_md_read_valid : 1; /* Whether collective metadata read property is valid */
-#endif                                /* H5_HAVE_PARALLEL */
-    bool elink_prefix_valid : 1;      /* Whether the prefix for external link prefix is valid */
-    bool nlinks_valid : 1;            /* Whether number of soft / UD links to traverse is valid */
-
-    /* Cached OCPL properties */
-#ifdef H5O_ENABLE_BAD_MESG_COUNT
-    bool bad_mesg_count_valid : 1; /* Whether the write a bad message count to the object header flag is valid
-                                    */
-#endif                             /* H5O_ENABLE_BAD_MESG_COUNT */
-    bool attr_max_compact_valid : 1; /* Whether the min dense attrs value is valid */
-    bool attr_min_dense_valid : 1; /* Whether the min dense attrs value is valid (H5O_CRT_ATTR_MIN_DENSE_NAME)
-                                    */
-    bool ohdr_flags_valid : 1;     /* Whether the object headers flags are valid */
-    bool pline_valid : 1;          /* Whether the filter pipeline for object creation is valid */
-
-    /* Cached OCPYPL properties */
-    bool comm_dtype_merge_list_valid : 1; /* Whether the committed datatype merge list for object copy is
-                                             valid */
-
-    /* Cached DCPL properties */
-    bool min_dset_ohdr_valid : 1; /* Whether minimize dataset object header flag is valid */
-    bool layout_valid : 1;        /* Whether the storage layout for object creation is valid */
-
-    /* Cached DAPL properties */
-    bool extfile_prefix_valid : 1; /* Whether the prefix for external file is valid */
-    bool vds_prefix_valid : 1;     /* Whether the prefix for VDS is valid           */
-
-    /* Cached FAPL properties */
-#ifdef H5_HAVE_PARALLEL
-    bool mpi_comm_valid : 1;          /* Whether the MPI communicator is valid */
-    bool mpi_info_valid : 1;          /* Whether the MPI info object is valid */
-    bool fapl_coll_md_read_valid : 1; /* Whether collective metadata read property is valid */
-    bool coll_md_write_valid : 1;     /* Whether collective metadata write property is valid */
-#ifdef H5_HAVE_SUBFILING_VFD
-    bool sf_ioc_params_valid : 1;      /* Whether subfiling IOC parameters property is valid */
-#endif                                 /* H5_HAVE_SUBFILING_VFD */
-#endif                                 /* H5_HAVE_PARALLEL */
-    bool vol_connector_prop_valid : 1; /* Whether property for VOL connector ID & info is valid */
-    bool driver_prop_valid : 1;        /* Whether property for driver, info & configuration string is valid */
-    bool file_image_info_valid : 1;    /* Whether property for file image info is valid */
-    bool low_bound_valid : 1;          /* Whether low_bound property is valid */
-    bool high_bound_valid : 1;         /* Whether high_bound property is valid */
-    bool use_file_locking_valid : 1;   /* Whether use_file_locking property is valid */
-    bool ignore_disabled_locks_valid : 1;       /* Whether ignore_disabled_locks property is valid */
-    bool align_bound_valid : 1;                 /* Whether alignment bound property is valid */
-    bool align_threshold_valid : 1;             /* Whether alignment threshold property is valid */
-    bool clear_status_flags_valid : 1;          /* Whether clear_status_flags property is valid */
-    bool gc_ref_valid : 1;                      /* Whether gc_ref property is valid */
-    bool use_mdc_logging_valid : 1;             /* Whether use_mdc_logging property is valid */
-    bool mdc_log_location_valid : 1;            /* Whether mdc_log_location property is valid */
-    bool start_mdc_logging_on_access_valid : 1; /* Whether start_mdc_logging_on_access property is valid */
-    bool mdc_read_attempts_valid : 1;           /* Whether metadata cache read attempts property is valid */
-    bool meta_alloc_block_size_valid : 1;       /* Whether metadata allocation block size property is valid */
-    bool
-        mdc_init_config_valid : 1; /* Whether metadata cache initialization configuration property is valid */
-    bool
-        mdc_image_config_valid : 1; /* Whether metadata cache image initial configuration property is valid */
-    bool object_flush_strategy_valid : 1; /* Whether object flush strategy property is valid */
-    bool pb_size_valid : 1;               /* Whether page buffer size property is valid */
-    bool pb_min_meta_perc_valid : 1;      /* Whether minimum metadata percentage property is valid */
-    bool pb_min_raw_perc_valid : 1;       /* Whether minimum raw percentage property is valid */
-    bool rdcc_nbytes_valid : 1;           /* Whether raw data cache byte size property is valid */
-    bool rdcc_nslots_valid : 1;           /* Whether raw data cache number of slots property is valid */
-    bool rdcc_w0_valid : 1;               /* Whether raw data cache preemption factor property is valid */
-    bool efc_size_valid : 1;              /* Whether external file cache size property is valid */
-    bool close_degree_valid : 1;          /* Whether file close degree property is valid */
-    bool evict_on_close_valid : 1;        /* Whether evict on close property is valid */
-    bool rfic_flags_valid : 1;            /* Whether relaxed file integrity checks property is valid */
-    bool sdata_block_size_valid : 1;      /* Whether "small" raw data block size property is valid */
-    bool sieve_buf_size_valid : 1;        /* Whether sieve buffer size property is valid */
-    bool null_fsm_addr_valid : 1;         /* Whether null file space map address property is valid */
-    bool skip_eof_check_valid : 1;        /* Whether skip EOF check property is valid */
-    bool fam_to_single_valid : 1;         /* Whether family to single file property is valid */
-    bool fam_offset_valid : 1;            /* Whether family offset property is valid */
-    bool fam_newsize_valid : 1;           /* Whether family new size property is valid */
-
-    /* Cached VOL settings */
+    /* Flags for cached VOL settings */
     bool vol_wrap_ctx_valid : 1; /* Whether VOL connector's "wrap context" for creating IDs is valid */
 } H5CX_t;
 
@@ -552,6 +569,7 @@ H5_DLL herr_t H5CX_get_intermediate_group(unsigned *crt_intermed_group);
 H5_DLL herr_t H5CX_get_lapl_coll_md_read(H5P_coll_md_read_flag_t *coll_md_read);
 #endif /* H5_HAVE_PARALLEL */
 H5_DLL herr_t H5CX_peek_elink_prefix(const char **elink_prefix);
+H5_DLL herr_t H5CX_get_elink_cb_info(H5L_elink_cb_t *cb_info);
 H5_DLL herr_t H5CX_get_nlinks(size_t *nlinks);
 
 /* "Getter" routines for OCPL properties cached in API context */

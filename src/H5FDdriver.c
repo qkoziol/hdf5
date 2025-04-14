@@ -274,6 +274,51 @@ done:
 } /* end H5FD_free_driver_info() */
 
 /*-------------------------------------------------------------------------
+ * Function:    H5FD_open_wrap
+ *
+ * Purpose:     Wrapper around H5FD_open thata saves and restores the current
+ *              API context state.  Must be used by a routine that passes a
+ *              different FAPL to H5FD_open than the routine was called with.
+ *
+ * Return:      SUCCEED/FAIL
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5FD_open_wrap(bool try, H5FD_int_t **_fh, const char *name, unsigned flags, H5P_genplist_t *fapl, haddr_t maxaddr)
+{
+    hid_t                     old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
+    H5F_close_degree_t        old_fc_degree;                 /* file close degree        */
+    hid_t                     new_fapl_id;                  /* ID for new FAPL */
+    herr_t                 ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Retrieve the current FAPL in the API context */
+    if ((old_fapl_id = H5CX_get_fapl()) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get file access property list");
+    H5CX_get_close_degree(&old_fc_degree);
+
+    /* Verify access property list and set up collective metadata if appropriate */
+    new_fapl_id = H5P_PLIST_ID(fapl);
+    if (H5CX_set_apl(&new_fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, false) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set access property list info");
+
+    /* Call actual H5FD_open routine */
+    if (H5FD_open(try, _fh, name, flags, fapl, maxaddr) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, FAIL, "can't open file");
+
+done :
+    /* Restore previous FAPL in the API context */
+    if (old_fapl_id > 0) {
+        H5CX_set_fapl(old_fapl_id);
+        H5CX_set_close_degree(old_fc_degree);
+    }
+
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5FD_open_wrap() */
+
+/*-------------------------------------------------------------------------
  * Function:    H5FD_open
  *
  * Purpose:     Opens a file named NAME for the type(s) of access described
@@ -724,6 +769,48 @@ H5FD_get_eof(const H5FD_int_t *fh, H5FD_mem_t type)
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FD_get_eof() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5FD_get_vfd_handle_wrap
+ *
+ * Purpose:     Wrapper around H5FD_get_vfd_handle thata saves and restores the
+ *              current API context state.  Must be used by a routine that passes
+ *              a different FAPL to H5FD_get_vfd_handle than the routine was
+ *              called with.
+ *
+ * Return:      SUCCEED/FAIL
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5FD_get_vfd_handle_wrap(H5FD_int_t *fh, const H5P_genplist_t *fapl, void **file_handle)
+{
+    hid_t                     old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
+    hid_t                     new_fapl_id;                  /* ID for new FAPL */
+    herr_t                 ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Retrieve the current FAPL in the API context */
+    if ((old_fapl_id = H5CX_get_fapl()) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get file access property list");
+
+    /* Verify access property list and set up collective metadata if appropriate */
+    new_fapl_id = H5P_PLIST_ID(fapl);
+    if (H5CX_set_apl(&new_fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, false) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set access property list info");
+
+    /* Call actual H5FD_get_vfd_handle routine */
+    if (H5FD_get_vfd_handle(fh, fapl, file_handle) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get file handle");
+
+done :
+    /* Restore previous FAPL in the API context */
+    if (old_fapl_id > 0)
+        H5CX_set_fapl(old_fapl_id);
+
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5FD_get_vfd_handle_wrap() */
 
 /*--------------------------------------------------------------------------
  * Function:    H5FD_get_vfd_handle
@@ -1912,6 +1999,47 @@ H5FD_unlock(H5FD_int_t *fh)
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FD_unlock() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5FD_delete_wrap
+ *
+ * Purpose:     Wrapper around H5FD_delete thata saves and restores the current
+ *              API context state.  Must be used by a routine that passes a
+ *              different FAPL to H5FD_delete than the routine was called with.
+ *
+ * Return:      SUCCEED/FAIL
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5FD_delete_wrap(const char *filename, H5P_genplist_t *fapl)
+{
+    hid_t                     old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
+    hid_t                     new_fapl_id;                  /* ID for new FAPL */
+    herr_t                 ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Retrieve the current FAPL in the API context */
+    if ((old_fapl_id = H5CX_get_fapl()) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get file access property list");
+
+    /* Verify access property list and set up collective metadata if appropriate */
+    new_fapl_id = H5P_PLIST_ID(fapl);
+    if (H5CX_set_apl(&new_fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, false) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set access property list info");
+
+    /* Call actual H5FD_delete routine */
+    if (H5FD_delete(filename, fapl) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTDELETEFILE, FAIL, "can't delete file");
+
+done :
+    /* Restore previous FAPL in the API context */
+    if (old_fapl_id > 0)
+        H5CX_set_fapl(old_fapl_id);
+
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5FD_delete_wrap() */
 
 /*-------------------------------------------------------------------------
  * Function:    H5FD_delete

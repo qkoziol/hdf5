@@ -543,6 +543,13 @@ H5FD__subfiling_open_stub_file(const char *name, unsigned flags, MPI_Comm file_c
         if (H5CX_set_apl(&fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, true) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set access property list info");
 
+        /* NOTE: Can't call H5FD_open_wrap() here, since that routine resets
+         * the cached FAPL properties in the API context, which will cause
+         * a new MPI communicator to be duplicated for rank 0 when the next
+         * collective operation occurs, and then that operation will hang
+         * because the non-zero ranks are on the old communicator and rank 0
+         * is on the new one. -QAK, 2025/04/15
+         */
         if (H5FD_open(false, &stub_file, name, flags, fapl, HADDR_UNDEF) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, FAIL, "couldn't open HDF5 stub file");
 

@@ -839,7 +839,7 @@ H5FD__onion_get_eof(const H5FD_t *_file, H5FD_mem_t H5_ATTR_UNUSED type)
  */
 static herr_t
 H5FD__onion_create_truncate_onion(H5FD_onion_t *file, const char *filename, const char *name_onion,
-                                  const char *recovery_file_nameery, unsigned int flags, haddr_t maxaddr)
+                                  const char *recovery_file_name, unsigned int flags, haddr_t maxaddr)
 {
     H5FD_onion_header_t          *hdr       = NULL;
     H5FD_onion_history_t         *history   = NULL;
@@ -863,12 +863,11 @@ H5FD__onion_create_truncate_onion(H5FD_onion_t *file, const char *filename, cons
     hdr->origin_eof = 0;
 
     /* Create backing files for onion history */
-    if (H5FD_open(false, &file->original_file, filename, flags, file->fa.backing_fapl, maxaddr) < 0)
+    if (H5FD_open_wrap(false, &file->original_file, filename, flags, file->fa.backing_fapl, maxaddr) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, FAIL, "cannot open the backing file");
-    if (H5FD_open(false, &file->onion_file, name_onion, flags, file->fa.backing_fapl, maxaddr) < 0)
+    if (H5FD_open_wrap(false, &file->onion_file, name_onion, flags, file->fa.backing_fapl, maxaddr) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, FAIL, "cannot open the backing onion file");
-    if (H5FD_open(false, &file->recovery_file, recovery_file_nameery, flags, file->fa.backing_fapl, maxaddr) <
-        0)
+    if (H5FD_open_wrap(false, &file->recovery_file, recovery_file_name, flags, file->fa.backing_fapl, maxaddr) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, FAIL, "cannot open the backing file");
 
     /* Write "empty" .h5 file contents (signature ONIONEOF) */
@@ -916,7 +915,7 @@ done:
     H5MM_xfree(buf);
 
     if (FAIL == ret_value)
-        HDremove(recovery_file_nameery); /* destroy new temp file, if 'twas created */
+        HDremove(recovery_file_name); /* destroy new temp file, if 'twas created */
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FD__onion_create_truncate_onion() */
@@ -1038,12 +1037,10 @@ H5FD__onion_open(const char *filename, unsigned flags, hid_t H5_ATTR_UNUSED fapl
     H5FD_onion_t            *file        = NULL;
     const H5FD_onion_fapl_t *fa          = NULL;
     H5FD_onion_fapl_t       *new_fa      = NULL;
-    hid_t                    old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
-    hid_t                    backing_fapl_id;               /* ID for backing FAPL */
     const char              *config_str            = NULL;
     double                   log2_page_size        = 0.0;
     char                    *name_onion            = NULL;
-    char                    *recovery_file_nameery = NULL;
+    char                    *recovery_file_name = NULL;
     bool                     new_open              = false;
     haddr_t                  canon_eof             = 0;
     H5FD_t                  *ret_value             = NULL;
@@ -1085,10 +1082,10 @@ H5FD__onion_open(const char *filename, unsigned flags, hid_t H5_ATTR_UNUSED fapl
         HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "unable to allocate onion name string");
     snprintf(name_onion, strlen(filename) + 7, "%s.onion", filename);
 
-    if (NULL == (recovery_file_nameery = H5MM_malloc(strlen(name_onion) + 10)))
+    if (NULL == (recovery_file_name = H5MM_malloc(strlen(name_onion) + 10)))
         HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "unable to allocate recovery name string");
-    snprintf(recovery_file_nameery, strlen(name_onion) + 10, "%s.recovery", name_onion);
-    file->recovery_file_name = recovery_file_nameery;
+    snprintf(recovery_file_name, strlen(name_onion) + 10, "%s.recovery", name_onion);
+    file->recovery_file_name = recovery_file_name;
 
     if (NULL == (file->recovery_file_name = H5MM_malloc(strlen(name_onion) + 10)))
         HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "unable to allocate recovery name string");
@@ -1116,15 +1113,6 @@ H5FD__onion_open(const char *filename, unsigned flags, hid_t H5_ATTR_UNUSED fapl
     log2_page_size                                      = log2((double)(fa->page_size));
     file->curr_rev_record.archival_index.page_size_log2 = (uint32_t)log2_page_size;
 
-    /* Retrieve the current FAPL in the API context */
-    if ((old_fapl_id = H5CX_get_fapl()) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get file access property list");
-
-    /* Verify access property list and set up collective metadata if appropriate */
-    backing_fapl_id = H5P_PLIST_ID(file->fa.backing_fapl);
-    if (H5CX_set_apl(&backing_fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, false) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, NULL, "can't set access property list info");
-
     /* Proceed with open. */
     if ((H5F_ACC_CREAT | H5F_ACC_TRUNC) & flags) {
         /* Create a new onion file from scratch */
@@ -1136,8 +1124,7 @@ H5FD__onion_open(const char *filename, unsigned flags, hid_t H5_ATTR_UNUSED fapl
         }
 
         /* Truncate and create everything as necessary */
-        if (H5FD__onion_create_truncate_onion(file, filename, name_onion, file->recovery_file_name, flags,
-                                              maxaddr) < 0)
+        if (H5FD__onion_create_truncate_onion(file, filename, name_onion, file->recovery_file_name, flags, maxaddr) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTCREATE, NULL, "unable to create/truncate onionized files");
         file->is_open_rw = true;
     }
@@ -1145,11 +1132,11 @@ H5FD__onion_open(const char *filename, unsigned flags, hid_t H5_ATTR_UNUSED fapl
         /* Opening an existing onion file */
 
         /* Open the existing file using the specified fapl */
-        if (H5FD_open(false, &file->original_file, filename, flags, file->fa.backing_fapl, maxaddr) < 0)
+        if (H5FD_open_wrap(false, &file->original_file, filename, flags, file->fa.backing_fapl, maxaddr) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL, "unable to open canonical file (does not exist?)");
 
         /* Try to open any existing onion file */
-        if (H5FD_open(true, &file->onion_file, name_onion, flags, file->fa.backing_fapl, maxaddr) < 0)
+        if (H5FD_open_wrap(true, &file->onion_file, name_onion, flags, file->fa.backing_fapl, maxaddr) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL, "cannot try opening the backing onion file");
 
         /* If that didn't work, create a new onion file */
@@ -1185,9 +1172,7 @@ H5FD__onion_open(const char *filename, unsigned flags, hid_t H5_ATTR_UNUSED fapl
                 file->logical_eof = canon_eof;
 
                 /* Create backing files for onion history */
-                if (H5FD_open(false, &file->onion_file, name_onion,
-                              (H5F_ACC_RDWR | H5F_ACC_CREAT | H5F_ACC_TRUNC), file->fa.backing_fapl,
-                              maxaddr) < 0)
+                if (H5FD_open_wrap(false, &file->onion_file, name_onion, (H5F_ACC_RDWR | H5F_ACC_CREAT | H5F_ACC_TRUNC), file->fa.backing_fapl, maxaddr) < 0)
                     HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL, "cannot open the backing onion file");
 
                 /* Write history header with "no" history */
@@ -1307,12 +1292,8 @@ H5FD__onion_open(const char *filename, unsigned flags, hid_t H5_ATTR_UNUSED fapl
     ret_value = (H5FD_t *)file;
 
 done:
-    /* Restore previous FAPL in the API contxt */
-    if (old_fapl_id > 0)
-        H5CX_set_fapl(old_fapl_id);
-
     H5MM_xfree(name_onion);
-    H5MM_xfree(recovery_file_nameery);
+    H5MM_xfree(recovery_file_name);
 
     if (config_str && new_fa)
         if (H5FD__onion_fapl_free(new_fa) < 0)
@@ -1373,8 +1354,7 @@ H5FD__onion_open_rw(H5FD_onion_t *file, unsigned int flags, haddr_t maxaddr, boo
         HGOTO_ERROR(H5E_VFL, H5E_UNSUPPORTED, FAIL, "can't write-open write-locked file");
 
     /* Copy history to recovery file */
-    if (H5FD_open(false, &file->recovery_file, file->recovery_file_name,
-                  (flags | H5F_ACC_CREAT | H5F_ACC_TRUNC), file->fa.backing_fapl, maxaddr) < 0)
+    if (H5FD_open_wrap(false, &file->recovery_file, file->recovery_file_name, (flags | H5F_ACC_CREAT | H5F_ACC_TRUNC), file->fa.backing_fapl, maxaddr) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, FAIL, "unable to create recovery file");
 
     if (0 == (size = H5FD__onion_write_history(&file->history, file->recovery_file, 0, 0)))

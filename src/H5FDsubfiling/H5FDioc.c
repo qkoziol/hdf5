@@ -1132,7 +1132,7 @@ H5FD__ioc_truncate(H5FD_t *_file, hid_t H5_ATTR_UNUSED dxpl_id, bool H5_ATTR_UNU
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5FD__ioc_delete(const char *name, hid_t fapl_id)
+H5FD__ioc_delete(const char *name, hid_t H5_ATTR_UNUSED fapl_id)
 {
     MPI_Comm comm          = MPI_COMM_NULL;
     MPI_Info info          = MPI_INFO_NULL;

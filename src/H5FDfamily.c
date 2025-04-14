@@ -702,9 +702,6 @@ H5FD__family_open(const char *name, unsigned flags, hid_t H5_ATTR_UNUSED fapl_id
     bool                      default_config = false;
     unsigned                  t_flags        = flags & ~H5F_ACC_CREAT;
     const H5FD_family_fapl_t *fa;
-    hid_t                     old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
-    H5F_close_degree_t        old_fc_degree;                 /* file close degree        */
-    hid_t                     memb_fapl_id;                  /* ID for member FAPL */
     H5FD_t                   *ret_value = NULL;
 
     FUNC_ENTER_PACKAGE
@@ -720,13 +717,11 @@ H5FD__family_open(const char *name, unsigned flags, hid_t H5_ATTR_UNUSED fapl_id
         HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "unable to allocate file struct");
 
     if (NULL == (fa = (const H5FD_family_fapl_t *)H5CX_peek_driver_info())) {
-        // fprintf(stderr, "%s:%u\n", __func__, __LINE__);
         if (H5FD__family_get_default_config(&file->fa) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get default family VFD configuration");
         default_config = true;
     }
     else {
-        // fprintf(stderr, "%s:%u\n", __func__, __LINE__);
         if (NULL == (file->fa.memb_fapl = H5P_copy_plist(fa->memb_fapl, false)))
             HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, NULL, "unable to copy member FAPL");
         file->fa.memb_size = fa->memb_size; /* Actual member size to be updated later */
@@ -762,25 +757,6 @@ H5FD__family_open(const char *name, unsigned flags, hid_t H5_ATTR_UNUSED fapl_id
         else
             HGOTO_ERROR(H5E_VFL, H5E_FILEEXISTS, NULL, "file names not unique");
     }
-    {
-        H5CX_get_close_degree(&old_fc_degree);
-        //    fprintf(stderr, "%s:%u - old_fc_degree: %d\n", __func__, __LINE__, old_fc_degree);
-    }
-
-    /* Retrieve the current FAPL in the API context */
-    if ((old_fapl_id = H5CX_get_fapl()) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get file access property list");
-
-    fprintf(stderr, "%s:%u\n", __func__, __LINE__);
-    /* Verify access property list and set up collective metadata if appropriate */
-    memb_fapl_id = H5P_PLIST_ID(file->fa.memb_fapl);
-    if (H5CX_set_apl(&memb_fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, false) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, NULL, "can't set access property list info");
-    {
-        H5F_close_degree_t fc_degree; /* file close degree        */
-        H5CX_get_close_degree(&fc_degree);
-        //    fprintf(stderr, "%s:%u - fc_degree: %d\n", __func__, __LINE__, fc_degree);
-    }
 
     /* Open all the family members */
     while (1) {
@@ -804,12 +780,12 @@ H5FD__family_open(const char *name, unsigned flags, hid_t H5_ATTR_UNUSED fapl_id
          * Allow H5F_ACC_CREAT only on the first family member.
          */
         if (0 == file->nmembs) {
-            if (H5FD_open(false, &file->memb[file->nmembs], memb_name, (0 == file->nmembs ? flags : t_flags),
+            if (H5FD_open_wrap(false, &file->memb[file->nmembs], memb_name, (0 == file->nmembs ? flags : t_flags),
                           file->fa.memb_fapl, HADDR_UNDEF) < 0)
                 HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL, "unable to open member file");
         }
         else {
-            if (H5FD_open(true, &file->memb[file->nmembs], memb_name, (0 == file->nmembs ? flags : t_flags),
+            if (H5FD_open_wrap(true, &file->memb[file->nmembs], memb_name, (0 == file->nmembs ? flags : t_flags),
                           file->fa.memb_fapl, HADDR_UNDEF) < 0)
                 HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL, "unable to open member file");
 
@@ -830,17 +806,6 @@ H5FD__family_open(const char *name, unsigned flags, hid_t H5_ATTR_UNUSED fapl_id
     ret_value = (H5FD_t *)file;
 
 done:
-    /* Restore previous FAPL in the API contxt */
-    if (old_fapl_id > 0) {
-        H5CX_set_fapl(old_fapl_id);
-        H5CX_set_close_degree(old_fc_degree);
-    }
-    {
-        H5F_close_degree_t fc_degree; /* file close degree        */
-        H5CX_get_close_degree(&fc_degree);
-        //    fprintf(stderr, "%s:%u - fc_degree: %d\n", __func__, __LINE__, fc_degree);
-    }
-
     /* Release resources */
     if (memb_name)
         H5MM_xfree(memb_name);
@@ -1036,8 +1001,6 @@ H5FD__family_set_eoa(H5FD_t *_file, H5FD_mem_t type, haddr_t abs_eoa)
     H5FD_family_t *file        = (H5FD_family_t *)_file;
     haddr_t        addr        = abs_eoa;
     char          *memb_name   = NULL;
-    hid_t          old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
-    hid_t          memb_fapl_id;                  /* ID for member FAPL */
     unsigned       u;                             /* Local index variable */
     herr_t         ret_value = SUCCEED;           /* Return value */
 
@@ -1046,15 +1009,6 @@ H5FD__family_set_eoa(H5FD_t *_file, H5FD_mem_t type, haddr_t abs_eoa)
     /* Allocate space for the member name buffer */
     if (NULL == (memb_name = (char *)H5MM_malloc(H5FD_FAM_MEMB_NAME_BUF_SIZE)))
         HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "unable to allocate member name");
-
-    /* Retrieve the current FAPL in the API context */
-    if ((old_fapl_id = H5CX_get_fapl()) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get file access property list");
-
-    /* Verify access property list and set up collective metadata if appropriate */
-    memb_fapl_id = H5P_PLIST_ID(file->fa.memb_fapl);
-    if (H5CX_set_apl(&memb_fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, false) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set access property list info");
 
     for (u = 0; addr || u < file->nmembs; u++) {
         /* Enlarge member array */
@@ -1074,7 +1028,7 @@ H5FD__family_set_eoa(H5FD_t *_file, H5FD_mem_t type, haddr_t abs_eoa)
             file->nmembs = MAX(file->nmembs, u + 1);
             snprintf(memb_name, H5FD_FAM_MEMB_NAME_BUF_SIZE, file->name, u);
             H5_CHECK_OVERFLOW(file->fa.memb_size, hsize_t, haddr_t);
-            if (H5FD_open(false, &file->memb[u], memb_name, file->flags | H5F_ACC_CREAT, file->fa.memb_fapl,
+            if (H5FD_open_wrap(false, &file->memb[u], memb_name, file->flags | H5F_ACC_CREAT, file->fa.memb_fapl,
                           (haddr_t)file->fa.memb_size) < 0)
                 HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, FAIL, "unable to open member file");
         } /* end if */
@@ -1097,10 +1051,6 @@ H5FD__family_set_eoa(H5FD_t *_file, H5FD_mem_t type, haddr_t abs_eoa)
     file->eoa = abs_eoa;
 
 done:
-    /* Restore previous FAPL in the API contxt */
-    if (old_fapl_id > 0)
-        H5CX_set_fapl(old_fapl_id);
-
     /* Release resources */
     if (memb_name)
         H5MM_xfree(memb_name);
@@ -1191,7 +1141,7 @@ H5FD__family_get_handle(H5FD_t *_file, hid_t fapl_id, void **file_handle)
         HGOTO_ERROR(H5E_VFL, H5E_BADID, FAIL, "offset is bigger than file size");
     memb = (int)(offset / file->fa.memb_size);
 
-    ret_value = H5FD_get_vfd_handle(file->memb[memb], fapl, file_handle);
+    ret_value = H5FD_get_vfd_handle_wrap(file->memb[memb], file->fa.memb_fapl, file_handle);
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -1457,8 +1407,6 @@ H5FD__family_delete(const char *filename, hid_t fapl_id)
     H5FD_family_fapl_t default_fa;
     bool               default_config = false;
     H5P_genplist_t    *memb_fapl      = NULL;
-    hid_t              old_fapl_id    = H5I_INVALID_HID; /* ID for old FAPL in API context */
-    hid_t              memb_fapl_id;                     /* ID for member FAPL */
     unsigned           current_member;
     char              *member_name = NULL;
     char              *temp        = NULL;
@@ -1515,15 +1463,6 @@ H5FD__family_delete(const char *filename, hid_t fapl_id)
                         "provided file name cannot generate unique sub-files");
     }
 
-    /* Retrieve the current FAPL in the API context */
-    if ((old_fapl_id = H5CX_get_fapl()) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get file access property list");
-
-    /* Verify access property list and set up collective metadata if appropriate */
-    memb_fapl_id = H5P_PLIST_ID(memb_fapl);
-    if (H5CX_set_apl(&memb_fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, false) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set access property list info");
-
     /* Delete all the family members */
     current_member = 0;
     while (1) {
@@ -1540,7 +1479,7 @@ H5FD__family_delete(const char *filename, hid_t fapl_id)
          * undeleted members behind.
          */
         if (0 == current_member) {
-            if (H5FD_delete(member_name, memb_fapl) < 0)
+            if (H5FD_delete_wrap(member_name, memb_fapl) < 0)
                 HGOTO_ERROR(H5E_VFL, H5E_CANTDELETEFILE, FAIL, "unable to delete member file");
         }
         else {
@@ -1548,7 +1487,7 @@ H5FD__family_delete(const char *filename, hid_t fapl_id)
 
             H5E_PAUSE_ERRORS
                 {
-                    delete_error = H5FD_delete(member_name, memb_fapl);
+                    delete_error = H5FD_delete_wrap(member_name, memb_fapl);
                 }
             H5E_RESUME_ERRORS
             if (delete_error < 0)
@@ -1559,10 +1498,6 @@ H5FD__family_delete(const char *filename, hid_t fapl_id)
     } /* end while */
 
 done:
-    /* Restore previous FAPL in the API contxt */
-    if (old_fapl_id > 0)
-        H5CX_set_fapl(old_fapl_id);
-
     if (member_name)
         H5MM_xfree(member_name);
     if (temp)

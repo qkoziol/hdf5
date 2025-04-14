@@ -144,7 +144,6 @@ H5_DLL htri_t  H5FD_try_extend(H5FD_int_t *fh, H5FD_mem_t type, struct H5F_t *f,
                                hsize_t extra_requested);
 H5_DLL herr_t  H5FD_set_feature_flags(H5FD_int_t *fh, unsigned long feature_flags);
 H5_DLL herr_t  H5FD_write(H5FD_int_t *fh, H5FD_mem_t type, haddr_t addr, size_t size, const void *buf);
-H5_DLL herr_t  H5FD_delete(const char *name, H5P_genplist_t *fapl);
 H5_DLL herr_t  H5FD_get_fileno(const H5FD_int_t *fh, unsigned long *filenum);
 H5_DLL haddr_t H5FD_get_base_addr(const H5FD_int_t *fh);
 H5_DLL herr_t  H5FD_set_base_addr(H5FD_int_t *fh, haddr_t base_addr);
@@ -155,6 +154,8 @@ H5_DLL hsize_t H5FD_sb_size(H5FD_int_t *file);
 H5_DLL herr_t  H5FD_sb_encode(H5FD_int_t *file, char *name /*out*/, uint8_t *buf);
 H5_DLL void   *H5FD_fapl_get(H5FD_int_t *fh);
 H5_DLL herr_t  H5FD_free_driver_info(const H5FD_driver_t *driver, const void *driver_info);
+H5_DLL herr_t H5FD_open_wrap(bool attempt, H5FD_int_t **fh, const char *name, unsigned flags, H5P_genplist_t *fapl,
+                        haddr_t maxaddr);
 H5_DLL herr_t H5FD_open(bool attempt, H5FD_int_t **fh, const char *name, unsigned flags, H5P_genplist_t *fapl,
                         haddr_t maxaddr);
 H5_DLL herr_t H5FD_close(H5FD_int_t *fh);
@@ -165,6 +166,7 @@ H5_DLL herr_t  H5FD_free(H5FD_int_t *fh, H5FD_mem_t type, struct H5F_t *f, haddr
 H5_DLL haddr_t H5FD_get_eoa(const H5FD_int_t *fh, H5FD_mem_t type);
 H5_DLL herr_t  H5FD_set_eoa(H5FD_int_t *fh, H5FD_mem_t type, haddr_t addr);
 H5_DLL haddr_t H5FD_get_eof(const H5FD_int_t *fh, H5FD_mem_t type);
+H5_DLL herr_t  H5FD_get_vfd_handle_wrap(H5FD_int_t *fh, const H5P_genplist_t *fapl, void **file_handle);
 H5_DLL herr_t  H5FD_get_vfd_handle(H5FD_int_t *fh, const H5P_genplist_t *fapl, void **file_handle);
 H5_DLL herr_t  H5FD_read(H5FD_int_t *fh, H5FD_mem_t type, haddr_t addr, size_t size, void *buf /*out*/);
 H5_DLL herr_t  H5FD_read_vector(H5FD_int_t *fh, uint32_t count, H5FD_mem_t types[], haddr_t addrs[],
@@ -181,6 +183,8 @@ H5_DLL herr_t  H5FD_flush(H5FD_int_t *fh, bool closing);
 H5_DLL herr_t  H5FD_truncate(H5FD_int_t *fh, bool closing);
 H5_DLL herr_t  H5FD_lock(H5FD_int_t *fh, bool rw);
 H5_DLL herr_t  H5FD_unlock(H5FD_int_t *fh);
+H5_DLL herr_t  H5FD_delete_wrap(const char *name, H5P_genplist_t *fapl);
+H5_DLL herr_t  H5FD_delete(const char *name, H5P_genplist_t *fapl);
 H5_DLL herr_t  H5FD_ctl(H5FD_int_t *fh, uint64_t op_code, uint64_t flags, const void *input, void **output);
 
 /* Functions than retrieve values set/cached in driver */
