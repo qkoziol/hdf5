@@ -55,7 +55,7 @@
     if (H5_UNLIKELY(H5_GLUE(H5P_, MTHD)((*head)->ctx.PL, (PROP_NAME), &(*head)->ctx.PROP_FIELD) < 0))        \
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, ERR_RET, "can't retrieve value from API context");
 
-/* Macros to inline testing / not testing for property existance before retrieving it */
+/* Macros to inline testing / not testing for property existence before retrieving it */
 #define H5CX_TEST_YES_PROP(PL, MTHD, PROP_NAME, PROP_FIELD, ERR_RET)                                         \
     {                                                                                                        \
         htri_t check_prop = 0; /* Whether the property exists in the API context's DXPL */                   \
@@ -1500,7 +1500,7 @@ H5CX_set_apl(hid_t *acspl_id, const H5P_libclass_t *libclass,
                      is_collective)
 {
     H5CX_node_t **head = NULL; /* Pointer to head of API context list */
-    htri_t is_lapl; /* Whether the access property list is (or is derived from) a link access property list */
+    htri_t is_lapl = false; /* Whether the access property list is (or is derived from) a link access property list */
 #ifdef H5_HAVE_PARALLEL
     bool is_default = false;    /* Whether the access property list is the default */
 #endif                          /* H5_HAVE_PARALLEL */
