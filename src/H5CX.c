@@ -1500,7 +1500,8 @@ H5CX_set_apl(hid_t *acspl_id, const H5P_libclass_t *libclass,
                      is_collective)
 {
     H5CX_node_t **head = NULL; /* Pointer to head of API context list */
-    htri_t is_lapl = false; /* Whether the access property list is (or is derived from) a link access property list */
+    htri_t        is_lapl =
+        false; /* Whether the access property list is (or is derived from) a link access property list */
 #ifdef H5_HAVE_PARALLEL
     bool is_default = false;    /* Whether the access property list is the default */
 #endif                          /* H5_HAVE_PARALLEL */
