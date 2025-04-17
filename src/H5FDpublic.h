@@ -42,6 +42,7 @@
 #define H5_VFD_SUBFILING ((H5FD_class_value_t)(12))
 #define H5_VFD_IOC       ((H5FD_class_value_t)(13))
 #define H5_VFD_ONION     ((H5FD_class_value_t)(14))
+#define H5_VFD_GDS       ((H5FD_class_value_t)(15))
 
 /* VFD IDs below this value are reserved for library use. */
 #define H5_VFD_RESERVED 256

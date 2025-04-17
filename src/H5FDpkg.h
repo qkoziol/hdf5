@@ -82,6 +82,10 @@ H5_DLL herr_t H5FD__direct_unregister(void);
 #endif
 H5_DLL herr_t H5FD__family_register(void);
 H5_DLL herr_t H5FD__family_unregister(void);
+#ifdef H5_HAVE_GDS_VFD
+H5_DLL herr_t H5FD__gds_register(void);
+H5_DLL herr_t H5FD__gds_unregister(void);
+#endif
 #ifdef H5_HAVE_LIBHDFS
 H5_DLL herr_t H5FD__hdfs_register(void);
 H5_DLL herr_t H5FD__hdfs_unregister(void);

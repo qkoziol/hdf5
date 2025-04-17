@@ -316,6 +316,10 @@ if SUBFILING_VFD_CONDITIONAL
   # Subfiling has a few VFD test failures to be resolved
   # VFD_LIST += subfiling
 endif
+if GDS_VFD_CONDITIONAL
+  # This would require a custom test suite
+  # VFD_LIST += gds
+endif
 
 # Run test with different Virtual File Driver
 check-vfd: $(LIB) $(PROGS) $(chk_TESTS)

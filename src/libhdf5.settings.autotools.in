@@ -88,6 +88,7 @@ Dimension scales w/ new references: @DIMENSION_SCALES_WITH_NEW_REF@
                      Subfiling VFD: @SUBFILING_VFD@
                 (Read-Only) S3 VFD: @ROS3_VFD@
               (Read-Only) HDFS VFD: @HAVE_LIBHDFS@
+                           GDS VFD: @GDS_VFD@
     Packages w/ extra debug output: @INTERNAL_DEBUG_OUTPUT@
                        API tracing: @TRACE_API@
               Using memory checker: @USINGMEMCHECKER@

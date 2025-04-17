@@ -179,6 +179,9 @@
 /* Define to 1 if you have the `gettimeofday' function. */
 #cmakedefine H5_HAVE_GETTIMEOFDAY @H5_HAVE_GETTIMEOFDAY@
 
+/* Define whether the GDS virtual file driver (VFD) should be compiled */
+#cmakedefine H5_HAVE_GDS_VFD @H5_HAVE_GDS_VFD@
+
 /* Define to 1 if you have the <hdfs.h> header file. */
 #cmakedefine H5_HAVE_HDFS_H @H5_HAVE_HDFS_H@
 

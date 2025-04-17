@@ -107,6 +107,10 @@ macro (H5_SET_VFD_LIST)
     # Subfiling has a few VFD test failures to be resolved
     # list (APPEND VFD_LIST subfiling)
   endif ()
+  if (H5_HAVE_GDS_VFD)
+    # This would require a custom test suite
+    # list (APPEND VFD_LIST gds)
+  endif ()
   if (H5_HAVE_WINDOWS)
     list (APPEND VFD_LIST windows)
   endif ()

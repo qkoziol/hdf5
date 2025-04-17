@@ -158,6 +158,10 @@ H5FD__init_package(void)
 #endif
     if (H5FD__family_register() < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "unable to register family VFD");
+#ifdef H5_HAVE_GDS_VFD
+    if (H5FD__gds_register() < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "unable to register gds VFD");
+#endif
 #ifdef H5_HAVE_LIBHDFS
     if (H5FD__hdfs_register() < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "unable to register hdfs VFD");
@@ -231,6 +235,9 @@ H5FD_term_package(void)
             H5FD__direct_unregister();
 #endif
             H5FD__family_unregister();
+#ifdef H5_HAVE_GDS_VFD
+            H5FD__gds_unregister();
+#endif
 #ifdef H5_HAVE_LIBHDFS
             H5FD__hdfs_unregister();
 #endif

@@ -147,12 +147,18 @@ if ROS3_VFD_CONDITIONAL
     libhdf5_la_SOURCES += H5FDros3.c H5FDs3comms.c
 endif
 
+# Only compile the GDS VFD if necessary
+if GDS_VFD_CONDITIONAL
+    libhdf5_la_SOURCES += H5FDgds.c
+endif
+
 # Public headers
 include_HEADERS = hdf5.h H5api_adpt.h H5overflow.h H5pubconf.h H5public.h H5version.h \
         H5Apublic.h H5ACpublic.h \
         H5Cpublic.h H5Dpublic.h \
         H5Epubgen.h H5Epublic.h H5ESpublic.h H5Fpublic.h \
-        H5FDpublic.h H5FDcore.h H5FDdirect.h H5FDfamily.h H5FDhdfs.h \
+        H5FDpublic.h H5FDcore.h H5FDdirect.h H5FDfamily.h \
+        H5FDgds.h H5FDhdfs.h \
         H5FDlog.h H5FDmirror.h H5FDmpi.h H5FDmpio.h H5FDmulti.h \
         H5FDonion.h H5FDros3.h H5FDsec2.h H5FDsplitter.h \
         H5FDstdio.h H5FDsubfiling/H5FDsubfiling.h H5FDsubfiling/H5FDioc.h \

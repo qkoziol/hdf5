@@ -641,6 +641,17 @@ if (HDF5_ENABLE_MIRROR_VFD)
 endif()
 
 #-----------------------------------------------------------------------------
+#  Check if GDS driver can be built
+#-----------------------------------------------------------------------------
+option (HDF5_ENABLE_GDS_VFD "Build the GDS Virtual File Driver" OFF)
+if (HDF5_ENABLE_GDS_VFD)
+    # Try to locate CUDA Toolkit, which contains the cuFile library
+    find_package(CUDAToolkit REQUIRED)
+    set (${HDF_PREFIX}_HAVE_GDS_VFD 1)
+    INCLUDE_DIRECTORIES (${CUDAToolkit_INCLUDE_DIRS})
+endif ()
+
+#-----------------------------------------------------------------------------
 # Check if C has __float128 extension (used for Fortran only)
 #-----------------------------------------------------------------------------
 

@@ -1113,6 +1113,11 @@ H5_trace_args(H5RS_str_t *rs, const char *type, va_list ap)
                                 case H5_VFD_ONION:
                                     H5RS_acat(rs, "H5_VFD_ONION");
                                     break;
+#ifdef H5_HAVE_GDS_VFD
+                                case H5_VFD_GDS:
+                                    H5RS_acat(rs, "H5_VFD_GDS");
+                                    break;
+#endif
                                 default:
                                     H5RS_asprintf_cat(rs, "%ld", (long)class_val);
                                     break;

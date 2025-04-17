@@ -68,6 +68,9 @@
 #ifdef H5_HAVE_WINDOWS
 #include "H5FDwindows.h" /* Win32 I/O                                */
 #endif
+#ifdef H5_HAVE_GDS_VFD
+#include "H5FDgds.h"
+#endif
 
 /* Includes needed to set default VOL connector */
 #include "H5VLnative_private.h" /* Native VOL connector                     */
@@ -1042,6 +1045,14 @@ H5P__facc_set_def_driver_check_predefined(const char *driver_name, hid_t *driver
             HGOTO_ERROR(H5E_VFL, H5E_UNINITIALIZED, FAIL, "couldn't initialize Windows VFD");
 #else
         HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "Windows VFD is not enabled");
+#endif
+    }
+    else if (!strcmp(driver_name, "gds")) {
+#ifdef H5_HAVE_GDS_VFD
+        if ((*driver_id = H5FD_GDS) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_UNINITIALIZED, FAIL, "couldn't initialize GDS VFD");
+#else
+        HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "GDS VFD is not enabled");
 #endif
     }
     else {

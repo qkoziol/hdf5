@@ -105,6 +105,7 @@ const char H5build_settings[]=
     "                     Subfiling VFD: @H5_HAVE_SUBFILING_VFD@\n"
     "                (Read-Only) S3 VFD: @H5_HAVE_ROS3_VFD@\n"
     "              (Read-Only) HDFS VFD: @H5_HAVE_LIBHDFS@\n"
+    "                           GDS VFD: @HDF5_ENABLE_GDS_VFD@\n"
     "    Packages w/ extra debug output: @INTERNAL_DEBUG_OUTPUT@\n"
     "                       API tracing: @HDF5_ENABLE_TRACE@\n"
     "              Using memory checker: @HDF5_ENABLE_USING_MEMCHECKER@\n"

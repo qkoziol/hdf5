@@ -86,6 +86,7 @@ Dimension scales w/ new references: @DIMENSION_SCALES_WITH_NEW_REF@
                      Subfiling VFD: @HDF5_ENABLE_SUBFILING_VFD@
                 (Read-Only) S3 VFD: @HDF5_ENABLE_ROS3_VFD@
               (Read-Only) HDFS VFD: @HDF5_ENABLE_HDFS@
+                           GDS VFD: @HDF5_ENABLE_GDS_VFD@
     Packages w/ extra debug output: @INTERNAL_DEBUG_OUTPUT@
                        API Tracing: @HDF5_ENABLE_TRACE@
               Using memory checker: @HDF5_ENABLE_USING_MEMCHECKER@

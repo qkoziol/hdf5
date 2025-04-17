@@ -1632,7 +1632,7 @@ if test "X$HDF5_DOXYGEN" = "Xyes"; then
   DOXYGEN_SEARCHENGINE_URL=
   DOXYGEN_STRIP_FROM_PATH='$(SRCDIR)'
   DOXYGEN_STRIP_FROM_INC_PATH='$(SRCDIR)'
-  DOXYGEN_PREDEFINED='H5_HAVE_DIRECT H5_HAVE_LIBHDFS H5_HAVE_MAP_API H5_HAVE_PARALLEL H5_HAVE_ROS3_VFD H5_DOXYGEN H5_HAVE_SUBFILING_VFD H5_HAVE_IOC_VFD H5_HAVE_MIRROR_VFD'
+  DOXYGEN_PREDEFINED='H5_HAVE_DIRECT H5_HAVE_LIBHDFS H5_HAVE_MAP_API H5_HAVE_PARALLEL H5_HAVE_ROS3_VFD H5_DOXYGEN H5_HAVE_SUBFILING_VFD H5_HAVE_IOC_VFD H5_HAVE_MIRROR_VFD H5_HAVE_GDS_VFD'
   DOXYGEN_WARN_AS_ERROR=${HDF5_DOXY_WARNINGS}
 
   DX_INIT_DOXYGEN([HDF5], [./doxygen/Doxyfile], [hdf5lib_docs])
@@ -3893,6 +3893,156 @@ fi
 
 ## Read-only HDFS files are not built if not required.
 AM_CONDITIONAL([HDFS_VFD_CONDITIONAL], [test "X$HAVE_LIBHDFS" = "Xyes"])
+
+# Check for CUDA
+
+# Find out what architecture we are
+CUDA_ARCH=`uname -m`
+if [[ $CUDA_ARCH == "x86_64" ]]; then
+    CUDA_SUFFIX="64"
+else
+    CUDA_SUFFIX=""
+fi
+
+AC_SUBST([HAVE_CUDA])
+AC_ARG_WITH([cuda],
+            [AS_HELP_STRING([--with-cuda=DIR],
+                            [Provide prefix where CUDA is installed [default=/usr/local/cuda]])],,
+            [withval=no])
+
+case $withval in
+  no)
+    HAVE_CUDA="no"
+    AC_MSG_CHECKING([for CUDA])
+    AC_MSG_RESULT([suppressed])
+    ;;
+  *)
+    HAVE_CUDA="yes"
+    case "$withval" in
+      *,*)
+        CUDA_INC="`echo $withval |cut -f1 -d,`"
+        CUDA_LIB="`echo $withval |cut -f2 -d, -s`"
+        ;;
+      yes)
+        CUDA_HOME="/usr/local/cuda"
+        CUDA_INC="$CUDA_HOME/include"
+        CUDA_LIB="$CUDA_HOME/lib$CUDA_SUFFIX"
+        ;;
+      *)
+        if test -n "$withval"; then
+          CUDA_INC="$withval/include"
+          CUDA_LIB="$withval/lib$CUDA_SUFFIX"
+        fi
+        ;;
+    esac
+
+    if test -n "$CUDA_INC"; then
+      CPPFLAGS="$CPPFLAGS -I$CUDA_INC"
+      AM_CPPFLAGS="$AM_CPPFLAGS -I$CUDA_INC"
+    fi
+    AC_CHECK_HEADERS([cuda.h],,
+                     [unset HAVE_CUDA])
+
+    if test "x$HAVE_CUDA" = "xyes"; then
+#      CUDA_LIBS="-lcudart"
+      CUDA_CFLAGS="-I$CUDA_INC"
+      CUDA_LDFLAGS="-L$CUDA_LIB"
+      LDFLAGS="$LDFLAGS $CUDA_LDFLAGS"
+      AM_LDFLAGS="$AM_LDFLAGS $CUDA_LDFLAGS"
+      AC_CHECK_LIB([cudart], [cudaMemcpy],,
+                     [unset HAVE_CUDA])
+      AC_CHECK_LIB([cuda], [cuGetErrorString],,
+                     [unset HAVE_CUDA])
+    fi
+esac
+
+AC_SUBST(CUDA_CFLAGS)
+AC_SUBST(CUDA_LIBS)
+AC_SUBST(CUDA_LDFLAGS)
+
+
+## ----------------------------------------------------------------------
+## Is libcufile (GDS cuFile) present?
+## It might be specified with the `--with-libcufile' command-line switch.
+## If found, enables the GDS VFD.
+##
+AC_SUBST([HAVE_LIBCUFILE])
+AC_ARG_WITH([libcufile],
+            [AS_HELP_STRING([--with-libcufile=DIR],
+                            [Provide libcufile library to enable GDS virtual file driver (VFD) [default=no]])],,
+            [withval=no])
+
+case $withval in
+  no)
+    HAVE_LIBCUFILE="no"
+    AC_MSG_CHECKING([for libcufile])
+    AC_MSG_RESULT([suppressed])
+    ;;
+  *)
+    HAVE_LIBCUFILE="yes"
+    case "$withval" in
+      *,*)
+        CUFILE_INC="`echo $withval |cut -f1 -d,`"
+        CUFILE_LIB="`echo $withval |cut -f2 -d, -s`"
+        ;;
+      yes)
+        CUFILE_INC="$CUDA_INC"
+        CUFILE_LIB="$CUDA_LIB"
+        ;;
+      *)
+        if test -n "$withval"; then
+          CUFILE_INC="$withval/include"
+          CUFILE_LIB="$withval/lib$CUDA_SUFFIX"
+        fi
+        ;;
+    esac
+
+    # Only add the cuFile header path if it's different from CUDA's path
+    if test "X$CUFILE_INC" != "X$CUDA_INC"; then
+      CPPFLAGS="$CPPFLAGS -I$CUFILE_INC"
+      AM_CPPFLAGS="$AM_CPPFLAGS -I$CUFILE_INC"
+    fi
+    AC_CHECK_HEADERS([cufile.h],,
+                     [unset HAVE_LIBCUFILE])
+
+    if test "x$HAVE_LIBCUFILE" = "xyes"; then
+      # Check for '-lcufile' 
+#      if test -n "$CUDA_LIB"; then
+#        LDFLAGS="$LDFLAGS $CUDA_LDFLAGS"
+#        AM_LDFLAGS="$AM_LDFLAGS $CUDA_LDFLAGS"
+#      fi
+      if test "X$CUFILE_LIB" != "X$CUDA_LIB"; then
+        LDFLAGS="$LDFLAGS -L$CUFILE_LIB"
+        AM_LDFLAGS="$AM_LDFLAGS -L$CUFILE_LIB"
+      fi
+      AC_CHECK_LIB([cufile], [cuFileRead],,
+                     [unset HAVE_LIBCUFILE])
+    fi
+
+    if test "x$HAVE_CUFILE" = "xyes"; then
+      CUFILE_LIBS="-lcufile"
+      CUFILE_CFLAGS="-I$CUFILE_INC"
+      CUFILE_LDFLAGS="-L$CUFILE_LIB"
+    fi
+
+    if test -z "$HAVE_LIBCUFILE"; then
+      AC_MSG_ERROR([Set to use libcufile library, but could not find or use
+                    libcufile. Please verify that the path to CUDA_HOME is
+                    valid, and/or reconfigure without --with-libcufile.])
+    fi
+    ;;
+esac
+
+if test "x$HAVE_LIBCUFILE" = "xyes"; then
+#  AC_DEFINE([HAVE_LIBCUFILE], [1],
+#            [Proceed to build with libcufile])
+  AC_SUBST([GDS_VFD], "yes")
+  AC_DEFINE([HAVE_GDS_VFD], [1],
+                [Define whether the GDS virtual file driver (VFD) will be compiled])
+fi
+
+## The GDS VFD is not built if not required.
+AM_CONDITIONAL([GDS_VFD_CONDITIONAL], [test "X$HAVE_LIBCUFILE" = "Xyes"])
 
 ## Checkpoint the cache
 AC_CACHE_SAVE
