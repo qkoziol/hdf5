@@ -37,7 +37,6 @@
 
 #include <pthread.h>
 
-
 /* #define ADVISE_OS_DISABLE_READ_CACHE */
 
 #ifdef ADVISE_OS_DISABLE_READ_CACHE
@@ -46,7 +45,7 @@
 
 typedef struct thread_data_t {
     union {
-        void *      rd_devPtr; /* read device address */
+        void       *rd_devPtr; /* read device address */
         const void *wr_devPtr; /* write device address */
     } u;
     int            fd;
@@ -85,10 +84,10 @@ hid_t H5FD_GDS_id_g = H5I_INVALID_HID;
 
 /* Driver-specific file access properties */
 typedef struct H5FD_gds_fapl_t {
-    size_t  mboundary;  /* Memory boundary for alignment    */
-    size_t  fbsize;     /* File system block size      */
-    size_t  cbsize;     /* Maximal buffer size for copying user data  */
-    bool must_align; /* Decides if data alignment is required        */
+    size_t mboundary;  /* Memory boundary for alignment    */
+    size_t fbsize;     /* File system block size      */
+    size_t cbsize;     /* Maximal buffer size for copying user data  */
+    bool   must_align; /* Decides if data alignment is required        */
 } H5FD_gds_fapl_t;
 
 /*
@@ -116,7 +115,7 @@ typedef struct H5FD_gds_t {
     CUfileHandle_t cf_handle;      /* cufile handle */
     int            num_io_threads; /* number of io threads for cufile */
     size_t         io_block_size;  /* io block size or cufile */
-    pthread_t *    threads;
+    pthread_t     *threads;
     thread_data_t *td;
 
 #ifndef H5_HAVE_WIN32_API
@@ -232,7 +231,6 @@ write_thread_fn(void *data)
 #define REGION_OVERFLOW(A, Z)                                                                                \
     (ADDR_OVERFLOW(A) || SIZE_OVERFLOW(Z) || HADDR_UNDEF == (A) + (Z) || (off_t)((A) + (Z)) < (off_t)(A))
 
-
 #define check_cudadrivercall(fn)                                                                             \
     {                                                                                                        \
         CUresult res = fn;                                                                                   \
@@ -259,16 +257,18 @@ write_thread_fn(void *data)
 /*
  * cuFile (i.e. GDS) error handling macros.
  */
-#define GDS_GOTO_ERROR(retcode, str, status)  \
-    do {   \
-        if (IS_CUDA_ERR(status)) { \
-            const char *cu_errstr = NULL; \
-            cuGetErrorString(status.cu_err, &cu_errstr); \
-            HGOTO_ERROR(H5E_VFL, H5E_SYSTEM, retcode, "%s: CUDA error '%s'", str, (cu_errstr ? cu_errstr : "NULL")); \
-        } \
-        else { \
-            HGOTO_ERROR(H5E_VFL, H5E_SYSTEM, retcode, "%s: cuFile error '%s'", str, CUFILE_ERRSTR(status.err)); \
-        } \
+#define GDS_GOTO_ERROR(retcode, str, status)                                                                 \
+    do {                                                                                                     \
+        if (IS_CUDA_ERR(status)) {                                                                           \
+            const char *cu_errstr = NULL;                                                                    \
+            cuGetErrorString(status.cu_err, &cu_errstr);                                                     \
+            HGOTO_ERROR(H5E_VFL, H5E_SYSTEM, retcode, "%s: CUDA error '%s'", str,                            \
+                        (cu_errstr ? cu_errstr : "NULL"));                                                   \
+        }                                                                                                    \
+        else {                                                                                               \
+            HGOTO_ERROR(H5E_VFL, H5E_SYSTEM, retcode, "%s: cuFile error '%s'", str,                          \
+                        CUFILE_ERRSTR(status.err));                                                          \
+        }                                                                                                    \
     } while (0)
 
 /* Prototypes */
@@ -276,8 +276,8 @@ static herr_t  H5FD__gds_init(void);
 static herr_t  H5FD__gds_term(void);
 static herr_t  H5FD__gds_populate_config(size_t boundary, size_t block_size, size_t cbuf_size,
                                          H5FD_gds_fapl_t *fa_out);
-static void *  H5FD__gds_fapl_get(H5FD_t *file);
-static void *  H5FD__gds_fapl_copy(const void *_old_fa);
+static void   *H5FD__gds_fapl_get(H5FD_t *file);
+static void   *H5FD__gds_fapl_copy(const void *_old_fa);
 static H5FD_t *H5FD__gds_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr);
 static herr_t  H5FD__gds_close(H5FD_t *_file);
 static int     H5FD__gds_cmp(const H5FD_t *_f1, const H5FD_t *_f2);
@@ -296,7 +296,7 @@ static herr_t  H5FD__gds_lock(H5FD_t *_file, hbool_t rw);
 static herr_t  H5FD__gds_unlock(H5FD_t *_file);
 static herr_t  H5FD__gds_delete(const char *filename, hid_t fapl_id);
 static herr_t  H5FD__gds_ctl(H5FD_t *_file, uint64_t op_code, uint64_t flags, const void *input,
-                              void **output);
+                             void **output);
 
 static const H5FD_class_t H5FD_gds_g = {
     H5FD_CLASS_VERSION,      /* struct version       */
@@ -444,10 +444,10 @@ H5FD__gds_term(void)
     if (H5FD_GDS_cufile_driver_opened_s) {
         CUfileError_t status;
 
-         status = cuFileDriverClose();
-         if (status.err != CU_FILE_SUCCESS)
+        status = cuFileDriverClose();
+        if (status.err != CU_FILE_SUCCESS)
             GDS_GOTO_ERROR(FAIL, "unable to close cufile driver", status);
-       H5FD_GDS_cufile_driver_opened_s = false;
+        H5FD_GDS_cufile_driver_opened_s = false;
     }
 
 done:
@@ -511,7 +511,7 @@ herr_t
 H5Pget_fapl_gds(hid_t fapl_id, size_t *boundary /*out*/, size_t *block_size /*out*/,
                 size_t *cbuf_size /*out*/)
 {
-    H5P_genplist_t           *fapl; /* Property list pointer */
+    H5P_genplist_t        *fapl; /* Property list pointer */
     const H5FD_gds_fapl_t *fa;
     H5FD_gds_fapl_t        default_fa;
     herr_t                 ret_value = SUCCEED; /* Return value */
@@ -613,8 +613,8 @@ done:
 static void *
 H5FD__gds_fapl_get(H5FD_t *_file)
 {
-    H5FD_gds_t *file = (H5FD_gds_t *)_file;
-    void          *ret_value = NULL; /* Return value */
+    H5FD_gds_t *file      = (H5FD_gds_t *)_file;
+    void       *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE_NOERR
 
@@ -638,9 +638,9 @@ H5FD__gds_fapl_get(H5FD_t *_file)
 static void *
 H5FD__gds_fapl_copy(const void *_old_fa)
 {
-    const H5FD_gds_fapl_t *old_fa = (const H5FD_gds_fapl_t *)_old_fa;
-    H5FD_gds_fapl_t *      new_fa = calloc(1, sizeof(H5FD_gds_fapl_t));
-    void          *ret_value = NULL; /* Return value */
+    const H5FD_gds_fapl_t *old_fa    = (const H5FD_gds_fapl_t *)_old_fa;
+    H5FD_gds_fapl_t       *new_fa    = calloc(1, sizeof(H5FD_gds_fapl_t));
+    void                  *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE_NOERR
 
@@ -675,22 +675,22 @@ H5FD__gds_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
 {
     CUfileError_t status;
     CUfileDescr_t cf_descr;
-    char *        num_io_threads_var;
-    char *        io_block_size_var;
+    char         *num_io_threads_var;
+    char         *io_block_size_var;
 
-    int              o_flags;
-    int              fd   = (-1);
-    H5FD_gds_t *     file = NULL;
+    int                    o_flags;
+    int                    fd   = (-1);
+    H5FD_gds_t            *file = NULL;
     const H5FD_gds_fapl_t *fa;
-    H5FD_gds_fapl_t  default_fa;
-    H5P_genplist_t           *fapl; /* Property list pointer */
+    H5FD_gds_fapl_t        default_fa;
+    H5P_genplist_t        *fapl; /* Property list pointer */
 #ifdef H5_HAVE_WIN32_API
     HFILE                              filehandle;
     struct _BY_HANDLE_FILE_INFORMATION fileinfo;
 #endif
-    struct stat     sb;
-    void *          buf1, *buf2;
-    H5FD_t *        ret_value = NULL;
+    struct stat sb;
+    void       *buf1, *buf2;
+    H5FD_t     *ret_value = NULL;
 
     FUNC_ENTER_PACKAGE
 
@@ -830,7 +830,8 @@ H5FD__gds_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
     if (o_flags & O_CREAT) {
         if (write(file->fd, buf1, sizeof(int)) < 0) {
             if (write(file->fd, buf2, file->fa.fbsize) < 0)
-                HGOTO_ERROR(H5E_FILE, H5E_WRITEERROR, NULL, "file system may not support GPUDirect Storage I/O");
+                HGOTO_ERROR(H5E_FILE, H5E_WRITEERROR, NULL,
+                            "file system may not support GPUDirect Storage I/O");
             else
                 file->fa.must_align = true;
         }
@@ -843,7 +844,8 @@ H5FD__gds_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
     else {
         if (read(file->fd, buf1, sizeof(int)) < 0) {
             if (read(file->fd, buf2, file->fa.fbsize) < 0)
-                HGOTO_ERROR(H5E_FILE, H5E_READERROR, NULL, "file system may not support GPUDirect Storage I/O");
+                HGOTO_ERROR(H5E_FILE, H5E_READERROR, NULL,
+                            "file system may not support GPUDirect Storage I/O");
             else
                 file->fa.must_align = true;
         }
@@ -868,7 +870,7 @@ H5FD__gds_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
 
     /* Set return value */
     ret_value = (H5FD_t *)file;
-fprintf(stderr, "%s:%u - Successfully opened file w/GDS VFD\n", __func__, __LINE__);
+    fprintf(stderr, "%s:%u - Successfully opened file w/GDS VFD\n", __func__, __LINE__);
 
 done:
     if (ret_value == NULL)
@@ -1010,7 +1012,7 @@ H5FD__gds_query(const H5FD_t H5_ATTR_UNUSED *_f, unsigned long *flags /* out */)
             H5FD_FEAT_SUPPORTS_SWMR_IO; /* VFD supports the single-writer/multiple-readers (SWMR) pattern   */
         *flags |= H5FD_FEAT_DEFAULT_VFD_COMPATIBLE; /* VFD creates a file which can be opened with the default
                                                        VFD      */
-        *flags |= H5FD_FEAT_MEMMANAGE; /* VFD uses CUDA memory management routines */
+        *flags |= H5FD_FEAT_MEMMANAGE;              /* VFD uses CUDA memory management routines */
     }
 
     FUNC_LEAVE_NOAPI(ret_value);
@@ -1032,7 +1034,7 @@ H5FD__gds_query(const H5FD_t H5_ATTR_UNUSED *_f, unsigned long *flags /* out */)
 static haddr_t
 H5FD__gds_get_eoa(const H5FD_t *_file, H5FD_mem_t H5_ATTR_UNUSED type)
 {
-    const H5FD_gds_t *file = (const H5FD_gds_t *)_file;
+    const H5FD_gds_t *file      = (const H5FD_gds_t *)_file;
     haddr_t           ret_value = HADDR_UNDEF;
 
     FUNC_ENTER_PACKAGE_NOERR
@@ -1060,7 +1062,7 @@ H5FD__gds_get_eoa(const H5FD_t *_file, H5FD_mem_t H5_ATTR_UNUSED type)
 static herr_t
 H5FD__gds_set_eoa(H5FD_t *_file, H5FD_mem_t H5_ATTR_UNUSED type, haddr_t addr)
 {
-    H5FD_gds_t *file = (H5FD_gds_t *)_file;
+    H5FD_gds_t *file      = (H5FD_gds_t *)_file;
     herr_t      ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE_NOERR
@@ -1088,7 +1090,7 @@ H5FD__gds_set_eoa(H5FD_t *_file, H5FD_mem_t H5_ATTR_UNUSED type, haddr_t addr)
 static haddr_t
 H5FD__gds_get_eof(const H5FD_t *_file, H5FD_mem_t H5_ATTR_UNUSED type)
 {
-    const H5FD_gds_t *file = (const H5FD_gds_t *)_file;
+    const H5FD_gds_t *file      = (const H5FD_gds_t *)_file;
     haddr_t           ret_value = HADDR_UNDEF;
 
     FUNC_ENTER_PACKAGE_NOERR
@@ -1164,10 +1166,10 @@ H5FD__gds_read(H5FD_t *_file, H5FD_mem_t H5_ATTR_UNUSED type, hid_t H5_ATTR_UNUS
 {
     H5FD_gds_t *file = (H5FD_gds_t *)_file;
     ssize_t     nbytes;
-    bool     _must_align = true;
+    bool        _must_align = true;
     herr_t      ret_value   = SUCCEED; /* Return value */
     size_t      alloc_size;
-    void *      copy_buf = NULL, *p2;
+    void       *copy_buf = NULL, *p2;
     size_t      _boundary;
     size_t      _fbsize;
     size_t      _cbsize;
@@ -1175,11 +1177,11 @@ H5FD__gds_read(H5FD_t *_file, H5FD_mem_t H5_ATTR_UNUSED type, hid_t H5_ATTR_UNUS
     size_t      copy_size = size; /* Size remaining to read when using copy buffer */
     size_t      copy_offset;      /* Offset into copy buffer of the requested data */
 
-    ssize_t       ret        = -1;
-    int           io_threads = file->num_io_threads;
-    size_t           block_size = file->io_block_size;
+    ssize_t ret        = -1;
+    int     io_threads = file->num_io_threads;
+    size_t  block_size = file->io_block_size;
 
-    off_t offset = (off_t)addr;
+    off_t   offset = (off_t)addr;
     ssize_t io_chunk;
     ssize_t io_chunk_rem;
 
@@ -1224,8 +1226,8 @@ H5FD__gds_read(H5FD_t *_file, H5FD_mem_t H5_ATTR_UNUSED type, hid_t H5_ATTR_UNUS
             io_chunk_rem = (unsigned)size % (unsigned)io_threads;
 
             for (int ii = 0; ii < io_threads; ii++) {
-                file->td[ii].u.rd_devPtr  = buf;
-                file->td[ii].cfr_handle = file->cf_handle;
+                file->td[ii].u.rd_devPtr = buf;
+                file->td[ii].cfr_handle  = file->cf_handle;
 
                 file->td[ii].offset        = (off_t)(offset + ii * io_chunk);
                 file->td[ii].devPtr_offset = (off_t)ii * io_chunk;
@@ -1427,10 +1429,10 @@ H5FD__gds_write(H5FD_t *_file, H5FD_mem_t H5_ATTR_UNUSED type, hid_t H5_ATTR_UNU
 {
     H5FD_gds_t *file = (H5FD_gds_t *)_file;
     ssize_t     nbytes;
-    bool     _must_align = true;
+    bool        _must_align = true;
     herr_t      ret_value   = SUCCEED; /* Return value */
     size_t      alloc_size;
-    void *      copy_buf = NULL, *p1;
+    void       *copy_buf = NULL, *p1;
     const void *p3;
     size_t      _boundary;
     size_t      _fbsize;
@@ -1441,9 +1443,9 @@ H5FD__gds_write(H5FD_t *_file, H5FD_mem_t H5_ATTR_UNUSED type, hid_t H5_ATTR_UNU
     size_t      copy_size = size; /* Size remaining to write when using copy buffer */
     size_t      copy_offset;      /* Offset into copy buffer of the data to write */
 
-    ssize_t       ret        = -1;
-    int           io_threads = file->num_io_threads;
-    size_t           block_size = file->io_block_size;
+    ssize_t ret        = -1;
+    int     io_threads = file->num_io_threads;
+    size_t  block_size = file->io_block_size;
 
     ssize_t io_chunk;
     ssize_t io_chunk_rem;
@@ -1491,8 +1493,8 @@ H5FD__gds_write(H5FD_t *_file, H5FD_mem_t H5_ATTR_UNUSED type, hid_t H5_ATTR_UNU
             io_chunk_rem = (unsigned)size % (unsigned)io_threads;
 
             for (int ii = 0; ii < io_threads; ii++) {
-                file->td[ii].u.wr_devPtr  = buf;
-                file->td[ii].cfr_handle = file->cf_handle;
+                file->td[ii].u.wr_devPtr = buf;
+                file->td[ii].cfr_handle  = file->cf_handle;
 
                 file->td[ii].offset        = (off_t)(offset + ii * io_chunk);
                 file->td[ii].devPtr_offset = (off_t)ii * io_chunk;
@@ -1929,9 +1931,10 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5FD__gds_ctl(H5FD_t H5_ATTR_UNUSED *_file, uint64_t op_code, uint64_t flags, const void *input, void H5_ATTR_UNUSED **output)
+H5FD__gds_ctl(H5FD_t H5_ATTR_UNUSED *_file, uint64_t op_code, uint64_t flags, const void *input,
+              void H5_ATTR_UNUSED **output)
 {
-    herr_t      ret_value = SUCCEED;             /* Return value */
+    herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -1939,14 +1942,13 @@ H5FD__gds_ctl(H5FD_t H5_ATTR_UNUSED *_file, uint64_t op_code, uint64_t flags, co
 
     switch (op_code) {
         /* Driver-level memory copy */
-        case H5FD_CTL_MEM_COPY:
-        {
+        case H5FD_CTL_MEM_COPY: {
             const H5FD_ctl_memcpy_args_t *copy_args = (const H5FD_ctl_memcpy_args_t *)input;
-            enum cudaMemcpyKind cpyKind;
-            bool src_on_device = false;
-            bool dst_on_device = false;
-            const void *src;
-            void *dst;
+            enum cudaMemcpyKind           cpyKind;
+            bool                          src_on_device = false;
+            bool                          dst_on_device = false;
+            const void                   *src;
+            void                         *dst;
 
             if (!copy_args)
                 HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid arguments to ctl operation");
@@ -1970,7 +1972,7 @@ H5FD__gds_ctl(H5FD_t H5_ATTR_UNUSED *_file, uint64_t op_code, uint64_t flags, co
 
             check_cudaruntimecall(cudaMemcpy(dst, src, copy_args->len, cpyKind))
 
-            break;
+                break;
         }
 
         /* Unknown op code */

@@ -28,7 +28,7 @@
 /** Identifier for the GDS VFD \since 1.14.0 */
 #define H5FD_GDS_VALUE H5_VFD_GDS
 
-#define H5FD_GDS_NAME  "gds"
+#define H5FD_GDS_NAME "gds"
 
 #else
 
