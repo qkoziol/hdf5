@@ -68,7 +68,7 @@
  *-------------------------------------------------------------------------
  */
 void *
-H5VL__native_group_create(void *obj, const H5VL_loc_params_t *loc_params, const char *name, hid_t lcpl_id,
+H5VL__native_group_create(void *obj, const H5VL_loc_params_t *loc_params, const char *name, hid_t H5_ATTR_UNUSED lcpl_id,
                           hid_t gcpl_id, hid_t H5_ATTR_UNUSED gapl_id, hid_t H5_ATTR_UNUSED dxpl_id,
                           void H5_ATTR_UNUSED **req)
 {
@@ -100,12 +100,8 @@ H5VL__native_group_create(void *obj, const H5VL_loc_params_t *loc_params, const 
     } /* end if */
     /* otherwise it's from H5Gcreate */
     else {
-        H5P_genplist_t *lcpl; /* Link creation property list */
-
         /* Create the new group & get its ID */
-        if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
-            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a property list");
-        if (NULL == (grp = H5G__create_named(&loc, name, lcpl, gcpl)))
+        if (NULL == (grp = H5G__create_named(&loc, name, gcpl)))
             HGOTO_ERROR(H5E_SYM, H5E_CANTINIT, NULL, "unable to create group");
     } /* end else */
 

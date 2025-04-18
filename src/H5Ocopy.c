@@ -71,20 +71,14 @@ typedef struct H5O_copy_search_comm_dt_ud_t {
 /********************/
 
 static herr_t H5O__copy_free_addrmap_cb(void *item, void *key, void *op_data);
-static herr_t H5O__copy_header_real(const H5O_loc_t *oloc_src, H5O_loc_t *oloc_dst /*out*/,
-                                    H5O_copy_t *cpy_info, H5O_type_t *obj_type, void **udata);
-static herr_t H5O__copy_header(const H5O_loc_t *oloc_src, H5O_loc_t *oloc_dst /*out*/, H5P_genplist_t *ocpypl,
-                               H5P_genplist_t *lcpl);
-static herr_t H5O__copy_obj(H5G_loc_t *src_loc, H5G_loc_t *dst_loc, const char *dst_name,
-                            H5P_genplist_t *ocpypl, H5P_genplist_t *lcpl);
+static herr_t H5O__copy_header_real(const H5O_loc_t *oloc_src, H5O_loc_t *oloc_dst /*out*/, H5O_copy_t *cpy_info, H5O_type_t *obj_type, void **udata);
+static herr_t H5O__copy_header(const H5O_loc_t *oloc_src, H5O_loc_t *oloc_dst /*out*/);
+static herr_t H5O__copy_obj(H5G_loc_t *src_loc, H5G_loc_t *dst_loc, const char *dst_name);
 static herr_t H5O__copy_free_comm_dt_cb(void *item, void *key, void *op_data);
 static int    H5O__copy_comm_dt_cmp(const void *dt1, const void *dt2);
-static herr_t H5O__copy_search_comm_dt_cb(hid_t group, const char *name, const H5L_info2_t *linfo,
-                                          void *udata);
-static htri_t H5O__copy_search_comm_dt(H5F_t *file_src, H5O_t *oh_src, H5O_loc_t *oloc_dst /*in, out*/,
-                                       H5O_copy_t *cpy_info);
-static herr_t H5O__copy_insert_comm_dt(H5F_t *file_src, H5O_t *oh_src, H5O_loc_t *oloc_dst,
-                                       H5O_copy_t *cpy_info);
+static herr_t H5O__copy_search_comm_dt_cb(hid_t group, const char *name, const H5L_info2_t *linfo, void *udata);
+static htri_t H5O__copy_search_comm_dt(H5F_t *file_src, H5O_t *oh_src, H5O_loc_t *oloc_dst /*in, out*/, H5O_copy_t *cpy_info);
+static herr_t H5O__copy_insert_comm_dt(H5F_t *file_src, H5O_t *oh_src, H5O_loc_t *oloc_dst, H5O_copy_t *cpy_info);
 
 /*********************/
 /* Package Variables */
@@ -117,8 +111,7 @@ H5FL_DEFINE(haddr_t);
  *-------------------------------------------------------------------------
  */
 herr_t
-H5O__copy(const H5G_loc_t *loc, const char *src_name, H5G_loc_t *dst_loc, const char *dst_name,
-          H5P_genplist_t *ocpypl, H5P_genplist_t *lcpl)
+H5O__copy(const H5G_loc_t *loc, const char *src_name, H5G_loc_t *dst_loc, const char *dst_name)
 {
     H5G_loc_t  src_loc;             /* Source object group location */
     H5G_name_t src_path;            /* Opened source object hier. path */
@@ -159,7 +152,7 @@ H5O__copy(const H5G_loc_t *loc, const char *src_name, H5G_loc_t *dst_loc, const 
     obj_open = true;
 
     /* Do the actual copying of the object */
-    if (H5O__copy_obj(&src_loc, dst_loc, dst_name, ocpypl, lcpl) < 0)
+    if (H5O__copy_obj(&src_loc, dst_loc, dst_name) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTCOPY, FAIL, "unable to copy object");
 
 done:
@@ -931,8 +924,7 @@ H5O__copy_free_addrmap_cb(void *_item, void H5_ATTR_UNUSED *key, void H5_ATTR_UN
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5O__copy_header(const H5O_loc_t *oloc_src, H5O_loc_t *oloc_dst /*out */, H5P_genplist_t *ocpypl,
-                 H5P_genplist_t *lcpl)
+H5O__copy_header(const H5O_loc_t *oloc_src, H5O_loc_t *oloc_dst /*out */)
 {
     H5O_copy_t                   cpy_info;       /* Information for copying object */
     H5O_copy_dtype_merge_list_t *dt_list = NULL; /* List of datatype merge suggestions */
@@ -952,16 +944,16 @@ H5O__copy_header(const H5O_loc_t *oloc_src, H5O_loc_t *oloc_dst /*out */, H5P_ge
     memset(&cpy_info, 0, sizeof(H5O_copy_t));
 
     /* Retrieve the copy parameters */
-    if (H5P_get(ocpypl, H5O_CPY_OPTION_NAME, &cpy_option) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get object copy flag");
+    if (H5CX_get_cpy_options(&cpy_option) < 0)
+        HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, FAIL, "can't get object copy flag");
 
     /* Retrieve the merge committed datatype list */
     if (H5CX_peek_comm_dtype_merge_list(&dt_list) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get merge committed datatype list");
+        HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, FAIL, "can't get merge committed datatype list");
 
     /* Get callback info */
-    if (H5P_get(ocpypl, H5O_CPY_MCDT_SEARCH_CB_NAME, &cb_info) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get callback info");
+    if (H5CX_get_mcdt_search_cb(&cb_info) < 0)
+        HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, FAIL, "can't get callback info");
 
     /* Convert copy flags into copy struct */
     if ((cpy_option & H5O_COPY_SHALLOW_HIERARCHY_FLAG) > 0) {
@@ -991,12 +983,9 @@ H5O__copy_header(const H5O_loc_t *oloc_src, H5O_loc_t *oloc_dst /*out */, H5P_ge
     cpy_info.mcdt_cb = cb_info.func;
     cpy_info.mcdt_ud = cb_info.user_data;
 
-    /* Add property lists needed by callbacks */
-    cpy_info.lcpl = lcpl;
-
     /* Create a skip list to keep track of which objects are copied */
     if (NULL == (cpy_info.map_list = H5SL_create(H5SL_TYPE_OBJ, NULL)))
-        HGOTO_ERROR(H5E_SLIST, H5E_CANTCREATE, FAIL, "cannot make skip list");
+        HGOTO_ERROR(H5E_OHDR, H5E_CANTCREATE, FAIL, "cannot make skip list");
 
     /* copy the object from the source file to the destination file */
     if (H5O__copy_header_real(oloc_src, oloc_dst, &cpy_info, NULL, NULL) < 0)
@@ -1021,8 +1010,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5O__copy_obj(H5G_loc_t *src_loc, H5G_loc_t *dst_loc, const char *dst_name, H5P_genplist_t *ocpypl,
-              H5P_genplist_t *lcpl)
+H5O__copy_obj(H5G_loc_t *src_loc, H5G_loc_t *dst_loc, const char *dst_name)
 {
     H5G_name_t new_path;                 /* Copied object group hier. path */
     H5O_loc_t  new_oloc;                 /* Copied object object location */
@@ -1051,7 +1039,7 @@ H5O__copy_obj(H5G_loc_t *src_loc, H5G_loc_t *dst_loc, const char *dst_name, H5P_
     cached_dst_file = dst_loc->oloc->file;
 
     /* Copy the object from the source file to the destination file */
-    if (H5O__copy_header(src_loc->oloc, &new_oloc, ocpypl, lcpl) < 0)
+    if (H5O__copy_header(src_loc->oloc, &new_oloc) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTCOPY, FAIL, "unable to copy object");
 
     /* Patch dst_loc.  Again, this can be removed once oloc's point to shared
@@ -1059,7 +1047,7 @@ H5O__copy_obj(H5G_loc_t *src_loc, H5G_loc_t *dst_loc, const char *dst_name, H5P_
     dst_loc->oloc->file = cached_dst_file;
 
     /* Insert the new object in the destination file's group */
-    if (H5L_link(dst_loc, dst_name, &new_loc, lcpl) < 0)
+    if (H5L_link(dst_loc, dst_name, &new_loc) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINIT, FAIL, "unable to insert link");
     entry_inserted = true;
 

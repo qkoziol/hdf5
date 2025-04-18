@@ -244,7 +244,7 @@ H5VL__native_dataset_io_cleanup(size_t count, hid_t mem_space_id[], hid_t file_s
  *-------------------------------------------------------------------------
  */
 void *
-H5VL__native_dataset_create(void *obj, const H5VL_loc_params_t *loc_params, const char *name, hid_t lcpl_id,
+H5VL__native_dataset_create(void *obj, const H5VL_loc_params_t *loc_params, const char *name, hid_t H5_ATTR_UNUSED lcpl_id,
                             hid_t type_id, hid_t space_id, hid_t dcpl_id, hid_t dapl_id,
                             hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
@@ -277,12 +277,8 @@ H5VL__native_dataset_create(void *obj, const H5VL_loc_params_t *loc_params, cons
     } /* end if */
     /* H5Dcreate2 */
     else {
-        H5P_genplist_t *lcpl; /* Link creation property list */
-
         /* Create the new dataset & get its ID */
-        if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
-            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a property list");
-        if (NULL == (dset = H5D__create_named(&loc, name, type_id, space, lcpl, dcpl, dapl)))
+        if (NULL == (dset = H5D__create_named(&loc, name, type_id, space, dcpl, dapl)))
             HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, NULL, "unable to create dataset");
     } /* end else */
 

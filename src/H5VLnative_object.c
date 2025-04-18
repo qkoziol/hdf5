@@ -135,13 +135,11 @@ done:
 herr_t
 H5VL__native_object_copy(void *src_obj, const H5VL_loc_params_t *loc_params1, const char *src_name,
                          void *dst_obj, const H5VL_loc_params_t *loc_params2, const char *dst_name,
-                         hid_t ocpypl_id, hid_t lcpl_id, hid_t H5_ATTR_UNUSED dxpl_id,
+                         hid_t H5_ATTR_UNUSED ocpypl_id, hid_t H5_ATTR_UNUSED lcpl_id, hid_t H5_ATTR_UNUSED dxpl_id,
                          void H5_ATTR_UNUSED **req)
 {
     H5G_loc_t       src_loc; /* Source object group location */
     H5G_loc_t       dst_loc; /* Destination group location */
-    H5P_genplist_t *ocpypl;  /* Object copy property list */
-    H5P_genplist_t *lcpl;    /* Link creation property list */
     herr_t          ret_value = FAIL;
 
     FUNC_ENTER_PACKAGE
@@ -151,13 +149,9 @@ H5VL__native_object_copy(void *src_obj, const H5VL_loc_params_t *loc_params1, co
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file or file object");
     if (H5G_loc_real(dst_obj, loc_params2->obj_type, &dst_loc) < 0)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file or file object");
-    if (NULL == (ocpypl = H5P_object_verify(ocpypl_id, H5P_TYPE_OBJECT_COPY, true)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
-    if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
 
     /* Copy the object */
-    if ((ret_value = H5O__copy(&src_loc, src_name, &dst_loc, dst_name, ocpypl, lcpl)) < 0)
+    if ((ret_value = H5O__copy(&src_loc, src_name, &dst_loc, dst_name)) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTCOPY, FAIL, "unable to copy object");
 
 done:

@@ -361,7 +361,7 @@ done:
  */
 H5D_t *
 H5D__create_named(const H5G_loc_t *loc, const char *name, hid_t type_id, const H5S_t *space,
-                  H5P_genplist_t *lcpl, H5P_genplist_t *dcpl, H5P_genplist_t *dapl)
+                  H5P_genplist_t *dcpl, H5P_genplist_t *dapl)
 {
     H5O_obj_create_t ocrt_info;        /* Information for object creation */
     H5D_obj_create_t dcrt_info;        /* Information for dataset creation */
@@ -374,7 +374,6 @@ H5D__create_named(const H5G_loc_t *loc, const char *name, hid_t type_id, const H
     assert(name && *name);
     assert(type_id != H5I_INVALID_HID);
     assert(space);
-    assert(lcpl);
     assert(dcpl);
     assert(dapl);
 
@@ -390,7 +389,7 @@ H5D__create_named(const H5G_loc_t *loc, const char *name, hid_t type_id, const H
     ocrt_info.new_obj  = NULL;
 
     /* Create the new dataset and link it to its parent group */
-    if (H5L_link_object(loc, name, &ocrt_info, lcpl) < 0)
+    if (H5L_link_object(loc, name, &ocrt_info) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, NULL, "unable to create and link to dataset");
     assert(ocrt_info.new_obj);
 

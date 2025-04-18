@@ -70,7 +70,7 @@
  */
 void *
 H5VL__native_datatype_commit(void *obj, const H5VL_loc_params_t *loc_params, const char *name, hid_t type_id,
-                             hid_t lcpl_id, hid_t tcpl_id, hid_t H5_ATTR_UNUSED tapl_id,
+                             hid_t H5_ATTR_UNUSED lcpl_id, hid_t tcpl_id, hid_t H5_ATTR_UNUSED tapl_id,
                              hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
     H5G_loc_t loc;              /* Location to commit datatype */
@@ -110,14 +110,11 @@ H5VL__native_datatype_commit(void *obj, const H5VL_loc_params_t *loc_params, con
     /* Commit the datatype */
     if (NULL != name) {
         H5P_genplist_t *tcpl; /* Datatype creation property list */
-        H5P_genplist_t *lcpl; /* Link creation property list */
 
         /* H5Tcommit */
         if (NULL == (tcpl = H5P_object_verify(tcpl_id, H5P_TYPE_DATATYPE_CREATE, true)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a property list");
-        if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
-            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a property list");
-        if (H5T__commit_named(&loc, name, type, lcpl, tcpl) < 0)
+        if (H5T__commit_named(&loc, name, type, tcpl) < 0)
             HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINIT, NULL, "unable to commit datatype");
     } /* end if */
     else {

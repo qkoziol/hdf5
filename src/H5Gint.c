@@ -291,7 +291,7 @@ done:
  *-------------------------------------------------------------------------
  */
 H5G_t *
-H5G__create_named(const H5G_loc_t *loc, const char *name, H5P_genplist_t *lcpl, H5P_genplist_t *gcpl)
+H5G__create_named(const H5G_loc_t *loc, const char *name, H5P_genplist_t *gcpl)
 {
     H5O_obj_create_t ocrt_info;        /* Information for object creation */
     H5G_obj_create_t gcrt_info;        /* Information for group creation */
@@ -302,7 +302,6 @@ H5G__create_named(const H5G_loc_t *loc, const char *name, H5P_genplist_t *lcpl, 
     /* Check arguments */
     assert(loc);
     assert(name && *name);
-    assert(lcpl);
     assert(gcpl);
 
     /* Set up group creation info */
@@ -316,7 +315,7 @@ H5G__create_named(const H5G_loc_t *loc, const char *name, H5P_genplist_t *lcpl, 
     ocrt_info.new_obj  = NULL;
 
     /* Create the new group and link it to its parent group */
-    if (H5L_link_object(loc, name, &ocrt_info, lcpl) < 0)
+    if (H5L_link_object(loc, name, &ocrt_info) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTINIT, NULL, "unable to create and link to group");
     assert(ocrt_info.new_obj);
 

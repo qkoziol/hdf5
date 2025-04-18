@@ -228,6 +228,8 @@ typedef struct H5CX_lapl_cache_t {
 #endif                                         /* H5_HAVE_PARALLEL */
     const char    *elink_prefix;  /* Prefix for external link prefix (H5L_ACS_ELINK_PREFIX_NAME) */
     H5L_elink_cb_t elink_cb_info; /* External link callback info struct (H5L_ACS_ELINK_CB_NAME) */
+    H5P_genplist_t *elink_fapl;   /* External link FAPL (H5L_ACS_ELINK_FAPL_NAME) */
+    unsigned elink_flags;         /* Flags for external link (H5L_ACS_ELINK_FLAGS_NAME) */
     size_t         nlinks;        /* Number of soft / UD links to traverse (H5L_ACS_NLINKS_NAME) */
 } H5CX_lapl_cache_t;
 
@@ -248,6 +250,8 @@ typedef struct H5CX_ocpl_cache_t {
 typedef struct H5CX_ocpypl_cache_t {
     H5O_copy_dtype_merge_list_t *comm_dtype_merge_list; /* Committed datatype merge list for object copy
                                                            (H5O_CPY_MERGE_COMM_DT_LIST_NAME) */
+    H5O_mcdt_cb_info_t mcdt_cb_info; /* Callback info for committed datatype search (H5O_CPY_MCDT_SEARCH_CB_NAME) */
+    unsigned          cpy_options; /* Object copy options (H5O_CPY_OPTION_NAME) */
 } H5CX_ocpypl_cache_t;
 
 /* Typedef for cached default dataset creation property list information */
@@ -526,6 +530,14 @@ H5CX__init_package(void)
     if (H5P_get(lapl, H5L_ACS_ELINK_CB_NAME, &H5CX_def_lapl_cache.elink_cb_info) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve callback info for external links");
 
+    /* Get the file access property list for external links */
+    if (H5P_peek(lapl, H5L_ACS_ELINK_FAPL_NAME, &H5CX_def_lapl_cache.elink_fapl) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve file access property list for external links");
+
+    /* Get the flags for external links */
+    if (H5P_get(lapl, H5L_ACS_ELINK_FLAGS_NAME, &H5CX_def_lapl_cache.elink_flags) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve flags for external links");
+
     /* Get number of soft / UD links to traverse */
     if (H5P_get(lapl, H5L_ACS_NLINKS_NAME, &H5CX_def_lapl_cache.nlinks) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve number of soft / UD links to traverse");
@@ -565,6 +577,14 @@ H5CX__init_package(void)
     /* Get the committed datatype merge list for object copy */
     if (H5P_peek(ocpypl, H5O_CPY_MERGE_COMM_DT_LIST_NAME, &H5CX_def_ocpypl_cache.comm_dtype_merge_list) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve committed datatype merge list");
+
+    /* Get the callback info for committed datatype search */
+    if (H5P_get(ocpypl, H5O_CPY_MCDT_SEARCH_CB_NAME, &H5CX_def_ocpypl_cache.mcdt_cb_info) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve callback info for committed datatype search");
+
+    /* Get the object copy options */
+    if (H5P_get(ocpypl, H5O_CPY_OPTION_NAME, &H5CX_def_ocpypl_cache.cpy_options) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve object copy options");
 
     /* Reset the "default DCPL cache" information */
     memset(&H5CX_def_dcpl_cache, 0, sizeof(H5CX_dcpl_cache_t));
@@ -3452,6 +3472,70 @@ done:
 } /* end H5CX_get_elink_cb_info() */
 
 /*-------------------------------------------------------------------------
+ * Function:    H5CX_peek_elink_fapl
+ *
+ * Purpose:     Shallow copy the file access property list for external links for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_peek_elink_fapl(H5P_genplist_t **elink_fapl)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(elink_fapl);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.lapl_id);
+
+    H5CX_PEEK_PROP_VALID(lapl, H5P_LINK_ACCESS_DEFAULT, H5L_ACS_ELINK_FAPL_NAME, elink_fapl)
+
+    /* Get the value */
+    *elink_fapl = (*head)->ctx.elink_fapl;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* End H5CX_peek_elink_fapl() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_elink_flags
+ *
+ * Purpose:     Retrieves the file access flags for external links for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_elink_flags(unsigned *elink_flags)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(elink_flags);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.dxpl_id);
+
+    H5CX_RETRIEVE_PROP_VALID(lapl, H5P_LINK_ACCESS_DEFAULT, H5L_ACS_ELINK_FLAGS_NAME, elink_flags)
+
+    /* Get the value */
+    *elink_flags = (*head)->ctx.elink_flags;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_elink_flags() */
+
+/*-------------------------------------------------------------------------
  * Function:    H5CX_get_nlinks
  *
  * Purpose:     Retrieves the # of soft / UD links to traverse for the current API call context.
@@ -5708,6 +5792,70 @@ H5CX_peek_comm_dtype_merge_list(H5O_copy_dtype_merge_list_t **comm_dtype_merge_l
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5CX_peek_comm_dtype_merge_list() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_mcdt_search_cb
+ *
+ * Purpose:     Retrieves the callback info for committed datatype search for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_mcdt_search_cb(H5O_mcdt_cb_info_t *mcdt_cb_info)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(mcdt_cb_info);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.ocpypl_id);
+
+    H5CX_RETRIEVE_PROP_VALID(ocpypl, H5P_OBJECT_COPY_DEFAULT, H5O_CPY_MCDT_SEARCH_CB_NAME, mcdt_cb_info)
+
+    /* Get the value */
+    *mcdt_cb_info = (*head)->ctx.mcdt_cb_info;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_mcdt_search_cb() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_cpy_options
+ *
+ * Purpose:     Retrieves the object copy options for the current API call context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_cpy_options(unsigned *cpy_options)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(cpy_options);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.ocpypl_id);
+
+    H5CX_RETRIEVE_PROP_VALID(ocpypl, H5P_OBJECT_COPY_DEFAULT, H5O_CPY_OPTION_NAME, cpy_options)
+
+    /* Get the value */
+    *cpy_options = (*head)->ctx.cpy_options;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_cpy_options() */
 
 /*-------------------------------------------------------------------------
  * Function:    H5CX_pop

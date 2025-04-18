@@ -111,6 +111,7 @@ H5L__extern_traverse(const char H5_ATTR_UNUSED *link_name, hid_t cur_group, cons
     char           *parent_group_name = NULL;           /* Temporary pointer to group name */
     char            local_group_name[H5L_EXT_TRAVERSE_BUF_SIZE]; /* Local buffer to hold group name */
     H5P_genplist_t *fapl         = NULL;                         /* File access property list pointer */
+    bool            fapl_copied  = false;                        /* Whether the FAPL was copied */
     const char     *elink_prefix = NULL;                         /* Pointer to elink prefix */
     hid_t           ret_value    = H5I_INVALID_HID;              /* Return value */
 
@@ -140,15 +141,17 @@ H5L__extern_traverse(const char H5_ATTR_UNUSED *link_name, hid_t cur_group, cons
         HGOTO_ERROR(H5E_LINK, H5E_CANTGET, H5I_INVALID_HID, "can't get object location");
 
     /* Get the FAPL set for LAPL, if any */
-    if (H5P_get(lapl, H5L_ACS_ELINK_FAPL_NAME, &fapl) < 0)
+    if (H5CX_peek_elink_fapl(&fapl) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTGET, H5I_INVALID_HID, "can't get fapl for links");
-    if (NULL == fapl)
+    if (NULL == fapl) {
         if (NULL == (fapl = H5F_get_access_plist(loc.oloc->file, false)))
             HGOTO_ERROR(H5E_LINK, H5E_CANTGET, H5I_INVALID_HID,
                         "can't get parent's file access property list");
+        fapl_copied = true;
+    } /* end if */
 
     /* Get the access flags set for lapl_id, if any */
-    if (H5P_get(lapl, H5L_ACS_ELINK_FLAGS_NAME, &intent) < 0)
+    if (H5CX_get_elink_flags(&intent) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTGET, H5I_INVALID_HID, "can't get elink file access flags");
 
     /* Get the file access mode flags for the parent file, if they were not set
@@ -231,7 +234,7 @@ H5L__extern_traverse(const char H5_ATTR_UNUSED *link_name, hid_t cur_group, cons
 done:
     /* XXX (VOL MERGE): Probably also want to consider closing ext_obj here on failures */
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl_copied && fapl && H5P_release(fapl) < 0)
         HDONE_ERROR(H5E_LINK, H5E_CANTCLOSEOBJ, H5I_INVALID_HID, "unable to close file access property list");
     if (ext_file && H5F_efc_close(loc.oloc->file, ext_file) < 0)
         HDONE_ERROR(H5E_LINK, H5E_CANTCLOSEFILE, H5I_INVALID_HID, "problem closing external file");

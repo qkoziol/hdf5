@@ -131,7 +131,7 @@ H5O__copy_obj_by_ref(H5O_loc_t *src_oloc, H5O_loc_t *dst_oloc, H5G_loc_t *dst_ro
          * pass the obj_type and udata fields returned by H5O_copy_header_map.
          * This could be changed in the future to slightly improve performance
          * --NAF */
-        if (H5L_link(dst_root_loc, tmp_obj_name, &new_loc, cpy_info->lcpl) < 0)
+        if (H5L_link(dst_root_loc, tmp_obj_name, &new_loc) < 0)
             HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINIT, FAIL, "unable to insert link");
 
         H5G_loc_free(&new_loc);

@@ -125,6 +125,8 @@ typedef struct H5CX_cached_lapl_flags_t {
 #endif                                /* H5_HAVE_PARALLEL */
     bool elink_prefix_valid : 1;      /* Whether the prefix for external link prefix is valid */
     bool elink_cb_info_valid : 1;     /* Whether the prefix for external link callback is valid */
+    bool elink_fapl_valid : 1;        /* Whether the file access property list for external links is valid */
+    bool elink_flags_valid : 1;       /* Whether the flags for external links is valid */
     bool nlinks_valid : 1;            /* Whether number of soft / UD links to traverse is valid */
 } H5CX_cached_lapl_flags_t;
 
@@ -145,6 +147,8 @@ typedef struct H5CX_cached_ocpl_flags_t {
 typedef struct H5CX_cached_ocpypl_flags_t {
     bool comm_dtype_merge_list_valid : 1; /* Whether the committed datatype merge list for object copy is
                                              valid */
+    bool mcdt_cb_info_valid : 1; /* Whether the callback info for committed datatype search is valid */
+    bool cpy_options_valid : 1; /* Whether the object copy options are valid */
 } H5CX_cached_ocpypl_flags_t;
 
 /* 'valid' & 'set' flags for cached DCPL properties */
@@ -372,6 +376,8 @@ typedef struct H5CX_t {
 #endif                            /* H5_HAVE_PARALLEL */
     const char    *elink_prefix;  /* Prefix for external link prefix (H5L_ACS_ELINK_PREFIX_NAME) */
     H5L_elink_cb_t elink_cb_info; /* External link callback info struct (H5L_ACS_ELINK_CB_NAME) */
+    H5P_genplist_t *elink_fapl;   /* External link FAPL (H5L_ACS_ELINK_FAPL_NAME) */
+    unsigned elink_flags;         /* Flags for external link (H5L_ACS_ELINK_FLAGS_NAME) */
     size_t         nlinks;        /* Number of soft / UD links to traverse (H5L_ACS_NLINKS_NAME) */
 
     /* Cached OCPL properties */
@@ -387,7 +393,8 @@ typedef struct H5CX_t {
     /* Cached OCPYPL properties */
     H5O_copy_dtype_merge_list_t *comm_dtype_merge_list; /* Committed datatype merge list for object copy
                                                            (H5O_CPY_MERGE_COMM_DT_LIST_NAME) */
-
+    H5O_mcdt_cb_info_t mcdt_cb_info; /* Callback info for committed datatype search (H5O_CPY_MCDT_SEARCH_CB_NAME) */
+    unsigned cpy_options; /* Object copy options (H5O_CPY_OPTION_NAME) */
     /* Cached DCPL properties */
     bool min_dset_ohdr;  /* Whether to minimize dataset object header (H5D_CRT_MIN_DSET_HDR_SIZE_NAME) */
     H5O_layout_t layout; /* Storage layout for object creation (H5D_CRT_LAYOUT_NAME) */
@@ -581,6 +588,8 @@ H5_DLL herr_t H5CX_get_lapl_coll_md_read(H5P_coll_md_read_flag_t *coll_md_read);
 #endif /* H5_HAVE_PARALLEL */
 H5_DLL herr_t H5CX_peek_elink_prefix(const char **elink_prefix);
 H5_DLL herr_t H5CX_get_elink_cb_info(H5L_elink_cb_t *cb_info);
+H5_DLL herr_t H5CX_peek_elink_fapl(H5P_genplist_t **elink_fapl);
+H5_DLL herr_t H5CX_get_elink_flags(unsigned *elink_flags);
 H5_DLL herr_t H5CX_get_nlinks(size_t *nlinks);
 
 /* "Getter" routines for OCPL properties cached in API context */
@@ -595,6 +604,8 @@ H5_DLL herr_t H5CX_peek_pline(H5O_pline_t *pline);
 
 /* "Getter" routines for OCPYPL properties cached in API context */
 H5_DLL herr_t H5CX_peek_comm_dtype_merge_list(H5O_copy_dtype_merge_list_t **comm_dtype_merge_list);
+H5_DLL herr_t H5CX_get_mcdt_search_cb(H5O_mcdt_cb_info_t *mcdt_cb_info);
+H5_DLL herr_t H5CX_get_cpy_options(unsigned *cpy_options);
 
 /* "Getter" routines for DCPL properties cached in API context */
 H5_DLL herr_t H5CX_get_min_dset_hdr(bool *dset_min_ohdr);
