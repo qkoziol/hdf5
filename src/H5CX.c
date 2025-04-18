@@ -226,11 +226,11 @@ typedef struct H5CX_lapl_cache_t {
 #ifdef H5_HAVE_PARALLEL
     H5P_coll_md_read_flag_t lapl_coll_md_read; /* Property for collective metadata read */
 #endif                                         /* H5_HAVE_PARALLEL */
-    const char    *elink_prefix;  /* Prefix for external link prefix (H5L_ACS_ELINK_PREFIX_NAME) */
-    H5L_elink_cb_t elink_cb_info; /* External link callback info struct (H5L_ACS_ELINK_CB_NAME) */
-    H5P_genplist_t *elink_fapl;   /* External link FAPL (H5L_ACS_ELINK_FAPL_NAME) */
-    unsigned elink_flags;         /* Flags for external link (H5L_ACS_ELINK_FLAGS_NAME) */
-    size_t         nlinks;        /* Number of soft / UD links to traverse (H5L_ACS_NLINKS_NAME) */
+    const char     *elink_prefix;  /* Prefix for external link prefix (H5L_ACS_ELINK_PREFIX_NAME) */
+    H5L_elink_cb_t  elink_cb_info; /* External link callback info struct (H5L_ACS_ELINK_CB_NAME) */
+    H5P_genplist_t *elink_fapl;    /* External link FAPL (H5L_ACS_ELINK_FAPL_NAME) */
+    unsigned        elink_flags;   /* Flags for external link (H5L_ACS_ELINK_FLAGS_NAME) */
+    size_t          nlinks;        /* Number of soft / UD links to traverse (H5L_ACS_NLINKS_NAME) */
 } H5CX_lapl_cache_t;
 
 /* Typedef for cached default object creation property list information */
@@ -250,8 +250,9 @@ typedef struct H5CX_ocpl_cache_t {
 typedef struct H5CX_ocpypl_cache_t {
     H5O_copy_dtype_merge_list_t *comm_dtype_merge_list; /* Committed datatype merge list for object copy
                                                            (H5O_CPY_MERGE_COMM_DT_LIST_NAME) */
-    H5O_mcdt_cb_info_t mcdt_cb_info; /* Callback info for committed datatype search (H5O_CPY_MCDT_SEARCH_CB_NAME) */
-    unsigned          cpy_options; /* Object copy options (H5O_CPY_OPTION_NAME) */
+    H5O_mcdt_cb_info_t
+             mcdt_cb_info; /* Callback info for committed datatype search (H5O_CPY_MCDT_SEARCH_CB_NAME) */
+    unsigned cpy_options;  /* Object copy options (H5O_CPY_OPTION_NAME) */
 } H5CX_ocpypl_cache_t;
 
 /* Typedef for cached default dataset creation property list information */
@@ -532,7 +533,8 @@ H5CX__init_package(void)
 
     /* Get the file access property list for external links */
     if (H5P_peek(lapl, H5L_ACS_ELINK_FAPL_NAME, &H5CX_def_lapl_cache.elink_fapl) < 0)
-        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve file access property list for external links");
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL,
+                    "Can't retrieve file access property list for external links");
 
     /* Get the flags for external links */
     if (H5P_get(lapl, H5L_ACS_ELINK_FLAGS_NAME, &H5CX_def_lapl_cache.elink_flags) < 0)
@@ -580,7 +582,8 @@ H5CX__init_package(void)
 
     /* Get the callback info for committed datatype search */
     if (H5P_get(ocpypl, H5O_CPY_MCDT_SEARCH_CB_NAME, &H5CX_def_ocpypl_cache.mcdt_cb_info) < 0)
-        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve callback info for committed datatype search");
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL,
+                    "Can't retrieve callback info for committed datatype search");
 
     /* Get the object copy options */
     if (H5P_get(ocpypl, H5O_CPY_OPTION_NAME, &H5CX_def_ocpypl_cache.cpy_options) < 0)
@@ -3474,7 +3477,8 @@ done:
 /*-------------------------------------------------------------------------
  * Function:    H5CX_peek_elink_fapl
  *
- * Purpose:     Shallow copy the file access property list for external links for the current API call context.
+ * Purpose:     Shallow copy the file access property list for external links for the current API call
+ *context.
  *
  * Return:      Non-negative on success / Negative on failure
  *

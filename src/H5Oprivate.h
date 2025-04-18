@@ -198,7 +198,7 @@ typedef struct H5O_copy_t {
     void                *shared_fo; /* The shared pointer for the src object */
     H5O_mcdt_search_cb_t mcdt_cb;   /* The callback to invoke before searching the global list of committed
                                        datatypes at destination */
-    void           *mcdt_ud;        /* User data passed to callback */
+    void *mcdt_ud;                  /* User data passed to callback */
 } H5O_copy_t;
 
 /* Header message IDs */

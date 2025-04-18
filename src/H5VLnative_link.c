@@ -68,10 +68,10 @@
  */
 herr_t
 H5VL__native_link_create(H5VL_link_create_args_t *args, void *obj, const H5VL_loc_params_t *loc_params,
-                         hid_t H5_ATTR_UNUSED lcpl_id, hid_t H5_ATTR_UNUSED lapl_id, hid_t H5_ATTR_UNUSED dxpl_id,
-                         void H5_ATTR_UNUSED **req)
+                         hid_t H5_ATTR_UNUSED lcpl_id, hid_t H5_ATTR_UNUSED lapl_id,
+                         hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
-    herr_t          ret_value = SUCCEED; /* Return value */
+    herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -121,7 +121,8 @@ H5VL__native_link_create(H5VL_link_create_args_t *args, void *obj, const H5VL_lo
 
             if (H5G_loc_real(obj, loc_params->obj_type, &link_loc) < 0)
                 HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file or file object");
-            if (H5L__create_soft(args->args.soft.target, &link_loc, loc_params->loc_data.loc_by_name.name) < 0)
+            if (H5L__create_soft(args->args.soft.target, &link_loc, loc_params->loc_data.loc_by_name.name) <
+                0)
                 HGOTO_ERROR(H5E_LINK, H5E_CANTCREATE, FAIL, "unable to create link");
 
             break;
@@ -132,7 +133,8 @@ H5VL__native_link_create(H5VL_link_create_args_t *args, void *obj, const H5VL_lo
 
             if (H5G_loc_real(obj, loc_params->obj_type, &link_loc) < 0)
                 HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file or file object");
-            if (H5L__create_ud(&link_loc, loc_params->loc_data.loc_by_name.name, args->args.ud.buf, args->args.ud.buf_size, args->args.ud.type) < 0)
+            if (H5L__create_ud(&link_loc, loc_params->loc_data.loc_by_name.name, args->args.ud.buf,
+                               args->args.ud.buf_size, args->args.ud.type) < 0)
                 HGOTO_ERROR(H5E_LINK, H5E_CANTINIT, FAIL, "unable to create link");
 
             break;
@@ -157,12 +159,12 @@ done:
  */
 herr_t
 H5VL__native_link_copy(void *src_obj, const H5VL_loc_params_t *loc_params1, void *dst_obj,
-                       const H5VL_loc_params_t *loc_params2, hid_t H5_ATTR_UNUSED lcpl_id, hid_t H5_ATTR_UNUSED lapl_id,
-                       hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
+                       const H5VL_loc_params_t *loc_params2, hid_t H5_ATTR_UNUSED lcpl_id,
+                       hid_t H5_ATTR_UNUSED lapl_id, hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
-    H5G_loc_t       src_loc, *src_loc_p;
-    H5G_loc_t       dst_loc, *dst_loc_p;
-    herr_t          ret_value = SUCCEED; /* Return value */
+    H5G_loc_t src_loc, *src_loc_p;
+    H5G_loc_t dst_loc, *dst_loc_p;
+    herr_t    ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -180,7 +182,8 @@ H5VL__native_link_copy(void *src_obj, const H5VL_loc_params_t *loc_params1, void
         dst_loc_p = src_loc_p;
 
     /* Copy the link */
-    if (H5L__move(src_loc_p, loc_params1->loc_data.loc_by_name.name, dst_loc_p, loc_params2->loc_data.loc_by_name.name, true) < 0)
+    if (H5L__move(src_loc_p, loc_params1->loc_data.loc_by_name.name, dst_loc_p,
+                  loc_params2->loc_data.loc_by_name.name, true) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTCOPY, FAIL, "unable to copy link");
 
 done:
@@ -198,12 +201,12 @@ done:
  */
 herr_t
 H5VL__native_link_move(void *src_obj, const H5VL_loc_params_t *loc_params1, void *dst_obj,
-                       const H5VL_loc_params_t *loc_params2, hid_t H5_ATTR_UNUSED lcpl_id, hid_t H5_ATTR_UNUSED lapl_id,
-                       hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
+                       const H5VL_loc_params_t *loc_params2, hid_t H5_ATTR_UNUSED lcpl_id,
+                       hid_t H5_ATTR_UNUSED lapl_id, hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
-    H5G_loc_t       src_loc, *src_loc_p;
-    H5G_loc_t       dst_loc, *dst_loc_p;
-    herr_t          ret_value = SUCCEED; /* Return value */
+    H5G_loc_t src_loc, *src_loc_p;
+    H5G_loc_t dst_loc, *dst_loc_p;
+    herr_t    ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -221,7 +224,8 @@ H5VL__native_link_move(void *src_obj, const H5VL_loc_params_t *loc_params1, void
         dst_loc_p = src_loc_p;
 
     /* Move the link */
-    if (H5L__move(src_loc_p, loc_params1->loc_data.loc_by_name.name, dst_loc_p, loc_params2->loc_data.loc_by_name.name, false) < 0)
+    if (H5L__move(src_loc_p, loc_params1->loc_data.loc_by_name.name, dst_loc_p,
+                  loc_params2->loc_data.loc_by_name.name, false) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTMOVE, FAIL, "unable to move link");
 
 done:

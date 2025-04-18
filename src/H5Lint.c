@@ -707,7 +707,7 @@ H5L__create_real(const H5G_loc_t *link_loc, const char *link_name, H5G_name_t *o
     unsigned      target_flags   = H5G_TARGET_NORMAL; /* Flags to pass to group traversal function */
     H5L_trav_cr_t udata;                              /* User data for callback */
     unsigned      crt_intmd_group;
-    herr_t        ret_value = SUCCEED;                /* Return value */
+    herr_t        ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -881,7 +881,8 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5L__create_ud(const H5G_loc_t *link_loc, const char *link_name, const void *ud_data, size_t ud_data_size, H5L_type_t type)
+H5L__create_ud(const H5G_loc_t *link_loc, const char *link_name, const void *ud_data, size_t ud_data_size,
+               H5L_type_t type)
 {
     H5O_link_t lnk;                 /* Link to insert */
     herr_t     ret_value = SUCCEED; /* Return value */
@@ -1551,13 +1552,14 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5L__move(const H5G_loc_t *src_loc, const char *src_name, const H5G_loc_t *dst_loc, const char *dst_name, bool copy_flag)
+H5L__move(const H5G_loc_t *src_loc, const char *src_name, const H5G_loc_t *dst_loc, const char *dst_name,
+          bool copy_flag)
 {
     unsigned      dst_target_flags = H5G_TARGET_NORMAL;
     H5T_cset_t    char_encoding    = H5F_DEFAULT_CSET; /* Character encoding for link */
     unsigned      crt_intmd_group;
-    H5L_trav_mv_t udata;                               /* User data for traversal */
-    herr_t        ret_value = SUCCEED;                 /* Return value */
+    H5L_trav_mv_t udata;               /* User data for traversal */
+    herr_t        ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
