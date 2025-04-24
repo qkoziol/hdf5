@@ -1111,7 +1111,7 @@ if (BUILD_STATIC_LIBS)
   )
   TARGET_C_PROPERTIES (${HDF5_LIB_TARGET} STATIC)
   target_link_libraries (${HDF5_LIB_TARGET}
-	  PRIVATE ${LINK_LIBS} ${LINK_COMP_LIBS} "$<$<BOOL:${CUDAToolkit_FOUND}>:CUDA::cudart>"  "$<$<BOOL:${CUDAToolkit_FOUND}>:CUDA::cufile>"  "$<$<BOOL:${CUDAToolkit_FOUND}>:CUDA::cuda_driver>"
+	  PRIVATE ${LINK_LIBS} ${LINK_COMP_LIBS} "$<$<BOOL:${CUDAToolkit_FOUND}>:CUDA::cudart>"  "$<$<BOOL:${CUDAToolkit_FOUND}>:CUDA::cuFile>"  "$<$<BOOL:${CUDAToolkit_FOUND}>:CUDA::cuda_driver>"
       PUBLIC "$<$<PLATFORM_ID:Windows>:${LINK_PUB_LIBS}>" "$<$<NOT:$<PLATFORM_ID:Windows>>:${CMAKE_DL_LIBS}>" "$<$<BOOL:${HDF5_ENABLE_PARALLEL}>:MPI::MPI_C>"
   )
   if (NOT WIN32)
@@ -1147,7 +1147,7 @@ if (BUILD_SHARED_LIBS)
   )
   TARGET_C_PROPERTIES (${HDF5_LIBSH_TARGET} SHARED)
   target_link_libraries (${HDF5_LIBSH_TARGET}
-	  PRIVATE ${LINK_LIBS} ${LINK_COMP_LIBS} "$<$<BOOL:${CUDAToolkit_FOUND}>:CUDA::cudart>"  "$<$<BOOL:${CUDAToolkit_FOUND}>:CUDA::cufile>"  "$<$<BOOL:${CUDAToolkit_FOUND}>:CUDA::cuda_driver>"
+	  PRIVATE ${LINK_LIBS} ${LINK_COMP_LIBS} "$<$<BOOL:${CUDAToolkit_FOUND}>:CUDA::cudart>"  "$<$<BOOL:${CUDAToolkit_FOUND}>:CUDA::cuFile>"  "$<$<BOOL:${CUDAToolkit_FOUND}>:CUDA::cuda_driver>"
       PUBLIC "$<$<PLATFORM_ID:Windows>:${LINK_PUB_LIBS}>" "$<$<NOT:$<PLATFORM_ID:Windows>>:${CMAKE_DL_LIBS}>" "$<$<BOOL:${HDF5_ENABLE_PARALLEL}>:MPI::MPI_C>" "$<$<OR:$<BOOL:${HDF5_ENABLE_THREADS}>,$<BOOL:${HDF5_ENABLE_SUBFILING_VFD}>>:Threads::Threads>"
   )
   set_global_variable (HDF5_LIBRARIES_TO_EXPORT "${HDF5_LIBRARIES_TO_EXPORT};${HDF5_LIBSH_TARGET}")
