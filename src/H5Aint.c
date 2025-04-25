@@ -279,8 +279,7 @@ H5A_term_package(void)
  *-------------------------------------------------------------------------
  */
 H5A_t *
-H5A__create(const H5G_loc_t *loc, const char *attr_name, const H5T_t *type, const H5S_t *space,
-            H5P_genplist_t *acpl)
+H5A__create(const H5G_loc_t *loc, const char *attr_name, const H5T_t *type, const H5S_t *space)
 {
     H5A_t   *attr = NULL;      /* Attribute created */
     hssize_t snelmts;          /* elements in attribute */
@@ -428,8 +427,7 @@ done:
  *-------------------------------------------------------------------------
  */
 H5A_t *
-H5A__create_by_name(const H5G_loc_t *loc, const char *obj_name, const char *attr_name, const H5T_t *type,
-                    const H5S_t *space, H5P_genplist_t *acpl)
+H5A__create_by_name(const H5G_loc_t *loc, const char *obj_name, const char *attr_name, const H5T_t *type, const H5S_t *space)
 {
     H5G_loc_t  obj_loc;           /* Location used to open group */
     H5G_name_t obj_path;          /* Opened object group hier. path */
@@ -456,7 +454,7 @@ H5A__create_by_name(const H5G_loc_t *loc, const char *obj_name, const char *attr
     loc_found = true;
 
     /* Go do the real work for attaching the attribute to the object */
-    if (NULL == (attr = H5A__create(&obj_loc, attr_name, type, space, acpl)))
+    if (NULL == (attr = H5A__create(&obj_loc, attr_name, type, space)))
         HGOTO_ERROR(H5E_ATTR, H5E_CANTINIT, NULL, "unable to create attribute");
 
     /* Set return value */
