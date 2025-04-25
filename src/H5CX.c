@@ -51,13 +51,13 @@
             HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, ERR_RET, "can't get property list");
 
 /* Common macro for the duplicated code to retrieve a property from a property list */
-#define H5CX_RETRIEVE_PROP(PL, MTHD, PROP_NAME, PROP_FIELD, ERR_RET)                                         \
+#define H5CX_RETRIEVE_PROP(PL, MTHD, SUB_PL, PROP_NAME, PROP_FIELD, ERR_RET)                                         \
     /* Get/peek the property */                                                                              \
-    if (H5_UNLIKELY(H5_GLUE(H5P_, MTHD)((*head)->ctx.PL, (PROP_NAME), &(*head)->ctx.PROP_FIELD) < 0))        \
+    if (H5_UNLIKELY(H5_GLUE(H5P_, MTHD)((*head)->ctx.PL, (PROP_NAME), &(*head)->ctx.H5_GLUE(SUB_PL, _props).PROP_FIELD) < 0))        \
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, ERR_RET, "can't retrieve value from API context");
 
 /* Macros to inline testing / not testing for property existence before retrieving it */
-#define H5CX_TEST_YES_PROP(PL, MTHD, PROP_NAME, PROP_FIELD, ERR_RET)                                         \
+#define H5CX_TEST_YES_PROP(PL, MTHD, SUB_PL, PROP_NAME, PROP_FIELD, ERR_RET)                                         \
     {                                                                                                        \
         htri_t check_prop = 0; /* Whether the property exists in the API context's DXPL */                   \
                                                                                                              \
@@ -67,27 +67,27 @@
                                                                                                              \
         /* If property exists, retrieve it */                                                                \
         if (check_prop > 0)                                                                                  \
-            H5CX_RETRIEVE_PROP(PL, MTHD, PROP_NAME, PROP_FIELD, ERR_RET)                                     \
+            H5CX_RETRIEVE_PROP(PL, MTHD, SUB_PL, PROP_NAME, PROP_FIELD, ERR_RET)                                     \
     }
-#define H5CX_TEST_NO_PROP(PL, MTHD, PROP_NAME, PROP_FIELD, ERR_RET)                                          \
+#define H5CX_TEST_NO_PROP(PL, MTHD, SUB_PL, PROP_NAME, PROP_FIELD, ERR_RET)                                          \
     /* Get/peek the property */                                                                              \
-    H5CX_RETRIEVE_PROP(PL, MTHD, PROP_NAME, PROP_FIELD, ERR_RET)
-#define H5CX_TEST_GET_PROP(TST, PL, MTHD, PROP_NAME, PROP_FIELD, ERR_RET)                                    \
-    H5_GLUE3(H5CX_TEST_, TST, _PROP)(PL, MTHD, PROP_NAME, PROP_FIELD, ERR_RET)
+    H5CX_RETRIEVE_PROP(PL, MTHD, SUB_PL, PROP_NAME, PROP_FIELD, ERR_RET)
+#define H5CX_TEST_GET_PROP(PL, TST, MTHD, SUB_PL, PROP_NAME, PROP_FIELD, ERR_RET)                                    \
+    H5_GLUE3(H5CX_TEST_, TST, _PROP)(PL, MTHD, SUB_PL, PROP_NAME, PROP_FIELD, ERR_RET)
 
 /* Common macro for the duplicated code to retrieve properties from a property list */
 #define H5CX_RETRIEVE_PROP_COMMON(PL, TST, MTHD, SUB_PL, DEF_PL, PROP_NAME, PROP_FIELD, ERR_RET)             \
     {                                                                                                        \
         /* Check for default property list */                                                                \
         if ((*head)->ctx.H5_GLUE(PL, _id) == (DEF_PL))                                                       \
-            H5MM_memcpy(&(*head)->ctx.PROP_FIELD, &H5_GLUE3(H5CX_def_, SUB_PL, _cache).PROP_FIELD,           \
+            H5MM_memcpy(&(*head)->ctx.H5_GLUE(SUB_PL, _props).PROP_FIELD, &H5_GLUE3(H5CX_def_, SUB_PL, _cache).PROP_FIELD,           \
                         sizeof(H5_GLUE3(H5CX_def_, SUB_PL, _cache).PROP_FIELD));                             \
         else {                                                                                               \
             /* Retrieve the property list */                                                                 \
             H5CX_RETRIEVE_PLIST(PL, ERR_RET)                                                                 \
                                                                                                              \
             /* Retrieve the property, possibly testing for existence */                                      \
-            H5CX_TEST_GET_PROP(TST, PL, MTHD, PROP_NAME, PROP_FIELD, ERR_RET)                                \
+            H5CX_TEST_GET_PROP(PL, TST, MTHD, SUB_PL, PROP_NAME, PROP_FIELD, ERR_RET)                                \
         } /* end else */                                                                                     \
                                                                                                              \
         /* Mark the field as valid */                                                                        \
@@ -159,7 +159,7 @@
         /* If property was already set or exists (for first set), update it */                               \
         if ((*head)->ctx.dxpl_flags.H5_GLUE(PROP_FIELD, _set) || check_prop > 0) {                           \
             /* Cache the value for later, marking it to set in DXPL when context popped */                   \
-            (*head)->ctx.PROP_FIELD                           = PROP_FIELD;                                  \
+            (*head)->ctx.dxpl_props.PROP_FIELD                           = PROP_FIELD;                                  \
             (*head)->ctx.dxpl_flags.H5_GLUE(PROP_FIELD, _set) = true;                                        \
         } /* end if */                                                                                       \
     }
@@ -172,7 +172,7 @@
         H5CX_RETRIEVE_PLIST(dxpl, FAIL)                                                                      \
                                                                                                              \
         /* Set the property */                                                                               \
-        if (H5_UNLIKELY(H5P_set((*head)->ctx.dxpl, PROP_NAME, &(*head)->ctx.PROP_FIELD) < 0))                \
+        if (H5_UNLIKELY(H5P_set((*head)->ctx.dxpl, PROP_NAME, &(*head)->ctx.dxpl_props.PROP_FIELD) < 0))                \
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTSET, FAIL, "error setting data xfer property");                 \
     } /* end if */
 
@@ -180,197 +180,7 @@
 /* Local Typedefs */
 /******************/
 
-/* Typedef for cached default dataset transfer property list information */
-/* This is initialized to the values in the default DXPL during package
- * initialization and then remains constant for the rest of the library's
- * operation.  When a field in H5CX_t is retrieved from an API context that
- * uses a default DXPL, this value is copied instead of spending time looking
- * up the property in the DXPL.
- */
-typedef struct H5CX_dxpl_cache_t {
-    size_t    max_temp_buf;         /* Maximum temporary buffer size (H5D_XFER_MAX_TEMP_BUF_NAME) */
-    void     *tconv_buf;            /* Temporary conversion buffer (H5D_XFER_TCONV_BUF_NAME) */
-    void     *bkgr_buf;             /* Background conversion buffer (H5D_XFER_BKGR_BUF_NAME) */
-    H5T_bkg_t bkgr_buf_type;        /* Background buffer type (H5D_XFER_BKGR_BUF_NAME) */
-    double    btree_split_ratio[3]; /* B-tree split ratios (H5D_XFER_BTREE_SPLIT_RATIO_NAME) */
-    size_t    vec_size;             /* Size of hyperslab vector (H5D_XFER_HYPER_VECTOR_SIZE_NAME) */
-#ifdef H5_HAVE_PARALLEL
-    H5FD_mpio_xfer_t io_xfer_mode; /* Parallel transfer mode for this request (H5D_XFER_IO_XFER_MODE_NAME) */
-    H5FD_mpio_collective_opt_t mpio_coll_opt; /* Parallel transfer with independent IO or collective IO with
-                                                 this mode (H5D_XFER_MPIO_COLLECTIVE_OPT_NAME) */
-    uint32_t mpio_local_no_coll_cause;        /* Local reason for breaking collective I/O
-                                                 (H5D_MPIO_LOCAL_NO_COLLECTIVE_CAUSE_NAME) */
-    uint32_t mpio_global_no_coll_cause;       /* Global reason for breaking collective I/O
-                                                 (H5D_MPIO_GLOBAL_NO_COLLECTIVE_CAUSE_NAME) */
-    H5FD_mpio_chunk_opt_t
-             mpio_chunk_opt_mode;       /* Collective chunk option (H5D_XFER_MPIO_CHUNK_OPT_HARD_NAME) */
-    unsigned mpio_chunk_opt_num;        /* Collective chunk threshold (H5D_XFER_MPIO_CHUNK_OPT_NUM_NAME) */
-    unsigned mpio_chunk_opt_ratio;      /* Collective chunk ratio (H5D_XFER_MPIO_CHUNK_OPT_RATIO_NAME) */
-#endif                                  /* H5_HAVE_PARALLEL */
-    H5Z_EDC_t               err_detect; /* Error detection info (H5D_XFER_EDC_NAME) */
-    H5Z_cb_t                filter_cb;  /* Filter callback function (H5D_XFER_FILTER_CB_NAME) */
-    H5Z_data_xform_t       *data_transform;        /* Data transform info (H5D_XFER_XFORM_NAME) */
-    H5T_vlen_alloc_info_t   vl_alloc_info;         /* VL datatype alloc info (H5D_XFER_VLEN_*_NAME) */
-    H5T_conv_cb_t           dt_conv_cb;            /* Datatype conversion struct (H5D_XFER_CONV_CB_NAME) */
-    H5D_selection_io_mode_t selection_io_mode;     /* Selection I/O mode (H5D_XFER_SELECTION_IO_MODE_NAME) */
-    uint32_t                no_selection_io_cause; /* Reasons for not performing selection I/O
-                                                            (H5D_XFER_NO_SELECTION_IO_CAUSE_NAME) */
-    uint32_t
-           actual_selection_io_mode; /* Actual selection I/O mode (H5D_XFER_ACTUAL_SELECTION_IO_MODE_NAME) */
-    bool   modify_write_buf;         /* Whether the library can modify write buffers */
-    H5S_t *dset_io_selection;        /* Dataset I/O selection (H5D_XFER_DSET_IO_SEL_NAME) */
-} H5CX_dxpl_cache_t;
 
-/* Typedef for cached default link creation property list information */
-/* (Same as the cached DXPL struct, above, except for the default LCPL) */
-typedef struct H5CX_lcpl_cache_t {
-    H5T_cset_t encoding;           /* Link name character encoding */
-    unsigned   intermediate_group; /* Whether to create intermediate groups  */
-} H5CX_lcpl_cache_t;
-
-/* Typedef for cached default link access property list information */
-/* (Same as the cached DXPL struct, above, except for the default LAPL) */
-typedef struct H5CX_lapl_cache_t {
-#ifdef H5_HAVE_PARALLEL
-    H5P_coll_md_read_flag_t lapl_coll_md_read; /* Property for collective metadata read */
-#endif                                         /* H5_HAVE_PARALLEL */
-    const char     *elink_prefix;  /* Prefix for external link prefix (H5L_ACS_ELINK_PREFIX_NAME) */
-    H5L_elink_cb_t  elink_cb_info; /* External link callback info struct (H5L_ACS_ELINK_CB_NAME) */
-    H5P_genplist_t *elink_fapl;    /* External link FAPL (H5L_ACS_ELINK_FAPL_NAME) */
-    unsigned        elink_flags;   /* Flags for external link (H5L_ACS_ELINK_FLAGS_NAME) */
-    size_t          nlinks;        /* Number of soft / UD links to traverse (H5L_ACS_NLINKS_NAME) */
-} H5CX_lapl_cache_t;
-
-/* Typedef for cached default object creation property list information */
-/* (Same as the cached DXPL struct, above, except for the default OCPL) */
-typedef struct H5CX_ocpl_cache_t {
-#ifdef H5O_ENABLE_BAD_MESG_COUNT
-    bool bad_mesg_count;          /* Write a bad message count to the object header */
-#endif                            /* H5O_ENABLE_BAD_MESG_COUNT */
-    unsigned    attr_max_compact; /* Maximum # of attributes to store in compact form */
-    unsigned    attr_min_dense;   /* Minimum # of attributes to store in dense form */
-    uint8_t     ohdr_flags;       /* Object header flags */
-    H5O_pline_t pline;            /* Filter pipeline for object creation */
-} H5CX_ocpl_cache_t;
-
-/* Typedef for cached default object copy property list information */
-/* (Same as the cached DXPL struct, above, except for the default OCPYPL) */
-typedef struct H5CX_ocpypl_cache_t {
-    H5O_copy_dtype_merge_list_t *comm_dtype_merge_list; /* Committed datatype merge list for object copy
-                                                           (H5O_CPY_MERGE_COMM_DT_LIST_NAME) */
-    H5O_mcdt_cb_info_t
-             mcdt_cb_info; /* Callback info for committed datatype search (H5O_CPY_MCDT_SEARCH_CB_NAME) */
-    unsigned cpy_options;  /* Object copy options (H5O_CPY_OPTION_NAME) */
-} H5CX_ocpypl_cache_t;
-
-/* Typedef for cached default dataset creation property list information */
-/* (Same as the cached DXPL struct, above, except for the default DCPL) */
-typedef struct H5CX_dcpl_cache_t {
-    bool         min_dset_ohdr; /* Whether to minimize dataset object header */
-    H5O_pline_t  pline;         /* Filter pipeline for dataset creation */
-    H5O_layout_t layout;        /* Storage layout for dataset creation */
-    H5O_efl_t    efl;           /* External file list for dataset creation */
-    H5O_fill_t   fill_value;    /* Fill value for dataset creation */
-#ifdef H5O_ENABLE_BOGUS
-    unsigned bogus_msg_id;    /* Bogus message ID for dataset creation */
-    uint8_t  bogus_msg_flags; /* Bogus message flags for dataset creation */
-#endif
-} H5CX_dcpl_cache_t;
-
-/* Typedef for cached default group creation property list information */
-/* (Same as the cached DXPL struct, above, except for the default GCPL) */
-typedef struct H5CX_gcpl_cache_t {
-    H5O_ginfo_t ginfo; /* Group info property */
-    H5O_linfo_t linfo; /* Link info property */
-} H5CX_gcpl_cache_t;
-
-/* Typedef for cached default dataset access property list information */
-/* (Same as the cached DXPL struct, above, except for the default DAPL) */
-typedef struct H5CX_dapl_cache_t {
-    const char        *extfile_prefix;   /* Prefix for external file */
-    const char        *vds_prefix;       /* Prefix for VDS           */
-    H5D_append_flush_t append_flush;     /* Property for append flush (H5D_ACS_APPEND_FLUSH_NAME) */
-    size_t             dapl_rdcc_nbytes; /* Property for size of the raw data cache */
-    size_t             dapl_rdcc_nslots; /* Property for number of slots in the raw data cache */
-    double             dapl_rdcc_w0;     /* Property for chunk cache preemption factor */
-    hsize_t            vds_printf_gap;   /* Property for VDS printf gap */
-    H5D_vds_view_t     vds_view;         /* Property for VDS view */
-} H5CX_dapl_cache_t;
-
-/* Typedef for cached default file access property list information */
-/* (Same as the cached DXPL struct, above, except for the default FAPL) */
-typedef struct H5CX_fapl_cache_t {
-#ifdef H5_HAVE_PARALLEL
-    MPI_Comm                mpi_comm;          /* MPI communicator */
-    MPI_Info                mpi_info;          /* MPI info */
-    H5P_coll_md_read_flag_t fapl_coll_md_read; /* Property for collective metadata read */
-    bool                    coll_md_write;     /* Property for collective metadata write */
-#ifdef H5_HAVE_SUBFILING_VFD
-    H5FD_subfiling_params_t sf_ioc_params;      /* Property for subfiling IOC parameters */
-#endif                                          /* H5_HAVE_SUBFILING_VFD */
-#endif                                          /* H5_HAVE_PARALLEL */
-    H5VL_connector_prop_t  vol_connector_prop;  /* Property for VOL connector & info */
-    H5FD_driver_prop_t     driver_prop;         /* Property for driver, info & configuration string */
-    H5FD_file_image_info_t file_image_info;     /* Property for file image info */
-    H5F_libver_t           low_bound;           /* low_bound property for H5Pset_libver_bounds() */
-    H5F_libver_t           high_bound;          /* high_bound property for H5Pset_libver_bounds */
-    bool                   use_file_locking;    /* use_file_locking property for H5Pset_file_locking() */
-    bool     ignore_disabled_locks;             /* ignore_disabled_locks property for H5Pset_file_locking() */
-    hsize_t  align_bound;                       /* alignment property for H5Pset_alignment() */
-    hsize_t  align_threshold;                   /* threshold property for H5Pset_alignment() */
-    bool     clear_status_flags;                /* Private property used by h5clear */
-    unsigned gc_ref;                            /* Property for garbage collection of references */
-    bool     use_mdc_logging;                   /* Property for metadata cache logging enabled */
-    char    *mdc_log_location;                  /* Property for metadata cache log location */
-    bool     start_mdc_logging_on_access;       /* Property for starting metadata cache logging on access */
-    unsigned mdc_read_attempts;                 /* Property for metadata cache read attempts */
-    hsize_t  meta_alloc_block_size;             /* Property for metadata allocation block size */
-    H5AC_cache_config_t       mdc_init_config;  /* Property for metadata cache initialization configuration */
-    H5AC_cache_image_config_t mdc_image_config; /* Property for metadata cache image configuration */
-    H5F_object_flush_t        object_flush_strategy; /* Property for object flush strategy */
-    size_t                    pb_size;               /* Property for page buffer size */
-    unsigned                  pb_min_meta_perc;      /* Property for minimum metadata percentage */
-    unsigned                  pb_min_raw_perc;       /* Property for minimum raw percentage */
-    size_t                    fapl_rdcc_nbytes;      /* Property for size of the raw data cache */
-    size_t                    fapl_rdcc_nslots;      /* Property for number of slots in the raw data cache */
-    double                    fapl_rdcc_w0;          /* Property for chunk cache preemption factor */
-    unsigned                  efc_size;              /* Property for size of the external file cache */
-    H5F_close_degree_t        close_degree;          /* Property for file close degree */
-    bool                      evict_on_close;        /* Property for evicting an object's metadata on close */
-    uint64_t                  rfic_flags;            /* Property for relaxed file integrity checks */
-    hsize_t                   sdata_block_size;      /* Property for "small" raw data block size */
-    size_t                    sieve_buf_size;        /* Property for sieve buffer size */
-    bool                      null_fsm_addr;         /* Property for null file space map address */
-    bool                      skip_eof_check;        /* Property for skipping EOF check */
-    bool                      fam_to_single;         /* Property to convert family to single file */
-    hsize_t                   fam_offset;            /* Property for family offset */
-    hsize_t                   fam_newsize;           /* Property for size of new family file */
-} H5CX_fapl_cache_t;
-
-/* Typedef for cached default file creation property list information */
-/* (Same as the cached DXPL struct, above, except for the default FCPL) */
-typedef struct H5CX_fcpl_cache_t {
-    hsize_t               userblock_size;            /* Property for userblock size */
-    uint8_t               sizeof_addr;               /* Property for size of address */
-    uint8_t               sizeof_size;               /* Property for size of size */
-    unsigned              sym_leaf_k;                /* Property for symbol table leaf node size */
-    unsigned              btree_k[H5B_NUM_BTREE_ID]; /* Property for B-tree rank */
-    hsize_t               fs_page_size;              /* Property for file space page size */
-    H5F_fspace_strategy_t fs_strategy;               /* Property for file space strategy */
-    bool                  fs_persist;                /* Property for file space persist */
-    hsize_t               fs_threshold;              /* Property for file space threshold */
-    unsigned              sohm_nindexes;             /* Property for number of SOHM indexes */
-    unsigned              shmsg_btree_min;           /* Property for SOHM btree minimum */
-    unsigned              shmsg_list_max;            /* Property for SOHM list max */
-    unsigned              shmsg_index_types[H5O_SHMESG_MAX_NINDEXES]; /* Property for SOHM index types */
-    unsigned shmsg_index_min_sizes[H5O_SHMESG_MAX_NINDEXES];          /* Property for SOHM index min sizes */
-} H5CX_fcpl_cache_t;
-
-/* Typedef for cached default attributegvreation property list information */
-/* (Same as the cached DXPL struct, above, except for the default ACPL) */
-typedef struct H5CX_acpl_cache_t {
-    H5T_cset_t attr_encoding; /* Property for character encoding */
-} H5CX_acpl_cache_t;
 
 /********************/
 /* Local Prototypes */
@@ -395,6 +205,13 @@ bool H5_PKG_INIT_VAR = false;
 #ifndef H5_HAVE_THREADSAFE_API
 H5CX_node_t *H5CX_head_g = NULL; /* Pointer to head of context stack */
 #endif                           /* H5_HAVE_THREADSAFE_API */
+
+/* These are initialized to the values in each default property list during
+ * package initialization and then remains constant for the rest of the library's
+ * operation.  When a field in H5CX_t is retrieved from an API context that
+ * uses a default property list, this value is copied instead of spending time
+ * looking up the property in the property list.
+ */
 
 /* Define a "default" dataset transfer property list cache structure to use for default DXPLs */
 static H5CX_dxpl_cache_t H5CX_def_dxpl_cache;
@@ -1542,8 +1359,8 @@ H5CX_set_libver_bounds(H5F_t *f)
     assert(head && *head);
 
     /* Set the API context value */
-    (*head)->ctx.low_bound  = (f == NULL) ? H5F_LIBVER_LATEST : H5F_LOW_BOUND(f);
-    (*head)->ctx.high_bound = (f == NULL) ? H5F_LIBVER_LATEST : H5F_HIGH_BOUND(f);
+    (*head)->ctx.fapl_props.low_bound  = (f == NULL) ? H5F_LIBVER_LATEST : H5F_LOW_BOUND(f);
+    (*head)->ctx.fapl_props.high_bound = (f == NULL) ? H5F_LIBVER_LATEST : H5F_HIGH_BOUND(f);
 
     /* Mark the values as valid */
     (*head)->ctx.fapl_flags.low_bound_valid  = true;
@@ -1930,9 +1747,9 @@ H5CX__reset_fapl(H5CX_node_t *head)
     /* Reset cached FAPL data */
 #ifdef H5_HAVE_PARALLEL
     if (head->ctx.fapl_flags.mpi_comm_valid)
-        (void)H5_mpi_comm_free(&head->ctx.mpi_comm);
+        (void)H5_mpi_comm_free(&head->ctx.fapl_props.mpi_comm);
     if (head->ctx.fapl_flags.mpi_info_valid)
-        (void)H5_mpi_info_free(&head->ctx.mpi_info);
+        (void)H5_mpi_info_free(&head->ctx.fapl_props.mpi_info);
 #endif /* H5_HAVE_PARALLEL */
 
     /* Reset the FAPL flags to force the properties to be retrieved again */
@@ -2297,7 +2114,7 @@ H5CX_get_mpi_comm(MPI_Comm *mpi_comm)
     H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_MPI_PARAMS_COMM_NAME, mpi_comm)
 
     /* Make a copy of the MPI communicator */
-    if (H5_mpi_comm_dup((*head)->ctx.mpi_comm, mpi_comm) < 0)
+    if (H5_mpi_comm_dup((*head)->ctx.fapl_props.mpi_comm, mpi_comm) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "unable to duplicate MPI communicator");
 
 done:
@@ -2329,7 +2146,7 @@ H5CX_peek_mpi_comm(MPI_Comm *mpi_comm)
     H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_MPI_PARAMS_COMM_NAME, mpi_comm)
 
     /* Get the MPI communicator */
-    *mpi_comm = (*head)->ctx.mpi_comm;
+    *mpi_comm = (*head)->ctx.fapl_props.mpi_comm;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -2361,7 +2178,7 @@ H5CX_get_mpi_info(MPI_Info *mpi_info)
     H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_MPI_PARAMS_INFO_NAME, mpi_info)
 
     /* Make a copy of the MPI info object */
-    if (H5_mpi_info_dup((*head)->ctx.mpi_info, mpi_info) < 0)
+    if (H5_mpi_info_dup((*head)->ctx.fapl_props.mpi_info, mpi_info) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "unable to duplicate MPI info object");
 
 done:
@@ -2393,7 +2210,7 @@ H5CX_peek_mpi_info(MPI_Info *mpi_info)
     H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_MPI_PARAMS_INFO_NAME, mpi_info)
 
     /* Get the MPI info object */
-    *mpi_info = (*head)->ctx.mpi_info;
+    *mpi_info = (*head)->ctx.fapl_props.mpi_info;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -2429,7 +2246,7 @@ H5CX_peek_vol_connector_prop(H5VL_connector_prop_t *vol_connector_prop)
     H5CX_PEEK_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_VOL_CONN_NAME, vol_connector_prop)
 
     /* Get the VOL connector & info */
-    H5MM_memcpy(vol_connector_prop, &(*head)->ctx.vol_connector_prop, sizeof(H5VL_connector_prop_t));
+    H5MM_memcpy(vol_connector_prop, &(*head)->ctx.fapl_props.vol_connector_prop, sizeof(H5VL_connector_prop_t));
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -2464,7 +2281,7 @@ H5CX_peek_driver_prop(H5FD_driver_prop_t *driver_prop)
     H5CX_PEEK_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FILE_DRV_NAME, driver_prop)
 
     /* Get the VOL connector & info */
-    H5MM_memcpy(driver_prop, &(*head)->ctx.driver_prop, sizeof(H5FD_driver_prop_t));
+    H5MM_memcpy(driver_prop, &(*head)->ctx.fapl_props.driver_prop, sizeof(H5FD_driver_prop_t));
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -2498,7 +2315,7 @@ H5CX_peek_driver(void)
     H5CX_PEEK_PROP_VALID_ERR(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FILE_DRV_NAME, driver_prop, NULL)
 
     /* Set the return value */
-    ret_value = (*head)->ctx.driver_prop.driver;
+    ret_value = (*head)->ctx.fapl_props.driver_prop.driver;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -2532,7 +2349,7 @@ H5CX_peek_driver_info(void)
     H5CX_PEEK_PROP_VALID_ERR(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FILE_DRV_NAME, driver_prop, NULL)
 
     /* Set the return value */
-    ret_value = (*head)->ctx.driver_prop.driver_info;
+    ret_value = (*head)->ctx.fapl_props.driver_prop.driver_info;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -2566,7 +2383,7 @@ H5CX_peek_driver_config_str(void)
     H5CX_PEEK_PROP_VALID_ERR(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FILE_DRV_NAME, driver_prop, NULL)
 
     /* Set the return value */
-    ret_value = (*head)->ctx.driver_prop.driver_config_str;
+    ret_value = (*head)->ctx.fapl_props.driver_prop.driver_config_str;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -2601,7 +2418,7 @@ H5CX_peek_file_image_info(H5FD_file_image_info_t *file_image_info)
     H5CX_PEEK_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FILE_IMAGE_INFO_NAME, file_image_info)
 
     /* Get the VOL connector & info */
-    H5MM_memcpy(file_image_info, &(*head)->ctx.file_image_info, sizeof(H5FD_file_image_info_t));
+    H5MM_memcpy(file_image_info, &(*head)->ctx.fapl_props.file_image_info, sizeof(H5FD_file_image_info_t));
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -2861,7 +2678,7 @@ H5CX_get_btree_split_ratios(double split_ratio[3])
                              btree_split_ratio)
 
     /* Get the B-tree split ratio values */
-    H5MM_memcpy(split_ratio, &(*head)->ctx.btree_split_ratio, sizeof((*head)->ctx.btree_split_ratio));
+    H5MM_memcpy(split_ratio, &(*head)->ctx.dxpl_props.btree_split_ratio, sizeof((*head)->ctx.dxpl_props.btree_split_ratio));
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -2893,7 +2710,7 @@ H5CX_get_max_temp_buf(size_t *max_temp_buf)
     H5CX_RETRIEVE_PROP_VALID(dxpl, H5P_DATASET_XFER_DEFAULT, H5D_XFER_MAX_TEMP_BUF_NAME, max_temp_buf)
 
     /* Get the value */
-    *max_temp_buf = (*head)->ctx.max_temp_buf;
+    *max_temp_buf = (*head)->ctx.dxpl_props.max_temp_buf;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -2925,7 +2742,7 @@ H5CX_get_tconv_buf(void **tconv_buf)
     H5CX_RETRIEVE_PROP_VALID(dxpl, H5P_DATASET_XFER_DEFAULT, H5D_XFER_TCONV_BUF_NAME, tconv_buf)
 
     /* Get the value */
-    *tconv_buf = (*head)->ctx.tconv_buf;
+    *tconv_buf = (*head)->ctx.dxpl_props.tconv_buf;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -2957,7 +2774,7 @@ H5CX_get_bkgr_buf(void **bkgr_buf)
     H5CX_RETRIEVE_PROP_VALID(dxpl, H5P_DATASET_XFER_DEFAULT, H5D_XFER_BKGR_BUF_NAME, bkgr_buf)
 
     /* Get the value */
-    *bkgr_buf = (*head)->ctx.bkgr_buf;
+    *bkgr_buf = (*head)->ctx.dxpl_props.bkgr_buf;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -2989,7 +2806,7 @@ H5CX_get_bkgr_buf_type(H5T_bkg_t *bkgr_buf_type)
     H5CX_RETRIEVE_PROP_VALID(dxpl, H5P_DATASET_XFER_DEFAULT, H5D_XFER_BKGR_BUF_TYPE_NAME, bkgr_buf_type)
 
     /* Get the value */
-    *bkgr_buf_type = (*head)->ctx.bkgr_buf_type;
+    *bkgr_buf_type = (*head)->ctx.dxpl_props.bkgr_buf_type;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -3021,7 +2838,7 @@ H5CX_get_vec_size(size_t *vec_size)
     H5CX_RETRIEVE_PROP_VALID(dxpl, H5P_DATASET_XFER_DEFAULT, H5D_XFER_HYPER_VECTOR_SIZE_NAME, vec_size)
 
     /* Get the value */
-    *vec_size = (*head)->ctx.vec_size;
+    *vec_size = (*head)->ctx.dxpl_props.vec_size;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -3055,7 +2872,7 @@ H5CX_get_io_xfer_mode(H5FD_mpio_xfer_t *io_xfer_mode)
     H5CX_RETRIEVE_PROP_VALID(dxpl, H5P_DATASET_XFER_DEFAULT, H5D_XFER_IO_XFER_MODE_NAME, io_xfer_mode)
 
     /* Get the value */
-    *io_xfer_mode = (*head)->ctx.io_xfer_mode;
+    *io_xfer_mode = (*head)->ctx.dxpl_props.io_xfer_mode;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -3087,7 +2904,7 @@ H5CX_get_mpio_coll_opt(H5FD_mpio_collective_opt_t *mpio_coll_opt)
     H5CX_RETRIEVE_PROP_VALID(dxpl, H5P_DATASET_XFER_DEFAULT, H5D_XFER_MPIO_COLLECTIVE_OPT_NAME, mpio_coll_opt)
 
     /* Get the value */
-    *mpio_coll_opt = (*head)->ctx.mpio_coll_opt;
+    *mpio_coll_opt = (*head)->ctx.dxpl_props.mpio_coll_opt;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -3120,7 +2937,7 @@ H5CX_get_mpio_local_no_coll_cause(uint32_t *mpio_local_no_coll_cause)
                                  mpio_local_no_coll_cause)
 
     /* Get the value */
-    *mpio_local_no_coll_cause = (*head)->ctx.mpio_local_no_coll_cause;
+    *mpio_local_no_coll_cause = (*head)->ctx.dxpl_props.mpio_local_no_coll_cause;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -3153,7 +2970,7 @@ H5CX_get_mpio_global_no_coll_cause(uint32_t *mpio_global_no_coll_cause)
                                  mpio_global_no_coll_cause)
 
     /* Get the value */
-    *mpio_global_no_coll_cause = (*head)->ctx.mpio_global_no_coll_cause;
+    *mpio_global_no_coll_cause = (*head)->ctx.dxpl_props.mpio_global_no_coll_cause;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -3186,7 +3003,7 @@ H5CX_get_mpio_chunk_opt_mode(H5FD_mpio_chunk_opt_t *mpio_chunk_opt_mode)
                              mpio_chunk_opt_mode)
 
     /* Get the value */
-    *mpio_chunk_opt_mode = (*head)->ctx.mpio_chunk_opt_mode;
+    *mpio_chunk_opt_mode = (*head)->ctx.dxpl_props.mpio_chunk_opt_mode;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -3219,7 +3036,7 @@ H5CX_get_mpio_chunk_opt_num(unsigned *mpio_chunk_opt_num)
                              mpio_chunk_opt_num)
 
     /* Get the value */
-    *mpio_chunk_opt_num = (*head)->ctx.mpio_chunk_opt_num;
+    *mpio_chunk_opt_num = (*head)->ctx.dxpl_props.mpio_chunk_opt_num;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -3252,7 +3069,7 @@ H5CX_get_mpio_chunk_opt_ratio(unsigned *mpio_chunk_opt_ratio)
                              mpio_chunk_opt_ratio)
 
     /* Get the value */
-    *mpio_chunk_opt_ratio = (*head)->ctx.mpio_chunk_opt_ratio;
+    *mpio_chunk_opt_ratio = (*head)->ctx.dxpl_props.mpio_chunk_opt_ratio;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -3285,7 +3102,7 @@ H5CX_get_err_detect(H5Z_EDC_t *err_detect)
     H5CX_RETRIEVE_PROP_VALID(dxpl, H5P_DATASET_XFER_DEFAULT, H5D_XFER_EDC_NAME, err_detect)
 
     /* Get the value */
-    *err_detect = (*head)->ctx.err_detect;
+    *err_detect = (*head)->ctx.dxpl_props.err_detect;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -3317,7 +3134,7 @@ H5CX_get_filter_cb(H5Z_cb_t *filter_cb)
     H5CX_RETRIEVE_PROP_VALID(dxpl, H5P_DATASET_XFER_DEFAULT, H5D_XFER_FILTER_CB_NAME, filter_cb)
 
     /* Get the value */
-    *filter_cb = (*head)->ctx.filter_cb;
+    *filter_cb = (*head)->ctx.dxpl_props.filter_cb;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -3353,7 +3170,7 @@ H5CX_peek_data_transform(H5Z_data_xform_t **data_transform)
     H5CX_PEEK_PROP_VALID(dxpl, H5P_DATASET_XFER_DEFAULT, H5D_XFER_XFORM_NAME, data_transform)
 
     /* Get the value */
-    *data_transform = (*head)->ctx.data_transform;
+    *data_transform = (*head)->ctx.dxpl_props.data_transform;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -3386,7 +3203,7 @@ H5CX_get_vlen_alloc_info(H5T_vlen_alloc_info_t *vl_alloc_info)
     if (!(*head)->ctx.dxpl_flags.vl_alloc_info_valid) {
         /* Check for default DXPL */
         if ((*head)->ctx.dxpl_id == H5P_DATASET_XFER_DEFAULT)
-            (*head)->ctx.vl_alloc_info = H5CX_def_dxpl_cache.vl_alloc_info;
+            (*head)->ctx.dxpl_props.vl_alloc_info = H5CX_def_dxpl_cache.vl_alloc_info;
         else {
             /* Check if the property list is already available */
             if (NULL == (*head)->ctx.dxpl)
@@ -3397,17 +3214,17 @@ H5CX_get_vlen_alloc_info(H5T_vlen_alloc_info_t *vl_alloc_info)
                                 "can't get default dataset transfer property list");
 
             /* Get VL datatype alloc info values */
-            if (H5P_get((*head)->ctx.dxpl, H5D_XFER_VLEN_ALLOC_NAME, &(*head)->ctx.vl_alloc_info.alloc_func) <
+            if (H5P_get((*head)->ctx.dxpl, H5D_XFER_VLEN_ALLOC_NAME, &(*head)->ctx.dxpl_props.vl_alloc_info.alloc_func) <
                 0)
                 HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve VL datatype alloc info");
             if (H5P_get((*head)->ctx.dxpl, H5D_XFER_VLEN_ALLOC_INFO_NAME,
-                        &(*head)->ctx.vl_alloc_info.alloc_info) < 0)
+                        &(*head)->ctx.dxpl_props.vl_alloc_info.alloc_info) < 0)
                 HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve VL datatype alloc info");
-            if (H5P_get((*head)->ctx.dxpl, H5D_XFER_VLEN_FREE_NAME, &(*head)->ctx.vl_alloc_info.free_func) <
+            if (H5P_get((*head)->ctx.dxpl, H5D_XFER_VLEN_FREE_NAME, &(*head)->ctx.dxpl_props.vl_alloc_info.free_func) <
                 0)
                 HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve VL datatype alloc info");
             if (H5P_get((*head)->ctx.dxpl, H5D_XFER_VLEN_FREE_INFO_NAME,
-                        &(*head)->ctx.vl_alloc_info.free_info) < 0)
+                        &(*head)->ctx.dxpl_props.vl_alloc_info.free_info) < 0)
                 HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve VL datatype alloc info");
         } /* end else */
 
@@ -3416,7 +3233,7 @@ H5CX_get_vlen_alloc_info(H5T_vlen_alloc_info_t *vl_alloc_info)
     } /* end if */
 
     /* Get the value */
-    *vl_alloc_info = (*head)->ctx.vl_alloc_info;
+    *vl_alloc_info = (*head)->ctx.dxpl_props.vl_alloc_info;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -3448,7 +3265,7 @@ H5CX_get_dt_conv_cb(H5T_conv_cb_t *dt_conv_cb)
     H5CX_RETRIEVE_PROP_VALID(dxpl, H5P_DATASET_XFER_DEFAULT, H5D_XFER_CONV_CB_NAME, dt_conv_cb)
 
     /* Get the value */
-    *dt_conv_cb = (*head)->ctx.dt_conv_cb;
+    *dt_conv_cb = (*head)->ctx.dxpl_props.dt_conv_cb;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -3481,7 +3298,7 @@ H5CX_get_selection_io_mode(H5D_selection_io_mode_t *selection_io_mode)
                              selection_io_mode)
 
     /* Get the value */
-    *selection_io_mode = (*head)->ctx.selection_io_mode;
+    *selection_io_mode = (*head)->ctx.dxpl_props.selection_io_mode;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -3515,7 +3332,7 @@ H5CX_get_no_selection_io_cause(uint32_t *no_selection_io_cause)
                                  no_selection_io_cause)
 
     /* Get the value */
-    *no_selection_io_cause = (*head)->ctx.no_selection_io_cause;
+    *no_selection_io_cause = (*head)->ctx.dxpl_props.no_selection_io_cause;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -3550,14 +3367,14 @@ H5CX_get_actual_selection_io_mode(uint32_t *actual_selection_io_mode)
     if ((*head)->ctx.dxpl_id != H5P_DATASET_XFER_DEFAULT &&
         !(*head)->ctx.dxpl_flags.actual_selection_io_mode_set &&
         !(*head)->ctx.dxpl_flags.actual_selection_io_mode_valid) {
-        (*head)->ctx.actual_selection_io_mode                = H5CX_def_dxpl_cache.actual_selection_io_mode;
+        (*head)->ctx.dxpl_props.actual_selection_io_mode                = H5CX_def_dxpl_cache.actual_selection_io_mode;
         (*head)->ctx.dxpl_flags.actual_selection_io_mode_set = true;
     }
     H5CX_RETRIEVE_PROP_VALID_SET(dxpl, H5P_DATASET_XFER_DEFAULT, H5D_XFER_ACTUAL_SELECTION_IO_MODE_NAME,
                                  actual_selection_io_mode)
 
     /* Get the value */
-    *actual_selection_io_mode = (*head)->ctx.actual_selection_io_mode;
+    *actual_selection_io_mode = (*head)->ctx.dxpl_props.actual_selection_io_mode;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -3589,7 +3406,7 @@ H5CX_get_modify_write_buf(bool *modify_write_buf)
     H5CX_RETRIEVE_PROP_VALID(dxpl, H5P_DATASET_XFER_DEFAULT, H5D_XFER_MODIFY_WRITE_BUF_NAME, modify_write_buf)
 
     /* Get the value */
-    *modify_write_buf = (*head)->ctx.modify_write_buf;
+    *modify_write_buf = (*head)->ctx.dxpl_props.modify_write_buf;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -3621,7 +3438,7 @@ H5CX_get_dset_io_selection(H5S_t **space)
     H5CX_RETRIEVE_PROP_VALID(dxpl, H5P_DATASET_XFER_DEFAULT, H5D_XFER_DSET_IO_SEL_NAME, dset_io_selection)
 
     /* Get the value */
-    *space = (*head)->ctx.dset_io_selection;
+    *space = (*head)->ctx.dxpl_props.dset_io_selection;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -3653,7 +3470,7 @@ H5CX_get_encoding(H5T_cset_t *encoding)
     H5CX_RETRIEVE_PROP_VALID(lcpl, H5P_LINK_CREATE_DEFAULT, H5P_STRCRT_CHAR_ENCODING_NAME, encoding)
 
     /* Get the value */
-    *encoding = (*head)->ctx.encoding;
+    *encoding = (*head)->ctx.lcpl_props.encoding;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -3686,7 +3503,7 @@ H5CX_get_intermediate_group(unsigned *crt_intermed_group)
                              intermediate_group)
 
     /* Get the value */
-    *crt_intermed_group = (*head)->ctx.intermediate_group;
+    *crt_intermed_group = (*head)->ctx.lcpl_props.intermediate_group;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -3719,7 +3536,7 @@ H5CX_get_lapl_coll_md_read(H5P_coll_md_read_flag_t *coll_md_read)
     H5CX_RETRIEVE_PROP_VALID(lapl, H5P_LINK_ACCESS_DEFAULT, H5_COLL_MD_READ_FLAG_NAME, lapl_coll_md_read)
 
     /* Get the value */
-    *coll_md_read = (*head)->ctx.lapl_coll_md_read;
+    *coll_md_read = (*head)->ctx.lapl_props.lapl_coll_md_read;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -3756,7 +3573,7 @@ H5CX_peek_elink_prefix(const char **elink_prefix)
     H5CX_PEEK_PROP_VALID(lapl, H5P_LINK_ACCESS_DEFAULT, H5L_ACS_ELINK_PREFIX_NAME, elink_prefix)
 
     /* Get the value */
-    *elink_prefix = (*head)->ctx.elink_prefix;
+    *elink_prefix = (*head)->ctx.lapl_props.elink_prefix;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -3788,7 +3605,7 @@ H5CX_get_elink_cb_info(H5L_elink_cb_t *elink_cb_info)
     H5CX_RETRIEVE_PROP_VALID(lapl, H5P_LINK_ACCESS_DEFAULT, H5L_ACS_ELINK_CB_NAME, elink_cb_info)
 
     /* Get the value */
-    *elink_cb_info = (*head)->ctx.elink_cb_info;
+    *elink_cb_info = (*head)->ctx.lapl_props.elink_cb_info;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -3821,7 +3638,7 @@ H5CX_peek_elink_fapl(H5P_genplist_t **elink_fapl)
     H5CX_PEEK_PROP_VALID(lapl, H5P_LINK_ACCESS_DEFAULT, H5L_ACS_ELINK_FAPL_NAME, elink_fapl)
 
     /* Get the value */
-    *elink_fapl = (*head)->ctx.elink_fapl;
+    *elink_fapl = (*head)->ctx.lapl_props.elink_fapl;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -3853,7 +3670,7 @@ H5CX_get_elink_flags(unsigned *elink_flags)
     H5CX_RETRIEVE_PROP_VALID(lapl, H5P_LINK_ACCESS_DEFAULT, H5L_ACS_ELINK_FLAGS_NAME, elink_flags)
 
     /* Get the value */
-    *elink_flags = (*head)->ctx.elink_flags;
+    *elink_flags = (*head)->ctx.lapl_props.elink_flags;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -3885,7 +3702,7 @@ H5CX_get_nlinks(size_t *nlinks)
     H5CX_RETRIEVE_PROP_VALID(lapl, H5P_LINK_ACCESS_DEFAULT, H5L_ACS_NLINKS_NAME, nlinks)
 
     /* Get the value */
-    *nlinks = (*head)->ctx.nlinks;
+    *nlinks = (*head)->ctx.lapl_props.nlinks;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -3946,8 +3763,8 @@ H5CX_get_libver_bounds(H5F_libver_t *low_bound, H5F_libver_t *high_bound)
     H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_LIBVER_HIGH_BOUND_NAME, high_bound)
 
     /* Get the values */
-    *low_bound  = (*head)->ctx.low_bound;
-    *high_bound = (*head)->ctx.high_bound;
+    *low_bound  = (*head)->ctx.fapl_props.low_bound;
+    *high_bound = (*head)->ctx.fapl_props.high_bound;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -3979,7 +3796,7 @@ H5CX_get_use_file_locking(bool *use_file_locking)
     H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_USE_FILE_LOCKING_NAME, use_file_locking)
 
     /* Get the value */
-    *use_file_locking = (*head)->ctx.use_file_locking;
+    *use_file_locking = (*head)->ctx.fapl_props.use_file_locking;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -4012,7 +3829,7 @@ H5CX_get_ignore_disabled_locks(bool *ignore_disabled_locks)
                              ignore_disabled_locks)
 
     /* Get the value */
-    *ignore_disabled_locks = (*head)->ctx.ignore_disabled_locks;
+    *ignore_disabled_locks = (*head)->ctx.fapl_props.ignore_disabled_locks;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -4046,8 +3863,8 @@ H5CX_get_alignment(hsize_t *align_bound, hsize_t *align_threshold)
     H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_ALIGN_THRHD_NAME, align_threshold)
 
     /* Get the values */
-    *align_bound     = (*head)->ctx.align_bound;
-    *align_threshold = (*head)->ctx.align_threshold;
+    *align_bound     = (*head)->ctx.fapl_props.align_bound;
+    *align_threshold = (*head)->ctx.fapl_props.align_threshold;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -4080,7 +3897,7 @@ H5CX_test_get_clear_status_flags(bool *clear_status_flags)
                                   clear_status_flags)
 
     /* Get the value */
-    *clear_status_flags = (*head)->ctx.clear_status_flags;
+    *clear_status_flags = (*head)->ctx.fapl_props.clear_status_flags;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -4112,7 +3929,7 @@ H5CX_get_gc_ref(unsigned *gc_ref)
     H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_GARBG_COLCT_REF_NAME, gc_ref)
 
     /* Get the value */
-    *gc_ref = (*head)->ctx.gc_ref;
+    *gc_ref = (*head)->ctx.fapl_props.gc_ref;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -4144,7 +3961,7 @@ H5CX_get_use_mdc_logging(bool *use_mdc_logging)
     H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_USE_MDC_LOGGING_NAME, use_mdc_logging)
 
     /* Get the value */
-    *use_mdc_logging = (*head)->ctx.use_mdc_logging;
+    *use_mdc_logging = (*head)->ctx.fapl_props.use_mdc_logging;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -4176,7 +3993,7 @@ H5CX_peek_mdc_log_location(char **mdc_log_location)
     H5CX_PEEK_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_MDC_LOG_LOCATION_NAME, mdc_log_location)
 
     /* Get the value */
-    *mdc_log_location = (*head)->ctx.mdc_log_location;
+    *mdc_log_location = (*head)->ctx.fapl_props.mdc_log_location;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -4209,7 +4026,7 @@ H5CX_get_start_mdc_logging_on_access(bool *start_mdc_logging_on_access)
                              start_mdc_logging_on_access)
 
     /* Get the value */
-    *start_mdc_logging_on_access = (*head)->ctx.start_mdc_logging_on_access;
+    *start_mdc_logging_on_access = (*head)->ctx.fapl_props.start_mdc_logging_on_access;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -4242,7 +4059,7 @@ H5CX_get_metadata_read_attempts(unsigned *mdc_read_attempts)
                              mdc_read_attempts)
 
     /* Get the value */
-    *mdc_read_attempts = (*head)->ctx.mdc_read_attempts;
+    *mdc_read_attempts = (*head)->ctx.fapl_props.mdc_read_attempts;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -4275,7 +4092,7 @@ H5CX_get_meta_alloc_block_size(hsize_t *meta_alloc_block_size)
                              meta_alloc_block_size)
 
     /* Get the value */
-    *meta_alloc_block_size = (*head)->ctx.meta_alloc_block_size;
+    *meta_alloc_block_size = (*head)->ctx.fapl_props.meta_alloc_block_size;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -4308,7 +4125,7 @@ H5CX_get_mdc_init_config(H5AC_cache_config_t *mdc_init_config)
                              mdc_init_config)
 
     /* Get the value */
-    H5MM_memcpy(mdc_init_config, &(*head)->ctx.mdc_init_config, sizeof(*mdc_init_config));
+    H5MM_memcpy(mdc_init_config, &(*head)->ctx.fapl_props.mdc_init_config, sizeof(*mdc_init_config));
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -4341,7 +4158,7 @@ H5CX_get_mdc_image_config(H5AC_cache_image_config_t *mdc_image_config)
                              mdc_image_config)
 
     /* Get the value */
-    H5MM_memcpy(mdc_image_config, &(*head)->ctx.mdc_image_config, sizeof(*mdc_image_config));
+    H5MM_memcpy(mdc_image_config, &(*head)->ctx.fapl_props.mdc_image_config, sizeof(*mdc_image_config));
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -4374,7 +4191,7 @@ H5CX_get_object_flush_strategy(H5F_object_flush_t *object_flush_strategy)
                              object_flush_strategy)
 
     /* Get the value */
-    H5MM_memcpy(object_flush_strategy, &(*head)->ctx.object_flush_strategy, sizeof(*object_flush_strategy));
+    H5MM_memcpy(object_flush_strategy, &(*head)->ctx.fapl_props.object_flush_strategy, sizeof(*object_flush_strategy));
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -4406,7 +4223,7 @@ H5CX_get_page_buffer_size(size_t *page_buf_size)
     H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_PAGE_BUFFER_SIZE_NAME, pb_size)
 
     /* Get the values */
-    *page_buf_size = (*head)->ctx.pb_size;
+    *page_buf_size = (*head)->ctx.fapl_props.pb_size;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -4442,8 +4259,8 @@ H5CX_get_page_buffer_percs(unsigned *min_meta_perc, unsigned *min_raw_perc)
                              pb_min_raw_perc)
 
     /* Get the values */
-    *min_meta_perc = (*head)->ctx.pb_min_meta_perc;
-    *min_raw_perc  = (*head)->ctx.pb_min_raw_perc;
+    *min_meta_perc = (*head)->ctx.fapl_props.pb_min_meta_perc;
+    *min_raw_perc  = (*head)->ctx.fapl_props.pb_min_raw_perc;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -4481,9 +4298,9 @@ H5CX_get_rdcc_info(size_t *nslots, size_t *nbytes, double *w0)
     H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_PREEMPT_READ_CHUNKS_NAME, fapl_rdcc_w0)
 
     /* Get the values */
-    *nslots = (*head)->ctx.fapl_rdcc_nslots;
-    *nbytes = (*head)->ctx.fapl_rdcc_nbytes;
-    *w0     = (*head)->ctx.fapl_rdcc_w0;
+    *nslots = (*head)->ctx.fapl_props.fapl_rdcc_nslots;
+    *nbytes = (*head)->ctx.fapl_props.fapl_rdcc_nbytes;
+    *w0     = (*head)->ctx.fapl_props.fapl_rdcc_w0;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -4516,7 +4333,7 @@ H5CX_get_fapl_coll_md_read(H5P_coll_md_read_flag_t *coll_md_read)
     H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5_COLL_MD_READ_FLAG_NAME, fapl_coll_md_read)
 
     /* Get the value */
-    *coll_md_read = (*head)->ctx.fapl_coll_md_read;
+    *coll_md_read = (*head)->ctx.fapl_props.fapl_coll_md_read;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -4548,7 +4365,7 @@ H5CX_get_coll_md_write(bool *coll_md_write)
     H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_COLL_MD_WRITE_FLAG_NAME, coll_md_write)
 
     /* Get the value */
-    *coll_md_write = (*head)->ctx.coll_md_write;
+    *coll_md_write = (*head)->ctx.fapl_props.coll_md_write;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -4581,7 +4398,7 @@ H5CX_get_sf_ioc_params(H5FD_subfiling_params_t *sf_ioc_params)
     H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_SUBFILING_CONFIG_PROP_NAME, sf_ioc_params)
 
     /* Get the value */
-    *sf_ioc_params = (*head)->ctx.sf_ioc_params;
+    *sf_ioc_params = (*head)->ctx.fapl_props.sf_ioc_params;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -4615,7 +4432,7 @@ H5CX_get_efc_size(unsigned *efc_size)
     H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_EFC_SIZE_NAME, efc_size)
 
     /* Get the value */
-    *efc_size = (*head)->ctx.efc_size;
+    *efc_size = (*head)->ctx.fapl_props.efc_size;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -4647,7 +4464,7 @@ H5CX_get_close_degree(H5F_close_degree_t *close_degree)
     H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_CLOSE_DEGREE_NAME, close_degree)
 
     /* Get the value */
-    *close_degree = (*head)->ctx.close_degree;
+    *close_degree = (*head)->ctx.fapl_props.close_degree;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -4679,7 +4496,7 @@ H5CX_get_evict_on_close(bool *evict_on_close)
     H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_EVICT_ON_CLOSE_FLAG_NAME, evict_on_close)
 
     /* Get the value */
-    *evict_on_close = (*head)->ctx.evict_on_close;
+    *evict_on_close = (*head)->ctx.fapl_props.evict_on_close;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -4711,7 +4528,7 @@ H5CX_get_rfic_flags(uint64_t *rfic_flags)
     H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_RFIC_FLAGS_NAME, rfic_flags)
 
     /* Get the value */
-    *rfic_flags = (*head)->ctx.rfic_flags;
+    *rfic_flags = (*head)->ctx.fapl_props.rfic_flags;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -4743,7 +4560,7 @@ H5CX_get_sdata_block_size(hsize_t *sdata_block_size)
     H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_SDATA_BLOCK_SIZE_NAME, sdata_block_size)
 
     /* Get the value */
-    *sdata_block_size = (*head)->ctx.sdata_block_size;
+    *sdata_block_size = (*head)->ctx.fapl_props.sdata_block_size;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -4775,7 +4592,7 @@ H5CX_get_sieve_buf_size(size_t *sieve_buf_size)
     H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_SIEVE_BUF_SIZE_NAME, sieve_buf_size)
 
     /* Get the value */
-    *sieve_buf_size = (*head)->ctx.sieve_buf_size;
+    *sieve_buf_size = (*head)->ctx.fapl_props.sieve_buf_size;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -4807,7 +4624,7 @@ H5CX_get_null_fsm_addr(bool *null_fsm_addr)
     H5CX_TEST_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_NULL_FSM_ADDR_NAME, null_fsm_addr)
 
     /* Get the value */
-    *null_fsm_addr = (*head)->ctx.null_fsm_addr;
+    *null_fsm_addr = (*head)->ctx.fapl_props.null_fsm_addr;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -4839,7 +4656,7 @@ H5CX_get_skip_eof_check(bool *skip_eof_check)
     H5CX_TEST_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_SKIP_EOF_CHECK_NAME, skip_eof_check)
 
     /* Get the value */
-    *skip_eof_check = (*head)->ctx.skip_eof_check;
+    *skip_eof_check = (*head)->ctx.fapl_props.skip_eof_check;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -4871,7 +4688,7 @@ H5CX_get_family_to_single(bool *fam_to_single)
     H5CX_TEST_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FAMILY_TO_SINGLE_NAME, fam_to_single)
 
     /* Get the value */
-    *fam_to_single = (*head)->ctx.fam_to_single;
+    *fam_to_single = (*head)->ctx.fapl_props.fam_to_single;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -4903,7 +4720,7 @@ H5CX_get_family_offset(hsize_t *fam_offset)
     H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FAMILY_OFFSET_NAME, fam_offset)
 
     /* Get the value */
-    *fam_offset = (*head)->ctx.fam_offset;
+    *fam_offset = (*head)->ctx.fapl_props.fam_offset;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -4935,7 +4752,7 @@ H5CX_get_family_newsize(hsize_t *fam_newsize)
     H5CX_TEST_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FAMILY_NEWSIZE_NAME, fam_newsize)
 
     /* Get the value */
-    *fam_newsize = (*head)->ctx.fam_newsize;
+    *fam_newsize = (*head)->ctx.fapl_props.fam_newsize;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -4969,7 +4786,7 @@ H5CX_get_min_dset_hdr(bool *min_dset_hdr)
                                     min_dset_ohdr)
 
     /* Get the value */
-    *min_dset_hdr = (*head)->ctx.min_dset_ohdr;
+    *min_dset_hdr = (*head)->ctx.dcpl_props.min_dset_ohdr;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -5002,7 +4819,7 @@ H5CX_get_layout(H5O_layout_t *layout)
     H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, dcpl, H5P_OBJECT_CREATE_DEFAULT, H5D_CRT_LAYOUT_NAME, layout)
 
     /* Make copy of layout */
-    if (NULL == H5O_msg_copy(H5O_LAYOUT_ID, &(*head)->ctx.layout, layout))
+    if (NULL == H5O_msg_copy(H5O_LAYOUT_ID, &(*head)->ctx.dcpl_props.layout, layout))
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy layout");
 
 done:
@@ -5035,7 +4852,7 @@ H5CX_get_efl(H5O_efl_t *efl)
     H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, dcpl, H5P_OBJECT_CREATE_DEFAULT, H5D_CRT_EXT_FILE_LIST_NAME, efl)
 
     /* Make copy of external file list */
-    if (NULL == H5O_msg_copy(H5O_EFL_ID, &(*head)->ctx.efl, efl))
+    if (NULL == H5O_msg_copy(H5O_EFL_ID, &(*head)->ctx.dcpl_props.efl, efl))
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy external file list");
 
 done:
@@ -5069,7 +4886,7 @@ H5CX_get_fill_value(H5O_fill_t *fill_value)
                                     fill_value)
 
     /* Make copy of fill value */
-    if (NULL == H5O_msg_copy(H5O_FILL_ID, &(*head)->ctx.fill_value, fill_value))
+    if (NULL == H5O_msg_copy(H5O_FILL_ID, &(*head)->ctx.dcpl_props.fill_value, fill_value))
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy fill value");
 
 done:
@@ -5104,7 +4921,7 @@ H5CX_get_bogus_msg_id(unsigned *bogus_msg_id)
                                          bogus_msg_id)
 
     /* Get the value */
-    *bogus_msg_id = (*head)->ctx.bogus_msg_id;
+    *bogus_msg_id = (*head)->ctx.dcpl_props.bogus_msg_id;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -5137,7 +4954,7 @@ H5CX_get_bogus_msg_flags(uint8_t *bogus_msg_flags)
                                          bogus_msg_flags)
 
     /* Get the value */
-    *bogus_msg_flags = (*head)->ctx.bogus_msg_flags;
+    *bogus_msg_flags = (*head)->ctx.dcpl_props.bogus_msg_flags;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -5170,7 +4987,7 @@ H5CX_get_ginfo(H5O_ginfo_t *ginfo)
     H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, gcpl, H5P_OBJECT_CREATE_DEFAULT, H5G_CRT_GROUP_INFO_NAME, ginfo)
 
     /* Get the value */
-    *ginfo = (*head)->ctx.ginfo;
+    *ginfo = (*head)->ctx.gcpl_props.ginfo;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -5202,7 +5019,7 @@ H5CX_get_linfo(H5O_linfo_t *linfo)
     H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, gcpl, H5P_OBJECT_CREATE_DEFAULT, H5G_CRT_LINK_INFO_NAME, linfo)
 
     /* Get the value */
-    *linfo = (*head)->ctx.linfo;
+    *linfo = (*head)->ctx.gcpl_props.linfo;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -5235,7 +5052,7 @@ H5CX_get_userblock_size(hsize_t *userblock_size)
                                     userblock_size)
 
     /* Get the value */
-    *userblock_size = (*head)->ctx.userblock_size;
+    *userblock_size = (*head)->ctx.fcpl_props.userblock_size;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -5268,7 +5085,7 @@ H5CX_get_sizeof_addr(uint8_t *sizeof_addr)
                                     sizeof_addr)
 
     /* Get the value */
-    *sizeof_addr = (*head)->ctx.sizeof_addr;
+    *sizeof_addr = (*head)->ctx.fcpl_props.sizeof_addr;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -5301,7 +5118,7 @@ H5CX_get_sizeof_size(uint8_t *sizeof_size)
                                     sizeof_size)
 
     /* Get the value */
-    *sizeof_size = (*head)->ctx.sizeof_size;
+    *sizeof_size = (*head)->ctx.fcpl_props.sizeof_size;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -5333,7 +5150,7 @@ H5CX_get_sym_leaf_k(unsigned *sym_leaf_k)
     H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_SYM_LEAF_NAME, sym_leaf_k)
 
     /* Get the value */
-    *sym_leaf_k = (*head)->ctx.sym_leaf_k;
+    *sym_leaf_k = (*head)->ctx.fcpl_props.sym_leaf_k;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -5365,7 +5182,7 @@ H5CX_get_btree_k(unsigned *btree_k)
     H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_BTREE_RANK_NAME, btree_k)
 
     /* Get the value */
-    memcpy(btree_k, (*head)->ctx.btree_k, H5B_NUM_BTREE_ID * sizeof(unsigned));
+    memcpy(btree_k, (*head)->ctx.fcpl_props.btree_k, H5B_NUM_BTREE_ID * sizeof(unsigned));
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -5398,7 +5215,7 @@ H5CX_get_file_space_page_size(hsize_t *fs_page_size)
                                     fs_page_size)
 
     /* Get the value */
-    *fs_page_size = (*head)->ctx.fs_page_size;
+    *fs_page_size = (*head)->ctx.fcpl_props.fs_page_size;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -5431,7 +5248,7 @@ H5CX_get_file_space_strategy(H5F_fspace_strategy_t *fs_strategy)
                                     fs_strategy)
 
     /* Get the value */
-    *fs_strategy = (*head)->ctx.fs_strategy;
+    *fs_strategy = (*head)->ctx.fcpl_props.fs_strategy;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -5464,7 +5281,7 @@ H5CX_get_file_space_persist(bool *fs_persist)
                                     fs_persist)
 
     /* Get the value */
-    *fs_persist = (*head)->ctx.fs_persist;
+    *fs_persist = (*head)->ctx.fcpl_props.fs_persist;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -5497,7 +5314,7 @@ H5CX_get_file_space_threshold(hsize_t *fs_threshold)
                                     fs_threshold)
 
     /* Get the value */
-    *fs_threshold = (*head)->ctx.fs_threshold;
+    *fs_threshold = (*head)->ctx.fcpl_props.fs_threshold;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -5530,7 +5347,7 @@ H5CX_get_shared_mesg_nindexes(unsigned *sohm_nindexes)
                                     sohm_nindexes)
 
     /* Get the value */
-    *sohm_nindexes = (*head)->ctx.sohm_nindexes;
+    *sohm_nindexes = (*head)->ctx.fcpl_props.sohm_nindexes;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -5563,7 +5380,7 @@ H5CX_get_shared_mesg_btree_min(unsigned *shmsg_btree_min)
                                     shmsg_btree_min)
 
     /* Get the value */
-    *shmsg_btree_min = (*head)->ctx.shmsg_btree_min;
+    *shmsg_btree_min = (*head)->ctx.fcpl_props.shmsg_btree_min;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -5596,7 +5413,7 @@ H5CX_get_shared_mesg_list_max(unsigned *shmsg_list_max)
                                     shmsg_list_max)
 
     /* Get the value */
-    *shmsg_list_max = (*head)->ctx.shmsg_list_max;
+    *shmsg_list_max = (*head)->ctx.fcpl_props.shmsg_list_max;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -5629,7 +5446,7 @@ H5CX_get_shared_mesg_index_types(unsigned *shmsg_index_types)
                                     shmsg_index_types)
 
     /* Get the value */
-    memcpy(shmsg_index_types, (*head)->ctx.shmsg_index_types, H5O_SHMESG_MAX_NINDEXES * sizeof(unsigned));
+    memcpy(shmsg_index_types, (*head)->ctx.fcpl_props.shmsg_index_types, H5O_SHMESG_MAX_NINDEXES * sizeof(unsigned));
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -5662,7 +5479,7 @@ H5CX_get_shared_mesg_index_min_sizes(unsigned *shmsg_index_min_sizes)
                                     shmsg_index_min_sizes)
 
     /* Get the value */
-    memcpy(shmsg_index_min_sizes, (*head)->ctx.shmsg_index_min_sizes,
+    memcpy(shmsg_index_min_sizes, (*head)->ctx.fcpl_props.shmsg_index_min_sizes,
            H5O_SHMESG_MAX_NINDEXES * sizeof(unsigned));
 
 done:
@@ -5695,7 +5512,7 @@ H5CX_get_attr_encoding(H5T_cset_t *attr_encoding)
     H5CX_RETRIEVE_PROP_VALID(acpl, H5P_ATTRIBUTE_CREATE_DEFAULT, H5P_STRCRT_CHAR_ENCODING_NAME, attr_encoding)
 
     /* Get the value */
-    *attr_encoding = (*head)->ctx.attr_encoding;
+    *attr_encoding = (*head)->ctx.acpl_props.attr_encoding;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -5731,7 +5548,7 @@ H5CX_peek_ext_file_prefix(const char **extfile_prefix)
     H5CX_PEEK_PROP_VALID(dapl, H5P_DATASET_ACCESS_DEFAULT, H5D_ACS_EFILE_PREFIX_NAME, extfile_prefix)
 
     /* Get the value */
-    *extfile_prefix = (*head)->ctx.extfile_prefix;
+    *extfile_prefix = (*head)->ctx.dapl_props.extfile_prefix;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -5767,7 +5584,7 @@ H5CX_peek_vds_prefix(const char **vds_prefix)
     H5CX_PEEK_PROP_VALID(dapl, H5P_DATASET_ACCESS_DEFAULT, H5D_ACS_VDS_PREFIX_NAME, vds_prefix)
 
     /* Get the value */
-    *vds_prefix = (*head)->ctx.vds_prefix;
+    *vds_prefix = (*head)->ctx.dapl_props.vds_prefix;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -5799,7 +5616,7 @@ H5CX_get_append_flush(H5D_append_flush_t *append_flush)
     H5CX_RETRIEVE_PROP_VALID(dapl, H5P_DATASET_ACCESS_DEFAULT, H5D_ACS_APPEND_FLUSH_NAME, append_flush)
 
     /* Get the value */
-    *append_flush = (*head)->ctx.append_flush;
+    *append_flush = (*head)->ctx.dapl_props.append_flush;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -5832,7 +5649,7 @@ H5CX_get_rdcc_nbytes(size_t *rdcc_nbytes)
                              dapl_rdcc_nbytes)
 
     /* Get the value */
-    *rdcc_nbytes = (*head)->ctx.dapl_rdcc_nbytes;
+    *rdcc_nbytes = (*head)->ctx.dapl_props.dapl_rdcc_nbytes;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -5865,7 +5682,7 @@ H5CX_get_rdcc_nslots(size_t *rdcc_nslots)
                              dapl_rdcc_nslots)
 
     /* Get the value */
-    *rdcc_nslots = (*head)->ctx.dapl_rdcc_nslots;
+    *rdcc_nslots = (*head)->ctx.dapl_props.dapl_rdcc_nslots;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -5897,7 +5714,7 @@ H5CX_get_rdcc_w0(double *rdcc_w0)
     H5CX_RETRIEVE_PROP_VALID(dapl, H5P_DATASET_ACCESS_DEFAULT, H5D_ACS_PREEMPT_READ_CHUNKS_NAME, dapl_rdcc_w0)
 
     /* Get the value */
-    *rdcc_w0 = (*head)->ctx.dapl_rdcc_w0;
+    *rdcc_w0 = (*head)->ctx.dapl_props.dapl_rdcc_w0;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -5929,7 +5746,7 @@ H5CX_get_vds_printf_gap(hsize_t *vds_printf_gap)
     H5CX_RETRIEVE_PROP_VALID(dapl, H5P_DATASET_ACCESS_DEFAULT, H5D_ACS_VDS_PRINTF_GAP_NAME, vds_printf_gap)
 
     /* Get the value */
-    *vds_printf_gap = (*head)->ctx.vds_printf_gap;
+    *vds_printf_gap = (*head)->ctx.dapl_props.vds_printf_gap;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -5961,7 +5778,7 @@ H5CX_get_vds_view(H5D_vds_view_t *vds_view)
     H5CX_RETRIEVE_PROP_VALID(dapl, H5P_DATASET_ACCESS_DEFAULT, H5D_ACS_VDS_VIEW_NAME, vds_view)
 
     /* Get the value */
-    *vds_view = (*head)->ctx.vds_view;
+    *vds_view = (*head)->ctx.dapl_props.vds_view;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -6175,7 +5992,7 @@ H5CX_set_io_xfer_mode(H5FD_mpio_xfer_t io_xfer_mode)
     assert(head && *head);
 
     /* Set the API context value */
-    (*head)->ctx.io_xfer_mode = io_xfer_mode;
+    (*head)->ctx.dxpl_props.io_xfer_mode = io_xfer_mode;
 
     /* Mark the value as valid */
     (*head)->ctx.dxpl_flags.io_xfer_mode_valid = true;
@@ -6206,7 +6023,7 @@ H5CX_set_mpio_coll_opt(H5FD_mpio_collective_opt_t mpio_coll_opt)
     assert(head && *head);
 
     /* Set the API context value */
-    (*head)->ctx.mpio_coll_opt = mpio_coll_opt;
+    (*head)->ctx.dxpl_props.mpio_coll_opt = mpio_coll_opt;
 
     /* Mark the value as valid */
     (*head)->ctx.dxpl_flags.mpio_coll_opt_valid = true;
@@ -6289,10 +6106,10 @@ H5CX_set_vlen_alloc_info(H5MM_allocate_t alloc_func, void *alloc_info, H5MM_free
     assert(head && *head);
 
     /* Set the API context value */
-    (*head)->ctx.vl_alloc_info.alloc_func = alloc_func;
-    (*head)->ctx.vl_alloc_info.alloc_info = alloc_info;
-    (*head)->ctx.vl_alloc_info.free_func  = free_func;
-    (*head)->ctx.vl_alloc_info.free_info  = free_info;
+    (*head)->ctx.dxpl_props.vl_alloc_info.alloc_func = alloc_func;
+    (*head)->ctx.dxpl_props.vl_alloc_info.alloc_info = alloc_info;
+    (*head)->ctx.dxpl_props.vl_alloc_info.free_func  = free_func;
+    (*head)->ctx.dxpl_props.vl_alloc_info.free_info  = free_info;
 
     /* Mark the value as valid */
     (*head)->ctx.dxpl_flags.vl_alloc_info_valid = true;
@@ -6323,7 +6140,7 @@ H5CX_set_nlinks(size_t nlinks)
     assert(head && *head);
 
     /* Set the API context value */
-    (*head)->ctx.nlinks = nlinks;
+    (*head)->ctx.lapl_props.nlinks = nlinks;
 
     /* Mark the value as valid */
     (*head)->ctx.lapl_flags.nlinks_valid = true;
@@ -6354,7 +6171,7 @@ H5CX_set_mdc_init_config(H5AC_cache_config_t *mdc_init_config)
     assert(head && *head);
 
     /* Set the API context value */
-    H5MM_memcpy(&(*head)->ctx.mdc_init_config, mdc_init_config, sizeof(*mdc_init_config));
+    H5MM_memcpy(&(*head)->ctx.fapl_props.mdc_init_config, mdc_init_config, sizeof(*mdc_init_config));
 
     /* Mark the value as valid */
     (*head)->ctx.fapl_flags.mdc_init_config_valid = true;
@@ -6385,7 +6202,7 @@ H5CX_set_close_degree(H5F_close_degree_t close_degree)
     assert(head && *head);
 
     /* Set the API context value */
-    (*head)->ctx.close_degree = close_degree;
+    (*head)->ctx.fapl_props.close_degree = close_degree;
 
     /* Mark the value as valid */
     (*head)->ctx.fapl_flags.close_degree_valid = true;
@@ -6418,7 +6235,7 @@ H5CX_set_mpio_actual_chunk_opt(H5D_mpio_actual_chunk_opt_mode_t mpio_actual_chun
     assert(!((*head)->ctx.dxpl_id == H5P_DEFAULT || (*head)->ctx.dxpl_id == H5P_DATASET_XFER_DEFAULT));
 
     /* Cache the value for later, marking it to set in DXPL when context popped */
-    (*head)->ctx.mpio_actual_chunk_opt                = mpio_actual_chunk_opt;
+    (*head)->ctx.dxpl_props.mpio_actual_chunk_opt                = mpio_actual_chunk_opt;
     (*head)->ctx.dxpl_flags.mpio_actual_chunk_opt_set = true;
 
     FUNC_LEAVE_NOAPI_VOID
@@ -6446,7 +6263,7 @@ H5CX_set_mpio_actual_io_mode(H5D_mpio_actual_io_mode_t mpio_actual_io_mode)
     assert(!((*head)->ctx.dxpl_id == H5P_DEFAULT || (*head)->ctx.dxpl_id == H5P_DATASET_XFER_DEFAULT));
 
     /* Cache the value for later, marking it to set in DXPL when context popped */
-    (*head)->ctx.mpio_actual_io_mode                = mpio_actual_io_mode;
+    (*head)->ctx.dxpl_props.mpio_actual_io_mode                = mpio_actual_io_mode;
     (*head)->ctx.dxpl_flags.mpio_actual_io_mode_set = true;
 
     FUNC_LEAVE_NOAPI_VOID
@@ -6476,7 +6293,7 @@ H5CX_set_mpio_local_no_coll_cause(uint32_t mpio_local_no_coll_cause)
     /* If we're using the default DXPL, don't modify it */
     if ((*head)->ctx.dxpl_id != H5P_DATASET_XFER_DEFAULT) {
         /* Cache the value for later, marking it to set in DXPL when context popped */
-        (*head)->ctx.mpio_local_no_coll_cause                = mpio_local_no_coll_cause;
+        (*head)->ctx.dxpl_props.mpio_local_no_coll_cause                = mpio_local_no_coll_cause;
         (*head)->ctx.dxpl_flags.mpio_local_no_coll_cause_set = true;
     } /* end if */
 
@@ -6507,7 +6324,7 @@ H5CX_set_mpio_global_no_coll_cause(uint32_t mpio_global_no_coll_cause)
     /* If we're using the default DXPL, don't modify it */
     if ((*head)->ctx.dxpl_id != H5P_DATASET_XFER_DEFAULT) {
         /* Cache the value for later, marking it to set in DXPL when context popped */
-        (*head)->ctx.mpio_global_no_coll_cause                = mpio_global_no_coll_cause;
+        (*head)->ctx.dxpl_props.mpio_global_no_coll_cause                = mpio_global_no_coll_cause;
         (*head)->ctx.dxpl_flags.mpio_global_no_coll_cause_set = true;
     } /* end if */
 
@@ -6756,7 +6573,7 @@ H5CX_set_no_selection_io_cause(uint32_t no_selection_io_cause)
     /* If we're using the default DXPL, don't modify it */
     if ((*head)->ctx.dxpl_id != H5P_DATASET_XFER_DEFAULT) {
         /* Cache the value for later, marking it to set in DXPL when context popped */
-        (*head)->ctx.no_selection_io_cause                = no_selection_io_cause;
+        (*head)->ctx.dxpl_props.no_selection_io_cause                = no_selection_io_cause;
         (*head)->ctx.dxpl_flags.no_selection_io_cause_set = true;
     } /* end if */
 
@@ -6788,7 +6605,7 @@ H5CX_set_actual_selection_io_mode(uint32_t actual_selection_io_mode)
     /* If we're using the default DXPL, don't modify it */
     if ((*head)->ctx.dxpl_id != H5P_DATASET_XFER_DEFAULT) {
         /* Cache the value for later, marking it to set in DXPL when context popped */
-        (*head)->ctx.actual_selection_io_mode                = actual_selection_io_mode;
+        (*head)->ctx.dxpl_props.actual_selection_io_mode                = actual_selection_io_mode;
         (*head)->ctx.dxpl_flags.actual_selection_io_mode_set = true;
     }
 
@@ -6822,7 +6639,7 @@ H5CX_get_bad_mesg_count(bool *bad_mesg_count)
     H5CX_RETRIEVE_PROP_VALID(ocpl, H5P_OBJECT_CREATE_DEFAULT, H5O_CRT_BAD_MESG_COUNT_NAME, bad_mesg_count)
 
     /* Get the value */
-    *bad_mesg_count = (*head)->ctx.bad_mesg_count;
+    *bad_mesg_count = (*head)->ctx.ocpl_props.bad_mesg_count;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -6855,7 +6672,7 @@ H5CX_get_attr_max_compact(unsigned *attr_max_compact)
     H5CX_RETRIEVE_PROP_VALID(ocpl, H5P_OBJECT_CREATE_DEFAULT, H5O_CRT_ATTR_MAX_COMPACT_NAME, attr_max_compact)
 
     /* Get the value */
-    *attr_max_compact = (*head)->ctx.attr_max_compact;
+    *attr_max_compact = (*head)->ctx.ocpl_props.attr_max_compact;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -6887,7 +6704,7 @@ H5CX_get_attr_min_dense(unsigned *attr_min_dense)
     H5CX_RETRIEVE_PROP_VALID(ocpl, H5P_OBJECT_CREATE_DEFAULT, H5O_CRT_ATTR_MIN_DENSE_NAME, attr_min_dense)
 
     /* Get the value */
-    *attr_min_dense = (*head)->ctx.attr_min_dense;
+    *attr_min_dense = (*head)->ctx.ocpl_props.attr_min_dense;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -6919,7 +6736,7 @@ H5CX_get_ohdr_flags(uint8_t *ohdr_flags)
     H5CX_RETRIEVE_PROP_VALID(ocpl, H5P_OBJECT_CREATE_DEFAULT, H5O_CRT_OHDR_FLAGS_NAME, ohdr_flags)
 
     /* Get the value */
-    *ohdr_flags = (*head)->ctx.ohdr_flags;
+    *ohdr_flags = (*head)->ctx.ocpl_props.ohdr_flags;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -6951,7 +6768,7 @@ H5CX_peek_pline(H5O_pline_t *pline)
     H5CX_RETRIEVE_PROP_VALID(ocpl, H5P_OBJECT_CREATE_DEFAULT, H5O_CRT_PIPELINE_NAME, pline)
 
     /* Get the value */
-    *pline = (*head)->ctx.pline;
+    *pline = (*head)->ctx.ocpl_props.pline;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -6983,7 +6800,7 @@ H5CX_get_pline(H5O_pline_t *pline)
     H5CX_RETRIEVE_PROP_VALID(ocpl, H5P_OBJECT_CREATE_DEFAULT, H5O_CRT_PIPELINE_NAME, pline)
 
     /* Make copy of filter pipeline */
-    if (NULL == H5O_msg_copy(H5O_PLINE_ID, &(*head)->ctx.pline, pline))
+    if (NULL == H5O_msg_copy(H5O_PLINE_ID, &(*head)->ctx.ocpl_props.pline, pline))
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy filter pipeline");
 
 done:
@@ -7009,13 +6826,13 @@ H5CX__reset_ocpl(H5CX_node_t *head)
 
     /* Reset cached DCPL/FCPL/GCPL/OCPL data */
     if (head->ctx.dcpl_flags.layout_valid)
-        H5O_msg_reset(H5O_LAYOUT_ID, &head->ctx.layout);
+        H5O_msg_reset(H5O_LAYOUT_ID, &head->ctx.dcpl_props.layout);
     if (head->ctx.ocpl_flags.pline_valid)
-        H5O_msg_reset(H5O_PLINE_ID, &head->ctx.pline);
+        H5O_msg_reset(H5O_PLINE_ID, &head->ctx.ocpl_props.pline);
     if (head->ctx.dcpl_flags.efl_valid)
-        H5O_msg_reset(H5O_EFL_ID, &head->ctx.efl);
+        H5O_msg_reset(H5O_EFL_ID, &head->ctx.dcpl_props.efl);
     if (head->ctx.dcpl_flags.fill_value_valid)
-        H5O_msg_reset(H5O_FILL_ID, &head->ctx.fill_value);
+        H5O_msg_reset(H5O_FILL_ID, &head->ctx.dcpl_props.fill_value);
 
     /* Reset the DCPL/FCPL/GCPL/OCPL flags to force the properties to be retrieved again */
     memset(&head->ctx.dcpl_flags, 0, sizeof(head->ctx.dcpl_flags));
@@ -7061,7 +6878,7 @@ H5CX_peek_comm_dtype_merge_list(H5O_copy_dtype_merge_list_t **comm_dtype_merge_l
                          comm_dtype_merge_list)
 
     /* Get the value */
-    *comm_dtype_merge_list = (*head)->ctx.comm_dtype_merge_list;
+    *comm_dtype_merge_list = (*head)->ctx.ocpypl_props.comm_dtype_merge_list;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -7093,7 +6910,7 @@ H5CX_get_mcdt_search_cb(H5O_mcdt_cb_info_t *mcdt_cb_info)
     H5CX_RETRIEVE_PROP_VALID(ocpypl, H5P_OBJECT_COPY_DEFAULT, H5O_CPY_MCDT_SEARCH_CB_NAME, mcdt_cb_info)
 
     /* Get the value */
-    *mcdt_cb_info = (*head)->ctx.mcdt_cb_info;
+    *mcdt_cb_info = (*head)->ctx.ocpypl_props.mcdt_cb_info;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -7125,7 +6942,7 @@ H5CX_get_cpy_options(unsigned *cpy_options)
     H5CX_RETRIEVE_PROP_VALID(ocpypl, H5P_OBJECT_COPY_DEFAULT, H5O_CPY_OPTION_NAME, cpy_options)
 
     /* Get the value */
-    *cpy_options = (*head)->ctx.cpy_options;
+    *cpy_options = (*head)->ctx.ocpypl_props.cpy_options;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -7160,7 +6977,7 @@ H5CX_pop(bool update_dxpl_props)
          * list */
         if ((*head)->ctx.dxpl_id != H5P_DATASET_XFER_DEFAULT &&
             !(*head)->ctx.dxpl_flags.actual_selection_io_mode_set) {
-            (*head)->ctx.actual_selection_io_mode = H5CX_def_dxpl_cache.actual_selection_io_mode;
+            (*head)->ctx.dxpl_props.actual_selection_io_mode = H5CX_def_dxpl_cache.actual_selection_io_mode;
             (*head)->ctx.dxpl_flags.actual_selection_io_mode_set = true;
         }
 
