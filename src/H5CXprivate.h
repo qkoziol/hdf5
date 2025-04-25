@@ -258,8 +258,10 @@ typedef struct H5CX_cached_fapl_flags_t {
 
 /* Typedef for cached object copy property list (OCPYPL) information */
 typedef struct H5CX_ocpypl_cache_t {
-    H5O_copy_dtype_merge_list_t *comm_dtype_merge_list; /* Committed datatype merge list for object copy (H5O_CPY_MERGE_COMM_DT_LIST_NAME) */
-    H5O_mcdt_cb_info_t mcdt_cb_info; /* Callback info for committed datatype search (H5O_CPY_MCDT_SEARCH_CB_NAME) */
+    H5O_copy_dtype_merge_list_t *comm_dtype_merge_list; /* Committed datatype merge list for object copy
+                                                           (H5O_CPY_MERGE_COMM_DT_LIST_NAME) */
+    H5O_mcdt_cb_info_t
+             mcdt_cb_info; /* Callback info for committed datatype search (H5O_CPY_MCDT_SEARCH_CB_NAME) */
     unsigned cpy_options;  /* Object copy options (H5O_CPY_OPTION_NAME) */
 } H5CX_ocpypl_cache_t;
 
@@ -273,8 +275,10 @@ typedef struct H5CX_dxpl_cache_t {
     size_t    vec_size;             /* Size of hyperslab vector (H5D_XFER_HYPER_VECTOR_SIZE_NAME) */
 #ifdef H5_HAVE_PARALLEL
     H5FD_mpio_xfer_t io_xfer_mode; /* Parallel transfer mode for this request (H5D_XFER_IO_XFER_MODE_NAME) */
-    H5FD_mpio_collective_opt_t mpio_coll_opt; /* Parallel transfer with independent IO or collective IO with this mode (H5D_XFER_MPIO_COLLECTIVE_OPT_NAME) */
-    H5FD_mpio_chunk_opt_t mpio_chunk_opt_mode;       /* Collective chunk option (H5D_XFER_MPIO_CHUNK_OPT_HARD_NAME) */
+    H5FD_mpio_collective_opt_t mpio_coll_opt; /* Parallel transfer with independent IO or collective IO with
+                                                 this mode (H5D_XFER_MPIO_COLLECTIVE_OPT_NAME) */
+    H5FD_mpio_chunk_opt_t
+             mpio_chunk_opt_mode;       /* Collective chunk option (H5D_XFER_MPIO_CHUNK_OPT_HARD_NAME) */
     unsigned mpio_chunk_opt_num;        /* Collective chunk threshold (H5D_XFER_MPIO_CHUNK_OPT_NUM_NAME) */
     unsigned mpio_chunk_opt_ratio;      /* Collective chunk ratio (H5D_XFER_MPIO_CHUNK_OPT_RATIO_NAME) */
 #endif                                  /* H5_HAVE_PARALLEL */
@@ -288,22 +292,35 @@ typedef struct H5CX_dxpl_cache_t {
 
 /* Return-only DXPL properties to return to application */
 #ifdef H5_HAVE_PARALLEL
-    H5D_mpio_actual_chunk_opt_mode_t mpio_actual_chunk_opt; /* Chunk optimization mode used for parallel I/O (H5D_MPIO_ACTUAL_CHUNK_OPT_MODE_NAME) */
-    H5D_mpio_actual_io_mode_t mpio_actual_io_mode; /* Actual I/O mode used for parallel I/O (H5D_MPIO_ACTUAL_IO_MODE_NAME) */
-    uint32_t mpio_local_no_coll_cause;  /* Local reason for breaking collective I/O (H5D_MPIO_LOCAL_NO_COLLECTIVE_CAUSE_NAME) */
-    uint32_t mpio_global_no_coll_cause; /* Global reason for breaking collective I/O (H5D_MPIO_GLOBAL_NO_COLLECTIVE_CAUSE_NAME) */
+    H5D_mpio_actual_chunk_opt_mode_t mpio_actual_chunk_opt; /* Chunk optimization mode used for parallel I/O
+                                                               (H5D_MPIO_ACTUAL_CHUNK_OPT_MODE_NAME) */
+    H5D_mpio_actual_io_mode_t
+             mpio_actual_io_mode; /* Actual I/O mode used for parallel I/O (H5D_MPIO_ACTUAL_IO_MODE_NAME) */
+    uint32_t mpio_local_no_coll_cause;  /* Local reason for breaking collective I/O
+                                           (H5D_MPIO_LOCAL_NO_COLLECTIVE_CAUSE_NAME) */
+    uint32_t mpio_global_no_coll_cause; /* Global reason for breaking collective I/O
+                                           (H5D_MPIO_GLOBAL_NO_COLLECTIVE_CAUSE_NAME) */
 #ifdef H5_HAVE_INSTRUMENTED_LIBRARY
-    int mpio_coll_chunk_link_hard;        /* Instrumented "collective chunk link hard" value (H5D_XFER_COLL_CHUNK_LINK_HARD_NAME) */
-    int mpio_coll_chunk_multi_hard;       /* Instrumented "collective chunk multi hard" value (H5D_XFER_COLL_CHUNK_MULTI_HARD_NAME) */
-    int mpio_coll_chunk_link_num_true;    /* Instrumented "collective chunk link num true" value (H5D_XFER_COLL_CHUNK_LINK_NUM_TRUE_NAME) */
-    int mpio_coll_chunk_link_num_false;   /* Instrumented "collective chunk link num false" value (H5D_XFER_COLL_CHUNK_LINK_NUM_FALSE_NAME) */
-    int mpio_coll_chunk_multi_ratio_coll; /* Instrumented "collective chunk multi ratio coll" value (H5D_XFER_COLL_CHUNK_MULTI_RATIO_COLL_NAME) */
-    int mpio_coll_chunk_multi_ratio_ind;  /* Instrumented "collective chunk multi ratio ind" value (H5D_XFER_COLL_CHUNK_MULTI_RATIO_IND_NAME) */
-    bool mpio_coll_rank0_bcast;           /* Instrumented "collective rank 0 broadcast" value (H5D_XFER_COLL_RANK0_BCAST_NAME) */
+    int mpio_coll_chunk_link_hard;        /* Instrumented "collective chunk link hard" value
+                                             (H5D_XFER_COLL_CHUNK_LINK_HARD_NAME) */
+    int mpio_coll_chunk_multi_hard;       /* Instrumented "collective chunk multi hard" value
+                                             (H5D_XFER_COLL_CHUNK_MULTI_HARD_NAME) */
+    int mpio_coll_chunk_link_num_true;    /* Instrumented "collective chunk link num true" value
+                                             (H5D_XFER_COLL_CHUNK_LINK_NUM_TRUE_NAME) */
+    int mpio_coll_chunk_link_num_false;   /* Instrumented "collective chunk link num false" value
+                                             (H5D_XFER_COLL_CHUNK_LINK_NUM_FALSE_NAME) */
+    int mpio_coll_chunk_multi_ratio_coll; /* Instrumented "collective chunk multi ratio coll" value
+                                             (H5D_XFER_COLL_CHUNK_MULTI_RATIO_COLL_NAME) */
+    int mpio_coll_chunk_multi_ratio_ind;  /* Instrumented "collective chunk multi ratio ind" value
+                                             (H5D_XFER_COLL_CHUNK_MULTI_RATIO_IND_NAME) */
+    bool mpio_coll_rank0_bcast;           /* Instrumented "collective rank 0 broadcast" value
+                                             (H5D_XFER_COLL_RANK0_BCAST_NAME) */
 #endif                                    /* H5_HAVE_INSTRUMENTED_LIBRARY */
 #endif                                    /* H5_HAVE_PARALLEL */
-    uint32_t no_selection_io_cause;       /* Reason for not performing selection I/O (H5D_XFER_NO_SELECTION_IO_CAUSE_NAME) */
-    uint32_t actual_selection_io_mode;    /* Actual selection I/O mode used (H5D_XFER_ACTUAL_SELECTION_IO_MODE_NAME) */
+    uint32_t no_selection_io_cause;       /* Reason for not performing selection I/O
+                                             (H5D_XFER_NO_SELECTION_IO_CAUSE_NAME) */
+    uint32_t actual_selection_io_mode;    /* Actual selection I/O mode used
+                                             (H5D_XFER_ACTUAL_SELECTION_IO_MODE_NAME) */
     H5S_t *dset_io_selection;             /* Dataset I/O selection */
 } H5CX_dxpl_cache_t;
 
@@ -316,7 +333,8 @@ typedef struct H5CX_lcpl_cache_t {
 /* Typedef for cached link access property list (LAPL) information */
 typedef struct H5CX_lapl_cache_t {
 #ifdef H5_HAVE_PARALLEL
-    H5P_coll_md_read_flag_t lapl_coll_md_read;         /* Property for collective metadata read (H5_COLL_MD_READ_FLAG_NAME) */
+    H5P_coll_md_read_flag_t
+        lapl_coll_md_read;         /* Property for collective metadata read (H5_COLL_MD_READ_FLAG_NAME) */
 #endif                             /* H5_HAVE_PARALLEL */
     const char     *elink_prefix;  /* Prefix for external link prefix (H5L_ACS_ELINK_PREFIX_NAME) */
     H5L_elink_cb_t  elink_cb_info; /* External link callback info struct (H5L_ACS_ELINK_CB_NAME) */
@@ -330,7 +348,8 @@ typedef struct H5CX_ocpl_cache_t {
 #ifdef H5O_ENABLE_BAD_MESG_COUNT
     bool bad_mesg_count; /* Write a bad message count to the object header (H5O_CRT_BAD_MESG_COUNT_NAME) */
 #endif                   /* H5O_ENABLE_BAD_MESG_COUNT */
-    unsigned    attr_max_compact;  /* Maximum # of attributes to store in compact form (H5O_CRT_ATTR_MAX_COMPACT_NAME) */
+    unsigned attr_max_compact;  /* Maximum # of attributes to store in compact form
+                                   (H5O_CRT_ATTR_MAX_COMPACT_NAME) */
     unsigned    attr_min_dense; /* Minimum # of attributes to store in dense form */
     uint8_t     ohdr_flags;     /* Object header flags (H5O_CRT_OHDR_FLAGS_NAME) */
     H5O_pline_t pline;          /* Filter pipeline for object creation (H5O_CRT_PLINE_NAME) */
@@ -356,7 +375,8 @@ typedef struct H5CX_gcpl_cache_t {
 
 /* Typedef for cached attribute creation property list (ACPL) information */
 typedef struct H5CX_acpl_cache_t {
-    H5T_cset_t attr_encoding; /* Attribute creation property list character encoding (H5P_STRCRT_CHAR_ENCODING_NAME) */
+    H5T_cset_t attr_encoding; /* Attribute creation property list character encoding
+                                 (H5P_STRCRT_CHAR_ENCODING_NAME) */
 } H5CX_acpl_cache_t;
 
 /* Typedef for cached file creation property list (FCPL) information */
@@ -373,8 +393,10 @@ typedef struct H5CX_fcpl_cache_t {
     unsigned sohm_nindexes;            /* Number of SOHM indexes (H5F_CRT_SHMSG_NINDEXES_NAME) */
     unsigned shmsg_btree_min;          /* SOHM btree minimum property (H5F_CRT_SHMSG_BTREE_MIN_NAME) */
     unsigned shmsg_list_max;           /* SOHM list max property (H5F_CRT_SHMSG_LIST_MAX_NAME) */
-    unsigned shmsg_index_types[H5O_SHMESG_MAX_NINDEXES];     /* SOHM index types property (H5F_CRT_SHMSG_INDEX_TYPES_NAME) */
-    unsigned shmsg_index_min_sizes[H5O_SHMESG_MAX_NINDEXES]; /* SOHM index min sizes property (H5F_CRT_SHMSG_INDEX_MINSIZE_NAME) */
+    unsigned shmsg_index_types[H5O_SHMESG_MAX_NINDEXES];     /* SOHM index types property
+                                                                (H5F_CRT_SHMSG_INDEX_TYPES_NAME) */
+    unsigned shmsg_index_min_sizes[H5O_SHMESG_MAX_NINDEXES]; /* SOHM index min sizes property
+                                                                (H5F_CRT_SHMSG_INDEX_MINSIZE_NAME) */
 } H5CX_fcpl_cache_t;
 
 /* Typedef for cached dataset access property list (DAPL) information */
@@ -394,40 +416,57 @@ typedef struct H5CX_fapl_cache_t {
 #ifdef H5_HAVE_PARALLEL
     MPI_Comm mpi_comm; /* MPI communicator (H5F_ACS_MPI_COMM_NAME) */
     MPI_Info mpi_info; /* MPI info (H5F_ACS_MPI_INFO_NAME) */
-    H5P_coll_md_read_flag_t fapl_coll_md_read; /* Property for collective metadata read (H5_COLL_MD_READ_FLAG_NAME) */
+    H5P_coll_md_read_flag_t
+         fapl_coll_md_read; /* Property for collective metadata read (H5_COLL_MD_READ_FLAG_NAME) */
     bool coll_md_write;     /* Property for collective metadata write (H5F_ACS_COLL_MD_WRITE_FLAG_NAME) */
 #ifdef H5_HAVE_SUBFILING_VFD
-    H5FD_subfiling_params_t sf_ioc_params; /* Property for subfiling IOC parameters (H5F_ACS_SUBFILING_CONFIG_PROP_NAME) */
+    H5FD_subfiling_params_t
+        sf_ioc_params; /* Property for subfiling IOC parameters (H5F_ACS_SUBFILING_CONFIG_PROP_NAME) */
 #endif                 /* H5_HAVE_SUBFILING_VFD */
 #endif                 /* H5_HAVE_PARALLEL */
-    H5VL_connector_prop_t vol_connector_prop; /* Property for VOL connector ID & info (H5F_ACS_VOL_CONN_NAME) */
-    H5FD_driver_prop_t driver_prop; /* Property for driver, info & configuration string (H5F_ACS_FILE_DRV_NAME) */
+    H5VL_connector_prop_t
+        vol_connector_prop; /* Property for VOL connector ID & info (H5F_ACS_VOL_CONN_NAME) */
+    H5FD_driver_prop_t
+        driver_prop; /* Property for driver, info & configuration string (H5F_ACS_FILE_DRV_NAME) */
     H5FD_file_image_info_t file_image_info; /* Property for file image info (H5F_ACS_FILE_IMAGE_INFO_NAME) */
-    H5F_libver_t low_bound; /* low_bound property for H5Pset_libver_bounds() (H5F_ACS_LIBVER_LOW_BOUND_NAME) */
-    H5F_libver_t high_bound;       /* high_bound property for H5Pset_libver_bounds (H5F_ACS_LIBVER_HIGH_BOUND_NAME) */
+    H5F_libver_t
+        low_bound; /* low_bound property for H5Pset_libver_bounds() (H5F_ACS_LIBVER_LOW_BOUND_NAME) */
+    H5F_libver_t
+         high_bound;       /* high_bound property for H5Pset_libver_bounds (H5F_ACS_LIBVER_HIGH_BOUND_NAME) */
     bool use_file_locking; /* Property to use file locking (H5F_ACS_USE_FILE_LOCKING_NAME) */
-    bool ignore_disabled_locks;  /* Property to ignore disabled file locks (H5F_ACS_IGNORE_DISABLED_FILE_LOCKS_NAME) */
+    bool ignore_disabled_locks;  /* Property to ignore disabled file locks
+                                    (H5F_ACS_IGNORE_DISABLED_FILE_LOCKS_NAME) */
     hsize_t  align_bound;        /* alignment property (H5F_ACS_ALIGNMENT_NAME) */
     hsize_t  align_threshold;    /* alignment threshold property (H5F_ACS_ALIGN_THRHD_NAME) */
     bool     clear_status_flags; /* Private property used by h5clear (H5F_ACS_CLEAR_STATUS_FLAGS_NAME) */
     unsigned gc_ref; /* Property for garbage collection of references (H5F_ACS_GARBG_COLCT_REF_NAME) */
     bool     use_mdc_logging; /* Property for metadata cache logging enabled (H5F_ACS_USE_MDC_LOGGING_NAME) */
     char    *mdc_log_location; /* Property for metadata cache log location (H5F_ACS_MDC_LOG_LOCATION_NAME) */
-    bool     start_mdc_logging_on_access;       /* Property for starting metadata cache logging on access (H5F_ACS_START_MDC_LOG_ON_ACCESS_NAME) */
-    unsigned mdc_read_attempts;                 /* Property for metadata cache read attempts (H5F_ACS_METADATA_READ_ATTEMPTS_NAME) */
-    hsize_t meta_alloc_block_size;              /* Property for metadata allocation block size (H5F_ACS_META_BLOCK_SIZE_NAME) */
-    H5AC_cache_config_t mdc_init_config;        /* Property for metadata cache initialization configuration (H5F_ACS_META_CACHE_INIT_CONFIG_NAME) */
-    H5AC_cache_image_config_t mdc_image_config; /* Property for metadata cache image initial configuration (H5F_ACS_META_CACHE_INIT_IMAGE_CONFIG_NAME) */
-    H5F_object_flush_t object_flush_strategy; /* Property for object flush strategy (H5F_ACS_OBJECT_FLUSH_CB_NAME) */
+    bool     start_mdc_logging_on_access;       /* Property for starting metadata cache logging on access
+                                                   (H5F_ACS_START_MDC_LOG_ON_ACCESS_NAME) */
+    unsigned mdc_read_attempts;                 /* Property for metadata cache read attempts
+                                                   (H5F_ACS_METADATA_READ_ATTEMPTS_NAME) */
+    hsize_t meta_alloc_block_size;              /* Property for metadata allocation block size
+                                                   (H5F_ACS_META_BLOCK_SIZE_NAME) */
+    H5AC_cache_config_t mdc_init_config;        /* Property for metadata cache initialization configuration
+                                                   (H5F_ACS_META_CACHE_INIT_CONFIG_NAME) */
+    H5AC_cache_image_config_t mdc_image_config; /* Property for metadata cache image initial configuration
+                                                   (H5F_ACS_META_CACHE_INIT_IMAGE_CONFIG_NAME) */
+    H5F_object_flush_t
+             object_flush_strategy; /* Property for object flush strategy (H5F_ACS_OBJECT_FLUSH_CB_NAME) */
     size_t   pb_size;               /* Property for page buffer size (H5F_ACS_PAGE_BUFFER_SIZE_NAME) */
-    unsigned pb_min_meta_perc;      /* Property for minimum metadata percentage (H5F_ACS_PAGE_BUFFER_MIN_META_PERC_NAME) */
-    unsigned pb_min_raw_perc;  /* Property for minimum raw percentage (H5F_ACS_PAGE_BUFFER_MIN_RAW_PERC_NAME) */
+    unsigned pb_min_meta_perc;      /* Property for minimum metadata percentage
+                                       (H5F_ACS_PAGE_BUFFER_MIN_META_PERC_NAME) */
+    unsigned
+           pb_min_raw_perc;  /* Property for minimum raw percentage (H5F_ACS_PAGE_BUFFER_MIN_RAW_PERC_NAME) */
     size_t fapl_rdcc_nbytes; /* Property for size of the raw data cache (H5F_ACS_DATA_CACHE_BYTE_SIZE_NAME) */
-    size_t fapl_rdcc_nslots; /* Property for number of slots in the raw data cache (H5F_ACS_DATA_CACHE_NUM_SLOTS_NAME) */
+    size_t fapl_rdcc_nslots; /* Property for number of slots in the raw data cache
+                                (H5F_ACS_DATA_CACHE_NUM_SLOTS_NAME) */
     double   fapl_rdcc_w0; /* Property for chunk cache preemption factor (H5F_ACS_PREEMPT_READ_CHUNKS_NAME) */
     unsigned efc_size;     /* Property for size of the external file cache (H5F_ACS_EFC_SIZE_NAME) */
     H5F_close_degree_t close_degree;   /* Property for file close degree (H5F_ACS_CLOSE_DEGREE_NAME) */
-    bool               evict_on_close; /* Property for evicting an object's metadata on close (H5F_ACS_EVICT_ON_CLOSE_FLAG_NAME) */
+    bool               evict_on_close; /* Property for evicting an object's metadata on close
+                                          (H5F_ACS_EVICT_ON_CLOSE_FLAG_NAME) */
     uint64_t rfic_flags;       /* Property for relaxed file integrity checks (H5F_ACS_RFIC_FLAGS_NAME) */
     hsize_t  sdata_block_size; /* Property for "small" raw data block size (H5F_ACS_SDATA_BLOCK_SIZE_NAME) */
     size_t   sieve_buf_size;   /* Property for sieve buffer size (H5F_ACS_SIEVE_BUF_SIZE_NAME) */
@@ -538,10 +577,10 @@ typedef struct H5CX_t {
 
     /* Cached properties */
     /* Overlapping some properties using unions to save space */
-    union  {
+    union {
         struct {
             H5CX_ocpypl_cache_t ocpypl_props;
-            H5CX_lcpl_cache_t lcpl_props;
+            H5CX_lcpl_cache_t   lcpl_props;
         };
         struct {
             H5CX_dxpl_cache_t dxpl_props;
@@ -571,13 +610,13 @@ typedef struct H5CX_t {
     H5CX_cached_lcpl_flags_t   lcpl_flags;
     H5CX_cached_dxpl_flags_t   dxpl_flags;
     H5CX_cached_ocpl_flags_t   ocpl_flags;
-    H5CX_cached_dcpl_flags_t dcpl_flags;
-    H5CX_cached_gcpl_flags_t gcpl_flags;
-    H5CX_cached_acpl_flags_t acpl_flags;
-    H5CX_cached_fapl_flags_t fapl_flags;
-    H5CX_cached_fcpl_flags_t fcpl_flags;
+    H5CX_cached_dcpl_flags_t   dcpl_flags;
+    H5CX_cached_gcpl_flags_t   gcpl_flags;
+    H5CX_cached_acpl_flags_t   acpl_flags;
+    H5CX_cached_fapl_flags_t   fapl_flags;
+    H5CX_cached_fcpl_flags_t   fcpl_flags;
     H5CX_cached_lapl_flags_t   lapl_flags;
-    H5CX_cached_dapl_flags_t dapl_flags;
+    H5CX_cached_dapl_flags_t   dapl_flags;
 
     /* Flags for cached VOL settings */
     bool vol_wrap_ctx_valid : 1; /* Whether VOL connector's "wrap context" for creating IDs is valid */

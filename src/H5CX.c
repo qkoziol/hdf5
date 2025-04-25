@@ -51,13 +51,14 @@
             HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, ERR_RET, "can't get property list");
 
 /* Common macro for the duplicated code to retrieve a property from a property list */
-#define H5CX_RETRIEVE_PROP(PL, MTHD, SUB_PL, PROP_NAME, PROP_FIELD, ERR_RET)                                         \
+#define H5CX_RETRIEVE_PROP(PL, MTHD, SUB_PL, PROP_NAME, PROP_FIELD, ERR_RET)                                 \
     /* Get/peek the property */                                                                              \
-    if (H5_UNLIKELY(H5_GLUE(H5P_, MTHD)((*head)->ctx.PL, (PROP_NAME), &(*head)->ctx.H5_GLUE(SUB_PL, _props).PROP_FIELD) < 0))        \
+    if (H5_UNLIKELY(H5_GLUE(H5P_, MTHD)((*head)->ctx.PL, (PROP_NAME),                                        \
+                                        &(*head)->ctx.H5_GLUE(SUB_PL, _props).PROP_FIELD) < 0))              \
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, ERR_RET, "can't retrieve value from API context");
 
 /* Macros to inline testing / not testing for property existence before retrieving it */
-#define H5CX_TEST_YES_PROP(PL, MTHD, SUB_PL, PROP_NAME, PROP_FIELD, ERR_RET)                                         \
+#define H5CX_TEST_YES_PROP(PL, MTHD, SUB_PL, PROP_NAME, PROP_FIELD, ERR_RET)                                 \
     {                                                                                                        \
         htri_t check_prop = 0; /* Whether the property exists in the API context's DXPL */                   \
                                                                                                              \
@@ -67,12 +68,12 @@
                                                                                                              \
         /* If property exists, retrieve it */                                                                \
         if (check_prop > 0)                                                                                  \
-            H5CX_RETRIEVE_PROP(PL, MTHD, SUB_PL, PROP_NAME, PROP_FIELD, ERR_RET)                                     \
+            H5CX_RETRIEVE_PROP(PL, MTHD, SUB_PL, PROP_NAME, PROP_FIELD, ERR_RET)                             \
     }
-#define H5CX_TEST_NO_PROP(PL, MTHD, SUB_PL, PROP_NAME, PROP_FIELD, ERR_RET)                                          \
+#define H5CX_TEST_NO_PROP(PL, MTHD, SUB_PL, PROP_NAME, PROP_FIELD, ERR_RET)                                  \
     /* Get/peek the property */                                                                              \
     H5CX_RETRIEVE_PROP(PL, MTHD, SUB_PL, PROP_NAME, PROP_FIELD, ERR_RET)
-#define H5CX_TEST_GET_PROP(PL, TST, MTHD, SUB_PL, PROP_NAME, PROP_FIELD, ERR_RET)                                    \
+#define H5CX_TEST_GET_PROP(PL, TST, MTHD, SUB_PL, PROP_NAME, PROP_FIELD, ERR_RET)                            \
     H5_GLUE3(H5CX_TEST_, TST, _PROP)(PL, MTHD, SUB_PL, PROP_NAME, PROP_FIELD, ERR_RET)
 
 /* Common macro for the duplicated code to retrieve properties from a property list */
@@ -80,14 +81,15 @@
     {                                                                                                        \
         /* Check for default property list */                                                                \
         if ((*head)->ctx.H5_GLUE(PL, _id) == (DEF_PL))                                                       \
-            H5MM_memcpy(&(*head)->ctx.H5_GLUE(SUB_PL, _props).PROP_FIELD, &H5_GLUE3(H5CX_def_, SUB_PL, _cache).PROP_FIELD,           \
+            H5MM_memcpy(&(*head)->ctx.H5_GLUE(SUB_PL, _props).PROP_FIELD,                                    \
+                        &H5_GLUE3(H5CX_def_, SUB_PL, _cache).PROP_FIELD,                                     \
                         sizeof(H5_GLUE3(H5CX_def_, SUB_PL, _cache).PROP_FIELD));                             \
         else {                                                                                               \
             /* Retrieve the property list */                                                                 \
             H5CX_RETRIEVE_PLIST(PL, ERR_RET)                                                                 \
                                                                                                              \
             /* Retrieve the property, possibly testing for existence */                                      \
-            H5CX_TEST_GET_PROP(PL, TST, MTHD, SUB_PL, PROP_NAME, PROP_FIELD, ERR_RET)                                \
+            H5CX_TEST_GET_PROP(PL, TST, MTHD, SUB_PL, PROP_NAME, PROP_FIELD, ERR_RET)                        \
         } /* end else */                                                                                     \
                                                                                                              \
         /* Mark the field as valid */                                                                        \
@@ -159,7 +161,7 @@
         /* If property was already set or exists (for first set), update it */                               \
         if ((*head)->ctx.dxpl_flags.H5_GLUE(PROP_FIELD, _set) || check_prop > 0) {                           \
             /* Cache the value for later, marking it to set in DXPL when context popped */                   \
-            (*head)->ctx.dxpl_props.PROP_FIELD                           = PROP_FIELD;                                  \
+            (*head)->ctx.dxpl_props.PROP_FIELD                = PROP_FIELD;                                  \
             (*head)->ctx.dxpl_flags.H5_GLUE(PROP_FIELD, _set) = true;                                        \
         } /* end if */                                                                                       \
     }
@@ -172,15 +174,13 @@
         H5CX_RETRIEVE_PLIST(dxpl, FAIL)                                                                      \
                                                                                                              \
         /* Set the property */                                                                               \
-        if (H5_UNLIKELY(H5P_set((*head)->ctx.dxpl, PROP_NAME, &(*head)->ctx.dxpl_props.PROP_FIELD) < 0))                \
+        if (H5_UNLIKELY(H5P_set((*head)->ctx.dxpl, PROP_NAME, &(*head)->ctx.dxpl_props.PROP_FIELD) < 0))     \
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTSET, FAIL, "error setting data xfer property");                 \
     } /* end if */
 
 /******************/
 /* Local Typedefs */
 /******************/
-
-
 
 /********************/
 /* Local Prototypes */
@@ -2246,7 +2246,8 @@ H5CX_peek_vol_connector_prop(H5VL_connector_prop_t *vol_connector_prop)
     H5CX_PEEK_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_VOL_CONN_NAME, vol_connector_prop)
 
     /* Get the VOL connector & info */
-    H5MM_memcpy(vol_connector_prop, &(*head)->ctx.fapl_props.vol_connector_prop, sizeof(H5VL_connector_prop_t));
+    H5MM_memcpy(vol_connector_prop, &(*head)->ctx.fapl_props.vol_connector_prop,
+                sizeof(H5VL_connector_prop_t));
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -2678,7 +2679,8 @@ H5CX_get_btree_split_ratios(double split_ratio[3])
                              btree_split_ratio)
 
     /* Get the B-tree split ratio values */
-    H5MM_memcpy(split_ratio, &(*head)->ctx.dxpl_props.btree_split_ratio, sizeof((*head)->ctx.dxpl_props.btree_split_ratio));
+    H5MM_memcpy(split_ratio, &(*head)->ctx.dxpl_props.btree_split_ratio,
+                sizeof((*head)->ctx.dxpl_props.btree_split_ratio));
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -3214,14 +3216,14 @@ H5CX_get_vlen_alloc_info(H5T_vlen_alloc_info_t *vl_alloc_info)
                                 "can't get default dataset transfer property list");
 
             /* Get VL datatype alloc info values */
-            if (H5P_get((*head)->ctx.dxpl, H5D_XFER_VLEN_ALLOC_NAME, &(*head)->ctx.dxpl_props.vl_alloc_info.alloc_func) <
-                0)
+            if (H5P_get((*head)->ctx.dxpl, H5D_XFER_VLEN_ALLOC_NAME,
+                        &(*head)->ctx.dxpl_props.vl_alloc_info.alloc_func) < 0)
                 HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve VL datatype alloc info");
             if (H5P_get((*head)->ctx.dxpl, H5D_XFER_VLEN_ALLOC_INFO_NAME,
                         &(*head)->ctx.dxpl_props.vl_alloc_info.alloc_info) < 0)
                 HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve VL datatype alloc info");
-            if (H5P_get((*head)->ctx.dxpl, H5D_XFER_VLEN_FREE_NAME, &(*head)->ctx.dxpl_props.vl_alloc_info.free_func) <
-                0)
+            if (H5P_get((*head)->ctx.dxpl, H5D_XFER_VLEN_FREE_NAME,
+                        &(*head)->ctx.dxpl_props.vl_alloc_info.free_func) < 0)
                 HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve VL datatype alloc info");
             if (H5P_get((*head)->ctx.dxpl, H5D_XFER_VLEN_FREE_INFO_NAME,
                         &(*head)->ctx.dxpl_props.vl_alloc_info.free_info) < 0)
@@ -3367,7 +3369,7 @@ H5CX_get_actual_selection_io_mode(uint32_t *actual_selection_io_mode)
     if ((*head)->ctx.dxpl_id != H5P_DATASET_XFER_DEFAULT &&
         !(*head)->ctx.dxpl_flags.actual_selection_io_mode_set &&
         !(*head)->ctx.dxpl_flags.actual_selection_io_mode_valid) {
-        (*head)->ctx.dxpl_props.actual_selection_io_mode                = H5CX_def_dxpl_cache.actual_selection_io_mode;
+        (*head)->ctx.dxpl_props.actual_selection_io_mode     = H5CX_def_dxpl_cache.actual_selection_io_mode;
         (*head)->ctx.dxpl_flags.actual_selection_io_mode_set = true;
     }
     H5CX_RETRIEVE_PROP_VALID_SET(dxpl, H5P_DATASET_XFER_DEFAULT, H5D_XFER_ACTUAL_SELECTION_IO_MODE_NAME,
@@ -4191,7 +4193,8 @@ H5CX_get_object_flush_strategy(H5F_object_flush_t *object_flush_strategy)
                              object_flush_strategy)
 
     /* Get the value */
-    H5MM_memcpy(object_flush_strategy, &(*head)->ctx.fapl_props.object_flush_strategy, sizeof(*object_flush_strategy));
+    H5MM_memcpy(object_flush_strategy, &(*head)->ctx.fapl_props.object_flush_strategy,
+                sizeof(*object_flush_strategy));
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -5446,7 +5449,8 @@ H5CX_get_shared_mesg_index_types(unsigned *shmsg_index_types)
                                     shmsg_index_types)
 
     /* Get the value */
-    memcpy(shmsg_index_types, (*head)->ctx.fcpl_props.shmsg_index_types, H5O_SHMESG_MAX_NINDEXES * sizeof(unsigned));
+    memcpy(shmsg_index_types, (*head)->ctx.fcpl_props.shmsg_index_types,
+           H5O_SHMESG_MAX_NINDEXES * sizeof(unsigned));
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -6235,7 +6239,7 @@ H5CX_set_mpio_actual_chunk_opt(H5D_mpio_actual_chunk_opt_mode_t mpio_actual_chun
     assert(!((*head)->ctx.dxpl_id == H5P_DEFAULT || (*head)->ctx.dxpl_id == H5P_DATASET_XFER_DEFAULT));
 
     /* Cache the value for later, marking it to set in DXPL when context popped */
-    (*head)->ctx.dxpl_props.mpio_actual_chunk_opt                = mpio_actual_chunk_opt;
+    (*head)->ctx.dxpl_props.mpio_actual_chunk_opt     = mpio_actual_chunk_opt;
     (*head)->ctx.dxpl_flags.mpio_actual_chunk_opt_set = true;
 
     FUNC_LEAVE_NOAPI_VOID
@@ -6263,7 +6267,7 @@ H5CX_set_mpio_actual_io_mode(H5D_mpio_actual_io_mode_t mpio_actual_io_mode)
     assert(!((*head)->ctx.dxpl_id == H5P_DEFAULT || (*head)->ctx.dxpl_id == H5P_DATASET_XFER_DEFAULT));
 
     /* Cache the value for later, marking it to set in DXPL when context popped */
-    (*head)->ctx.dxpl_props.mpio_actual_io_mode                = mpio_actual_io_mode;
+    (*head)->ctx.dxpl_props.mpio_actual_io_mode     = mpio_actual_io_mode;
     (*head)->ctx.dxpl_flags.mpio_actual_io_mode_set = true;
 
     FUNC_LEAVE_NOAPI_VOID
@@ -6293,7 +6297,7 @@ H5CX_set_mpio_local_no_coll_cause(uint32_t mpio_local_no_coll_cause)
     /* If we're using the default DXPL, don't modify it */
     if ((*head)->ctx.dxpl_id != H5P_DATASET_XFER_DEFAULT) {
         /* Cache the value for later, marking it to set in DXPL when context popped */
-        (*head)->ctx.dxpl_props.mpio_local_no_coll_cause                = mpio_local_no_coll_cause;
+        (*head)->ctx.dxpl_props.mpio_local_no_coll_cause     = mpio_local_no_coll_cause;
         (*head)->ctx.dxpl_flags.mpio_local_no_coll_cause_set = true;
     } /* end if */
 
@@ -6324,7 +6328,7 @@ H5CX_set_mpio_global_no_coll_cause(uint32_t mpio_global_no_coll_cause)
     /* If we're using the default DXPL, don't modify it */
     if ((*head)->ctx.dxpl_id != H5P_DATASET_XFER_DEFAULT) {
         /* Cache the value for later, marking it to set in DXPL when context popped */
-        (*head)->ctx.dxpl_props.mpio_global_no_coll_cause                = mpio_global_no_coll_cause;
+        (*head)->ctx.dxpl_props.mpio_global_no_coll_cause     = mpio_global_no_coll_cause;
         (*head)->ctx.dxpl_flags.mpio_global_no_coll_cause_set = true;
     } /* end if */
 
@@ -6573,7 +6577,7 @@ H5CX_set_no_selection_io_cause(uint32_t no_selection_io_cause)
     /* If we're using the default DXPL, don't modify it */
     if ((*head)->ctx.dxpl_id != H5P_DATASET_XFER_DEFAULT) {
         /* Cache the value for later, marking it to set in DXPL when context popped */
-        (*head)->ctx.dxpl_props.no_selection_io_cause                = no_selection_io_cause;
+        (*head)->ctx.dxpl_props.no_selection_io_cause     = no_selection_io_cause;
         (*head)->ctx.dxpl_flags.no_selection_io_cause_set = true;
     } /* end if */
 
@@ -6605,7 +6609,7 @@ H5CX_set_actual_selection_io_mode(uint32_t actual_selection_io_mode)
     /* If we're using the default DXPL, don't modify it */
     if ((*head)->ctx.dxpl_id != H5P_DATASET_XFER_DEFAULT) {
         /* Cache the value for later, marking it to set in DXPL when context popped */
-        (*head)->ctx.dxpl_props.actual_selection_io_mode                = actual_selection_io_mode;
+        (*head)->ctx.dxpl_props.actual_selection_io_mode     = actual_selection_io_mode;
         (*head)->ctx.dxpl_flags.actual_selection_io_mode_set = true;
     }
 
