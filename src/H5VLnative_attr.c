@@ -77,13 +77,13 @@ H5VL__native_attr_create(void *obj, const H5VL_loc_params_t *loc_params, const c
                          hid_t space_id, hid_t H5_ATTR_UNUSED acpl_id, hid_t H5_ATTR_UNUSED aapl_id,
                          hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
-    H5G_loc_t       loc;     /* Object location */
-    H5G_loc_t       obj_loc; /* Location used to open group */
-    bool            loc_found = false;
-    H5T_t          *type, *dt; /* Datatype to use for attribute */
-    H5S_t          *space;     /* Dataspace to use for attribute */
-    H5A_t          *attr      = NULL;
-    void           *ret_value = NULL;
+    H5G_loc_t loc;     /* Object location */
+    H5G_loc_t obj_loc; /* Location used to open group */
+    bool      loc_found = false;
+    H5T_t    *type, *dt; /* Datatype to use for attribute */
+    H5S_t    *space;     /* Dataspace to use for attribute */
+    H5A_t    *attr      = NULL;
+    void     *ret_value = NULL;
 
     FUNC_ENTER_PACKAGE
 
@@ -107,7 +107,8 @@ H5VL__native_attr_create(void *obj, const H5VL_loc_params_t *loc_params, const c
     } /* end if */
     else if (loc_params->type == H5VL_OBJECT_BY_NAME) {
         /* H5Acreate_by_name */
-        if (NULL == (attr = H5A__create_by_name(&loc, loc_params->loc_data.loc_by_name.name, attr_name, type, space)))
+        if (NULL ==
+            (attr = H5A__create_by_name(&loc, loc_params->loc_data.loc_by_name.name, attr_name, type, space)))
             HGOTO_ERROR(H5E_ATTR, H5E_CANTINIT, NULL, "unable to create attribute");
     } /* end else-if */
     else

@@ -175,7 +175,8 @@ H5_DLLVAR const H5B2_class_t H5A_BT2_CORDER[1];
 
 /* Function prototypes for H5A package scope */
 H5_DLL H5A_t *H5A__create(const H5G_loc_t *loc, const char *attr_name, const H5T_t *type, const H5S_t *space);
-H5_DLL H5A_t *H5A__create_by_name(const H5G_loc_t *loc, const char *obj_name, const char *attr_name, const H5T_t *type, const H5S_t *space);
+H5_DLL H5A_t *H5A__create_by_name(const H5G_loc_t *loc, const char *obj_name, const char *attr_name,
+                                  const H5T_t *type, const H5S_t *space);
 H5_DLL H5A_t *H5A__open(const H5G_loc_t *loc, const char *attr_name);
 H5_DLL H5A_t *H5A__open_by_name(const H5G_loc_t *loc, const char *obj_name, const char *attr_name);
 H5_DLL H5A_t *H5A__open_by_idx(const H5G_loc_t *loc, const char *obj_name, H5_index_t idx_type,
