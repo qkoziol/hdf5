@@ -2170,12 +2170,12 @@ H5D__virtual_init(H5F_t *f, const H5D_t *dset)
     } /* end for */
 
     /* Get view option */
-    if (H5P_get(dset->shared->dapl, H5D_ACS_VDS_VIEW_NAME, &storage->view) < 0)
+    if (H5CX_get_vds_view(&storage->view) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get virtual view option");
 
     /* Get printf gap if view is H5D_VDS_LAST_AVAILABLE, otherwise set to 0 */
     if (storage->view == H5D_VDS_LAST_AVAILABLE) {
-        if (H5P_get(dset->shared->dapl, H5D_ACS_VDS_PRINTF_GAP_NAME, &storage->printf_gap) < 0)
+        if (H5CX_get_vds_printf_gap(&storage->printf_gap) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get virtual printf gap");
     } /* end if */
     else

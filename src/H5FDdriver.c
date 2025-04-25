@@ -302,7 +302,7 @@ H5FD_open_wrap(bool try, H5FD_int_t **_fh, const char *name, unsigned flags, H5P
 
     /* Verify access property list and set up collective metadata if appropriate */
     new_fapl_id = H5P_PLIST_ID(fapl);
-    if (H5CX_set_apl(&new_fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, false) < 0)
+    if (H5CX_set_apl(&new_fapl_id, H5I_INVALID_HID, false) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Call actual H5FD_open routine */
@@ -798,7 +798,7 @@ H5FD_get_vfd_handle_wrap(H5FD_int_t *fh, const H5P_genplist_t *fapl, void **file
 
     /* Verify access property list and set up collective metadata if appropriate */
     new_fapl_id = H5P_PLIST_ID(fapl);
-    if (H5CX_set_apl(&new_fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, false) < 0)
+    if (H5CX_set_apl(&new_fapl_id, H5I_INVALID_HID, false) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Call actual H5FD_get_vfd_handle routine */
@@ -2027,7 +2027,7 @@ H5FD_delete_wrap(const char *filename, H5P_genplist_t *fapl)
 
     /* Verify access property list and set up collective metadata if appropriate */
     new_fapl_id = H5P_PLIST_ID(fapl);
-    if (H5CX_set_apl(&new_fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, false) < 0)
+    if (H5CX_set_apl(&new_fapl_id, H5I_INVALID_HID, false) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Call actual H5FD_delete routine */

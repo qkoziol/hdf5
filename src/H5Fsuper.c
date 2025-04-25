@@ -88,6 +88,7 @@ static const unsigned HDF5_superblock_ver_bounds[] = {
 static herr_t
 H5F__super_ext_create(H5F_t *f, H5O_loc_t *ext_ptr)
 {
+    hid_t            old_fcpl_id = H5I_INVALID_HID; /* ID for old FCPL in API context */
     herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -107,8 +108,12 @@ H5F__super_ext_create(H5F_t *f, H5O_loc_t *ext_ptr)
     else if (H5_addr_defined(f->shared->sblock->ext_addr))
         HGOTO_ERROR(H5E_FILE, H5E_CANTCREATE, FAIL, "superblock extension already exists?!?!");
     else {
+        /* Retrieve the current FCPL in the API context */
+        if ((old_fcpl_id = H5CX_get_fcpl()) < 0)
+            HGOTO_ERROR(H5E_SYM, H5E_CANTGET, FAIL, "can't get file creation property list");
+
         /* Set the default OCPL in the API context for superblock creation */
-        if (H5CX_set_cpl(H5P_OBJECT_CREATE_DEFAULT, H5P_CLS_OCRT) < 0)
+        if (H5CX_set_cpl(H5P_OBJECT_CREATE_DEFAULT) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set creation property list info");
 
         /* If we pass 0 as a size hint for the object header, the library will
@@ -125,6 +130,10 @@ H5F__super_ext_create(H5F_t *f, H5O_loc_t *ext_ptr)
     } /* end else */
 
 done:
+    /* Restore previous FCPL in the API contxt */
+    if (old_fcpl_id > 0)
+        H5CX_set_fcpl(old_fcpl_id);
+
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5F__super_ext_create() */
 
@@ -414,7 +423,7 @@ H5F__super_read(H5F_t *f, bool initial_read)
     udata.f               = f;
     udata.ignore_drvrinfo = H5FD_HAS_FEATURE(f->shared->fh, H5FD_FEAT_IGNORE_DRVRINFO);
     udata.sym_leaf_k      = 0;
-    if (H5P_get(f->shared->fcpl, H5F_CRT_BTREE_RANK_NAME, udata.btree_k) < 0)
+    if (H5CX_get_btree_k(udata.btree_k) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to get rank for btree internal nodes");
     udata.stored_eof       = HADDR_UNDEF;
     udata.drvrinfo_removed = false;
@@ -511,9 +520,9 @@ H5F__super_read(H5F_t *f, bool initial_read)
     else {
         /* Get the (default) B-tree internal node values, etc */
         /* (Note: these may be reset in a superblock extension) */
-        if (H5P_get(f->shared->fcpl, H5F_CRT_BTREE_RANK_NAME, sblock->btree_k) < 0)
+        if (H5CX_get_btree_k(sblock->btree_k) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to get rank for btree internal nodes");
-        if (H5P_get(f->shared->fcpl, H5F_CRT_SYM_LEAF_NAME, &sblock->sym_leaf_k) < 0)
+        if (H5CX_get_sym_leaf_k(&sblock->sym_leaf_k) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to get rank for btree internal nodes");
     } /* end else */
 
@@ -1069,11 +1078,11 @@ H5F__super_init(H5F_t *f)
     sblock->root_addr   = HADDR_UNDEF;
 
     /* Initialize sym_leaf_k */
-    if (H5P_get(f->shared->fcpl, H5F_CRT_SYM_LEAF_NAME, &sblock->sym_leaf_k) < 0)
+    if (H5CX_get_sym_leaf_k(&sblock->sym_leaf_k) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get byte number for object size");
 
     /* Initialize btree_k */
-    if (H5P_get(f->shared->fcpl, H5F_CRT_BTREE_RANK_NAME, &sblock->btree_k[0]) < 0)
+    if (H5CX_get_btree_k(&sblock->btree_k[0]) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to get rank for btree internal nodes");
 
     /* Check for non-default free-space settings */
@@ -1159,7 +1168,7 @@ H5F__super_init(H5F_t *f)
      * base address is set to the same thing as the superblock for
      * now.
      */
-    if (H5P_get(f->shared->fcpl, H5F_CRT_USER_BLOCK_NAME, &userblock_size) < 0)
+    if (H5CX_get_userblock_size(&userblock_size) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to get userblock size");
 
     /* Sanity check the userblock size vs. the file's allocation alignment */
@@ -1300,7 +1309,7 @@ H5F__super_init(H5F_t *f)
          */
         if (f->shared->sohm_nindexes > 0) {
             /* Initialize the shared message code & write the SOHM message to the extension */
-            if (H5SM_init(f, f->shared->fcpl, &ext_loc) < 0)
+            if (H5SM_init(f, &ext_loc) < 0)
                 HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, FAIL, "unable to create SOHM table");
         }
 

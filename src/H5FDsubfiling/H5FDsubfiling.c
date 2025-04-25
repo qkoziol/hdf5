@@ -503,6 +503,10 @@ H5Pset_fapl_subfiling(hid_t fapl_id, const H5FD_subfiling_config_t *vfd_config)
         if (NULL == (fa.ioc_fapl = H5P_object_verify(vfd_config->ioc_fapl_id, H5P_TYPE_FILE_ACCESS, false)))
             HGOTO_ERROR(H5E_VFL, H5E_BADTYPE, FAIL, "not a file access property list");
 
+        /* Check for correct (IOC) driver */
+        if (H5FD_IOC_VALUE != H5P_get_driver_value(fa.ioc_fapl))
+            HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, FAIL, "only IOC VFD is currently supported for subfiles");
+
         /* Check if any MPI parameters were set on the FAPL */
         if (H5P_peek(fapl, H5F_ACS_MPI_PARAMS_COMM_NAME, &comm) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get MPI communicator from fapl");
@@ -1223,11 +1227,6 @@ H5FD__subfiling_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t ma
     /* Copy the driver info into the file's struct */
     if (H5FD__subfiling_fapl_info_dup(&file->fa, fa) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, NULL, "unable to copy driver info");
-
-    /* Check for correct IOC driver */
-    if (H5FD_IOC_VALUE != H5P_get_driver_value(file->fa.ioc_fapl))
-        HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL,
-                    "unable to open file '%s' - only IOC VFD is currently supported for subfiles", name);
 
     /* Fully resolve the given filepath and get its dirname */
     if (H5FD__subfiling_resolve_pathname(name, file->comm, &file->file_path) < 0)

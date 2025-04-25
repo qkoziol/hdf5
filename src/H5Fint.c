@@ -868,6 +868,7 @@ H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_op
     H5F_t     *src_file    = NULL;            /* Source file */
     H5F_efc_t *efc         = NULL;            /* External file cache */
     hid_t      old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
+    hid_t      old_fcpl_id = H5I_INVALID_HID; /* ID for old FCPL in API context */
     hid_t      fapl_id;                       /* ID for FAPL */
     char      *full_name        = NULL;       /* File name with prefix */
     char      *actual_file_name = NULL;       /* File's actual name */
@@ -892,14 +893,20 @@ H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_op
         HGOTO_ERROR(H5E_FILE, H5E_CANTALLOC, FAIL, "memory allocation failed");
     temp_file_name_len = strlen(temp_file_name);
 
-    /* Retrieve the current FAPL in the API context */
+    /* Retrieve the current FAPL and FCPL in the API context */
     if ((old_fapl_id = H5CX_get_fapl()) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get file access property list");
+    if ((old_fcpl_id = H5CX_get_fcpl()) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get file creation property list");
 
     /* Verify access property list and set up collective metadata if appropriate */
     fapl_id = H5P_PLIST_ID(fapl);
-    if (H5CX_set_apl(&fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, true) < 0)
+    if (H5CX_set_apl(&fapl_id, H5I_INVALID_HID, true) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set access property list info");
+
+    /* Set the default FCPL in the API context for root group creation */
+    if (H5CX_set_cpl(H5P_LST_FILE_CREATE_ID_g) < 0)
+        HGOTO_ERROR(H5E_SYM, H5E_CANTSET, FAIL, "can't set creation property list info");
 
     /* External link and virtual dataset files are always opened with 'weak' close degree */
     if (H5CX_set_close_degree(H5F_CLOSE_WEAK) < 0)
@@ -1062,9 +1069,11 @@ H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_op
         HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, FAIL, "can't open file");
 
 done:
-    /* Restore previous FAPL in the API contxt */
+    /* Restore previous FAPL and FCPL in the API contxt */
     if (old_fapl_id > 0)
         H5CX_set_fapl(old_fapl_id);
+    if (old_fcpl_id > 0)
+        H5CX_set_fcpl(old_fcpl_id);
 
     if (ret_value < 0)
         if (src_file && H5F_efc_close(primary_file, src_file) < 0)
@@ -1241,20 +1250,20 @@ H5F__new(H5F_shared_t *shared, unsigned flags, H5P_genplist_t *fcpl, H5FD_int_t 
             HGOTO_ERROR(H5E_FILE, H5E_CANTCOPY, NULL, "unable to copy the creation property list");
 
         /* Get the FCPL values to cache */
-        if (H5P_get(fcpl, H5F_CRT_ADDR_BYTE_NUM_NAME, &f->shared->sizeof_addr) < 0)
+        if (H5CX_get_sizeof_addr(&f->shared->sizeof_addr) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, NULL, "can't get byte number for address");
-        if (H5P_get(fcpl, H5F_CRT_OBJ_BYTE_NUM_NAME, &f->shared->sizeof_size) < 0)
+        if (H5CX_get_sizeof_size(&f->shared->sizeof_size) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, NULL, "can't get byte number for object size");
-        if (H5P_get(fcpl, H5F_CRT_SHMSG_NINDEXES_NAME, &f->shared->sohm_nindexes) < 0)
+        if (H5CX_get_shared_mesg_nindexes(&f->shared->sohm_nindexes) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, NULL, "can't get number of SOHM indexes");
         assert(f->shared->sohm_nindexes < 255);
-        if (H5P_get(fcpl, H5F_CRT_FILE_SPACE_STRATEGY_NAME, &f->shared->fs_strategy) < 0)
+        if (H5CX_get_file_space_strategy(&f->shared->fs_strategy) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, NULL, "can't get file space strategy");
-        if (H5P_get(fcpl, H5F_CRT_FREE_SPACE_PERSIST_NAME, &f->shared->fs_persist) < 0)
+        if (H5CX_get_file_space_persist(&f->shared->fs_persist) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, NULL, "can't get file space persisting status");
-        if (H5P_get(fcpl, H5F_CRT_FREE_SPACE_THRESHOLD_NAME, &f->shared->fs_threshold) < 0)
+        if (H5CX_get_file_space_threshold(&f->shared->fs_threshold) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, NULL, "can't get free-space section threshold");
-        if (H5P_get(fcpl, H5F_CRT_FILE_SPACE_PAGE_SIZE_NAME, &f->shared->fs_page_size) < 0)
+        if (H5CX_get_file_space_page_size(&f->shared->fs_page_size) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, NULL, "can't get file space page size");
         assert(f->shared->fs_page_size >= H5F_FILE_SPACE_PAGE_SIZE_MIN);
 
@@ -2693,7 +2702,7 @@ H5F__reopen(H5F_t *f)
 
     /* Verify access property list and set up collective metadata if appropriate */
     fapl_id = H5P_PLIST_ID(fapl);
-    if (H5CX_set_apl(&fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, true) < 0)
+    if (H5CX_set_apl(&fapl_id, H5I_INVALID_HID, true) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, NULL, "can't set access property list info");
 
     if (NULL == (ret_value = H5F__new(f->shared, 0, H5P_LST_FILE_CREATE_g, NULL)))

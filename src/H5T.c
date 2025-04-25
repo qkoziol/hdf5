@@ -3570,6 +3570,7 @@ H5Tconvert(hid_t src_id, hid_t dst_id, size_t nelmts, void *buf, void *backgroun
 {
     H5T_path_t *tpath;               /* type conversion info    */
     H5T_t      *src, *dst;           /* unregistered types      */
+    H5P_genplist_t   *dxpl;           /* Dataset transfer property list */
     herr_t      ret_value = SUCCEED; /* Return value            */
 
     FUNC_ENTER_API(FAIL)
@@ -3579,9 +3580,11 @@ H5Tconvert(hid_t src_id, hid_t dst_id, size_t nelmts, void *buf, void *backgroun
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a datatype");
     if (NULL == (dst = H5I_object_verify(dst_id, H5I_DATATYPE)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a datatype");
+    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+        HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(dxpl_id) < 0)
+    if (H5CX_set_dxpl(H5P_PLIST_ID(dxpl)) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
     /* Find the conversion function */
@@ -3610,6 +3613,7 @@ done:
 herr_t
 H5Treclaim(hid_t type_id, hid_t space_id, hid_t dxpl_id, void *buf)
 {
+    H5P_genplist_t   *dxpl;           /* Dataset transfer property list */
     const H5T_t *type;
     H5S_t       *space;     /* Dataspace for iteration */
     herr_t       ret_value; /* Return value */
@@ -3625,9 +3629,11 @@ H5Treclaim(hid_t type_id, hid_t space_id, hid_t dxpl_id, void *buf)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid dataspace");
     if (!(H5S_has_extent(space)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "dataspace does not have extent set");
+    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+        HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(dxpl_id) < 0)
+    if (H5CX_set_dxpl(H5P_PLIST_ID(dxpl)) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
     /* Call internal routine */

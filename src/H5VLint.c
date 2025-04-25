@@ -2647,7 +2647,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_setup_acc_args(hid_t loc_id, const H5P_libclass_t *libclass, bool is_collective, hid_t *acspl_id,
+H5VL_setup_acc_args(hid_t loc_id, bool is_collective, hid_t *acspl_id,
                     H5VL_object_t **vol_obj, H5VL_loc_params_t *loc_params)
 {
     herr_t ret_value = SUCCEED; /* Return value */
@@ -2655,13 +2655,12 @@ H5VL_setup_acc_args(hid_t loc_id, const H5P_libclass_t *libclass, bool is_collec
     FUNC_ENTER_NOAPI(FAIL)
 
     /* Sanity check */
-    assert(libclass);
     assert(acspl_id);
     assert(vol_obj);
     assert(loc_params);
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(acspl_id, libclass, loc_id, is_collective) < 0)
+    if (H5CX_set_apl(acspl_id, loc_id, is_collective) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Get the location object */
@@ -2738,7 +2737,7 @@ H5VL_setup_name_args(hid_t loc_id, const char *name, bool is_collective, H5P_gen
 
     /* Verify access property list and set up collective metadata if appropriate */
     lapl_id = H5P_PLIST_ID(lapl);
-    if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, loc_id, is_collective) < 0)
+    if (H5CX_set_apl(&lapl_id, loc_id, is_collective) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Get the location object */
@@ -2790,7 +2789,7 @@ H5VL_setup_idx_args(hid_t loc_id, const char *name, H5_index_t idx_type, H5_iter
 
     /* Verify access property list and set up collective metadata if appropriate */
     lapl_id = H5P_PLIST_ID(lapl);
-    if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, loc_id, is_collective) < 0)
+    if (H5CX_set_apl(&lapl_id, loc_id, is_collective) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Get the location object */

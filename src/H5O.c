@@ -859,6 +859,7 @@ H5Olink(hid_t obj_id, hid_t new_loc_id, const char *new_name, hid_t lcpl_id, hid
     /* Get the link creation property list */
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "can't find object for ID");
+    lcpl_id = H5P_PLIST_ID(lcpl); /* Allow for application passing H5P_DEFAULT */
 
     /* Set the LCPL for the API context */
     H5CX_set_lcpl(lcpl_id);
@@ -869,7 +870,7 @@ H5Olink(hid_t obj_id, hid_t new_loc_id, const char *new_name, hid_t lcpl_id, hid
     lapl_id = H5P_PLIST_ID(lapl); /* Allow for application passing H5P_DEFAULT */
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, obj_id, true) < 0)
+    if (H5CX_set_apl(&lapl_id, obj_id, true) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Set up new location struct */
@@ -1047,7 +1048,7 @@ H5Oexists_by_name(hid_t loc_id, const char *name, hid_t lapl_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not link access property list");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, loc_id, false) < 0)
+    if (H5CX_set_apl(&lapl_id, loc_id, false) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Get the location object */
@@ -1285,7 +1286,7 @@ H5Oget_info_by_idx3(hid_t loc_id, const char *group_name, H5_index_t idx_type, H
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not link access property list");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, loc_id, false) < 0)
+    if (H5CX_set_apl(&lapl_id, loc_id, false) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Set location struct fields */
@@ -1400,7 +1401,7 @@ H5Oget_native_info_by_name(hid_t loc_id, const char *name, H5O_native_info_t *oi
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not link access property list");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, loc_id, false) < 0)
+    if (H5CX_set_apl(&lapl_id, loc_id, false) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Fill out location struct */
@@ -1469,7 +1470,7 @@ H5Oget_native_info_by_idx(hid_t loc_id, const char *group_name, H5_index_t idx_t
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not link access property list");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, loc_id, false) < 0)
+    if (H5CX_set_apl(&lapl_id, loc_id, false) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Set location struct fields */
@@ -1585,7 +1586,7 @@ H5Oset_comment_by_name(hid_t loc_id, const char *name, const char *comment, hid_
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not link access property list");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, loc_id, true) < 0)
+    if (H5CX_set_apl(&lapl_id, loc_id, true) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Fill in location struct fields */
@@ -1698,7 +1699,7 @@ H5Oget_comment_by_name(hid_t loc_id, const char *name, char *comment /*out*/, si
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, (-1), "not link access property list");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, loc_id, false) < 0)
+    if (H5CX_set_apl(&lapl_id, loc_id, false) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTSET, (-1), "can't set access property list info");
 
     /* Fill in location struct fields */
@@ -1870,7 +1871,7 @@ H5Ovisit_by_name3(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_it
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not link access property list");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, loc_id, false) < 0)
+    if (H5CX_set_apl(&lapl_id, loc_id, false) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Get the location object */

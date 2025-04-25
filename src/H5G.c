@@ -164,7 +164,7 @@ H5G__create_api_common(hid_t loc_id, const char *name, H5P_genplist_t *lcpl, H5P
 
     /* Set up object access arguments */
     gapl_id = H5P_PLIST_ID(gapl);
-    if (H5VL_setup_acc_args(loc_id, H5P_CLS_GACC, true, &gapl_id, vol_obj_ptr, &loc_params) < 0)
+    if (H5VL_setup_acc_args(loc_id, true, &gapl_id, vol_obj_ptr, &loc_params) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTSET, H5I_INVALID_HID, "can't set object access arguments");
 
     /* Create the group */
@@ -219,6 +219,7 @@ H5Gcreate2(hid_t loc_id, const char *name, hid_t lcpl_id, hid_t gcpl_id, hid_t g
     /* Check link creation property list */
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_SYM, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+    lcpl_id = H5P_PLIST_ID(lcpl); /* Allow for application passing H5P_DEFAULT */
 
     /* Check group creation property list */
     if (NULL == (gcpl = H5P_object_verify(gcpl_id, H5P_TYPE_GROUP_CREATE, true)))
@@ -228,9 +229,10 @@ H5Gcreate2(hid_t loc_id, const char *name, hid_t lcpl_id, hid_t gcpl_id, hid_t g
     /* Check group access property list */
     if (NULL == (gapl = H5P_object_verify(gapl_id, H5P_TYPE_GROUP_ACCESS, true)))
         HGOTO_ERROR(H5E_SYM, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+    gapl_id = H5P_PLIST_ID(gcpl); /* Allow for application passing H5P_DEFAULT */
 
     /* Set the GCPL for the API context */
-    if (H5CX_set_cpl(gcpl_id, H5P_CLS_GCRT) < 0)
+    if (H5CX_set_cpl(gcpl_id) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTSET, H5I_INVALID_HID, "can't set creation property list info");
 
     /* Set the LCPL for the API context */
@@ -271,6 +273,7 @@ H5Gcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
     /* Check link creation property list */
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_SYM, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+    lcpl_id = H5P_PLIST_ID(lcpl); /* Allow for application passing H5P_DEFAULT */
 
     /* Check group creation property list */
     if (NULL == (gcpl = H5P_object_verify(gcpl_id, H5P_TYPE_GROUP_CREATE, true)))
@@ -280,9 +283,10 @@ H5Gcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
     /* Check group access property list */
     if (NULL == (gapl = H5P_object_verify(gapl_id, H5P_TYPE_GROUP_ACCESS, true)))
         HGOTO_ERROR(H5E_SYM, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+    gapl_id = H5P_PLIST_ID(gapl); /* Allow for application passing H5P_DEFAULT */
 
     /* Set the GCPL for the API context */
-    if (H5CX_set_cpl(gcpl_id, H5P_CLS_GCRT) < 0)
+    if (H5CX_set_cpl(gcpl_id) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTSET, H5I_INVALID_HID, "can't set creation property list info");
 
     /* Set the LCPL for the API context */
@@ -364,11 +368,11 @@ H5Gcreate_anon(hid_t loc_id, hid_t gcpl_id, hid_t gapl_id)
     gapl_id = H5P_PLIST_ID(gapl); /* Allow for application passing H5P_DEFAULT */
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&gapl_id, H5P_CLS_GACC, loc_id, true) < 0)
+    if (H5CX_set_apl(&gapl_id, loc_id, true) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTSET, H5I_INVALID_HID, "can't set access property list info");
 
     /* Set the GCPL for the API context */
-    if (H5CX_set_cpl(gcpl_id, H5P_CLS_GCRT) < 0)
+    if (H5CX_set_cpl(gcpl_id) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTSET, H5I_INVALID_HID, "can't set creation property list info");
 
     /* Set location struct fields */
@@ -429,7 +433,7 @@ H5G__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *gapl, void 
 
     /* Set up object access arguments */
     gapl_id = H5P_PLIST_ID(gapl);
-    if (H5VL_setup_acc_args(loc_id, H5P_CLS_GACC, false, &gapl_id, vol_obj_ptr, &loc_params) < 0)
+    if (H5VL_setup_acc_args(loc_id, false, &gapl_id, vol_obj_ptr, &loc_params) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTSET, H5I_INVALID_HID, "can't set object access arguments");
 
     if (NULL == (grp = H5VL_group_open(*vol_obj_ptr, &loc_params, name, gapl, token_ptr)))

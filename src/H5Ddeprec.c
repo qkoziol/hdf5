@@ -121,7 +121,7 @@ H5Dcreate1(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t 
     dcpl_id = H5P_PLIST_ID(dcpl); /* Allow for application passing H5P_DEFAULT */
 
     /* Set the DCPL for the API context */
-    if (H5CX_set_cpl(dcpl_id, H5P_CLS_DCRT) < 0)
+    if (H5CX_set_cpl(dcpl_id) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, H5I_INVALID_HID, "can't set creation property list info");
 
     /* Set location parameters */

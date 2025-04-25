@@ -189,7 +189,7 @@ H5Gcreate1(hid_t loc_id, const char *name, size_t size_hint)
         tmp_gcpl = H5P_LST_GROUP_CREATE_g;
 
     /* Set the GCPL for the API context */
-    if (H5CX_set_cpl(H5P_PLIST_ID(tmp_gcpl), H5P_CLS_GCRT) < 0)
+    if (H5CX_set_cpl(H5P_PLIST_ID(tmp_gcpl)) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTSET, H5I_INVALID_HID, "can't set creation property list info");
 
     /* Set up collective metadata if appropriate */

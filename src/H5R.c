@@ -496,7 +496,7 @@ H5R__open_common(H5R_ref_t *ref_ptr, hid_t file_id, H5P_genplist_t *dapl, void *
 
     /* Verify access property list and set up collective metadata if appropriate */
     dapl_id = H5P_PLIST_ID(dapl);
-    if (H5CX_set_apl(&dapl_id, H5P_CLS_DACC, file_id, false) < 0)
+    if (H5CX_set_apl(&dapl_id, file_id, false) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTSET, NULL, "can't set access property list info");
 
     /* Get object token */
@@ -903,7 +903,7 @@ H5R__open_attr_api_common(H5R_ref_t *ref_ptr, hid_t file_id, H5P_genplist_t *aap
 
     /* Verify access property list and set up collective metadata if appropriate */
     aapl_id = H5P_PLIST_ID(aapl);
-    if (H5CX_set_apl(&aapl_id, H5P_CLS_AACC, file_id, false) < 0)
+    if (H5CX_set_apl(&aapl_id, file_id, false) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTSET, H5I_INVALID_HID, "can't set access property list info");
 
     /* Set location parameters */

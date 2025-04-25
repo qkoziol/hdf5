@@ -440,7 +440,7 @@ H5Fget_vfd_handle(hid_t file_id, hid_t fapl_id, void **file_handle /*out*/)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not file access property list");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&fapl_id, H5P_CLS_FACC, file_id, false) < 0)
+    if (H5CX_set_apl(&fapl_id, file_id, false) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set file access property list");
 
     /* Get the file object */
@@ -491,7 +491,7 @@ H5Fis_accessible(const char *filename, hid_t fapl_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not file access property list");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, true) < 0)
+    if (H5CX_set_apl(&fapl_id, H5I_INVALID_HID, true) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Set up VOL callback arguments */
@@ -584,12 +584,16 @@ H5F__create_api_common(const char *filename, unsigned flags, H5P_genplist_t *fcp
 
     /* Verify access property list and set up collective metadata if appropriate */
     fapl_id = H5P_PLIST_ID(fapl);
-    if (H5CX_set_apl(&fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, true) < 0)
+    if (H5CX_set_apl(&fapl_id, H5I_INVALID_HID, true) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID, "can't set access property list info");
+
+    /* Set the creation property list */
+    if (H5CX_set_cpl(H5P_PLIST_ID(fcpl)) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID, "can't set creation property list info");
 
     /* Retrieve the connector property */
     if (H5CX_peek_vol_connector_prop(&connector_prop) < 0)
-        HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get VOL connector from API context");
+        HGOTO_ERROR(H5E_FILE, H5E_CANTGET, H5I_INVALID_HID, "can't get VOL connector from API context");
 
     /* Sanity check */
     assert(connector_prop.connector);
@@ -788,12 +792,12 @@ H5F__open_api_common(const char *filename, unsigned flags, H5P_genplist_t *fapl,
 
     /* Verify access property list and set up collective metadata if appropriate */
     fapl_id = H5P_PLIST_ID(fapl);
-    if (H5CX_set_apl(&fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, true) < 0)
+    if (H5CX_set_apl(&fapl_id, H5I_INVALID_HID, true) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID, "can't set access property list info");
 
     /* Retrieve the connector property */
     if (H5CX_peek_vol_connector_prop(&connector_prop) < 0)
-        HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get VOL connector from API context");
+        HGOTO_ERROR(H5E_FILE, H5E_CANTGET, H5I_INVALID_HID, "can't get VOL connector from API context");
 
     /* Sanity check */
     assert(connector_prop.connector);
@@ -1163,7 +1167,7 @@ H5Fdelete(const char *filename, hid_t fapl_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not file access property list");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, true) < 0)
+    if (H5CX_set_apl(&fapl_id, H5I_INVALID_HID, true) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Set up VOL callback arguments */

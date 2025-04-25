@@ -42,7 +42,7 @@ typedef struct H5SM_master_table_t H5SM_master_table_t;
 /******************************/
 
 /* Generally useful shared message routines */
-H5_DLL herr_t H5SM_init(H5F_t *f, H5P_genplist_t *fcpl, const H5O_loc_t *ext_loc);
+H5_DLL herr_t H5SM_init(H5F_t *f, const H5O_loc_t *ext_loc);
 H5_DLL htri_t H5SM_can_share(H5F_t *f, H5SM_master_table_t *table, ssize_t *sohm_index_num, unsigned type_id,
                              const void *mesg);
 H5_DLL htri_t H5SM_try_share(H5F_t *f, H5O_t *open_oh, unsigned defer_flags, unsigned type_id, void *mesg,

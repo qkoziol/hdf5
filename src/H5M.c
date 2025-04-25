@@ -274,8 +274,7 @@ H5M__create_api_common(hid_t loc_id, const char *name, hid_t key_type_id, hid_t 
 
     /* Set up VOL callback arguments */
     mapl_id = H5P_PLIST_ID(mapl);
-    if (H5VL_setup_acc_args(loc_id, H5P_CLS_MACC, true, &mapl_id, vol_obj_ptr, &map_args.create.loc_params) <
-        0)
+    if (H5VL_setup_acc_args(loc_id, true, &mapl_id, vol_obj_ptr, &map_args.create.loc_params) < 0)
         HGOTO_ERROR(H5E_MAP, H5E_CANTSET, H5I_INVALID_HID, "can't set object access arguments");
     map_args.create.name        = name;
     map_args.create.lcpl_id     = H5P_PLIST_ID(lcpl);
@@ -466,7 +465,7 @@ H5Mcreate_anon(hid_t loc_id, hid_t key_type_id, hid_t val_type_id, hid_t mcpl_id
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not map access property list ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&mapl_id, H5P_CLS_MACC, loc_id, true) < 0)
+    if (H5CX_set_apl(&mapl_id, loc_id, true) < 0)
         HGOTO_ERROR(H5E_MAP, H5E_CANTSET, H5I_INVALID_HID, "can't set access property list info");
 
     /* get the location object */
@@ -543,8 +542,7 @@ H5M__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *mapl, void 
 
     /* Set up VOL callback arguments */
     mapl_id = H5P_PLIST_ID(mapl);
-    if (H5VL_setup_acc_args(loc_id, H5P_CLS_MACC, false, &mapl_id, vol_obj_ptr, &map_args.open.loc_params) <
-        0)
+    if (H5VL_setup_acc_args(loc_id, false, &mapl_id, vol_obj_ptr, &map_args.open.loc_params) < 0)
         HGOTO_ERROR(H5E_MAP, H5E_CANTSET, H5I_INVALID_HID, "can't set object access arguments");
     map_args.open.name    = name;
     map_args.open.mapl_id = mapl_id;

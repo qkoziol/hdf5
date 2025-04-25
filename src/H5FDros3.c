@@ -711,7 +711,6 @@ H5FD__ros3_open(const char *url, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
     H5FD_ros3_t            *file       = NULL;
     s3r_t                  *handle     = NULL;
     const H5FD_ros3_fapl_t *fa         = NULL;
-    H5P_genplist_t         *fapl       = NULL;
     char                   *fapl_token = NULL;
     H5FD_t                 *ret_value  = NULL;
 
@@ -726,8 +725,6 @@ H5FD__ros3_open(const char *url, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
         HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, NULL, "bogus maxaddr");
     if (flags != H5F_ACC_RDONLY)
         HGOTO_ERROR(H5E_ARGS, H5E_UNSUPPORTED, NULL, "only Read-Only access allowed");
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file access property list");
 
     /* Initialize driver, if it's not yet */
     if (!H5FD_ros3_init_s)
@@ -739,12 +736,16 @@ H5FD__ros3_open(const char *url, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
         HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, NULL, "unable to initialize curl global (placeholder flags)");
 
     /* Get ros3 driver info */
-    if (NULL == (fa = (const H5FD_ros3_fapl_t *)H5P_peek_driver_info(fapl)))
+    if (NULL == (fa = (const H5FD_ros3_fapl_t *)H5CX_peek_driver_info()))
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "could not get ros3 VFL driver info");
 
     /* Get the token, if it exists */
     if (fa->authenticate) {
+        H5P_genplist_t *fapl;
         htri_t token_exists;
+
+        if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file access property list");
 
         /* Does the token exist in the fapl? */
         if ((token_exists = H5P_exist_plist(fapl, ROS3_TOKEN_PROP_NAME)) < 0)

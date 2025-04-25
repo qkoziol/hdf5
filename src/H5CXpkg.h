@@ -62,7 +62,8 @@ H5_DLLVAR H5CX_node_t *H5CX_head_g; /* Pointer to head of context stack */
 /* Package Private Prototypes */
 /******************************/
 
-/* Reset the property cache for the API context's FAPL */
+/* Reset the property cache for various property lists */
 H5_DLL void H5CX__reset_fapl(H5CX_node_t *head);
+H5_DLL void H5CX__reset_ocpl(H5CX_node_t *head);
 
 #endif /*H5CXpkg_H*/

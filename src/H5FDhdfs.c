@@ -624,7 +624,6 @@ H5FD__get_fapl_hdfs(H5P_genplist_t *fapl, H5FD_hdfs_fapl_t *fa_dst /*out*/)
 
     /* Sanity checks */
     assert(fa_dst);
-    assert(H5_VFD_HDFS == H5P_get_driver_value(fapl));
 
     /* Get pointer to HDFS info */
     if (NULL == (fa_src = (const H5FD_hdfs_fapl_t *)H5P_peek_driver_info(fapl)))
@@ -750,12 +749,11 @@ done:
  *-------------------------------------------------------------------------
  */
 static H5FD_t *
-H5FD__hdfs_open(const char *path, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
+H5FD__hdfs_open(const char *path, unsigned flags, hid_t H5_ATTR_UNUSED fapl_id, haddr_t maxaddr)
 {
     H5FD_hdfs_t     *file = NULL;
-    H5P_genplist_t  *fapl;
     hdfs_t          *handle = NULL;
-    H5FD_hdfs_fapl_t fa;
+    H5FD_hdfs_fapl_t *fa;
     H5FD_t          *ret_value = NULL;
 
     FUNC_ENTER_PACKAGE
@@ -776,26 +774,19 @@ H5FD__hdfs_open(const char *path, unsigned flags, hid_t fapl_id, haddr_t maxaddr
         HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, NULL, "bogus maxaddr");
     if (flags != H5F_ACC_RDONLY)
         HGOTO_ERROR(H5E_ARGS, H5E_UNSUPPORTED, NULL, "only Read-Only access allowed");
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file access list");
 
     /* Get the HDFS info */
-    if (FAIL == H5FD__get_fapl_hdfs(fapl, &fa))
+    if (NULL == (fa = H5CX_peek_driver_info()))
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get HDFS info");
 
-    handle = H5FD__hdfs_handle_open(path, fa.namenode_name, fa.namenode_port, fa.user_name,
-                                    fa.kerberos_ticket_cache, fa.stream_buffer_size);
-    if (handle == NULL)
+    if (NULL == handle = H5FD__hdfs_handle_open(path, fa->namenode_name, fa->namenode_port, fa->user_name, fa->kerberos_ticket_cache, fa->stream_buffer_size)))
         HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL, "could not open");
 
-    assert(handle->magic == HDFS_HDFST_MAGIC);
-
     /* Create new file struct */
-    file = H5FL_CALLOC(H5FD_hdfs_t);
-    if (file == NULL)
+    if (NULL == (file = H5FL_CALLOC(H5FD_hdfs_t)))
         HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "unable to allocate file struct");
     file->hdfs_handle = handle;
-    H5MM_memcpy(&(file->fa), &fa, sizeof(H5FD_hdfs_fapl_t));
+    H5MM_memcpy(&file->fa, fa, sizeof(H5FD_hdfs_fapl_t));
 
 #if HDFS_STATS
     if (FAIL == hdfs__reset_stats(file))

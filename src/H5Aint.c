@@ -323,9 +323,7 @@ H5A__create(const H5G_loc_t *loc, const char *attr_name, const H5T_t *type, cons
         HGOTO_ERROR(H5E_ATTR, H5E_CANTALLOC, NULL, "can't allocate shared attr structure");
 
     /* If it's a default creation property list, use the default character encoding */
-    if (H5P_PLIST_IS_DEFAULT(acpl))
-        attr->shared->encoding = H5F_DEFAULT_CSET;
-    else if (H5P_get(acpl, H5P_STRCRT_CHAR_ENCODING_NAME, &(attr->shared->encoding)) < 0)
+    if (H5CX_get_attr_encoding(&attr->shared->encoding) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, NULL, "can't get character encoding flag");
 
     /* Copy the attribute name */

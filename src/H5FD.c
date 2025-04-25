@@ -329,7 +329,7 @@ H5FDopen(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
     fapl_id = H5P_PLIST_ID(fapl); /* Account for the fact that the FAPL ID may be H5P_DEFAULT */
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, true) < 0)
+    if (H5CX_set_apl(&fapl_id, H5I_INVALID_HID, true) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, NULL, "can't set file access property list");
 
     /* Call private function */
@@ -532,6 +532,7 @@ done:
 haddr_t
 H5FDalloc(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, hsize_t size)
 {
+    H5P_genplist_t   *dxpl;           /* Dataset transfer property list */
     H5FD_int_t    fh;     /* Temporary internal file handle */
     H5FD_driver_t driver; /* Temporary VFD driver */
     haddr_t       ret_value = HADDR_UNDEF;
@@ -547,9 +548,11 @@ H5FDalloc(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, hsize_t size)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, HADDR_UNDEF, "invalid request type");
     if (size == 0)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, HADDR_UNDEF, "zero-size request");
+    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADID, HADDR_UNDEF, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(dxpl_id) < 0)
+    if (H5CX_set_dxpl(H5P_PLIST_ID(dxpl)) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, HADDR_UNDEF, "can't set DXPL for operation");
 
     /* Construct temporary internal file handle */
@@ -583,6 +586,7 @@ done:
 herr_t
 H5FDfree(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, hsize_t size)
 {
+    H5P_genplist_t   *dxpl;           /* Dataset transfer property list */
     H5FD_int_t    fh;                  /* Temporary internal file handle */
     H5FD_driver_t driver;              /* Temporary VFD driver */
     herr_t        ret_value = SUCCEED; /* Return value */
@@ -596,9 +600,11 @@ H5FDfree(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, hsize_t siz
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "file class pointer cannot be NULL");
     if (type < H5FD_MEM_DEFAULT || type >= H5FD_MEM_NTYPES)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid request type");
+    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(dxpl_id) < 0)
+    if (H5CX_set_dxpl(H5P_PLIST_ID(dxpl)) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
     /* Construct temporary internal file handle */
@@ -794,7 +800,7 @@ H5FDget_vfd_handle(H5FD_t *file, hid_t fapl_id, void **file_handle /*out*/)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "file handle parameter cannot be NULL");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, false) < 0)
+    if (H5CX_set_apl(&fapl_id, H5I_INVALID_HID, false) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set file access property list");
 
     /* Construct temporary internal file handle */
@@ -836,6 +842,7 @@ done:
 herr_t
 H5FDread(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, size_t size, void *buf /*out*/)
 {
+    H5P_genplist_t   *dxpl;           /* Dataset transfer property list */
     H5FD_int_t    fh;                  /* Temporary internal file handle */
     H5FD_driver_t driver;              /* Temporary VFD driver */
     herr_t        ret_value = SUCCEED; /* Return value             */
@@ -849,9 +856,11 @@ H5FDread(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, size_t size
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "file class pointer cannot be NULL");
     if (!buf)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "result buffer parameter can't be NULL");
+    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(dxpl_id) < 0)
+    if (H5CX_set_dxpl(H5P_PLIST_ID(dxpl)) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
     /* Construct temporary internal file handle */
@@ -881,6 +890,7 @@ done:
 herr_t
 H5FDwrite(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, size_t size, const void *buf)
 {
+    H5P_genplist_t   *dxpl;           /* Dataset transfer property list */
     H5FD_int_t    fh;                  /* Temporary internal file handle */
     H5FD_driver_t driver;              /* Temporary VFD driver */
     herr_t        ret_value = SUCCEED; /* Return value             */
@@ -894,9 +904,11 @@ H5FDwrite(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, size_t siz
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "file class pointer cannot be NULL");
     if (!buf)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "result buffer parameter can't be NULL");
+    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(dxpl_id) < 0)
+    if (H5CX_set_dxpl(H5P_PLIST_ID(dxpl)) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
     /* Construct temporary internal file handle */
@@ -936,6 +948,7 @@ herr_t
 H5FDread_vector(H5FD_t *file, hid_t dxpl_id, uint32_t count, H5FD_mem_t types[], haddr_t addrs[],
                 size_t sizes[], void *bufs[] /* out */)
 {
+    H5P_genplist_t   *dxpl;           /* Dataset transfer property list */
     H5FD_int_t    fh;                  /* Temporary internal file handle */
     H5FD_driver_t driver;              /* Temporary VFD driver */
     herr_t        ret_value = SUCCEED; /* Return value             */
@@ -961,9 +974,11 @@ H5FDread_vector(H5FD_t *file, hid_t dxpl_id, uint32_t count, H5FD_mem_t types[],
         if (types[0] == H5FD_MEM_NOLIST)
             HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "count[0] can't be H5FD_MEM_NOLIST");
     }
+    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(dxpl_id) < 0)
+    if (H5CX_set_dxpl(H5P_PLIST_ID(dxpl)) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
     /* Construct temporary internal file handle */
@@ -1001,6 +1016,7 @@ herr_t
 H5FDwrite_vector(H5FD_t *file, hid_t dxpl_id, uint32_t count, H5FD_mem_t types[], haddr_t addrs[],
                  size_t sizes[], const void *bufs[] /* in */)
 {
+    H5P_genplist_t   *dxpl;           /* Dataset transfer property list */
     H5FD_int_t    fh;                  /* Temporary internal file handle */
     H5FD_driver_t driver;              /* Temporary VFD driver */
     herr_t        ret_value = SUCCEED; /* Return value             */
@@ -1026,9 +1042,11 @@ H5FDwrite_vector(H5FD_t *file, hid_t dxpl_id, uint32_t count, H5FD_mem_t types[]
         if (types[0] == H5FD_MEM_NOLIST)
             HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "count[0] can't be H5FD_MEM_NOLIST");
     }
+    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(dxpl_id) < 0)
+    if (H5CX_set_dxpl(H5P_PLIST_ID(dxpl)) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
     /* Construct temporary internal file handle */
@@ -1085,6 +1103,7 @@ herr_t
 H5FDread_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, uint32_t count, hid_t mem_space_ids[],
                    hid_t file_space_ids[], haddr_t offsets[], size_t element_sizes[], void *bufs[] /* out */)
 {
+    H5P_genplist_t   *dxpl;           /* Dataset transfer property list */
     H5FD_int_t    fh;                  /* Temporary internal file handle */
     H5FD_driver_t driver;              /* Temporary VFD driver */
     herr_t        ret_value = SUCCEED; /* Return value             */
@@ -1115,9 +1134,11 @@ H5FDread_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, uint32_t count,
         if (bufs[0] == NULL)
             HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "bufs[0] can't be NULL");
     }
+    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(dxpl_id) < 0)
+    if (H5CX_set_dxpl(H5P_PLIST_ID(dxpl)) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
     /* Construct temporary internal file handle */
@@ -1173,6 +1194,7 @@ herr_t
 H5FDwrite_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, uint32_t count, hid_t mem_space_ids[],
                     hid_t file_space_ids[], haddr_t offsets[], size_t element_sizes[], const void *bufs[])
 {
+    H5P_genplist_t   *dxpl;           /* Dataset transfer property list */
     H5FD_int_t    fh;                  /* Temporary internal file handle */
     H5FD_driver_t driver;              /* Temporary VFD driver */
     herr_t        ret_value = SUCCEED; /* Return value             */
@@ -1203,9 +1225,11 @@ H5FDwrite_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, uint32_t count
         if (bufs[0] == NULL)
             HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "bufs[0] can't be NULL");
     }
+    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(dxpl_id) < 0)
+    if (H5CX_set_dxpl(H5P_PLIST_ID(dxpl)) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
     /* Construct temporary internal file handle */
@@ -1267,6 +1291,7 @@ H5FDread_vector_from_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, uin
                                hid_t mem_space_ids[], hid_t file_space_ids[], haddr_t offsets[],
                                size_t element_sizes[], void *bufs[] /* out */)
 {
+    H5P_genplist_t   *dxpl;           /* Dataset transfer property list */
     H5FD_int_t    fh;                  /* Temporary internal file handle */
     H5FD_driver_t driver;              /* Temporary VFD driver */
     herr_t        ret_value = SUCCEED; /* Return value             */
@@ -1297,9 +1322,11 @@ H5FDread_vector_from_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, uin
         if (bufs[0] == NULL)
             HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "bufs[0] can't be NULL");
     }
+    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(dxpl_id) < 0)
+    if (H5CX_set_dxpl(H5P_PLIST_ID(dxpl)) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
     /* Construct temporary internal file handle */
@@ -1359,6 +1386,7 @@ H5FDwrite_vector_from_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, ui
                                 hid_t mem_space_ids[], hid_t file_space_ids[], haddr_t offsets[],
                                 size_t element_sizes[], const void *bufs[])
 {
+    H5P_genplist_t   *dxpl;           /* Dataset transfer property list */
     H5FD_int_t    fh;                  /* Temporary internal file handle */
     H5FD_driver_t driver;              /* Temporary VFD driver */
     herr_t        ret_value = SUCCEED; /* Return value             */
@@ -1389,9 +1417,11 @@ H5FDwrite_vector_from_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, ui
         if (bufs[0] == NULL)
             HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "bufs[0] can't be NULL");
     }
+    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(dxpl_id) < 0)
+    if (H5CX_set_dxpl(H5P_PLIST_ID(dxpl)) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
     /* Construct temporary internal file handle */
@@ -1451,6 +1481,7 @@ herr_t
 H5FDread_from_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, uint32_t count, hid_t mem_space_ids[],
                         hid_t file_space_ids[], haddr_t offsets[], size_t element_sizes[], void *bufs[])
 {
+    H5P_genplist_t   *dxpl;           /* Dataset transfer property list */
     H5FD_int_t    fh;                  /* Temporary internal file handle */
     H5FD_driver_t driver;              /* Temporary VFD driver */
     herr_t        ret_value = SUCCEED; /* Return value             */
@@ -1481,9 +1512,11 @@ H5FDread_from_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, uint32_t c
         if (bufs[0] == NULL)
             HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "bufs[0] can't be NULL");
     }
+    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(dxpl_id) < 0)
+    if (H5CX_set_dxpl(H5P_PLIST_ID(dxpl)) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
     /* Construct temporary internal file handle */
@@ -1542,6 +1575,7 @@ H5FDwrite_from_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, uint32_t 
                          hid_t file_space_ids[], haddr_t offsets[], size_t element_sizes[],
                          const void *bufs[])
 {
+    H5P_genplist_t   *dxpl;           /* Dataset transfer property list */
     H5FD_int_t    fh;                  /* Temporary internal file handle */
     H5FD_driver_t driver;              /* Temporary VFD driver */
     herr_t        ret_value = SUCCEED; /* Return value             */
@@ -1572,9 +1606,11 @@ H5FDwrite_from_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, uint32_t 
         if (bufs[0] == NULL)
             HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "bufs[0] can't be NULL");
     }
+    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(dxpl_id) < 0)
+    if (H5CX_set_dxpl(H5P_PLIST_ID(dxpl)) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
     /* Construct temporary internal file handle */
@@ -1603,6 +1639,7 @@ done:
 herr_t
 H5FDflush(H5FD_t *file, hid_t dxpl_id, hbool_t closing)
 {
+    H5P_genplist_t   *dxpl;           /* Dataset transfer property list */
     H5FD_int_t    fh;                  /* Temporary internal file handle */
     H5FD_driver_t driver;              /* Temporary VFD driver */
     herr_t        ret_value = SUCCEED; /* Return value */
@@ -1614,9 +1651,11 @@ H5FDflush(H5FD_t *file, hid_t dxpl_id, hbool_t closing)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "file pointer cannot be NULL");
     if (!file->cls)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "file class pointer cannot be NULL");
+    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(dxpl_id) < 0)
+    if (H5CX_set_dxpl(H5P_PLIST_ID(dxpl)) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
     /* Construct temporary internal file handle */
@@ -1642,6 +1681,7 @@ done:
 herr_t
 H5FDtruncate(H5FD_t *file, hid_t dxpl_id, hbool_t closing)
 {
+    H5P_genplist_t   *dxpl;           /* Dataset transfer property list */
     H5FD_int_t    fh;                  /* Temporary internal file handle */
     H5FD_driver_t driver;              /* Temporary VFD driver */
     herr_t        ret_value = SUCCEED; /* Return value */
@@ -1653,9 +1693,11 @@ H5FDtruncate(H5FD_t *file, hid_t dxpl_id, hbool_t closing)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "file pointer cannot be NULL");
     if (!file->cls)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "file class pointer cannot be NULL");
+    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(dxpl_id) < 0)
+    if (H5CX_set_dxpl(H5P_PLIST_ID(dxpl)) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
 
     /* Construct temporary internal file handle */
@@ -1854,7 +1896,7 @@ H5FDdelete(const char *filename, hid_t fapl_id)
     fapl_id = H5P_PLIST_ID(fapl); /* Account for the fact that the FAPL ID may be H5P_DEFAULT */
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, true) < 0)
+    if (H5CX_set_apl(&fapl_id, H5I_INVALID_HID, true) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set file access property list");
 
     /* Call private function */

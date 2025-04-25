@@ -117,11 +117,11 @@ H5G__obj_create(H5F_t *f, H5G_obj_create_t *gcrt_info, H5O_loc_t *oloc /*out*/)
     assert(oloc);
 
     /* Get the group info property */
-    if (H5P_get(gcrt_info->gcpl, H5G_CRT_GROUP_INFO_NAME, &ginfo) < 0)
+    if (H5CX_get_ginfo(&ginfo) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTGET, FAIL, "can't get group info");
 
     /* Get the link info property */
-    if (H5P_get(gcrt_info->gcpl, H5G_CRT_LINK_INFO_NAME, &linfo) < 0)
+    if (H5CX_get_linfo(&linfo) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTGET, FAIL, "can't get group info");
 
     /* Get the pipeline property */

@@ -20,14 +20,15 @@
 /***********/
 /* Headers */
 /***********/
-#include "H5private.h"   /* Generic Functions			*/
-#include "H5Eprivate.h"  /* Error handling		  	*/
-#include "H5Fprivate.h"  /* File access                          */
-#include "H5FLprivate.h" /* Free Lists                           */
-#include "H5MFprivate.h" /* File memory management		*/
-#include "H5MMprivate.h" /* Memory management			*/
-#include "H5Opkg.h"      /* Object Headers                       */
-#include "H5SMpkg.h"     /* Shared object header messages        */
+#include "H5private.h"   /* Generic Functions			       */
+#include "H5CXprivate.h" /* API Context                        */
+#include "H5Eprivate.h"  /* Error handling		  	           */
+#include "H5Fprivate.h"  /* File access                        */
+#include "H5FLprivate.h" /* Free Lists                         */
+#include "H5MFprivate.h" /* File memory management	           */
+#include "H5MMprivate.h" /* Memory management		           */
+#include "H5Opkg.h"      /* Object Headers                     */
+#include "H5SMpkg.h"     /* Shared object header messages      */
 
 /****************/
 /* Local Macros */
@@ -112,7 +113,7 @@ H5FL_ARR_DEFINE(H5SM_sohm_t, H5O_SHMESG_MAX_LIST_SIZE);
  *-------------------------------------------------------------------------
  */
 herr_t
-H5SM_init(H5F_t *f, H5P_genplist_t *fcpl, const H5O_loc_t *ext_loc)
+H5SM_init(H5F_t *f, const H5O_loc_t *ext_loc)
 {
     H5O_shmesg_table_t   sohm_table;                 /* SOHM message for superblock extension */
     H5SM_master_table_t *table      = NULL;          /* SOHM master table for file */
@@ -140,14 +141,14 @@ H5SM_init(H5F_t *f, H5P_genplist_t *fcpl, const H5O_loc_t *ext_loc)
     table->num_indexes = H5F_SOHM_NINDEXES(f);
     table->table_size  = H5SM_TABLE_SIZE(f);
 
-    /* Get information from fcpl */
-    if (H5P_get(fcpl, H5F_CRT_SHMSG_INDEX_TYPES_NAME, &index_type_flags) < 0)
+    /* Get information from FCPL */
+    if (H5CX_get_shared_mesg_index_types(index_type_flags) < 0)
         HGOTO_ERROR(H5E_SOHM, H5E_CANTGET, FAIL, "can't get SOHM type flags");
-    if (H5P_get(fcpl, H5F_CRT_SHMSG_LIST_MAX_NAME, &list_max) < 0)
+    if (H5CX_get_shared_mesg_list_max(&list_max) < 0)
         HGOTO_ERROR(H5E_SOHM, H5E_CANTGET, FAIL, "can't get SOHM list maximum");
-    if (H5P_get(fcpl, H5F_CRT_SHMSG_BTREE_MIN_NAME, &btree_min) < 0)
+    if (H5CX_get_shared_mesg_btree_min(&btree_min) < 0)
         HGOTO_ERROR(H5E_SOHM, H5E_CANTGET, FAIL, "can't get SOHM btree minimum");
-    if (H5P_get(fcpl, H5F_CRT_SHMSG_INDEX_MINSIZE_NAME, &minsizes) < 0)
+    if (H5CX_get_shared_mesg_index_min_sizes(minsizes) < 0)
         HGOTO_ERROR(H5E_SOHM, H5E_CANTGET, FAIL, "can't get SOHM message min sizes");
 
     /* Verify that values are valid */

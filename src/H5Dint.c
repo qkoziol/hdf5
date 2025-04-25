@@ -1002,19 +1002,18 @@ H5D__update_oh_info(H5F_t *file, H5D_t *dset)
 
 #ifdef H5O_ENABLE_BOGUS
     {
+        unsigned bogus_id = 0;        /* "bogus" ID */
+
+        if (H5CX_get_bogus_msg_id(&bogus_id) < 0)
+            HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get bogus message ID");
+
         /* Check whether to add a "bogus" message */
-        if ((H5P_exist_plist(new_dset->shared->dcpl, H5O_BOGUS_MSG_FLAGS_NAME) > 0) &&
-            (H5P_exist_plist(new_dset->shared->dcpl, H5O_BOGUS_MSG_ID_NAME) > 0)) {
-
+        if ((bogus_id > 0) {
             uint8_t  bogus_flags = 0; /* Flags for creating "bogus" message */
-            unsigned bogus_id;        /* "bogus" ID */
 
-            /* Retrieve "bogus" message ID */
-            if (H5P_get(new_dset->shared->dcpl, H5O_BOGUS_MSG_ID_NAME, &bogus_id) < 0)
-                HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get bogus ID options");
             /* Retrieve "bogus" message flags */
-            if (H5P_get(new_dset->shared->dcpl, H5O_BOGUS_MSG_FLAGS_NAME, &bogus_flags) < 0)
-                HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get bogus message options");
+            if (H5CX_get_bogus_msg_flags(&bogus_flags) < 0)
+                HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get bogus message flags");
 
             /* Add a "bogus" message (for error testing). */
             if (H5O_bogus_oh(file, oh, bogus_id, (unsigned)bogus_flags) < 0)
@@ -1252,7 +1251,7 @@ H5D__create(H5F_t *file, hid_t type_id, const H5S_t *space, H5P_genplist_t *dcpl
         }
 
         fill = &new_dset->shared->dcpl_cache.fill;
-        if (H5P_get(new_dset->shared->dcpl, H5D_CRT_FILL_VALUE_NAME, fill) < 0)
+        if (H5CX_get_fill_value(fill) < 0)
             HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, NULL, "can't retrieve fill value info");
         fill_copied = true;
 
@@ -1265,7 +1264,7 @@ H5D__create(H5F_t *file, hid_t type_id, const H5S_t *space, H5P_genplist_t *dcpl
             HGOTO_ERROR(H5E_DATASET, H5E_BADVALUE, NULL, "compact dataset must have early space allocation");
 
         efl = &new_dset->shared->dcpl_cache.efl;
-        if (H5P_get(new_dset->shared->dcpl, H5D_CRT_EXT_FILE_LIST_NAME, efl) < 0)
+        if (H5CX_get_efl(efl) < 0)
             HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, NULL, "can't retrieve external file list");
         efl_copied = true;
     } /* end if */
@@ -1620,44 +1619,41 @@ H5D__append_flush_setup(H5D_t *dset)
 
     /* If the dataset is chunked and there is a non-default DAPL */
     if (!H5P_PLIST_IS_DEFAULT(dset->shared->dapl) && dset->shared->layout.type == H5D_CHUNKED) {
-        /* Check if append flush property exists */
-        if (H5P_exist_plist(dset->shared->dapl, H5D_ACS_APPEND_FLUSH_NAME) > 0) {
-            H5D_append_flush_t info;
+        H5D_append_flush_t info;
 
-            /* Get append flush property */
-            if (H5P_get(dset->shared->dapl, H5D_ACS_APPEND_FLUSH_NAME, &info) < 0)
-                HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get append flush info");
-            if (info.ndims > 0) {
-                hsize_t  curr_dims[H5S_MAX_RANK]; /* current dimension sizes */
-                hsize_t  max_dims[H5S_MAX_RANK];  /* current dimension sizes */
-                int      rank;                    /* dataspace # of dimensions */
-                unsigned u;                       /* local index variable */
+        /* Get append flush property */
+        if (H5CX_get_append_flush(&info) < 0)
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get append flush info");
+        if (info.ndims > 0) {
+            hsize_t  curr_dims[H5S_MAX_RANK]; /* current dimension sizes */
+            hsize_t  max_dims[H5S_MAX_RANK];  /* current dimension sizes */
+            int      rank;                    /* dataspace # of dimensions */
+            unsigned u;                       /* local index variable */
 
-                /* Get dataset rank */
-                if ((rank = H5S_get_simple_extent_dims(dset->shared->space, curr_dims, max_dims)) < 0)
-                    HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get dataset dimensions");
-                if (info.ndims != (unsigned)rank)
-                    HGOTO_ERROR(H5E_DATASET, H5E_BADVALUE, FAIL,
-                                "boundary dimension rank does not match dataset rank");
+            /* Get dataset rank */
+            if ((rank = H5S_get_simple_extent_dims(dset->shared->space, curr_dims, max_dims)) < 0)
+                HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get dataset dimensions");
+            if (info.ndims != (unsigned)rank)
+                HGOTO_ERROR(H5E_DATASET, H5E_BADVALUE, FAIL,
+                            "boundary dimension rank does not match dataset rank");
 
-                /* Validate boundary sizes */
-                for (u = 0; u < info.ndims; u++)
-                    if (info.boundary[u] != 0) /* when a non-zero boundary is set */
-                        /* the dimension is extendible? */
-                        if (max_dims[u] != H5S_UNLIMITED && max_dims[u] == curr_dims[u])
-                            break;
+            /* Validate boundary sizes */
+            for (u = 0; u < info.ndims; u++)
+                if (info.boundary[u] != 0) /* when a non-zero boundary is set */
+                    /* the dimension is extendible? */
+                    if (max_dims[u] != H5S_UNLIMITED && max_dims[u] == curr_dims[u])
+                        break;
 
-                /* At least one boundary dimension is not extendible */
-                if (u != info.ndims)
-                    HGOTO_ERROR(H5E_DATASET, H5E_BADVALUE, FAIL, "boundary dimension is not valid");
+            /* At least one boundary dimension is not extendible */
+            if (u != info.ndims)
+                HGOTO_ERROR(H5E_DATASET, H5E_BADVALUE, FAIL, "boundary dimension is not valid");
 
-                /* Copy append flush settings */
-                dset->shared->append_flush.ndims = info.ndims;
-                dset->shared->append_flush.func  = info.func;
-                dset->shared->append_flush.udata = info.udata;
-                H5MM_memcpy(dset->shared->append_flush.boundary, info.boundary, sizeof(info.boundary));
-            } /* end if */
-        }     /* end if */
+            /* Copy append flush settings */
+            dset->shared->append_flush.ndims = info.ndims;
+            dset->shared->append_flush.func  = info.func;
+            dset->shared->append_flush.udata = info.udata;
+            H5MM_memcpy(dset->shared->append_flush.boundary, info.boundary, sizeof(info.boundary));
+        } /* end if */
     }         /* end if */
 
 done:
@@ -3736,82 +3732,34 @@ H5D_get_access_plist(const H5D_t *dset)
 
     FUNC_ENTER_NOAPI(NULL)
 
-    /* Make a copy of the dataset's dataset access property list */
-    if (NULL == (new_dapl = H5P_copy_plist(dset->shared->dapl, true)))
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTCOPY, NULL, "unable to copy access property list");
+    /* Make a copy of the default dataset access property list */
+    if (NULL == (new_dapl = H5P_copy_plist(H5P_LST_DATASET_ACCESS_g, true)))
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTCREATE, NULL, "unable to create access property list");
 
-    /* If the dataset is chunked then copy the rdcc & append flush parameters.
-     * Otherwise, use the default values. */
+    /* If the dataset is chunked then copy the chunk-related parameters */
     if (dset->shared->layout.type == H5D_CHUNKED) {
-        if (H5P_set(new_dapl, H5D_ACS_DATA_CACHE_NUM_SLOTS_NAME, &(dset->shared->cache.chunk.nslots)) < 0)
+        if (H5P_set(new_dapl, H5D_ACS_DATA_CACHE_NUM_SLOTS_NAME, &dset->shared->cache.chunk.nslots) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, NULL, "can't set data cache number of slots");
-        if (H5P_set(new_dapl, H5D_ACS_DATA_CACHE_BYTE_SIZE_NAME, &(dset->shared->cache.chunk.nbytes_max)) < 0)
+        if (H5P_set(new_dapl, H5D_ACS_DATA_CACHE_BYTE_SIZE_NAME, &dset->shared->cache.chunk.nbytes_max) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, NULL, "can't set data cache byte size");
-        if (H5P_set(new_dapl, H5D_ACS_PREEMPT_READ_CHUNKS_NAME, &(dset->shared->cache.chunk.w0)) < 0)
+        if (H5P_set(new_dapl, H5D_ACS_PREEMPT_READ_CHUNKS_NAME, &dset->shared->cache.chunk.w0) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, NULL, "can't set preempt read chunks");
         if (H5P_set(new_dapl, H5D_ACS_APPEND_FLUSH_NAME, &dset->shared->append_flush) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, NULL, "can't set append flush property");
     }
-    else {
-        H5D_rdcc_t         def_chunk_info;              /* Default chunk cache property */
-        H5D_append_flush_t def_append_flush_info = {0}; /* Default append flush property */
 
-        /* Set the data cache number of slots to the value of the default FAPL */
-        if (H5P_get(H5P_LST_DATASET_ACCESS_g, H5D_ACS_DATA_CACHE_NUM_SLOTS_NAME, &def_chunk_info.nslots) < 0)
-            HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, NULL, "can't get data number of slots");
-        if (H5P_set(new_dapl, H5D_ACS_DATA_CACHE_NUM_SLOTS_NAME, &def_chunk_info.nslots) < 0)
-            HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, NULL, "can't set data cache number of slots");
-
-        /* Set the data cache byte size to the value of the default FAPL */
-        if (H5P_get(H5P_LST_DATASET_ACCESS_g, H5D_ACS_DATA_CACHE_BYTE_SIZE_NAME, &def_chunk_info.nbytes_max) <
-            0)
-            HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, NULL, "can't get data cache byte size");
-        if (H5P_set(new_dapl, H5D_ACS_DATA_CACHE_BYTE_SIZE_NAME, &def_chunk_info.nbytes_max) < 0)
-            HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, NULL, "can't set data cache byte size");
-
-        /* Set the preempt read chunks property to the value of the default FAPL */
-        if (H5P_get(H5P_LST_DATASET_ACCESS_g, H5D_ACS_PREEMPT_READ_CHUNKS_NAME, &def_chunk_info.w0) < 0)
-            HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, NULL, "can't get preempt read chunks");
-        if (H5P_set(new_dapl, H5D_ACS_PREEMPT_READ_CHUNKS_NAME, &def_chunk_info.w0) < 0)
-            HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, NULL, "can't set preempt read chunks");
-
-        /* Set the append flush property to its default value */
-        if (H5P_set(new_dapl, H5D_ACS_APPEND_FLUSH_NAME, &def_append_flush_info) < 0)
-            HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, NULL, "can't set append flush property");
-    } /* end if-else */
-
-    /* If the dataset is virtual then copy the VDS view & printf gap options.
-     * Otherwise, use the default values. */
+    /* If the dataset is virtual then copy the VDS options. */
     if (dset->shared->layout.type == H5D_VIRTUAL) {
-        if (H5P_set(new_dapl, H5D_ACS_VDS_VIEW_NAME, &(dset->shared->layout.storage.u.virt.view)) < 0)
+        if (H5P_set(new_dapl, H5D_ACS_VDS_VIEW_NAME, &dset->shared->layout.storage.u.virt.view) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, NULL, "can't set VDS view");
-        if (H5P_set(new_dapl, H5D_ACS_VDS_PRINTF_GAP_NAME,
-                    &(dset->shared->layout.storage.u.virt.printf_gap)) < 0)
+        if (H5P_set(new_dapl, H5D_ACS_VDS_PRINTF_GAP_NAME, &dset->shared->layout.storage.u.virt.printf_gap) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, NULL, "can't set VDS printf gap");
+        if (H5P_set(new_dapl, H5D_ACS_VDS_PREFIX_NAME, &dset->shared->vds_prefix) < 0)
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, NULL, "can't set vds prefix");
     }
-    else {
-        H5D_vds_view_t def_vds_view; /* Default virtual view property */
-        hsize_t        def_vds_gap;  /* Default virtual printf gap property */
-
-        /* Set the data cache number of slots to the value of the default FAPL */
-        if (H5P_get(H5P_LST_DATASET_ACCESS_g, H5D_ACS_VDS_VIEW_NAME, &def_vds_view) < 0)
-            HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, NULL, "can't get VDS view");
-        if (H5P_set(new_dapl, H5D_ACS_VDS_VIEW_NAME, &def_vds_view) < 0)
-            HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, NULL, "can't set VDS view");
-
-        /* Set the data cache byte size to the value of the default FAPL */
-        if (H5P_get(H5P_LST_DATASET_ACCESS_g, H5D_ACS_VDS_PRINTF_GAP_NAME, &def_vds_gap) < 0)
-            HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, NULL, "can't get VDS printf gap");
-        if (H5P_set(new_dapl, H5D_ACS_VDS_PRINTF_GAP_NAME, &def_vds_gap) < 0)
-            HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, NULL, "can't set VDS printf gap");
-    }
-
-    /* Set the vds prefix option */
-    if (H5P_set(new_dapl, H5D_ACS_VDS_PREFIX_NAME, &(dset->shared->vds_prefix)) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, NULL, "can't set vds prefix");
 
     /* Set the external file prefix option */
-    if (H5P_set(new_dapl, H5D_ACS_EFILE_PREFIX_NAME, &(dset->shared->extfile_prefix)) < 0)
+    if (H5P_set(new_dapl, H5D_ACS_EFILE_PREFIX_NAME, &dset->shared->extfile_prefix) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, NULL, "can't set external file prefix");
 
     /* Set the return value */

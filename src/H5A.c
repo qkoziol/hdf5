@@ -175,7 +175,7 @@ H5A__create_api_common(hid_t loc_id, const char *attr_name, hid_t type_id, hid_t
 
     /* Set up object access arguments */
     aapl_id = H5P_PLIST_ID(aapl);
-    if (H5VL_setup_acc_args(loc_id, H5P_CLS_AACC, true, &aapl_id, vol_obj_ptr, &loc_params) < 0)
+    if (H5VL_setup_acc_args(loc_id, true, &aapl_id, vol_obj_ptr, &loc_params) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTSET, H5I_INVALID_HID, "can't set object access arguments");
 
     /* Create the attribute */
@@ -232,10 +232,14 @@ H5Acreate2(hid_t loc_id, const char *attr_name, hid_t type_id, hid_t space_id, h
     /* Get the pointer to the attribute creation property list */
     if (NULL == (acpl = H5P_object_verify(acpl_id, H5P_TYPE_ATTRIBUTE_CREATE, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute creation property list");
+    acpl_id = H5P_PLIST_ID(acpl); /* Allow for application passing H5P_DEFAULT */
 
     /* Get the pointer to the attribute access property list */
     if (NULL == (aapl = H5P_object_verify(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute access property list");
+
+    /* Set the ACPL for the API context */
+    H5CX_set_acpl(acpl_id);
 
     /* Create the attribute synchronously */
     if ((ret_value = H5A__create_api_common(loc_id, attr_name, type_id, space_id, acpl, aapl, NULL, NULL)) <
@@ -273,10 +277,14 @@ H5Acreate_async(const char *app_file, const char *app_func, unsigned app_line, h
     /* Get the pointer to the attribute creation property list */
     if (NULL == (acpl = H5P_object_verify(acpl_id, H5P_TYPE_ATTRIBUTE_CREATE, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute creation property list");
+    acpl_id = H5P_PLIST_ID(acpl); /* Allow for application passing H5P_DEFAULT */
 
     /* Get the pointer to the attribute access property list */
     if (NULL == (aapl = H5P_object_verify(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute access property list");
+
+    /* Set the ACPL for the API context */
+    H5CX_set_acpl(acpl_id);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -341,7 +349,7 @@ H5A__create_by_name_api_common(hid_t loc_id, const char *obj_name, const char *a
 
     /* Verify access property list and set up collective metadata if appropriate */
     aapl_id = H5P_PLIST_ID(aapl);
-    if (H5CX_set_apl(&aapl_id, H5P_CLS_AACC, loc_id, true) < 0)
+    if (H5CX_set_apl(&aapl_id, loc_id, true) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTSET, H5I_INVALID_HID, "can't set attribute access property list info");
 
     /* Create the attribute */
@@ -401,10 +409,13 @@ H5Acreate_by_name(hid_t loc_id, const char *obj_name, const char *attr_name, hid
     /* Get the pointer to the attribute creation property list */
     if (NULL == (acpl = H5P_object_verify(acpl_id, H5P_TYPE_ATTRIBUTE_CREATE, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute creation property list");
-
+    acpl_id = H5P_PLIST_ID(acpl); /* Allow for application passing H5P_DEFAULT */
     /* Get the pointer to the attribute access property list */
     if (NULL == (aapl = H5P_object_verify(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute access property list");
+
+    /* Set the ACPL for the API context */
+    H5CX_set_acpl(acpl_id);
 
     /* Create the attribute synchronously */
     if ((ret_value = H5A__create_by_name_api_common(loc_id, obj_name, attr_name, type_id, space_id, acpl,
@@ -447,10 +458,14 @@ H5Acreate_by_name_async(const char *app_file, const char *app_func, unsigned app
     /* Get the pointer to the attribute creation property list */
     if (NULL == (acpl = H5P_object_verify(acpl_id, H5P_TYPE_ATTRIBUTE_CREATE, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute creation property list");
+    acpl_id = H5P_PLIST_ID(acpl); /* Allow for application passing H5P_DEFAULT */
 
     /* Get the pointer to the attribute access property list */
     if (NULL == (aapl = H5P_object_verify(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute access property list");
+
+    /* Set the ACPL for the API context */
+    H5CX_set_acpl(acpl_id);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -549,7 +564,7 @@ H5A__open_api_common(hid_t loc_id, const char *attr_name, H5P_genplist_t *aapl, 
 
     /* Set up object access arguments */
     aapl_id = H5P_PLIST_ID(aapl);
-    if (H5VL_setup_acc_args(loc_id, H5P_CLS_AACC, false, &aapl_id, vol_obj_ptr, &loc_params) < 0)
+    if (H5VL_setup_acc_args(loc_id, false, &aapl_id, vol_obj_ptr, &loc_params) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTSET, H5I_INVALID_HID, "can't set object access arguments");
 
     /* Open the attribute */
@@ -685,7 +700,7 @@ H5A__open_by_name_api_common(hid_t loc_id, const char *obj_name, const char *att
 
     /* Verify access property list and set up collective metadata if appropriate */
     aapl_id = H5P_PLIST_ID(aapl);
-    if (H5CX_set_apl(&aapl_id, H5P_CLS_AACC, loc_id, false) < 0)
+    if (H5CX_set_apl(&aapl_id, loc_id, false) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTSET, H5I_INVALID_HID, "can't set attribute access property list info");
 
     /* Open the attribute */
@@ -837,7 +852,7 @@ H5A__open_by_idx_api_common(hid_t loc_id, const char *obj_name, H5_index_t idx_t
 
     /* Verify access property list and set up collective metadata if appropriate */
     aapl_id = H5P_PLIST_ID(aapl);
-    if (H5CX_set_apl(&aapl_id, H5P_CLS_AACC, loc_id, false) < 0)
+    if (H5CX_set_apl(&aapl_id, loc_id, false) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTSET, H5I_INVALID_HID, "can't set attribute access property list info");
 
     /* Open the attribute */
@@ -1418,7 +1433,7 @@ H5Aget_name_by_idx(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_i
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, (-1), "not link access property list");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, loc_id, false) < 0)
+    if (H5CX_set_apl(&lapl_id, loc_id, false) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTSET, (-1), "can't set access property list info");
 
     /* Get the object */
@@ -1569,7 +1584,7 @@ H5Aget_info_by_name(hid_t loc_id, const char *obj_name, const char *attr_name, H
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not link access property list");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, loc_id, false) < 0)
+    if (H5CX_set_apl(&lapl_id, loc_id, false) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Get the object */
@@ -1633,7 +1648,7 @@ H5Aget_info_by_idx(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_i
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not link access property list");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, loc_id, false) < 0)
+    if (H5CX_set_apl(&lapl_id, loc_id, false) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Get the object */
@@ -2087,7 +2102,7 @@ H5Aiterate_by_name(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_i
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not link access property list");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, loc_id, false) < 0)
+    if (H5CX_set_apl(&lapl_id, loc_id, false) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* get the loc object */
@@ -2213,7 +2228,7 @@ H5Adelete_by_name(hid_t loc_id, const char *obj_name, const char *attr_name, hid
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not link access property list");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, loc_id, true) < 0)
+    if (H5CX_set_apl(&lapl_id, loc_id, true) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Get the object */
@@ -2290,7 +2305,7 @@ H5Adelete_by_idx(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_ite
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not link access property list");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&lapl_id, H5P_CLS_LACC, loc_id, true) < 0)
+    if (H5CX_set_apl(&lapl_id, loc_id, true) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* get the object */
