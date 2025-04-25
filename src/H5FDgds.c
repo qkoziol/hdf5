@@ -747,8 +747,7 @@ H5FD__gds_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
         HGOTO_ERROR(H5E_VFL, H5E_NOSPACE, NULL, "unable to allocate file struct");
 
     /* Get the driver specific information */
-    if (NULL == (fa = H5P_peek_driver_info(fapl)))
-        HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, NULL, "bad VFL driver info");
+    fa = H5P_peek_driver_info(fapl);
     if (!fa) {
         if (H5FD__gds_populate_config(0, 0, 0, &default_fa) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTSET, NULL, "can't initialize driver configuration info");
@@ -870,7 +869,7 @@ H5FD__gds_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
 
     /* Set return value */
     ret_value = (H5FD_t *)file;
-    fprintf(stderr, "%s:%u - Successfully opened file w/GDS VFD\n", __func__, __LINE__);
+fprintf(stderr, "%s:%u - Successfully opened file w/GDS VFD\n", __func__, __LINE__);
 
 done:
     if (ret_value == NULL)
