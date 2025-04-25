@@ -1002,14 +1002,14 @@ H5D__update_oh_info(H5F_t *file, H5D_t *dset)
 
 #ifdef H5O_ENABLE_BOGUS
     {
-        unsigned bogus_id = 0;        /* "bogus" ID */
+        unsigned bogus_id = 0; /* "bogus" ID */
 
         if (H5CX_get_bogus_msg_id(&bogus_id) < 0)
             HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get bogus message ID");
 
         /* Check whether to add a "bogus" message */
         if ((bogus_id > 0) {
-            uint8_t  bogus_flags = 0; /* Flags for creating "bogus" message */
+            uint8_t bogus_flags = 0; /* Flags for creating "bogus" message */
 
             /* Retrieve "bogus" message flags */
             if (H5CX_get_bogus_msg_flags(&bogus_flags) < 0)
@@ -1654,7 +1654,7 @@ H5D__append_flush_setup(H5D_t *dset)
             dset->shared->append_flush.udata = info.udata;
             H5MM_memcpy(dset->shared->append_flush.boundary, info.boundary, sizeof(info.boundary));
         } /* end if */
-    }         /* end if */
+    }     /* end if */
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -3752,7 +3752,8 @@ H5D_get_access_plist(const H5D_t *dset)
     if (dset->shared->layout.type == H5D_VIRTUAL) {
         if (H5P_set(new_dapl, H5D_ACS_VDS_VIEW_NAME, &dset->shared->layout.storage.u.virt.view) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, NULL, "can't set VDS view");
-        if (H5P_set(new_dapl, H5D_ACS_VDS_PRINTF_GAP_NAME, &dset->shared->layout.storage.u.virt.printf_gap) < 0)
+        if (H5P_set(new_dapl, H5D_ACS_VDS_PRINTF_GAP_NAME, &dset->shared->layout.storage.u.virt.printf_gap) <
+            0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, NULL, "can't set VDS printf gap");
         if (H5P_set(new_dapl, H5D_ACS_VDS_PREFIX_NAME, &dset->shared->vds_prefix) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, NULL, "can't set vds prefix");

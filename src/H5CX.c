@@ -127,7 +127,7 @@
 
 #ifdef H5O_ENABLE_BOGUS
 /* Macro for the duplicated code to retrieve a value from a plist if the context value is invalid */
-#define H5CX_TEST_RETRIEVE_SUBCLS_PROP_VALID(PL, SUB_PL, DEF_PL, PROP_NAME, PROP_FIELD)                           \
+#define H5CX_TEST_RETRIEVE_SUBCLS_PROP_VALID(PL, SUB_PL, DEF_PL, PROP_NAME, PROP_FIELD)                      \
     /* Check if the value has been retrieved already */                                                      \
     if (!(*head)->ctx.H5_GLUE(SUB_PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                   \
     H5CX_RETRIEVE_PROP_COMMON(PL, YES, get, SUB_PL, DEF_PL, PROP_NAME, PROP_FIELD, FAIL)
@@ -272,8 +272,8 @@ typedef struct H5CX_dcpl_cache_t {
     H5O_efl_t    efl;           /* External file list for dataset creation */
     H5O_fill_t   fill_value;    /* Fill value for dataset creation */
 #ifdef H5O_ENABLE_BOGUS
-    unsigned bogus_msg_id;         /* Bogus message ID for dataset creation */
-    uint8_t  bogus_msg_flags;      /* Bogus message flags for dataset creation */
+    unsigned bogus_msg_id;    /* Bogus message ID for dataset creation */
+    uint8_t  bogus_msg_flags; /* Bogus message flags for dataset creation */
 #endif
 } H5CX_dcpl_cache_t;
 
@@ -287,14 +287,14 @@ typedef struct H5CX_gcpl_cache_t {
 /* Typedef for cached default dataset access property list information */
 /* (Same as the cached DXPL struct, above, except for the default DAPL) */
 typedef struct H5CX_dapl_cache_t {
-    const char *extfile_prefix; /* Prefix for external file */
-    const char *vds_prefix;     /* Prefix for VDS           */
-    H5D_append_flush_t append_flush; /* Property for append flush (H5D_ACS_APPEND_FLUSH_NAME) */
-    size_t                    dapl_rdcc_nbytes;           /* Property for size of the raw data cache */
-    size_t                    dapl_rdcc_nslots;           /* Property for number of slots in the raw data cache */
-    double                    dapl_rdcc_w0;               /* Property for chunk cache preemption factor */
-    hsize_t                   vds_printf_gap;       /* Property for VDS printf gap */
-    H5D_vds_view_t            vds_view;               /* Property for VDS view */
+    const char        *extfile_prefix;   /* Prefix for external file */
+    const char        *vds_prefix;       /* Prefix for VDS           */
+    H5D_append_flush_t append_flush;     /* Property for append flush (H5D_ACS_APPEND_FLUSH_NAME) */
+    size_t             dapl_rdcc_nbytes; /* Property for size of the raw data cache */
+    size_t             dapl_rdcc_nslots; /* Property for number of slots in the raw data cache */
+    double             dapl_rdcc_w0;     /* Property for chunk cache preemption factor */
+    hsize_t            vds_printf_gap;   /* Property for VDS printf gap */
+    H5D_vds_view_t     vds_view;         /* Property for VDS view */
 } H5CX_dapl_cache_t;
 
 /* Typedef for cached default file access property list information */
@@ -331,9 +331,9 @@ typedef struct H5CX_fapl_cache_t {
     size_t                    pb_size;               /* Property for page buffer size */
     unsigned                  pb_min_meta_perc;      /* Property for minimum metadata percentage */
     unsigned                  pb_min_raw_perc;       /* Property for minimum raw percentage */
-    size_t                    fapl_rdcc_nbytes;           /* Property for size of the raw data cache */
-    size_t                    fapl_rdcc_nslots;           /* Property for number of slots in the raw data cache */
-    double                    fapl_rdcc_w0;               /* Property for chunk cache preemption factor */
+    size_t                    fapl_rdcc_nbytes;      /* Property for size of the raw data cache */
+    size_t                    fapl_rdcc_nslots;      /* Property for number of slots in the raw data cache */
+    double                    fapl_rdcc_w0;          /* Property for chunk cache preemption factor */
     unsigned                  efc_size;              /* Property for size of the external file cache */
     H5F_close_degree_t        close_degree;          /* Property for file close degree */
     bool                      evict_on_close;        /* Property for evicting an object's metadata on close */
@@ -350,20 +350,20 @@ typedef struct H5CX_fapl_cache_t {
 /* Typedef for cached default file creation property list information */
 /* (Same as the cached DXPL struct, above, except for the default FCPL) */
 typedef struct H5CX_fcpl_cache_t {
-    hsize_t userblock_size; /* Property for userblock size */
-    uint8_t sizeof_addr; /* Property for size of address */
-    uint8_t sizeof_size; /* Property for size of size */
-    unsigned sym_leaf_k; /* Property for symbol table leaf node size */
-    unsigned btree_k[H5B_NUM_BTREE_ID]; /* Property for B-tree rank */
-    hsize_t fs_page_size; /* Property for file space page size */
-    H5F_fspace_strategy_t fs_strategy; /* Property for file space strategy */
-    bool fs_persist; /* Property for file space persist */
-    hsize_t fs_threshold; /* Property for file space threshold */
-    unsigned sohm_nindexes; /* Property for number of SOHM indexes */
-    unsigned shmsg_btree_min; /* Property for SOHM btree minimum */
-    unsigned shmsg_list_max; /* Property for SOHM list max */
-    unsigned shmsg_index_types[H5O_SHMESG_MAX_NINDEXES]; /* Property for SOHM index types */
-    unsigned shmsg_index_min_sizes[H5O_SHMESG_MAX_NINDEXES]; /* Property for SOHM index min sizes */
+    hsize_t               userblock_size;            /* Property for userblock size */
+    uint8_t               sizeof_addr;               /* Property for size of address */
+    uint8_t               sizeof_size;               /* Property for size of size */
+    unsigned              sym_leaf_k;                /* Property for symbol table leaf node size */
+    unsigned              btree_k[H5B_NUM_BTREE_ID]; /* Property for B-tree rank */
+    hsize_t               fs_page_size;              /* Property for file space page size */
+    H5F_fspace_strategy_t fs_strategy;               /* Property for file space strategy */
+    bool                  fs_persist;                /* Property for file space persist */
+    hsize_t               fs_threshold;              /* Property for file space threshold */
+    unsigned              sohm_nindexes;             /* Property for number of SOHM indexes */
+    unsigned              shmsg_btree_min;           /* Property for SOHM btree minimum */
+    unsigned              shmsg_list_max;            /* Property for SOHM list max */
+    unsigned              shmsg_index_types[H5O_SHMESG_MAX_NINDEXES]; /* Property for SOHM index types */
+    unsigned shmsg_index_min_sizes[H5O_SHMESG_MAX_NINDEXES];          /* Property for SOHM index min sizes */
 } H5CX_fcpl_cache_t;
 
 /* Typedef for cached default attributegvreation property list information */
@@ -448,18 +448,18 @@ DESCRIPTION
 herr_t
 H5CX__init_package(void)
 {
-    H5P_genplist_t *dapl      = H5P_LST_DATASET_ACCESS_g; /* Dataset access property list */
-    H5P_genplist_t *dcpl      = H5P_LST_DATASET_CREATE_g; /* Dataset creation property list */
-    H5P_genplist_t *dxpl      = H5P_LST_DATASET_XFER_g;   /* Default data transfer property list */
-    H5P_genplist_t *fapl      = H5P_LST_FILE_ACCESS_g;    /* File access property list */
-    H5P_genplist_t *fcpl      = H5P_LST_FILE_CREATE_g;    /* File creation property list */
-    H5P_genplist_t *gcpl      = H5P_LST_GROUP_CREATE_g;   /* Group creation property list */
-    H5P_genplist_t *acpl      = H5P_LST_ATTRIBUTE_CREATE_g;    /* Attribute creation property list */
-    H5P_genplist_t *lcpl      = H5P_LST_LINK_CREATE_g;    /* Link creation property list */
-    H5P_genplist_t *lapl      = H5P_LST_LINK_ACCESS_g;    /* Link access property list */
-    H5P_genplist_t *ocpl      = H5P_LST_OBJECT_CREATE_g;  /* Object creation property list */
-    H5P_genplist_t *ocpypl    = H5P_LST_OBJECT_COPY_g;    /* Object copy property list */
-    herr_t          ret_value = SUCCEED;                  /* Return value */
+    H5P_genplist_t *dapl      = H5P_LST_DATASET_ACCESS_g;   /* Dataset access property list */
+    H5P_genplist_t *dcpl      = H5P_LST_DATASET_CREATE_g;   /* Dataset creation property list */
+    H5P_genplist_t *dxpl      = H5P_LST_DATASET_XFER_g;     /* Default data transfer property list */
+    H5P_genplist_t *fapl      = H5P_LST_FILE_ACCESS_g;      /* File access property list */
+    H5P_genplist_t *fcpl      = H5P_LST_FILE_CREATE_g;      /* File creation property list */
+    H5P_genplist_t *gcpl      = H5P_LST_GROUP_CREATE_g;     /* Group creation property list */
+    H5P_genplist_t *acpl      = H5P_LST_ATTRIBUTE_CREATE_g; /* Attribute creation property list */
+    H5P_genplist_t *lcpl      = H5P_LST_LINK_CREATE_g;      /* Link creation property list */
+    H5P_genplist_t *lapl      = H5P_LST_LINK_ACCESS_g;      /* Link access property list */
+    H5P_genplist_t *ocpl      = H5P_LST_OBJECT_CREATE_g;    /* Object creation property list */
+    H5P_genplist_t *ocpypl    = H5P_LST_OBJECT_COPY_g;      /* Object copy property list */
+    herr_t          ret_value = SUCCEED;                    /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -704,7 +704,7 @@ H5CX__init_package(void)
     memset(&H5CX_def_fcpl_cache, 0, sizeof(H5CX_fcpl_cache_t));
 
     /* Get the default FCPL cache information */
-    
+
     /* Get the userblock size property */
     if (H5P_get(fcpl, H5F_CRT_USER_BLOCK_NAME, &H5CX_def_fcpl_cache.userblock_size) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve userblock size property");
@@ -712,7 +712,7 @@ H5CX__init_package(void)
     /* Get the size of address property */
     if (H5P_get(fcpl, H5F_CRT_ADDR_BYTE_NUM_NAME, &H5CX_def_fcpl_cache.sizeof_addr) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve size of addresses property");
-    
+
     /* Get the size of size property */
     if (H5P_get(fcpl, H5F_CRT_OBJ_BYTE_NUM_NAME, &H5CX_def_fcpl_cache.sizeof_size) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve size of sizes property");
@@ -736,7 +736,7 @@ H5CX__init_package(void)
     /* Get the file free space persist property */
     if (H5P_get(fcpl, H5F_CRT_FREE_SPACE_PERSIST_NAME, &H5CX_def_fcpl_cache.fs_persist) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve file space persist property");
-        
+
     /* Get the file free space threshold property */
     if (H5P_get(fcpl, H5F_CRT_FREE_SPACE_THRESHOLD_NAME, &H5CX_def_fcpl_cache.fs_threshold) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve file free space threshold property");
@@ -777,7 +777,7 @@ H5CX__init_package(void)
     /* Get the append flush property */
     if (H5P_get(dapl, H5D_ACS_APPEND_FLUSH_NAME, &H5CX_def_dapl_cache.append_flush) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve append flush property");
-    
+
     /* Get the number of slots in the raw data cache */
     if (H5P_get(dapl, H5D_ACS_DATA_CACHE_NUM_SLOTS_NAME, &H5CX_def_dapl_cache.dapl_rdcc_nslots) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve raw data cache number of slots property");
@@ -788,7 +788,8 @@ H5CX__init_package(void)
 
     /* Get the chunk cache preemption factor */
     if (H5P_get(dapl, H5D_ACS_PREEMPT_READ_CHUNKS_NAME, &H5CX_def_dapl_cache.dapl_rdcc_w0) < 0)
-        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve raw data cache preemption factor property");
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL,
+                    "Can't retrieve raw data cache preemption factor property");
 
     /* Get the VDS printf gap */
     if (H5P_get(dapl, H5D_ACS_VDS_PRINTF_GAP_NAME, &H5CX_def_dapl_cache.vds_printf_gap) < 0)
@@ -1481,7 +1482,7 @@ H5CX__reset_dxpl(H5CX_node_t *head)
     memset(&head->ctx.dxpl_flags, 0, sizeof(head->ctx.dxpl_flags));
 
     /* Retrieve the DXPL pointer again also */
-    head->ctx.dxpl = NULL;
+    head->ctx.dxpl    = NULL;
     head->ctx.dxpl_id = H5P_DATASET_XFER_DEFAULT;
 
     FUNC_LEAVE_NOAPI_VOID
@@ -1573,7 +1574,7 @@ H5CX__reset_lcpl(H5CX_node_t *head)
     memset(&head->ctx.lcpl_flags, 0, sizeof(head->ctx.lcpl_flags));
 
     /* Retrieve the LCPL pointer again also */
-    head->ctx.lcpl = NULL;
+    head->ctx.lcpl    = NULL;
     head->ctx.lcpl_id = H5P_LINK_CREATE_DEFAULT;
 
     FUNC_LEAVE_NOAPI_VOID
@@ -1630,7 +1631,7 @@ H5CX__reset_acpl(H5CX_node_t *head)
     memset(&head->ctx.acpl_flags, 0, sizeof(head->ctx.acpl_flags));
 
     /* Retrieve the ACPL pointer again also */
-    head->ctx.acpl = NULL;
+    head->ctx.acpl    = NULL;
     head->ctx.acpl_id = H5P_ATTRIBUTE_CREATE_DEFAULT;
 
     FUNC_LEAVE_NOAPI_VOID
@@ -1678,14 +1679,19 @@ H5CX_set_acpl(hid_t acpl_id)
 herr_t
 H5CX_set_cpl(hid_t crtpl_id)
 {
-    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
-    H5P_genplist_t *plist = NULL;   /* Property list for the ID */
-    htri_t is_dcpl = false; /* Whether the creation property list is (or is derived from) a dataset creation property list */
-    htri_t is_fcpl = false; /* Whether the creation property list is (or is derived from) a file creation property list */
-    htri_t is_gcpl = false; /* Whether the creation property list is (or is derived from) a group creation property list */
-    htri_t is_tcpl = false; /* Whether the creation property list is (or is derived from) a datatype creation property list */
-    htri_t is_ocpl = false; /* Whether the creation property list is (or is derived from) an object creation property list */
-    herr_t        ret_value = SUCCEED; /* Return value */
+    H5CX_node_t   **head  = NULL; /* Pointer to head of API context list */
+    H5P_genplist_t *plist = NULL; /* Property list for the ID */
+    htri_t is_dcpl = false; /* Whether the creation property list is (or is derived from) a dataset creation
+                               property list */
+    htri_t is_fcpl =
+        false; /* Whether the creation property list is (or is derived from) a file creation property list */
+    htri_t is_gcpl =
+        false; /* Whether the creation property list is (or is derived from) a group creation property list */
+    htri_t is_tcpl = false; /* Whether the creation property list is (or is derived from) a datatype creation
+                               property list */
+    htri_t is_ocpl = false; /* Whether the creation property list is (or is derived from) an object creation
+                               property list */
+    herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
@@ -1750,7 +1756,8 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5CX_set_apl(hid_t *acspl_id, hid_t
+H5CX_set_apl(hid_t *acspl_id,
+             hid_t
 #ifndef H5_HAVE_PARALLEL
                  H5_ATTR_UNUSED
 #endif /* H5_HAVE_PARALLEL */
@@ -1761,9 +1768,9 @@ H5CX_set_apl(hid_t *acspl_id, hid_t
 #endif /* H5_HAVE_PARALLEL */
                      is_collective)
 {
-    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
-    H5P_genplist_t *plist = NULL;   /* Property list for the ID */
-    htri_t        is_lapl =
+    H5CX_node_t   **head  = NULL; /* Pointer to head of API context list */
+    H5P_genplist_t *plist = NULL; /* Property list for the ID */
+    htri_t          is_lapl =
         false; /* Whether the access property list is (or is derived from) a link access property list */
 #ifdef H5_HAVE_PARALLEL
     bool is_default = false;    /* Whether the access property list is the default */
@@ -1932,7 +1939,7 @@ H5CX__reset_fapl(H5CX_node_t *head)
     memset(&head->ctx.fapl_flags, 0, sizeof(head->ctx.fapl_flags));
 
     /* Retrieve the FAPL pointer again also */
-    head->ctx.fapl = NULL;
+    head->ctx.fapl    = NULL;
     head->ctx.fapl_id = H5P_FILE_ACCESS_DEFAULT;
 
     FUNC_LEAVE_NOAPI_VOID
@@ -2165,7 +2172,6 @@ H5CX_get_fapl(void)
 
     FUNC_LEAVE_NOAPI(fapl_id)
 } /* end H5CX_get_fapl() */
-
 
 /*-------------------------------------------------------------------------
  * Function:    H5CX_get_fcpl
@@ -3906,7 +3912,7 @@ H5CX__reset_lapl(H5CX_node_t *head)
     memset(&head->ctx.lapl_flags, 0, sizeof(head->ctx.lapl_flags));
 
     /* Retrieve the LAPL pointer again also */
-    head->ctx.lapl = NULL;
+    head->ctx.lapl    = NULL;
     head->ctx.lapl_id = H5P_LINK_ACCESS_DEFAULT;
 
     FUNC_LEAVE_NOAPI_VOID
@@ -4468,8 +4474,10 @@ H5CX_get_rdcc_info(size_t *nslots, size_t *nbytes, double *w0)
     assert(head && *head);
     assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_DATA_CACHE_NUM_SLOTS_NAME, fapl_rdcc_nslots)
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_DATA_CACHE_BYTE_SIZE_NAME, fapl_rdcc_nbytes)
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_DATA_CACHE_NUM_SLOTS_NAME,
+                             fapl_rdcc_nslots)
+    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_DATA_CACHE_BYTE_SIZE_NAME,
+                             fapl_rdcc_nbytes)
     H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_PREEMPT_READ_CHUNKS_NAME, fapl_rdcc_w0)
 
     /* Get the values */
@@ -5057,7 +5065,8 @@ H5CX_get_fill_value(H5O_fill_t *fill_value)
     assert(head && *head);
     assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, dcpl, H5P_OBJECT_CREATE_DEFAULT, H5D_CRT_FILL_VALUE_NAME, fill_value)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, dcpl, H5P_OBJECT_CREATE_DEFAULT, H5D_CRT_FILL_VALUE_NAME,
+                                    fill_value)
 
     /* Make copy of fill value */
     if (NULL == H5O_msg_copy(H5O_FILL_ID, &(*head)->ctx.fill_value, fill_value))
@@ -5091,7 +5100,8 @@ H5CX_get_bogus_msg_id(unsigned *bogus_msg_id)
     assert(head && *head);
     assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_TEST_RETRIEVE_SUBCLS_PROP_VALID(ocpl, dcpl, H5P_OBJECT_CREATE_DEFAULT, H5D_BOGUS_MSG_ID_NAME, bogus_msg_id)
+    H5CX_TEST_RETRIEVE_SUBCLS_PROP_VALID(ocpl, dcpl, H5P_OBJECT_CREATE_DEFAULT, H5D_BOGUS_MSG_ID_NAME,
+                                         bogus_msg_id)
 
     /* Get the value */
     *bogus_msg_id = (*head)->ctx.bogus_msg_id;
@@ -5123,7 +5133,8 @@ H5CX_get_bogus_msg_flags(uint8_t *bogus_msg_flags)
     assert(head && *head);
     assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_TEST_RETRIEVE_SUBCLS_PROP_VALID(ocpl, dcpl, H5P_OBJECT_CREATE_DEFAULT, H5D_BOGUS_MSG_FLAGS_NAME, bogus_msg_flags)
+    H5CX_TEST_RETRIEVE_SUBCLS_PROP_VALID(ocpl, dcpl, H5P_OBJECT_CREATE_DEFAULT, H5D_BOGUS_MSG_FLAGS_NAME,
+                                         bogus_msg_flags)
 
     /* Get the value */
     *bogus_msg_flags = (*head)->ctx.bogus_msg_flags;
@@ -5220,7 +5231,8 @@ H5CX_get_userblock_size(hsize_t *userblock_size)
     assert(head && *head);
     assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_USER_BLOCK_NAME, userblock_size)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_USER_BLOCK_NAME,
+                                    userblock_size)
 
     /* Get the value */
     *userblock_size = (*head)->ctx.userblock_size;
@@ -5252,7 +5264,8 @@ H5CX_get_sizeof_addr(uint8_t *sizeof_addr)
     assert(head && *head);
     assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_ADDR_BYTE_NUM_NAME, sizeof_addr)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_ADDR_BYTE_NUM_NAME,
+                                    sizeof_addr)
 
     /* Get the value */
     *sizeof_addr = (*head)->ctx.sizeof_addr;
@@ -5284,7 +5297,8 @@ H5CX_get_sizeof_size(uint8_t *sizeof_size)
     assert(head && *head);
     assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_OBJ_BYTE_NUM_NAME, sizeof_size)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_OBJ_BYTE_NUM_NAME,
+                                    sizeof_size)
 
     /* Get the value */
     *sizeof_size = (*head)->ctx.sizeof_size;
@@ -5380,7 +5394,8 @@ H5CX_get_file_space_page_size(hsize_t *fs_page_size)
     assert(head && *head);
     assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_FILE_SPACE_PAGE_SIZE_NAME, fs_page_size)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_FILE_SPACE_PAGE_SIZE_NAME,
+                                    fs_page_size)
 
     /* Get the value */
     *fs_page_size = (*head)->ctx.fs_page_size;
@@ -5412,7 +5427,8 @@ H5CX_get_file_space_strategy(H5F_fspace_strategy_t *fs_strategy)
     assert(head && *head);
     assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_FILE_SPACE_STRATEGY_NAME, fs_strategy)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_FILE_SPACE_STRATEGY_NAME,
+                                    fs_strategy)
 
     /* Get the value */
     *fs_strategy = (*head)->ctx.fs_strategy;
@@ -5444,7 +5460,8 @@ H5CX_get_file_space_persist(bool *fs_persist)
     assert(head && *head);
     assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_FREE_SPACE_PERSIST_NAME, fs_persist)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_FREE_SPACE_PERSIST_NAME,
+                                    fs_persist)
 
     /* Get the value */
     *fs_persist = (*head)->ctx.fs_persist;
@@ -5476,7 +5493,8 @@ H5CX_get_file_space_threshold(hsize_t *fs_threshold)
     assert(head && *head);
     assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_FREE_SPACE_THRESHOLD_NAME, fs_threshold)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_FREE_SPACE_THRESHOLD_NAME,
+                                    fs_threshold)
 
     /* Get the value */
     *fs_threshold = (*head)->ctx.fs_threshold;
@@ -5508,7 +5526,8 @@ H5CX_get_shared_mesg_nindexes(unsigned *sohm_nindexes)
     assert(head && *head);
     assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_SHMSG_NINDEXES_NAME, sohm_nindexes)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_SHMSG_NINDEXES_NAME,
+                                    sohm_nindexes)
 
     /* Get the value */
     *sohm_nindexes = (*head)->ctx.sohm_nindexes;
@@ -5540,7 +5559,8 @@ H5CX_get_shared_mesg_btree_min(unsigned *shmsg_btree_min)
     assert(head && *head);
     assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_SHMSG_BTREE_MIN_NAME, shmsg_btree_min)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_SHMSG_BTREE_MIN_NAME,
+                                    shmsg_btree_min)
 
     /* Get the value */
     *shmsg_btree_min = (*head)->ctx.shmsg_btree_min;
@@ -5572,7 +5592,8 @@ H5CX_get_shared_mesg_list_max(unsigned *shmsg_list_max)
     assert(head && *head);
     assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_SHMSG_LIST_MAX_NAME, shmsg_list_max)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_SHMSG_LIST_MAX_NAME,
+                                    shmsg_list_max)
 
     /* Get the value */
     *shmsg_list_max = (*head)->ctx.shmsg_list_max;
@@ -5604,7 +5625,8 @@ H5CX_get_shared_mesg_index_types(unsigned *shmsg_index_types)
     assert(head && *head);
     assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_SHMSG_INDEX_TYPES_NAME, shmsg_index_types)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_SHMSG_INDEX_TYPES_NAME,
+                                    shmsg_index_types)
 
     /* Get the value */
     memcpy(shmsg_index_types, (*head)->ctx.shmsg_index_types, H5O_SHMESG_MAX_NINDEXES * sizeof(unsigned));
@@ -5636,10 +5658,12 @@ H5CX_get_shared_mesg_index_min_sizes(unsigned *shmsg_index_min_sizes)
     assert(head && *head);
     assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_SHMSG_INDEX_MINSIZE_NAME, shmsg_index_min_sizes)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_SHMSG_INDEX_MINSIZE_NAME,
+                                    shmsg_index_min_sizes)
 
     /* Get the value */
-    memcpy(shmsg_index_min_sizes, (*head)->ctx.shmsg_index_min_sizes, H5O_SHMESG_MAX_NINDEXES * sizeof(unsigned));
+    memcpy(shmsg_index_min_sizes, (*head)->ctx.shmsg_index_min_sizes,
+           H5O_SHMESG_MAX_NINDEXES * sizeof(unsigned));
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -5804,7 +5828,8 @@ H5CX_get_rdcc_nbytes(size_t *rdcc_nbytes)
     assert(head && *head);
     assert(H5P_DEFAULT != (*head)->ctx.dapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(dapl, H5P_DATASET_ACCESS_DEFAULT, H5D_ACS_DATA_CACHE_BYTE_SIZE_NAME, dapl_rdcc_nbytes)
+    H5CX_RETRIEVE_PROP_VALID(dapl, H5P_DATASET_ACCESS_DEFAULT, H5D_ACS_DATA_CACHE_BYTE_SIZE_NAME,
+                             dapl_rdcc_nbytes)
 
     /* Get the value */
     *rdcc_nbytes = (*head)->ctx.dapl_rdcc_nbytes;
@@ -5836,7 +5861,8 @@ H5CX_get_rdcc_nslots(size_t *rdcc_nslots)
     assert(head && *head);
     assert(H5P_DEFAULT != (*head)->ctx.dapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(dapl, H5P_DATASET_ACCESS_DEFAULT, H5D_ACS_DATA_CACHE_NUM_SLOTS_NAME, dapl_rdcc_nslots)
+    H5CX_RETRIEVE_PROP_VALID(dapl, H5P_DATASET_ACCESS_DEFAULT, H5D_ACS_DATA_CACHE_NUM_SLOTS_NAME,
+                             dapl_rdcc_nslots)
 
     /* Get the value */
     *rdcc_nslots = (*head)->ctx.dapl_rdcc_nslots;
@@ -5962,7 +5988,7 @@ H5CX__reset_dapl(H5CX_node_t *head)
     memset(&head->ctx.dapl_flags, 0, sizeof(head->ctx.dapl_flags));
 
     /* Retrieve the DAPL pointer again also */
-    head->ctx.dapl = NULL;
+    head->ctx.dapl    = NULL;
     head->ctx.dapl_id = H5P_DATASET_ACCESS_DEFAULT;
 
     FUNC_LEAVE_NOAPI_VOID
@@ -6998,7 +7024,7 @@ H5CX__reset_ocpl(H5CX_node_t *head)
     memset(&head->ctx.ocpl_flags, 0, sizeof(head->ctx.ocpl_flags));
 
     /* Retrieve the OCPL pointer again also */
-    head->ctx.ocpl = NULL;
+    head->ctx.ocpl    = NULL;
     head->ctx.ocpl_id = H5P_OBJECT_CREATE_DEFAULT;
 
     FUNC_LEAVE_NOAPI_VOID

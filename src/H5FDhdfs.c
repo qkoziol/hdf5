@@ -751,10 +751,10 @@ done:
 static H5FD_t *
 H5FD__hdfs_open(const char *path, unsigned flags, hid_t H5_ATTR_UNUSED fapl_id, haddr_t maxaddr)
 {
-    H5FD_hdfs_t     *file = NULL;
-    hdfs_t          *handle = NULL;
+    H5FD_hdfs_t      *file   = NULL;
+    hdfs_t           *handle = NULL;
     H5FD_hdfs_fapl_t *fa;
-    H5FD_t          *ret_value = NULL;
+    H5FD_t           *ret_value = NULL;
 
     FUNC_ENTER_PACKAGE
 
@@ -779,7 +779,8 @@ H5FD__hdfs_open(const char *path, unsigned flags, hid_t H5_ATTR_UNUSED fapl_id, 
     if (NULL == (fa = H5CX_peek_driver_info()))
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get HDFS info");
 
-    if (NULL == handle = H5FD__hdfs_handle_open(path, fa->namenode_name, fa->namenode_port, fa->user_name, fa->kerberos_ticket_cache, fa->stream_buffer_size)))
+    if (NULL == handle = H5FD__hdfs_handle_open(path, fa->namenode_name, fa->namenode_port, fa->user_name,
+                                                fa->kerberos_ticket_cache, fa->stream_buffer_size)))
         HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL, "could not open");
 
     /* Create new file struct */

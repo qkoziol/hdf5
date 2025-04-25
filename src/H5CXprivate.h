@@ -159,9 +159,9 @@ typedef struct H5CX_cached_dcpl_flags_t {
     bool efl_valid : 1;           /* Whether the external file list for dataset creation is valid */
     bool fill_value_valid : 1;    /* Whether the fill value for dataset creation is valid */
 #ifdef H5O_ENABLE_BOGUS
-    bool bogus_msg_id_valid : 1; /* Whether the bogus message ID for dataset creation is valid */
+    bool bogus_msg_id_valid : 1;    /* Whether the bogus message ID for dataset creation is valid */
     bool bogus_msg_flags_valid : 1; /* Whether the bogus message flags for dataset creation is valid */
-#endif /* H5O_ENABLE_BOGUS */
+#endif                              /* H5O_ENABLE_BOGUS */
 } H5CX_cached_dcpl_flags_t;
 
 /* 'valid' & 'set' flags for cached GCPL properties */
@@ -177,32 +177,32 @@ typedef struct H5CX_cached_acpl_flags_t {
 
 /* 'valid' & 'set' flags for cached FCPL properties */
 typedef struct H5CX_cached_fcpl_flags_t {
-    bool userblock_size_valid : 1; /* Whether userblock size property is valid */
-    bool sizeof_addr_valid : 1; /* Whether size of address property is valid */
-    bool sizeof_size_valid : 1; /* Whether size of size property is valid */
-    bool sym_leaf_k_valid : 1; /* Whether symbol table leaf node size property is valid */
-    bool btree_k_valid : 1; /* Whether B-tree rank property is valid */
-    bool fs_page_size_valid : 1; /* Whether file space page size property is valid */
-    bool fs_strategy_valid : 1; /* Whether file space strategy property is valid */
-    bool fs_persist_valid : 1; /* Whether file space persist property is valid */
-    bool fs_threshold_valid : 1; /* Whether file space threshold property is valid */
-    bool sohm_nindexes_valid : 1; /* Whether number of SOHM indexes property is valid */
-    bool shmsg_btree_min_valid : 1; /* Whether SOHM btree minimum property is valid */
-    bool shmsg_list_max_valid : 1; /* Whether SOHM list max property is valid */
-    bool shmsg_index_types_valid : 1; /* Whether SOHM index types property is valid */
+    bool userblock_size_valid : 1;        /* Whether userblock size property is valid */
+    bool sizeof_addr_valid : 1;           /* Whether size of address property is valid */
+    bool sizeof_size_valid : 1;           /* Whether size of size property is valid */
+    bool sym_leaf_k_valid : 1;            /* Whether symbol table leaf node size property is valid */
+    bool btree_k_valid : 1;               /* Whether B-tree rank property is valid */
+    bool fs_page_size_valid : 1;          /* Whether file space page size property is valid */
+    bool fs_strategy_valid : 1;           /* Whether file space strategy property is valid */
+    bool fs_persist_valid : 1;            /* Whether file space persist property is valid */
+    bool fs_threshold_valid : 1;          /* Whether file space threshold property is valid */
+    bool sohm_nindexes_valid : 1;         /* Whether number of SOHM indexes property is valid */
+    bool shmsg_btree_min_valid : 1;       /* Whether SOHM btree minimum property is valid */
+    bool shmsg_list_max_valid : 1;        /* Whether SOHM list max property is valid */
+    bool shmsg_index_types_valid : 1;     /* Whether SOHM index types property is valid */
     bool shmsg_index_min_sizes_valid : 1; /* Whether SOHM index min sizes property is valid */
 } H5CX_cached_fcpl_flags_t;
 
 /* 'valid' & 'set' flags for cached DAPL properties */
 typedef struct H5CX_cached_dapl_flags_t {
-    bool extfile_prefix_valid : 1; /* Whether the prefix for external file is valid */
-    bool vds_prefix_valid : 1;     /* Whether the prefix for VDS is valid           */
-    bool append_flush_valid : 1; /* Whether the append flush property is valid */
+    bool extfile_prefix_valid : 1;   /* Whether the prefix for external file is valid */
+    bool vds_prefix_valid : 1;       /* Whether the prefix for VDS is valid           */
+    bool append_flush_valid : 1;     /* Whether the append flush property is valid */
     bool dapl_rdcc_nbytes_valid : 1; /* Whether the raw data cache byte size property is valid */
     bool dapl_rdcc_nslots_valid : 1; /* Whether the raw data cache number of slots property is valid */
-    bool dapl_rdcc_w0_valid : 1; /* Whether the raw data cache preemption factor property is valid */
-    bool vds_printf_gap_valid : 1; /* Whether the VDS printf gap property is valid */
-    bool vds_view_valid : 1; /* Whether the VDS view property is valid */
+    bool dapl_rdcc_w0_valid : 1;     /* Whether the raw data cache preemption factor property is valid */
+    bool vds_printf_gap_valid : 1;   /* Whether the VDS printf gap property is valid */
+    bool vds_view_valid : 1;         /* Whether the VDS view property is valid */
 } H5CX_cached_dapl_flags_t;
 
 /* 'valid' & 'set' flags for cached FAPL properties */
@@ -240,9 +240,9 @@ typedef struct H5CX_cached_fapl_flags_t {
     bool pb_size_valid : 1;               /* Whether page buffer size property is valid */
     bool pb_min_meta_perc_valid : 1;      /* Whether minimum metadata percentage property is valid */
     bool pb_min_raw_perc_valid : 1;       /* Whether minimum raw percentage property is valid */
-    bool fapl_rdcc_nbytes_valid : 1;           /* Whether raw data cache byte size property is valid */
-    bool fapl_rdcc_nslots_valid : 1;           /* Whether raw data cache number of slots property is valid */
-    bool fapl_rdcc_w0_valid : 1;               /* Whether raw data cache preemption factor property is valid */
+    bool fapl_rdcc_nbytes_valid : 1;      /* Whether raw data cache byte size property is valid */
+    bool fapl_rdcc_nslots_valid : 1;      /* Whether raw data cache number of slots property is valid */
+    bool fapl_rdcc_w0_valid : 1;          /* Whether raw data cache preemption factor property is valid */
     bool efc_size_valid : 1;              /* Whether external file cache size property is valid */
     bool close_degree_valid : 1;          /* Whether file close degree property is valid */
     bool evict_on_close_valid : 1;        /* Whether evict on close property is valid */
@@ -444,47 +444,50 @@ typedef struct H5CX_t {
     unsigned cpy_options;  /* Object copy options (H5O_CPY_OPTION_NAME) */
 
     /* Cached DCPL properties */
-    bool min_dset_ohdr;  /* Whether to minimize dataset object header (H5D_CRT_MIN_DSET_HDR_SIZE_NAME) */
-    H5O_layout_t layout; /* Storage layout for object creation (H5D_CRT_LAYOUT_NAME) */
-    H5O_efl_t    efl;    /* External file list for dataset creation (H5D_CRT_EXT_FILE_LIST_NAME) */
+    bool min_dset_ohdr;      /* Whether to minimize dataset object header (H5D_CRT_MIN_DSET_HDR_SIZE_NAME) */
+    H5O_layout_t layout;     /* Storage layout for object creation (H5D_CRT_LAYOUT_NAME) */
+    H5O_efl_t    efl;        /* External file list for dataset creation (H5D_CRT_EXT_FILE_LIST_NAME) */
     H5O_fill_t   fill_value; /* Fill value for dataset creation (H5D_CRT_FILL_VALUE_NAME) */
 #ifdef H5O_ENABLE_BOGUS
-    unsigned bogus_msg_id; /* Bogus message ID for dataset creation (H5D_CRT_BOGUS_MSG_ID_NAME) */
+    unsigned bogus_msg_id;    /* Bogus message ID for dataset creation (H5D_CRT_BOGUS_MSG_ID_NAME) */
     uint8_t  bogus_msg_flags; /* Bogus message flags for dataset creation (H5D_CRT_BOGUS_MSG_FLAGS_NAME) */
-#endif /* H5O_ENABLE_BOGUS */
+#endif                        /* H5O_ENABLE_BOGUS */
 
     /* Cached GCPL properties */
     H5O_ginfo_t ginfo; /* Group info property (H5D_CRT_GROUP_INFO_NAME) */
     H5O_linfo_t linfo; /* Link info property (H5D_CRT_LINK_INFO_NAME) */
 
     /* Cached ACPL properties */
-    H5T_cset_t attr_encoding; /* Attribute creation property list character encoding (H5P_STRCRT_CHAR_ENCODING_NAME) */
+    H5T_cset_t attr_encoding; /* Attribute creation property list character encoding
+                                 (H5P_STRCRT_CHAR_ENCODING_NAME) */
 
     /* Cached FCPL properties */
-    hsize_t userblock_size; /* Userblock size property (H5F_CRT_USERBLOCK_SIZE_NAME) */
-    uint8_t sizeof_addr; /* Size of address property (H5F_CRT_ADDR_BYTE_NUM_NAME) */
-    uint8_t sizeof_size; /* Size of size property (H5F_CRT_OBJ_BYTE_NUM_NAME) */
-    unsigned sym_leaf_k; /* Symbol table leaf node size property (H5F_CRT_SYM_LEAF_NAME) */
+    hsize_t  userblock_size;            /* Userblock size property (H5F_CRT_USERBLOCK_SIZE_NAME) */
+    uint8_t  sizeof_addr;               /* Size of address property (H5F_CRT_ADDR_BYTE_NUM_NAME) */
+    uint8_t  sizeof_size;               /* Size of size property (H5F_CRT_OBJ_BYTE_NUM_NAME) */
+    unsigned sym_leaf_k;                /* Symbol table leaf node size property (H5F_CRT_SYM_LEAF_NAME) */
     unsigned btree_k[H5B_NUM_BTREE_ID]; /* B-tree rank property (H5F_CRT_BTREE_RANK_NAME) */
-    hsize_t fs_page_size; /* File space page size property (H5F_CRT_FILE_SPACE_PAGE_SIZE_NAME) */
+    hsize_t  fs_page_size;             /* File space page size property (H5F_CRT_FILE_SPACE_PAGE_SIZE_NAME) */
     H5F_fspace_strategy_t fs_strategy; /* File space strategy property (H5F_CRT_FILE_SPACE_STRATEGY_NAME) */
-    bool fs_persist; /* File space persist property (H5F_CRT_FREE_SPACE_PERSIST_NAME) */
-    hsize_t fs_threshold; /* File space threshold property (H5F_CRT_FREE_SPACE_THRESHOLD_NAME) */
-    unsigned sohm_nindexes; /* Number of SOHM indexes (H5F_CRT_SHMSG_NINDEXES_NAME) */
-    unsigned shmsg_btree_min; /* SOHM btree minimum property (H5F_CRT_SHMSG_BTREE_MIN_NAME) */
-    unsigned shmsg_list_max; /* SOHM list max property (H5F_CRT_SHMSG_LIST_MAX_NAME) */
-    unsigned shmsg_index_types[H5O_SHMESG_MAX_NINDEXES]; /* SOHM index types property (H5F_CRT_SHMSG_INDEX_TYPES_NAME) */
-    unsigned shmsg_index_min_sizes[H5O_SHMESG_MAX_NINDEXES]; /* SOHM index min sizes property (H5F_CRT_SHMSG_INDEX_MINSIZE_NAME) */
+    bool                  fs_persist;  /* File space persist property (H5F_CRT_FREE_SPACE_PERSIST_NAME) */
+    hsize_t  fs_threshold;             /* File space threshold property (H5F_CRT_FREE_SPACE_THRESHOLD_NAME) */
+    unsigned sohm_nindexes;            /* Number of SOHM indexes (H5F_CRT_SHMSG_NINDEXES_NAME) */
+    unsigned shmsg_btree_min;          /* SOHM btree minimum property (H5F_CRT_SHMSG_BTREE_MIN_NAME) */
+    unsigned shmsg_list_max;           /* SOHM list max property (H5F_CRT_SHMSG_LIST_MAX_NAME) */
+    unsigned shmsg_index_types[H5O_SHMESG_MAX_NINDEXES];     /* SOHM index types property
+                                                                (H5F_CRT_SHMSG_INDEX_TYPES_NAME) */
+    unsigned shmsg_index_min_sizes[H5O_SHMESG_MAX_NINDEXES]; /* SOHM index min sizes property
+                                                                (H5F_CRT_SHMSG_INDEX_MINSIZE_NAME) */
 
     /* Cached DAPL properties */
-    const char *extfile_prefix; /* Prefix for external file (H5D_ACS_EFILE_PREFIX_NAME) */
-    const char *vds_prefix;     /* Prefix for VDS (H5D_ACS_VDS_PREFIX_NAME) */
-    H5D_append_flush_t append_flush; /* Append flush property (H5D_ACS_APPEND_FLUSH_NAME) */
-    size_t       dapl_rdcc_nbytes;   /* Property for size of the raw data cache */
-    size_t       dapl_rdcc_nslots;   /* Property for number of slots in the raw data cache */
-    double       dapl_rdcc_w0;       /* Property for chunk cache preemption factor */
-    hsize_t      vds_printf_gap;     /* Property for VDS printf gap */
-    H5D_vds_view_t vds_view;         /* Property for VDS view */
+    const char        *extfile_prefix;   /* Prefix for external file (H5D_ACS_EFILE_PREFIX_NAME) */
+    const char        *vds_prefix;       /* Prefix for VDS (H5D_ACS_VDS_PREFIX_NAME) */
+    H5D_append_flush_t append_flush;     /* Append flush property (H5D_ACS_APPEND_FLUSH_NAME) */
+    size_t             dapl_rdcc_nbytes; /* Property for size of the raw data cache */
+    size_t             dapl_rdcc_nslots; /* Property for number of slots in the raw data cache */
+    double             dapl_rdcc_w0;     /* Property for chunk cache preemption factor */
+    hsize_t            vds_printf_gap;   /* Property for VDS printf gap */
+    H5D_vds_view_t     vds_view;         /* Property for VDS view */
 
     /* Cached FAPL properties */
 #ifdef H5_HAVE_PARALLEL
@@ -532,12 +535,12 @@ typedef struct H5CX_t {
     unsigned pb_min_meta_perc;      /* Property for minimum metadata percentage
                                        (H5F_ACS_PAGE_BUFFER_MIN_META_PERC_NAME) */
     unsigned
-           pb_min_raw_perc; /* Property for minimum raw percentage (H5F_ACS_PAGE_BUFFER_MIN_RAW_PERC_NAME) */
-    size_t fapl_rdcc_nbytes;     /* Property for size of the raw data cache (H5F_ACS_DATA_CACHE_BYTE_SIZE_NAME) */
-    size_t fapl_rdcc_nslots;     /* Property for number of slots in the raw data cache
-                               (H5F_ACS_DATA_CACHE_NUM_SLOTS_NAME) */
-    double   fapl_rdcc_w0;  /* Property for chunk cache preemption factor (H5F_ACS_PREEMPT_READ_CHUNKS_NAME) */
-    unsigned efc_size; /* Property for size of the external file cache (H5F_ACS_EFC_SIZE_NAME) */
+           pb_min_raw_perc;  /* Property for minimum raw percentage (H5F_ACS_PAGE_BUFFER_MIN_RAW_PERC_NAME) */
+    size_t fapl_rdcc_nbytes; /* Property for size of the raw data cache (H5F_ACS_DATA_CACHE_BYTE_SIZE_NAME) */
+    size_t fapl_rdcc_nslots; /* Property for number of slots in the raw data cache
+                           (H5F_ACS_DATA_CACHE_NUM_SLOTS_NAME) */
+    double   fapl_rdcc_w0; /* Property for chunk cache preemption factor (H5F_ACS_PREEMPT_READ_CHUNKS_NAME) */
+    unsigned efc_size;     /* Property for size of the external file cache (H5F_ACS_EFC_SIZE_NAME) */
     H5F_close_degree_t close_degree;   /* Property for file close degree (H5F_ACS_CLOSE_DEGREE_NAME) */
     bool               evict_on_close; /* Property for evicting an object's metadata on close
                                           (H5F_ACS_EVICT_ON_CLOSE_FLAG_NAME) */

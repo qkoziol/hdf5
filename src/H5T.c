@@ -3568,10 +3568,10 @@ done:
 herr_t
 H5Tconvert(hid_t src_id, hid_t dst_id, size_t nelmts, void *buf, void *background, hid_t dxpl_id)
 {
-    H5T_path_t *tpath;               /* type conversion info    */
-    H5T_t      *src, *dst;           /* unregistered types      */
-    H5P_genplist_t   *dxpl;           /* Dataset transfer property list */
-    herr_t      ret_value = SUCCEED; /* Return value            */
+    H5T_path_t     *tpath;               /* type conversion info    */
+    H5T_t          *src, *dst;           /* unregistered types      */
+    H5P_genplist_t *dxpl;                /* Dataset transfer property list */
+    herr_t          ret_value = SUCCEED; /* Return value            */
 
     FUNC_ENTER_API(FAIL)
 
@@ -3613,10 +3613,10 @@ done:
 herr_t
 H5Treclaim(hid_t type_id, hid_t space_id, hid_t dxpl_id, void *buf)
 {
-    H5P_genplist_t   *dxpl;           /* Dataset transfer property list */
-    const H5T_t *type;
-    H5S_t       *space;     /* Dataspace for iteration */
-    herr_t       ret_value; /* Return value */
+    H5P_genplist_t *dxpl; /* Dataset transfer property list */
+    const H5T_t    *type;
+    H5S_t          *space;     /* Dataspace for iteration */
+    herr_t          ret_value; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 

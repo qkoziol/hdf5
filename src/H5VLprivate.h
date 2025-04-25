@@ -151,7 +151,8 @@ H5_DLL herr_t H5VL_register_using_existing_id(H5I_type_t type, void *object, H5V
 struct H5P_libclass_t;
 H5_DLL herr_t H5VL_setup_args(hid_t loc_id, H5I_type_t id_type, H5VL_object_t **vol_obj);
 H5_DLL herr_t H5VL_setup_loc_args(hid_t loc_id, H5VL_object_t **vol_obj, H5VL_loc_params_t *loc_params);
-H5_DLL herr_t H5VL_setup_acc_args(hid_t loc_id, bool is_collective, hid_t *acspl_id, H5VL_object_t **vol_obj, H5VL_loc_params_t *loc_params);
+H5_DLL herr_t H5VL_setup_acc_args(hid_t loc_id, bool is_collective, hid_t *acspl_id, H5VL_object_t **vol_obj,
+                                  H5VL_loc_params_t *loc_params);
 H5_DLL herr_t H5VL_setup_self_args(hid_t loc_id, H5VL_object_t **vol_obj, H5VL_loc_params_t *loc_params);
 H5_DLL herr_t H5VL_setup_name_args(hid_t loc_id, const char *name, bool is_collective, H5P_genplist_t *lapl,
                                    H5VL_object_t **vol_obj, H5VL_loc_params_t *loc_params);

@@ -742,7 +742,7 @@ H5FD__ros3_open(const char *url, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
     /* Get the token, if it exists */
     if (fa->authenticate) {
         H5P_genplist_t *fapl;
-        htri_t token_exists;
+        htri_t          token_exists;
 
         if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file access property list");

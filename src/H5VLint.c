@@ -2647,8 +2647,8 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_setup_acc_args(hid_t loc_id, bool is_collective, hid_t *acspl_id,
-                    H5VL_object_t **vol_obj, H5VL_loc_params_t *loc_params)
+H5VL_setup_acc_args(hid_t loc_id, bool is_collective, hid_t *acspl_id, H5VL_object_t **vol_obj,
+                    H5VL_loc_params_t *loc_params)
 {
     herr_t ret_value = SUCCEED; /* Return value */
 

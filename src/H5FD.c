@@ -532,10 +532,10 @@ done:
 haddr_t
 H5FDalloc(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, hsize_t size)
 {
-    H5P_genplist_t   *dxpl;           /* Dataset transfer property list */
-    H5FD_int_t    fh;     /* Temporary internal file handle */
-    H5FD_driver_t driver; /* Temporary VFD driver */
-    haddr_t       ret_value = HADDR_UNDEF;
+    H5P_genplist_t *dxpl;   /* Dataset transfer property list */
+    H5FD_int_t      fh;     /* Temporary internal file handle */
+    H5FD_driver_t   driver; /* Temporary VFD driver */
+    haddr_t         ret_value = HADDR_UNDEF;
 
     FUNC_ENTER_API(HADDR_UNDEF)
 
@@ -586,10 +586,10 @@ done:
 herr_t
 H5FDfree(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, hsize_t size)
 {
-    H5P_genplist_t   *dxpl;           /* Dataset transfer property list */
-    H5FD_int_t    fh;                  /* Temporary internal file handle */
-    H5FD_driver_t driver;              /* Temporary VFD driver */
-    herr_t        ret_value = SUCCEED; /* Return value */
+    H5P_genplist_t *dxpl;                /* Dataset transfer property list */
+    H5FD_int_t      fh;                  /* Temporary internal file handle */
+    H5FD_driver_t   driver;              /* Temporary VFD driver */
+    herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -842,10 +842,10 @@ done:
 herr_t
 H5FDread(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, size_t size, void *buf /*out*/)
 {
-    H5P_genplist_t   *dxpl;           /* Dataset transfer property list */
-    H5FD_int_t    fh;                  /* Temporary internal file handle */
-    H5FD_driver_t driver;              /* Temporary VFD driver */
-    herr_t        ret_value = SUCCEED; /* Return value             */
+    H5P_genplist_t *dxpl;                /* Dataset transfer property list */
+    H5FD_int_t      fh;                  /* Temporary internal file handle */
+    H5FD_driver_t   driver;              /* Temporary VFD driver */
+    herr_t          ret_value = SUCCEED; /* Return value             */
 
     FUNC_ENTER_API(FAIL)
 
@@ -890,10 +890,10 @@ done:
 herr_t
 H5FDwrite(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, size_t size, const void *buf)
 {
-    H5P_genplist_t   *dxpl;           /* Dataset transfer property list */
-    H5FD_int_t    fh;                  /* Temporary internal file handle */
-    H5FD_driver_t driver;              /* Temporary VFD driver */
-    herr_t        ret_value = SUCCEED; /* Return value             */
+    H5P_genplist_t *dxpl;                /* Dataset transfer property list */
+    H5FD_int_t      fh;                  /* Temporary internal file handle */
+    H5FD_driver_t   driver;              /* Temporary VFD driver */
+    herr_t          ret_value = SUCCEED; /* Return value             */
 
     FUNC_ENTER_API(FAIL)
 
@@ -948,10 +948,10 @@ herr_t
 H5FDread_vector(H5FD_t *file, hid_t dxpl_id, uint32_t count, H5FD_mem_t types[], haddr_t addrs[],
                 size_t sizes[], void *bufs[] /* out */)
 {
-    H5P_genplist_t   *dxpl;           /* Dataset transfer property list */
-    H5FD_int_t    fh;                  /* Temporary internal file handle */
-    H5FD_driver_t driver;              /* Temporary VFD driver */
-    herr_t        ret_value = SUCCEED; /* Return value             */
+    H5P_genplist_t *dxpl;                /* Dataset transfer property list */
+    H5FD_int_t      fh;                  /* Temporary internal file handle */
+    H5FD_driver_t   driver;              /* Temporary VFD driver */
+    herr_t          ret_value = SUCCEED; /* Return value             */
 
     FUNC_ENTER_API(FAIL)
 
@@ -1016,10 +1016,10 @@ herr_t
 H5FDwrite_vector(H5FD_t *file, hid_t dxpl_id, uint32_t count, H5FD_mem_t types[], haddr_t addrs[],
                  size_t sizes[], const void *bufs[] /* in */)
 {
-    H5P_genplist_t   *dxpl;           /* Dataset transfer property list */
-    H5FD_int_t    fh;                  /* Temporary internal file handle */
-    H5FD_driver_t driver;              /* Temporary VFD driver */
-    herr_t        ret_value = SUCCEED; /* Return value             */
+    H5P_genplist_t *dxpl;                /* Dataset transfer property list */
+    H5FD_int_t      fh;                  /* Temporary internal file handle */
+    H5FD_driver_t   driver;              /* Temporary VFD driver */
+    herr_t          ret_value = SUCCEED; /* Return value             */
 
     FUNC_ENTER_API(FAIL)
 
@@ -1103,10 +1103,10 @@ herr_t
 H5FDread_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, uint32_t count, hid_t mem_space_ids[],
                    hid_t file_space_ids[], haddr_t offsets[], size_t element_sizes[], void *bufs[] /* out */)
 {
-    H5P_genplist_t   *dxpl;           /* Dataset transfer property list */
-    H5FD_int_t    fh;                  /* Temporary internal file handle */
-    H5FD_driver_t driver;              /* Temporary VFD driver */
-    herr_t        ret_value = SUCCEED; /* Return value             */
+    H5P_genplist_t *dxpl;                /* Dataset transfer property list */
+    H5FD_int_t      fh;                  /* Temporary internal file handle */
+    H5FD_driver_t   driver;              /* Temporary VFD driver */
+    herr_t          ret_value = SUCCEED; /* Return value             */
 
     FUNC_ENTER_API(FAIL)
 
@@ -1194,10 +1194,10 @@ herr_t
 H5FDwrite_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, uint32_t count, hid_t mem_space_ids[],
                     hid_t file_space_ids[], haddr_t offsets[], size_t element_sizes[], const void *bufs[])
 {
-    H5P_genplist_t   *dxpl;           /* Dataset transfer property list */
-    H5FD_int_t    fh;                  /* Temporary internal file handle */
-    H5FD_driver_t driver;              /* Temporary VFD driver */
-    herr_t        ret_value = SUCCEED; /* Return value             */
+    H5P_genplist_t *dxpl;                /* Dataset transfer property list */
+    H5FD_int_t      fh;                  /* Temporary internal file handle */
+    H5FD_driver_t   driver;              /* Temporary VFD driver */
+    herr_t          ret_value = SUCCEED; /* Return value             */
 
     FUNC_ENTER_API(FAIL)
 
@@ -1291,10 +1291,10 @@ H5FDread_vector_from_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, uin
                                hid_t mem_space_ids[], hid_t file_space_ids[], haddr_t offsets[],
                                size_t element_sizes[], void *bufs[] /* out */)
 {
-    H5P_genplist_t   *dxpl;           /* Dataset transfer property list */
-    H5FD_int_t    fh;                  /* Temporary internal file handle */
-    H5FD_driver_t driver;              /* Temporary VFD driver */
-    herr_t        ret_value = SUCCEED; /* Return value             */
+    H5P_genplist_t *dxpl;                /* Dataset transfer property list */
+    H5FD_int_t      fh;                  /* Temporary internal file handle */
+    H5FD_driver_t   driver;              /* Temporary VFD driver */
+    herr_t          ret_value = SUCCEED; /* Return value             */
 
     FUNC_ENTER_API(FAIL)
 
@@ -1386,10 +1386,10 @@ H5FDwrite_vector_from_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, ui
                                 hid_t mem_space_ids[], hid_t file_space_ids[], haddr_t offsets[],
                                 size_t element_sizes[], const void *bufs[])
 {
-    H5P_genplist_t   *dxpl;           /* Dataset transfer property list */
-    H5FD_int_t    fh;                  /* Temporary internal file handle */
-    H5FD_driver_t driver;              /* Temporary VFD driver */
-    herr_t        ret_value = SUCCEED; /* Return value             */
+    H5P_genplist_t *dxpl;                /* Dataset transfer property list */
+    H5FD_int_t      fh;                  /* Temporary internal file handle */
+    H5FD_driver_t   driver;              /* Temporary VFD driver */
+    herr_t          ret_value = SUCCEED; /* Return value             */
 
     FUNC_ENTER_API(FAIL)
 
@@ -1481,10 +1481,10 @@ herr_t
 H5FDread_from_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, uint32_t count, hid_t mem_space_ids[],
                         hid_t file_space_ids[], haddr_t offsets[], size_t element_sizes[], void *bufs[])
 {
-    H5P_genplist_t   *dxpl;           /* Dataset transfer property list */
-    H5FD_int_t    fh;                  /* Temporary internal file handle */
-    H5FD_driver_t driver;              /* Temporary VFD driver */
-    herr_t        ret_value = SUCCEED; /* Return value             */
+    H5P_genplist_t *dxpl;                /* Dataset transfer property list */
+    H5FD_int_t      fh;                  /* Temporary internal file handle */
+    H5FD_driver_t   driver;              /* Temporary VFD driver */
+    herr_t          ret_value = SUCCEED; /* Return value             */
 
     FUNC_ENTER_API(FAIL)
 
@@ -1575,10 +1575,10 @@ H5FDwrite_from_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, uint32_t 
                          hid_t file_space_ids[], haddr_t offsets[], size_t element_sizes[],
                          const void *bufs[])
 {
-    H5P_genplist_t   *dxpl;           /* Dataset transfer property list */
-    H5FD_int_t    fh;                  /* Temporary internal file handle */
-    H5FD_driver_t driver;              /* Temporary VFD driver */
-    herr_t        ret_value = SUCCEED; /* Return value             */
+    H5P_genplist_t *dxpl;                /* Dataset transfer property list */
+    H5FD_int_t      fh;                  /* Temporary internal file handle */
+    H5FD_driver_t   driver;              /* Temporary VFD driver */
+    herr_t          ret_value = SUCCEED; /* Return value             */
 
     FUNC_ENTER_API(FAIL)
 
@@ -1639,10 +1639,10 @@ done:
 herr_t
 H5FDflush(H5FD_t *file, hid_t dxpl_id, hbool_t closing)
 {
-    H5P_genplist_t   *dxpl;           /* Dataset transfer property list */
-    H5FD_int_t    fh;                  /* Temporary internal file handle */
-    H5FD_driver_t driver;              /* Temporary VFD driver */
-    herr_t        ret_value = SUCCEED; /* Return value */
+    H5P_genplist_t *dxpl;                /* Dataset transfer property list */
+    H5FD_int_t      fh;                  /* Temporary internal file handle */
+    H5FD_driver_t   driver;              /* Temporary VFD driver */
+    herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -1681,10 +1681,10 @@ done:
 herr_t
 H5FDtruncate(H5FD_t *file, hid_t dxpl_id, hbool_t closing)
 {
-    H5P_genplist_t   *dxpl;           /* Dataset transfer property list */
-    H5FD_int_t    fh;                  /* Temporary internal file handle */
-    H5FD_driver_t driver;              /* Temporary VFD driver */
-    herr_t        ret_value = SUCCEED; /* Return value */
+    H5P_genplist_t *dxpl;                /* Dataset transfer property list */
+    H5FD_int_t      fh;                  /* Temporary internal file handle */
+    H5FD_driver_t   driver;              /* Temporary VFD driver */
+    herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 

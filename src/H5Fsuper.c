@@ -88,8 +88,8 @@ static const unsigned HDF5_superblock_ver_bounds[] = {
 static herr_t
 H5F__super_ext_create(H5F_t *f, H5O_loc_t *ext_ptr)
 {
-    hid_t            old_fcpl_id = H5I_INVALID_HID; /* ID for old FCPL in API context */
-    herr_t ret_value = SUCCEED; /* Return value */
+    hid_t  old_fcpl_id = H5I_INVALID_HID; /* ID for old FCPL in API context */
+    herr_t ret_value   = SUCCEED;         /* Return value */
 
     FUNC_ENTER_PACKAGE
 
