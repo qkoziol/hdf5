@@ -1089,7 +1089,7 @@ H5Dread(hid_t dset_id, hid_t mem_type_id, hid_t mem_space_id, hid_t file_space_i
 
     /* Get the pointer to the dataset transfer property list */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
-        HGOTO_ERROR(H5E_FILE, H5E_BADID, FAIL, "can't find object for ID");
+        HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Read the data */
     if (H5D__read_api_common(1, &dset_id, &mem_type_id, &mem_space_id, &file_space_id, dxpl, &buf, NULL,

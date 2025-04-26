@@ -662,11 +662,22 @@ H5FD__subfiling_get_default_info(H5P_genplist_t *fapl, H5FD_subfiling_fapl_t *fa
     }
 
     /* Check if any MPI parameters were set on the FAPL */
-    if (H5P_peek(fapl, H5F_ACS_MPI_PARAMS_COMM_NAME, &comm) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get MPI communicator from fapl");
-    if (H5P_peek(fapl, H5F_ACS_MPI_PARAMS_INFO_NAME, &info) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get MPI info from fapl");
+    if (fapl) {
+        if (H5P_peek(fapl, H5F_ACS_MPI_PARAMS_COMM_NAME, &comm) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get MPI communicator from fapl");
+        if (H5P_peek(fapl, H5F_ACS_MPI_PARAMS_INFO_NAME, &info) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get MPI info from fapl");
+    }
+    else {
+        if (H5CX_peek_mpi_comm(&comm) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get MPI communicator from fapl");
+        if (H5CX_peek_mpi_info(&info) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get MPI info from fapl");
+    }
     if (comm == MPI_COMM_NULL) {
+        /* Sanity check */
+        assert(fapl);
+
         comm = MPI_COMM_WORLD;
 
         /* Set MPI_COMM_WORLD on FAPL if no MPI parameters were set */
@@ -1145,12 +1156,11 @@ done:
  *-------------------------------------------------------------------------
  */
 static H5FD_t *
-H5FD__subfiling_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
+H5FD__subfiling_open(const char *name, unsigned flags, hid_t H5_ATTR_UNUSED fapl_id, haddr_t maxaddr)
 {
     H5FD_subfiling_t            *file = NULL; /* Subfiling VFD info */
     const H5FD_subfiling_fapl_t *fa   = NULL; /* Driver-specific property list */
     H5FD_subfiling_fapl_t        default_fa;  /* Default driver info, if not set */
-    H5P_genplist_t              *fapl        = NULL;
     bool                         bcasted_eof = false;
     int64_t                      sf_eof      = -1;
     int                          mpi_code; /* MPI return code */
@@ -1180,10 +1190,6 @@ H5FD__subfiling_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t ma
     file->fa.ioc_fapl    = NULL;
     file->ext_comm       = MPI_COMM_NULL;
     file->fail_to_encode = false;
-
-    /* Get the driver-specific file access properties */
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file access property list");
 
     if (H5FD_mpi_self_initialized_s) {
         file->comm = MPI_COMM_WORLD;
@@ -1219,7 +1225,7 @@ H5FD__subfiling_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t ma
     }
 
     if (NULL == (fa = H5CX_peek_driver_info())) {
-        if (H5FD__subfiling_get_default_info(fapl, &default_fa) < 0)
+        if (H5FD__subfiling_get_default_info(NULL, &default_fa) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get default subfiling driver info");
         fa = &default_fa;
     }
@@ -1810,7 +1816,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5FD__subfiling_delete(const char *name, hid_t fapl_id)
+H5FD__subfiling_delete(const char *name, hid_t H5_ATTR_UNUSED fapl_id)
 {
     const H5FD_subfiling_fapl_t *subfiling_fa = NULL;
     H5FD_subfiling_fapl_t        default_fa;
@@ -1824,12 +1830,7 @@ H5FD__subfiling_delete(const char *name, hid_t fapl_id)
             HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, FAIL, "can't initialize driver");
 
     if (NULL == (subfiling_fa = H5CX_peek_driver_info())) {
-        H5P_genplist_t *fapl = NULL;
-
-        if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
-            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
-
-        if (H5FD__subfiling_get_default_info(fapl, &default_fa) < 0)
+        if (H5FD__subfiling_get_default_info(NULL, &default_fa) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get default subfiling driver info");
         subfiling_fa = &default_fa;
     }

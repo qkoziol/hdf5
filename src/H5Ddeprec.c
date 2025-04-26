@@ -304,6 +304,7 @@ done:
 herr_t
 H5Dvlen_reclaim(hid_t type_id, hid_t space_id, hid_t dxpl_id, void *buf)
 {
+    H5P_genplist_t   *dxpl;           /* Dataset transfer property list */
     const H5T_t *type;
     H5S_t       *space;     /* Dataspace for iteration */
     herr_t       ret_value; /* Return value */
@@ -319,6 +320,9 @@ H5Dvlen_reclaim(hid_t type_id, hid_t space_id, hid_t dxpl_id, void *buf)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid dataspace");
     if (!(H5S_has_extent(space)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "dataspace does not have extent set");
+    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+        HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
+    dxpl_id = H5P_PLIST_ID(dxpl); /* Allow for application passing H5P_DEFAULT */
 
     /* Set DXPL for operation */
     if (H5CX_set_dxpl(dxpl_id) < 0)
