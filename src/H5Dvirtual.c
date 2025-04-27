@@ -536,7 +536,6 @@ H5D__virtual_copy_layout(H5O_layout_t *layout)
     H5O_storage_virtual_ent_t *orig_list = NULL;
     H5O_storage_virtual_t     *virt      = &layout->storage.u.virt;
     H5P_genplist_t            *orig_source_fapl;
-    H5P_genplist_t            *orig_source_dapl;
     size_t                     i;
     herr_t                     ret_value = SUCCEED;
 
@@ -549,8 +548,6 @@ H5D__virtual_copy_layout(H5O_layout_t *layout)
      * so the originals aren't closed on error */
     orig_source_fapl  = virt->source_fapl;
     virt->source_fapl = NULL;
-    orig_source_dapl  = virt->source_dapl;
-    virt->source_dapl = NULL;
     orig_list         = virt->list;
     virt->list        = NULL;
 
@@ -653,9 +650,6 @@ H5D__virtual_copy_layout(H5O_layout_t *layout)
     if (orig_source_fapl)
         if (NULL == (virt->source_fapl = H5P_copy_plist(orig_source_fapl, false)))
             HGOTO_ERROR(H5E_DATASET, H5E_CANTCOPY, FAIL, "can't copy fapl");
-    if (orig_source_dapl)
-        if (NULL == (virt->source_dapl = H5P_copy_plist(orig_source_dapl, false)))
-            HGOTO_ERROR(H5E_DATASET, H5E_CANTCOPY, FAIL, "can't copy dapl");
 
     /* New layout is not fully initialized */
     virt->init = false;
@@ -736,11 +730,6 @@ H5D__virtual_reset_layout(H5O_layout_t *layout)
         if (H5P_release(virt->source_fapl) < 0)
             HDONE_ERROR(H5E_DATASET, H5E_CANTCLOSEOBJ, FAIL, "can't close source fapl");
         virt->source_fapl = NULL;
-    }
-    if (virt->source_dapl) {
-        if (H5P_release(virt->source_dapl) < 0)
-            HDONE_ERROR(H5E_DATASET, H5E_CANTCLOSEOBJ, FAIL, "can't close source dapl");
-        virt->source_dapl = NULL;
     }
 
     /* The list is no longer initialized */
@@ -899,9 +888,7 @@ H5D__virtual_open_source_dset(const H5D_t *vdset, H5O_storage_virtual_ent_t *vir
         /* Dataset exists */
         if (exists) {
             /* Try opening the source dataset */
-            if (NULL ==
-                (source_dset->dset = H5D__open_name(&src_root_loc, source_dset->dset_name,
-                                                    vdset->shared->layout.storage.u.virt.source_dapl)))
+            if (NULL == (source_dset->dset = H5D__open_name(&src_root_loc, source_dset->dset_name)))
                 HGOTO_ERROR(H5E_DATASET, H5E_CANTOPENOBJ, FAIL, "unable to open source dataset");
 
             /* Dataset exists */
@@ -2187,11 +2174,6 @@ H5D__virtual_init(H5F_t *f, const H5D_t *dset)
         if (NULL == (storage->source_fapl = H5F_get_access_plist(f, false)))
             HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get fapl");
     } /* end if */
-
-    /* Copy DAPL to layout */
-    if (NULL == storage->source_dapl)
-        if (NULL == (storage->source_dapl = H5P_copy_plist(dset->shared->dapl, false)))
-            HGOTO_ERROR(H5E_DATASET, H5E_CANTCOPY, FAIL, "can't copy dapl");
 
     /* Mark layout as not fully initialized (must be done prior to I/O for
      * unlimited/printf selections) */

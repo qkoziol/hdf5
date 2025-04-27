@@ -75,13 +75,13 @@ typedef struct {
 /********************/
 
 /* General stuff */
-static H5D_shared_t *H5D__new(H5P_genplist_t *dcpl, H5P_genplist_t *dapl, bool creating, bool vl_type);
+static H5D_shared_t *H5D__new(H5P_genplist_t *dcpl, bool creating, bool vl_type);
 static herr_t        H5D__init_type(H5F_t *file, const H5D_t *dset, hid_t type_id, H5T_t *type);
 static herr_t        H5D__cache_dataspace_info(const H5D_t *dset);
 static herr_t        H5D__init_space(H5F_t *file, const H5D_t *dset, const H5S_t *space);
 static herr_t        H5D__update_oh_info(H5F_t *file, H5D_t *dset);
 static herr_t H5D__build_file_prefix(const H5D_t *dset, H5F_prefix_open_t prefix_type, char **file_prefix);
-static herr_t H5D__open_oid(H5D_t *dataset, H5P_genplist_t *dapl);
+static herr_t H5D__open_oid(H5D_t *dataset);
 static herr_t H5D__init_storage(H5D_t *dset, bool full_overwrite, hsize_t old_dim[]);
 static herr_t H5D__append_flush_setup(H5D_t *dset);
 static herr_t H5D__close_cb(H5VL_object_t *dset_vol_obj, void **request);
@@ -361,7 +361,7 @@ done:
  */
 H5D_t *
 H5D__create_named(const H5G_loc_t *loc, const char *name, hid_t type_id, const H5S_t *space,
-                  H5P_genplist_t *dcpl, H5P_genplist_t *dapl)
+                  H5P_genplist_t *dcpl)
 {
     H5O_obj_create_t ocrt_info;        /* Information for object creation */
     H5D_obj_create_t dcrt_info;        /* Information for dataset creation */
@@ -375,13 +375,11 @@ H5D__create_named(const H5G_loc_t *loc, const char *name, hid_t type_id, const H
     assert(type_id != H5I_INVALID_HID);
     assert(space);
     assert(dcpl);
-    assert(dapl);
 
     /* Set up dataset creation info */
     dcrt_info.type_id = type_id;
     dcrt_info.space   = space;
     dcrt_info.dcpl    = dcpl;
-    dcrt_info.dapl    = dapl;
 
     /* Set up object creation information */
     ocrt_info.obj_type = H5O_TYPE_DATASET;
@@ -460,7 +458,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static H5D_shared_t *
-H5D__new(H5P_genplist_t *dcpl, H5P_genplist_t *dapl, bool creating, bool vl_type)
+H5D__new(H5P_genplist_t *dcpl, bool creating, bool vl_type)
 {
     H5D_shared_t *new_dset  = NULL; /* New dataset object */
     H5D_shared_t *ret_value = NULL; /* Return value */
@@ -482,11 +480,6 @@ H5D__new(H5P_genplist_t *dcpl, H5P_genplist_t *dapl, bool creating, bool vl_type
     else if (NULL == (new_dset->dcpl = H5P_copy_plist(dcpl, false)))
         HGOTO_ERROR(H5E_DATASET, H5E_CANTCOPY, NULL, "can't copy dataset creation property list");
 
-    if (!vl_type && creating && H5P_PLIST_IS_DEFAULT(dapl))
-        new_dset->dapl = dapl;
-    else if (NULL == (new_dset->dapl = H5P_copy_plist(dapl, false)))
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTCOPY, NULL, "can't copy dataset access property list");
-
     /* Set return value */
     ret_value = new_dset;
 
@@ -496,8 +489,6 @@ done:
             if (new_dset->dcpl && !H5P_PLIST_IS_DEFAULT(new_dset->dcpl) && H5P_release(new_dset->dcpl) < 0)
                 HDONE_ERROR(H5E_DATASET, H5E_CANTCLOSEOBJ, NULL,
                             "can't close dataset creation property list");
-            if (new_dset->dapl && !H5P_PLIST_IS_DEFAULT(new_dset->dapl) && H5P_release(new_dset->dapl) < 0)
-                HDONE_ERROR(H5E_DATASET, H5E_CANTCLOSEOBJ, NULL, "can't close dataset access property list");
             new_dset = H5FL_FREE(H5D_shared_t, new_dset);
         } /* end if */
 
@@ -1142,7 +1133,7 @@ done:
  *-------------------------------------------------------------------------
  */
 H5D_t *
-H5D__create(H5F_t *file, hid_t type_id, const H5S_t *space, H5P_genplist_t *dcpl, H5P_genplist_t *dapl)
+H5D__create(H5F_t *file, hid_t type_id, const H5S_t *space, H5P_genplist_t *dcpl)
 {
     H5T_t    *type          = NULL; /* Datatype for dataset (VOL pointer) */
     H5T_t    *dt            = NULL; /* Datatype for dataset (non-VOL pointer) */
@@ -1193,7 +1184,7 @@ H5D__create(H5F_t *file, hid_t type_id, const H5S_t *space, H5P_genplist_t *dcpl
     H5G_loc_reset(&dset_loc);
 
     /* Initialize the shared dataset info */
-    if (NULL == (new_dset->shared = H5D__new(dcpl, dapl, true, has_vl_type)))
+    if (NULL == (new_dset->shared = H5D__new(dcpl, true, has_vl_type)))
         HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, NULL, "can't initialize dataset object");
 
     /* Copy & initialize datatype for dataset */
@@ -1386,10 +1377,6 @@ done:
                 H5P_release(new_dset->shared->dcpl) < 0)
                 HDONE_ERROR(H5E_DATASET, H5E_CANTCLOSEOBJ, NULL,
                             "unable to close copy of dataset creation property list");
-            if (new_dset->shared->dapl && !H5P_PLIST_IS_DEFAULT(new_dset->shared->dapl) &&
-                H5P_release(new_dset->shared->dapl) < 0)
-                HDONE_ERROR(H5E_DATASET, H5E_CANTCLOSEOBJ, NULL,
-                            "unable to close copy of dataset access property list");
             new_dset->shared->extfile_prefix = (char *)H5MM_xfree(new_dset->shared->extfile_prefix);
             new_dset->shared->vds_prefix     = (char *)H5MM_xfree(new_dset->shared->vds_prefix);
             new_dset->shared                 = H5FL_FREE(H5D_shared_t, new_dset->shared);
@@ -1411,7 +1398,7 @@ done:
  *-------------------------------------------------------------------------
  */
 H5D_t *
-H5D__open_name(const H5G_loc_t *loc, const char *name, H5P_genplist_t *dapl)
+H5D__open_name(const H5G_loc_t *loc, const char *name)
 {
     H5D_t     *dset = NULL;
     H5G_loc_t  dset_loc;          /* Object location of dataset */
@@ -1444,7 +1431,7 @@ H5D__open_name(const H5G_loc_t *loc, const char *name, H5P_genplist_t *dapl)
         HGOTO_ERROR(H5E_DATASET, H5E_BADTYPE, NULL, "not a dataset");
 
     /* Open the dataset */
-    if (NULL == (dset = H5D_open(&dset_loc, dapl)))
+    if (NULL == (dset = H5D_open(&dset_loc)))
         HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, NULL, "can't open dataset");
 
     /* Set return value */
@@ -1470,7 +1457,7 @@ done:
  *-------------------------------------------------------------------------
  */
 H5D_t *
-H5D_open(const H5G_loc_t *loc, H5P_genplist_t *dapl)
+H5D_open(const H5G_loc_t *loc)
 {
     H5D_shared_t *shared_fo      = NULL;
     H5D_t        *dataset        = NULL;
@@ -1506,7 +1493,7 @@ H5D_open(const H5G_loc_t *loc, H5P_genplist_t *dapl)
     /* Check if dataset was already open */
     if (NULL == (shared_fo = (H5D_shared_t *)H5FO_opened(dataset->oloc.file, dataset->oloc.addr))) {
         /* Open the dataset object */
-        if (H5D__open_oid(dataset, dapl) < 0)
+        if (H5D__open_oid(dataset) < 0)
             HGOTO_ERROR(H5E_DATASET, H5E_NOTFOUND, NULL, "not found");
 
         /* Add the dataset to the list of opened objects in the file */
@@ -1617,8 +1604,8 @@ H5D__append_flush_setup(H5D_t *dset)
     /* Set default append flush values */
     memset(&dset->shared->append_flush, 0, sizeof(dset->shared->append_flush));
 
-    /* If the dataset is chunked and there is a non-default DAPL */
-    if (!H5P_PLIST_IS_DEFAULT(dset->shared->dapl) && dset->shared->layout.type == H5D_CHUNKED) {
+    /* Check if the dataset is chunked */
+    if (dset->shared->layout.type == H5D_CHUNKED) {
         H5D_append_flush_t info;
 
         /* Get append flush property */
@@ -1669,7 +1656,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5D__open_oid(H5D_t *dataset, H5P_genplist_t *dapl)
+H5D__open_oid(H5D_t *dataset)
 {
     H5O_fill_t *fill_prop = NULL;          /* Pointer to dataset's fill value info */
     unsigned    alloc_time_state;          /* Allocation time state */
@@ -1685,7 +1672,7 @@ H5D__open_oid(H5D_t *dataset, H5P_genplist_t *dapl)
     assert(dataset);
 
     /* (Set the 'vl_type' parameter to false since it doesn't matter from here) */
-    if (NULL == (dataset->shared = H5D__new(H5P_LST_DATASET_CREATE_g, dapl, false, false)))
+    if (NULL == (dataset->shared = H5D__new(H5P_LST_DATASET_CREATE_g, false, false)))
         HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, FAIL, "can't initialize dataset object");
 
     /* Open the dataset object */
@@ -2014,8 +2001,6 @@ H5D_close(H5D_t *dataset)
          */
         free_failed |= (H5I_dec_ref(dataset->shared->type_id) < 0);
         free_failed |= (H5S_close(dataset->shared->space) < 0);
-        free_failed |=
-            !H5P_PLIST_IS_DEFAULT(dataset->shared->dapl) && (H5P_release(dataset->shared->dapl) < 0);
         free_failed |=
             !H5P_PLIST_IS_DEFAULT(dataset->shared->dcpl) && (H5P_release(dataset->shared->dcpl) < 0);
 

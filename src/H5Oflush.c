@@ -390,7 +390,7 @@ H5O_refresh_metadata_reopen(hid_t oid, H5P_genplist_t *apl, H5G_loc_t *obj_loc,
                 HGOTO_ERROR(H5E_OHDR, H5E_CANTSET, FAIL, "can't set access property list ID");
 
             /* Re-open the dataset */
-            if (NULL == (object = H5D_open(obj_loc, apl)))
+            if (NULL == (object = H5D_open(obj_loc)))
                 HGOTO_ERROR(H5E_OHDR, H5E_CANTOPENOBJ, FAIL, "unable to open dataset");
             if (!start_swmr) /* No need to handle multiple opens when H5Fstart_swmr_write() */
                 if (H5D_mult_refresh_reopen((H5D_t *)object) < 0)
