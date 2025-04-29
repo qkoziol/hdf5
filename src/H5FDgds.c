@@ -727,6 +727,7 @@ H5FD__gds_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
     /* Open the file */
     if ((fd = open(name, o_flags, H5FD_GDS_POSIX_CREATE_MODE_RW)) < 0)
         HSYS_GOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, NULL, "unable to open file");
+fprintf(stderr, "%s:%u - fd = %d\n", __func__, __LINE__, fd);
 
     if (fstat(fd, &sb) < 0)
         HSYS_GOTO_ERROR(H5E_VFL, H5E_BADFILE, NULL, "unable to fstat file");
