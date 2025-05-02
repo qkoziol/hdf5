@@ -636,7 +636,6 @@ H5G__traverse_real(const H5G_loc_t *_loc, const char *name, unsigned target, H5G
                 const H5O_linfo_t *linfo;     /* Link info settings for new group */
                 const H5O_pline_t *pline;     /* Filter pipeline settings for new group */
                 H5G_obj_create_t   gcrt_info; /* Group creation info */
-                H5O_obj_create_t  *ocrt_info; /* Object creation info in op_data */
 
                 /* Check for the parent group having a group info message */
                 /* (OK if not found) */
