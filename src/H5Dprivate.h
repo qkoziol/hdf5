@@ -124,12 +124,6 @@
 /* Default virtual dataset list size */
 #define H5D_VIRTUAL_DEF_LIST_SIZE 8
 
-#ifdef H5D_MODULE
-#define H5D_OBJ_PLIST(D) (((H5D_obj_create_t *)(D))->dcpl)
-#else /* H5D_MODULE */
-#define H5D_OBJ_PLIST(D) (H5D_get_dcpl(D))
-#endif
-
 /****************************/
 /* Library Private Typedefs */
 /****************************/
@@ -143,6 +137,8 @@ typedef struct H5D_dcpl_cache_t {
     H5O_fill_t  fill;  /* Fill value info (H5D_CRT_FILL_VALUE_NAME) */
     H5O_pline_t pline; /* I/O pipeline info (H5O_CRT_PIPELINE_NAME) */
     H5O_efl_t   efl;   /* External file list info (H5D_CRT_EXT_FILE_LIST_NAME) */
+    bool min_dset_ohdr; /* Minimize dataset object headers (H5D_CRT_MIN_DSET_HDR_SIZE_NAME) */
+    unsigned alloc_time_state; /* Allocation time state set  (H5D_CRT_ALLOC_TIME_STATE_NAME) */
 } H5D_dcpl_cache_t;
 
 /* Callback information for copying datasets */
@@ -178,7 +174,6 @@ H5_DLL H5G_name_t     *H5D_nameof(H5D_t *dataset);
 H5_DLL herr_t          H5D_flush_all(H5F_t *f);
 H5_DLL H5P_genplist_t *H5D_get_create_plist(const H5D_t *dset);
 H5_DLL H5P_genplist_t *H5D_get_access_plist(const H5D_t *dset);
-H5_DLL H5P_genplist_t *H5D_get_dcpl(const H5D_obj_create_t *d);
 
 /* Functions that operate on chunked storage */
 H5_DLL herr_t H5D_chunk_idx_reset(H5O_storage_chunk_t *storage, bool reset_addr);

@@ -536,7 +536,6 @@ struct H5D_shared_t {
     hid_t            type_id;         /* ID for dataset's datatype    */
     H5T_t           *type;            /* Datatype for this dataset     */
     H5S_t           *space;           /* Dataspace of this dataset    */
-    H5P_genplist_t  *dcpl;            /* Dataset creation property list */
     H5D_dcpl_cache_t dcpl_cache;      /* Cached DCPL values */
     H5O_layout_t     layout;          /* Data layout                  */
     bool             checked_filters; /* true if dataset passes can_apply check */
@@ -580,7 +579,6 @@ typedef enum {
 struct H5D_obj_create_t {
     hid_t           type_id; /* Datatype for dataset */
     const H5S_t    *space;   /* Dataspace for dataset */
-    H5P_genplist_t *dcpl;    /* Dataset creation property list */
 };
 
 /* Typedef for filling a buffer with a fill value */
@@ -637,8 +635,8 @@ H5_DLLVAR const unsigned H5O_layout_ver_bounds[H5F_LIBVER_NBOUNDS + 1];
 /* Package Private Prototypes */
 /******************************/
 
-H5_DLL H5D_t  *H5D__create(H5F_t *file, hid_t type_id, const H5S_t *space, H5P_genplist_t *dcpl);
-H5_DLL H5D_t  *H5D__create_named(const H5G_loc_t *loc, const char *name, hid_t type_id, const H5S_t *space, H5P_genplist_t *dcpl);
+H5_DLL H5D_t  *H5D__create(H5F_t *file, hid_t type_id, const H5S_t *space);
+H5_DLL H5D_t  *H5D__create_named(const H5G_loc_t *loc, const char *name, hid_t type_id, const H5S_t *space);
 H5_DLL H5D_t  *H5D__open_name(const H5G_loc_t *loc, const char *name);
 H5_DLL hid_t   H5D__get_space(const H5D_t *dset);
 H5_DLL hid_t   H5D__get_type(const H5D_t *dset);

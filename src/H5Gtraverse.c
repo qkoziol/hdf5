@@ -689,15 +689,6 @@ H5G__traverse_real(const H5G_loc_t *_loc, const char *name, unsigned target, H5G
                     pline = &def_pline;
 
                 /* Create intermediate group */
-                gcrt_info.gcpl = H5P_LST_GROUP_CREATE_g;
-                /* Propagate the object creation properties when creating intermedidate groups */
-                if ((target & H5G_CRT_OBJ) && (ocrt_info = H5L_OCRT_INFO(op_data)) != NULL) {
-                    if (ocrt_info->obj_type == H5O_TYPE_GROUP)
-                        gcrt_info.gcpl = H5G_OBJ_PLIST(ocrt_info->crt_info);
-                    else if (ocrt_info->obj_type == H5O_TYPE_DATASET)
-                        gcrt_info.gcpl = H5D_OBJ_PLIST(ocrt_info->crt_info);
-                }
-
                 gcrt_info.cache_type = H5G_NOTHING_CACHED;
                 memset(&gcrt_info.cache, 0, sizeof(gcrt_info.cache));
                 if (H5G__obj_create_real(grp_oloc.file, ginfo, linfo, pline, &gcrt_info,

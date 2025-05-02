@@ -371,8 +371,8 @@ H5HF__hdr_create(H5F_t *f, const H5HF_create_t *cparam)
      *  length is already set in that case (its stored in the header on disk))
      */
     if (cparam->pline.nused > 0) {
-        /* Check if the filters in the DCPL can be applied to this dataset */
-        if (H5Z_can_apply_direct(&(cparam->pline)) < 0)
+        /* Check if the filters in the OCPL can be applied to this heap */
+        if (H5Z_can_apply_direct(&cparam->pline) < 0)
             HGOTO_ERROR(H5E_HEAP, H5E_CANTINIT, HADDR_UNDEF, "I/O filters can't operate on this heap");
 
         /* Mark the filters as checked */

@@ -94,10 +94,8 @@
 /* If the module using this macro is allowed access to the private variables, access them directly */
 #ifdef H5G_MODULE
 #define H5G_MOUNTED(G)   ((G)->shared->mounted)
-#define H5G_OBJ_PLIST(G) (((H5G_obj_create_t *)(G))->gcpl)
 #else /* H5G_MODULE */
 #define H5G_MOUNTED(G)   (H5G_mounted(G))
-#define H5G_OBJ_PLIST(G) (H5G_get_gcpl(G))
 #endif /* H5G_MODULE */
 
 /*
@@ -239,7 +237,6 @@ H5_DLL herr_t H5G_obj_remove_by_idx(const struct H5O_loc_t *grp_oloc, H5RS_str_t
 H5_DLL herr_t H5G_obj_lookup_by_idx(const struct H5O_loc_t *grp_oloc, H5_index_t idx_type,
                                     H5_iter_order_t order, hsize_t n, struct H5O_link_t *lnk);
 H5_DLL H5P_genplist_t *H5G_get_create_plist(const H5G_t *grp);
-H5_DLL H5P_genplist_t *H5G_get_gcpl(const H5G_obj_create_t *g);
 
 /*
  * These functions operate on symbol table nodes.

@@ -179,7 +179,6 @@ H5G_mkroot(H5F_t *f, bool create_root)
         if (H5CX_set_cpl(H5P_PLIST_ID(f->shared->fcpl)) < 0)
             HGOTO_ERROR(H5E_SYM, H5E_CANTSET, FAIL, "can't set creation property list info");
 
-        gcrt_info.gcpl       = f->shared->fcpl;
         gcrt_info.cache_type = H5G_NOTHING_CACHED;
         if (H5G__obj_create(f, &gcrt_info, root_loc.oloc /*out*/) < 0)
             HGOTO_ERROR(H5E_SYM, H5E_CANTINIT, FAIL, "unable to create group entry");

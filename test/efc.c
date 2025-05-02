@@ -65,7 +65,6 @@ test_single(H5P_genplist_t *fcpl, hid_t fapl_id)
 
     /* Reset the cached properties in the test's API context */
     H5CX_reset_fapl_test();
-    H5CX_reset_ocpl_test();
     H5CX_set_cpl(H5P_PLIST_ID(fcpl));
     H5CX_set_apl(&fapl_id, H5I_INVALID_HID, true);
 
@@ -83,7 +82,6 @@ test_single(H5P_genplist_t *fcpl, hid_t fapl_id)
 
     /* Reset the cached properties in the test's API context */
     H5CX_reset_fapl_test();
-    H5CX_reset_ocpl_test();
     H5CX_set_cpl(H5P_PLIST_ID(fcpl));
     H5CX_set_apl(&fapl_id, H5I_INVALID_HID, true);
 
@@ -504,7 +502,6 @@ test_graph_nocycle(H5P_genplist_t *fcpl, hid_t fapl_id)
 
     /* Reset the cached properties in the test's API context */
     H5CX_reset_fapl_test();
-    H5CX_reset_ocpl_test();
     H5CX_set_cpl(H5P_PLIST_ID(fcpl));
     H5CX_set_apl(&fapl_id, H5I_INVALID_HID, true);
 
@@ -835,7 +832,6 @@ test_graph_cycle(H5P_genplist_t *fcpl, hid_t fapl_id)
 
     /* Reset the cached properties in the test's API context */
     H5CX_reset_fapl_test();
-    H5CX_reset_ocpl_test();
     H5CX_set_cpl(H5P_PLIST_ID(fcpl));
     H5CX_set_apl(&fapl_id, H5I_INVALID_HID, true);
 
@@ -2576,7 +2572,6 @@ test_graph_cycle(H5P_genplist_t *fcpl, hid_t fapl_id)
 
     /* Reset the cached properties in the test's API context */
     H5CX_reset_fapl_test();
-    H5CX_reset_ocpl_test();
     H5CX_set_cpl(H5P_PLIST_ID(fcpl));
     H5CX_set_apl(&fapl_id, H5I_INVALID_HID, true);
 
@@ -2589,7 +2584,6 @@ test_graph_cycle(H5P_genplist_t *fcpl, hid_t fapl_id)
 
     /* Reset the cached properties in the test's API context */
     H5CX_reset_fapl_test();
-    H5CX_reset_ocpl_test();
     H5CX_set_cpl(H5P_PLIST_ID(fcpl));
     H5CX_set_apl(&fapl_id, H5I_INVALID_HID, true);
 
@@ -2639,7 +2633,6 @@ test_graph_cycle(H5P_genplist_t *fcpl, hid_t fapl_id)
 
     /* Reset the cached properties in the test's API context */
     H5CX_reset_fapl_test();
-    H5CX_reset_ocpl_test();
     H5CX_set_cpl(H5P_PLIST_ID(fcpl));
     H5CX_set_apl(&fapl_id, H5I_INVALID_HID, true);
 
@@ -2652,7 +2645,6 @@ test_graph_cycle(H5P_genplist_t *fcpl, hid_t fapl_id)
 
     /* Reset the cached properties in the test's API context */
     H5CX_reset_fapl_test();
-    H5CX_reset_ocpl_test();
     H5CX_set_cpl(H5P_PLIST_ID(fcpl));
     H5CX_set_apl(&fapl_id, H5I_INVALID_HID, true);
 

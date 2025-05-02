@@ -589,9 +589,6 @@ H5D__layout_oh_read(H5D_t *dataset)
         if (NULL == H5O_msg_read(&(dataset->oloc), H5O_PLINE_ID, &dataset->shared->dcpl_cache.pline))
             HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't retrieve message");
         pline_copied = true;
-        /* Set the I/O pipeline info in the property list */
-        if (H5P_set(dataset->shared->dcpl, H5O_CRT_PIPELINE_NAME, &dataset->shared->dcpl_cache.pline) < 0)
-            HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "can't set pipeline");
     } /* end if */
 
     /*
@@ -613,10 +610,6 @@ H5D__layout_oh_read(H5D_t *dataset)
             HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't retrieve message");
         efl_copied = true;
 
-        /* Set the EFL info in the property list */
-        if (H5P_set(dataset->shared->dcpl, H5D_CRT_EXT_FILE_LIST_NAME, &dataset->shared->dcpl_cache.efl) < 0)
-            HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "can't set external file list");
-
         /* Set the dataset's I/O operations */
         dataset->shared->layout.ops = H5D_LOPS_EFL;
     } /* end if */
@@ -632,10 +625,6 @@ H5D__layout_oh_read(H5D_t *dataset)
     /* Adjust chunk dimensions to omit datatype size (in last dimension) for creation property */
     if (H5D_CHUNKED == dataset->shared->layout.type)
         dataset->shared->layout.u.chunk.ndims--;
-
-    /* Copy layout to the DCPL */
-    if (H5P_set(dataset->shared->dcpl, H5D_CRT_LAYOUT_NAME, &dataset->shared->layout) < 0)
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "can't set layout");
 
     /* Set chunk sizes */
     if (H5D_CHUNKED == dataset->shared->layout.type)

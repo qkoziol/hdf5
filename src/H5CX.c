@@ -190,6 +190,7 @@ static void H5CX__reset_dapl(H5CX_node_t *head);
 static void H5CX__reset_dxpl(H5CX_node_t *head);
 static void H5CX__reset_lcpl(H5CX_node_t *head);
 static void H5CX__reset_acpl(H5CX_node_t *head);
+static void H5CX__reset_ocpl(H5CX_node_t *head);
 
 /*********************/
 /* Package Variables */
@@ -480,6 +481,10 @@ H5CX__init_package(void)
     /* Get flag to indicate whether to minimize dataset object header */
     if (H5P_get(dcpl, H5D_CRT_MIN_DSET_HDR_SIZE_NAME, &H5CX_def_dcpl_cache.min_dset_ohdr) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve dataset minimize flag");
+
+    /* Get flag to indicate whether dataset allocation time state is set */
+    if (H5P_get(dcpl, H5D_CRT_ALLOC_TIME_STATE_NAME, &H5CX_def_dcpl_cache.alloc_time_state) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve dataset allocation time state flag");
 
     /* Get storage layout */
     if (H5P_get(dcpl, H5D_CRT_LAYOUT_NAME, &H5CX_def_dcpl_cache.layout) < 0)
@@ -2018,6 +2023,35 @@ H5CX_get_fcpl(void)
 
     FUNC_LEAVE_NOAPI(fcpl_id)
 } /* end H5CX_get_fcpl() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_ocpl
+ *
+ * Purpose:     Retrieves the OCPL ID for the current API call context.
+ *
+ * Note:        All creation property lists are OCPLs.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+hid_t
+H5CX_get_ocpl(void)
+{
+    H5CX_node_t **head    = NULL;            /* Pointer to head of API context list */
+    hid_t         ocpl_id = H5I_INVALID_HID; /* OCPL ID for API operation */
+
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    /* Sanity check */
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+
+    /* Set return value */
+    ocpl_id = (*head)->ctx.ocpl_id;
+
+    FUNC_LEAVE_NOAPI(ocpl_id)
+} /* end H5CX_get_ocpl() */
 
 /*-------------------------------------------------------------------------
  * Function:    H5CX_get_lapl
@@ -4796,6 +4830,39 @@ done:
 } /* end H5CX_get_min_dset_hdr() */
 
 /*-------------------------------------------------------------------------
+ * Function:    H5CX_get_alloc_time_state
+ *
+ * Purpose:     Retrieves the flag that indicates whether the dataset allocation
+ *		time state is set
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_alloc_time_state(unsigned *alloc_time_state)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(alloc_time_state);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
+
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, dcpl, H5P_OBJECT_CREATE_DEFAULT, H5D_CRT_ALLOC_TIME_STATE_NAME, alloc_time_state)
+
+    /* Get the value */
+    *alloc_time_state = (*head)->ctx.dcpl_props.alloc_time_state;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_alloc_time_state() */
+
+/*-------------------------------------------------------------------------
  * Function:    H5CX_get_layout
  *
  * Purpose:     Retrieves the storage layout for dataset creation
@@ -6812,6 +6879,38 @@ done:
 } /* End H5CX_get_pline() */
 
 /*-------------------------------------------------------------------------
+ * Function:    H5CX_is_def_ocpl
+ *
+ * Purpose:     Checks if the API context is using a library's default OCPL
+ *
+ * Return:      true / false (can't fail)
+ *
+ *-------------------------------------------------------------------------
+ */
+bool
+H5CX_is_def_ocpl(void)
+{
+    H5CX_node_t **head        = NULL;  /* Pointer to head of API context list */
+    bool          is_def_ocpl = false; /* Flag to indicate OCPL is default */
+
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    /* Sanity check */
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+
+    /* Set return value */
+    is_def_ocpl = ((*head)->ctx.ocpl_id == H5P_LST_FILE_CREATE_ID_g
+            || (*head)->ctx.ocpl_id == H5P_LST_DATASET_CREATE_ID_g
+            || (*head)->ctx.ocpl_id == H5P_LST_GROUP_CREATE_ID_g
+            || (*head)->ctx.ocpl_id == H5P_LST_DATATYPE_CREATE_ID_g
+            || (*head)->ctx.ocpl_id == H5P_LST_MAP_CREATE_ID_g
+            || (*head)->ctx.ocpl_id == H5P_LST_OBJECT_CREATE_ID_g);
+
+    FUNC_LEAVE_NOAPI(is_def_ocpl)
+} /* end H5CX_is_def_ocpl() */
+
+/*-------------------------------------------------------------------------
  * Function:    H5CX__reset_ocpl
  *
  * Purpose:     Resets the cached OCPL info for the current API call context.
@@ -6820,7 +6919,7 @@ done:
  *
  *-------------------------------------------------------------------------
  */
-void
+static void
 H5CX__reset_ocpl(H5CX_node_t *head)
 {
     FUNC_ENTER_PACKAGE_NOERR
@@ -6846,10 +6945,35 @@ H5CX__reset_ocpl(H5CX_node_t *head)
 
     /* Retrieve the OCPL pointer again also */
     head->ctx.ocpl    = NULL;
-    head->ctx.ocpl_id = H5P_OBJECT_CREATE_DEFAULT;
 
     FUNC_LEAVE_NOAPI_VOID
 } /* end H5CX__reset_ocpl() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_reset_ocpl
+ *
+ * Purpose:     Reset the property cache for the API context's OCPL
+ *
+ * Return:      None
+ *
+ *-------------------------------------------------------------------------
+ */
+void
+H5CX_reset_ocpl(void)
+{
+    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
+
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    /* Sanity check */
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+
+    /* Reset the cached data */
+    H5CX__reset_ocpl(*head);
+
+    FUNC_LEAVE_NOAPI_VOID
+} /* end H5CX_reset_ocpl() */
 
 /*-------------------------------------------------------------------------
  * Function:    H5CX_peek_comm_dtype_merge_list

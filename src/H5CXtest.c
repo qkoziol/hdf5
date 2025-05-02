@@ -74,28 +74,3 @@ H5CX_reset_fapl_test(void)
     FUNC_LEAVE_NOAPI_VOID
 } /* end H5CX_reset_fapl_test() */
 
-/*-------------------------------------------------------------------------
- * Function:    H5CX_reset_ocpl_test
- *
- * Purpose:     Reset the property cache for the API context's OCPL in a test
- *
- * Return:      None
- *
- *-------------------------------------------------------------------------
- */
-void
-H5CX_reset_ocpl_test(void)
-{
-    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
-
-    FUNC_ENTER_NOAPI_NOINIT_NOERR
-
-    /* Sanity check */
-    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
-    assert(head && *head);
-
-    /* Reset the cached data */
-    H5CX__reset_ocpl(*head);
-
-    FUNC_LEAVE_NOAPI_VOID
-} /* end H5CX_reset_ocpl_test() */

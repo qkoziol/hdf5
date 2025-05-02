@@ -291,7 +291,7 @@ done:
  *-------------------------------------------------------------------------
  */
 H5G_t *
-H5G__create_named(const H5G_loc_t *loc, const char *name, H5P_genplist_t *gcpl)
+H5G__create_named(const H5G_loc_t *loc, const char *name)
 {
     H5O_obj_create_t ocrt_info;        /* Information for object creation */
     H5G_obj_create_t gcrt_info;        /* Information for group creation */
@@ -302,10 +302,8 @@ H5G__create_named(const H5G_loc_t *loc, const char *name, H5P_genplist_t *gcpl)
     /* Check arguments */
     assert(loc);
     assert(name && *name);
-    assert(gcpl);
 
     /* Set up group creation info */
-    gcrt_info.gcpl       = gcpl;
     gcrt_info.cache_type = H5G_NOTHING_CACHED;
     memset(&gcrt_info.cache, 0, sizeof(gcrt_info.cache));
 
@@ -351,7 +349,6 @@ H5G__create(H5F_t *file, H5G_obj_create_t *gcrt_info)
 
     /* check args */
     assert(file);
-    assert(gcrt_info->gcpl);
 
     /* create an open group */
     if (NULL == (grp = H5FL_CALLOC(H5G_t)))
@@ -1440,23 +1437,3 @@ done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5G__get_info_by_idx() */
 
-/*-------------------------------------------------------------------------
- * Function: H5G_get_gcpl
- *
- * Purpose:  Quick and dirty routine to retrieve the
- *           gcpl (group creation property list) from the
- *           group creation operation struct
- *
- * Return:   'gcpl' on success/abort on failure (shouldn't fail)
- *-------------------------------------------------------------------------
- */
-H5P_genplist_t *
-H5G_get_gcpl(const H5G_obj_create_t *g)
-{
-    /* Use FUNC_ENTER_NOAPI_NOINIT_NOERR here to avoid performance issues */
-    FUNC_ENTER_NOAPI_NOINIT_NOERR
-
-    assert(g);
-
-    FUNC_LEAVE_NOAPI(g->gcpl);
-} /* end H5G_get_gcpl() */

@@ -16759,7 +16759,7 @@ static enum {
 static htri_t
 link_filter_can_apply(hid_t dcpl_id, hid_t type_id, hid_t space_id)
 {
-    if (dcpl_id >= 0 || type_id >= 0 || space_id >= 0)
+    if (type_id >= 0 || space_id >= 0)
         return -1;
 
     if (link_filter_state >= LFS_ENCODED)
@@ -16776,7 +16776,7 @@ link_filter_can_apply(hid_t dcpl_id, hid_t type_id, hid_t space_id)
 static herr_t
 link_filter_set_local(hid_t dcpl_id, hid_t type_id, hid_t space_id)
 {
-    if (dcpl_id >= 0 || type_id >= 0 || space_id >= 0)
+    if (type_id >= 0 || space_id >= 0)
         return -1;
 
     if (link_filter_state >= LFS_ENCODED)

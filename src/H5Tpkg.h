@@ -356,7 +356,6 @@ typedef enum H5T_sdir_t {
 /* Typedef for named datatype creation operation */
 typedef struct {
     H5T_t          *dt;   /* Datatype to commit */
-    H5P_genplist_t *tcpl; /* Named datatype creation property list */
 } H5T_obj_create_t;
 
 /* Typedef for datatype iteration operations */
@@ -476,7 +475,7 @@ H5_DLL herr_t H5T__upgrade_version(H5T_t *dt, unsigned new_version);
 /* Committed / named datatype routines */
 H5_DLL herr_t H5T__commit_anon(H5F_t *file, H5T_t *type);
 H5_DLL herr_t H5T__commit(H5F_t *file, H5T_t *type);
-H5_DLL herr_t H5T__commit_named(const H5G_loc_t *loc, const char *name, H5T_t *dt, H5P_genplist_t *tcpl);
+H5_DLL herr_t H5T__commit_named(const H5G_loc_t *loc, const char *name, H5T_t *dt);
 H5_DLL H5T_t *H5T__open_name(const H5G_loc_t *loc, const char *name);
 H5_DLL H5P_genplist_t *H5T__get_create_plist(const H5T_t *type);
 
