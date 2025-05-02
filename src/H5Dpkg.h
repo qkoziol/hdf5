@@ -577,8 +577,8 @@ typedef enum {
 
 /* Typedef for dataset creation operation */
 struct H5D_obj_create_t {
-    hid_t           type_id; /* Datatype for dataset */
-    const H5S_t    *space;   /* Dataspace for dataset */
+    hid_t        type_id; /* Datatype for dataset */
+    const H5S_t *space;   /* Dataspace for dataset */
 };
 
 /* Typedef for filling a buffer with a fill value */

@@ -70,8 +70,9 @@
  */
 void *
 H5VL__native_datatype_commit(void *obj, const H5VL_loc_params_t *loc_params, const char *name, hid_t type_id,
-                             hid_t H5_ATTR_UNUSED lcpl_id, hid_t H5_ATTR_UNUSED tcpl_id, hid_t H5_ATTR_UNUSED tapl_id,
-                             hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
+                             hid_t H5_ATTR_UNUSED lcpl_id, hid_t H5_ATTR_UNUSED tcpl_id,
+                             hid_t H5_ATTR_UNUSED tapl_id, hid_t H5_ATTR_UNUSED dxpl_id,
+                             void H5_ATTR_UNUSED **req)
 {
     H5G_loc_t loc;              /* Location to commit datatype */
     H5T_t    *dt;               /* Datatype for ID */

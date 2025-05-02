@@ -1436,4 +1436,3 @@ done:
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5G__get_info_by_idx() */
-

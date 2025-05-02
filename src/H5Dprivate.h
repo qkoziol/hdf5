@@ -134,11 +134,11 @@ typedef struct H5D_obj_create_t H5D_obj_create_t;
 
 /* Typedef for cached dataset creation property list information */
 typedef struct H5D_dcpl_cache_t {
-    H5O_fill_t  fill;  /* Fill value info (H5D_CRT_FILL_VALUE_NAME) */
-    H5O_pline_t pline; /* I/O pipeline info (H5O_CRT_PIPELINE_NAME) */
-    H5O_efl_t   efl;   /* External file list info (H5D_CRT_EXT_FILE_LIST_NAME) */
-    bool min_dset_ohdr; /* Minimize dataset object headers (H5D_CRT_MIN_DSET_HDR_SIZE_NAME) */
-    unsigned alloc_time_state; /* Allocation time state set  (H5D_CRT_ALLOC_TIME_STATE_NAME) */
+    H5O_fill_t  fill;             /* Fill value info (H5D_CRT_FILL_VALUE_NAME) */
+    H5O_pline_t pline;            /* I/O pipeline info (H5O_CRT_PIPELINE_NAME) */
+    H5O_efl_t   efl;              /* External file list info (H5D_CRT_EXT_FILE_LIST_NAME) */
+    bool        min_dset_ohdr;    /* Minimize dataset object headers (H5D_CRT_MIN_DSET_HDR_SIZE_NAME) */
+    unsigned    alloc_time_state; /* Allocation time state set  (H5D_CRT_ALLOC_TIME_STATE_NAME) */
 } H5D_dcpl_cache_t;
 
 /* Callback information for copying datasets */

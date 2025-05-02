@@ -242,15 +242,15 @@ typedef struct {
 herr_t
 H5G__dense_create(H5F_t *f, H5O_linfo_t *linfo, const H5O_pline_t *pline)
 {
-    H5HF_create_t fheap_cparam;        /* Fractal heap creation parameters */
-    H5B2_create_t bt2_cparam;          /* v2 B-tree creation parameters */
-    H5HF_t       *fheap      = NULL;   /* Fractal heap handle */
-    H5B2_t       *bt2_name   = NULL;   /* v2 B-tree handle for names */
-    H5B2_t       *bt2_corder = NULL;   /* v2 B-tree handle for creation order */
-    size_t        fheap_id_len;        /* Fractal heap ID length */
-    hid_t old_ocpl_id = H5I_INVALID_HID;
-    H5P_genplist_t *gcpl = NULL;                         /* DCPL for dataset */
-    herr_t        ret_value = SUCCEED; /* Return value */
+    H5HF_create_t   fheap_cparam;      /* Fractal heap creation parameters */
+    H5B2_create_t   bt2_cparam;        /* v2 B-tree creation parameters */
+    H5HF_t         *fheap      = NULL; /* Fractal heap handle */
+    H5B2_t         *bt2_name   = NULL; /* v2 B-tree handle for names */
+    H5B2_t         *bt2_corder = NULL; /* v2 B-tree handle for creation order */
+    size_t          fheap_id_len;      /* Fractal heap ID length */
+    hid_t           old_ocpl_id = H5I_INVALID_HID;
+    H5P_genplist_t *gcpl        = NULL;    /* DCPL for dataset */
+    herr_t          ret_value   = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -346,7 +346,7 @@ H5G__dense_create(H5F_t *f, H5O_linfo_t *linfo, const H5O_pline_t *pline)
 
 done:
     /* Reset the OCPL back to its previous value */
-    if(H5I_INVALID_HID != old_ocpl_id)
+    if (H5I_INVALID_HID != old_ocpl_id)
         H5CX_set_cpl(old_ocpl_id);
 
     /* Close the open objects */

@@ -4853,7 +4853,8 @@ H5CX_get_alloc_time_state(unsigned *alloc_time_state)
     assert(head && *head);
     assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, dcpl, H5P_OBJECT_CREATE_DEFAULT, H5D_CRT_ALLOC_TIME_STATE_NAME, alloc_time_state)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, dcpl, H5P_OBJECT_CREATE_DEFAULT, H5D_CRT_ALLOC_TIME_STATE_NAME,
+                                    alloc_time_state)
 
     /* Get the value */
     *alloc_time_state = (*head)->ctx.dcpl_props.alloc_time_state;
@@ -6900,12 +6901,12 @@ H5CX_is_def_ocpl(void)
     assert(head && *head);
 
     /* Set return value */
-    is_def_ocpl = ((*head)->ctx.ocpl_id == H5P_LST_FILE_CREATE_ID_g
-            || (*head)->ctx.ocpl_id == H5P_LST_DATASET_CREATE_ID_g
-            || (*head)->ctx.ocpl_id == H5P_LST_GROUP_CREATE_ID_g
-            || (*head)->ctx.ocpl_id == H5P_LST_DATATYPE_CREATE_ID_g
-            || (*head)->ctx.ocpl_id == H5P_LST_MAP_CREATE_ID_g
-            || (*head)->ctx.ocpl_id == H5P_LST_OBJECT_CREATE_ID_g);
+    is_def_ocpl = ((*head)->ctx.ocpl_id == H5P_LST_FILE_CREATE_ID_g ||
+                   (*head)->ctx.ocpl_id == H5P_LST_DATASET_CREATE_ID_g ||
+                   (*head)->ctx.ocpl_id == H5P_LST_GROUP_CREATE_ID_g ||
+                   (*head)->ctx.ocpl_id == H5P_LST_DATATYPE_CREATE_ID_g ||
+                   (*head)->ctx.ocpl_id == H5P_LST_MAP_CREATE_ID_g ||
+                   (*head)->ctx.ocpl_id == H5P_LST_OBJECT_CREATE_ID_g);
 
     FUNC_LEAVE_NOAPI(is_def_ocpl)
 } /* end H5CX_is_def_ocpl() */
@@ -6944,7 +6945,7 @@ H5CX__reset_ocpl(H5CX_node_t *head)
     memset(&head->ctx.ocpl_flags, 0, sizeof(head->ctx.ocpl_flags));
 
     /* Retrieve the OCPL pointer again also */
-    head->ctx.ocpl    = NULL;
+    head->ctx.ocpl = NULL;
 
     FUNC_LEAVE_NOAPI_VOID
 } /* end H5CX__reset_ocpl() */

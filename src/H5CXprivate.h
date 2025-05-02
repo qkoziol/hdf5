@@ -154,11 +154,11 @@ typedef struct H5CX_cached_ocpl_flags_t {
 
 /* 'valid' & 'set' flags for cached DCPL properties */
 typedef struct H5CX_cached_dcpl_flags_t {
-    bool min_dset_ohdr_valid : 1; /* Whether minimize dataset object header flag is valid */
+    bool min_dset_ohdr_valid : 1;    /* Whether minimize dataset object header flag is valid */
     bool alloc_time_state_valid : 1; /* Whether allocation time state is valid */
-    bool layout_valid : 1;        /* Whether the storage layout for object creation is valid */
-    bool efl_valid : 1;           /* Whether the external file list for dataset creation is valid */
-    bool fill_value_valid : 1;    /* Whether the fill value for dataset creation is valid */
+    bool layout_valid : 1;           /* Whether the storage layout for object creation is valid */
+    bool efl_valid : 1;              /* Whether the external file list for dataset creation is valid */
+    bool fill_value_valid : 1;       /* Whether the fill value for dataset creation is valid */
 #ifdef H5O_ENABLE_BOGUS
     bool bogus_msg_id_valid : 1;    /* Whether the bogus message ID for dataset creation is valid */
     bool bogus_msg_flags_valid : 1; /* Whether the bogus message flags for dataset creation is valid */
@@ -358,11 +358,11 @@ typedef struct H5CX_ocpl_cache_t {
 
 /* Typedef for cached dataset creation property list (DCPL) information */
 typedef struct H5CX_dcpl_cache_t {
-    bool min_dset_ohdr;      /* Whether to minimize dataset object header (H5D_CRT_MIN_DSET_HDR_SIZE_NAME) */
-    unsigned alloc_time_state;      /* Whether allocation time state is set (H5D_CRT_ALLOC_TIME_STATE_NAME) */
-    H5O_layout_t layout;     /* Storage layout for object creation (H5D_CRT_LAYOUT_NAME) */
-    H5O_efl_t    efl;        /* External file list for dataset creation (H5D_CRT_EXT_FILE_LIST_NAME) */
-    H5O_fill_t   fill_value; /* Fill value for dataset creation (H5D_CRT_FILL_VALUE_NAME) */
+    bool     min_dset_ohdr; /* Whether to minimize dataset object header (H5D_CRT_MIN_DSET_HDR_SIZE_NAME) */
+    unsigned alloc_time_state; /* Whether allocation time state is set (H5D_CRT_ALLOC_TIME_STATE_NAME) */
+    H5O_layout_t layout;       /* Storage layout for object creation (H5D_CRT_LAYOUT_NAME) */
+    H5O_efl_t    efl;          /* External file list for dataset creation (H5D_CRT_EXT_FILE_LIST_NAME) */
+    H5O_fill_t   fill_value;   /* Fill value for dataset creation (H5D_CRT_FILL_VALUE_NAME) */
 #ifdef H5O_ENABLE_BOGUS
     unsigned bogus_msg_id;    /* Bogus message ID for dataset creation (H5D_CRT_BOGUS_MSG_ID_NAME) */
     uint8_t  bogus_msg_flags; /* Bogus message flags for dataset creation (H5D_CRT_BOGUS_MSG_FLAGS_NAME) */
@@ -651,7 +651,7 @@ H5_DLL herr_t H5CX_init_phase2(void);
 H5_DLL herr_t H5CX_push(H5CX_node_t *cnode);
 H5_DLL herr_t H5CX_pop(bool update_dxpl_props);
 H5_DLL bool   H5CX_pushed(void);
-H5_DLL void H5CX_reset_ocpl(void);
+H5_DLL void   H5CX_reset_ocpl(void);
 
 /* API context state routines */
 H5_DLL herr_t H5CX_retrieve_state(H5CX_state_t **api_state);
@@ -674,10 +674,10 @@ H5_DLL herr_t H5CX_set_vol_wrap_ctx(void *wrap_ctx);
 /* "Getter" routines for API context info */
 H5_DLL hid_t       H5CX_get_fapl(void);
 H5_DLL hid_t       H5CX_get_ocpl(void);
-H5_DLL bool   H5CX_is_def_ocpl(void);
+H5_DLL bool        H5CX_is_def_ocpl(void);
 H5_DLL hid_t       H5CX_get_fcpl(void);
 H5_DLL hid_t       H5CX_get_dxpl(void);
-H5_DLL bool   H5CX_is_def_dxpl(void);
+H5_DLL bool        H5CX_is_def_dxpl(void);
 H5_DLL hid_t       H5CX_get_lapl(void);
 H5_DLL herr_t      H5CX_get_vol_wrap_ctx(void **wrap_ctx);
 H5_DLL haddr_t     H5CX_get_tag(void);

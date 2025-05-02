@@ -216,9 +216,11 @@ H5D__init_package(void)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't retrieve fill value");
     if (H5P_get(H5P_LST_DATASET_CREATE_g, H5O_CRT_PIPELINE_NAME, &H5D_def_dset.dcpl_cache.pline) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't retrieve pipeline filter");
-    if (H5P_get(H5P_LST_DATASET_CREATE_g, H5D_CRT_MIN_DSET_HDR_SIZE_NAME, &H5D_def_dset.dcpl_cache.min_dset_ohdr) < 0)
+    if (H5P_get(H5P_LST_DATASET_CREATE_g, H5D_CRT_MIN_DSET_HDR_SIZE_NAME,
+                &H5D_def_dset.dcpl_cache.min_dset_ohdr) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't retrieve minimize dataset object header flag");
-    if (H5P_get(H5P_LST_DATASET_CREATE_g, H5D_CRT_ALLOC_TIME_STATE_NAME, &H5D_def_dset.dcpl_cache.alloc_time_state) < 0)
+    if (H5P_get(H5P_LST_DATASET_CREATE_g, H5D_CRT_ALLOC_TIME_STATE_NAME,
+                &H5D_def_dset.dcpl_cache.alloc_time_state) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't retrieve allocation time state flag");
 
     /* Mark "top" of interface as initialized, too */
@@ -1737,10 +1739,11 @@ H5D__open_oid(H5D_t *dataset)
     if (H5P_fill_value_cmp(&H5D_def_dset.dcpl_cache.fill, fill_prop, sizeof(H5O_fill_t))) {
         dataset->shared->dcpl_cache.alloc_time_state = false;
         if ((dataset->shared->layout.type == H5D_COMPACT && fill_prop->alloc_time == H5D_ALLOC_TIME_EARLY) ||
-            (dataset->shared->layout.type == H5D_CONTIGUOUS && fill_prop->alloc_time == H5D_ALLOC_TIME_LATE) ||
+            (dataset->shared->layout.type == H5D_CONTIGUOUS &&
+             fill_prop->alloc_time == H5D_ALLOC_TIME_LATE) ||
             (dataset->shared->layout.type == H5D_CHUNKED && fill_prop->alloc_time == H5D_ALLOC_TIME_INCR) ||
             (dataset->shared->layout.type == H5D_VIRTUAL && fill_prop->alloc_time == H5D_ALLOC_TIME_INCR))
-                dataset->shared->dcpl_cache.alloc_time_state = true;
+            dataset->shared->dcpl_cache.alloc_time_state = true;
     } /* end if */
 
     /*
@@ -2864,10 +2867,10 @@ done:
 static herr_t
 H5D__check_filters(H5D_t *dataset)
 {
-    H5O_fill_t *fill;                /* Dataset's fill value */
-    hid_t old_ocpl_id = H5I_INVALID_HID;
-    H5P_genplist_t *dcpl = NULL;                         /* DCPL for dataset */
-    herr_t      ret_value = SUCCEED; /* Return value */
+    H5O_fill_t     *fill; /* Dataset's fill value */
+    hid_t           old_ocpl_id = H5I_INVALID_HID;
+    H5P_genplist_t *dcpl        = NULL;    /* DCPL for dataset */
+    herr_t          ret_value   = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -2899,7 +2902,8 @@ H5D__check_filters(H5D_t *dataset)
                 H5CX_set_cpl(H5P_PLIST_ID(dcpl));
 
                 /* Filters must have encoding enabled. Ensure that all filters can be applied */
-                if (H5Z_can_apply(&dataset->shared->layout, &dataset->shared->dcpl_cache.pline, dataset->shared->type_id) < 0)
+                if (H5Z_can_apply(&dataset->shared->layout, &dataset->shared->dcpl_cache.pline,
+                                  dataset->shared->type_id) < 0)
                     HGOTO_ERROR(H5E_DATASET, H5E_CANAPPLY, FAIL, "can't apply filters");
 
                 dataset->shared->checked_filters = true;
@@ -2909,7 +2913,7 @@ H5D__check_filters(H5D_t *dataset)
 
 done:
     /* Restore any previous OCPL that was set */
-    if(H5I_INVALID_HID != old_ocpl_id)
+    if (H5I_INVALID_HID != old_ocpl_id)
         H5CX_set_cpl(old_ocpl_id);
 
     /* Clean up resources */
@@ -3499,16 +3503,16 @@ done:
 H5P_genplist_t *
 H5D_get_create_plist(const H5D_t *dset)
 {
-    H5P_genplist_t *new_dcpl = NULL;   /* Copy of dataset's DCPL */
-    H5O_layout_t    copied_layout;     /* Layout to tweak */
-    bool layout_copied = false;         /* Whether layout was copied */
-    H5O_fill_t      copied_fill = {0}; /* Fill value to tweak */
-    bool fill_copied = false;         /* Whether fill value was copied */
-    H5O_efl_t       copied_efl;        /* External file list to tweak */
-    bool efl_copied = false;         /* Whether external file list was copied */
-    H5T_t          *dst_type  = NULL;
-    H5T_t          *tmp_type  = NULL;
-    H5P_genplist_t *ret_value = NULL; /* Return value */
+    H5P_genplist_t *new_dcpl = NULL;       /* Copy of dataset's DCPL */
+    H5O_layout_t    copied_layout;         /* Layout to tweak */
+    bool            layout_copied = false; /* Whether layout was copied */
+    H5O_fill_t      copied_fill   = {0};   /* Fill value to tweak */
+    bool            fill_copied   = false; /* Whether fill value was copied */
+    H5O_efl_t       copied_efl;            /* External file list to tweak */
+    bool            efl_copied = false;    /* Whether external file list was copied */
+    H5T_t          *dst_type   = NULL;
+    H5T_t          *tmp_type   = NULL;
+    H5P_genplist_t *ret_value  = NULL; /* Return value */
 
     FUNC_ENTER_NOAPI(NULL)
 
@@ -3876,4 +3880,3 @@ done:
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5D__refresh() */
-

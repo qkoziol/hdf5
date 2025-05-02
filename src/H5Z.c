@@ -770,7 +770,8 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5Z__prelude_callback(const H5O_pline_t *pline, hid_t type_id, hid_t space_id, H5Z_prelude_type_t prelude_type)
+H5Z__prelude_callback(const H5O_pline_t *pline, hid_t type_id, hid_t space_id,
+                      H5Z_prelude_type_t prelude_type)
 {
     H5Z_class2_t *fclass; /* Individual filter information */
     hid_t         ocpl_id;
@@ -863,8 +864,8 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5Z__prepare_prelude_callback(const H5O_layout_t *layout, const H5O_pline_t *pline,
-                                   const hid_t type_id, H5Z_prelude_type_t prelude_type)
+H5Z__prepare_prelude_callback(const H5O_layout_t *layout, const H5O_pline_t *pline, const hid_t type_id,
+                              H5Z_prelude_type_t prelude_type)
 {
     hid_t  space_id  = -1;      /* ID for dataspace describing chunk */
     herr_t ret_value = SUCCEED; /* Return value */
@@ -990,7 +991,8 @@ H5Z_can_apply_direct(const H5O_pline_t *pline)
     assert(pline->nused > 0);
 
     /* Make "can apply" callbacks for filters in pipeline */
-    if (H5Z__prelude_callback(pline, (hid_t)H5I_INVALID_HID, (hid_t)H5I_INVALID_HID, H5Z_PRELUDE_CAN_APPLY) < 0)
+    if (H5Z__prelude_callback(pline, (hid_t)H5I_INVALID_HID, (hid_t)H5I_INVALID_HID, H5Z_PRELUDE_CAN_APPLY) <
+        0)
         HGOTO_ERROR(H5E_PLINE, H5E_CANAPPLY, FAIL, "unable to apply filter");
 
 done:
@@ -1022,7 +1024,8 @@ H5Z_set_local_direct(const H5O_pline_t *pline)
     assert(pline->nused > 0);
 
     /* Make "set local" callbacks for filters in pipeline */
-    if (H5Z__prelude_callback(pline, (hid_t)H5I_INVALID_HID, (hid_t)H5I_INVALID_HID, H5Z_PRELUDE_SET_LOCAL) < 0)
+    if (H5Z__prelude_callback(pline, (hid_t)H5I_INVALID_HID, (hid_t)H5I_INVALID_HID, H5Z_PRELUDE_SET_LOCAL) <
+        0)
         HGOTO_ERROR(H5E_PLINE, H5E_SETLOCAL, FAIL, "local filter parameters not set");
 
 done:

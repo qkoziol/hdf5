@@ -271,7 +271,7 @@ H5T__commit_named(const H5G_loc_t *loc, const char *name, H5T_t *dt)
     old_state = dt->shared->state;
 
     /* Set up named datatype creation info */
-    tcrt_info.dt   = dt;
+    tcrt_info.dt = dt;
 
     /* Set up object creation information */
     ocrt_info.obj_type = H5O_TYPE_NAMED_DATATYPE;

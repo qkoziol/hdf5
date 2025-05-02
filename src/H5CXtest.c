@@ -73,4 +73,3 @@ H5CX_reset_fapl_test(void)
 
     FUNC_LEAVE_NOAPI_VOID
 } /* end H5CX_reset_fapl_test() */
-
