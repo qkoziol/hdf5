@@ -16757,7 +16757,7 @@ static enum {
 } link_filter_state;
 
 static htri_t
-link_filter_can_apply(hid_t dcpl_id, hid_t type_id, hid_t space_id)
+link_filter_can_apply(hid_t H5_ATTR_UNUSED dcpl_id, hid_t type_id, hid_t space_id)
 {
     if (type_id >= 0 || space_id >= 0)
         return -1;
@@ -16774,7 +16774,7 @@ link_filter_can_apply(hid_t dcpl_id, hid_t type_id, hid_t space_id)
 } /* end link_fitler_can_apply */
 
 static herr_t
-link_filter_set_local(hid_t dcpl_id, hid_t type_id, hid_t space_id)
+link_filter_set_local(hid_t H5_ATTR_UNUSED dcpl_id, hid_t type_id, hid_t space_id)
 {
     if (type_id >= 0 || space_id >= 0)
         return -1;
