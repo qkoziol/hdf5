@@ -449,7 +449,7 @@
                 -D "TEST_SKIP_COMPARE=true"
                 -D "TEST_REFERENCE=${resultfile}.mty"
                 -D "TEST_ERRREF=${result_errcheck}"
-                -P "${HDF_RESOURCES_DIR}/grepTest.cmake"
+                -P "${HDF_RESOURCES_DIR}/runTest.cmake"
         )
       endif ()
       set_tests_properties (H5REPACK_MASK-${testname} PROPERTIES
@@ -803,9 +803,11 @@
                   -D "TEST_FOLDER=${PROJECT_BINARY_DIR}/testfiles"
                   -D "TEST_OUTPUT=${testfile}-${testname}-v.out"
                   -D "TEST_EXPECT=${resultcode}"
-                  -D "TEST_FILTER:STRING=${testfilter}"
+                  -D "TEST_SKIP_COMPARE=TRUE"
+                  -D "TEST_GREP_FILTER:STRING=${testfilter}"
                   -D "TEST_REFERENCE=${testfilter}"
-                  -P "${HDF_RESOURCES_DIR}/grepTest.cmake"
+                  -D "TEST_GREP_COMPARE=TRUE"
+                  -P "${HDF_RESOURCES_DIR}/runTest.cmake"
           )
           set_tests_properties (H5REPACK_VERIFY_LAYOUT-${testname}_DMP PROPERTIES
               DEPENDS H5REPACK_VERIFY_LAYOUT-${testname}_DFF
@@ -828,10 +830,13 @@
                   -D "TEST_ARGS:STRING=-pH;out-${testname}.${testfile}"
                   -D "TEST_FOLDER=${PROJECT_BINARY_DIR}/testfiles"
                   -D "TEST_OUTPUT=${testfile}-${testname}-v.out"
-                  -D "TEST_EXPECT=${resultcode}"
-                  -D "TEST_FILTER:STRING=${nottestfilter}"
+                  -D "TEST_EXPECT=0"
+                  -D "TEST_SKIP_COMPARE=TRUE"
+                  -D "TEST_GREP_EXPECT=${resultcode}"
+                  -D "TEST_GREP_FILTER:STRING=${nottestfilter}"
                   -D "TEST_REFERENCE=${testfilter}"
-                  -P "${HDF_RESOURCES_DIR}/grepTest.cmake"
+                  -D "TEST_GREP_COMPARE=TRUE"
+                  -P "${HDF_RESOURCES_DIR}/runTest.cmake"
           )
           set_tests_properties (H5REPACK_VERIFY_LAYOUT-${testname}_DMP PROPERTIES
               DEPENDS H5REPACK_VERIFY_LAYOUT-${testname}_DFF
@@ -933,10 +938,12 @@
               -D "TEST_ARGS:STRING=-H;-B;out-${testname}.${testfile}"
               -D "TEST_FOLDER=${PROJECT_BINARY_DIR}/testfiles"
               -D "TEST_OUTPUT=${testfile}-${testname}-v.out"
-              -D "TEST_EXPECT=${resultcode}"
-              -D "TEST_FILTER:STRING=SUPERBLOCK_VERSION ${superblock}"
+              -D "TEST_EXPECT=0"
+              -D "TEST_SKIP_COMPARE=TRUE"
+              -D "TEST_GREP_FILTER:STRING=SUPERBLOCK_VERSION ${superblock}"
               -D "TEST_REFERENCE=SUPERBLOCK_VERSION ${superblock}"
-              -P "${HDF_RESOURCES_DIR}/grepTest.cmake"
+              -D "TEST_GREP_COMPARE=TRUE"
+              -P "${HDF_RESOURCES_DIR}/runTest.cmake"
       )
       set_tests_properties (H5REPACK_VERIFY_SUPERBLOCK-${testname}_DMP PROPERTIES
           DEPENDS H5REPACK_VERIFY_SUPERBLOCK-${testname}
@@ -1003,10 +1010,12 @@
               -D "TEST_ARGS:STRING=-H;-B;out-${testname}.${testfile}"
               -D "TEST_FOLDER=${PROJECT_BINARY_DIR}/testfiles"
               -D "TEST_OUTPUT=${testfile}-${testname}-v.out"
-              -D "TEST_EXPECT=${resultcode}"
-              -D "TEST_FILTER:STRING=USERBLOCK_SIZE ${userblocksize}"
+              -D "TEST_EXPECT=0"
+              -D "TEST_SKIP_COMPARE=TRUE"
+              -D "TEST_GREP_FILTER:STRING=USERBLOCK_SIZE ${userblocksize}"
               -D "TEST_REFERENCE=USERBLOCK_SIZE ${userblocksize}"
-              -P "${HDF_RESOURCES_DIR}/grepTest.cmake"
+              -D "TEST_GREP_COMPARE=TRUE"
+              -P "${HDF_RESOURCES_DIR}/runTest.cmake"
       )
       set_tests_properties (H5REPACK_VERIFY_USERBLOCK-${testname}_DMP PROPERTIES
           DEPENDS H5REPACK_VERIFY_USERBLOCK-${testname}
