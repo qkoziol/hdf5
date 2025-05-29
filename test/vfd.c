@@ -2253,8 +2253,8 @@ error:
  * Purpose:     Tests the file handle interface for the ROS3 driver
  *
  *              As the ROS3 driver is 1) read only, 2) requires access
- *              to an S3 server (minio for now), this test is quite
- *              different from the other tests.
+ *              to an S3 server, this test is quite different from the
+ *              other tests.
  *
  *              For now, test only fapl & flags.  Extend as the
  *              work on the VFD continues.
