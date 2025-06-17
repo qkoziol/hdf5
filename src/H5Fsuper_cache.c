@@ -423,6 +423,10 @@ H5F__cache_superblock_deserialize(const void *_image, size_t len, void *_udata, 
     if (H5F__superblock_prefix_decode(sblock, &image, len, udata, false) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTDECODE, NULL, "can't decode file superblock prefix");
 
+    /* Set the file's address and length */
+    H5F_SET_SIZEOF_ADDR(udata->f, sblock->sizeof_addr);
+    H5F_SET_SIZEOF_SIZE(udata->f, sblock->sizeof_size);
+
     /* Check for older version of superblock format */
     if (sblock->super_vers < HDF5_SUPERBLOCK_VERSION_2) {
         uint32_t status_flags;  /* File status flags	   */
@@ -457,13 +461,11 @@ H5F__cache_superblock_deserialize(const void *_image, size_t len, void *_udata, 
         if (H5_IS_BUFFER_OVERFLOW(image, 1, end))
             HGOTO_ERROR(H5E_FILE, H5E_OVERFLOW, NULL, "image pointer is out of bounds");
         image++;
-        udata->f->shared->sizeof_addr = sblock->sizeof_addr; /* Keep a local copy also */
 
         /* Skip over size of file sizes (already decoded) */
         if (H5_IS_BUFFER_OVERFLOW(image, 1, end))
             HGOTO_ERROR(H5E_FILE, H5E_OVERFLOW, NULL, "image pointer is out of bounds");
         image++;
-        udata->f->shared->sizeof_size = sblock->sizeof_size; /* Keep a local copy also */
 
         /* Skip over reserved byte */
         if (H5_IS_BUFFER_OVERFLOW(image, 1, end))
@@ -560,10 +562,8 @@ H5F__cache_superblock_deserialize(const void *_image, size_t len, void *_udata, 
 
         /* Skip over size of file addresses (already decoded) */
         image++;
-        udata->f->shared->sizeof_addr = sblock->sizeof_addr; /* Keep a local copy also */
         /* Skip over size of file sizes (already decoded) */
         image++;
-        udata->f->shared->sizeof_size = sblock->sizeof_size; /* Keep a local copy also */
 
         /* Check whether the image pointer is out of bounds */
         if (H5_IS_BUFFER_OVERFLOW(image, 1, end))

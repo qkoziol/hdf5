@@ -946,7 +946,7 @@ done:
 H5P_genplist_t *
 H5T__get_create_plist(const H5T_t *type)
 {
-    H5P_genplist_t *new_plist;        /* New datatype creation property list */
+    H5P_genplist_t *new_tcpl;        /* New datatype creation property list */
     H5P_genplist_t *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -955,19 +955,19 @@ H5T__get_create_plist(const H5T_t *type)
     assert(type);
 
     /* Copy the default datatype creation property list */
-    if (NULL == (new_plist = H5P_new_plist_of_type(H5P_TYPE_DATATYPE_CREATE, true)))
+    if (NULL == (new_tcpl = H5P_new_plist_of_type(H5P_TYPE_DATATYPE_CREATE, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTCOPY, NULL, "can't copy default datatype creation property list");
 
     /* Retrieve any object creation properties */
-    if (H5O_get_create_plist(&type->oloc, new_plist) < 0)
+    if (H5O_get_create_plist(&type->oloc, new_tcpl) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTGET, NULL, "can't get object creation info");
 
     /* Set the return value */
-    ret_value = new_plist;
+    ret_value = new_tcpl;
 
 done:
     if (NULL == ret_value)
-        if (new_plist && H5P_release(new_plist) < 0)
+        if (new_tcpl && H5P_release(new_tcpl) < 0)
             HDONE_ERROR(H5E_DATATYPE, H5E_CANTCLOSEOBJ, NULL, "can't close datatype creation property list");
 
     FUNC_LEAVE_NOAPI(ret_value)

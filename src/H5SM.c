@@ -1918,13 +1918,12 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5SM_get_info(const H5O_loc_t *ext_loc, H5P_genplist_t *fcpl)
+H5SM_get_info(const H5O_loc_t *ext_loc)
 {
-    H5F_t               *f = ext_loc->file;         /* File pointer (convenience variable) */
+    H5F_t               *f = NULL;         /* File pointer (convenience variable) */
     H5O_shmesg_table_t   sohm_table;                /* SOHM message from superblock extension */
     H5SM_master_table_t *table     = NULL;          /* SOHM master table */
     H5AC_ring_t          orig_ring = H5AC_RING_INV; /* Original ring value */
-    unsigned             tmp_sohm_nindexes;         /* Number of shared messages indexes in the table */
     htri_t               status;                    /* Status for message existing */
     herr_t               ret_value = SUCCEED;       /* Return value */
 
@@ -1932,27 +1931,19 @@ H5SM_get_info(const H5O_loc_t *ext_loc, H5P_genplist_t *fcpl)
 
     /* Sanity check */
     assert(ext_loc);
+    f = ext_loc->file;
     assert(f);
-    assert(fcpl);
 
     /* Check for the extension having a 'shared message info' message */
     if ((status = H5O_msg_exists(ext_loc, H5O_SHMESG_ID)) < 0)
         HGOTO_ERROR(H5E_SOHM, H5E_CANTGET, FAIL, "unable to read object header");
     if (status) {
         H5SM_table_cache_ud_t cache_udata;                          /* User-data for callback */
-        unsigned              index_flags[H5O_SHMESG_MAX_NINDEXES]; /* Message flags for each index */
-        unsigned              minsizes[H5O_SHMESG_MAX_NINDEXES];    /* Minimum message size for each index */
-        unsigned              sohm_l2b;                             /* SOHM list-to-btree cutoff */
-        unsigned              sohm_b2l;                             /* SOHM btree-to-list cutoff */
         unsigned              u;                                    /* Local index variable */
 
         /* Retrieve the 'shared message info' structure */
         if (NULL == H5O_msg_read(ext_loc, H5O_SHMESG_ID, &sohm_table))
             HGOTO_ERROR(H5E_SOHM, H5E_CANTGET, FAIL, "shared message info message not present");
-
-        /* Portably initialize the arrays */
-        memset(index_flags, 0, sizeof(index_flags));
-        memset(minsizes, 0, sizeof(minsizes));
 
         /* Set SOHM info from file */
         H5F_SET_SOHM_ADDR(f, sohm_table.addr);
@@ -1973,50 +1964,26 @@ H5SM_get_info(const H5O_loc_t *ext_loc, H5P_genplist_t *fcpl)
             HGOTO_ERROR(H5E_SOHM, H5E_CANTPROTECT, FAIL, "unable to load SOHM master table");
 
         /* Get index conversion limits */
-        sohm_l2b = (unsigned)table->indexes[0].list_max;
-        sohm_b2l = (unsigned)table->indexes[0].btree_min;
+        H5F_SET_SOHM_LIST_MAX(f, (unsigned)table->indexes[0].list_max);
+        H5F_SET_SOHM_BTREE_MIN(f, (unsigned)table->indexes[0].btree_min);
 
         /* Iterate through all indices */
         for (u = 0; u < table->num_indexes; ++u) {
             /* Pack information about the individual SOHM index */
-            index_flags[u] = table->indexes[u].mesg_types;
-            minsizes[u]    = (unsigned)table->indexes[u].min_mesg_size;
+            H5F_SET_SOHM_INDEX_FLAGS(f, u, table->indexes[u].mesg_types);
+            H5F_SET_SOHM_INDEX_MINSIZE(f, u, (unsigned)table->indexes[u].min_mesg_size);
 
             /* Sanity check */
-            assert(sohm_l2b == table->indexes[u].list_max);
-            assert(sohm_b2l == table->indexes[u].btree_min);
+            assert(H5F_SOHM_LIST_MAX(f) == table->indexes[u].list_max);
+            assert(H5F_SOHM_BTREE_MIN(f) == table->indexes[u].btree_min);
 
             /* Check for sharing attributes in this file, which means that creation
              *  indices must be tracked on object header message in the file.
              */
-            if (index_flags[u] & H5O_SHMESG_ATTR_FLAG)
+            if (H5F_SOHM_INDEX_FLAGS(f, u) & H5O_SHMESG_ATTR_FLAG)
                 H5F_SET_STORE_MSG_CRT_IDX(f, true);
         } /* end for */
-
-        /* Set values in the property list */
-        tmp_sohm_nindexes = H5F_SOHM_NINDEXES(f);
-        if (H5P_set(fcpl, H5F_CRT_SHMSG_NINDEXES_NAME, &tmp_sohm_nindexes) < 0)
-            HGOTO_ERROR(H5E_SOHM, H5E_CANTSET, FAIL, "can't set number of SOHM indexes");
-        if (H5P_set(fcpl, H5F_CRT_SHMSG_INDEX_TYPES_NAME, index_flags) < 0)
-            HGOTO_ERROR(H5E_SOHM, H5E_CANTSET, FAIL, "can't set type flags for indexes");
-        if (H5P_set(fcpl, H5F_CRT_SHMSG_INDEX_MINSIZE_NAME, minsizes) < 0)
-            HGOTO_ERROR(H5E_SOHM, H5E_CANTSET, FAIL, "can't set type flags for indexes");
-        if (H5P_set(fcpl, H5F_CRT_SHMSG_LIST_MAX_NAME, &sohm_l2b) < 0)
-            HGOTO_ERROR(H5E_SOHM, H5E_CANTGET, FAIL, "can't set SOHM cutoff in property list");
-        if (H5P_set(fcpl, H5F_CRT_SHMSG_BTREE_MIN_NAME, &sohm_b2l) < 0)
-            HGOTO_ERROR(H5E_SOHM, H5E_CANTGET, FAIL, "can't set SOHM cutoff in property list");
     } /* end if */
-    else {
-        /* No SOHM info in file */
-        H5F_SET_SOHM_ADDR(f, HADDR_UNDEF);
-        H5F_SET_SOHM_VERS(f, 0);
-        H5F_SET_SOHM_NINDEXES(f, 0);
-
-        /* Shared object header messages are disabled */
-        tmp_sohm_nindexes = H5F_SOHM_NINDEXES(f);
-        if (H5P_set(fcpl, H5F_CRT_SHMSG_NINDEXES_NAME, &tmp_sohm_nindexes) < 0)
-            HGOTO_ERROR(H5E_SOHM, H5E_CANTSET, FAIL, "can't set number of SOHM indexes");
-    } /* end else */
 
 done:
     /* Reset the ring in the API context */

@@ -142,7 +142,7 @@ H5F__efc_open_file(bool try, H5F_t **_file, const char *name, unsigned flags, H5
     *_file = NULL;
 
     /* Open the file */
-    if (H5F_open(try, &file, name, flags, H5P_LST_FILE_CREATE_g, fapl) < 0)
+    if (H5F_open(try, &file, name, flags, fapl) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, FAIL, "can't open file");
 
     /* Check if file was not opened */

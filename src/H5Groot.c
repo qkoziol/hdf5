@@ -126,7 +126,6 @@ H5G_mkroot(H5F_t *f, bool create_root)
 {
     H5G_loc_t        root_loc;                       /* Root location information */
     H5G_obj_create_t gcrt_info;                      /* Root group object creation info */
-    hid_t            old_fcpl_id  = H5I_INVALID_HID; /* ID for old FCPL in API context */
     htri_t           stab_exists  = -1;              /* Whether the symbol table exists */
     bool             sblock_dirty = false;           /* Whether superblock was dirtied */
     bool             path_init    = false;           /* Whether path was initialized */
@@ -170,14 +169,6 @@ H5G_mkroot(H5F_t *f, bool create_root)
     if (create_root) {
         /* Create root group */
         /* (Uses the FCPL, which is a sub-class of the group creation property class) */
-
-        /* Retrieve the current FCPL in the API context */
-        if ((old_fcpl_id = H5CX_get_fcpl()) < 0)
-            HGOTO_ERROR(H5E_SYM, H5E_CANTGET, FAIL, "can't get file creation property list");
-
-        /* Set the FCPL in the API context for root group creation */
-        if (H5CX_set_cpl(H5P_PLIST_ID(f->shared->fcpl)) < 0)
-            HGOTO_ERROR(H5E_SYM, H5E_CANTSET, FAIL, "can't set creation property list info");
 
         gcrt_info.cache_type = H5G_NOTHING_CACHED;
         if (H5G__obj_create(f, &gcrt_info, root_loc.oloc /*out*/) < 0)
@@ -292,12 +283,7 @@ H5G_mkroot(H5F_t *f, bool create_root)
     f->nopen_objs--;
 
 done:
-    /* Restore previous FCPL in the API contxt */
-    if (old_fcpl_id > 0)
-        H5CX_set_fcpl(old_fcpl_id);
-
-    /* In case of error, free various memory locations that may have been
-     * allocated */
+    /* In case of error, free various memory locations that may have been allocated */
     if (ret_value < 0) {
         if (f->shared->root_grp) {
             if (path_init)

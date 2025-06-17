@@ -96,46 +96,46 @@
         (*head)->ctx.H5_GLUE(SUB_PL, _flags).H5_GLUE(PROP_FIELD, _valid) = true;                             \
     }
 
-/* Macro for the duplicated code to retrieve a value from a plist if the context value is invalid */
+/* Macro for the duplicated code to retrieve a value from a property list if the context value is invalid */
 #define H5CX_RETRIEVE_PROP_VALID(PL, DEF_PL, PROP_NAME, PROP_FIELD)                                          \
     /* Check if the value has been retrieved already */                                                      \
     if (!(*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                       \
     H5CX_RETRIEVE_PROP_COMMON(PL, NO, get, PL, DEF_PL, PROP_NAME, PROP_FIELD, FAIL)
 
-/* Macro for the duplicated code to test for and retrieve a value from a plist if the context value is invalid
+/* Macro for the duplicated code to test for and retrieve a value from a property list if the context value is invalid
  */
 #define H5CX_TEST_RETRIEVE_PROP_VALID(PL, DEF_PL, PROP_NAME, PROP_FIELD)                                     \
     /* Check if the value has been retrieved already */                                                      \
     if (!(*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                       \
     H5CX_RETRIEVE_PROP_COMMON(PL, YES, get, PL, DEF_PL, PROP_NAME, PROP_FIELD, FAIL)
 
-/* Macro for the duplicated code to "peek" a value from a plist if the context value is invalid */
+/* Macro for the duplicated code to "peek" a value from a property list if the context value is invalid */
 #define H5CX_PEEK_PROP_VALID(PL, DEF_PL, PROP_NAME, PROP_FIELD)                                              \
     /* Check if the value has been retrieved already */                                                      \
     if (!(*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                       \
     H5CX_RETRIEVE_PROP_COMMON(PL, NO, peek, PL, DEF_PL, PROP_NAME, PROP_FIELD, FAIL)
 
-/* Macro for the duplicated code to "peek" a value from a plist if the context value is invalid */
+/* Macro for the duplicated code to "peek" a value from a property list if the context value is invalid */
 #define H5CX_PEEK_PROP_VALID_ERR(PL, DEF_PL, PROP_NAME, PROP_FIELD, ERR_RET)                                 \
     /* Check if the value has been retrieved already */                                                      \
     if (!(*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                       \
     H5CX_RETRIEVE_PROP_COMMON(PL, NO, peek, PL, DEF_PL, PROP_NAME, PROP_FIELD, ERR_RET)
 
-/* Macro for the duplicated code to retrieve a value from a plist if the context value is invalid */
+/* Macro for the duplicated code to retrieve a value from a property list if the context value is invalid */
 #define H5CX_RETRIEVE_SUBCLS_PROP_VALID(PL, SUB_PL, DEF_PL, PROP_NAME, PROP_FIELD)                           \
     /* Check if the value has been retrieved already */                                                      \
     if (!(*head)->ctx.H5_GLUE(SUB_PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                   \
     H5CX_RETRIEVE_PROP_COMMON(PL, NO, get, SUB_PL, DEF_PL, PROP_NAME, PROP_FIELD, FAIL)
 
 #ifdef H5O_ENABLE_BOGUS
-/* Macro for the duplicated code to retrieve a value from a plist if the context value is invalid */
+/* Macro for the duplicated code to retrieve a value from a property list if the context value is invalid */
 #define H5CX_TEST_RETRIEVE_SUBCLS_PROP_VALID(PL, SUB_PL, DEF_PL, PROP_NAME, PROP_FIELD)                      \
     /* Check if the value has been retrieved already */                                                      \
     if (!(*head)->ctx.H5_GLUE(SUB_PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                   \
     H5CX_RETRIEVE_PROP_COMMON(PL, YES, get, SUB_PL, DEF_PL, PROP_NAME, PROP_FIELD, FAIL)
 #endif /* H5O_ENABLE_BOGUS */
 
-/* Macro for the duplicated code to retrieve a value from a plist if the context value is invalid, or the
+/* Macro for the duplicated code to retrieve a value from a property list if the context value is invalid, or the
  * library has previously modified the context value for return */
 #define H5CX_RETRIEVE_PROP_VALID_SET(PL, DEF_PL, PROP_NAME, PROP_FIELD)                                      \
     /* Check if the value has been retrieved already */                                                      \
@@ -1502,7 +1502,7 @@ herr_t
 H5CX_set_cpl(hid_t crtpl_id)
 {
     H5CX_node_t   **head  = NULL; /* Pointer to head of API context list */
-    H5P_genplist_t *plist = NULL; /* Property list for the ID */
+    H5P_genplist_t *crtpl = NULL; /* Property list for the ID */
     htri_t is_dcpl = false; /* Whether the creation property list is (or is derived from) a dataset creation
                                property list */
     htri_t is_fcpl =
@@ -1523,31 +1523,31 @@ H5CX_set_cpl(hid_t crtpl_id)
     assert(H5P_DEFAULT != crtpl_id);
 
     /* Get the property list for the ID */
-    if (NULL == (plist = H5I_object_verify(crtpl_id, H5I_GENPROP_LST)))
+    if (NULL == (crtpl = H5I_object_verify(crtpl_id, H5I_GENPROP_LST)))
         HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "invalid ID for property list");
 
     /* Check for dataset creation property */
-    if ((is_dcpl = H5P_class_isa(H5P_CLASS(plist), H5P_CLS_DATASET_CREATE_g)) < 0)
+    if ((is_dcpl = H5P_class_isa(H5P_CLASS(crtpl), H5P_CLS_DATASET_CREATE_g)) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for dataset creation class");
     else if (!is_dcpl) {
         /* Check for file creation property */
         /* (Must be before group creation property, as the file creation property is a sub-class of it) */
-        if ((is_fcpl = H5P_class_isa(H5P_CLASS(plist), H5P_CLS_FILE_CREATE_g)) < 0)
+        if ((is_fcpl = H5P_class_isa(H5P_CLASS(crtpl), H5P_CLS_FILE_CREATE_g)) < 0)
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for file creation class");
         else if (!is_fcpl) {
             /* Check for group creation property */
-            if ((is_gcpl = H5P_class_isa(H5P_CLASS(plist), H5P_CLS_GROUP_CREATE_g)) < 0)
+            if ((is_gcpl = H5P_class_isa(H5P_CLASS(crtpl), H5P_CLS_GROUP_CREATE_g)) < 0)
                 HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for group creation class");
             else if (!is_gcpl) {
                 /* Check for datatype creation property */
-                if ((is_tcpl = H5P_class_isa(H5P_CLASS(plist), H5P_CLS_DATATYPE_CREATE_g)) < 0)
+                if ((is_tcpl = H5P_class_isa(H5P_CLASS(crtpl), H5P_CLS_DATATYPE_CREATE_g)) < 0)
                     HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for datatype creation class");
                 else if (!is_tcpl) {
                     /* Check for object creation property */
                     /* (Must be last, as other object creation property classes are
                      *      sub-classes of it)
                      */
-                    if ((is_ocpl = H5P_class_isa(H5P_CLASS(plist), H5P_CLS_OBJECT_CREATE_g)) < 0)
+                    if ((is_ocpl = H5P_class_isa(H5P_CLASS(crtpl), H5P_CLS_OBJECT_CREATE_g)) < 0)
                         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for object creation class");
                     else if (!is_ocpl)
                         HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "unknown creation property class");
@@ -1591,7 +1591,7 @@ H5CX_set_apl(hid_t *acspl_id,
                      is_collective)
 {
     H5CX_node_t   **head  = NULL; /* Pointer to head of API context list */
-    H5P_genplist_t *plist = NULL; /* Property list for the ID */
+    H5P_genplist_t *acspl = NULL; /* Property list for the ID */
     htri_t          is_lapl =
         false; /* Whether the access property list is (or is derived from) a link access property list */
 #ifdef H5_HAVE_PARALLEL
@@ -1619,11 +1619,11 @@ H5CX_set_apl(hid_t *acspl_id,
     }
     else {
         /* Get the property list for the ID */
-        if (NULL == (plist = H5I_object_verify(*acspl_id, H5I_GENPROP_LST)))
+        if (NULL == (acspl = H5I_object_verify(*acspl_id, H5I_GENPROP_LST)))
             HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "invalid ID for property list");
 
         /* Check for link access property */
-        if ((is_lapl = H5P_class_isa(H5P_CLASS(plist), H5P_CLS_LINK_ACCESS_g)) < 0)
+        if ((is_lapl = H5P_class_isa(H5P_CLASS(acspl), H5P_CLS_LINK_ACCESS_g)) < 0)
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for link access class");
         else if (is_lapl) {
             H5CX__reset_lapl(*head);
@@ -1645,10 +1645,10 @@ H5CX_set_apl(hid_t *acspl_id,
                            list */
 
         /* Get the property list for the ID, if we don't have it already */
-        if (!plist && NULL == (plist = H5I_object_verify(*acspl_id, H5I_GENPROP_LST)))
+        if (!acspl && NULL == (acspl = H5I_object_verify(*acspl_id, H5I_GENPROP_LST)))
             HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "invalid ID for property list");
 
-        if ((is_dapl = H5P_class_isa(H5P_CLASS(plist), H5P_CLS_DATASET_ACCESS_g)) < 0)
+        if ((is_dapl = H5P_class_isa(H5P_CLASS(acspl), H5P_CLS_DATASET_ACCESS_g)) < 0)
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for dataset access class");
         else if (is_dapl) {
             H5CX__reset_dapl(*head);
@@ -1669,10 +1669,10 @@ H5CX_set_apl(hid_t *acspl_id,
                            list */
 
         /* Get the property list for the ID, if we don't have it already */
-        if (!plist && NULL == (plist = H5I_object_verify(*acspl_id, H5I_GENPROP_LST)))
+        if (!acspl && NULL == (acspl = H5I_object_verify(*acspl_id, H5I_GENPROP_LST)))
             HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "invalid ID for property list");
 
-        if ((is_fapl = H5P_class_isa(H5P_CLASS(plist), H5P_CLS_FILE_ACCESS_g)) < 0)
+        if ((is_fapl = H5P_class_isa(H5P_CLASS(acspl), H5P_CLS_FILE_ACCESS_g)) < 0)
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for file access class");
         else if (is_fapl) {
             H5CX__reset_fapl(*head);

@@ -276,7 +276,7 @@ done:
 /*-------------------------------------------------------------------------
  * Function:    H5FD_open_wrap
  *
- * Purpose:     Wrapper around H5FD_open thata saves and restores the current
+ * Purpose:     Wrapper around H5FD_open that saves and restores the current
  *              API context state.  Must be used by a routine that passes a
  *              different FAPL to H5FD_open than the routine was called with.
  *
@@ -774,7 +774,7 @@ done:
 /*-------------------------------------------------------------------------
  * Function:    H5FD_get_vfd_handle_wrap
  *
- * Purpose:     Wrapper around H5FD_get_vfd_handle thata saves and restores the
+ * Purpose:     Wrapper around H5FD_get_vfd_handle that saves and restores the
  *              current API context state.  Must be used by a routine that passes
  *              a different FAPL to H5FD_get_vfd_handle than the routine was
  *              called with.
@@ -2004,7 +2004,7 @@ done:
 /*-------------------------------------------------------------------------
  * Function:    H5FD_delete_wrap
  *
- * Purpose:     Wrapper around H5FD_delete thata saves and restores the current
+ * Purpose:     Wrapper around H5FD_delete that saves and restores the current
  *              API context state.  Must be used by a routine that passes a
  *              different FAPL to H5FD_delete than the routine was called with.
  *

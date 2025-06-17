@@ -407,7 +407,7 @@ static herr_t H5P__facc_mpi_info_close(const char *name, size_t size, void *valu
 #endif /* H5_HAVE_PARALLEL */
 
 /* VFD driver routines */
-static herr_t H5P__set_driver_by_name(H5P_genplist_t *plist, const char *driver_name,
+static herr_t H5P__set_driver_by_name(H5P_genplist_t *fapl, const char *driver_name,
                                       const char *driver_config);
 
 /*********************/

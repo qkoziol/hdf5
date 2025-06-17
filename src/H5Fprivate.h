@@ -61,13 +61,23 @@ typedef struct H5F_t H5F_t;
 #define H5F_KVALUE(F, T)                 ((F)->shared->sblock->btree_k[(T)->id])
 #define H5F_NREFS(F)                     ((F)->shared->nrefs)
 #define H5F_SIZEOF_ADDR(F)               ((F)->shared->sizeof_addr)
+#define H5F_SET_SIZEOF_ADDR(F, A)        ((F)->shared->sizeof_addr = (A))
 #define H5F_SIZEOF_SIZE(F)               ((F)->shared->sizeof_size)
+#define H5F_SET_SIZEOF_SIZE(F, S)        ((F)->shared->sizeof_size = (S))
 #define H5F_SOHM_ADDR(F)                 ((F)->shared->sohm_addr)
 #define H5F_SET_SOHM_ADDR(F, A)          ((F)->shared->sohm_addr = (A))
 #define H5F_SOHM_VERS(F)                 ((F)->shared->sohm_vers)
 #define H5F_SET_SOHM_VERS(F, V)          ((F)->shared->sohm_vers = (V))
 #define H5F_SOHM_NINDEXES(F)             ((F)->shared->sohm_nindexes)
 #define H5F_SET_SOHM_NINDEXES(F, N)      ((F)->shared->sohm_nindexes = (N))
+#define H5F_SOHM_INDEX_FLAGS(F, U)       ((F)->shared->sohm_index_flags[U])
+#define H5F_SET_SOHM_INDEX_FLAGS(F, U, FLAGS) ((F)->shared->sohm_index_flags[U] = (FLAGS))
+#define H5F_SOHM_INDEX_MINSIZE(F, U)     ((F)->shared->sohm_index_minsize[U])
+#define H5F_SET_SOHM_INDEX_MINSIZE(F, U, MINSIZE) ((F)->shared->sohm_index_minsize[U] = (MINSIZE))
+#define H5F_SOHM_LIST_MAX(F)             ((F)->shared->sohm_list_max)
+#define H5F_SET_SOHM_LIST_MAX(F, MAX)    ((F)->shared->sohm_list_max = (MAX))
+#define H5F_SOHM_BTREE_MIN(F)            ((F)->shared->sohm_btree_min)
+#define H5F_SET_SOHM_BTREE_MIN(F, MIN)   ((F)->shared->sohm_btree_min = (MIN))
 #define H5F_GET_FC_DEGREE(F)             ((F)->shared->fc_degree)
 #define H5F_EVICT_ON_CLOSE(F)            ((F)->shared->evict_on_close)
 #define H5F_RDCC_NSLOTS(F)               ((F)->shared->rdcc_nslots)
@@ -122,13 +132,23 @@ typedef struct H5F_t H5F_t;
 #define H5F_KVALUE(F, T)                 (H5F_kvalue(F, T))
 #define H5F_NREFS(F)                     (H5F_get_nrefs(F))
 #define H5F_SIZEOF_ADDR(F)               (H5F_sizeof_addr(F))
+#define H5F_SET_SIZEOF_ADDR(F, A)        (H5F_set_sizeof_addr(F, A))
 #define H5F_SIZEOF_SIZE(F)               (H5F_sizeof_size(F))
+#define H5F_SET_SIZEOF_SIZE(F, S)        (H5F_set_sizeof_size(F, S))
 #define H5F_SOHM_ADDR(F)                 (H5F_get_sohm_addr(F))
 #define H5F_SET_SOHM_ADDR(F, A)          (H5F_set_sohm_addr((F), (A)))
 #define H5F_SOHM_VERS(F)                 (H5F_get_sohm_vers(F))
 #define H5F_SET_SOHM_VERS(F, V)          (H5F_set_sohm_vers((F), (V)))
 #define H5F_SOHM_NINDEXES(F)             (H5F_get_sohm_nindexes(F))
 #define H5F_SET_SOHM_NINDEXES(F, N)      (H5F_set_sohm_nindexes((F), (N)))
+#define H5F_SOHM_INDEX_FLAGS(F, U)       (H5F_get_sohm_index_flags((F), (U)))
+#define H5F_SET_SOHM_INDEX_FLAGS(F, U, FLAGS) (H5F_set_sohm_index_flags((F), (U), (FLAGS)))
+#define H5F_SOHM_INDEX_MINSIZE(F, U)     (H5F_get_sohm_index_minsize((F), (U)))
+#define H5F_SET_SOHM_INDEX_MINSIZE(F, U, MINSIZE) (H5F_set_sohm_index_minsize((F), (U), (MINSIZE)))
+#define H5F_SOHM_LIST_MAX(F)             (H5F_get_sohm_list_max(F))
+#define H5F_SET_SOHM_LIST_MAX(F, MAX)    (H5F_set_sohm_list_max((F), (MAX)))
+#define H5F_SOHM_BTREE_MIN(F)            (H5F_get_sohm_btree_min(F))
+#define H5F_SET_SOHM_BTREE_MIN(F, MIN)   (H5F_set_sohm_btree_min((F), (MIN)))
 #define H5F_GET_FC_DEGREE(F)             (H5F_get_fc_degree(F))
 #define H5F_EVICT_ON_CLOSE(F)            (H5F_get_evict_on_close(F))
 #define H5F_RDCC_NSLOTS(F)               (H5F_rdcc_nslots(F))
@@ -484,8 +504,7 @@ typedef enum H5F_prefix_open_t {
 
 /* Private functions */
 H5_DLL herr_t H5F_init(void);
-H5_DLL herr_t H5F_open(bool attempt, H5F_t **file, const char *name, unsigned flags, H5P_genplist_t *fcpl,
-                       H5P_genplist_t *fapl);
+H5_DLL herr_t H5F_open(bool attempt, H5F_t **file, const char *name, unsigned flags, H5P_genplist_t *fapl);
 H5_DLL herr_t H5F_try_close(H5F_t *f, bool *was_closed /*out*/);
 H5_DLL hid_t  H5F_get_file_id(H5VL_object_t *vol_obj, H5I_type_t obj_type, bool app_ref);
 
@@ -507,6 +526,7 @@ H5_DLL H5F_t          *H5F_get_parent(const H5F_t *f);
 H5_DLL unsigned        H5F_get_nmounts(const H5F_t *f);
 H5_DLL unsigned        H5F_get_read_attempts(const H5F_t *f);
 H5_DLL H5P_genplist_t *H5F_get_access_plist(H5F_t *f, bool app_ref);
+H5_DLL H5P_genplist_t *H5F_get_create_plist(H5F_t *f);
 H5_DLL hid_t           H5F_get_id(H5F_t *file);
 H5_DLL herr_t  H5F_get_obj_count(const H5F_t *f, unsigned types, bool app_ref, size_t *obj_id_count_ptr);
 H5_DLL herr_t  H5F_get_obj_ids(const H5F_t *f, unsigned types, size_t max_objs, hid_t *oid_list, bool app_ref,
@@ -516,6 +536,8 @@ H5_DLL bool    H5F_get_point_of_no_return(const H5F_t *f);
 H5_DLL bool    H5F_get_null_fsm_addr(const H5F_t *f);
 H5_DLL bool    H5F_get_min_dset_ohdr(const H5F_t *f);
 H5_DLL herr_t  H5F_set_min_dset_ohdr(H5F_t *f, bool minimize);
+H5_DLL void H5F_set_sizeof_addr(H5F_t *f, uint8_t sizeof_addr);
+H5_DLL void H5F_set_sizeof_size(H5F_t *f, uint8_t sizeof_size);
 H5_DLL H5VL_object_t *H5F_get_vol_obj(const H5F_t *f);
 H5_DLL bool           H5F_get_use_file_locking(const H5F_t *f);
 H5_DLL uint64_t       H5F_get_rfic_flags(const H5F_t *f);
@@ -533,6 +555,14 @@ H5_DLL unsigned           H5F_get_sohm_vers(const H5F_t *f);
 H5_DLL herr_t             H5F_set_sohm_vers(H5F_t *f, unsigned vers);
 H5_DLL unsigned           H5F_get_sohm_nindexes(const H5F_t *f);
 H5_DLL herr_t             H5F_set_sohm_nindexes(H5F_t *f, unsigned nindexes);
+H5_DLL unsigned           H5F_get_sohm_index_flags(const H5F_t *f, unsigned u);
+H5_DLL herr_t             H5F_set_sohm_index_flags(H5F_t *f, unsigned u, unsigned flags);
+H5_DLL unsigned           H5F_get_sohm_index_minsize(const H5F_t *f, unsigned u);
+H5_DLL herr_t             H5F_set_sohm_index_minsize(H5F_t *f, unsigned u, unsigned minsize);
+H5_DLL unsigned           H5F_get_sohm_list_max(const H5F_t *f);
+H5_DLL herr_t             H5F_set_sohm_list_max(H5F_t *f, unsigned max);
+H5_DLL unsigned           H5F_get_sohm_btree_min(const H5F_t *f);
+H5_DLL herr_t             H5F_set_sohm_btree_min(H5F_t *f, unsigned min);
 H5_DLL H5F_close_degree_t H5F_get_fc_degree(const H5F_t *f);
 H5_DLL bool               H5F_get_evict_on_close(const H5F_t *f);
 H5_DLL size_t             H5F_rdcc_nbytes(const H5F_t *f);

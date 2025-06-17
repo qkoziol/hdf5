@@ -38,7 +38,6 @@
 herr_t
 H5F_debug(H5F_t *f, FILE *stream, int indent, int fwidth)
 {
-    hsize_t userblock_size;      /* Userblock size */
     herr_t  ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
@@ -48,10 +47,6 @@ H5F_debug(H5F_t *f, FILE *stream, int indent, int fwidth)
     assert(stream);
     assert(indent >= 0);
     assert(fwidth >= 0);
-
-    /* Retrieve file creation properties */
-    if (H5P_get(f->shared->fcpl, H5F_CRT_USER_BLOCK_NAME, &userblock_size) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get userblock size");
 
     /* debug */
     fprintf(stream, "%*sFile Super Block...\n", indent, "");
@@ -64,7 +59,7 @@ H5F_debug(H5F_t *f, FILE *stream, int indent, int fwidth)
     fprintf(stream, "%*s%-*s %" PRIuHADDR " (abs)\n", indent, "", fwidth,
             "Address of super block:", f->shared->sblock->base_addr);
     fprintf(stream, "%*s%-*s %" PRIuHSIZE " bytes\n", indent, "", fwidth,
-            "Size of userblock:", userblock_size);
+            "Size of userblock:", f->shared->sblock->base_addr);
 
     fprintf(stream, "%*s%-*s %u\n", indent, "", fwidth,
             "Superblock version number:", f->shared->sblock->super_vers);
@@ -78,9 +73,9 @@ H5F_debug(H5F_t *f, FILE *stream, int indent, int fwidth)
             "Shared header version number:", (unsigned)HDF5_SHAREDHEADER_VERSION);
 
     fprintf(stream, "%*s%-*s %u bytes\n", indent, "", fwidth,
-            "Size of file offsets (haddr_t type):", (unsigned)f->shared->sizeof_addr);
+            "Size of file offsets (haddr_t type):", (unsigned)f->shared->sblock->sizeof_addr);
     fprintf(stream, "%*s%-*s %u bytes\n", indent, "", fwidth,
-            "Size of file lengths (hsize_t type):", (unsigned)f->shared->sizeof_size);
+            "Size of file lengths (hsize_t type):", (unsigned)f->shared->sblock->sizeof_size);
     fprintf(stream, "%*s%-*s %u\n", indent, "", fwidth,
             "Symbol table leaf node 1/2 rank:", f->shared->sblock->sym_leaf_k);
     fprintf(stream, "%*s%-*s %u\n", indent, "", fwidth,

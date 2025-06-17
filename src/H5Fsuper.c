@@ -494,27 +494,15 @@ H5F__super_read(H5F_t *f, bool initial_read)
             sblock_flags |= H5AC__DIRTIED_FLAG;
     } /* end if */
 
-    /* Set information in the file's creation property list */
-    if (H5P_set(f->shared->fcpl, H5F_CRT_SUPER_VERS_NAME, &sblock->super_vers) < 0)
-        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "unable to set superblock version");
-    if (H5P_set(f->shared->fcpl, H5F_CRT_ADDR_BYTE_NUM_NAME, &sblock->sizeof_addr) < 0)
-        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "unable to set byte number in an address");
-    if (H5P_set(f->shared->fcpl, H5F_CRT_OBJ_BYTE_NUM_NAME, &sblock->sizeof_size) < 0)
-        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "unable to set byte number for object size");
-
     /* Handle the B-tree 'K' values */
     if (sblock->super_vers < HDF5_SUPERBLOCK_VERSION_2) {
         /* Sanity check */
         assert(udata.sym_leaf_k != 0);
 
         /* Set the symbol table internal node 'K' value */
-        if (H5P_set(f->shared->fcpl, H5F_CRT_SYM_LEAF_NAME, &udata.sym_leaf_k) < 0)
-            HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "unable to set rank for symbol table leaf nodes");
         sblock->sym_leaf_k = udata.sym_leaf_k;
 
         /* Set the B-tree internal node values, etc */
-        if (H5P_set(f->shared->fcpl, H5F_CRT_BTREE_RANK_NAME, udata.btree_k) < 0)
-            HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "unable to set rank for btree internal nodes");
         H5MM_memcpy(sblock->btree_k, udata.btree_k, sizeof(unsigned) * (size_t)H5B_NUM_BTREE_ID);
     } /* end if */
     else {
@@ -525,13 +513,6 @@ H5F__super_read(H5F_t *f, bool initial_read)
         if (H5CX_get_sym_leaf_k(&sblock->sym_leaf_k) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to get rank for btree internal nodes");
     } /* end else */
-
-    /*
-     * The user-defined data is the area of the file before the base
-     * address.
-     */
-    if (H5P_set(f->shared->fcpl, H5F_CRT_USER_BLOCK_NAME, &sblock->base_addr) < 0)
-        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "unable to set userblock size");
 
     /*
      * Make sure that the data is not truncated. One case where this is
@@ -697,7 +678,7 @@ H5F__super_read(H5F_t *f, bool initial_read)
         }     /* end if */
 
         /* Read in the shared OH message information if there is any */
-        if (H5SM_get_info(&ext_loc, f->shared->fcpl) < 0)
+        if (H5SM_get_info(&ext_loc) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to read SOHM table information");
 
         /* Check for the extension having a 'v1 B-tree "K"' message */
@@ -712,12 +693,6 @@ H5F__super_read(H5F_t *f, bool initial_read)
             sblock->btree_k[H5B_CHUNK_ID] = btreek.btree_k[H5B_CHUNK_ID];
             sblock->btree_k[H5B_SNODE_ID] = btreek.btree_k[H5B_SNODE_ID];
             sblock->sym_leaf_k            = btreek.sym_leaf_k;
-
-            /* Set non-default v1 B-tree 'K' values in the property list */
-            if (H5P_set(f->shared->fcpl, H5F_CRT_BTREE_RANK_NAME, btreek.btree_k) < 0)
-                HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "unable to set rank for btree internal nodes");
-            if (H5P_set(f->shared->fcpl, H5F_CRT_SYM_LEAF_NAME, &btreek.sym_leaf_k) < 0)
-                HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "unable to set rank for symbol table leaf nodes");
         } /* end if */
 
         /* Check for the extension having a 'free-space manager info' message */
@@ -754,44 +729,22 @@ H5F__super_read(H5F_t *f, bool initial_read)
                 /* Update changed values */
                 if (f->shared->fs_version != fsinfo.version)
                     f->shared->fs_version = fsinfo.version;
-                if (f->shared->fs_strategy != fsinfo.strategy) {
+                if (f->shared->fs_strategy != fsinfo.strategy)
                     f->shared->fs_strategy = fsinfo.strategy;
-
-                    /* Set non-default strategy in the property list */
-                    if (H5P_set(f->shared->fcpl, H5F_CRT_FILE_SPACE_STRATEGY_NAME, &fsinfo.strategy) < 0)
-                        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "unable to set file space strategy");
-                } /* end if */
-                if (f->shared->fs_persist != fsinfo.persist) {
+                if (f->shared->fs_persist != fsinfo.persist)
                     f->shared->fs_persist = fsinfo.persist;
-
-                    /* Set non-default strategy in the property list */
-                    if (H5P_set(f->shared->fcpl, H5F_CRT_FREE_SPACE_PERSIST_NAME, &fsinfo.persist) < 0)
-                        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "unable to set file space strategy");
-                } /* end if */
-                if (f->shared->fs_threshold != fsinfo.threshold) {
+                if (f->shared->fs_threshold != fsinfo.threshold)
                     f->shared->fs_threshold = fsinfo.threshold;
-
-                    /* Set non-default threshold in the property list */
-                    if (H5P_set(f->shared->fcpl, H5F_CRT_FREE_SPACE_THRESHOLD_NAME, &fsinfo.threshold) < 0)
-                        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "unable to set file space strategy");
-                } /* end if */
 
                 if (f->shared->fs_page_size < H5F_FILE_SPACE_PAGE_SIZE_MIN)
                     HGOTO_ERROR(H5E_FILE, H5E_BADVALUE, FAIL, "file space page size too small");
                 if (fsinfo.page_size < H5F_FILE_SPACE_PAGE_SIZE_MIN)
                     HGOTO_ERROR(H5E_FILE, H5E_BADVALUE, FAIL, "file space page size too small");
 
-                if (f->shared->fs_page_size != fsinfo.page_size) {
+                if (f->shared->fs_page_size != fsinfo.page_size)
                     f->shared->fs_page_size = fsinfo.page_size;
-
-                    /* Set file space page size in the property list */
-                    if (H5P_set(f->shared->fcpl, H5F_CRT_FILE_SPACE_PAGE_SIZE_NAME, &fsinfo.page_size) < 0)
-                        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "unable to set file space page size");
-                } /* end if */
                 if (f->shared->pgend_meta_thres != fsinfo.pgend_meta_thres)
-                    /* Initialize page end meta threshold */
                     f->shared->pgend_meta_thres = fsinfo.pgend_meta_thres;
-
                 if (f->shared->eoa_fsm_fsalloc != fsinfo.eoa_pre_fsm_fsalloc)
                     f->shared->eoa_fsm_fsalloc = fsinfo.eoa_pre_fsm_fsalloc;
 
@@ -1054,7 +1007,6 @@ H5F__super_init(H5F_t *f)
     bool           drvinfo_in_cache =
         false; /* Whether the driver info block has been inserted into the metadata cache */
     H5AC_ring_t orig_ring = H5AC_RING_INV;
-    hsize_t     userblock_size;      /* Size of userblock, in bytes                */
     hsize_t     superblock_size = 0; /* Size of superblock, in bytes               */
     haddr_t     superblock_addr = HADDR_UNDEF;
     size_t      driver_size;                              /* Size of driver info block (bytes)          */
@@ -1153,12 +1105,6 @@ H5F__super_init(H5F_t *f)
     if (super_vers > HDF5_superblock_ver_bounds[f->shared->high_bound])
         HGOTO_ERROR(H5E_FILE, H5E_BADVALUE, FAIL, "superblock version out of bounds");
 
-    /* If a newer superblock version is required, set it here */
-    if (super_vers != HDF5_SUPERBLOCK_VERSION_DEF) {
-        if (H5P_set(f->shared->fcpl, H5F_CRT_SUPER_VERS_NAME, &super_vers) < 0)
-            HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "unable to set superblock version");
-    } /* end if */
-
     if (H5FD_set_paged_aggr(f->shared->fh, (bool)H5F_PAGED_AGGR(f)) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, FAIL, "failed to set paged_aggr status for file driver");
 
@@ -1168,26 +1114,25 @@ H5F__super_init(H5F_t *f)
      * base address is set to the same thing as the superblock for
      * now.
      */
-    if (H5CX_get_userblock_size(&userblock_size) < 0)
-        HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to get userblock size");
+    if (H5CX_get_userblock_size(&sblock->base_addr) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get userblock size");
 
     /* Sanity check the userblock size vs. the file's allocation alignment */
-    if (userblock_size > 0) {
+    if (sblock->base_addr > 0) {
         /* Set up the alignment to use for page or aggr fs */
         hsize_t alignment = H5F_PAGED_AGGR(f) ? f->shared->fs_page_size : f->shared->alignment;
 
-        if (userblock_size < alignment)
+        if (sblock->base_addr < alignment)
             HGOTO_ERROR(H5E_FILE, H5E_BADVALUE, FAIL, "userblock size must be > file object alignment");
-        if (0 != (userblock_size % alignment))
+        if (0 != (sblock->base_addr % alignment))
             HGOTO_ERROR(H5E_FILE, H5E_BADVALUE, FAIL,
                         "userblock size must be an integral multiple of file object alignment");
     } /* end if */
 
-    sblock->base_addr    = userblock_size;
     sblock->status_flags = 0;
 
     /* Reserve space for the userblock */
-    if (H5F__set_eoa(f, H5FD_MEM_SUPER, userblock_size) < 0)
+    if (H5F__set_eoa(f, H5FD_MEM_SUPER, sblock->base_addr) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, FAIL, "unable to set EOA value for userblock");
 
     /* Set the base address for the file in the VFD now, after allocating
@@ -1198,8 +1143,14 @@ H5F__super_init(H5F_t *f)
 
     /* Save a local copy of the superblock version number, size of addresses & offsets */
     sblock->super_vers  = super_vers;
-    sblock->sizeof_addr = f->shared->sizeof_addr;
-    sblock->sizeof_size = f->shared->sizeof_size;
+    if (H5CX_get_sizeof_addr(&sblock->sizeof_addr) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get size of addresses");
+    if (H5CX_get_sizeof_size(&sblock->sizeof_size) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get size of sizes");
+
+    /* Cache a copy of the file's address and length sizes */
+    f->shared->sizeof_addr = sblock->sizeof_addr;
+    f->shared->sizeof_size = sblock->sizeof_size;
 
     /* Compute the size of the superblock */
     superblock_size = (hsize_t)H5F_SUPERBLOCK_SIZE(sblock);

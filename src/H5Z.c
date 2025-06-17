@@ -463,17 +463,17 @@ done:
 static htri_t
 H5Z__check_unregister(hid_t ocpl_id, H5Z_filter_t filter_id)
 {
-    H5P_genplist_t *plist;             /* Property list */
+    H5P_genplist_t *ocpl;             /* Property list */
     htri_t          ret_value = false; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
-    /* Get the plist structure of object creation */
-    if (NULL == (plist = H5P_object_verify(ocpl_id, H5P_TYPE_OBJECT_CREATE, true)))
+    /* Get the property list structure of object creation */
+    if (NULL == (ocpl = H5P_object_verify(ocpl_id, H5P_TYPE_OBJECT_CREATE, true)))
         HGOTO_ERROR(H5E_PLINE, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Check if the object creation property list uses the filter */
-    if ((ret_value = H5P_filter_in_pline(plist, filter_id)) < 0)
+    if ((ret_value = H5P_filter_in_pline(ocpl, filter_id)) < 0)
         HGOTO_ERROR(H5E_PLINE, H5E_CANTGET, FAIL, "can't check filter in pipeline");
 
 done:
@@ -536,7 +536,7 @@ H5Z__check_unregister_group_cb(void H5_ATTR_UNUSED *obj_ptr, hid_t obj_id, void 
 done:
     if (ocpl_id > 0)
         if (H5I_dec_app_ref(ocpl_id) < 0)
-            HDONE_ERROR(H5E_PLINE, H5E_CANTDEC, FAIL, "can't release plist");
+            HDONE_ERROR(H5E_PLINE, H5E_CANTDEC, FAIL, "can't release property list");
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5Z__check_unregister_group_cb() */
@@ -597,7 +597,7 @@ H5Z__check_unregister_dset_cb(void H5_ATTR_UNUSED *obj_ptr, hid_t obj_id, void *
 done:
     if (ocpl_id > 0)
         if (H5I_dec_app_ref(ocpl_id) < 0)
-            HDONE_ERROR(H5E_PLINE, H5E_CANTDEC, FAIL, "can't release plist");
+            HDONE_ERROR(H5E_PLINE, H5E_CANTDEC, FAIL, "can't release property list");
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5Z__check_unregister_dset_cb() */

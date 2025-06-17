@@ -78,7 +78,7 @@ static herr_t H5F__get_objects(const H5F_t *f, unsigned types, size_t max_index,
 static int    H5F__get_objects_cb(void *obj_ptr, hid_t obj_id, void *key);
 static herr_t H5F__build_name(const char *prefix, const char *file_name, char **full_name /*out*/);
 static char  *H5F__getenv_prefix_name(char **env_prefix /*in,out*/);
-static H5F_t *H5F__new(H5F_shared_t *shared, unsigned flags, H5P_genplist_t *fcpl, H5FD_int_t *fh);
+static H5F_t *H5F__new(H5F_shared_t *shared, unsigned flags, H5FD_int_t *fh);
 static herr_t H5F__check_if_using_file_locks(bool *use_file_locking, bool *ignore_disabled_locks);
 static herr_t H5F__dest(H5F_t *f, bool flush, bool free_on_failure);
 static herr_t H5F__build_actual_name(const H5F_t *f, const H5P_genplist_t *fapl, const char *name,
@@ -508,6 +508,74 @@ done:
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5F_get_access_plist() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5F_get_create_plist
+ *
+ * Purpose:     Returns a copy of the file creation property list for the
+ *              specified file.
+ *
+ * Return:      Success:    Pointer to a copy of the file creation property list.
+ *              Failure:    NULL
+ *-------------------------------------------------------------------------
+ */
+H5P_genplist_t *
+H5F_get_create_plist(H5F_t *f)
+{
+    H5P_genplist_t       *new_fcpl = NULL;            /* New property list */
+    H5P_genplist_t       *ret_value = NULL; /* Return value */
+
+    FUNC_ENTER_NOAPI(NULL)
+
+    /* Check args */
+    assert(f);
+
+    /* Create the property list object to return */
+    if (NULL == (new_fcpl = H5P_new_plist_of_type(H5P_TYPE_FILE_CREATE, true)))
+        HGOTO_ERROR(H5E_FILE, H5E_CANTCREATE, NULL, "unable to create file creation property list");
+
+    /* Copy properties of the file access property list */
+    if (H5P_set(new_fcpl, H5F_CRT_USER_BLOCK_NAME, &f->shared->sblock->base_addr) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, NULL, "can't set userblock size");
+    if (H5P_set(new_fcpl, H5F_CRT_SYM_LEAF_NAME, &f->shared->sblock->sym_leaf_k) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, NULL, "can't set symbol table leaf rank");
+    if (H5P_set(new_fcpl, H5F_CRT_BTREE_RANK_NAME, &f->shared->sblock->btree_k) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, NULL, "can't set btree internal node rank");
+    if (H5P_set(new_fcpl, H5F_CRT_ADDR_BYTE_NUM_NAME, &f->shared->sblock->sizeof_addr) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, NULL, "can't set size of addresses in file");
+    if (H5P_set(new_fcpl, H5F_CRT_OBJ_BYTE_NUM_NAME, &f->shared->sblock->sizeof_size) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, NULL, "can't set size of offsets in file");
+    if (H5P_set(new_fcpl, H5F_CRT_SUPER_VERS_NAME, &f->shared->sblock->super_vers) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, NULL, "can't set superblock version");
+    if (H5P_set(new_fcpl, H5F_CRT_SHMSG_NINDEXES_NAME, &f->shared->sohm_nindexes) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, NULL, "can't set number of shared message indexes");
+    if (H5P_set(new_fcpl, H5F_CRT_SHMSG_INDEX_TYPES_NAME, &f->shared->sohm_index_flags) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, NULL, "can't set flags for each shared message index");
+    if (H5P_set(new_fcpl, H5F_CRT_SHMSG_INDEX_MINSIZE_NAME, &f->shared->sohm_index_minsize) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, NULL, "can't set minimum size for each shared message index");
+    if (H5P_set(new_fcpl, H5F_CRT_SHMSG_LIST_MAX_NAME, &f->shared->sohm_list_max) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, NULL, "can't set maximum size for list-based shared messages");
+    if (H5P_set(new_fcpl, H5F_CRT_SHMSG_BTREE_MIN_NAME, &f->shared->sohm_btree_min) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, NULL, "can't set minimum size for btree-based shared messages");
+    if (H5P_set(new_fcpl, H5F_CRT_FILE_SPACE_STRATEGY_NAME, &f->shared->fs_strategy) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, NULL, "can't set file space strategy");
+    if (H5P_set(new_fcpl, H5F_CRT_FREE_SPACE_PERSIST_NAME, &f->shared->fs_persist) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, NULL, "can't set file space persist flag");
+    if (H5P_set(new_fcpl, H5F_CRT_FREE_SPACE_THRESHOLD_NAME, &f->shared->fs_threshold) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, NULL, "can't set file space threshold");
+    if (H5P_set(new_fcpl, H5F_CRT_FILE_SPACE_PAGE_SIZE_NAME, &f->shared->fs_page_size) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, NULL, "can't set file space page size");
+
+    /* Set return value */
+    ret_value = new_fcpl;
+
+done:
+    if (NULL == ret_value)
+        if (new_fcpl && H5P_release(new_fcpl) < 0)
+            HDONE_ERROR(H5E_FILE, H5E_CANTCLOSEOBJ, NULL, "can't free property list");
+
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5F_get_create_plist() */
 
 /*-------------------------------------------------------------------------
  * Function: H5F_get_obj_count
@@ -1163,7 +1231,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static H5F_t *
-H5F__new(H5F_shared_t *shared, unsigned flags, H5P_genplist_t *fcpl, H5FD_int_t *fh)
+H5F__new(H5F_shared_t *shared, unsigned flags, H5FD_int_t *fh)
 {
     H5F_t             *f = NULL;
     H5F_close_degree_t fc_degree; /* file close degree        */
@@ -1242,29 +1310,22 @@ H5F__new(H5F_shared_t *shared, unsigned flags, H5P_genplist_t *fcpl, H5FD_int_t 
         /* initialize point of no return */
         f->shared->point_of_no_return = false;
 
-        /* Copy the file creation and file access property lists into the
-         * new file handle. We do this early because some values might need
-         * to change as the file is being opened.
+        /* Copy the file creation and file access properties into the new file handle.  We do this
+         * early because some values might need to change as the file is being opened.
          */
-        if (NULL == (f->shared->fcpl = H5P_copy_plist(fcpl, false)))
-            HGOTO_ERROR(H5E_FILE, H5E_CANTCOPY, NULL, "unable to copy the creation property list");
 
         /* Get the FCPL values to cache */
-        if (H5CX_get_sizeof_addr(&f->shared->sizeof_addr) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, NULL, "can't get byte number for address");
-        if (H5CX_get_sizeof_size(&f->shared->sizeof_size) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, NULL, "can't get byte number for object size");
         if (H5CX_get_shared_mesg_nindexes(&f->shared->sohm_nindexes) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, NULL, "can't get number of SOHM indexes");
+            HGOTO_ERROR(H5E_FILE, H5E_CANTGET, NULL, "can't get number of SOHM indexes");
         assert(f->shared->sohm_nindexes < 255);
         if (H5CX_get_file_space_strategy(&f->shared->fs_strategy) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, NULL, "can't get file space strategy");
+            HGOTO_ERROR(H5E_FILE, H5E_CANTGET, NULL, "can't get file space strategy");
         if (H5CX_get_file_space_persist(&f->shared->fs_persist) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, NULL, "can't get file space persisting status");
+            HGOTO_ERROR(H5E_FILE, H5E_CANTGET, NULL, "can't get file space persisting status");
         if (H5CX_get_file_space_threshold(&f->shared->fs_threshold) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, NULL, "can't get free-space section threshold");
+            HGOTO_ERROR(H5E_FILE, H5E_CANTGET, NULL, "can't get free-space section threshold");
         if (H5CX_get_file_space_page_size(&f->shared->fs_page_size) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, NULL, "can't get file space page size");
+            HGOTO_ERROR(H5E_FILE, H5E_CANTGET, NULL, "can't get file space page size");
         assert(f->shared->fs_page_size >= H5F_FILE_SPACE_PAGE_SIZE_MIN);
 
         /* Temporary for multi/split drivers: fail file creation
@@ -1310,9 +1371,9 @@ H5F__new(H5F_shared_t *shared, unsigned flags, H5P_genplist_t *fcpl, H5FD_int_t 
                 HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, NULL, "can't create external file cache");
 #ifdef H5_HAVE_PARALLEL
         if (H5CX_get_fapl_coll_md_read(&f->shared->coll_md_read) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, NULL, "can't get collective metadata read flag");
+            HGOTO_ERROR(H5E_FILE, H5E_CANTGET, NULL, "can't get collective metadata read flag");
         if (H5CX_get_coll_md_write(&f->shared->coll_md_write) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, NULL, "can't get collective metadata write flag");
+            HGOTO_ERROR(H5E_FILE, H5E_CANTGET, NULL, "can't get collective metadata write flag");
 #endif /* H5_HAVE_PARALLEL */
         if (H5CX_get_mdc_image_config(&f->shared->mdc_initCacheImageCfg) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTGET, NULL, "can't get initial metadata cache resize config");
@@ -1439,10 +1500,6 @@ done:
             if (f->shared->efc)
                 if (H5F__efc_destroy(f->shared->efc) < 0)
                     HDONE_ERROR(H5E_FILE, H5E_CANTRELEASE, NULL, "can't destroy external file cache");
-            if (f->shared->fcpl && !H5P_PLIST_IS_DEFAULT(f->shared->fcpl))
-                if (H5P_release(f->shared->fcpl) < 0)
-                    HDONE_ERROR(H5E_FILE, H5E_CANTCLOSEOBJ, NULL, "can't close property list");
-
             f->shared = H5FL_FREE(H5F_shared_t, f->shared);
         }
 
@@ -1663,12 +1720,6 @@ H5F__dest(H5F_t *f, bool flush, bool free_on_failure)
             /* Push error, but keep going*/
             HDONE_ERROR(H5E_FILE, H5E_CANTRELEASE, FAIL, "problems closing file");
 
-        /* Destroy file creation properties */
-        if (!H5P_PLIST_IS_DEFAULT(f->shared->fcpl))
-            if (H5P_release(f->shared->fcpl) < 0)
-                /* Push error, but keep going*/
-                HDONE_ERROR(H5E_FILE, H5E_CANTCLOSEOBJ, FAIL, "can't close property list");
-
         /* Clean up the cached VOL connector ID & info */
         if (f->shared->vol_info)
             if (H5VL_free_connector_info(f->shared->vol_conn, f->shared->vol_info) < 0)
@@ -1885,7 +1936,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist_t *fcpl,
+H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags,
          H5P_genplist_t *fapl)
 {
     H5F_t             *file   = NULL; /* File pointer (OUT)       */
@@ -2011,7 +2062,7 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
             HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, FAIL,
                         "SWMR read access flag not the same for file that is already open");
 
-        if (NULL == (file = H5F__new(shared, flags, fcpl, NULL)))
+        if (NULL == (file = H5F__new(shared, flags, NULL)))
             HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, FAIL, "unable to create new file object");
     } /* end if */
     else {
@@ -2031,7 +2082,7 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
             assert(fh);
         } /* end if */
 
-        if (NULL == (file = H5F__new(NULL, flags, fcpl, fh))) {
+        if (NULL == (file = H5F__new(NULL, flags, fh))) {
             /* If this is the only time the file has been opened and the struct
              * returned is NULL, H5FD_close() will never be called via H5F__dest()
              * so we have to close fh here before heading to the error handling.
@@ -2696,7 +2747,7 @@ H5F__reopen(H5F_t *f)
 
     FUNC_ENTER_PACKAGE
 
-    /* Retrieve FAPL for file to re-open */
+    /* Retrieve FAPL for file to ree-open */
     if (NULL == (fapl = H5F_get_access_plist(f, false)))
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, NULL, "can't get file's file access property list");
 
@@ -2705,7 +2756,7 @@ H5F__reopen(H5F_t *f)
     if (H5CX_set_apl(&fapl_id, H5I_INVALID_HID, true) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, NULL, "can't set access property list info");
 
-    if (NULL == (ret_value = H5F__new(f->shared, 0, H5P_LST_FILE_CREATE_g, NULL)))
+    if (NULL == (ret_value = H5F__new(f->shared, 0, NULL)))
         HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, NULL, "unable to reopen file");
 
     /* Duplicate old file's names */
@@ -2962,6 +3013,7 @@ H5F_addr_encode(const H5F_t *f, uint8_t **pp /*in,out*/, haddr_t addr)
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
     assert(f);
+    assert(f->shared);
 
     H5F_addr_encode_len(H5F_SIZEOF_ADDR(f), pp, addr);
 
@@ -3050,6 +3102,7 @@ H5F_addr_decode(const H5F_t *f, const uint8_t **pp /*in,out*/, haddr_t *addr_p /
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
     assert(f);
+    assert(f->shared);
 
     H5F_addr_decode_len(H5F_SIZEOF_ADDR(f), pp, addr_p);
 
@@ -3148,6 +3201,98 @@ H5F_set_sohm_nindexes(H5F_t *f, unsigned nindexes)
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* H5F_set_sohm_nindexes() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5F_set_sohm_index_flags
+ *
+ * Purpose:     Set the sohm_index_flags field with a new value.
+ *
+ * Return:      SUCCEED/FAIL
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5F_set_sohm_index_flags(H5F_t *f, unsigned u, unsigned flags)
+{
+    /* Use FUNC_ENTER_NOAPI_NOINIT_NOERR here to avoid performance issues */
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    /* Sanity check */
+    assert(f);
+    assert(f->shared);
+
+    f->shared->sohm_index_flags[u] = flags;
+
+    FUNC_LEAVE_NOAPI(SUCCEED)
+} /* H5F_set_sohm_index_flags() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5F_set_sohm_index_minsize
+ *
+ * Purpose:     Set the sohm_index_minsize field with a new value.
+ *
+ * Return:      SUCCEED/FAIL
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5F_set_sohm_index_minsize(H5F_t *f, unsigned u, unsigned minsize)
+{
+    /* Use FUNC_ENTER_NOAPI_NOINIT_NOERR here to avoid performance issues */
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    /* Sanity check */
+    assert(f);
+    assert(f->shared);
+
+    f->shared->sohm_index_minsize[u] = minsize;
+
+    FUNC_LEAVE_NOAPI(SUCCEED)
+} /* H5F_set_sohm_index_minsize() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5F_set_sohm_list_max
+ *
+ * Purpose:     Set the sohm_list_max field with a new value.
+ *
+ * Return:      SUCCEED/FAIL
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5F_set_sohm_list_max(H5F_t *f, unsigned max)
+{
+    /* Use FUNC_ENTER_NOAPI_NOINIT_NOERR here to avoid performance issues */
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    /* Sanity check */
+    assert(f);
+    assert(f->shared);
+
+    f->shared->sohm_list_max = max;
+
+    FUNC_LEAVE_NOAPI(SUCCEED)
+} /* H5F_set_sohm_list_max() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5F_set_sohm_btree_min
+ *
+ * Purpose:     Set the sohm_btree_min field with a new value.
+ *
+ * Return:      SUCCEED/FAIL
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5F_set_sohm_btree_min(H5F_t *f, unsigned min)
+{
+    /* Use FUNC_ENTER_NOAPI_NOINIT_NOERR here to avoid performance issues */
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    /* Sanity check */
+    assert(f);
+    assert(f->shared);
+
+    f->shared->sohm_btree_min = min;
+
+    FUNC_LEAVE_NOAPI(SUCCEED)
+} /* H5F_set_sohm_btree_min() */
 
 /*-------------------------------------------------------------------------
  * Function:    H5F_set_store_msg_crt_idx
@@ -4144,3 +4289,49 @@ H5F_set_min_dset_ohdr(H5F_t *f, bool minimize)
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* H5F_set_min_dset_ohdr() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5F_set_sizeof_addr
+ *
+ * Purpose:     Set the sizeof_addr field with a new value.
+ *
+ * Return:      none
+ *-------------------------------------------------------------------------
+ */
+void
+H5F_set_sizeof_addr(H5F_t *f, uint8_t sizeof_addr)
+{
+    /* Use FUNC_ENTER_NOAPI_NOINIT_NOERR here to avoid performance issues */
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    /* Sanity check */
+    assert(f);
+    assert(f->shared);
+
+    f->shared->sizeof_addr = sizeof_addr;
+
+    FUNC_LEAVE_NOAPI_VOID
+} /* H5F_set_sizeof_addr() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5F_set_sizeof_size
+ *
+ * Purpose:     Set the sizeof_size field with a new value.
+ *
+ * Return:      none
+ *-------------------------------------------------------------------------
+ */
+void
+H5F_set_sizeof_size(H5F_t *f, uint8_t sizeof_size)
+{
+    /* Use FUNC_ENTER_NOAPI_NOINIT_NOERR here to avoid performance issues */
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    /* Sanity check */
+    assert(f);
+    assert(f->shared);
+
+    f->shared->sizeof_size = sizeof_size;
+
+    FUNC_LEAVE_NOAPI_VOID
+} /* H5F_set_sizeof_size() */

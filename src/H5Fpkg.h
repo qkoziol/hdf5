@@ -266,11 +266,17 @@ struct H5F_shared_t {
     /* Cached values from FCPL/superblock */
     uint8_t       sizeof_addr;   /* Size of addresses in file            */
     uint8_t       sizeof_size;   /* Size of offsets in file              */
+    unsigned long feature_flags; /* VFL Driver feature Flags            */
+    haddr_t       maxaddr;       /* Maximum address for file             */
+
+    /* Shared object header message info */
     haddr_t       sohm_addr;     /* Relative address of shared object header message table */
     unsigned      sohm_vers;     /* Version of shared message table on disk */
     unsigned      sohm_nindexes; /* Number of shared messages indexes in the table */
-    unsigned long feature_flags; /* VFL Driver feature Flags            */
-    haddr_t       maxaddr;       /* Maximum address for file             */
+    unsigned      sohm_index_flags[H5O_SHMESG_MAX_NINDEXES]; /* Flags for each shared message index */
+    unsigned      sohm_index_minsize[H5O_SHMESG_MAX_NINDEXES]; /* Minimum size for each shared message index */
+    unsigned      sohm_list_max; /* Maximum size for list-based shared messages */
+    unsigned      sohm_btree_min; /* Minimum size for btree-based shared messages */
 
     H5PB_t             *page_buf;                    /* The page buffer cache                */
     H5AC_t             *cache;                       /* The object cache	 		*/
@@ -287,7 +293,6 @@ struct H5F_shared_t {
     bool start_mdc_log_on_access;                    /* set when mdc logging should  */
                                                      /* begin on file access/create          */
     char              *mdc_log_location;             /* location of mdc log               */
-    H5P_genplist_t    *fcpl;                         /* File creation property list */
     H5F_close_degree_t fc_degree;                    /* File close behavior degree	*/
     bool     evict_on_close; /* If the file's objects should be evicted from the metadata cache on close */
     size_t   rdcc_nslots;    /* Size of raw data chunk cache (slots)	*/

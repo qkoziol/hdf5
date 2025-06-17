@@ -592,8 +592,8 @@ typedef struct H5CX_t {
                 H5CX_dcpl_cache_t dcpl_props;
                 H5CX_gcpl_cache_t gcpl_props;
                 H5CX_acpl_cache_t acpl_props;
-                H5CX_fcpl_cache_t fcpl_props;
             };
+            H5CX_fcpl_cache_t fcpl_props;
             H5CX_lapl_cache_t lapl_props;
             H5CX_dapl_cache_t dapl_props;
             H5CX_fapl_cache_t fapl_props;

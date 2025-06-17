@@ -451,6 +451,88 @@ H5F_get_sohm_nindexes(const H5F_t *f)
 } /* end H5F_get_sohm_nindexes() */
 
 /*-------------------------------------------------------------------------
+ * Function: H5F_get_sohm_index_flags
+ *
+ * Purpose:  Retrieve the file's 'sohm_index_flags' value
+ *
+ * Return:   'sohm_index_flags' on success/abort on failure (shouldn't fail)
+ *-------------------------------------------------------------------------
+ */
+H5_ATTR_PURE unsigned
+H5F_get_sohm_index_flags(const H5F_t *f, unsigned u)
+{
+    /* Use FUNC_ENTER_NOAPI_NOINIT_NOERR here to avoid performance issues */
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    assert(f);
+    assert(f->shared);
+    assert(u < f->shared->sohm_nindexes);
+
+    FUNC_LEAVE_NOAPI(f->shared->sohm_index_flags[u])
+} /* end H5F_get_sohm_index_flags() */
+
+/*-------------------------------------------------------------------------
+ * Function: H5F_get_sohm_index_minsize
+ *
+ * Purpose:  Retrieve the file's 'sohm_index_minsize' value
+ *
+ * Return:   'sohm_index_minsize' on success/abort on failure (shouldn't fail)
+ *-------------------------------------------------------------------------
+ */
+H5_ATTR_PURE unsigned
+H5F_get_sohm_index_minsize(const H5F_t *f, unsigned u)
+{
+    /* Use FUNC_ENTER_NOAPI_NOINIT_NOERR here to avoid performance issues */
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    assert(f);
+    assert(f->shared);
+    assert(u < f->shared->sohm_nindexes);
+
+    FUNC_LEAVE_NOAPI(f->shared->sohm_index_minsize[u])
+} /* end H5F_get_sohm_index_minsize() */
+
+/*-------------------------------------------------------------------------
+ * Function: H5F_get_sohm_list_max
+ *
+ * Purpose:  Retrieve the file's 'sohm_list_max' value
+ *
+ * Return:   'sohm_list_max' on success/abort on failure (shouldn't fail)
+ *-------------------------------------------------------------------------
+ */
+H5_ATTR_PURE unsigned
+H5F_get_sohm_list_max(const H5F_t *f)
+{
+    /* Use FUNC_ENTER_NOAPI_NOINIT_NOERR here to avoid performance issues */
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    assert(f);
+    assert(f->shared);
+
+    FUNC_LEAVE_NOAPI(f->shared->sohm_list_max) 
+} /* end H5F_get_sohm_list_max() */
+
+/*-------------------------------------------------------------------------
+ * Function: H5F_get_sohm_btree_min
+ *
+ * Purpose:  Retrieve the file's 'sohm_btree_min' value
+ *
+ * Return:   'sohm_btree_min' on success/abort on failure (shouldn't fail)
+ *-------------------------------------------------------------------------
+ */
+H5_ATTR_PURE unsigned
+H5F_get_sohm_btree_min(const H5F_t *f)
+{
+    /* Use FUNC_ENTER_NOAPI_NOINIT_NOERR here to avoid performance issues */
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    assert(f);
+    assert(f->shared);
+
+    FUNC_LEAVE_NOAPI(f->shared->sohm_btree_min)
+} /* end H5F_get_sohm_btree_min() */
+
+/*-------------------------------------------------------------------------
  * Function: H5F_sym_leaf_k
  *
  * Purpose:  Replaced a macro to retrieve the symbol table leaf size,
