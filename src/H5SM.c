@@ -1920,7 +1920,7 @@ done:
 herr_t
 H5SM_get_info(const H5O_loc_t *ext_loc)
 {
-    H5F_t               *f = NULL;         /* File pointer (convenience variable) */
+    H5F_t               *f = NULL;                  /* File pointer (convenience variable) */
     H5O_shmesg_table_t   sohm_table;                /* SOHM message from superblock extension */
     H5SM_master_table_t *table     = NULL;          /* SOHM master table */
     H5AC_ring_t          orig_ring = H5AC_RING_INV; /* Original ring value */
@@ -1938,8 +1938,8 @@ H5SM_get_info(const H5O_loc_t *ext_loc)
     if ((status = H5O_msg_exists(ext_loc, H5O_SHMESG_ID)) < 0)
         HGOTO_ERROR(H5E_SOHM, H5E_CANTGET, FAIL, "unable to read object header");
     if (status) {
-        H5SM_table_cache_ud_t cache_udata;                          /* User-data for callback */
-        unsigned              u;                                    /* Local index variable */
+        H5SM_table_cache_ud_t cache_udata; /* User-data for callback */
+        unsigned              u;           /* Local index variable */
 
         /* Retrieve the 'shared message info' structure */
         if (NULL == H5O_msg_read(ext_loc, H5O_SHMESG_ID, &sohm_table))
@@ -1983,7 +1983,7 @@ H5SM_get_info(const H5O_loc_t *ext_loc)
             if (H5F_SOHM_INDEX_FLAGS(f, u) & H5O_SHMESG_ATTR_FLAG)
                 H5F_SET_STORE_MSG_CRT_IDX(f, true);
         } /* end for */
-    } /* end if */
+    }     /* end if */
 
 done:
     /* Reset the ring in the API context */

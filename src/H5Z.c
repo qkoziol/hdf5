@@ -463,7 +463,7 @@ done:
 static htri_t
 H5Z__check_unregister(hid_t ocpl_id, H5Z_filter_t filter_id)
 {
-    H5P_genplist_t *ocpl;             /* Property list */
+    H5P_genplist_t *ocpl;              /* Property list */
     htri_t          ret_value = false; /* Return value */
 
     FUNC_ENTER_PACKAGE

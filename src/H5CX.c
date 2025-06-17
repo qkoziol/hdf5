@@ -102,7 +102,8 @@
     if (!(*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                       \
     H5CX_RETRIEVE_PROP_COMMON(PL, NO, get, PL, DEF_PL, PROP_NAME, PROP_FIELD, FAIL)
 
-/* Macro for the duplicated code to test for and retrieve a value from a property list if the context value is invalid
+/* Macro for the duplicated code to test for and retrieve a value from a property list if the context value is
+ * invalid
  */
 #define H5CX_TEST_RETRIEVE_PROP_VALID(PL, DEF_PL, PROP_NAME, PROP_FIELD)                                     \
     /* Check if the value has been retrieved already */                                                      \
@@ -135,8 +136,8 @@
     H5CX_RETRIEVE_PROP_COMMON(PL, YES, get, SUB_PL, DEF_PL, PROP_NAME, PROP_FIELD, FAIL)
 #endif /* H5O_ENABLE_BOGUS */
 
-/* Macro for the duplicated code to retrieve a value from a property list if the context value is invalid, or the
- * library has previously modified the context value for return */
+/* Macro for the duplicated code to retrieve a value from a property list if the context value is invalid, or
+ * the library has previously modified the context value for return */
 #define H5CX_RETRIEVE_PROP_VALID_SET(PL, DEF_PL, PROP_NAME, PROP_FIELD)                                      \
     /* Check if the value has been retrieved already */                                                      \
     if (!((*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _valid) ||                                    \

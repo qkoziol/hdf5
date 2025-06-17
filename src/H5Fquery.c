@@ -509,7 +509,7 @@ H5F_get_sohm_list_max(const H5F_t *f)
     assert(f);
     assert(f->shared);
 
-    FUNC_LEAVE_NOAPI(f->shared->sohm_list_max) 
+    FUNC_LEAVE_NOAPI(f->shared->sohm_list_max)
 } /* end H5F_get_sohm_list_max() */
 
 /*-------------------------------------------------------------------------

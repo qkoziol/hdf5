@@ -270,13 +270,13 @@ struct H5F_shared_t {
     haddr_t       maxaddr;       /* Maximum address for file             */
 
     /* Shared object header message info */
-    haddr_t       sohm_addr;     /* Relative address of shared object header message table */
-    unsigned      sohm_vers;     /* Version of shared message table on disk */
-    unsigned      sohm_nindexes; /* Number of shared messages indexes in the table */
-    unsigned      sohm_index_flags[H5O_SHMESG_MAX_NINDEXES]; /* Flags for each shared message index */
-    unsigned      sohm_index_minsize[H5O_SHMESG_MAX_NINDEXES]; /* Minimum size for each shared message index */
-    unsigned      sohm_list_max; /* Maximum size for list-based shared messages */
-    unsigned      sohm_btree_min; /* Minimum size for btree-based shared messages */
+    haddr_t  sohm_addr;     /* Relative address of shared object header message table */
+    unsigned sohm_vers;     /* Version of shared message table on disk */
+    unsigned sohm_nindexes; /* Number of shared messages indexes in the table */
+    unsigned sohm_index_flags[H5O_SHMESG_MAX_NINDEXES];   /* Flags for each shared message index */
+    unsigned sohm_index_minsize[H5O_SHMESG_MAX_NINDEXES]; /* Minimum size for each shared message index */
+    unsigned sohm_list_max;                               /* Maximum size for list-based shared messages */
+    unsigned sohm_btree_min;                              /* Minimum size for btree-based shared messages */
 
     H5PB_t             *page_buf;                    /* The page buffer cache                */
     H5AC_t             *cache;                       /* The object cache	 		*/

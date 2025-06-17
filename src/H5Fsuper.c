@@ -1006,7 +1006,7 @@ H5F__super_init(H5F_t *f)
     H5O_drvinfo_t *drvinfo = NULL;  /* Driver info */
     bool           drvinfo_in_cache =
         false; /* Whether the driver info block has been inserted into the metadata cache */
-    H5AC_ring_t orig_ring = H5AC_RING_INV;
+    H5AC_ring_t orig_ring       = H5AC_RING_INV;
     hsize_t     superblock_size = 0; /* Size of superblock, in bytes               */
     haddr_t     superblock_addr = HADDR_UNDEF;
     size_t      driver_size;                              /* Size of driver info block (bytes)          */
@@ -1142,7 +1142,7 @@ H5F__super_init(H5F_t *f)
         HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, FAIL, "failed to set base address for file driver");
 
     /* Save a local copy of the superblock version number, size of addresses & offsets */
-    sblock->super_vers  = super_vers;
+    sblock->super_vers = super_vers;
     if (H5CX_get_sizeof_addr(&sblock->sizeof_addr) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get size of addresses");
     if (H5CX_get_sizeof_size(&sblock->sizeof_size) < 0)

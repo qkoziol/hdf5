@@ -188,8 +188,8 @@ H5MF__aggr_alloc(H5F_t *f, H5F_blk_aggr_t *aggr, H5F_blk_aggr_t *other_aggr, H5F
         H5FD_mem_t alloc_type, other_alloc_type; /* Current aggregator & 'other' aggregator types */
 
 #ifdef H5MF_AGGR_DEBUG
-        fprintf(stderr, "%s: aggr = {%" PRIuHADDR ", %" PRIuHSIZE ", %" PRIuHSIZE "}\n", __func__,
-                aggr->addr, aggr->tot_size, aggr->size);
+        fprintf(stderr, "%s: aggr = {%" PRIuHADDR ", %" PRIuHSIZE ", %" PRIuHSIZE "}\n", __func__, aggr->addr,
+                aggr->tot_size, aggr->size);
 #endif /* H5MF_AGGR_DEBUG */
 
         /* Turn off alignment if allocation < threshold */
@@ -204,8 +204,7 @@ H5MF__aggr_alloc(H5F_t *f, H5F_blk_aggr_t *aggr, H5F_blk_aggr_t *other_aggr, H5F
             aggr_frag_size = alignment - aggr_mis_align;
         } /* end if */
 
-        alloc_type =
-            aggr->feature_flag == H5FD_FEAT_AGGREGATE_METADATA ? H5FD_MEM_DEFAULT : H5FD_MEM_DRAW;
+        alloc_type = aggr->feature_flag == H5FD_FEAT_AGGREGATE_METADATA ? H5FD_MEM_DEFAULT : H5FD_MEM_DRAW;
         other_alloc_type =
             other_aggr->feature_flag == H5FD_FEAT_AGGREGATE_METADATA ? H5FD_MEM_DEFAULT : H5FD_MEM_DRAW;
 
@@ -237,8 +236,7 @@ H5MF__aggr_alloc(H5F_t *f, H5F_blk_aggr_t *aggr, H5F_blk_aggr_t *other_aggr, H5F
                      * has allocated more than one block and the unallocated space is greater than its
                      * allocation block size.
                      */
-                    if ((other_aggr->size > 0) &&
-                        (H5_addr_eq((other_aggr->addr + other_aggr->size), eoa)) &&
+                    if ((other_aggr->size > 0) && (H5_addr_eq((other_aggr->addr + other_aggr->size), eoa)) &&
                         (other_aggr->tot_size > other_aggr->size) &&
                         ((other_aggr->tot_size - other_aggr->size) >= other_aggr->alloc_size)) {
                         if (H5MF__aggr_free(f, other_alloc_type, other_aggr) < 0)
@@ -249,8 +247,7 @@ H5MF__aggr_alloc(H5F_t *f, H5F_blk_aggr_t *aggr, H5F_blk_aggr_t *other_aggr, H5F
                     /* Allocate space from the VFD (i.e. at the end of the file) */
                     if (HADDR_UNDEF ==
                         (ret_value = H5F__alloc(f, alloc_type, size, &eoa_frag_addr, &eoa_frag_size)))
-                        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTALLOC, HADDR_UNDEF,
-                                    "can't allocate file space");
+                        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTALLOC, HADDR_UNDEF, "can't allocate file space");
                 } /* end else */
             }     /* end if */
             else {
@@ -285,8 +282,7 @@ H5MF__aggr_alloc(H5F_t *f, H5F_blk_aggr_t *aggr, H5F_blk_aggr_t *other_aggr, H5F
                      * has allocated more than one block and the unallocated space is greater than its
                      * allocation block size.
                      */
-                    if ((other_aggr->size > 0) &&
-                        (H5_addr_eq((other_aggr->addr + other_aggr->size), eoa)) &&
+                    if ((other_aggr->size > 0) && (H5_addr_eq((other_aggr->addr + other_aggr->size), eoa)) &&
                         (other_aggr->tot_size > other_aggr->size) &&
                         ((other_aggr->tot_size - other_aggr->size) >= other_aggr->alloc_size)) {
                         if (H5MF__aggr_free(f, other_alloc_type, other_aggr) < 0)
@@ -297,8 +293,7 @@ H5MF__aggr_alloc(H5F_t *f, H5F_blk_aggr_t *aggr, H5F_blk_aggr_t *other_aggr, H5F
                     /* Allocate space from the VFD (i.e. at the end of the file) */
                     if (HADDR_UNDEF == (new_space = H5F__alloc(f, alloc_type, aggr->alloc_size,
                                                                &eoa_frag_addr, &eoa_frag_size)))
-                        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTALLOC, HADDR_UNDEF,
-                                    "can't allocate file space");
+                        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTALLOC, HADDR_UNDEF, "can't allocate file space");
 
                     /* Return the unused portion of the block to a free list */
                     if (aggr->size > 0)
@@ -342,8 +337,7 @@ H5MF__aggr_alloc(H5F_t *f, H5F_blk_aggr_t *aggr, H5F_blk_aggr_t *other_aggr, H5F
             /* Freeing any possible fragment due to alignment in the block after extension */
             if (extended && aggr_frag_size)
                 if (H5MF_xfree(f, alloc_type, aggr_frag_addr, aggr_frag_size) < 0)
-                    HGOTO_ERROR(H5E_RESOURCE, H5E_CANTFREE, HADDR_UNDEF,
-                                "can't free aggregation fragment");
+                    HGOTO_ERROR(H5E_RESOURCE, H5E_CANTFREE, HADDR_UNDEF, "can't free aggregation fragment");
         } /* end if */
         else {
             /* Allocate space out of the block */
@@ -354,8 +348,7 @@ H5MF__aggr_alloc(H5F_t *f, H5F_blk_aggr_t *aggr, H5F_blk_aggr_t *other_aggr, H5F
             /* free any possible fragment */
             if (aggr_frag_size)
                 if (H5MF_xfree(f, alloc_type, aggr_frag_addr, aggr_frag_size) < 0)
-                    HGOTO_ERROR(H5E_RESOURCE, H5E_CANTFREE, HADDR_UNDEF,
-                                "can't free aggregation fragment");
+                    HGOTO_ERROR(H5E_RESOURCE, H5E_CANTFREE, HADDR_UNDEF, "can't free aggregation fragment");
         } /* end else */
     }     /* end if */
     else {
@@ -406,8 +399,9 @@ done:
  *
  *-------------------------------------------------------------------------
  */
-htri_t H5MF__aggr_try_extend(H5F_t * f, H5F_blk_aggr_t * aggr, H5FD_mem_t type, haddr_t blk_end,
-                             hsize_t extra_requested)
+htri_t
+H5MF__aggr_try_extend(H5F_t *f, H5F_blk_aggr_t *aggr, H5FD_mem_t type, haddr_t blk_end,
+                      hsize_t extra_requested)
 {
     htri_t ret_value = false; /* Return value */
 
@@ -448,8 +442,7 @@ htri_t H5MF__aggr_try_extend(H5F_t * f, H5F_blk_aggr_t * aggr, H5FD_mem_t type, 
                  * 2) extend the block into the aggregator
                  */
                 else {
-                    hsize_t extra =
-                        (extra_requested < aggr->alloc_size) ? aggr->alloc_size : extra_requested;
+                    hsize_t extra = (extra_requested < aggr->alloc_size) ? aggr->alloc_size : extra_requested;
 
                     if ((ret_value = H5F__try_extend(f, type, (aggr->addr + aggr->size), extra)) < 0)
                         HGOTO_ERROR(H5E_RESOURCE, H5E_CANTEXTEND, FAIL, "error extending file");
@@ -501,8 +494,9 @@ done:
  *
  *-------------------------------------------------------------------------
  */
-htri_t H5MF__aggr_can_absorb(const H5F_t *f, const H5F_blk_aggr_t *aggr, const H5MF_free_section_t *sect,
-                             H5MF_shrink_type_t *shrink)
+htri_t
+H5MF__aggr_can_absorb(const H5F_t *f, const H5F_blk_aggr_t *aggr, const H5MF_free_section_t *sect,
+                      H5MF_shrink_type_t *shrink)
 {
     htri_t ret_value = false; /* Return value */
 
@@ -523,8 +517,8 @@ htri_t H5MF__aggr_can_absorb(const H5F_t *f, const H5F_blk_aggr_t *aggr, const H
             H5_addr_eq((aggr->addr + aggr->size), sect->sect_info.addr)) {
 #ifdef H5MF_AGGR_DEBUG
             fprintf(stderr,
-                    "%s: section {%" PRIuHADDR ", %" PRIuHSIZE "} adjoins aggr = {%" PRIuHADDR
-                    ", %" PRIuHSIZE "}\n",
+                    "%s: section {%" PRIuHADDR ", %" PRIuHSIZE "} adjoins aggr = {%" PRIuHADDR ", %" PRIuHSIZE
+                    "}\n",
                     "H5MF__aggr_can_absorb", sect->sect_info.addr, sect->sect_info.size, aggr->addr,
                     aggr->size);
 #endif /* H5MF_AGGR_DEBUG */
@@ -554,8 +548,9 @@ done:
  *
  *-------------------------------------------------------------------------
  */
-herr_t H5MF__aggr_absorb(const H5F_t H5_ATTR_UNUSED *f, H5F_blk_aggr_t *aggr, H5MF_free_section_t *sect,
-                         bool allow_sect_absorb)
+herr_t
+H5MF__aggr_absorb(const H5F_t H5_ATTR_UNUSED *f, H5F_blk_aggr_t *aggr, H5MF_free_section_t *sect,
+                  bool allow_sect_absorb)
 {
     FUNC_ENTER_PACKAGE_NOERR
 
@@ -575,8 +570,7 @@ herr_t H5MF__aggr_absorb(const H5F_t H5_ATTR_UNUSED *f, H5F_blk_aggr_t *aggr, H5
             fprintf(stderr,
                     "%s: aggr {%" PRIuHADDR ", %" PRIuHSIZE "} adjoins front of section = {%" PRIuHADDR
                     ", %" PRIuHSIZE "}\n",
-                    "H5MF__aggr_absorb", aggr->addr, aggr->size, sect->sect_info.addr,
-                    sect->sect_info.size);
+                    "H5MF__aggr_absorb", aggr->addr, aggr->size, sect->sect_info.addr, sect->sect_info.size);
 #endif /* H5MF_AGGR_DEBUG */
             /* Absorb aggregator onto end of section */
             sect->sect_info.size += aggr->size;
@@ -589,8 +583,7 @@ herr_t H5MF__aggr_absorb(const H5F_t H5_ATTR_UNUSED *f, H5F_blk_aggr_t *aggr, H5
             fprintf(stderr,
                     "%s: aggr {%" PRIuHADDR ", %" PRIuHSIZE "} adjoins end of section = {%" PRIuHADDR
                     ", %" PRIuHSIZE "}\n",
-                    "H5MF__aggr_absorb", aggr->addr, aggr->size, sect->sect_info.addr,
-                    sect->sect_info.size);
+                    "H5MF__aggr_absorb", aggr->addr, aggr->size, sect->sect_info.addr, sect->sect_info.size);
 #endif /* H5MF_AGGR_DEBUG */
             /* Absorb aggregator onto beginning of section */
             sect->sect_info.addr -= aggr->size;
@@ -609,8 +602,7 @@ herr_t H5MF__aggr_absorb(const H5F_t H5_ATTR_UNUSED *f, H5F_blk_aggr_t *aggr, H5
             fprintf(stderr,
                     "%s: section {%" PRIuHADDR ", %" PRIuHSIZE "} adjoins front of aggr = {%" PRIuHADDR
                     ", %" PRIuHSIZE "}\n",
-                    "H5MF__aggr_absorb", sect->sect_info.addr, sect->sect_info.size, aggr->addr,
-                    aggr->size);
+                    "H5MF__aggr_absorb", sect->sect_info.addr, sect->sect_info.size, aggr->addr, aggr->size);
 #endif /* H5MF_AGGR_DEBUG */
             /* Absorb section onto front of aggregator */
             aggr->addr -= sect->sect_info.size;
@@ -629,8 +621,7 @@ herr_t H5MF__aggr_absorb(const H5F_t H5_ATTR_UNUSED *f, H5F_blk_aggr_t *aggr, H5
             fprintf(stderr,
                     "%s: section {%" PRIuHADDR ", %" PRIuHSIZE "} adjoins end of aggr = {%" PRIuHADDR
                     ", %" PRIuHSIZE "}\n",
-                    "H5MF__aggr_absorb", sect->sect_info.addr, sect->sect_info.size, aggr->addr,
-                    aggr->size);
+                    "H5MF__aggr_absorb", sect->sect_info.addr, sect->sect_info.size, aggr->addr, aggr->size);
 #endif /* H5MF_AGGR_DEBUG */
             /* Absorb section onto end of aggregator */
             aggr->size += sect->sect_info.size;
@@ -652,7 +643,8 @@ herr_t H5MF__aggr_absorb(const H5F_t H5_ATTR_UNUSED *f, H5F_blk_aggr_t *aggr, H5
  *
  *-------------------------------------------------------------------------
  */
-herr_t H5MF__aggr_query(const H5F_t *f, const H5F_blk_aggr_t *aggr, haddr_t *addr, hsize_t *size)
+herr_t
+H5MF__aggr_query(const H5F_t *f, const H5F_blk_aggr_t *aggr, haddr_t *addr, hsize_t *size)
 {
     FUNC_ENTER_PACKAGE_NOERR
 
@@ -683,7 +675,8 @@ herr_t H5MF__aggr_query(const H5F_t *f, const H5F_blk_aggr_t *aggr, haddr_t *add
  *
  *-------------------------------------------------------------------------
  */
-static herr_t H5MF__aggr_reset(H5F_t * f, H5F_blk_aggr_t * aggr)
+static herr_t
+H5MF__aggr_reset(H5F_t *f, H5F_blk_aggr_t *aggr)
 {
     H5FD_mem_t alloc_type;          /* Type of file memory to work with */
     herr_t     ret_value = SUCCEED; /* Return value */
@@ -740,7 +733,8 @@ done:
  *
  *-------------------------------------------------------------------------
  */
-herr_t H5MF_free_aggrs(H5F_t * f)
+herr_t
+H5MF_free_aggrs(H5F_t *f)
 {
     H5F_blk_aggr_t *first_aggr;              /* First aggregator to reset */
     H5F_blk_aggr_t *second_aggr;             /* Second aggregator to reset */
@@ -802,7 +796,8 @@ done:
  *
  *-------------------------------------------------------------------------
  */
-static htri_t H5MF__aggr_can_shrink_eoa(H5F_t * f, H5FD_mem_t type, H5F_blk_aggr_t * aggr)
+static htri_t
+H5MF__aggr_can_shrink_eoa(H5F_t *f, H5FD_mem_t type, H5F_blk_aggr_t *aggr)
 {
     haddr_t eoa       = HADDR_UNDEF; /* EOA for the file */
     htri_t  ret_value = false;       /* Return value */
@@ -839,7 +834,8 @@ done:
  *
  *-------------------------------------------------------------------------
  */
-static herr_t H5MF__aggr_free(H5F_t * f, H5FD_mem_t type, H5F_blk_aggr_t * aggr)
+static herr_t
+H5MF__aggr_free(H5F_t *f, H5FD_mem_t type, H5F_blk_aggr_t *aggr)
 {
     herr_t ret_value = SUCCEED; /* Return value */
 
@@ -879,7 +875,8 @@ done:
  *
  *-------------------------------------------------------------------------
  */
-htri_t H5MF__aggrs_try_shrink_eoa(H5F_t * f)
+htri_t
+H5MF__aggrs_try_shrink_eoa(H5F_t *f)
 {
     htri_t ma_status;        /* Whether the metadata aggregator can shrink the EOA */
     htri_t sda_status;       /* Whether the small data aggregator can shrink the EOA */

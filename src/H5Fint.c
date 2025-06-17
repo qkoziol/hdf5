@@ -522,8 +522,8 @@ done:
 H5P_genplist_t *
 H5F_get_create_plist(H5F_t *f)
 {
-    H5P_genplist_t       *new_fcpl = NULL;            /* New property list */
-    H5P_genplist_t       *ret_value = NULL; /* Return value */
+    H5P_genplist_t *new_fcpl  = NULL; /* New property list */
+    H5P_genplist_t *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_NOAPI(NULL)
 
@@ -1936,8 +1936,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags,
-         H5P_genplist_t *fapl)
+H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist_t *fapl)
 {
     H5F_t             *file   = NULL; /* File pointer (OUT)       */
     H5F_shared_t      *shared = NULL; /* Shared part of `file'    */

@@ -946,7 +946,7 @@ done:
 H5P_genplist_t *
 H5T__get_create_plist(const H5T_t *type)
 {
-    H5P_genplist_t *new_tcpl;        /* New datatype creation property list */
+    H5P_genplist_t *new_tcpl;         /* New datatype creation property list */
     H5P_genplist_t *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE

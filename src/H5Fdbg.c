@@ -38,7 +38,7 @@
 herr_t
 H5F_debug(H5F_t *f, FILE *stream, int indent, int fwidth)
 {
-    herr_t  ret_value = SUCCEED; /* Return value */
+    herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
