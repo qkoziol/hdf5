@@ -425,6 +425,7 @@ H5Fget_vfd_handle(hid_t file_id, hid_t fapl_id, void **file_handle /*out*/)
     H5VL_object_t                   *vol_obj;             /* File info */
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
+    H5P_genplist_t              *fapl;                        /* File access property list */
     herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -433,14 +434,12 @@ H5Fget_vfd_handle(hid_t file_id, hid_t fapl_id, void **file_handle /*out*/)
     if (!file_handle)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid file handle pointer");
 
-    /* Check the file access property list */
-    if (H5P_DEFAULT == fapl_id)
-        fapl_id = H5P_FILE_ACCESS_DEFAULT;
-    else if (true != H5P_isa_class(fapl_id, H5P_FILE_ACCESS))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not file access property list");
+    /* Get the pointer to the file access property list */
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&fapl_id, file_id, false) < 0)
+    if (H5CX_set_apl(H5P_PLIST_ID(fapl), file_id, false) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set file access property list");
 
     /* Get the file object */
@@ -448,7 +447,7 @@ H5Fget_vfd_handle(hid_t file_id, hid_t fapl_id, void **file_handle /*out*/)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid file identifier");
 
     /* Set up VOL callback arguments */
-    file_opt_args.get_vfd_handle.fapl_id     = fapl_id;
+    file_opt_args.get_vfd_handle.fapl_id     = H5P_PLIST_ID(fapl);
     file_opt_args.get_vfd_handle.file_handle = file_handle;
     vol_cb_args.op_type                      = H5VL_NATIVE_FILE_GET_VFD_HANDLE;
     vol_cb_args.args                         = &file_opt_args;
@@ -475,6 +474,7 @@ htri_t
 H5Fis_accessible(const char *filename, hid_t fapl_id)
 {
     H5VL_file_specific_args_t vol_cb_args;           /* Arguments to VOL callback */
+    H5P_genplist_t              *fapl;                        /* File access property list */
     bool                      is_accessible = false; /* Whether file is accessible */
     htri_t                    ret_value;             /* Return value */
 
@@ -484,20 +484,18 @@ H5Fis_accessible(const char *filename, hid_t fapl_id)
     if (!filename || !*filename)
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, FAIL, "no file name specified");
 
-    /* Check the file access property list */
-    if (H5P_DEFAULT == fapl_id)
-        fapl_id = H5P_FILE_ACCESS_DEFAULT;
-    else if (true != H5P_isa_class(fapl_id, H5P_FILE_ACCESS))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not file access property list");
+    /* Get the pointer to the file access property list */
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&fapl_id, H5I_INVALID_HID, true) < 0)
+    if (H5CX_set_apl(H5P_PLIST_ID(fapl), H5I_INVALID_HID, true) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Set up VOL callback arguments */
     vol_cb_args.op_type                       = H5VL_FILE_IS_ACCESSIBLE;
     vol_cb_args.args.is_accessible.filename   = filename;
-    vol_cb_args.args.is_accessible.fapl_id    = fapl_id;
+    vol_cb_args.args.is_accessible.fapl_id    = H5P_PLIST_ID(fapl);
     vol_cb_args.args.is_accessible.accessible = &is_accessible;
 
     /* Check if file is accessible */
@@ -561,7 +559,6 @@ static hid_t
 H5F__create_api_common(const char *filename, unsigned flags, H5P_genplist_t *fcpl, H5P_genplist_t *fapl,
                        void **token_ptr)
 {
-    hid_t                 fapl_id;                     /* ID for FAPL */
     void                 *new_file = NULL;             /* File struct for new file                 */
     H5VL_connector_prop_t connector_prop;              /* Property for VOL connector ID & info */
     hid_t                 ret_value = H5I_INVALID_HID; /* Return value                             */
@@ -583,8 +580,7 @@ H5F__create_api_common(const char *filename, unsigned flags, H5P_genplist_t *fcp
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, H5I_INVALID_HID, "mutually exclusive flags for file creation");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    fapl_id = H5P_PLIST_ID(fapl);
-    if (H5CX_set_apl(&fapl_id, H5I_INVALID_HID, true) < 0)
+    if (H5CX_set_apl(H5P_PLIST_ID(fapl), H5I_INVALID_HID, true) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID, "can't set access property list info");
 
     /* Set the creation property list */
@@ -767,7 +763,6 @@ done:
 static hid_t
 H5F__open_api_common(const char *filename, unsigned flags, H5P_genplist_t *fapl, void **token_ptr)
 {
-    hid_t                 fapl_id;                     /* ID for FAPL */
     void                 *new_file = NULL;             /* File struct for new file                 */
     H5VL_connector_prop_t connector_prop;              /* Property for VOL connector ID & info */
     hid_t                 ret_value = H5I_INVALID_HID; /* Return value                             */
@@ -791,8 +786,7 @@ H5F__open_api_common(const char *filename, unsigned flags, H5P_genplist_t *fapl,
                     "SWMR read access on a file open for read-write access is not allowed");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    fapl_id = H5P_PLIST_ID(fapl);
-    if (H5CX_set_apl(&fapl_id, H5I_INVALID_HID, true) < 0)
+    if (H5CX_set_apl(H5P_PLIST_ID(fapl), H5I_INVALID_HID, true) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID, "can't set access property list info");
 
     /* Retrieve the connector property */
@@ -1151,6 +1145,7 @@ herr_t
 H5Fdelete(const char *filename, hid_t fapl_id)
 {
     H5VL_file_specific_args_t vol_cb_args;           /* Arguments to VOL callback */
+    H5P_genplist_t              *fapl;                        /* File access property list */
     bool                      is_accessible = false; /* Whether file is accessible */
     herr_t                    ret_value     = SUCCEED;
 
@@ -1160,20 +1155,18 @@ H5Fdelete(const char *filename, hid_t fapl_id)
     if (!filename || !*filename)
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, FAIL, "no file name specified");
 
-    /* Check the file access property list */
-    if (H5P_DEFAULT == fapl_id)
-        fapl_id = H5P_FILE_ACCESS_DEFAULT;
-    else if (true != H5P_isa_class(fapl_id, H5P_FILE_ACCESS))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not file access property list");
+    /* Get the pointer to the file access property list */
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&fapl_id, H5I_INVALID_HID, true) < 0)
+    if (H5CX_set_apl(H5P_PLIST_ID(fapl), H5I_INVALID_HID, true) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Set up VOL callback arguments */
     vol_cb_args.op_type                       = H5VL_FILE_IS_ACCESSIBLE;
     vol_cb_args.args.is_accessible.filename   = filename;
-    vol_cb_args.args.is_accessible.fapl_id    = fapl_id;
+    vol_cb_args.args.is_accessible.fapl_id    = H5P_PLIST_ID(fapl);
     vol_cb_args.args.is_accessible.accessible = &is_accessible;
 
     /* Make sure this is HDF5 storage for this VOL connector */
@@ -1185,7 +1178,7 @@ H5Fdelete(const char *filename, hid_t fapl_id)
     /* Set up VOL callback arguments */
     vol_cb_args.op_type           = H5VL_FILE_DELETE;
     vol_cb_args.args.del.filename = filename;
-    vol_cb_args.args.del.fapl_id  = fapl_id;
+    vol_cb_args.args.del.fapl_id  = H5P_PLIST_ID(fapl);
 
     /* Delete the file */
     if (H5VL_file_specific(NULL, &vol_cb_args, H5_REQUEST_NULL) < 0)

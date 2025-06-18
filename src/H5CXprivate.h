@@ -664,7 +664,7 @@ H5_DLL herr_t H5CX_set_dxpl(hid_t dxpl_id);
 H5_DLL void   H5CX_set_lcpl(hid_t lcpl_id);
 H5_DLL void   H5CX_set_acpl(hid_t acpl_id);
 H5_DLL herr_t H5CX_set_libver_bounds(H5F_t *f);
-H5_DLL herr_t H5CX_set_apl(hid_t *acspl_id, hid_t loc_id, bool is_collective);
+H5_DLL herr_t H5CX_set_apl(hid_t acspl_id, hid_t loc_id, bool is_collective);
 H5_DLL void   H5CX_set_fapl(hid_t fapl_id);
 H5_DLL void   H5CX_set_fcpl(hid_t fcpl_id);
 H5_DLL void   H5CX_set_ocpypl(hid_t ocpypl_id);

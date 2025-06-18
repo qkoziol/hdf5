@@ -487,7 +487,6 @@ static void *
 H5R__open_common(H5R_ref_t *ref_ptr, hid_t file_id, H5P_genplist_t *dapl, void **token_ptr,
                  H5VL_object_t **vol_obj_ptr, H5I_type_t *opened_type)
 {
-    hid_t             dapl_id;          /* ID for DAPL */
     H5VL_loc_params_t loc_params;       /* Location parameters */
     H5O_token_t       obj_token = {0};  /* Object token */
     void             *ret_value = NULL; /* Return value */
@@ -495,8 +494,7 @@ H5R__open_common(H5R_ref_t *ref_ptr, hid_t file_id, H5P_genplist_t *dapl, void *
     FUNC_ENTER_PACKAGE
 
     /* Verify access property list and set up collective metadata if appropriate */
-    dapl_id = H5P_PLIST_ID(dapl);
-    if (H5CX_set_apl(&dapl_id, file_id, false) < 0)
+    if (H5CX_set_apl(H5P_PLIST_ID(dapl), file_id, false) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTSET, NULL, "can't set access property list info");
 
     /* Get object token */
@@ -879,7 +877,6 @@ static hid_t
 H5R__open_attr_api_common(H5R_ref_t *ref_ptr, hid_t file_id, H5P_genplist_t *aapl, void **token_ptr,
                           H5VL_object_t **_vol_obj_ptr)
 {
-    hid_t           aapl_id;            /* Attribute access property list */
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for file_id */
     H5VL_object_t **vol_obj_ptr =
         (_vol_obj_ptr ? _vol_obj_ptr : &tmp_vol_obj); /* Ptr to object ptr for file_id */
@@ -902,8 +899,7 @@ H5R__open_attr_api_common(H5R_ref_t *ref_ptr, hid_t file_id, H5P_genplist_t *aap
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTINIT, H5I_INVALID_HID, "can't create VOL object for object");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    aapl_id = H5P_PLIST_ID(aapl);
-    if (H5CX_set_apl(&aapl_id, file_id, false) < 0)
+    if (H5CX_set_apl(H5P_PLIST_ID(aapl), file_id, false) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTSET, H5I_INVALID_HID, "can't set access property list info");
 
     /* Set location parameters */

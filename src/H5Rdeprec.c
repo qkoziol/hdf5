@@ -586,6 +586,7 @@ H5Rdereference2(hid_t obj_id, hid_t oapl_id, H5R_type_t ref_type, const void *re
     H5VL_loc_params_t    loc_params;                                     /* Location parameters */
     H5O_token_t          obj_token = {0};                                /* Object token */
     H5I_type_t           opened_type;                                    /* Opened object type */
+    H5P_genplist_t         *oapl;            /* Object access property list */
     void                *opened_obj        = NULL;                       /* Opened object */
     const unsigned char *buf               = (const unsigned char *)ref; /* Reference pointer */
     bool                 is_native_vol_obj = false;           /* Whether the native VOL connector is in use */
@@ -594,8 +595,6 @@ H5Rdereference2(hid_t obj_id, hid_t oapl_id, H5R_type_t ref_type, const void *re
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Check args */
-    if (oapl_id < 0)
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a property list");
     if (buf == NULL)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, H5I_INVALID_HID, "invalid reference pointer");
     if (ref_type != H5R_OBJECT1 && ref_type != H5R_DATASET_REGION1)
@@ -603,13 +602,11 @@ H5Rdereference2(hid_t obj_id, hid_t oapl_id, H5R_type_t ref_type, const void *re
 
     /* Check the object access property list */
     /* (the OAPL is treated as a DAPL currently) */
-    if (H5P_DEFAULT == oapl_id)
-        oapl_id = H5P_DATASET_ACCESS_DEFAULT;
-    else if (true != H5P_isa_class(oapl_id, H5P_DATASET_ACCESS))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not file access property list");
+    if (NULL == (oapl = H5P_object_verify(oapl_id, H5P_TYPE_DATASET_ACCESS, true)))
+        HGOTO_ERROR(H5E_REFERENCE, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&oapl_id, obj_id, false) < 0)
+    if (H5CX_set_apl(H5P_PLIST_ID(oapl), obj_id, false) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTSET, H5I_INVALID_HID, "can't set access property list info");
 
     /* Get the VOL object */

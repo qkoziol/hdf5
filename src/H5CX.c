@@ -1579,7 +1579,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5CX_set_apl(hid_t *acspl_id,
+H5CX_set_apl(hid_t acspl_id,
              hid_t
 #ifndef H5_HAVE_PARALLEL
                  H5_ATTR_UNUSED
@@ -1603,24 +1603,23 @@ H5CX_set_apl(hid_t *acspl_id,
     FUNC_ENTER_NOAPI(FAIL)
 
     /* Sanity checks */
-    assert(acspl_id);
-    assert(H5P_DEFAULT != *acspl_id);
+    assert(H5P_DEFAULT != acspl_id);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
     /* Check for link access property and set API context if so */
-    if (H5P_LST_LINK_ACCESS_ID_g == *acspl_id || H5P_LST_DATASET_ACCESS_ID_g == *acspl_id ||
-        H5P_LST_ATTRIBUTE_ACCESS_ID_g == *acspl_id || H5P_LST_DATATYPE_ACCESS_ID_g == *acspl_id ||
-        H5P_LST_GROUP_ACCESS_ID_g == *acspl_id || H5P_LST_MAP_ACCESS_ID_g == *acspl_id) {
+    if (H5P_LST_LINK_ACCESS_ID_g == acspl_id || H5P_LST_DATASET_ACCESS_ID_g == acspl_id ||
+        H5P_LST_ATTRIBUTE_ACCESS_ID_g == acspl_id || H5P_LST_DATATYPE_ACCESS_ID_g == acspl_id ||
+        H5P_LST_GROUP_ACCESS_ID_g == acspl_id || H5P_LST_MAP_ACCESS_ID_g == acspl_id) {
 #ifdef H5_HAVE_PARALLEL
         is_default = true;
 #endif /* H5_HAVE_PARALLEL */
         H5CX__reset_lapl(*head);
-        (*head)->ctx.lapl_id = *acspl_id;
+        (*head)->ctx.lapl_id = acspl_id;
     }
     else {
         /* Get the property list for the ID */
-        if (NULL == (acspl = H5I_object_verify(*acspl_id, H5I_GENPROP_LST)))
+        if (NULL == (acspl = H5I_object_verify(acspl_id, H5I_GENPROP_LST)))
             HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "invalid ID for property list");
 
         /* Check for link access property */
@@ -1628,56 +1627,56 @@ H5CX_set_apl(hid_t *acspl_id,
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for link access class");
         else if (is_lapl) {
             H5CX__reset_lapl(*head);
-            (*head)->ctx.lapl_id = *acspl_id;
+            (*head)->ctx.lapl_id = acspl_id;
         }
     }
 
     /* Check for dataset access property and set API context if so */
     /* Note: DAPL's are a subclass of LAPLs, so this might set both the lapl_id and the dapl_id */
-    if (H5P_LST_DATASET_ACCESS_ID_g == *acspl_id) {
+    if (H5P_LST_DATASET_ACCESS_ID_g == acspl_id) {
 #ifdef H5_HAVE_PARALLEL
         is_default = true;
 #endif /* H5_HAVE_PARALLEL */
         H5CX__reset_dapl(*head);
-        (*head)->ctx.dapl_id = *acspl_id;
+        (*head)->ctx.dapl_id = acspl_id;
     }
     else {
         htri_t is_dapl; /* Whether the access property list is (or is derived from) a dataset access property
                            list */
 
         /* Get the property list for the ID, if we don't have it already */
-        if (!acspl && NULL == (acspl = H5I_object_verify(*acspl_id, H5I_GENPROP_LST)))
+        if (!acspl && NULL == (acspl = H5I_object_verify(acspl_id, H5I_GENPROP_LST)))
             HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "invalid ID for property list");
 
         if ((is_dapl = H5P_class_isa(H5P_CLASS(acspl), H5P_CLS_DATASET_ACCESS_g)) < 0)
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for dataset access class");
         else if (is_dapl) {
             H5CX__reset_dapl(*head);
-            (*head)->ctx.dapl_id = *acspl_id;
+            (*head)->ctx.dapl_id = acspl_id;
         }
     }
 
     /* Check for file access property and set API context if so */
-    if (H5P_LST_FILE_ACCESS_ID_g == *acspl_id) {
+    if (H5P_LST_FILE_ACCESS_ID_g == acspl_id) {
 #ifdef H5_HAVE_PARALLEL
         is_default = true;
 #endif /* H5_HAVE_PARALLEL */
         H5CX__reset_fapl(*head);
-        (*head)->ctx.fapl_id = *acspl_id;
+        (*head)->ctx.fapl_id = acspl_id;
     }
     else {
         htri_t is_fapl; /* Whether the access property list is (or is derived from) a file access property
                            list */
 
         /* Get the property list for the ID, if we don't have it already */
-        if (!acspl && NULL == (acspl = H5I_object_verify(*acspl_id, H5I_GENPROP_LST)))
+        if (!acspl && NULL == (acspl = H5I_object_verify(acspl_id, H5I_GENPROP_LST)))
             HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "invalid ID for property list");
 
         if ((is_fapl = H5P_class_isa(H5P_CLASS(acspl), H5P_CLS_FILE_ACCESS_g)) < 0)
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for file access class");
         else if (is_fapl) {
             H5CX__reset_fapl(*head);
-            (*head)->ctx.fapl_id = *acspl_id;
+            (*head)->ctx.fapl_id = acspl_id;
         }
     }
 

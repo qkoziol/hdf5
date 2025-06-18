@@ -155,7 +155,7 @@ H5Fis_hdf5(const char *name)
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, (-1), "no file name specified");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&fapl_id, H5I_INVALID_HID, true) < 0)
+    if (H5CX_set_apl(fapl_id, H5I_INVALID_HID, true) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Set up VOL callback arguments */

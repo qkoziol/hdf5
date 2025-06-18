@@ -536,16 +536,14 @@ H5Ocopy(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *ds
     /* Get correct property lists */
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "can't find object for ID");
-    lcpl_id = H5P_PLIST_ID(lcpl); /* Allow for application passing H5P_DEFAULT */
     if (NULL == (ocpypl = H5P_object_verify(ocpypl_id, H5P_TYPE_OBJECT_COPY, true)))
         HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "can't find object for ID");
-    ocpypl_id = H5P_PLIST_ID(ocpypl); /* Allow for application passing H5P_DEFAULT */
 
     /* Set the LCPL for the API context */
-    H5CX_set_lcpl(lcpl_id);
+    H5CX_set_lcpl(H5P_PLIST_ID(lcpl));
 
     /* Set the OCPYPL for the API context */
-    H5CX_set_ocpypl(ocpypl_id);
+    H5CX_set_ocpypl(H5P_PLIST_ID(ocpypl));
 
     /* To copy an object synchronously */
     if (H5O__copy_api_common(src_loc_id, src_name, dst_loc_id, dst_name, ocpypl, lcpl, NULL, NULL) < 0)
@@ -587,10 +585,10 @@ H5Ocopy_async(const char *app_file, const char *app_func, unsigned app_line, hid
     ocpypl_id = H5P_PLIST_ID(ocpypl); /* Allow for application passing H5P_DEFAULT */
 
     /* Set the LCPL for the API context */
-    H5CX_set_lcpl(lcpl_id);
+    H5CX_set_lcpl(H5P_PLIST_ID(lcpl));
 
     /* Set the OCPYPL for the API context */
-    H5CX_set_ocpypl(ocpypl_id);
+    H5CX_set_ocpypl(H5P_PLIST_ID(ocpypl));
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -859,25 +857,23 @@ H5Olink(hid_t obj_id, hid_t new_loc_id, const char *new_name, hid_t lcpl_id, hid
     /* Get the link creation property list */
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "can't find object for ID");
-    lcpl_id = H5P_PLIST_ID(lcpl); /* Allow for application passing H5P_DEFAULT */
 
     /* Set the LCPL for the API context */
-    H5CX_set_lcpl(lcpl_id);
+    H5CX_set_lcpl(H5P_PLIST_ID(lcpl));
 
     /* Get the link access property list */
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "can't find object for ID");
-    lapl_id = H5P_PLIST_ID(lapl); /* Allow for application passing H5P_DEFAULT */
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&lapl_id, obj_id, true) < 0)
+    if (H5CX_set_apl(H5P_PLIST_ID(lapl), obj_id, true) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Set up new location struct */
     new_loc_params.type                         = H5VL_OBJECT_BY_NAME;
     new_loc_params.obj_type                     = H5I_get_type(new_loc_id);
     new_loc_params.loc_data.loc_by_name.name    = new_name;
-    new_loc_params.loc_data.loc_by_name.lapl_id = lapl_id;
+    new_loc_params.loc_data.loc_by_name.lapl_id = H5P_PLIST_ID(lapl);
 
     /* Get the first location object */
     if (NULL == (vol_obj1 = H5VL_vol_object(obj_id)))
@@ -1030,6 +1026,7 @@ H5Oexists_by_name(hid_t loc_id, const char *name, hid_t lapl_id)
     H5VL_object_t              *vol_obj;            /* Object of loc_id */
     H5VL_object_specific_args_t vol_cb_args;        /* Arguments to VOL callback */
     H5VL_loc_params_t           loc_params;         /* Location parameters for object access */
+    H5P_genplist_t         *lapl;            /* Link access property list */
     bool                        obj_exists = false; /* Whether object exists */
     htri_t                      ret_value  = FAIL;  /* Return value */
 
@@ -1041,14 +1038,12 @@ H5Oexists_by_name(hid_t loc_id, const char *name, hid_t lapl_id)
     if (!*name)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "name parameter cannot be an empty string");
 
-    /* Check the link access property list */
-    if (H5P_DEFAULT == lapl_id)
-        lapl_id = H5P_LINK_ACCESS_DEFAULT;
-    else if (true != H5P_isa_class(lapl_id, H5P_LINK_ACCESS))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not link access property list");
+    /* Get the link access property list */
+    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
+        HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&lapl_id, loc_id, false) < 0)
+    if (H5CX_set_apl(H5P_PLIST_ID(lapl), loc_id, false) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Get the location object */
@@ -1058,7 +1053,7 @@ H5Oexists_by_name(hid_t loc_id, const char *name, hid_t lapl_id)
     /* Set the location struct fields */
     loc_params.type                         = H5VL_OBJECT_BY_NAME;
     loc_params.loc_data.loc_by_name.name    = name;
-    loc_params.loc_data.loc_by_name.lapl_id = lapl_id;
+    loc_params.loc_data.loc_by_name.lapl_id = H5P_PLIST_ID(lapl);
     loc_params.obj_type                     = H5I_get_type(loc_id);
 
     /* Set up VOL callback arguments */
@@ -1263,6 +1258,7 @@ H5Oget_info_by_idx3(hid_t loc_id, const char *group_name, H5_index_t idx_type, H
     H5VL_object_t         *vol_obj;     /* Object of loc_id */
     H5VL_object_get_args_t vol_cb_args; /* Arguments to VOL callback */
     H5VL_loc_params_t      loc_params;
+    H5P_genplist_t         *lapl;            /* Link access property list */
     herr_t                 ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1279,14 +1275,12 @@ H5Oget_info_by_idx3(hid_t loc_id, const char *group_name, H5_index_t idx_type, H
     if (fields & ~H5O_INFO_ALL)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid fields");
 
-    /* Check the link access property list */
-    if (H5P_DEFAULT == lapl_id)
-        lapl_id = H5P_LINK_ACCESS_DEFAULT;
-    else if (true != H5P_isa_class(lapl_id, H5P_LINK_ACCESS))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not link access property list");
+    /* Get the link access property list */
+    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
+        HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&lapl_id, loc_id, false) < 0)
+    if (H5CX_set_apl(H5P_PLIST_ID(lapl), loc_id, false) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Set location struct fields */
@@ -1295,7 +1289,7 @@ H5Oget_info_by_idx3(hid_t loc_id, const char *group_name, H5_index_t idx_type, H
     loc_params.loc_data.loc_by_idx.idx_type = idx_type;
     loc_params.loc_data.loc_by_idx.order    = order;
     loc_params.loc_data.loc_by_idx.n        = n;
-    loc_params.loc_data.loc_by_idx.lapl_id  = lapl_id;
+    loc_params.loc_data.loc_by_idx.lapl_id  = H5P_PLIST_ID(lapl);
     loc_params.obj_type                     = H5I_get_type(loc_id);
 
     /* Get the location object */
@@ -1380,6 +1374,7 @@ H5Oget_native_info_by_name(hid_t loc_id, const char *name, H5O_native_info_t *oi
     H5VL_optional_args_t               vol_cb_args;  /* Arguments to VOL callback */
     H5VL_native_object_optional_args_t obj_opt_args; /* Arguments for optional operation */
     H5VL_loc_params_t                  loc_params;
+    H5P_genplist_t         *lapl;            /* Link access property list */
     herr_t                             ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1394,20 +1389,18 @@ H5Oget_native_info_by_name(hid_t loc_id, const char *name, H5O_native_info_t *oi
     if (fields & ~H5O_NATIVE_INFO_ALL)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid fields");
 
-    /* Check the link access property list */
-    if (H5P_DEFAULT == lapl_id)
-        lapl_id = H5P_LINK_ACCESS_DEFAULT;
-    else if (true != H5P_isa_class(lapl_id, H5P_LINK_ACCESS))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not link access property list");
+    /* Get the link access property list */
+    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
+        HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&lapl_id, loc_id, false) < 0)
+    if (H5CX_set_apl(H5P_PLIST_ID(lapl), loc_id, false) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Fill out location struct */
     loc_params.type                         = H5VL_OBJECT_BY_NAME;
     loc_params.loc_data.loc_by_name.name    = name;
-    loc_params.loc_data.loc_by_name.lapl_id = lapl_id;
+    loc_params.loc_data.loc_by_name.lapl_id = H5P_PLIST_ID(lapl);
     loc_params.obj_type                     = H5I_get_type(loc_id);
 
     /* Get the location object */
@@ -1447,6 +1440,7 @@ H5Oget_native_info_by_idx(hid_t loc_id, const char *group_name, H5_index_t idx_t
     H5VL_optional_args_t               vol_cb_args;  /* Arguments to VOL callback */
     H5VL_native_object_optional_args_t obj_opt_args; /* Arguments for optional operation */
     H5VL_loc_params_t                  loc_params;
+    H5P_genplist_t         *lapl;            /* Link access property list */
     herr_t                             ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1463,14 +1457,12 @@ H5Oget_native_info_by_idx(hid_t loc_id, const char *group_name, H5_index_t idx_t
     if (fields & ~H5O_NATIVE_INFO_ALL)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid fields");
 
-    /* Check the link access property list */
-    if (H5P_DEFAULT == lapl_id)
-        lapl_id = H5P_LINK_ACCESS_DEFAULT;
-    else if (true != H5P_isa_class(lapl_id, H5P_LINK_ACCESS))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not link access property list");
+    /* Get the link access property list */
+    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
+        HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&lapl_id, loc_id, false) < 0)
+    if (H5CX_set_apl(H5P_PLIST_ID(lapl), loc_id, false) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Set location struct fields */
@@ -1479,7 +1471,7 @@ H5Oget_native_info_by_idx(hid_t loc_id, const char *group_name, H5_index_t idx_t
     loc_params.loc_data.loc_by_idx.idx_type = idx_type;
     loc_params.loc_data.loc_by_idx.order    = order;
     loc_params.loc_data.loc_by_idx.n        = n;
-    loc_params.loc_data.loc_by_idx.lapl_id  = lapl_id;
+    loc_params.loc_data.loc_by_idx.lapl_id  = H5P_PLIST_ID(lapl);
     loc_params.obj_type                     = H5I_get_type(loc_id);
 
     /* Get the location object */
@@ -1571,6 +1563,7 @@ H5Oset_comment_by_name(hid_t loc_id, const char *name, const char *comment, hid_
     H5VL_optional_args_t               vol_cb_args;  /* Arguments to VOL callback */
     H5VL_native_object_optional_args_t obj_opt_args; /* Arguments for optional operation */
     H5VL_loc_params_t                  loc_params;
+    H5P_genplist_t         *lapl;            /* Link access property list */
     herr_t                             ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1579,20 +1572,18 @@ H5Oset_comment_by_name(hid_t loc_id, const char *name, const char *comment, hid_
     if (!name || !*name)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "no name");
 
-    /* Check the link access property list */
-    if (H5P_DEFAULT == lapl_id)
-        lapl_id = H5P_LINK_ACCESS_DEFAULT;
-    else if (true != H5P_isa_class(lapl_id, H5P_LINK_ACCESS))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not link access property list");
+    /* Get the link access property list */
+    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
+        HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&lapl_id, loc_id, true) < 0)
+    if (H5CX_set_apl(H5P_PLIST_ID(lapl), loc_id, true) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Fill in location struct fields */
     loc_params.type                         = H5VL_OBJECT_BY_NAME;
     loc_params.loc_data.loc_by_name.name    = name;
-    loc_params.loc_data.loc_by_name.lapl_id = lapl_id;
+    loc_params.loc_data.loc_by_name.lapl_id = H5P_PLIST_ID(lapl);
     loc_params.obj_type                     = H5I_get_type(loc_id);
 
     /* Get the location object */
@@ -1683,6 +1674,7 @@ H5Oget_comment_by_name(hid_t loc_id, const char *name, char *comment /*out*/, si
     H5VL_optional_args_t               vol_cb_args;  /* Arguments to VOL callback */
     H5VL_native_object_optional_args_t obj_opt_args; /* Arguments for optional operation */
     H5VL_loc_params_t                  loc_params;
+    H5P_genplist_t         *lapl;            /* Link access property list */
     size_t                             comment_len = 0;  /* Length of comment string */
     ssize_t                            ret_value   = -1; /* Return value */
 
@@ -1692,20 +1684,18 @@ H5Oget_comment_by_name(hid_t loc_id, const char *name, char *comment /*out*/, si
     if (!name || !*name)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, (-1), "no name");
 
-    /* Check the link access property list */
-    if (H5P_DEFAULT == lapl_id)
-        lapl_id = H5P_LINK_ACCESS_DEFAULT;
-    else if (true != H5P_isa_class(lapl_id, H5P_LINK_ACCESS))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, (-1), "not link access property list");
+    /* Get the link access property list */
+    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
+        HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&lapl_id, loc_id, false) < 0)
+    if (H5CX_set_apl(H5P_PLIST_ID(lapl), loc_id, false) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTSET, (-1), "can't set access property list info");
 
     /* Fill in location struct fields */
     loc_params.type                         = H5VL_OBJECT_BY_NAME;
     loc_params.loc_data.loc_by_name.name    = name;
-    loc_params.loc_data.loc_by_name.lapl_id = lapl_id;
+    loc_params.loc_data.loc_by_name.lapl_id = H5P_PLIST_ID(lapl);
     loc_params.obj_type                     = H5I_get_type(loc_id);
 
     /* Get the location object */
@@ -1846,6 +1836,7 @@ H5Ovisit_by_name3(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_it
     H5VL_object_t              *vol_obj;     /* Object of loc_id */
     H5VL_object_specific_args_t vol_cb_args; /* Arguments to VOL callback */
     H5VL_loc_params_t           loc_params;  /* Location parameters for object access */
+    H5P_genplist_t         *lapl;            /* Link access property list */
     herr_t                      ret_value;   /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1864,14 +1855,12 @@ H5Ovisit_by_name3(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_it
     if (fields & ~H5O_INFO_ALL)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid fields");
 
-    /* Check the link access property list */
-    if (H5P_DEFAULT == lapl_id)
-        lapl_id = H5P_LINK_ACCESS_DEFAULT;
-    else if (true != H5P_isa_class(lapl_id, H5P_LINK_ACCESS))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not link access property list");
+    /* Get the link access property list */
+    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
+        HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&lapl_id, loc_id, false) < 0)
+    if (H5CX_set_apl(H5P_PLIST_ID(lapl), loc_id, false) < 0)
         HGOTO_ERROR(H5E_OHDR, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Get the location object */
@@ -1881,7 +1870,7 @@ H5Ovisit_by_name3(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_it
     /* Set location parameters */
     loc_params.type                         = H5VL_OBJECT_BY_NAME;
     loc_params.loc_data.loc_by_name.name    = obj_name;
-    loc_params.loc_data.loc_by_name.lapl_id = lapl_id;
+    loc_params.loc_data.loc_by_name.lapl_id = H5P_PLIST_ID(lapl);
     loc_params.obj_type                     = H5I_get_type(loc_id);
 
     /* Set up VOL callback arguments */

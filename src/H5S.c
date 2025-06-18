@@ -1428,6 +1428,7 @@ herr_t
 H5Sencode2(hid_t obj_id, void *buf, size_t *nalloc, hid_t fapl_id)
 {
     H5S_t *dspace;
+    H5P_genplist_t         *fapl;            /* File access property list */
     herr_t ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
@@ -1436,15 +1437,13 @@ H5Sencode2(hid_t obj_id, void *buf, size_t *nalloc, hid_t fapl_id)
     if (NULL == (dspace = (H5S_t *)H5I_object_verify(obj_id, H5I_DATASPACE)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a dataspace");
 
-    /* Check the file access property list */
-    if (H5P_DEFAULT == fapl_id)
-        fapl_id = H5P_FILE_ACCESS_DEFAULT;
-    else if (true != H5P_isa_class(fapl_id, H5P_FILE_ACCESS))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not file access property list");
+    /* Get the file access property list */
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+        HGOTO_ERROR(H5E_DATASPACE, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&fapl_id, H5I_INVALID_HID, true) < 0)
-        HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID, "can't set access property list info");
+    if (H5CX_set_apl(H5P_PLIST_ID(fapl), H5I_INVALID_HID, true) < 0)
+        HGOTO_ERROR(H5E_DATASPACE, H5E_CANTSET, FAIL, "can't set access property list info");
 
     if (H5S_encode(dspace, (unsigned char **)&buf, nalloc) < 0)
         HGOTO_ERROR(H5E_DATASPACE, H5E_CANTENCODE, FAIL, "can't encode dataspace");

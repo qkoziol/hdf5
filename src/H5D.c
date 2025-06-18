@@ -97,7 +97,6 @@ H5D__create_api_common(hid_t loc_id, const char *name, hid_t type_id, hid_t spac
                        H5VL_object_t **_vol_obj_ptr)
 {
     void           *dset = NULL;        /* New dataset's info */
-    hid_t           dapl_id;            /* ID for dataset access property list */
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
         (_vol_obj_ptr ? _vol_obj_ptr : &tmp_vol_obj); /* Ptr to object ptr for loc_id */
@@ -113,8 +112,7 @@ H5D__create_api_common(hid_t loc_id, const char *name, hid_t type_id, hid_t spac
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, H5I_INVALID_HID, "name parameter cannot be an empty string");
 
     /* Set up object access arguments */
-    dapl_id = H5P_PLIST_ID(dapl);
-    if (H5VL_setup_acc_args(loc_id, true, &dapl_id, vol_obj_ptr, &loc_params) < 0)
+    if (H5VL_setup_acc_args(loc_id, true, dapl, vol_obj_ptr, &loc_params) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, H5I_INVALID_HID, "can't set object access arguments");
 
     /* Create the dataset */
@@ -191,11 +189,9 @@ H5Dcreate2(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t 
     /* Get the pointer to the dataset access property list */
     if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
-    dapl_id = H5P_PLIST_ID(dapl); /* Allow for application passing H5P_DEFAULT */
 
     /* Create the dataset synchronously */
-    if ((ret_value = H5D__create_api_common(loc_id, name, type_id, space_id, lcpl, dcpl, dapl, NULL, NULL)) <
-        0)
+    if ((ret_value = H5D__create_api_common(loc_id, name, type_id, space_id, lcpl, dcpl, dapl, NULL, NULL)) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTCREATE, H5I_INVALID_HID, "unable to synchronously create dataset");
 
 done:
@@ -328,10 +324,9 @@ H5Dcreate_anon(hid_t loc_id, hid_t type_id, hid_t space_id, hid_t dcpl_id, hid_t
     /* Get the pointer to the dataset access property list */
     if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
-    dapl_id = H5P_PLIST_ID(dapl); /* Allow for application passing H5P_DEFAULT */
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&dapl_id, loc_id, true) < 0)
+    if (H5CX_set_apl(H5P_PLIST_ID(dapl), loc_id, true) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, H5I_INVALID_HID, "can't set access property list info");
 
     /* get the location object */
@@ -375,7 +370,6 @@ H5D__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *dapl, void 
                      H5VL_object_t **_vol_obj_ptr)
 {
     void           *dset = NULL;        /* dset object from VOL connector */
-    hid_t           dapl_id;            /* ID for dataset access property list */
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
         (_vol_obj_ptr ? _vol_obj_ptr : &tmp_vol_obj); /* Ptr to object ptr for loc_id */
@@ -391,8 +385,7 @@ H5D__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *dapl, void 
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, H5I_INVALID_HID, "name parameter cannot be an empty string");
 
     /* Set up object access arguments */
-    dapl_id = H5P_PLIST_ID(dapl);
-    if (H5VL_setup_acc_args(loc_id, false, &dapl_id, vol_obj_ptr, &loc_params) < 0)
+    if (H5VL_setup_acc_args(loc_id, false, dapl, vol_obj_ptr, &loc_params) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, H5I_INVALID_HID, "can't set object access arguments");
 
     /* Open the dataset */

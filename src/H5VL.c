@@ -737,6 +737,10 @@ done:
  * Purpose:     Retrieves a copy of the internal state of the HDF5 library,
  *              so that it can be restored later.
  *
+ *              The retrieved state can be used to restore the same library
+ *              state into a newly opened library state, with
+ *              H5VLrestore_lib_state.
+ *
  * Note:        This routine is _only_ for HDF5 VOL connector authors!  It is
  *              _not_ part of the public API for HDF5 application developers.
  *
@@ -765,6 +769,25 @@ done:
     FUNC_LEAVE_API_NOINIT(ret_value)
 } /* H5VLretrieve_lib_state() */
 
+/*---------------------------------------------------------------------------
+ * Function:    H5VLopen_lib_context
+ *
+ * Purpose:     Open an internal state of the HDF5 library.
+ *
+ * Note:        The internal library state is in a default state, ready for a
+ *              retrieved state (with H5VLretrieve_lib_state) to be restored
+ *              (with H5VLrestore_lib_state).
+ *
+ * Note:        This routine must be paired with H5VLclose_lib_context().
+ *
+ * Note:        This routine is _only_ for HDF5 VOL connector authors!  It is
+ *              _not_ part of the public API for HDF5 application developers.
+ *
+ * Return:      Success:    Non-negative
+ *              Failure:    Negative
+ *
+ *---------------------------------------------------------------------------
+ */
 herr_t
 H5VLopen_lib_context(void **context)
 {
@@ -818,6 +841,21 @@ done:
     FUNC_LEAVE_API_NOINIT(ret_value)
 } /* H5VLrestore_lib_state() */
 
+/*---------------------------------------------------------------------------
+ * Function:    H5VLclose_lib_context
+ *
+ * Purpose:     Close an internal state of the HDF5 library.
+ *
+ * Note:        This routine must be paired with H5VLopen_lib_context().
+ *
+ * Note:        This routine is _only_ for HDF5 VOL connector authors!  It is
+ *              _not_ part of the public API for HDF5 application developers.
+ *
+ * Return:      Success:    Non-negative
+ *              Failure:    Negative
+ *
+ *---------------------------------------------------------------------------
+ */
 herr_t
 H5VLclose_lib_context(void *context)
 {

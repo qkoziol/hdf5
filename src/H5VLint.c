@@ -2647,7 +2647,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5VL_setup_acc_args(hid_t loc_id, bool is_collective, hid_t *acspl_id, H5VL_object_t **vol_obj,
+H5VL_setup_acc_args(hid_t loc_id, bool is_collective, H5P_genplist_t *acspl, H5VL_object_t **vol_obj,
                     H5VL_loc_params_t *loc_params)
 {
     herr_t ret_value = SUCCEED; /* Return value */
@@ -2655,12 +2655,12 @@ H5VL_setup_acc_args(hid_t loc_id, bool is_collective, hid_t *acspl_id, H5VL_obje
     FUNC_ENTER_NOAPI(FAIL)
 
     /* Sanity check */
-    assert(acspl_id);
+    assert(acspl);
     assert(vol_obj);
     assert(loc_params);
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(acspl_id, loc_id, is_collective) < 0)
+    if (H5CX_set_apl(H5P_PLIST_ID(acspl), loc_id, is_collective) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Get the location object */
@@ -2720,7 +2720,6 @@ herr_t
 H5VL_setup_name_args(hid_t loc_id, const char *name, bool is_collective, H5P_genplist_t *lapl,
                      H5VL_object_t **vol_obj, H5VL_loc_params_t *loc_params)
 {
-    hid_t  lapl_id;             /* ID for link access property list */
     herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
@@ -2736,8 +2735,7 @@ H5VL_setup_name_args(hid_t loc_id, const char *name, bool is_collective, H5P_gen
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "name parameter cannot be an empty string");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    lapl_id = H5P_PLIST_ID(lapl);
-    if (H5CX_set_apl(&lapl_id, loc_id, is_collective) < 0)
+    if (H5CX_set_apl(H5P_PLIST_ID(lapl), loc_id, is_collective) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Get the location object */
@@ -2747,7 +2745,7 @@ H5VL_setup_name_args(hid_t loc_id, const char *name, bool is_collective, H5P_gen
     /* Set up location parameters */
     loc_params->type                         = H5VL_OBJECT_BY_NAME;
     loc_params->loc_data.loc_by_name.name    = name;
-    loc_params->loc_data.loc_by_name.lapl_id = lapl_id;
+    loc_params->loc_data.loc_by_name.lapl_id = H5P_PLIST_ID(lapl);
     loc_params->obj_type                     = H5I_get_type(loc_id);
 
 done:
@@ -2768,7 +2766,6 @@ H5VL_setup_idx_args(hid_t loc_id, const char *name, H5_index_t idx_type, H5_iter
                     bool is_collective, H5P_genplist_t *lapl, H5VL_object_t **vol_obj,
                     H5VL_loc_params_t *loc_params)
 {
-    hid_t  lapl_id;             /* ID for link access property list */
     herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
@@ -2788,8 +2785,7 @@ H5VL_setup_idx_args(hid_t loc_id, const char *name, H5_index_t idx_type, H5_iter
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid iteration order specified");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    lapl_id = H5P_PLIST_ID(lapl);
-    if (H5CX_set_apl(&lapl_id, loc_id, is_collective) < 0)
+    if (H5CX_set_apl(H5P_PLIST_ID(lapl), loc_id, is_collective) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Get the location object */
@@ -2802,7 +2798,7 @@ H5VL_setup_idx_args(hid_t loc_id, const char *name, H5_index_t idx_type, H5_iter
     loc_params->loc_data.loc_by_idx.idx_type = idx_type;
     loc_params->loc_data.loc_by_idx.order    = order;
     loc_params->loc_data.loc_by_idx.n        = n;
-    loc_params->loc_data.loc_by_idx.lapl_id  = lapl_id;
+    loc_params->loc_data.loc_by_idx.lapl_id  = H5P_PLIST_ID(lapl);
     loc_params->obj_type                     = H5I_get_type(loc_id);
 
 done:

@@ -1752,12 +1752,11 @@ H5FDonion_get_revision_count(const char *filename, hid_t fapl_id, uint64_t *revi
     /* Make sure using the correct driver */
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "not a valid FAPL ID");
-    fapl_id = H5P_PLIST_ID(fapl); /* Account for the fact that the FAPL ID may be H5P_DEFAULT */
     if (H5FD_ONION_VALUE != H5P_get_driver_value(fapl))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "not a Onion VFL driver");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&fapl_id, H5I_INVALID_HID, false) < 0)
+    if (H5CX_set_apl(H5P_PLIST_ID(fapl), H5I_INVALID_HID, false) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set file access property list");
 
     /* Open the file with the driver */

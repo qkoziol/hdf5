@@ -66,7 +66,7 @@ test_single(H5P_genplist_t *fcpl, hid_t fapl_id)
     /* Reset the cached properties in the test's API context */
     H5CX_reset_fapl_test();
     H5CX_set_cpl(H5P_PLIST_ID(fcpl));
-    H5CX_set_apl(&fapl_id, H5I_INVALID_HID, true);
+    H5CX_set_apl(fapl_id, H5I_INVALID_HID, true);
 
     /* Get the FAPL pointer */
     if (NULL == (fapl = H5I_object(fapl_id)))
@@ -83,7 +83,7 @@ test_single(H5P_genplist_t *fcpl, hid_t fapl_id)
     /* Reset the cached properties in the test's API context */
     H5CX_reset_fapl_test();
     H5CX_set_cpl(H5P_PLIST_ID(fcpl));
-    H5CX_set_apl(&fapl_id, H5I_INVALID_HID, true);
+    H5CX_set_apl(fapl_id, H5I_INVALID_HID, true);
 
     /* Test 1: Open file 1 through EFC, close, then open normally, verify ref
      * count = 2, release EFC, verify ref count = 1. Verifies a file can be
@@ -503,7 +503,7 @@ test_graph_nocycle(H5P_genplist_t *fcpl, hid_t fapl_id)
     /* Reset the cached properties in the test's API context */
     H5CX_reset_fapl_test();
     H5CX_set_cpl(H5P_PLIST_ID(fcpl));
-    H5CX_set_apl(&fapl_id, H5I_INVALID_HID, true);
+    H5CX_set_apl(fapl_id, H5I_INVALID_HID, true);
 
     /* Get the FAPL pointer */
     if (NULL == (fapl = H5I_object(fapl_id)))
@@ -833,7 +833,7 @@ test_graph_cycle(H5P_genplist_t *fcpl, hid_t fapl_id)
     /* Reset the cached properties in the test's API context */
     H5CX_reset_fapl_test();
     H5CX_set_cpl(H5P_PLIST_ID(fcpl));
-    H5CX_set_apl(&fapl_id, H5I_INVALID_HID, true);
+    H5CX_set_apl(fapl_id, H5I_INVALID_HID, true);
 
     /* Get the FAPL pointer */
     if (NULL == (fapl = H5I_object(fapl_id)))
@@ -2573,7 +2573,7 @@ test_graph_cycle(H5P_genplist_t *fcpl, hid_t fapl_id)
     /* Reset the cached properties in the test's API context */
     H5CX_reset_fapl_test();
     H5CX_set_cpl(H5P_PLIST_ID(fcpl));
-    H5CX_set_apl(&fapl_id, H5I_INVALID_HID, true);
+    H5CX_set_apl(fapl_id, H5I_INVALID_HID, true);
 
     if (H5F__efc_open(false, f0->shared->efc, &f1, filename[1], H5F_ACC_RDWR | H5F_ACC_CREAT | H5F_ACC_TRUNC,
                       fapl) < 0)
@@ -2585,7 +2585,7 @@ test_graph_cycle(H5P_genplist_t *fcpl, hid_t fapl_id)
     /* Reset the cached properties in the test's API context */
     H5CX_reset_fapl_test();
     H5CX_set_cpl(H5P_PLIST_ID(fcpl));
-    H5CX_set_apl(&fapl_id, H5I_INVALID_HID, true);
+    H5CX_set_apl(fapl_id, H5I_INVALID_HID, true);
 
     if (H5F__efc_open(false, f1->shared->efc, &ftmp0, filename[0], H5F_ACC_RDWR, fapl) < 0)
         FAIL_STACK_ERROR;
@@ -2634,7 +2634,7 @@ test_graph_cycle(H5P_genplist_t *fcpl, hid_t fapl_id)
     /* Reset the cached properties in the test's API context */
     H5CX_reset_fapl_test();
     H5CX_set_cpl(H5P_PLIST_ID(fcpl));
-    H5CX_set_apl(&fapl_id, H5I_INVALID_HID, true);
+    H5CX_set_apl(fapl_id, H5I_INVALID_HID, true);
 
     if (H5F__efc_open(false, f1->shared->efc, &f2, filename[2], H5F_ACC_RDWR | H5F_ACC_CREAT | H5F_ACC_TRUNC,
                       fapl) < 0)
@@ -2646,7 +2646,7 @@ test_graph_cycle(H5P_genplist_t *fcpl, hid_t fapl_id)
     /* Reset the cached properties in the test's API context */
     H5CX_reset_fapl_test();
     H5CX_set_cpl(H5P_PLIST_ID(fcpl));
-    H5CX_set_apl(&fapl_id, H5I_INVALID_HID, true);
+    H5CX_set_apl(fapl_id, H5I_INVALID_HID, true);
 
     if (H5F_efc_close(f1, f2) < 0)
         FAIL_STACK_ERROR;

@@ -937,7 +937,6 @@ H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_op
     H5F_efc_t *efc         = NULL;            /* External file cache */
     hid_t      old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
     hid_t      old_fcpl_id = H5I_INVALID_HID; /* ID for old FCPL in API context */
-    hid_t      fapl_id;                       /* ID for FAPL */
     char      *full_name        = NULL;       /* File name with prefix */
     char      *actual_file_name = NULL;       /* File's actual name */
     char      *temp_file_name   = NULL;       /* Temporary pointer to file name */
@@ -968,8 +967,7 @@ H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_op
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get file creation property list");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    fapl_id = H5P_PLIST_ID(fapl);
-    if (H5CX_set_apl(&fapl_id, H5I_INVALID_HID, true) < 0)
+    if (H5CX_set_apl(H5P_PLIST_ID(fapl), H5I_INVALID_HID, true) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Set the default FCPL in the API context for root group creation */
@@ -2741,18 +2739,16 @@ H5F_t *
 H5F__reopen(H5F_t *f)
 {
     H5P_genplist_t *fapl = NULL;      /* File access property list pointer */
-    hid_t           fapl_id;          /* ID for FAPL */
     H5F_t          *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
-    /* Retrieve FAPL for file to ree-open */
+    /* Retrieve FAPL for file to re-open */
     if (NULL == (fapl = H5F_get_access_plist(f, false)))
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, NULL, "can't get file's file access property list");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    fapl_id = H5P_PLIST_ID(fapl);
-    if (H5CX_set_apl(&fapl_id, H5I_INVALID_HID, true) < 0)
+    if (H5CX_set_apl(H5P_PLIST_ID(fapl), H5I_INVALID_HID, true) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, NULL, "can't set access property list info");
 
     if (NULL == (ret_value = H5F__new(f->shared, 0, NULL)))

@@ -377,16 +377,13 @@ H5O_refresh_metadata_reopen(hid_t oid, H5P_genplist_t *apl, H5G_loc_t *obj_loc,
                 HGOTO_ERROR(H5E_OHDR, H5E_CANTOPENOBJ, FAIL, "unable to open named datatype");
             break;
 
-        case H5I_DATASET: {
-            hid_t apl_id;
-
+        case H5I_DATASET:
             /* Check for default access property list */
             if (NULL == apl)
                 apl = H5P_LST_DATASET_ACCESS_g;
-            apl_id = H5P_PLIST_ID(apl);
 
             /* Set dataset access property list in API context if appropriate */
-            if (H5CX_set_apl(&apl_id, oid, true) < 0)
+            if (H5CX_set_apl(H5P_PLIST_ID(apl), oid, true) < 0)
                 HGOTO_ERROR(H5E_OHDR, H5E_CANTSET, FAIL, "can't set access property list ID");
 
             /* Re-open the dataset */
@@ -395,7 +392,7 @@ H5O_refresh_metadata_reopen(hid_t oid, H5P_genplist_t *apl, H5G_loc_t *obj_loc,
             if (!start_swmr) /* No need to handle multiple opens when H5Fstart_swmr_write() */
                 if (H5D_mult_refresh_reopen((H5D_t *)object) < 0)
                     HGOTO_ERROR(H5E_OHDR, H5E_CANTOPENOBJ, FAIL, "unable to finish refresh for dataset");
-        } break;
+            break;
 
         case H5I_MAP:
             HGOTO_ERROR(H5E_OHDR, H5E_BADTYPE, FAIL, "maps not supported in native VOL connector");

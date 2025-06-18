@@ -83,6 +83,25 @@ H5_DLL herr_t H5VLcmp_connector_cls(int *cmp, hid_t connector_id1, hid_t connect
 H5_DLL hid_t H5VLwrap_register(void *obj, H5I_type_t type);
 
 /* Library context and state routines */
+
+/**
+ * \ingroup H5VLDEV
+ *
+ * \brief Retrieves a copy of the internal state of the HDF5 library,
+ *              so that it can be restored later.
+ *
+ * \param[out] state library's state
+ *
+ * \return Returns a non-negative value if \p *context is set; otherwise returns
+ *         negative value if \p *context is unset.
+ *
+ * \details The retrieved state can be used to restore the same library
+ *              state into a newly opened library state, with
+ *              H5VLrestore_lib_state.
+ *
+ * \note \vol_only_api
+ *
+ */
 H5_DLL herr_t H5VLretrieve_lib_state(void **state);
 /**
  * \ingroup H5VLDEV
@@ -101,10 +120,22 @@ H5_DLL herr_t H5VLretrieve_lib_state(void **state);
  *
  * \note \vol_only_api
  *
- * \since 2.0.0
- *
  */
 H5_DLL herr_t H5VLopen_lib_context(void **context);
+/**
+ * \ingroup H5VLDEV
+ *
+ * \brief Restores the HDF5 library to a previous state, to resume execution
+ *              with the same state as previously retrieved.
+ *
+ * \param[in] state library's state
+ *
+ * \return Returns a non-negative value on success; otherwise returns
+ *         negative value on failure.
+ *
+ * \note \vol_only_api
+ *
+ */
 H5_DLL herr_t H5VLrestore_lib_state(const void *state);
 /**
  * \ingroup H5VLDEV
@@ -122,10 +153,23 @@ H5_DLL herr_t H5VLrestore_lib_state(const void *state);
  *
  * \note \vol_only_api
  *
- * \since 2.0.0
- *
  */
 H5_DLL herr_t H5VLclose_lib_context(void *context);
+/**
+ * \ingroup H5VLDEV
+ *
+ * \brief Free a retrieved library state.
+ *
+ * \param[in] state library's state
+ *
+ * \return Returns a non-negative value on success; otherwise returns
+ *         negative value on failure.
+ *
+ * \details This routine must be called as a "pair" with H5VLretrieve_lib_state.
+ *
+ * \note \vol_only_api
+ *
+ */
 H5_DLL herr_t H5VLfree_lib_state(void *state);
 
 /* Pass-through callbacks */

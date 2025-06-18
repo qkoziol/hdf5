@@ -92,7 +92,6 @@ H5T__commit_api_common(hid_t loc_id, const char *name, hid_t type_id, H5P_genpli
                        H5VL_object_t **_vol_obj_ptr)
 {
     void           *data = NULL;        /* VOL-managed datatype data */
-    hid_t           tapl_id;            /* ID for datatype access property list */
     H5VL_object_t  *new_obj     = NULL; /* VOL object that holds the datatype object and the VOL info */
     H5T_t          *dt          = NULL; /* High level datatype object that wraps the VOL object */
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
@@ -114,8 +113,7 @@ H5T__commit_api_common(hid_t loc_id, const char *name, hid_t type_id, H5P_genpli
         HGOTO_ERROR(H5E_ARGS, H5E_CANTSET, FAIL, "datatype is already committed");
 
     /* Set up object access arguments */
-    tapl_id = H5P_PLIST_ID(tapl);
-    if (H5VL_setup_acc_args(loc_id, true, &tapl_id, vol_obj_ptr, &loc_params) < 0)
+    if (H5VL_setup_acc_args(loc_id, true, tapl, vol_obj_ptr, &loc_params) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set object access arguments");
 
     /* Commit the type */
@@ -163,7 +161,6 @@ H5Tcommit2(hid_t loc_id, const char *name, hid_t type_id, hid_t lcpl_id, hid_t t
     tcpl_id = H5P_PLIST_ID(tcpl); /* Allow for application passing H5P_DEFAULT */
     if (NULL == (tapl = H5P_object_verify(tapl_id, H5P_TYPE_DATATYPE_ACCESS, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
-    tapl_id = H5P_PLIST_ID(tapl); /* Allow for application passing H5P_DEFAULT */
 
     /* Set the TCPL for the API context */
     if (H5CX_set_cpl(tcpl_id) < 0)
@@ -357,10 +354,9 @@ H5Tcommit_anon(hid_t loc_id, hid_t type_id, hid_t tcpl_id, hid_t tapl_id)
     tcpl_id = H5P_PLIST_ID(tcpl); /* Allow for application passing H5P_DEFAULT */
     if (NULL == (tapl = H5P_object_verify(tapl_id, H5P_TYPE_DATATYPE_ACCESS, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
-    tapl_id = H5P_PLIST_ID(tapl); /* Allow for application passing H5P_DEFAULT */
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(&tapl_id, loc_id, true) < 0)
+    if (H5CX_set_apl(H5P_PLIST_ID(tapl), loc_id, true) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Set the TCPL for the API context */
@@ -654,7 +650,6 @@ H5T__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *tapl, void 
                      H5VL_object_t **_vol_obj_ptr)
 {
     void           *dt = NULL;          /* datatype object created by VOL connector */
-    hid_t           tapl_id;            /* ID for datatype access property list */
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
         (_vol_obj_ptr ? _vol_obj_ptr : &tmp_vol_obj); /* Ptr to object ptr for loc_id */
@@ -670,8 +665,7 @@ H5T__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *tapl, void 
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, H5I_INVALID_HID, "name parameter cannot be an empty string");
 
     /* Set up object access arguments */
-    tapl_id = H5P_PLIST_ID(tapl);
-    if (H5VL_setup_acc_args(loc_id, false, &tapl_id, vol_obj_ptr, &loc_params) < 0)
+    if (H5VL_setup_acc_args(loc_id, false, tapl, vol_obj_ptr, &loc_params) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, H5I_INVALID_HID, "can't set object access arguments");
 
     /* Open the datatype */
