@@ -96,11 +96,33 @@
         (*head)->ctx.H5_GLUE(SUB_PL, _flags).H5_GLUE(PROP_FIELD, _valid) = true;                             \
     }
 
+/* Common macro for the duplicated code to retrieve properties from a property list */
+#define H5CX_RETRIEVE_PROP_COMMON_NEW(PL, TST, MTHD, SUB_PL, DEF_PL, PROP_NAME, PROP_FIELD, ERR_RET)             \
+    {                                                                                                        \
+        /* Check for default property list */                                                                \
+        if (NULL == (*head)->ctx.PL) \
+            H5MM_memcpy(&(*head)->ctx.H5_GLUE(SUB_PL, _props).PROP_FIELD,                                    \
+                        &H5_GLUE3(H5CX_def_, SUB_PL, _cache).PROP_FIELD,                                     \
+                        sizeof(H5_GLUE3(H5CX_def_, SUB_PL, _cache).PROP_FIELD));                             \
+        else                                                                                                \
+            /* Retrieve the property, possibly testing for existence */                                      \
+            H5CX_TEST_GET_PROP(PL, TST, MTHD, SUB_PL, PROP_NAME, PROP_FIELD, ERR_RET)                        \
+                                                                                                             \
+        /* Mark the field as valid */                                                                        \
+        (*head)->ctx.H5_GLUE(SUB_PL, _flags).H5_GLUE(PROP_FIELD, _valid) = true;                             \
+    }
+
 /* Macro for the duplicated code to retrieve a value from a property list if the context value is invalid */
 #define H5CX_RETRIEVE_PROP_VALID(PL, DEF_PL, PROP_NAME, PROP_FIELD)                                          \
     /* Check if the value has been retrieved already */                                                      \
     if (!(*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                       \
     H5CX_RETRIEVE_PROP_COMMON(PL, NO, get, PL, DEF_PL, PROP_NAME, PROP_FIELD, FAIL)
+
+/* Macro for the duplicated code to retrieve a value from a property list if the context value is invalid */
+#define H5CX_RETRIEVE_PROP_VALID_NEW(PL, DEF_PL, PROP_NAME, PROP_FIELD)                                          \
+    /* Check if the value has been retrieved already */                                                      \
+    if (!(*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                       \
+    H5CX_RETRIEVE_PROP_COMMON_NEW(PL, NO, get, PL, DEF_PL, PROP_NAME, PROP_FIELD, FAIL)
 
 /* Macro for the duplicated code to test for and retrieve a value from a property list if the context value is
  * invalid
@@ -980,7 +1002,6 @@ H5CX_push(H5CX_node_t *cnode)
     cnode->ctx.ocpl_id   = H5P_OBJECT_CREATE_DEFAULT;
     cnode->ctx.ocpypl_id = H5P_OBJECT_COPY_DEFAULT;
     cnode->ctx.dapl_id   = H5P_DATASET_ACCESS_DEFAULT;
-    cnode->ctx.lcpl_id   = H5P_LINK_CREATE_DEFAULT;
     cnode->ctx.lapl_id   = H5P_LINK_ACCESS_DEFAULT;
     cnode->ctx.fapl_id   = H5P_FILE_ACCESS_DEFAULT;
     cnode->ctx.acpl_id   = H5P_ATTRIBUTE_CREATE_DEFAULT;
@@ -1095,16 +1116,10 @@ H5CX_retrieve_state(H5CX_state_t **api_state)
         (*api_state)->lapl_id = H5P_LINK_ACCESS_DEFAULT;
 
     /* Check for non-default LCPL */
-    if (H5P_LINK_CREATE_DEFAULT != (*head)->ctx.lcpl_id) {
-        /* Retrieve the LCPL property list */
-        H5CX_RETRIEVE_PLIST(lcpl, FAIL)
-
-        /* Copy the LCPL ID */
-        if (((*api_state)->lcpl_id = H5P_copy_plist_id((H5P_genplist_t *)(*head)->ctx.lcpl, false)) < 0)
+    if ((*head)->ctx.lcpl)
+        /* Copy the LCPL */
+        if (NULL == ((*api_state)->lcpl = H5P_copy_plist((H5P_genplist_t *)(*head)->ctx.lcpl, false)))
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy property list");
-    } /* end if */
-    else
-        (*api_state)->lcpl_id = H5P_LINK_CREATE_DEFAULT;
 
     /* Keep a reference to the current VOL wrapping context */
     (*api_state)->vol_wrap_ctx = (*head)->ctx.vol_wrap_ctx;
@@ -1180,8 +1195,7 @@ H5CX_restore_state(const H5CX_state_t *api_state)
     (*head)->ctx.lapl    = NULL;
 
     /* Restore the LCPL info */
-    (*head)->ctx.lcpl_id = api_state->lcpl_id;
-    (*head)->ctx.lcpl    = NULL;
+    (*head)->ctx.lcpl = api_state->lcpl;
 
     /* Restore the VOL wrapper context */
     (*head)->ctx.vol_wrap_ctx = api_state->vol_wrap_ctx;
@@ -1241,8 +1255,8 @@ H5CX_free_state(H5CX_state_t *api_state)
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTDEC, FAIL, "can't decrement refcount on LAPL");
 
     /* Release the LCPL */
-    if (0 != api_state->lcpl_id && H5P_LINK_CREATE_DEFAULT != api_state->lcpl_id)
-        if (H5I_dec_ref(api_state->lcpl_id) < 0)
+    if (api_state->lcpl)
+        if (H5P_release(api_state->lcpl) < 0)
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTDEC, FAIL, "can't decrement refcount on LCPL");
 
     /* Release the VOL wrapper context */
@@ -1398,7 +1412,6 @@ H5CX__reset_lcpl(H5CX_node_t *head)
 
     /* Retrieve the LCPL pointer again also */
     head->ctx.lcpl    = NULL;
-    head->ctx.lcpl_id = H5P_LINK_CREATE_DEFAULT;
 
     FUNC_LEAVE_NOAPI_VOID
 } /* end H5CX__reset_lcpl() */
@@ -1413,7 +1426,7 @@ H5CX__reset_lcpl(H5CX_node_t *head)
  *-------------------------------------------------------------------------
  */
 void
-H5CX_set_lcpl(hid_t lcpl_id)
+H5CX_set_lcpl(H5P_genplist_t *lcpl)
 {
     H5CX_node_t **head = NULL; /* Pointer to head of API context list */
 
@@ -1422,13 +1435,13 @@ H5CX_set_lcpl(hid_t lcpl_id)
     /* Sanity check */
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != lcpl_id);
+    assert(lcpl);
 
     /* Reset the cached data */
     H5CX__reset_lcpl(*head);
 
     /* Set the API context's LCPL to a new value */
-    (*head)->ctx.lcpl_id = lcpl_id;
+    (*head)->ctx.lcpl = lcpl;
 
     FUNC_LEAVE_NOAPI_VOID
 } /* end H5CX_set_lcpl() */
@@ -3501,9 +3514,8 @@ H5CX_get_encoding(H5T_cset_t *encoding)
     assert(encoding);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.lcpl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(lcpl, H5P_LINK_CREATE_DEFAULT, H5P_STRCRT_CHAR_ENCODING_NAME, encoding)
+    H5CX_RETRIEVE_PROP_VALID_NEW(lcpl, H5P_LINK_CREATE_DEFAULT, H5P_STRCRT_CHAR_ENCODING_NAME, encoding)
 
     /* Get the value */
     *encoding = (*head)->ctx.lcpl_props.encoding;
@@ -3533,10 +3545,8 @@ H5CX_get_intermediate_group(unsigned *crt_intermed_group)
     assert(crt_intermed_group);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.lcpl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(lcpl, H5P_LINK_CREATE_DEFAULT, H5L_CRT_INTERMEDIATE_GROUP_NAME,
-                             intermediate_group)
+    H5CX_RETRIEVE_PROP_VALID_NEW(lcpl, H5P_LINK_CREATE_DEFAULT, H5L_CRT_INTERMEDIATE_GROUP_NAME, intermediate_group)
 
     /* Get the value */
     *crt_intermed_group = (*head)->ctx.lcpl_props.intermediate_group;

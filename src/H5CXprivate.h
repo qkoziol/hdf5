@@ -48,7 +48,7 @@ typedef struct H5CX_state_t {
     hid_t dxpl_id;      /* DXPL for operation */
     hid_t fapl_id;      /* FAPL for operation */
     hid_t lapl_id;      /* LAPL for operation */
-    hid_t lcpl_id;      /* LCPL for operation */
+    H5P_genplist_t *lcpl; /* LCPL for operation */
     hid_t ocpl_id;      /* FCPL/DCPL/GCPL/TCPL for operation */
     hid_t ocpypl_id;    /* OCPYPL for operation */
     void *vol_wrap_ctx; /* VOL connector's "wrap context" for creating IDs */
@@ -530,7 +530,6 @@ typedef struct H5CX_t {
     H5P_genplist_t *dxpl;    /* Dataset Transfer Property List */
 
     /* LCPL */
-    hid_t           lcpl_id; /* LCPL ID for API operation */
     H5P_genplist_t *lcpl;    /* Link Creation Property List */
 
     /* LAPL */
@@ -661,7 +660,7 @@ H5_DLL herr_t H5CX_free_state(H5CX_state_t *api_state);
 /* "Setter" routines for API context info */
 H5_DLL herr_t H5CX_set_cpl(hid_t crtpl_id);
 H5_DLL herr_t H5CX_set_dxpl(hid_t dxpl_id);
-H5_DLL void   H5CX_set_lcpl(hid_t lcpl_id);
+H5_DLL void   H5CX_set_lcpl(H5P_genplist_t *lcpl);
 H5_DLL void   H5CX_set_acpl(hid_t acpl_id);
 H5_DLL herr_t H5CX_set_libver_bounds(H5F_t *f);
 H5_DLL herr_t H5CX_set_apl(hid_t acspl_id, hid_t loc_id, bool is_collective);

@@ -540,7 +540,7 @@ H5Ocopy(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *ds
         HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set the LCPL for the API context */
-    H5CX_set_lcpl(H5P_PLIST_ID(lcpl));
+    H5CX_set_lcpl(lcpl);
 
     /* Set the OCPYPL for the API context */
     H5CX_set_ocpypl(H5P_PLIST_ID(ocpypl));
@@ -579,13 +579,11 @@ H5Ocopy_async(const char *app_file, const char *app_func, unsigned app_line, hid
     /* Get correct property lists */
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "can't find object for ID");
-    lcpl_id = H5P_PLIST_ID(lcpl); /* Allow for application passing H5P_DEFAULT */
     if (NULL == (ocpypl = H5P_object_verify(ocpypl_id, H5P_TYPE_OBJECT_COPY, true)))
         HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "can't find object for ID");
-    ocpypl_id = H5P_PLIST_ID(ocpypl); /* Allow for application passing H5P_DEFAULT */
 
     /* Set the LCPL for the API context */
-    H5CX_set_lcpl(H5P_PLIST_ID(lcpl));
+    H5CX_set_lcpl(lcpl);
 
     /* Set the OCPYPL for the API context */
     H5CX_set_ocpypl(H5P_PLIST_ID(ocpypl));
@@ -603,7 +601,7 @@ H5Ocopy_async(const char *app_file, const char *app_func, unsigned app_line, hid
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE10(__func__, "*s*sIui*si*siii", app_file, app_func, app_line, src_loc_id, src_name, dst_loc_id, dst_name, ocpypl_id, lcpl_id, es_id)) < 0)
+                        H5ARG_TRACE10(__func__, "*s*sIui*si*siii", app_file, app_func, app_line, src_loc_id, src_name, dst_loc_id, dst_name, H5P_PLIST_ID(ocpypl), H5P_PLIST_ID(lcpl), es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_OHDR, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 
@@ -859,7 +857,7 @@ H5Olink(hid_t obj_id, hid_t new_loc_id, const char *new_name, hid_t lcpl_id, hid
         HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set the LCPL for the API context */
-    H5CX_set_lcpl(H5P_PLIST_ID(lcpl));
+    H5CX_set_lcpl(lcpl);
 
     /* Get the link access property list */
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))

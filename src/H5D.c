@@ -172,10 +172,9 @@ H5Dcreate2(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t 
     /* Get link creation property list */
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
-    lcpl_id = H5P_PLIST_ID(lcpl); /* Allow for application passing H5P_DEFAULT */
 
     /* Set the LCPL for the API context */
-    H5CX_set_lcpl(lcpl_id);
+    H5CX_set_lcpl(lcpl);
 
     /* Get the pointer to the dataset create property list */
     if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, true)))
@@ -225,10 +224,9 @@ H5Dcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
     /* Get link creation property list */
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
-    lcpl_id = H5P_PLIST_ID(lcpl); /* Allow for application passing H5P_DEFAULT */
 
     /* Set the LCPL for the API context */
-    H5CX_set_lcpl(lcpl_id);
+    H5CX_set_lcpl(lcpl);
 
     /* Get the pointer to the dataset create property list */
     if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, true)))

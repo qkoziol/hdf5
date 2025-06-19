@@ -54,7 +54,7 @@
 /* Local Prototypes */
 /********************/
 static herr_t H5T__commit_api_common(hid_t loc_id, const char *name, hid_t type_id, H5P_genplist_t *lcpl,
-                                     H5P_genplist_t *tcpl_id, H5P_genplist_t *tapl, void **token_ptr,
+                                     H5P_genplist_t *tcpl, H5P_genplist_t *tapl, void **token_ptr,
                                      H5VL_object_t **_vol_obj_ptr);
 static hid_t  H5T__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *tapl, void **token_ptr,
                                    H5VL_object_t **_vol_obj_ptr);
@@ -155,19 +155,17 @@ H5Tcommit2(hid_t loc_id, const char *name, hid_t type_id, hid_t lcpl_id, hid_t t
     /* Get correct property lists */
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
-    lcpl_id = H5P_PLIST_ID(lcpl); /* Allow for application passing H5P_DEFAULT */
     if (NULL == (tcpl = H5P_object_verify(tcpl_id, H5P_TYPE_DATATYPE_CREATE, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
-    tcpl_id = H5P_PLIST_ID(tcpl); /* Allow for application passing H5P_DEFAULT */
     if (NULL == (tapl = H5P_object_verify(tapl_id, H5P_TYPE_DATATYPE_ACCESS, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set the TCPL for the API context */
-    if (H5CX_set_cpl(tcpl_id) < 0)
+    if (H5CX_set_cpl(H5P_PLIST_ID(tcpl)) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set creation property list info");
 
     /* Set the LCPL for the API context */
-    H5CX_set_lcpl(lcpl_id);
+    H5CX_set_lcpl(lcpl);
 
     /* Commit the dataset synchronously */
     if ((ret_value = H5T__commit_api_common(loc_id, name, type_id, lcpl, tcpl, tapl, NULL, NULL)) < 0)
@@ -203,20 +201,17 @@ H5Tcommit_async(const char *app_file, const char *app_func, unsigned app_line, h
     /* Get correct property lists */
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
-    lcpl_id = H5P_PLIST_ID(lcpl); /* Allow for application passing H5P_DEFAULT */
     if (NULL == (tcpl = H5P_object_verify(tcpl_id, H5P_TYPE_DATATYPE_CREATE, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
-    tcpl_id = H5P_PLIST_ID(tcpl); /* Allow for application passing H5P_DEFAULT */
     if (NULL == (tapl = H5P_object_verify(tapl_id, H5P_TYPE_DATATYPE_ACCESS, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
-    tapl_id = H5P_PLIST_ID(tapl); /* Allow for application passing H5P_DEFAULT */
 
     /* Set the TCPL for the API context */
-    if (H5CX_set_cpl(tcpl_id) < 0)
+    if (H5CX_set_cpl(H5P_PLIST_ID(tcpl)) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set creation property list info");
 
     /* Set the LCPL for the API context */
-    H5CX_set_lcpl(lcpl_id);
+    H5CX_set_lcpl(lcpl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -231,7 +226,7 @@ H5Tcommit_async(const char *app_file, const char *app_func, unsigned app_line, h
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE10(__func__, "*s*sIui*siiiii", app_file, app_func, app_line, loc_id, name, type_id, lcpl_id, tcpl_id, tapl_id, es_id)) < 0)
+                        H5ARG_TRACE10(__func__, "*s*sIui*siiiii", app_file, app_func, app_line, loc_id, name, type_id, H5P_PLIST_ID(lcpl), H5P_PLIST_ID(tcpl), H5P_PLIST_ID(tapl), es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 
@@ -351,7 +346,6 @@ H5Tcommit_anon(hid_t loc_id, hid_t type_id, hid_t tcpl_id, hid_t tapl_id)
     /* Get property lists */
     if (NULL == (tcpl = H5P_object_verify(tcpl_id, H5P_TYPE_DATATYPE_CREATE, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
-    tcpl_id = H5P_PLIST_ID(tcpl); /* Allow for application passing H5P_DEFAULT */
     if (NULL == (tapl = H5P_object_verify(tapl_id, H5P_TYPE_DATATYPE_ACCESS, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -360,7 +354,7 @@ H5Tcommit_anon(hid_t loc_id, hid_t type_id, hid_t tcpl_id, hid_t tapl_id)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Set the TCPL for the API context */
-    if (H5CX_set_cpl(tcpl_id) < 0)
+    if (H5CX_set_cpl(H5P_PLIST_ID(tcpl)) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set creation property list info");
 
     /* Fill in location struct fields */
