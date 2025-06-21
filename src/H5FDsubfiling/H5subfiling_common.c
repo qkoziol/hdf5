@@ -488,7 +488,7 @@ herr_t
 H5FD__subfiling_open_stub_file(const char *name, unsigned flags, MPI_Comm file_comm, H5FD_int_t **file_ptr,
                                uint64_t *file_id)
 {
-    hid_t           old_fapl_id   = H5I_INVALID_HID; /* ID for old FAPL in API context */
+    H5P_genplist_t *old_fapl      = NULL; /* old FAPL in API context */
     H5P_genplist_t *fapl          = NULL;
     uint64_t        stub_file_id  = H5FD_SUBFILING_BAD_FILE_ID;
     bool            bcasted_inode = false;
@@ -516,7 +516,7 @@ H5FD__subfiling_open_stub_file(const char *name, unsigned flags, MPI_Comm file_c
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "NULL stub file pointer");
 
     /* Retrieve the current FAPL in the API context */
-    if ((old_fapl_id = H5CX_get_fapl()) < 0)
+    if (NULL == (old_fapl = H5CX_get_fapl()))
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get file access property list");
 
     /* Open stub file on MPI rank 0 only */
@@ -576,8 +576,8 @@ H5FD__subfiling_open_stub_file(const char *name, unsigned flags, MPI_Comm file_c
 
 done:
     /* Restore previous FAPL in the API contxt */
-    if (old_fapl_id > 0)
-        H5CX_set_fapl(old_fapl_id);
+    if (old_fapl)
+        H5CX_set_fapl(old_fapl);
 
     if (fapl && H5P_release(fapl) < 0)
         HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "can't close FAPL ID");

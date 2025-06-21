@@ -1019,9 +1019,13 @@ H5CX_push(H5CX_node_t *cnode)
 
     /* Set non-zero context info */
     cnode->ctx.dxpl_id   = H5P_DATASET_XFER_DEFAULT;
+    cnode->ctx.lapl      = H5P_LST_LINK_ACCESS_g;
+    cnode->ctx.lcpl      = H5P_LST_LINK_CREATE_g;
     cnode->ctx.ocpl_id   = H5P_OBJECT_CREATE_DEFAULT;
-    cnode->ctx.dapl_id   = H5P_DATASET_ACCESS_DEFAULT;
     cnode->ctx.acpl_id   = H5P_ATTRIBUTE_CREATE_DEFAULT;
+    cnode->ctx.ocpypl    = H5P_LST_OBJECT_COPY_g;
+    cnode->ctx.dapl_id   = H5P_DATASET_ACCESS_DEFAULT;
+    cnode->ctx.fapl      = H5P_LST_FILE_ACCESS_g;
     cnode->ctx.tag       = H5AC__INVALID_TAG;
     cnode->ctx.ring      = H5AC_RING_USER;
 
@@ -1085,10 +1089,13 @@ H5CX_retrieve_state(H5CX_state_t **api_state)
         (*api_state)->ocpl_id = H5P_OBJECT_CREATE_DEFAULT;
 
     /* Check for non-default OCPYPL */
-    if ((*head)->ctx.ocpypl)
+    if (H5P_LST_OBJECT_COPY_g != (*head)->ctx.ocpypl) {
         /* Copy the OCPYPL */
         if (NULL == ((*api_state)->ocpypl = H5P_copy_plist((H5P_genplist_t *)(*head)->ctx.ocpypl, false)))
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy property list");
+    }
+    else
+        (*api_state)->ocpypl = H5P_LST_OBJECT_COPY_g;
 
     /* Check for non-default DXPL */
     if (H5P_DATASET_XFER_DEFAULT != (*head)->ctx.dxpl_id) {
@@ -1103,22 +1110,31 @@ H5CX_retrieve_state(H5CX_state_t **api_state)
         (*api_state)->dxpl_id = H5P_DATASET_XFER_DEFAULT;
 
     /* Check for non-default FAPL */
-    if ((*head)->ctx.fapl)
+    if (H5P_LST_FILE_ACCESS_g != (*head)->ctx.fapl) {
         /* Copy the FAPL */
         if (NULL == ((*api_state)->fapl = H5P_copy_plist((H5P_genplist_t *)(*head)->ctx.fapl, false)))
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy property list");
+    }
+    else
+        (*api_state)->fapl = H5P_LST_FILE_ACCESS_g;
 
     /* Check for non-default LAPL */
-    if ((*head)->ctx.lapl)
+    if (H5P_LST_LINK_ACCESS_g != (*head)->ctx.lapl) {
         /* Copy the LAPL */
         if (NULL == ((*api_state)->lapl = H5P_copy_plist((H5P_genplist_t *)(*head)->ctx.lapl, false)))
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy property list");
+    }
+    else
+        (*api_state)->lapl = H5P_LST_LINK_ACCESS_g;
 
     /* Check for non-default LCPL */
-    if ((*head)->ctx.lcpl)
+    if (H5P_LST_LINK_CREATE_g != (*head)->ctx.lcpl) {
         /* Copy the LCPL */
         if (NULL == ((*api_state)->lcpl = H5P_copy_plist((H5P_genplist_t *)(*head)->ctx.lcpl, false)))
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy property list");
+    }
+    else
+        (*api_state)->lcpl = H5P_LST_LINK_CREATE_g;
 
     /* Keep a reference to the current VOL wrapping context */
     (*api_state)->vol_wrap_ctx = (*head)->ctx.vol_wrap_ctx;
@@ -1231,7 +1247,7 @@ H5CX_free_state(H5CX_state_t *api_state)
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTDEC, FAIL, "can't decrement refcount on OCPL");
 
     /* Release the OCPYPL */
-    if (api_state->ocpypl)
+    if (H5P_LST_OBJECT_COPY_g != api_state->ocpypl)
         if (H5P_release(api_state->ocpypl) < 0)
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't decrement refcount on OCPYPL");
 
@@ -1241,17 +1257,17 @@ H5CX_free_state(H5CX_state_t *api_state)
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTDEC, FAIL, "can't decrement refcount on DXPL");
 
     /* Release the FAPL */
-    if (api_state->fapl)
+    if (H5P_LST_FILE_ACCESS_g != api_state->fapl)
         if (H5P_release(api_state->fapl) < 0)
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't decrement refcount on FAPL");
 
     /* Release the LAPL */
-    if (api_state->lapl)
+    if (H5P_LST_LINK_ACCESS_g != api_state->lapl)
         if (H5P_release(api_state->lapl) < 0)
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't decrement refcount on LAPL");
 
     /* Release the LCPL */
-    if (api_state->lcpl)
+    if (H5P_LST_LINK_CREATE_g != api_state->lcpl)
         if (H5P_release(api_state->lcpl) < 0)
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't decrement refcount on LCPL");
 
@@ -1601,8 +1617,9 @@ H5CX_set_apl(H5P_genplist_t *acspl,
                      is_collective)
 {
     H5CX_node_t   **head  = NULL; /* Pointer to head of API context list */
-    htri_t          is_lapl =
-        false; /* Whether the access property list is (or is derived from) a link access property list */
+    htri_t is_lapl = false; /* Whether the access property list is (or is derived from) a link access property list */
+    htri_t is_dapl = false; /* Whether the access property list is (or is derived from) a dataset access property list */
+    htri_t is_fapl = false; /* Whether the access property list is (or is derived from) a file access property list */
 #ifdef H5_HAVE_PARALLEL
     bool is_default = false;    /* Whether the access property list is the default */
 #endif                          /* H5_HAVE_PARALLEL */
@@ -1622,17 +1639,13 @@ H5CX_set_apl(H5P_genplist_t *acspl,
 #ifdef H5_HAVE_PARALLEL
         is_default = true;
 #endif /* H5_HAVE_PARALLEL */
+        is_lapl = true;
+    }
+    else if ((is_lapl = H5P_class_isa(H5P_CLASS(acspl), H5P_CLS_LINK_ACCESS_g)) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for link access class");
+    if (is_lapl) {
         H5CX__reset_lapl(*head);
         (*head)->ctx.lapl = acspl;
-    }
-    else {
-        /* Check for link access property */
-        if ((is_lapl = H5P_class_isa(H5P_CLASS(acspl), H5P_CLS_LINK_ACCESS_g)) < 0)
-            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for link access class");
-        else if (is_lapl) {
-            H5CX__reset_lapl(*head);
-            (*head)->ctx.lapl = acspl;
-        }
     }
 
     /* Check for dataset access property and set API context if so */
@@ -1641,18 +1654,13 @@ H5CX_set_apl(H5P_genplist_t *acspl,
 #ifdef H5_HAVE_PARALLEL
         is_default = true;
 #endif /* H5_HAVE_PARALLEL */
+        is_dapl = true;
+    }
+    else if ((is_dapl = H5P_class_isa(H5P_CLASS(acspl), H5P_CLS_DATASET_ACCESS_g)) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for dataset access class");
+    if (is_dapl) {
         H5CX__reset_dapl(*head);
         (*head)->ctx.dapl_id = H5P_PLIST_ID(acspl);
-    }
-    else {
-        htri_t is_dapl; /* Whether the access property list is (or is derived from) a dataset access property list */
-
-        if ((is_dapl = H5P_class_isa(H5P_CLASS(acspl), H5P_CLS_DATASET_ACCESS_g)) < 0)
-            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for dataset access class");
-        else if (is_dapl) {
-            H5CX__reset_dapl(*head);
-            (*head)->ctx.dapl_id = H5P_PLIST_ID(acspl);
-        }
     }
 
     /* Check for file access property and set API context if so */
@@ -1660,18 +1668,13 @@ H5CX_set_apl(H5P_genplist_t *acspl,
 #ifdef H5_HAVE_PARALLEL
         is_default = true;
 #endif /* H5_HAVE_PARALLEL */
+        is_fapl = true;
+    }
+    else if ((is_fapl = H5P_class_isa(H5P_CLASS(acspl), H5P_CLS_FILE_ACCESS_g)) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for file access class");
+    if (is_fapl) {
         H5CX__reset_fapl(*head);
         (*head)->ctx.fapl = acspl;
-    }
-    else {
-        htri_t is_fapl; /* Whether the access property list is (or is derived from) a file access property list */
-
-        if ((is_fapl = H5P_class_isa(H5P_CLASS(acspl), H5P_CLS_FILE_ACCESS_g)) < 0)
-            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for file access class");
-        else if (is_fapl) {
-            H5CX__reset_fapl(*head);
-            (*head)->ctx.fapl = acspl;
-        }
     }
 
 #ifdef H5_HAVE_PARALLEL
@@ -1972,7 +1975,6 @@ H5P_genplist_t *
 H5CX_get_fapl(void)
 {
     H5CX_node_t **head    = NULL;            /* Pointer to head of API context list */
-    H5P_genplist_t *fapl = NULL; /* FAPL ID for API operation */
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
@@ -1980,10 +1982,7 @@ H5CX_get_fapl(void)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    /* Set return value */
-    fapl = (*head)->ctx.fapl;
-
-    FUNC_LEAVE_NOAPI(fapl)
+    FUNC_LEAVE_NOAPI((*head)->ctx.fapl)
 } /* end H5CX_get_fapl() */
 
 /*-------------------------------------------------------------------------
@@ -2057,7 +2056,6 @@ H5P_genplist_t *
 H5CX_get_lapl(void)
 {
     H5CX_node_t **head    = NULL;            /* Pointer to head of API context list */
-    H5P_genplist_t *lapl = NULL; /* LAPL ID for API operation */
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
@@ -2065,10 +2063,7 @@ H5CX_get_lapl(void)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    /* Set return value */
-    lapl = (*head)->ctx.lapl;
-
-    FUNC_LEAVE_NOAPI(lapl)
+    FUNC_LEAVE_NOAPI((*head)->ctx.lapl)
 } /* end H5CX_get_lapl() */
 
 /*-------------------------------------------------------------------------
@@ -2136,7 +2131,7 @@ H5CX_get_mpi_comm(MPI_Comm *mpi_comm)
     assert(head && *head);
 
     /* Get the MPI communicator */
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_MPI_PARAMS_COMM_NAME, mpi_comm)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_MPI_PARAMS_COMM_NAME, mpi_comm)
 
     /* Make a copy of the MPI communicator */
     if (H5_mpi_comm_dup((*head)->ctx.fapl_props.mpi_comm, mpi_comm) < 0)
@@ -2168,7 +2163,7 @@ H5CX_peek_mpi_comm(MPI_Comm *mpi_comm)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_MPI_PARAMS_COMM_NAME, mpi_comm)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_MPI_PARAMS_COMM_NAME, mpi_comm)
 
     /* Get the MPI communicator */
     *mpi_comm = (*head)->ctx.fapl_props.mpi_comm;
@@ -2200,7 +2195,7 @@ H5CX_get_mpi_info(MPI_Info *mpi_info)
     assert(head && *head);
 
     /* Get the MPI info object */
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_MPI_PARAMS_INFO_NAME, mpi_info)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_MPI_PARAMS_INFO_NAME, mpi_info)
 
     /* Make a copy of the MPI info object */
     if (H5_mpi_info_dup((*head)->ctx.fapl_props.mpi_info, mpi_info) < 0)
@@ -2232,7 +2227,7 @@ H5CX_peek_mpi_info(MPI_Info *mpi_info)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_MPI_PARAMS_INFO_NAME, mpi_info)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_MPI_PARAMS_INFO_NAME, mpi_info)
 
     /* Get the MPI info object */
     *mpi_info = (*head)->ctx.fapl_props.mpi_info;
