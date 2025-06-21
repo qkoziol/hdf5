@@ -314,13 +314,13 @@ H5FDopen(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
 {
     H5P_genplist_t *fapl; /* File access property list */
     H5FD_int_t     *fh          = NULL;
-    hid_t           old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
+    H5P_genplist_t *old_fapl = NULL; /* old FAPL in API context */
     H5FD_t         *ret_value   = NULL;
 
     FUNC_ENTER_API(NULL)
 
     /* Retrieve the current FAPL in the API context */
-    if ((old_fapl_id = H5CX_get_fapl()) < 0)
+    if (NULL == (old_fapl = H5CX_get_fapl()))
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, NULL, "can't get file access property list");
 
     /* Check arguments */
@@ -340,8 +340,8 @@ H5FDopen(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
 
 done:
     /* Restore previous FAPL in the API contxt */
-    if (old_fapl_id > 0)
-        H5CX_set_fapl(old_fapl_id);
+    if (old_fapl)
+        H5CX_set_fapl(old_fapl);
 
     /* Clean up */
     if (fh) {
@@ -778,13 +778,13 @@ H5FDget_vfd_handle(H5FD_t *file, hid_t fapl_id, void **file_handle /*out*/)
     H5FD_int_t      fh;                            /* Temporary internal file handle */
     H5FD_driver_t   driver;                        /* Temporary VFD driver */
     H5P_genplist_t *fapl;                          /* File access property list */
-    hid_t           old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
+    H5P_genplist_t *old_fapl = NULL; /* old FAPL in API context */
     herr_t          ret_value   = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
 
     /* Retrieve the current FAPL in the API context */
-    if ((old_fapl_id = H5CX_get_fapl()) < 0)
+    if (NULL == (old_fapl = H5CX_get_fapl()))
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get file access property list");
 
     /* Check arguments */
@@ -810,8 +810,8 @@ H5FDget_vfd_handle(H5FD_t *file, hid_t fapl_id, void **file_handle /*out*/)
 
 done:
     /* Restore previous FAPL in the API contxt */
-    if (old_fapl_id > 0)
-        H5CX_set_fapl(old_fapl_id);
+    if (old_fapl)
+        H5CX_set_fapl(old_fapl);
 
     if (FAIL == ret_value)
         if (file_handle)
@@ -1875,13 +1875,13 @@ herr_t
 H5FDdelete(const char *filename, hid_t fapl_id)
 {
     H5P_genplist_t *fapl;                          /* File access property list */
-    hid_t           old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
+    H5P_genplist_t *old_fapl = NULL; /* old FAPL in API context */
     herr_t          ret_value   = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
 
     /* Retrieve the current FAPL in the API context */
-    if ((old_fapl_id = H5CX_get_fapl()) < 0)
+    if (NULL == (old_fapl = H5CX_get_fapl()))
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get file access property list");
 
     /* Check arguments */
@@ -1902,8 +1902,8 @@ H5FDdelete(const char *filename, hid_t fapl_id)
 
 done:
     /* Restore previous FAPL in the API contxt */
-    if (old_fapl_id > 0)
-        H5CX_set_fapl(old_fapl_id);
+    if (old_fapl)
+        H5CX_set_fapl(old_fapl);
 
     FUNC_LEAVE_API(ret_value)
 } /* end H5FDdelete() */

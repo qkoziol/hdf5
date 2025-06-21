@@ -81,8 +81,7 @@ static char  *H5F__getenv_prefix_name(char **env_prefix /*in,out*/);
 static H5F_t *H5F__new(H5F_shared_t *shared, unsigned flags, H5FD_int_t *fh);
 static herr_t H5F__check_if_using_file_locks(bool *use_file_locking, bool *ignore_disabled_locks);
 static herr_t H5F__dest(H5F_t *f, bool flush, bool free_on_failure);
-static herr_t H5F__build_actual_name(const H5F_t *f, const H5P_genplist_t *fapl, const char *name,
-                                     char ** /*out*/ actual_name);
+static herr_t H5F__build_actual_name(const H5F_t *f, H5P_genplist_t *fapl, const char *name, char ** /*out*/ actual_name);
 static herr_t H5F__flush_phase1(H5F_t *f);
 static herr_t H5F__flush_phase2(H5F_t *f, bool closing);
 
@@ -935,7 +934,7 @@ H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_op
 {
     H5F_t     *src_file    = NULL;            /* Source file */
     H5F_efc_t *efc         = NULL;            /* External file cache */
-    hid_t      old_fapl_id = H5I_INVALID_HID; /* ID for old FAPL in API context */
+    H5P_genplist_t *old_fapl = NULL; /* old FAPL in API context */
     hid_t      old_fcpl_id = H5I_INVALID_HID; /* ID for old FCPL in API context */
     char      *full_name        = NULL;       /* File name with prefix */
     char      *actual_file_name = NULL;       /* File's actual name */
@@ -961,7 +960,7 @@ H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_op
     temp_file_name_len = strlen(temp_file_name);
 
     /* Retrieve the current FAPL and FCPL in the API context */
-    if ((old_fapl_id = H5CX_get_fapl()) < 0)
+    if (NULL == (old_fapl = H5CX_get_fapl()))
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get file access property list");
     if ((old_fcpl_id = H5CX_get_fcpl()) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get file creation property list");
@@ -1136,8 +1135,8 @@ H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_op
 
 done:
     /* Restore previous FAPL and FCPL in the API contxt */
-    if (old_fapl_id > 0)
-        H5CX_set_fapl(old_fapl_id);
+    if (old_fapl)
+        H5CX_set_fapl(old_fapl);
     if (old_fcpl_id > 0)
         H5CX_set_fcpl(old_fcpl_id);
 
@@ -2854,8 +2853,7 @@ H5F_decr_nopen_objs(H5F_t *f)
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5F__build_actual_name(const H5F_t *f, const H5P_genplist_t *fapl, const char *name,
-                       char **actual_name /*out*/)
+H5F__build_actual_name(const H5F_t *f, H5P_genplist_t *fapl, const char *name, char **actual_name /*out*/)
 {
 #ifdef H5_HAVE_SYMLINK
     /* This has to be declared here to avoid unfreed resources on errors */

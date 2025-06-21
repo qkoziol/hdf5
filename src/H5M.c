@@ -455,7 +455,7 @@ H5Mcreate_anon(hid_t loc_id, hid_t key_type_id, hid_t val_type_id, hid_t mcpl_id
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Get the map creation property list */
-    if (NULL == (mcpl = H5P_object_verify(mapl_id, H5P_TYPE_MAP_CREATE, true)))
+    if (NULL == (mcpl = H5P_object_verify(mcpl_id, H5P_TYPE_MAP_CREATE, true)))
         HGOTO_ERROR(H5E_MAP, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Get the map access property list */

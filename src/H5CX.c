@@ -132,6 +132,14 @@
     if (!(*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                       \
     H5CX_RETRIEVE_PROP_COMMON(PL, YES, get, PL, DEF_PL, PROP_NAME, PROP_FIELD, FAIL)
 
+/* Macro for the duplicated code to test for and retrieve a value from a property list if the context value is
+ * invalid
+ */
+#define H5CX_TEST_RETRIEVE_PROP_VALID_NEW(PL, DEF_PL, PROP_NAME, PROP_FIELD)                                     \
+    /* Check if the value has been retrieved already */                                                      \
+    if (!(*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                       \
+    H5CX_RETRIEVE_PROP_COMMON_NEW(PL, YES, get, PL, DEF_PL, PROP_NAME, PROP_FIELD, FAIL)
+
 /* Macro for the duplicated code to "peek" a value from a property list if the context value is invalid */
 #define H5CX_PEEK_PROP_VALID(PL, DEF_PL, PROP_NAME, PROP_FIELD)                                              \
     /* Check if the value has been retrieved already */                                                      \
@@ -149,6 +157,12 @@
     /* Check if the value has been retrieved already */                                                      \
     if (!(*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                       \
     H5CX_RETRIEVE_PROP_COMMON(PL, NO, peek, PL, DEF_PL, PROP_NAME, PROP_FIELD, ERR_RET)
+
+/* Macro for the duplicated code to "peek" a value from a property list if the context value is invalid */
+#define H5CX_PEEK_PROP_VALID_ERR_NEW(PL, DEF_PL, PROP_NAME, PROP_FIELD, ERR_RET)                                 \
+    /* Check if the value has been retrieved already */                                                      \
+    if (!(*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                       \
+    H5CX_RETRIEVE_PROP_COMMON_NEW(PL, NO, peek, PL, DEF_PL, PROP_NAME, PROP_FIELD, ERR_RET)
 
 /* Macro for the duplicated code to retrieve a value from a property list if the context value is invalid */
 #define H5CX_RETRIEVE_SUBCLS_PROP_VALID(PL, SUB_PL, DEF_PL, PROP_NAME, PROP_FIELD)                           \
@@ -1007,7 +1021,6 @@ H5CX_push(H5CX_node_t *cnode)
     cnode->ctx.dxpl_id   = H5P_DATASET_XFER_DEFAULT;
     cnode->ctx.ocpl_id   = H5P_OBJECT_CREATE_DEFAULT;
     cnode->ctx.dapl_id   = H5P_DATASET_ACCESS_DEFAULT;
-    cnode->ctx.fapl_id   = H5P_FILE_ACCESS_DEFAULT;
     cnode->ctx.acpl_id   = H5P_ATTRIBUTE_CREATE_DEFAULT;
     cnode->ctx.tag       = H5AC__INVALID_TAG;
     cnode->ctx.ring      = H5AC_RING_USER;
@@ -1090,16 +1103,10 @@ H5CX_retrieve_state(H5CX_state_t **api_state)
         (*api_state)->dxpl_id = H5P_DATASET_XFER_DEFAULT;
 
     /* Check for non-default FAPL */
-    if (H5P_FILE_ACCESS_DEFAULT != (*head)->ctx.fapl_id) {
-        /* Retrieve the FAPL property list */
-        H5CX_RETRIEVE_PLIST(fapl, FAIL)
-
-        /* Copy the FAPL ID */
-        if (((*api_state)->fapl_id = H5P_copy_plist_id((H5P_genplist_t *)(*head)->ctx.fapl, false)) < 0)
+    if ((*head)->ctx.fapl)
+        /* Copy the FAPL */
+        if (NULL == ((*api_state)->fapl = H5P_copy_plist((H5P_genplist_t *)(*head)->ctx.fapl, false)))
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy property list");
-    } /* end if */
-    else
-        (*api_state)->fapl_id = H5P_FILE_ACCESS_DEFAULT;
 
     /* Check for non-default LAPL */
     if ((*head)->ctx.lapl)
@@ -1178,8 +1185,7 @@ H5CX_restore_state(const H5CX_state_t *api_state)
     (*head)->ctx.dxpl    = NULL;
 
     /* Restore the FAPL info */
-    (*head)->ctx.fapl_id = api_state->fapl_id;
-    (*head)->ctx.fapl    = NULL;
+    (*head)->ctx.fapl = api_state->fapl;
 
     /* Restore the LAPL info */
     (*head)->ctx.lapl = api_state->lapl;
@@ -1235,9 +1241,9 @@ H5CX_free_state(H5CX_state_t *api_state)
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTDEC, FAIL, "can't decrement refcount on DXPL");
 
     /* Release the FAPL */
-    if (0 != api_state->fapl_id && H5P_FILE_ACCESS_DEFAULT != api_state->fapl_id)
-        if (H5I_dec_ref(api_state->fapl_id) < 0)
-            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTDEC, FAIL, "can't decrement refcount on FAPL");
+    if (api_state->fapl)
+        if (H5P_release(api_state->fapl) < 0)
+            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't decrement refcount on FAPL");
 
     /* Release the LAPL */
     if (api_state->lapl)
@@ -1655,7 +1661,7 @@ H5CX_set_apl(H5P_genplist_t *acspl,
         is_default = true;
 #endif /* H5_HAVE_PARALLEL */
         H5CX__reset_fapl(*head);
-        (*head)->ctx.fapl_id = H5P_PLIST_ID(acspl);
+        (*head)->ctx.fapl = acspl;
     }
     else {
         htri_t is_fapl; /* Whether the access property list is (or is derived from) a file access property list */
@@ -1664,7 +1670,7 @@ H5CX_set_apl(H5P_genplist_t *acspl,
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for file access class");
         else if (is_fapl) {
             H5CX__reset_fapl(*head);
-            (*head)->ctx.fapl_id = H5P_PLIST_ID(acspl);
+            (*head)->ctx.fapl = acspl;
         }
     }
 
@@ -1703,9 +1709,7 @@ H5CX_set_apl(H5P_genplist_t *acspl,
         if (H5_coll_api_sanity_check_g) {
             MPI_Comm mpi_comm; /* File communicator */
 
-            /* Retrieve the MPI communicator from the loc_id or the fapl_id
-             * just pushed in the API context.
-             */
+            /* Retrieve the MPI communicator from the loc_id or the FAPL just pushed in the API context. */
             if (H5F_mpi_retrieve_comm(loc_id, &mpi_comm) < 0)
                 HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't get MPI communicator");
 
@@ -1750,7 +1754,6 @@ H5CX__reset_fapl(H5CX_node_t *head)
 
     /* Retrieve the FAPL pointer again also */
     head->ctx.fapl    = NULL;
-    head->ctx.fapl_id = H5P_FILE_ACCESS_DEFAULT;
 
     FUNC_LEAVE_NOAPI_VOID
 } /* end H5CX__reset_fapl() */
@@ -1765,7 +1768,7 @@ H5CX__reset_fapl(H5CX_node_t *head)
  *-------------------------------------------------------------------------
  */
 void
-H5CX_set_fapl(hid_t fapl_id)
+H5CX_set_fapl(H5P_genplist_t *fapl)
 {
     H5CX_node_t **head = NULL; /* Pointer to head of API context list */
 
@@ -1779,7 +1782,7 @@ H5CX_set_fapl(hid_t fapl_id)
     H5CX__reset_fapl(*head);
 
     /* Set the API context's FAPL to a new value */
-    (*head)->ctx.fapl_id = fapl_id;
+    (*head)->ctx.fapl = fapl;
 
     FUNC_LEAVE_NOAPI_VOID
 } /* end H5CX_set_fapl() */
@@ -1880,7 +1883,7 @@ H5CX_set_loc(hid_t
     if (H5_coll_api_sanity_check_g) {
         MPI_Comm mpi_comm; /* File communicator */
 
-        /* Retrieve the MPI communicator from the loc_id or the fapl_id */
+        /* Retrieve the MPI communicator from the loc_id or the FAPL */
         if (H5F_loc_mpi_retrieve_comm(loc_id, &mpi_comm) < 0)
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't get MPI communicator");
 
@@ -1965,11 +1968,11 @@ H5CX_get_dxpl(void)
  *
  *-------------------------------------------------------------------------
  */
-hid_t
+H5P_genplist_t *
 H5CX_get_fapl(void)
 {
     H5CX_node_t **head    = NULL;            /* Pointer to head of API context list */
-    hid_t         fapl_id = H5I_INVALID_HID; /* FAPL ID for API operation */
+    H5P_genplist_t *fapl = NULL; /* FAPL ID for API operation */
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
@@ -1978,9 +1981,9 @@ H5CX_get_fapl(void)
     assert(head && *head);
 
     /* Set return value */
-    fapl_id = (*head)->ctx.fapl_id;
+    fapl = (*head)->ctx.fapl;
 
-    FUNC_LEAVE_NOAPI(fapl_id)
+    FUNC_LEAVE_NOAPI(fapl)
 } /* end H5CX_get_fapl() */
 
 /*-------------------------------------------------------------------------
@@ -2265,7 +2268,7 @@ H5CX_peek_vol_connector_prop(H5VL_connector_prop_t *vol_connector_prop)
      * H5P_peek instead of H5P_get.  This prevents invocation of the property's
      * library-defined copy callback
      */
-    H5CX_PEEK_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_VOL_CONN_NAME, vol_connector_prop)
+    H5CX_PEEK_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_VOL_CONN_NAME, vol_connector_prop)
 
     /* Get the VOL connector & info */
     H5MM_memcpy(vol_connector_prop, &(*head)->ctx.fapl_props.vol_connector_prop,
@@ -2301,7 +2304,7 @@ H5CX_peek_driver_prop(H5FD_driver_prop_t *driver_prop)
      * H5P_peek instead of H5P_get.  This prevents invocation of the property's
      * library-defined copy callback
      */
-    H5CX_PEEK_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FILE_DRV_NAME, driver_prop)
+    H5CX_PEEK_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FILE_DRV_NAME, driver_prop)
 
     /* Get the VOL connector & info */
     H5MM_memcpy(driver_prop, &(*head)->ctx.fapl_props.driver_prop, sizeof(H5FD_driver_prop_t));
@@ -2335,7 +2338,7 @@ H5CX_peek_driver(void)
      * H5P_peek instead of H5P_get.  This prevents invocation of the property's
      * library-defined copy callback
      */
-    H5CX_PEEK_PROP_VALID_ERR(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FILE_DRV_NAME, driver_prop, NULL)
+    H5CX_PEEK_PROP_VALID_ERR_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FILE_DRV_NAME, driver_prop, NULL)
 
     /* Set the return value */
     ret_value = (*head)->ctx.fapl_props.driver_prop.driver;
@@ -2369,7 +2372,7 @@ H5CX_peek_driver_info(void)
      * H5P_peek instead of H5P_get.  This prevents invocation of the property's
      * library-defined copy callback
      */
-    H5CX_PEEK_PROP_VALID_ERR(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FILE_DRV_NAME, driver_prop, NULL)
+    H5CX_PEEK_PROP_VALID_ERR_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FILE_DRV_NAME, driver_prop, NULL)
 
     /* Set the return value */
     ret_value = (*head)->ctx.fapl_props.driver_prop.driver_info;
@@ -2403,7 +2406,7 @@ H5CX_peek_driver_config_str(void)
      * H5P_peek instead of H5P_get.  This prevents invocation of the property's
      * library-defined copy callback
      */
-    H5CX_PEEK_PROP_VALID_ERR(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FILE_DRV_NAME, driver_prop, NULL)
+    H5CX_PEEK_PROP_VALID_ERR_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FILE_DRV_NAME, driver_prop, NULL)
 
     /* Set the return value */
     ret_value = (*head)->ctx.fapl_props.driver_prop.driver_config_str;
@@ -2438,7 +2441,7 @@ H5CX_peek_file_image_info(H5FD_file_image_info_t *file_image_info)
      * H5P_peek instead of H5P_get.  This prevents invocation of the property's
      * library-defined copy callback
      */
-    H5CX_PEEK_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FILE_IMAGE_INFO_NAME, file_image_info)
+    H5CX_PEEK_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FILE_IMAGE_INFO_NAME, file_image_info)
 
     /* Get the VOL connector & info */
     H5MM_memcpy(file_image_info, &(*head)->ctx.fapl_props.file_image_info, sizeof(H5FD_file_image_info_t));
@@ -3771,10 +3774,9 @@ H5CX_get_libver_bounds(H5F_libver_t *low_bound, H5F_libver_t *high_bound)
     assert(high_bound);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_LIBVER_LOW_BOUND_NAME, low_bound)
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_LIBVER_HIGH_BOUND_NAME, high_bound)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_LIBVER_LOW_BOUND_NAME, low_bound)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_LIBVER_HIGH_BOUND_NAME, high_bound)
 
     /* Get the values */
     *low_bound  = (*head)->ctx.fapl_props.low_bound;
@@ -3805,9 +3807,8 @@ H5CX_get_use_file_locking(bool *use_file_locking)
     assert(use_file_locking);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_USE_FILE_LOCKING_NAME, use_file_locking)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_USE_FILE_LOCKING_NAME, use_file_locking)
 
     /* Get the value */
     *use_file_locking = (*head)->ctx.fapl_props.use_file_locking;
@@ -3837,10 +3838,8 @@ H5CX_get_ignore_disabled_locks(bool *ignore_disabled_locks)
     assert(ignore_disabled_locks);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_IGNORE_DISABLED_FILE_LOCKS_NAME,
-                             ignore_disabled_locks)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_IGNORE_DISABLED_FILE_LOCKS_NAME, ignore_disabled_locks)
 
     /* Get the value */
     *ignore_disabled_locks = (*head)->ctx.fapl_props.ignore_disabled_locks;
@@ -3871,10 +3870,9 @@ H5CX_get_alignment(hsize_t *align_bound, hsize_t *align_threshold)
     assert(align_threshold);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_ALIGN_NAME, align_bound)
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_ALIGN_THRHD_NAME, align_threshold)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_ALIGN_NAME, align_bound)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_ALIGN_THRHD_NAME, align_threshold)
 
     /* Get the values */
     *align_bound     = (*head)->ctx.fapl_props.align_bound;
@@ -3905,10 +3903,8 @@ H5CX_test_get_clear_status_flags(bool *clear_status_flags)
     assert(clear_status_flags);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
 
-    H5CX_TEST_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_CLEAR_STATUS_FLAGS_NAME,
-                                  clear_status_flags)
+    H5CX_TEST_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_CLEAR_STATUS_FLAGS_NAME, clear_status_flags)
 
     /* Get the value */
     *clear_status_flags = (*head)->ctx.fapl_props.clear_status_flags;
@@ -3938,9 +3934,8 @@ H5CX_get_gc_ref(unsigned *gc_ref)
     assert(gc_ref);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_GARBG_COLCT_REF_NAME, gc_ref)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_GARBG_COLCT_REF_NAME, gc_ref)
 
     /* Get the value */
     *gc_ref = (*head)->ctx.fapl_props.gc_ref;
@@ -3970,9 +3965,8 @@ H5CX_get_use_mdc_logging(bool *use_mdc_logging)
     assert(use_mdc_logging);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_USE_MDC_LOGGING_NAME, use_mdc_logging)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_USE_MDC_LOGGING_NAME, use_mdc_logging)
 
     /* Get the value */
     *use_mdc_logging = (*head)->ctx.fapl_props.use_mdc_logging;
@@ -4002,9 +3996,8 @@ H5CX_peek_mdc_log_location(char **mdc_log_location)
     assert(mdc_log_location);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
 
-    H5CX_PEEK_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_MDC_LOG_LOCATION_NAME, mdc_log_location)
+    H5CX_PEEK_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_MDC_LOG_LOCATION_NAME, mdc_log_location)
 
     /* Get the value */
     *mdc_log_location = (*head)->ctx.fapl_props.mdc_log_location;
@@ -4034,10 +4027,9 @@ H5CX_get_start_mdc_logging_on_access(bool *start_mdc_logging_on_access)
     assert(start_mdc_logging_on_access);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_START_MDC_LOG_ON_ACCESS_NAME,
-                             start_mdc_logging_on_access)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_START_MDC_LOG_ON_ACCESS_NAME,
+                                 start_mdc_logging_on_access)
 
     /* Get the value */
     *start_mdc_logging_on_access = (*head)->ctx.fapl_props.start_mdc_logging_on_access;
@@ -4067,10 +4059,9 @@ H5CX_get_metadata_read_attempts(unsigned *mdc_read_attempts)
     assert(mdc_read_attempts);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_METADATA_READ_ATTEMPTS_NAME,
-                             mdc_read_attempts)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_METADATA_READ_ATTEMPTS_NAME,
+                                 mdc_read_attempts)
 
     /* Get the value */
     *mdc_read_attempts = (*head)->ctx.fapl_props.mdc_read_attempts;
@@ -4100,10 +4091,9 @@ H5CX_get_meta_alloc_block_size(hsize_t *meta_alloc_block_size)
     assert(meta_alloc_block_size);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_META_BLOCK_SIZE_NAME,
-                             meta_alloc_block_size)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_META_BLOCK_SIZE_NAME,
+                                 meta_alloc_block_size)
 
     /* Get the value */
     *meta_alloc_block_size = (*head)->ctx.fapl_props.meta_alloc_block_size;
@@ -4133,10 +4123,9 @@ H5CX_get_mdc_init_config(H5AC_cache_config_t *mdc_init_config)
     assert(mdc_init_config);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_META_CACHE_INIT_CONFIG_NAME,
-                             mdc_init_config)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_META_CACHE_INIT_CONFIG_NAME,
+                                 mdc_init_config)
 
     /* Get the value */
     H5MM_memcpy(mdc_init_config, &(*head)->ctx.fapl_props.mdc_init_config, sizeof(*mdc_init_config));
@@ -4166,10 +4155,9 @@ H5CX_get_mdc_image_config(H5AC_cache_image_config_t *mdc_image_config)
     assert(mdc_image_config);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_META_CACHE_INIT_IMAGE_CONFIG_NAME,
-                             mdc_image_config)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_META_CACHE_INIT_IMAGE_CONFIG_NAME,
+                                 mdc_image_config)
 
     /* Get the value */
     H5MM_memcpy(mdc_image_config, &(*head)->ctx.fapl_props.mdc_image_config, sizeof(*mdc_image_config));
@@ -4199,10 +4187,9 @@ H5CX_get_object_flush_strategy(H5F_object_flush_t *object_flush_strategy)
     assert(object_flush_strategy);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_OBJECT_FLUSH_CB_NAME,
-                             object_flush_strategy)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_OBJECT_FLUSH_CB_NAME,
+                                 object_flush_strategy)
 
     /* Get the value */
     H5MM_memcpy(object_flush_strategy, &(*head)->ctx.fapl_props.object_flush_strategy,
@@ -4233,9 +4220,8 @@ H5CX_get_page_buffer_size(size_t *page_buf_size)
     assert(page_buf_size);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_PAGE_BUFFER_SIZE_NAME, pb_size)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_PAGE_BUFFER_SIZE_NAME, pb_size)
 
     /* Get the values */
     *page_buf_size = (*head)->ctx.fapl_props.pb_size;
@@ -4266,12 +4252,9 @@ H5CX_get_page_buffer_percs(unsigned *min_meta_perc, unsigned *min_raw_perc)
     assert(min_raw_perc);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_PAGE_BUFFER_MIN_META_PERC_NAME,
-                             pb_min_meta_perc)
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_PAGE_BUFFER_MIN_RAW_PERC_NAME,
-                             pb_min_raw_perc)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_PAGE_BUFFER_MIN_META_PERC_NAME, pb_min_meta_perc)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_PAGE_BUFFER_MIN_RAW_PERC_NAME, pb_min_raw_perc)
 
     /* Get the values */
     *min_meta_perc = (*head)->ctx.fapl_props.pb_min_meta_perc;
@@ -4304,13 +4287,10 @@ H5CX_get_rdcc_info(size_t *nslots, size_t *nbytes, double *w0)
     assert(w0);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_DATA_CACHE_NUM_SLOTS_NAME,
-                             fapl_rdcc_nslots)
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_DATA_CACHE_BYTE_SIZE_NAME,
-                             fapl_rdcc_nbytes)
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_PREEMPT_READ_CHUNKS_NAME, fapl_rdcc_w0)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_DATA_CACHE_NUM_SLOTS_NAME, fapl_rdcc_nslots)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_DATA_CACHE_BYTE_SIZE_NAME, fapl_rdcc_nbytes)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_PREEMPT_READ_CHUNKS_NAME, fapl_rdcc_w0)
 
     /* Get the values */
     *nslots = (*head)->ctx.fapl_props.fapl_rdcc_nslots;
@@ -4343,9 +4323,8 @@ H5CX_get_fapl_coll_md_read(H5P_coll_md_read_flag_t *coll_md_read)
     assert(coll_md_read);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5_COLL_MD_READ_FLAG_NAME, fapl_coll_md_read)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5_COLL_MD_READ_FLAG_NAME, fapl_coll_md_read)
 
     /* Get the value */
     *coll_md_read = (*head)->ctx.fapl_props.fapl_coll_md_read;
@@ -4375,9 +4354,8 @@ H5CX_get_coll_md_write(bool *coll_md_write)
     assert(coll_md_write);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_COLL_MD_WRITE_FLAG_NAME, coll_md_write)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_COLL_MD_WRITE_FLAG_NAME, coll_md_write)
 
     /* Get the value */
     *coll_md_write = (*head)->ctx.fapl_props.coll_md_write;
@@ -4408,9 +4386,8 @@ H5CX_get_sf_ioc_params(H5FD_subfiling_params_t *sf_ioc_params)
     assert(sf_ioc_params);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_SUBFILING_CONFIG_PROP_NAME, sf_ioc_params)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_SUBFILING_CONFIG_PROP_NAME, sf_ioc_params)
 
     /* Get the value */
     *sf_ioc_params = (*head)->ctx.fapl_props.sf_ioc_params;
@@ -4442,9 +4419,8 @@ H5CX_get_efc_size(unsigned *efc_size)
     assert(efc_size);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_EFC_SIZE_NAME, efc_size)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_EFC_SIZE_NAME, efc_size)
 
     /* Get the value */
     *efc_size = (*head)->ctx.fapl_props.efc_size;
@@ -4474,9 +4450,8 @@ H5CX_get_close_degree(H5F_close_degree_t *close_degree)
     assert(close_degree);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_CLOSE_DEGREE_NAME, close_degree)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_CLOSE_DEGREE_NAME, close_degree)
 
     /* Get the value */
     *close_degree = (*head)->ctx.fapl_props.close_degree;
@@ -4506,9 +4481,8 @@ H5CX_get_evict_on_close(bool *evict_on_close)
     assert(evict_on_close);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_EVICT_ON_CLOSE_FLAG_NAME, evict_on_close)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_EVICT_ON_CLOSE_FLAG_NAME, evict_on_close)
 
     /* Get the value */
     *evict_on_close = (*head)->ctx.fapl_props.evict_on_close;
@@ -4538,9 +4512,8 @@ H5CX_get_rfic_flags(uint64_t *rfic_flags)
     assert(rfic_flags);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_RFIC_FLAGS_NAME, rfic_flags)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_RFIC_FLAGS_NAME, rfic_flags)
 
     /* Get the value */
     *rfic_flags = (*head)->ctx.fapl_props.rfic_flags;
@@ -4570,9 +4543,8 @@ H5CX_get_sdata_block_size(hsize_t *sdata_block_size)
     assert(sdata_block_size);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_SDATA_BLOCK_SIZE_NAME, sdata_block_size)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_SDATA_BLOCK_SIZE_NAME, sdata_block_size)
 
     /* Get the value */
     *sdata_block_size = (*head)->ctx.fapl_props.sdata_block_size;
@@ -4602,9 +4574,8 @@ H5CX_get_sieve_buf_size(size_t *sieve_buf_size)
     assert(sieve_buf_size);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_SIEVE_BUF_SIZE_NAME, sieve_buf_size)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_SIEVE_BUF_SIZE_NAME, sieve_buf_size)
 
     /* Get the value */
     *sieve_buf_size = (*head)->ctx.fapl_props.sieve_buf_size;
@@ -4634,9 +4605,8 @@ H5CX_get_null_fsm_addr(bool *null_fsm_addr)
     assert(null_fsm_addr);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
 
-    H5CX_TEST_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_NULL_FSM_ADDR_NAME, null_fsm_addr)
+    H5CX_TEST_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_NULL_FSM_ADDR_NAME, null_fsm_addr)
 
     /* Get the value */
     *null_fsm_addr = (*head)->ctx.fapl_props.null_fsm_addr;
@@ -4666,9 +4636,8 @@ H5CX_get_skip_eof_check(bool *skip_eof_check)
     assert(skip_eof_check);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
 
-    H5CX_TEST_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_SKIP_EOF_CHECK_NAME, skip_eof_check)
+    H5CX_TEST_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_SKIP_EOF_CHECK_NAME, skip_eof_check)
 
     /* Get the value */
     *skip_eof_check = (*head)->ctx.fapl_props.skip_eof_check;
@@ -4698,9 +4667,8 @@ H5CX_get_family_to_single(bool *fam_to_single)
     assert(fam_to_single);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
 
-    H5CX_TEST_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FAMILY_TO_SINGLE_NAME, fam_to_single)
+    H5CX_TEST_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FAMILY_TO_SINGLE_NAME, fam_to_single)
 
     /* Get the value */
     *fam_to_single = (*head)->ctx.fapl_props.fam_to_single;
@@ -4730,9 +4698,8 @@ H5CX_get_family_offset(hsize_t *fam_offset)
     assert(fam_offset);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FAMILY_OFFSET_NAME, fam_offset)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FAMILY_OFFSET_NAME, fam_offset)
 
     /* Get the value */
     *fam_offset = (*head)->ctx.fapl_props.fam_offset;
@@ -4762,9 +4729,8 @@ H5CX_get_family_newsize(hsize_t *fam_newsize)
     assert(fam_newsize);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.fapl_id);
 
-    H5CX_TEST_RETRIEVE_PROP_VALID(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FAMILY_NEWSIZE_NAME, fam_newsize)
+    H5CX_TEST_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FAMILY_NEWSIZE_NAME, fam_newsize)
 
     /* Get the value */
     *fam_newsize = (*head)->ctx.fapl_props.fam_newsize;
@@ -7113,7 +7079,7 @@ H5CX_pop(bool update_dxpl_props)
         H5CX__reset_lapl(*head);
     if (H5P_OBJECT_CREATE_DEFAULT != (*head)->ctx.ocpl_id)
         H5CX__reset_ocpl(*head);
-    if (H5P_FILE_ACCESS_DEFAULT != (*head)->ctx.fapl_id)
+    if ((*head)->ctx.fapl)
         H5CX__reset_fapl(*head);
 
     /* Pop the top context node from the stack */
