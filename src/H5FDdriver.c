@@ -300,7 +300,7 @@ H5FD_open_wrap(bool try, H5FD_int_t **_fh, const char *name, unsigned flags, H5P
     H5CX_get_close_degree(&old_fc_degree);
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(H5P_PLIST_ID(fapl), H5I_INVALID_HID, false) < 0)
+    if (H5CX_set_apl(fapl, H5I_INVALID_HID, false) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Call actual H5FD_open routine */
@@ -794,7 +794,7 @@ H5FD_get_vfd_handle_wrap(H5FD_int_t *fh, const H5P_genplist_t *fapl, void **file
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get file access property list");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(H5P_PLIST_ID(fapl), H5I_INVALID_HID, false) < 0)
+    if (H5CX_set_apl(fapl, H5I_INVALID_HID, false) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Call actual H5FD_get_vfd_handle routine */
@@ -2021,7 +2021,7 @@ H5FD_delete_wrap(const char *filename, H5P_genplist_t *fapl)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get file access property list");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(H5P_PLIST_ID(fapl), H5I_INVALID_HID, false) < 0)
+    if (H5CX_set_apl(fapl, H5I_INVALID_HID, false) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Call actual H5FD_delete routine */

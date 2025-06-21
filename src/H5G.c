@@ -362,7 +362,7 @@ H5Gcreate_anon(hid_t loc_id, hid_t gcpl_id, hid_t gapl_id)
         HGOTO_ERROR(H5E_SYM, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(H5P_PLIST_ID(gapl), loc_id, true) < 0)
+    if (H5CX_set_apl(gapl, loc_id, true) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTSET, H5I_INVALID_HID, "can't set access property list info");
 
     /* Set the GCPL for the API context */

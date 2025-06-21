@@ -350,7 +350,7 @@ H5Tcommit_anon(hid_t loc_id, hid_t type_id, hid_t tcpl_id, hid_t tapl_id)
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(H5P_PLIST_ID(tapl), loc_id, true) < 0)
+    if (H5CX_set_apl(tapl, loc_id, true) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Set the TCPL for the API context */

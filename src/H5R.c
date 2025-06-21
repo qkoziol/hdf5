@@ -494,7 +494,7 @@ H5R__open_common(H5R_ref_t *ref_ptr, hid_t file_id, H5P_genplist_t *dapl, void *
     FUNC_ENTER_PACKAGE
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(H5P_PLIST_ID(dapl), file_id, false) < 0)
+    if (H5CX_set_apl(dapl, file_id, false) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTSET, NULL, "can't set access property list info");
 
     /* Get object token */
@@ -899,7 +899,7 @@ H5R__open_attr_api_common(H5R_ref_t *ref_ptr, hid_t file_id, H5P_genplist_t *aap
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTINIT, H5I_INVALID_HID, "can't create VOL object for object");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(H5P_PLIST_ID(aapl), file_id, false) < 0)
+    if (H5CX_set_apl(aapl, file_id, false) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTSET, H5I_INVALID_HID, "can't set access property list info");
 
     /* Set location parameters */

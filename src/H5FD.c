@@ -328,7 +328,7 @@ H5FDopen(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file access property list");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(H5P_PLIST_ID(fapl), H5I_INVALID_HID, true) < 0)
+    if (H5CX_set_apl(fapl, H5I_INVALID_HID, true) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, NULL, "can't set file access property list");
 
     /* Call private function */
@@ -798,7 +798,7 @@ H5FDget_vfd_handle(H5FD_t *file, hid_t fapl_id, void **file_handle /*out*/)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "file handle parameter cannot be NULL");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(H5P_PLIST_ID(fapl), H5I_INVALID_HID, false) < 0)
+    if (H5CX_set_apl(fapl, H5I_INVALID_HID, false) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set file access property list");
 
     /* Construct temporary internal file handle */
@@ -1893,7 +1893,7 @@ H5FDdelete(const char *filename, hid_t fapl_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(H5P_PLIST_ID(fapl), H5I_INVALID_HID, true) < 0)
+    if (H5CX_set_apl(fapl, H5I_INVALID_HID, true) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set file access property list");
 
     /* Call private function */

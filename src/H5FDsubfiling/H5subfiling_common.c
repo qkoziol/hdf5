@@ -538,7 +538,7 @@ H5FD__subfiling_open_stub_file(const char *name, unsigned flags, MPI_Comm file_c
             HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set MPI I/O driver on FAPL");
 
         /* Verify access property list and set up collective metadata if appropriate */
-        if (H5CX_set_apl(H5P_PLIST_ID(fapl), H5I_INVALID_HID, true) < 0)
+        if (H5CX_set_apl(fapl, H5I_INVALID_HID, true) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set access property list info");
 
         /* NOTE: Can't call H5FD_open_wrap() here, since that routine resets

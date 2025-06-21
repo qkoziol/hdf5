@@ -967,7 +967,7 @@ H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_op
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get file creation property list");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(H5P_PLIST_ID(fapl), H5I_INVALID_HID, true) < 0)
+    if (H5CX_set_apl(fapl, H5I_INVALID_HID, true) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Set the default FCPL in the API context for root group creation */
@@ -2748,7 +2748,7 @@ H5F__reopen(H5F_t *f)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, NULL, "can't get file's file access property list");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(H5P_PLIST_ID(fapl), H5I_INVALID_HID, true) < 0)
+    if (H5CX_set_apl(fapl, H5I_INVALID_HID, true) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, NULL, "can't set access property list info");
 
     if (NULL == (ret_value = H5F__new(f->shared, 0, NULL)))

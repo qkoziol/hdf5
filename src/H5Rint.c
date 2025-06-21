@@ -468,7 +468,7 @@ H5R__reopen_file(H5R_ref_priv_t *ref, H5P_genplist_t *fapl)
     /* TODO add search path */
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(H5P_PLIST_ID(fapl), H5I_INVALID_HID, true) < 0)
+    if (H5CX_set_apl(fapl, H5I_INVALID_HID, true) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTSET, H5I_INVALID_HID, "can't set access property list info");
 
     /* Retrieve the connector property */

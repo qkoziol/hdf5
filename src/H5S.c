@@ -1442,7 +1442,7 @@ H5Sencode2(hid_t obj_id, void *buf, size_t *nalloc, hid_t fapl_id)
         HGOTO_ERROR(H5E_DATASPACE, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(H5P_PLIST_ID(fapl), H5I_INVALID_HID, true) < 0)
+    if (H5CX_set_apl(fapl, H5I_INVALID_HID, true) < 0)
         HGOTO_ERROR(H5E_DATASPACE, H5E_CANTSET, FAIL, "can't set access property list info");
 
     if (H5S_encode(dspace, (unsigned char **)&buf, nalloc) < 0)

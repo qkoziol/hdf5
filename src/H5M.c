@@ -463,7 +463,7 @@ H5Mcreate_anon(hid_t loc_id, hid_t key_type_id, hid_t val_type_id, hid_t mcpl_id
         HGOTO_ERROR(H5E_MAP, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(H5P_PLIST_ID(mapl), loc_id, true) < 0)
+    if (H5CX_set_apl(mapl, loc_id, true) < 0)
         HGOTO_ERROR(H5E_MAP, H5E_CANTSET, H5I_INVALID_HID, "can't set access property list info");
 
     /* get the location object */

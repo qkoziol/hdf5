@@ -439,7 +439,7 @@ H5Fget_vfd_handle(hid_t file_id, hid_t fapl_id, void **file_handle /*out*/)
         HGOTO_ERROR(H5E_FILE, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(H5P_PLIST_ID(fapl), file_id, false) < 0)
+    if (H5CX_set_apl(fapl, file_id, false) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set file access property list");
 
     /* Get the file object */
@@ -489,7 +489,7 @@ H5Fis_accessible(const char *filename, hid_t fapl_id)
         HGOTO_ERROR(H5E_FILE, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(H5P_PLIST_ID(fapl), H5I_INVALID_HID, true) < 0)
+    if (H5CX_set_apl(fapl, H5I_INVALID_HID, true) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Set up VOL callback arguments */
@@ -580,7 +580,7 @@ H5F__create_api_common(const char *filename, unsigned flags, H5P_genplist_t *fcp
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, H5I_INVALID_HID, "mutually exclusive flags for file creation");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(H5P_PLIST_ID(fapl), H5I_INVALID_HID, true) < 0)
+    if (H5CX_set_apl(fapl, H5I_INVALID_HID, true) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID, "can't set access property list info");
 
     /* Set the creation property list */
@@ -786,7 +786,7 @@ H5F__open_api_common(const char *filename, unsigned flags, H5P_genplist_t *fapl,
                     "SWMR read access on a file open for read-write access is not allowed");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(H5P_PLIST_ID(fapl), H5I_INVALID_HID, true) < 0)
+    if (H5CX_set_apl(fapl, H5I_INVALID_HID, true) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID, "can't set access property list info");
 
     /* Retrieve the connector property */
@@ -1160,7 +1160,7 @@ H5Fdelete(const char *filename, hid_t fapl_id)
         HGOTO_ERROR(H5E_FILE, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
-    if (H5CX_set_apl(H5P_PLIST_ID(fapl), H5I_INVALID_HID, true) < 0)
+    if (H5CX_set_apl(fapl, H5I_INVALID_HID, true) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Set up VOL callback arguments */
