@@ -88,7 +88,7 @@ static const unsigned HDF5_superblock_ver_bounds[] = {
 static herr_t
 H5F__super_ext_create(H5F_t *f, H5O_loc_t *ext_ptr)
 {
-    hid_t  old_fcpl_id = H5I_INVALID_HID; /* ID for old FCPL in API context */
+    H5P_genplist_t *old_fcpl = NULL; /* ID for old FCPL in API context */
     herr_t ret_value   = SUCCEED;         /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -109,11 +109,11 @@ H5F__super_ext_create(H5F_t *f, H5O_loc_t *ext_ptr)
         HGOTO_ERROR(H5E_FILE, H5E_CANTCREATE, FAIL, "superblock extension already exists?!?!");
     else {
         /* Retrieve the current FCPL in the API context */
-        if ((old_fcpl_id = H5CX_get_fcpl()) < 0)
+        if (NULL == (old_fcpl = H5CX_get_fcpl()))
             HGOTO_ERROR(H5E_SYM, H5E_CANTGET, FAIL, "can't get file creation property list");
 
         /* Set the default OCPL in the API context for superblock creation */
-        if (H5CX_set_cpl(H5P_OBJECT_CREATE_DEFAULT) < 0)
+        if (H5CX_set_cpl(H5P_LST_OBJECT_CREATE_g) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set creation property list info");
 
         /* If we pass 0 as a size hint for the object header, the library will
@@ -131,8 +131,8 @@ H5F__super_ext_create(H5F_t *f, H5O_loc_t *ext_ptr)
 
 done:
     /* Restore previous FCPL in the API contxt */
-    if (old_fcpl_id > 0)
-        H5CX_set_fcpl(old_fcpl_id);
+    if (old_fcpl)
+        H5CX_set_fcpl(old_fcpl);
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5F__super_ext_create() */

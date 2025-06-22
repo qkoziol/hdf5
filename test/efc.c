@@ -69,7 +69,7 @@ test_single(H5P_genplist_t *fcpl, hid_t fapl_id)
 
     /* Reset the cached properties in the test's API context */
     H5CX_reset_fapl_test();
-    H5CX_set_cpl(H5P_PLIST_ID(fcpl));
+    H5CX_set_cpl(fcpl);
     H5CX_set_apl(fapl, H5I_INVALID_HID, true);
 
     /* Open parent file */
@@ -82,7 +82,7 @@ test_single(H5P_genplist_t *fcpl, hid_t fapl_id)
 
     /* Reset the cached properties in the test's API context */
     H5CX_reset_fapl_test();
-    H5CX_set_cpl(H5P_PLIST_ID(fcpl));
+    H5CX_set_cpl(fcpl);
     H5CX_set_apl(fapl, H5I_INVALID_HID, true);
 
     /* Test 1: Open file 1 through EFC, close, then open normally, verify ref
@@ -506,7 +506,7 @@ test_graph_nocycle(H5P_genplist_t *fcpl, hid_t fapl_id)
 
     /* Reset the cached properties in the test's API context */
     H5CX_reset_fapl_test();
-    H5CX_set_cpl(H5P_PLIST_ID(fcpl));
+    H5CX_set_cpl(fcpl);
     H5CX_set_apl(fapl, H5I_INVALID_HID, true);
 
     /* Test 1: Simple 3 file chain. Open file 1 through file 0, then open file
@@ -836,7 +836,7 @@ test_graph_cycle(H5P_genplist_t *fcpl, hid_t fapl_id)
 
     /* Reset the cached properties in the test's API context */
     H5CX_reset_fapl_test();
-    H5CX_set_cpl(H5P_PLIST_ID(fcpl));
+    H5CX_set_cpl(fcpl);
     H5CX_set_apl(fapl, H5I_INVALID_HID, true);
 
     /* Test 1: File caches itself. Verify that closing the file causes it to be
@@ -2572,7 +2572,7 @@ test_graph_cycle(H5P_genplist_t *fcpl, hid_t fapl_id)
 
     /* Reset the cached properties in the test's API context */
     H5CX_reset_fapl_test();
-    H5CX_set_cpl(H5P_PLIST_ID(fcpl));
+    H5CX_set_cpl(fcpl);
     H5CX_set_apl(fapl, H5I_INVALID_HID, true);
 
     if (H5F__efc_open(false, f0->shared->efc, &f1, filename[1], H5F_ACC_RDWR | H5F_ACC_CREAT | H5F_ACC_TRUNC,
@@ -2584,7 +2584,7 @@ test_graph_cycle(H5P_genplist_t *fcpl, hid_t fapl_id)
 
     /* Reset the cached properties in the test's API context */
     H5CX_reset_fapl_test();
-    H5CX_set_cpl(H5P_PLIST_ID(fcpl));
+    H5CX_set_cpl(fcpl);
     H5CX_set_apl(fapl, H5I_INVALID_HID, true);
 
     if (H5F__efc_open(false, f1->shared->efc, &ftmp0, filename[0], H5F_ACC_RDWR, fapl) < 0)
@@ -2633,7 +2633,7 @@ test_graph_cycle(H5P_genplist_t *fcpl, hid_t fapl_id)
 
     /* Reset the cached properties in the test's API context */
     H5CX_reset_fapl_test();
-    H5CX_set_cpl(H5P_PLIST_ID(fcpl));
+    H5CX_set_cpl(fcpl);
     H5CX_set_apl(fapl, H5I_INVALID_HID, true);
 
     if (H5F__efc_open(false, f1->shared->efc, &f2, filename[2], H5F_ACC_RDWR | H5F_ACC_CREAT | H5F_ACC_TRUNC,
@@ -2645,7 +2645,7 @@ test_graph_cycle(H5P_genplist_t *fcpl, hid_t fapl_id)
 
     /* Reset the cached properties in the test's API context */
     H5CX_reset_fapl_test();
-    H5CX_set_cpl(H5P_PLIST_ID(fcpl));
+    H5CX_set_cpl(fcpl);
     H5CX_set_apl(fapl, H5I_INVALID_HID, true);
 
     if (H5F_efc_close(f1, f2) < 0)

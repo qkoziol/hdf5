@@ -584,7 +584,7 @@ H5F__create_api_common(const char *filename, unsigned flags, H5P_genplist_t *fcp
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID, "can't set access property list info");
 
     /* Set the creation property list */
-    if (H5CX_set_cpl(H5P_PLIST_ID(fcpl)) < 0)
+    if (H5CX_set_cpl(fcpl) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID, "can't set creation property list info");
 
     /* Retrieve the connector property */
@@ -603,8 +603,7 @@ H5F__create_api_common(const char *filename, unsigned flags, H5P_genplist_t *fcp
     flags |= H5F_ACC_RDWR | H5F_ACC_CREAT;
 
     /* Create a new file or truncate an existing file through the VOL */
-    if (NULL ==
-        (new_file = H5VL_file_create(connector_prop.connector, filename, flags, fcpl, fapl, token_ptr)))
+    if (NULL == (new_file = H5VL_file_create(connector_prop.connector, filename, flags, fcpl, fapl, token_ptr)))
         HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, H5I_INVALID_HID, "unable to create file");
 
     /* Get an ID for the file */
@@ -722,7 +721,7 @@ H5Fcreate_async(const char *app_file, const char *app_func, unsigned app_line, c
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE8(__func__, "*s*sIu*sIuiii", app_file, app_func, app_line, filename, flags, fcpl_id, fapl_id, es_id)) < 0) {
+                        H5ARG_TRACE8(__func__, "*s*sIu*sIuiii", app_file, app_func, app_line, filename, flags, H5P_PLIST_ID(fcpl), H5P_PLIST_ID(fapl), es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref(ret_value) < 0)
                 HDONE_ERROR(H5E_FILE, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on file ID");
@@ -741,7 +740,7 @@ H5Fcreate_async(const char *app_file, const char *app_func, unsigned app_line, c
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE8(__func__, "*s*sIu*sIuiii", app_file, app_func, app_line, filename, flags, fcpl_id, fapl_id, es_id)) < 0)
+                        H5ARG_TRACE8(__func__, "*s*sIu*sIuiii", app_file, app_func, app_line, filename, flags, H5P_PLIST_ID(fcpl), H5P_PLIST_ID(fapl), es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_FILE, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
 
@@ -899,7 +898,7 @@ H5Fopen_async(const char *app_file, const char *app_func, unsigned app_line, con
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE7(__func__, "*s*sIu*sIuii", app_file, app_func, app_line, filename, flags, fapl_id, es_id)) < 0) {
+                        H5ARG_TRACE7(__func__, "*s*sIu*sIuii", app_file, app_func, app_line, filename, flags, H5P_PLIST_ID(fapl), es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref(ret_value) < 0)
                 HDONE_ERROR(H5E_FILE, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on file ID");
@@ -918,7 +917,7 @@ H5Fopen_async(const char *app_file, const char *app_func, unsigned app_line, con
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE7(__func__, "*s*sIu*sIuii", app_file, app_func, app_line, filename, flags, fapl_id, es_id)) < 0)
+                        H5ARG_TRACE7(__func__, "*s*sIu*sIuii", app_file, app_func, app_line, filename, flags, H5P_PLIST_ID(fapl), es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_FILE, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
 

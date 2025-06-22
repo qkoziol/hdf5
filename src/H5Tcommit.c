@@ -161,7 +161,7 @@ H5Tcommit2(hid_t loc_id, const char *name, hid_t type_id, hid_t lcpl_id, hid_t t
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set the TCPL for the API context */
-    if (H5CX_set_cpl(H5P_PLIST_ID(tcpl)) < 0)
+    if (H5CX_set_cpl(tcpl) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set creation property list info");
 
     /* Set the LCPL for the API context */
@@ -207,7 +207,7 @@ H5Tcommit_async(const char *app_file, const char *app_func, unsigned app_line, h
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set the TCPL for the API context */
-    if (H5CX_set_cpl(H5P_PLIST_ID(tcpl)) < 0)
+    if (H5CX_set_cpl(tcpl) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set creation property list info");
 
     /* Set the LCPL for the API context */
@@ -354,7 +354,7 @@ H5Tcommit_anon(hid_t loc_id, hid_t type_id, hid_t tcpl_id, hid_t tapl_id)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set access property list info");
 
     /* Set the TCPL for the API context */
-    if (H5CX_set_cpl(H5P_PLIST_ID(tcpl)) < 0)
+    if (H5CX_set_cpl(tcpl) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set creation property list info");
 
     /* Fill in location struct fields */

@@ -783,7 +783,7 @@ H5Z__prelude_callback(const H5O_pline_t *pline, hid_t type_id, hid_t space_id,
     assert(pline->nused > 0);
 
     /* Iterate over filters */
-    ocpl_id = H5CX_get_ocpl();
+    ocpl_id = H5P_PLIST_ID(H5CX_get_ocpl());
     for (u = 0; u < pline->nused; u++) {
         /* Get filter information, ignoring failure from optional filters */
         if (H5Z_find(pline->filter[u].flags & H5Z_FLAG_OPTIONAL, pline->filter[u].id, &fclass) < 0)

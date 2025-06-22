@@ -145,7 +145,6 @@ H5G__traverse_ud(const H5G_loc_t *grp_loc /*in,out*/, const H5O_link_t *lnk, H5G
                  unsigned target, bool *obj_exists)
 {
     const H5L_class_t *link_class;     /* User-defined link class */
-    H5P_genplist_t *lapl; /* LAPL for API operation */
     hid_t lapl_id;      /* LAPL ID to pass to the user callback */
     hid_t              cb_return = -1; /* The ID the user-defined callback returned */
     H5G_loc_t          grp_loc_copy;
@@ -187,8 +186,7 @@ H5G__traverse_ud(const H5G_loc_t *grp_loc /*in,out*/, const H5O_link_t *lnk, H5G
         H5E_pause_stack();
 
     /* Invoke user-defined callback function */
-    lapl = H5CX_get_lapl();
-    lapl_id = (lapl ? H5P_PLIST_ID(lapl) : H5P_LST_LINK_ACCESS_ID_g);
+    lapl_id = H5P_PLIST_ID(H5CX_get_lapl());
 
 #ifndef H5_NO_DEPRECATED_SYMBOLS
     /* (Backwardly compatible with v0 H5L_class_t traversal callback) */

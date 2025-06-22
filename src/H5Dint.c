@@ -2868,7 +2868,7 @@ static herr_t
 H5D__check_filters(H5D_t *dataset)
 {
     H5O_fill_t     *fill; /* Dataset's fill value */
-    hid_t           old_ocpl_id = H5I_INVALID_HID;
+    H5P_genplist_t *old_ocpl = NULL;
     H5P_genplist_t *dcpl        = NULL;    /* DCPL for dataset */
     herr_t          ret_value   = SUCCEED; /* Return value */
 
@@ -2896,10 +2896,10 @@ H5D__check_filters(H5D_t *dataset)
                 (fill->fill_time == H5D_FILL_TIME_IFSET && fill_status == H5D_FILL_VALUE_USER_DEFINED)) {
 
                 /* Make certain that the correct DCPL is in the API context */
-                old_ocpl_id = H5CX_get_ocpl();
+                old_ocpl = H5CX_get_ocpl();
                 if (NULL == (dcpl = H5D_get_create_plist(dataset)))
                     HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get dataset's creation property list");
-                H5CX_set_cpl(H5P_PLIST_ID(dcpl));
+                H5CX_set_cpl(dcpl);
 
                 /* Filters must have encoding enabled. Ensure that all filters can be applied */
                 if (H5Z_can_apply(&dataset->shared->layout, &dataset->shared->dcpl_cache.pline,
@@ -2913,8 +2913,8 @@ H5D__check_filters(H5D_t *dataset)
 
 done:
     /* Restore any previous OCPL that was set */
-    if (H5I_INVALID_HID != old_ocpl_id)
-        H5CX_set_cpl(old_ocpl_id);
+    if (old_ocpl)
+        H5CX_set_cpl(old_ocpl);
 
     /* Clean up resources */
     if (dcpl && H5P_release(dcpl) < 0)

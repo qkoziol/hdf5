@@ -109,7 +109,7 @@ H5Tcommit1(hid_t loc_id, const char *name, hid_t type_id)
         HGOTO_ERROR(H5E_ARGS, H5E_CANTSET, FAIL, "datatype is already committed");
 
     /* Set the default TCPL for the API context */
-    if (H5CX_set_cpl(H5P_DATATYPE_CREATE_DEFAULT) < 0)
+    if (H5CX_set_cpl(H5P_LST_DATATYPE_CREATE_g) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set creation property list info");
 
     /* Set up collective metadata if appropriate */

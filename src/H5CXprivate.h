@@ -49,7 +49,7 @@ typedef struct H5CX_state_t {
     H5P_genplist_t *fapl; /* FAPL for operation */
     H5P_genplist_t *lapl; /* LAPL for operation */
     H5P_genplist_t *lcpl; /* LCPL for operation */
-    hid_t ocpl_id;      /* FCPL/DCPL/GCPL/TCPL for operation */
+    H5P_genplist_t *ocpl; /* FCPL/DCPL/GCPL/TCPL for operation */
     H5P_genplist_t *ocpypl;    /* OCPYPL for operation */
     void *vol_wrap_ctx; /* VOL connector's "wrap context" for creating IDs */
 
@@ -536,7 +536,6 @@ typedef struct H5CX_t {
     H5P_genplist_t *lapl;    /* Link Access Property List */
 
     /* OCPL */
-    hid_t           ocpl_id; /* OCPL (i.e. DCPL, GCPL, or TCPL) ID for API operation */
     H5P_genplist_t *ocpl;    /* Object Creation Property List */
 
     /* ACPL */
@@ -655,23 +654,23 @@ H5_DLL herr_t H5CX_restore_state(const H5CX_state_t *api_state);
 H5_DLL herr_t H5CX_free_state(H5CX_state_t *api_state);
 
 /* "Setter" routines for API context info */
-H5_DLL herr_t H5CX_set_cpl(hid_t crtpl_id);
+H5_DLL herr_t H5CX_set_cpl(H5P_genplist_t *crtpl);
 H5_DLL herr_t H5CX_set_dxpl(hid_t dxpl_id);
 H5_DLL void   H5CX_set_lcpl(H5P_genplist_t *lcpl);
 H5_DLL void   H5CX_set_acpl(hid_t acpl_id);
 H5_DLL herr_t H5CX_set_libver_bounds(H5F_t *f);
 H5_DLL herr_t H5CX_set_apl(H5P_genplist_t *acspl, hid_t loc_id, bool is_collective);
 H5_DLL void   H5CX_set_fapl(H5P_genplist_t *fapl);
-H5_DLL void   H5CX_set_fcpl(hid_t fcpl_id);
+H5_DLL void   H5CX_set_fcpl(H5P_genplist_t *fcpl);
 H5_DLL void   H5CX_set_ocpypl(H5P_genplist_t *ocpypl);
 H5_DLL herr_t H5CX_set_loc(hid_t loc_id);
 H5_DLL herr_t H5CX_set_vol_wrap_ctx(void *wrap_ctx);
 
 /* "Getter" routines for API context info */
 H5_DLL H5P_genplist_t *H5CX_get_fapl(void);
-H5_DLL hid_t       H5CX_get_ocpl(void);
+H5_DLL H5P_genplist_t *H5CX_get_ocpl(void);
 H5_DLL bool        H5CX_is_def_ocpl(void);
-H5_DLL hid_t       H5CX_get_fcpl(void);
+H5_DLL H5P_genplist_t *H5CX_get_fcpl(void);
 H5_DLL hid_t       H5CX_get_dxpl(void);
 H5_DLL bool        H5CX_is_def_dxpl(void);
 H5_DLL H5P_genplist_t *H5CX_get_lapl(void);

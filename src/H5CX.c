@@ -97,10 +97,10 @@
     }
 
 /* Common macro for the duplicated code to retrieve properties from a property list */
-#define H5CX_RETRIEVE_PROP_COMMON_NEW(PL, TST, MTHD, SUB_PL, DEF_PL, PROP_NAME, PROP_FIELD, ERR_RET)             \
+#define H5CX_RETRIEVE_PROP_COMMON_NEW(PL, TST, MTHD, SUB_PL, PROP_NAME, PROP_FIELD, ERR_RET)             \
     {                                                                                                        \
         /* Check for default property list */                                                                \
-        if (NULL == (*head)->ctx.PL) \
+        if (H5P_PLIST_IS_DEFAULT((*head)->ctx.PL)) \
             H5MM_memcpy(&(*head)->ctx.H5_GLUE(SUB_PL, _props).PROP_FIELD,                                    \
                         &H5_GLUE3(H5CX_def_, SUB_PL, _cache).PROP_FIELD,                                     \
                         sizeof(H5_GLUE3(H5CX_def_, SUB_PL, _cache).PROP_FIELD));                             \
@@ -119,10 +119,10 @@
     H5CX_RETRIEVE_PROP_COMMON(PL, NO, get, PL, DEF_PL, PROP_NAME, PROP_FIELD, FAIL)
 
 /* Macro for the duplicated code to retrieve a value from a property list if the context value is invalid */
-#define H5CX_RETRIEVE_PROP_VALID_NEW(PL, DEF_PL, PROP_NAME, PROP_FIELD)                                          \
+#define H5CX_RETRIEVE_PROP_VALID_NEW(PL, PROP_NAME, PROP_FIELD)                                          \
     /* Check if the value has been retrieved already */                                                      \
     if (!(*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                       \
-    H5CX_RETRIEVE_PROP_COMMON_NEW(PL, NO, get, PL, DEF_PL, PROP_NAME, PROP_FIELD, FAIL)
+    H5CX_RETRIEVE_PROP_COMMON_NEW(PL, NO, get, PL, PROP_NAME, PROP_FIELD, FAIL)
 
 /* Macro for the duplicated code to test for and retrieve a value from a property list if the context value is
  * invalid
@@ -135,10 +135,10 @@
 /* Macro for the duplicated code to test for and retrieve a value from a property list if the context value is
  * invalid
  */
-#define H5CX_TEST_RETRIEVE_PROP_VALID_NEW(PL, DEF_PL, PROP_NAME, PROP_FIELD)                                     \
+#define H5CX_TEST_RETRIEVE_PROP_VALID_NEW(PL, PROP_NAME, PROP_FIELD)                                     \
     /* Check if the value has been retrieved already */                                                      \
     if (!(*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                       \
-    H5CX_RETRIEVE_PROP_COMMON_NEW(PL, YES, get, PL, DEF_PL, PROP_NAME, PROP_FIELD, FAIL)
+    H5CX_RETRIEVE_PROP_COMMON_NEW(PL, YES, get, PL, PROP_NAME, PROP_FIELD, FAIL)
 
 /* Macro for the duplicated code to "peek" a value from a property list if the context value is invalid */
 #define H5CX_PEEK_PROP_VALID(PL, DEF_PL, PROP_NAME, PROP_FIELD)                                              \
@@ -147,10 +147,10 @@
     H5CX_RETRIEVE_PROP_COMMON(PL, NO, peek, PL, DEF_PL, PROP_NAME, PROP_FIELD, FAIL)
 
 /* Macro for the duplicated code to "peek" a value from a property list if the context value is invalid */
-#define H5CX_PEEK_PROP_VALID_NEW(PL, DEF_PL, PROP_NAME, PROP_FIELD)                                              \
+#define H5CX_PEEK_PROP_VALID_NEW(PL, PROP_NAME, PROP_FIELD)                                              \
     /* Check if the value has been retrieved already */                                                      \
     if (!(*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                       \
-    H5CX_RETRIEVE_PROP_COMMON_NEW(PL, NO, peek, PL, DEF_PL, PROP_NAME, PROP_FIELD, FAIL)
+    H5CX_RETRIEVE_PROP_COMMON_NEW(PL, NO, peek, PL, PROP_NAME, PROP_FIELD, FAIL)
 
 /* Macro for the duplicated code to "peek" a value from a property list if the context value is invalid */
 #define H5CX_PEEK_PROP_VALID_ERR(PL, DEF_PL, PROP_NAME, PROP_FIELD, ERR_RET)                                 \
@@ -159,16 +159,22 @@
     H5CX_RETRIEVE_PROP_COMMON(PL, NO, peek, PL, DEF_PL, PROP_NAME, PROP_FIELD, ERR_RET)
 
 /* Macro for the duplicated code to "peek" a value from a property list if the context value is invalid */
-#define H5CX_PEEK_PROP_VALID_ERR_NEW(PL, DEF_PL, PROP_NAME, PROP_FIELD, ERR_RET)                                 \
+#define H5CX_PEEK_PROP_VALID_ERR_NEW(PL, PROP_NAME, PROP_FIELD, ERR_RET)                                 \
     /* Check if the value has been retrieved already */                                                      \
     if (!(*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                       \
-    H5CX_RETRIEVE_PROP_COMMON_NEW(PL, NO, peek, PL, DEF_PL, PROP_NAME, PROP_FIELD, ERR_RET)
+    H5CX_RETRIEVE_PROP_COMMON_NEW(PL, NO, peek, PL, PROP_NAME, PROP_FIELD, ERR_RET)
 
 /* Macro for the duplicated code to retrieve a value from a property list if the context value is invalid */
 #define H5CX_RETRIEVE_SUBCLS_PROP_VALID(PL, SUB_PL, DEF_PL, PROP_NAME, PROP_FIELD)                           \
     /* Check if the value has been retrieved already */                                                      \
     if (!(*head)->ctx.H5_GLUE(SUB_PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                   \
     H5CX_RETRIEVE_PROP_COMMON(PL, NO, get, SUB_PL, DEF_PL, PROP_NAME, PROP_FIELD, FAIL)
+
+/* Macro for the duplicated code to retrieve a value from a property list if the context value is invalid */
+#define H5CX_RETRIEVE_SUBCLS_PROP_VALID_NEW(PL, SUB_PL, PROP_NAME, PROP_FIELD)                           \
+    /* Check if the value has been retrieved already */                                                      \
+    if (!(*head)->ctx.H5_GLUE(SUB_PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                   \
+    H5CX_RETRIEVE_PROP_COMMON_NEW(PL, NO, get, SUB_PL, PROP_NAME, PROP_FIELD, FAIL)
 
 #ifdef H5O_ENABLE_BOGUS
 /* Macro for the duplicated code to retrieve a value from a property list if the context value is invalid */
@@ -1021,7 +1027,7 @@ H5CX_push(H5CX_node_t *cnode)
     cnode->ctx.dxpl_id   = H5P_DATASET_XFER_DEFAULT;
     cnode->ctx.lapl      = H5P_LST_LINK_ACCESS_g;
     cnode->ctx.lcpl      = H5P_LST_LINK_CREATE_g;
-    cnode->ctx.ocpl_id   = H5P_OBJECT_CREATE_DEFAULT;
+    cnode->ctx.ocpl      = H5P_LST_OBJECT_CREATE_g;
     cnode->ctx.acpl_id   = H5P_ATTRIBUTE_CREATE_DEFAULT;
     cnode->ctx.ocpypl    = H5P_LST_OBJECT_COPY_g;
     cnode->ctx.dapl_id   = H5P_DATASET_ACCESS_DEFAULT;
@@ -1077,16 +1083,13 @@ H5CX_retrieve_state(H5CX_state_t **api_state)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTALLOC, FAIL, "unable to allocate new API context state");
 
     /* Check for non-default OCPL */
-    if (H5P_OBJECT_CREATE_DEFAULT != (*head)->ctx.ocpl_id) {
-        /* Retrieve the OCPL property list */
-        H5CX_RETRIEVE_PLIST(ocpl, FAIL)
-
-        /* Copy the OCPL ID */
-        if (((*api_state)->ocpl_id = H5P_copy_plist_id((H5P_genplist_t *)(*head)->ctx.ocpl, false)) < 0)
+    if (H5P_LST_OBJECT_CREATE_g != (*head)->ctx.ocpl) {
+        /* Copy the OCPL */
+        if (NULL == ((*api_state)->ocpl = H5P_copy_plist((H5P_genplist_t *)(*head)->ctx.ocpl, false)))
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy property list");
-    } /* end if */
+    }
     else
-        (*api_state)->ocpl_id = H5P_OBJECT_CREATE_DEFAULT;
+        (*api_state)->ocpl = H5P_LST_OBJECT_CREATE_g;
 
     /* Check for non-default OCPYPL */
     if (H5P_LST_OBJECT_COPY_g != (*head)->ctx.ocpypl) {
@@ -1190,8 +1193,7 @@ H5CX_restore_state(const H5CX_state_t *api_state)
     assert(api_state);
 
     /* Restore the OCPL info */
-    (*head)->ctx.ocpl_id = api_state->ocpl_id;
-    (*head)->ctx.ocpl    = NULL;
+    (*head)->ctx.ocpl = api_state->ocpl;
 
     /* Restore the OCPYPL info */
     (*head)->ctx.ocpypl = api_state->ocpypl;
@@ -1242,9 +1244,9 @@ H5CX_free_state(H5CX_state_t *api_state)
     assert(api_state);
 
     /* Release the OCPL */
-    if (0 != api_state->ocpl_id && H5P_OBJECT_CREATE_DEFAULT != api_state->ocpl_id)
-        if (H5I_dec_ref(api_state->ocpl_id) < 0)
-            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTDEC, FAIL, "can't decrement refcount on OCPL");
+    if (H5P_LST_OBJECT_CREATE_g != api_state->ocpl)
+        if (H5P_release(api_state->ocpl) < 0)
+            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't decrement refcount on OCPL");
 
     /* Release the OCPYPL */
     if (H5P_LST_OBJECT_COPY_g != api_state->ocpypl)
@@ -1525,20 +1527,14 @@ H5CX_set_acpl(hid_t acpl_id)
  *-------------------------------------------------------------------------
  */
 herr_t
-H5CX_set_cpl(hid_t crtpl_id)
+H5CX_set_cpl(H5P_genplist_t *crtpl)
 {
     H5CX_node_t   **head  = NULL; /* Pointer to head of API context list */
-    H5P_genplist_t *crtpl = NULL; /* Property list for the ID */
-    htri_t is_dcpl = false; /* Whether the creation property list is (or is derived from) a dataset creation
-                               property list */
-    htri_t is_fcpl =
-        false; /* Whether the creation property list is (or is derived from) a file creation property list */
-    htri_t is_gcpl =
-        false; /* Whether the creation property list is (or is derived from) a group creation property list */
-    htri_t is_tcpl = false; /* Whether the creation property list is (or is derived from) a datatype creation
-                               property list */
-    htri_t is_ocpl = false; /* Whether the creation property list is (or is derived from) an object creation
-                               property list */
+    htri_t is_dcpl = false; /* Whether the creation property list is (or is derived from) a dataset creation property list */
+    htri_t is_fcpl = false; /* Whether the creation property list is (or is derived from) a file creation property list */
+    htri_t is_gcpl = false; /* Whether the creation property list is (or is derived from) a group creation property list */
+    htri_t is_tcpl = false; /* Whether the creation property list is (or is derived from) a datatype creation property list */
+    htri_t is_ocpl = false; /* Whether the creation property list is (or is derived from) an object creation property list */
     herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
@@ -1546,34 +1542,30 @@ H5CX_set_cpl(hid_t crtpl_id)
     /* Sanity checks */
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != crtpl_id);
-
-    /* Get the property list for the ID */
-    if (NULL == (crtpl = H5I_object_verify(crtpl_id, H5I_GENPROP_LST)))
-        HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "invalid ID for property list");
+    assert(crtpl);
 
     /* Check for dataset creation property */
-    if ((is_dcpl = H5P_class_isa(H5P_CLASS(crtpl), H5P_CLS_DATASET_CREATE_g)) < 0)
+    if ((is_dcpl = H5P_isa_type(crtpl, H5P_TYPE_DATASET_CREATE)) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for dataset creation class");
     else if (!is_dcpl) {
         /* Check for file creation property */
         /* (Must be before group creation property, as the file creation property is a sub-class of it) */
-        if ((is_fcpl = H5P_class_isa(H5P_CLASS(crtpl), H5P_CLS_FILE_CREATE_g)) < 0)
+        if ((is_fcpl = H5P_isa_type(crtpl, H5P_TYPE_FILE_CREATE)) < 0)
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for file creation class");
         else if (!is_fcpl) {
             /* Check for group creation property */
-            if ((is_gcpl = H5P_class_isa(H5P_CLASS(crtpl), H5P_CLS_GROUP_CREATE_g)) < 0)
+            if ((is_gcpl = H5P_isa_type(crtpl, H5P_TYPE_GROUP_CREATE)) < 0)
                 HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for group creation class");
             else if (!is_gcpl) {
                 /* Check for datatype creation property */
-                if ((is_tcpl = H5P_class_isa(H5P_CLASS(crtpl), H5P_CLS_DATATYPE_CREATE_g)) < 0)
+                if ((is_tcpl = H5P_isa_type(crtpl, H5P_TYPE_DATATYPE_CREATE)) < 0)
                     HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for datatype creation class");
                 else if (!is_tcpl) {
                     /* Check for object creation property */
                     /* (Must be last, as other object creation property classes are
                      *      sub-classes of it)
                      */
-                    if ((is_ocpl = H5P_class_isa(H5P_CLASS(crtpl), H5P_CLS_OBJECT_CREATE_g)) < 0)
+                    if ((is_ocpl = H5P_isa_type(crtpl, H5P_TYPE_OBJECT_CREATE)) < 0)
                         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for object creation class");
                     else if (!is_ocpl)
                         HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "unknown creation property class");
@@ -1587,7 +1579,7 @@ H5CX_set_cpl(hid_t crtpl_id)
     H5CX__reset_ocpl(*head);
 
     /* Set object creation property list ID */
-    (*head)->ctx.ocpl_id = crtpl_id;
+    (*head)->ctx.ocpl = crtpl;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -1802,7 +1794,7 @@ H5CX_set_fapl(H5P_genplist_t *fapl)
  *-------------------------------------------------------------------------
  */
 void
-H5CX_set_fcpl(hid_t fcpl_id)
+H5CX_set_fcpl(H5P_genplist_t *fcpl)
 {
     H5CX_node_t **head = NULL; /* Pointer to head of API context list */
 
@@ -1816,7 +1808,7 @@ H5CX_set_fcpl(hid_t fcpl_id)
     H5CX__reset_ocpl(*head);
 
     /* Set the API context's OCPL to a new value */
-    (*head)->ctx.ocpl_id = fcpl_id;
+    (*head)->ctx.ocpl = fcpl;
 
     FUNC_LEAVE_NOAPI_VOID
 } /* end H5CX_set_fcpl() */
@@ -1996,11 +1988,10 @@ H5CX_get_fapl(void)
  *
  *-------------------------------------------------------------------------
  */
-hid_t
+H5P_genplist_t *
 H5CX_get_fcpl(void)
 {
     H5CX_node_t **head    = NULL;            /* Pointer to head of API context list */
-    hid_t         fcpl_id = H5I_INVALID_HID; /* FCPL ID for API operation */
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
@@ -2008,10 +1999,7 @@ H5CX_get_fcpl(void)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    /* Set return value */
-    fcpl_id = (*head)->ctx.ocpl_id;
-
-    FUNC_LEAVE_NOAPI(fcpl_id)
+    FUNC_LEAVE_NOAPI((*head)->ctx.ocpl)
 } /* end H5CX_get_fcpl() */
 
 /*-------------------------------------------------------------------------
@@ -2025,11 +2013,10 @@ H5CX_get_fcpl(void)
  *
  *-------------------------------------------------------------------------
  */
-hid_t
+H5P_genplist_t *
 H5CX_get_ocpl(void)
 {
     H5CX_node_t **head    = NULL;            /* Pointer to head of API context list */
-    hid_t         ocpl_id = H5I_INVALID_HID; /* OCPL ID for API operation */
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
@@ -2037,10 +2024,7 @@ H5CX_get_ocpl(void)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    /* Set return value */
-    ocpl_id = (*head)->ctx.ocpl_id;
-
-    FUNC_LEAVE_NOAPI(ocpl_id)
+    FUNC_LEAVE_NOAPI((*head)->ctx.ocpl)
 } /* end H5CX_get_ocpl() */
 
 /*-------------------------------------------------------------------------
@@ -2131,7 +2115,7 @@ H5CX_get_mpi_comm(MPI_Comm *mpi_comm)
     assert(head && *head);
 
     /* Get the MPI communicator */
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_MPI_PARAMS_COMM_NAME, mpi_comm)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_MPI_PARAMS_COMM_NAME, mpi_comm)
 
     /* Make a copy of the MPI communicator */
     if (H5_mpi_comm_dup((*head)->ctx.fapl_props.mpi_comm, mpi_comm) < 0)
@@ -2163,7 +2147,7 @@ H5CX_peek_mpi_comm(MPI_Comm *mpi_comm)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_MPI_PARAMS_COMM_NAME, mpi_comm)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_MPI_PARAMS_COMM_NAME, mpi_comm)
 
     /* Get the MPI communicator */
     *mpi_comm = (*head)->ctx.fapl_props.mpi_comm;
@@ -2195,7 +2179,7 @@ H5CX_get_mpi_info(MPI_Info *mpi_info)
     assert(head && *head);
 
     /* Get the MPI info object */
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_MPI_PARAMS_INFO_NAME, mpi_info)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_MPI_PARAMS_INFO_NAME, mpi_info)
 
     /* Make a copy of the MPI info object */
     if (H5_mpi_info_dup((*head)->ctx.fapl_props.mpi_info, mpi_info) < 0)
@@ -2227,7 +2211,7 @@ H5CX_peek_mpi_info(MPI_Info *mpi_info)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_MPI_PARAMS_INFO_NAME, mpi_info)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_MPI_PARAMS_INFO_NAME, mpi_info)
 
     /* Get the MPI info object */
     *mpi_info = (*head)->ctx.fapl_props.mpi_info;
@@ -2263,7 +2247,7 @@ H5CX_peek_vol_connector_prop(H5VL_connector_prop_t *vol_connector_prop)
      * H5P_peek instead of H5P_get.  This prevents invocation of the property's
      * library-defined copy callback
      */
-    H5CX_PEEK_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_VOL_CONN_NAME, vol_connector_prop)
+    H5CX_PEEK_PROP_VALID_NEW(fapl, H5F_ACS_VOL_CONN_NAME, vol_connector_prop)
 
     /* Get the VOL connector & info */
     H5MM_memcpy(vol_connector_prop, &(*head)->ctx.fapl_props.vol_connector_prop,
@@ -2299,7 +2283,7 @@ H5CX_peek_driver_prop(H5FD_driver_prop_t *driver_prop)
      * H5P_peek instead of H5P_get.  This prevents invocation of the property's
      * library-defined copy callback
      */
-    H5CX_PEEK_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FILE_DRV_NAME, driver_prop)
+    H5CX_PEEK_PROP_VALID_NEW(fapl, H5F_ACS_FILE_DRV_NAME, driver_prop)
 
     /* Get the VOL connector & info */
     H5MM_memcpy(driver_prop, &(*head)->ctx.fapl_props.driver_prop, sizeof(H5FD_driver_prop_t));
@@ -2333,7 +2317,7 @@ H5CX_peek_driver(void)
      * H5P_peek instead of H5P_get.  This prevents invocation of the property's
      * library-defined copy callback
      */
-    H5CX_PEEK_PROP_VALID_ERR_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FILE_DRV_NAME, driver_prop, NULL)
+    H5CX_PEEK_PROP_VALID_ERR_NEW(fapl, H5F_ACS_FILE_DRV_NAME, driver_prop, NULL)
 
     /* Set the return value */
     ret_value = (*head)->ctx.fapl_props.driver_prop.driver;
@@ -2367,7 +2351,7 @@ H5CX_peek_driver_info(void)
      * H5P_peek instead of H5P_get.  This prevents invocation of the property's
      * library-defined copy callback
      */
-    H5CX_PEEK_PROP_VALID_ERR_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FILE_DRV_NAME, driver_prop, NULL)
+    H5CX_PEEK_PROP_VALID_ERR_NEW(fapl, H5F_ACS_FILE_DRV_NAME, driver_prop, NULL)
 
     /* Set the return value */
     ret_value = (*head)->ctx.fapl_props.driver_prop.driver_info;
@@ -2401,7 +2385,7 @@ H5CX_peek_driver_config_str(void)
      * H5P_peek instead of H5P_get.  This prevents invocation of the property's
      * library-defined copy callback
      */
-    H5CX_PEEK_PROP_VALID_ERR_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FILE_DRV_NAME, driver_prop, NULL)
+    H5CX_PEEK_PROP_VALID_ERR_NEW(fapl, H5F_ACS_FILE_DRV_NAME, driver_prop, NULL)
 
     /* Set the return value */
     ret_value = (*head)->ctx.fapl_props.driver_prop.driver_config_str;
@@ -2436,7 +2420,7 @@ H5CX_peek_file_image_info(H5FD_file_image_info_t *file_image_info)
      * H5P_peek instead of H5P_get.  This prevents invocation of the property's
      * library-defined copy callback
      */
-    H5CX_PEEK_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FILE_IMAGE_INFO_NAME, file_image_info)
+    H5CX_PEEK_PROP_VALID_NEW(fapl, H5F_ACS_FILE_IMAGE_INFO_NAME, file_image_info)
 
     /* Get the VOL connector & info */
     H5MM_memcpy(file_image_info, &(*head)->ctx.fapl_props.file_image_info, sizeof(H5FD_file_image_info_t));
@@ -3488,7 +3472,7 @@ H5CX_get_encoding(H5T_cset_t *encoding)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(lcpl, H5P_LINK_CREATE_DEFAULT, H5P_STRCRT_CHAR_ENCODING_NAME, encoding)
+    H5CX_RETRIEVE_PROP_VALID_NEW(lcpl, H5P_STRCRT_CHAR_ENCODING_NAME, encoding)
 
     /* Get the value */
     *encoding = (*head)->ctx.lcpl_props.encoding;
@@ -3519,7 +3503,7 @@ H5CX_get_intermediate_group(unsigned *crt_intermed_group)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(lcpl, H5P_LINK_CREATE_DEFAULT, H5L_CRT_INTERMEDIATE_GROUP_NAME, intermediate_group)
+    H5CX_RETRIEVE_PROP_VALID_NEW(lcpl, H5L_CRT_INTERMEDIATE_GROUP_NAME, intermediate_group)
 
     /* Get the value */
     *crt_intermed_group = (*head)->ctx.lcpl_props.intermediate_group;
@@ -3551,7 +3535,7 @@ H5CX_get_lapl_coll_md_read(H5P_coll_md_read_flag_t *coll_md_read)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(lapl, H5P_LINK_ACCESS_DEFAULT, H5_COLL_MD_READ_FLAG_NAME, lapl_coll_md_read)
+    H5CX_RETRIEVE_PROP_VALID_NEW(lapl, H5_COLL_MD_READ_FLAG_NAME, lapl_coll_md_read)
 
     /* Get the value */
     *coll_md_read = (*head)->ctx.lapl_props.lapl_coll_md_read;
@@ -3587,7 +3571,7 @@ H5CX_peek_elink_prefix(const char **elink_prefix)
      * H5P_peek instead of H5P_get.  This prevents invocation of the property's
      * library-defined copy callback
      */
-    H5CX_PEEK_PROP_VALID_NEW(lapl, H5P_LINK_ACCESS_DEFAULT, H5L_ACS_ELINK_PREFIX_NAME, elink_prefix)
+    H5CX_PEEK_PROP_VALID_NEW(lapl, H5L_ACS_ELINK_PREFIX_NAME, elink_prefix)
 
     /* Get the value */
     *elink_prefix = (*head)->ctx.lapl_props.elink_prefix;
@@ -3618,7 +3602,7 @@ H5CX_get_elink_cb_info(H5L_elink_cb_t *elink_cb_info)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(lapl, H5P_LINK_ACCESS_DEFAULT, H5L_ACS_ELINK_CB_NAME, elink_cb_info)
+    H5CX_RETRIEVE_PROP_VALID_NEW(lapl, H5L_ACS_ELINK_CB_NAME, elink_cb_info)
 
     /* Get the value */
     *elink_cb_info = (*head)->ctx.lapl_props.elink_cb_info;
@@ -3650,7 +3634,7 @@ H5CX_peek_elink_fapl(H5P_genplist_t **elink_fapl)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_PEEK_PROP_VALID_NEW(lapl, H5P_LINK_ACCESS_DEFAULT, H5L_ACS_ELINK_FAPL_NAME, elink_fapl)
+    H5CX_PEEK_PROP_VALID_NEW(lapl, H5L_ACS_ELINK_FAPL_NAME, elink_fapl)
 
     /* Get the value */
     *elink_fapl = (*head)->ctx.lapl_props.elink_fapl;
@@ -3681,7 +3665,7 @@ H5CX_get_elink_flags(unsigned *elink_flags)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(lapl, H5P_LINK_ACCESS_DEFAULT, H5L_ACS_ELINK_FLAGS_NAME, elink_flags)
+    H5CX_RETRIEVE_PROP_VALID_NEW(lapl, H5L_ACS_ELINK_FLAGS_NAME, elink_flags)
 
     /* Get the value */
     *elink_flags = (*head)->ctx.lapl_props.elink_flags;
@@ -3712,7 +3696,7 @@ H5CX_get_nlinks(size_t *nlinks)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(lapl, H5P_LINK_ACCESS_DEFAULT, H5L_ACS_NLINKS_NAME, nlinks)
+    H5CX_RETRIEVE_PROP_VALID_NEW(lapl, H5L_ACS_NLINKS_NAME, nlinks)
 
     /* Get the value */
     *nlinks = (*head)->ctx.lapl_props.nlinks;
@@ -3770,8 +3754,8 @@ H5CX_get_libver_bounds(H5F_libver_t *low_bound, H5F_libver_t *high_bound)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_LIBVER_LOW_BOUND_NAME, low_bound)
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_LIBVER_HIGH_BOUND_NAME, high_bound)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_LIBVER_LOW_BOUND_NAME, low_bound)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_LIBVER_HIGH_BOUND_NAME, high_bound)
 
     /* Get the values */
     *low_bound  = (*head)->ctx.fapl_props.low_bound;
@@ -3803,7 +3787,7 @@ H5CX_get_use_file_locking(bool *use_file_locking)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_USE_FILE_LOCKING_NAME, use_file_locking)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_USE_FILE_LOCKING_NAME, use_file_locking)
 
     /* Get the value */
     *use_file_locking = (*head)->ctx.fapl_props.use_file_locking;
@@ -3834,7 +3818,7 @@ H5CX_get_ignore_disabled_locks(bool *ignore_disabled_locks)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_IGNORE_DISABLED_FILE_LOCKS_NAME, ignore_disabled_locks)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_IGNORE_DISABLED_FILE_LOCKS_NAME, ignore_disabled_locks)
 
     /* Get the value */
     *ignore_disabled_locks = (*head)->ctx.fapl_props.ignore_disabled_locks;
@@ -3866,8 +3850,8 @@ H5CX_get_alignment(hsize_t *align_bound, hsize_t *align_threshold)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_ALIGN_NAME, align_bound)
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_ALIGN_THRHD_NAME, align_threshold)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_ALIGN_NAME, align_bound)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_ALIGN_THRHD_NAME, align_threshold)
 
     /* Get the values */
     *align_bound     = (*head)->ctx.fapl_props.align_bound;
@@ -3899,7 +3883,7 @@ H5CX_test_get_clear_status_flags(bool *clear_status_flags)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_TEST_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_CLEAR_STATUS_FLAGS_NAME, clear_status_flags)
+    H5CX_TEST_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_CLEAR_STATUS_FLAGS_NAME, clear_status_flags)
 
     /* Get the value */
     *clear_status_flags = (*head)->ctx.fapl_props.clear_status_flags;
@@ -3930,7 +3914,7 @@ H5CX_get_gc_ref(unsigned *gc_ref)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_GARBG_COLCT_REF_NAME, gc_ref)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_GARBG_COLCT_REF_NAME, gc_ref)
 
     /* Get the value */
     *gc_ref = (*head)->ctx.fapl_props.gc_ref;
@@ -3961,7 +3945,7 @@ H5CX_get_use_mdc_logging(bool *use_mdc_logging)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_USE_MDC_LOGGING_NAME, use_mdc_logging)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_USE_MDC_LOGGING_NAME, use_mdc_logging)
 
     /* Get the value */
     *use_mdc_logging = (*head)->ctx.fapl_props.use_mdc_logging;
@@ -3992,7 +3976,7 @@ H5CX_peek_mdc_log_location(char **mdc_log_location)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_PEEK_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_MDC_LOG_LOCATION_NAME, mdc_log_location)
+    H5CX_PEEK_PROP_VALID_NEW(fapl, H5F_ACS_MDC_LOG_LOCATION_NAME, mdc_log_location)
 
     /* Get the value */
     *mdc_log_location = (*head)->ctx.fapl_props.mdc_log_location;
@@ -4023,8 +4007,7 @@ H5CX_get_start_mdc_logging_on_access(bool *start_mdc_logging_on_access)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_START_MDC_LOG_ON_ACCESS_NAME,
-                                 start_mdc_logging_on_access)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_START_MDC_LOG_ON_ACCESS_NAME, start_mdc_logging_on_access)
 
     /* Get the value */
     *start_mdc_logging_on_access = (*head)->ctx.fapl_props.start_mdc_logging_on_access;
@@ -4055,8 +4038,7 @@ H5CX_get_metadata_read_attempts(unsigned *mdc_read_attempts)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_METADATA_READ_ATTEMPTS_NAME,
-                                 mdc_read_attempts)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_METADATA_READ_ATTEMPTS_NAME, mdc_read_attempts)
 
     /* Get the value */
     *mdc_read_attempts = (*head)->ctx.fapl_props.mdc_read_attempts;
@@ -4087,8 +4069,7 @@ H5CX_get_meta_alloc_block_size(hsize_t *meta_alloc_block_size)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_META_BLOCK_SIZE_NAME,
-                                 meta_alloc_block_size)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_META_BLOCK_SIZE_NAME, meta_alloc_block_size)
 
     /* Get the value */
     *meta_alloc_block_size = (*head)->ctx.fapl_props.meta_alloc_block_size;
@@ -4119,8 +4100,7 @@ H5CX_get_mdc_init_config(H5AC_cache_config_t *mdc_init_config)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_META_CACHE_INIT_CONFIG_NAME,
-                                 mdc_init_config)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_META_CACHE_INIT_CONFIG_NAME, mdc_init_config)
 
     /* Get the value */
     H5MM_memcpy(mdc_init_config, &(*head)->ctx.fapl_props.mdc_init_config, sizeof(*mdc_init_config));
@@ -4151,8 +4131,7 @@ H5CX_get_mdc_image_config(H5AC_cache_image_config_t *mdc_image_config)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_META_CACHE_INIT_IMAGE_CONFIG_NAME,
-                                 mdc_image_config)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_META_CACHE_INIT_IMAGE_CONFIG_NAME, mdc_image_config)
 
     /* Get the value */
     H5MM_memcpy(mdc_image_config, &(*head)->ctx.fapl_props.mdc_image_config, sizeof(*mdc_image_config));
@@ -4183,8 +4162,7 @@ H5CX_get_object_flush_strategy(H5F_object_flush_t *object_flush_strategy)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_OBJECT_FLUSH_CB_NAME,
-                                 object_flush_strategy)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_OBJECT_FLUSH_CB_NAME, object_flush_strategy)
 
     /* Get the value */
     H5MM_memcpy(object_flush_strategy, &(*head)->ctx.fapl_props.object_flush_strategy,
@@ -4216,7 +4194,7 @@ H5CX_get_page_buffer_size(size_t *page_buf_size)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_PAGE_BUFFER_SIZE_NAME, pb_size)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_PAGE_BUFFER_SIZE_NAME, pb_size)
 
     /* Get the values */
     *page_buf_size = (*head)->ctx.fapl_props.pb_size;
@@ -4248,8 +4226,8 @@ H5CX_get_page_buffer_percs(unsigned *min_meta_perc, unsigned *min_raw_perc)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_PAGE_BUFFER_MIN_META_PERC_NAME, pb_min_meta_perc)
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_PAGE_BUFFER_MIN_RAW_PERC_NAME, pb_min_raw_perc)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_PAGE_BUFFER_MIN_META_PERC_NAME, pb_min_meta_perc)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_PAGE_BUFFER_MIN_RAW_PERC_NAME, pb_min_raw_perc)
 
     /* Get the values */
     *min_meta_perc = (*head)->ctx.fapl_props.pb_min_meta_perc;
@@ -4283,9 +4261,9 @@ H5CX_get_rdcc_info(size_t *nslots, size_t *nbytes, double *w0)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_DATA_CACHE_NUM_SLOTS_NAME, fapl_rdcc_nslots)
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_DATA_CACHE_BYTE_SIZE_NAME, fapl_rdcc_nbytes)
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_PREEMPT_READ_CHUNKS_NAME, fapl_rdcc_w0)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_DATA_CACHE_NUM_SLOTS_NAME, fapl_rdcc_nslots)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_DATA_CACHE_BYTE_SIZE_NAME, fapl_rdcc_nbytes)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_PREEMPT_READ_CHUNKS_NAME, fapl_rdcc_w0)
 
     /* Get the values */
     *nslots = (*head)->ctx.fapl_props.fapl_rdcc_nslots;
@@ -4319,7 +4297,7 @@ H5CX_get_fapl_coll_md_read(H5P_coll_md_read_flag_t *coll_md_read)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5_COLL_MD_READ_FLAG_NAME, fapl_coll_md_read)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5_COLL_MD_READ_FLAG_NAME, fapl_coll_md_read)
 
     /* Get the value */
     *coll_md_read = (*head)->ctx.fapl_props.fapl_coll_md_read;
@@ -4350,7 +4328,7 @@ H5CX_get_coll_md_write(bool *coll_md_write)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_COLL_MD_WRITE_FLAG_NAME, coll_md_write)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_COLL_MD_WRITE_FLAG_NAME, coll_md_write)
 
     /* Get the value */
     *coll_md_write = (*head)->ctx.fapl_props.coll_md_write;
@@ -4382,7 +4360,7 @@ H5CX_get_sf_ioc_params(H5FD_subfiling_params_t *sf_ioc_params)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_SUBFILING_CONFIG_PROP_NAME, sf_ioc_params)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_SUBFILING_CONFIG_PROP_NAME, sf_ioc_params)
 
     /* Get the value */
     *sf_ioc_params = (*head)->ctx.fapl_props.sf_ioc_params;
@@ -4415,7 +4393,7 @@ H5CX_get_efc_size(unsigned *efc_size)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_EFC_SIZE_NAME, efc_size)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_EFC_SIZE_NAME, efc_size)
 
     /* Get the value */
     *efc_size = (*head)->ctx.fapl_props.efc_size;
@@ -4446,7 +4424,7 @@ H5CX_get_close_degree(H5F_close_degree_t *close_degree)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_CLOSE_DEGREE_NAME, close_degree)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_CLOSE_DEGREE_NAME, close_degree)
 
     /* Get the value */
     *close_degree = (*head)->ctx.fapl_props.close_degree;
@@ -4477,7 +4455,7 @@ H5CX_get_evict_on_close(bool *evict_on_close)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_EVICT_ON_CLOSE_FLAG_NAME, evict_on_close)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_EVICT_ON_CLOSE_FLAG_NAME, evict_on_close)
 
     /* Get the value */
     *evict_on_close = (*head)->ctx.fapl_props.evict_on_close;
@@ -4508,7 +4486,7 @@ H5CX_get_rfic_flags(uint64_t *rfic_flags)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_RFIC_FLAGS_NAME, rfic_flags)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_RFIC_FLAGS_NAME, rfic_flags)
 
     /* Get the value */
     *rfic_flags = (*head)->ctx.fapl_props.rfic_flags;
@@ -4539,7 +4517,7 @@ H5CX_get_sdata_block_size(hsize_t *sdata_block_size)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_SDATA_BLOCK_SIZE_NAME, sdata_block_size)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_SDATA_BLOCK_SIZE_NAME, sdata_block_size)
 
     /* Get the value */
     *sdata_block_size = (*head)->ctx.fapl_props.sdata_block_size;
@@ -4570,7 +4548,7 @@ H5CX_get_sieve_buf_size(size_t *sieve_buf_size)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_SIEVE_BUF_SIZE_NAME, sieve_buf_size)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_SIEVE_BUF_SIZE_NAME, sieve_buf_size)
 
     /* Get the value */
     *sieve_buf_size = (*head)->ctx.fapl_props.sieve_buf_size;
@@ -4601,7 +4579,7 @@ H5CX_get_null_fsm_addr(bool *null_fsm_addr)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_TEST_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_NULL_FSM_ADDR_NAME, null_fsm_addr)
+    H5CX_TEST_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_NULL_FSM_ADDR_NAME, null_fsm_addr)
 
     /* Get the value */
     *null_fsm_addr = (*head)->ctx.fapl_props.null_fsm_addr;
@@ -4632,7 +4610,7 @@ H5CX_get_skip_eof_check(bool *skip_eof_check)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_TEST_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_SKIP_EOF_CHECK_NAME, skip_eof_check)
+    H5CX_TEST_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_SKIP_EOF_CHECK_NAME, skip_eof_check)
 
     /* Get the value */
     *skip_eof_check = (*head)->ctx.fapl_props.skip_eof_check;
@@ -4663,7 +4641,7 @@ H5CX_get_family_to_single(bool *fam_to_single)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_TEST_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FAMILY_TO_SINGLE_NAME, fam_to_single)
+    H5CX_TEST_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_FAMILY_TO_SINGLE_NAME, fam_to_single)
 
     /* Get the value */
     *fam_to_single = (*head)->ctx.fapl_props.fam_to_single;
@@ -4694,7 +4672,7 @@ H5CX_get_family_offset(hsize_t *fam_offset)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FAMILY_OFFSET_NAME, fam_offset)
+    H5CX_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_FAMILY_OFFSET_NAME, fam_offset)
 
     /* Get the value */
     *fam_offset = (*head)->ctx.fapl_props.fam_offset;
@@ -4725,7 +4703,7 @@ H5CX_get_family_newsize(hsize_t *fam_newsize)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_TEST_RETRIEVE_PROP_VALID_NEW(fapl, H5P_FILE_ACCESS_DEFAULT, H5F_ACS_FAMILY_NEWSIZE_NAME, fam_newsize)
+    H5CX_TEST_RETRIEVE_PROP_VALID_NEW(fapl, H5F_ACS_FAMILY_NEWSIZE_NAME, fam_newsize)
 
     /* Get the value */
     *fam_newsize = (*head)->ctx.fapl_props.fam_newsize;
@@ -4756,10 +4734,8 @@ H5CX_get_min_dset_hdr(bool *min_dset_hdr)
     assert(min_dset_hdr);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, dcpl, H5P_OBJECT_CREATE_DEFAULT, H5D_CRT_MIN_DSET_HDR_SIZE_NAME,
-                                    min_dset_ohdr)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID_NEW(ocpl, dcpl, H5D_CRT_MIN_DSET_HDR_SIZE_NAME, min_dset_ohdr)
 
     /* Get the value */
     *min_dset_hdr = (*head)->ctx.dcpl_props.min_dset_ohdr;
@@ -4790,10 +4766,8 @@ H5CX_get_alloc_time_state(unsigned *alloc_time_state)
     assert(alloc_time_state);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, dcpl, H5P_OBJECT_CREATE_DEFAULT, H5D_CRT_ALLOC_TIME_STATE_NAME,
-                                    alloc_time_state)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID_NEW(ocpl, dcpl, H5D_CRT_ALLOC_TIME_STATE_NAME, alloc_time_state)
 
     /* Get the value */
     *alloc_time_state = (*head)->ctx.dcpl_props.alloc_time_state;
@@ -4823,10 +4797,9 @@ H5CX_get_layout(H5O_layout_t *layout)
     assert(layout);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
-    assert(H5P_isa_class((*head)->ctx.ocpl_id, H5P_DATASET_CREATE));
+    assert(H5P_isa_type((*head)->ctx.ocpl, H5P_TYPE_DATASET_CREATE));
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, dcpl, H5P_OBJECT_CREATE_DEFAULT, H5D_CRT_LAYOUT_NAME, layout)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID_NEW(ocpl, dcpl, H5D_CRT_LAYOUT_NAME, layout)
 
     /* Make copy of layout */
     if (NULL == H5O_msg_copy(H5O_LAYOUT_ID, &(*head)->ctx.dcpl_props.layout, layout))
@@ -4857,9 +4830,8 @@ H5CX_get_efl(H5O_efl_t *efl)
     assert(efl);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, dcpl, H5P_OBJECT_CREATE_DEFAULT, H5D_CRT_EXT_FILE_LIST_NAME, efl)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID_NEW(ocpl, dcpl, H5D_CRT_EXT_FILE_LIST_NAME, efl)
 
     /* Make copy of external file list */
     if (NULL == H5O_msg_copy(H5O_EFL_ID, &(*head)->ctx.dcpl_props.efl, efl))
@@ -4890,10 +4862,8 @@ H5CX_get_fill_value(H5O_fill_t *fill_value)
     assert(fill_value);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, dcpl, H5P_OBJECT_CREATE_DEFAULT, H5D_CRT_FILL_VALUE_NAME,
-                                    fill_value)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID_NEW(ocpl, dcpl, H5D_CRT_FILL_VALUE_NAME, fill_value)
 
     /* Make copy of fill value */
     if (NULL == H5O_msg_copy(H5O_FILL_ID, &(*head)->ctx.dcpl_props.fill_value, fill_value))
@@ -4925,10 +4895,8 @@ H5CX_get_bogus_msg_id(unsigned *bogus_msg_id)
     assert(bogus_msg_id);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_TEST_RETRIEVE_SUBCLS_PROP_VALID(ocpl, dcpl, H5P_OBJECT_CREATE_DEFAULT, H5D_BOGUS_MSG_ID_NAME,
-                                         bogus_msg_id)
+    H5CX_TEST_RETRIEVE_SUBCLS_PROP_VALID_NEW(ocpl, dcpl, H5D_BOGUS_MSG_ID_NAME, bogus_msg_id)
 
     /* Get the value */
     *bogus_msg_id = (*head)->ctx.dcpl_props.bogus_msg_id;
@@ -4958,10 +4926,8 @@ H5CX_get_bogus_msg_flags(uint8_t *bogus_msg_flags)
     assert(bogus_msg_flags);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_TEST_RETRIEVE_SUBCLS_PROP_VALID(ocpl, dcpl, H5P_OBJECT_CREATE_DEFAULT, H5D_BOGUS_MSG_FLAGS_NAME,
-                                         bogus_msg_flags)
+    H5CX_TEST_RETRIEVE_SUBCLS_PROP_VALID_NEW(ocpl, dcpl, H5D_BOGUS_MSG_FLAGS_NAME, bogus_msg_flags)
 
     /* Get the value */
     *bogus_msg_flags = (*head)->ctx.dcpl_props.bogus_msg_flags;
@@ -4992,9 +4958,8 @@ H5CX_get_ginfo(H5O_ginfo_t *ginfo)
     assert(ginfo);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, gcpl, H5P_OBJECT_CREATE_DEFAULT, H5G_CRT_GROUP_INFO_NAME, ginfo)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID_NEW(ocpl, gcpl, H5G_CRT_GROUP_INFO_NAME, ginfo)
 
     /* Get the value */
     *ginfo = (*head)->ctx.gcpl_props.ginfo;
@@ -5024,9 +4989,8 @@ H5CX_get_linfo(H5O_linfo_t *linfo)
     assert(linfo);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, gcpl, H5P_OBJECT_CREATE_DEFAULT, H5G_CRT_LINK_INFO_NAME, linfo)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID_NEW(ocpl, gcpl, H5G_CRT_LINK_INFO_NAME, linfo)
 
     /* Get the value */
     *linfo = (*head)->ctx.gcpl_props.linfo;
@@ -5056,10 +5020,8 @@ H5CX_get_userblock_size(hsize_t *userblock_size)
     assert(userblock_size);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_USER_BLOCK_NAME,
-                                    userblock_size)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID_NEW(ocpl, fcpl, H5F_CRT_USER_BLOCK_NAME, userblock_size)
 
     /* Get the value */
     *userblock_size = (*head)->ctx.fcpl_props.userblock_size;
@@ -5089,10 +5051,8 @@ H5CX_get_sizeof_addr(uint8_t *sizeof_addr)
     assert(sizeof_addr);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_ADDR_BYTE_NUM_NAME,
-                                    sizeof_addr)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID_NEW(ocpl, fcpl, H5F_CRT_ADDR_BYTE_NUM_NAME, sizeof_addr)
 
     /* Get the value */
     *sizeof_addr = (*head)->ctx.fcpl_props.sizeof_addr;
@@ -5122,10 +5082,8 @@ H5CX_get_sizeof_size(uint8_t *sizeof_size)
     assert(sizeof_size);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_OBJ_BYTE_NUM_NAME,
-                                    sizeof_size)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID_NEW(ocpl, fcpl, H5F_CRT_OBJ_BYTE_NUM_NAME, sizeof_size)
 
     /* Get the value */
     *sizeof_size = (*head)->ctx.fcpl_props.sizeof_size;
@@ -5155,9 +5113,8 @@ H5CX_get_sym_leaf_k(unsigned *sym_leaf_k)
     assert(sym_leaf_k);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_SYM_LEAF_NAME, sym_leaf_k)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID_NEW(ocpl, fcpl, H5F_CRT_SYM_LEAF_NAME, sym_leaf_k)
 
     /* Get the value */
     *sym_leaf_k = (*head)->ctx.fcpl_props.sym_leaf_k;
@@ -5187,9 +5144,8 @@ H5CX_get_btree_k(unsigned *btree_k)
     assert(btree_k);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_BTREE_RANK_NAME, btree_k)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID_NEW(ocpl, fcpl, H5F_CRT_BTREE_RANK_NAME, btree_k)
 
     /* Get the value */
     memcpy(btree_k, (*head)->ctx.fcpl_props.btree_k, H5B_NUM_BTREE_ID * sizeof(unsigned));
@@ -5219,10 +5175,8 @@ H5CX_get_file_space_page_size(hsize_t *fs_page_size)
     assert(fs_page_size);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_FILE_SPACE_PAGE_SIZE_NAME,
-                                    fs_page_size)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID_NEW(ocpl, fcpl, H5F_CRT_FILE_SPACE_PAGE_SIZE_NAME, fs_page_size)
 
     /* Get the value */
     *fs_page_size = (*head)->ctx.fcpl_props.fs_page_size;
@@ -5252,10 +5206,8 @@ H5CX_get_file_space_strategy(H5F_fspace_strategy_t *fs_strategy)
     assert(fs_strategy);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_FILE_SPACE_STRATEGY_NAME,
-                                    fs_strategy)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID_NEW(ocpl, fcpl, H5F_CRT_FILE_SPACE_STRATEGY_NAME, fs_strategy)
 
     /* Get the value */
     *fs_strategy = (*head)->ctx.fcpl_props.fs_strategy;
@@ -5285,10 +5237,8 @@ H5CX_get_file_space_persist(bool *fs_persist)
     assert(fs_persist);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_FREE_SPACE_PERSIST_NAME,
-                                    fs_persist)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID_NEW(ocpl, fcpl, H5F_CRT_FREE_SPACE_PERSIST_NAME, fs_persist)
 
     /* Get the value */
     *fs_persist = (*head)->ctx.fcpl_props.fs_persist;
@@ -5318,10 +5268,8 @@ H5CX_get_file_space_threshold(hsize_t *fs_threshold)
     assert(fs_threshold);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_FREE_SPACE_THRESHOLD_NAME,
-                                    fs_threshold)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID_NEW(ocpl, fcpl, H5F_CRT_FREE_SPACE_THRESHOLD_NAME, fs_threshold)
 
     /* Get the value */
     *fs_threshold = (*head)->ctx.fcpl_props.fs_threshold;
@@ -5351,10 +5299,8 @@ H5CX_get_shared_mesg_nindexes(unsigned *sohm_nindexes)
     assert(sohm_nindexes);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_SHMSG_NINDEXES_NAME,
-                                    sohm_nindexes)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID_NEW(ocpl, fcpl, H5F_CRT_SHMSG_NINDEXES_NAME, sohm_nindexes)
 
     /* Get the value */
     *sohm_nindexes = (*head)->ctx.fcpl_props.sohm_nindexes;
@@ -5384,10 +5330,8 @@ H5CX_get_shared_mesg_btree_min(unsigned *shmsg_btree_min)
     assert(shmsg_btree_min);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_SHMSG_BTREE_MIN_NAME,
-                                    shmsg_btree_min)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID_NEW(ocpl, fcpl, H5F_CRT_SHMSG_BTREE_MIN_NAME, shmsg_btree_min)
 
     /* Get the value */
     *shmsg_btree_min = (*head)->ctx.fcpl_props.shmsg_btree_min;
@@ -5417,10 +5361,8 @@ H5CX_get_shared_mesg_list_max(unsigned *shmsg_list_max)
     assert(shmsg_list_max);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_SHMSG_LIST_MAX_NAME,
-                                    shmsg_list_max)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID_NEW(ocpl, fcpl, H5F_CRT_SHMSG_LIST_MAX_NAME, shmsg_list_max)
 
     /* Get the value */
     *shmsg_list_max = (*head)->ctx.fcpl_props.shmsg_list_max;
@@ -5450,14 +5392,11 @@ H5CX_get_shared_mesg_index_types(unsigned *shmsg_index_types)
     assert(shmsg_index_types);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_SHMSG_INDEX_TYPES_NAME,
-                                    shmsg_index_types)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID_NEW(ocpl, fcpl, H5F_CRT_SHMSG_INDEX_TYPES_NAME, shmsg_index_types)
 
     /* Get the value */
-    memcpy(shmsg_index_types, (*head)->ctx.fcpl_props.shmsg_index_types,
-           H5O_SHMESG_MAX_NINDEXES * sizeof(unsigned));
+    memcpy(shmsg_index_types, (*head)->ctx.fcpl_props.shmsg_index_types, H5O_SHMESG_MAX_NINDEXES * sizeof(unsigned));
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -5484,14 +5423,11 @@ H5CX_get_shared_mesg_index_min_sizes(unsigned *shmsg_index_min_sizes)
     assert(shmsg_index_min_sizes);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5P_OBJECT_CREATE_DEFAULT, H5F_CRT_SHMSG_INDEX_MINSIZE_NAME,
-                                    shmsg_index_min_sizes)
+    H5CX_RETRIEVE_SUBCLS_PROP_VALID_NEW(ocpl, fcpl, H5F_CRT_SHMSG_INDEX_MINSIZE_NAME, shmsg_index_min_sizes)
 
     /* Get the value */
-    memcpy(shmsg_index_min_sizes, (*head)->ctx.fcpl_props.shmsg_index_min_sizes,
-           H5O_SHMESG_MAX_NINDEXES * sizeof(unsigned));
+    memcpy(shmsg_index_min_sizes, (*head)->ctx.fcpl_props.shmsg_index_min_sizes, H5O_SHMESG_MAX_NINDEXES * sizeof(unsigned));
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -6645,9 +6581,8 @@ H5CX_get_bad_mesg_count(bool *bad_mesg_count)
     assert(bad_mesg_count);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(ocpl, H5P_OBJECT_CREATE_DEFAULT, H5O_CRT_BAD_MESG_COUNT_NAME, bad_mesg_count)
+    H5CX_RETRIEVE_PROP_VALID_NEW(ocpl, H5O_CRT_BAD_MESG_COUNT_NAME, bad_mesg_count)
 
     /* Get the value */
     *bad_mesg_count = (*head)->ctx.ocpl_props.bad_mesg_count;
@@ -6678,9 +6613,8 @@ H5CX_get_attr_max_compact(unsigned *attr_max_compact)
     assert(attr_max_compact);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(ocpl, H5P_OBJECT_CREATE_DEFAULT, H5O_CRT_ATTR_MAX_COMPACT_NAME, attr_max_compact)
+    H5CX_RETRIEVE_PROP_VALID_NEW(ocpl, H5O_CRT_ATTR_MAX_COMPACT_NAME, attr_max_compact)
 
     /* Get the value */
     *attr_max_compact = (*head)->ctx.ocpl_props.attr_max_compact;
@@ -6710,9 +6644,8 @@ H5CX_get_attr_min_dense(unsigned *attr_min_dense)
     assert(attr_min_dense);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(ocpl, H5P_OBJECT_CREATE_DEFAULT, H5O_CRT_ATTR_MIN_DENSE_NAME, attr_min_dense)
+    H5CX_RETRIEVE_PROP_VALID_NEW(ocpl, H5O_CRT_ATTR_MIN_DENSE_NAME, attr_min_dense)
 
     /* Get the value */
     *attr_min_dense = (*head)->ctx.ocpl_props.attr_min_dense;
@@ -6742,9 +6675,8 @@ H5CX_get_ohdr_flags(uint8_t *ohdr_flags)
     assert(ohdr_flags);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(ocpl, H5P_OBJECT_CREATE_DEFAULT, H5O_CRT_OHDR_FLAGS_NAME, ohdr_flags)
+    H5CX_RETRIEVE_PROP_VALID_NEW(ocpl, H5O_CRT_OHDR_FLAGS_NAME, ohdr_flags)
 
     /* Get the value */
     *ohdr_flags = (*head)->ctx.ocpl_props.ohdr_flags;
@@ -6774,9 +6706,8 @@ H5CX_peek_pline(H5O_pline_t *pline)
     assert(pline);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(ocpl, H5P_OBJECT_CREATE_DEFAULT, H5O_CRT_PIPELINE_NAME, pline)
+    H5CX_RETRIEVE_PROP_VALID_NEW(ocpl, H5O_CRT_PIPELINE_NAME, pline)
 
     /* Get the value */
     *pline = (*head)->ctx.ocpl_props.pline;
@@ -6806,9 +6737,8 @@ H5CX_get_pline(H5O_pline_t *pline)
     assert(pline);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.ocpl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(ocpl, H5P_OBJECT_CREATE_DEFAULT, H5O_CRT_PIPELINE_NAME, pline)
+    H5CX_RETRIEVE_PROP_VALID_NEW(ocpl, H5O_CRT_PIPELINE_NAME, pline)
 
     /* Make copy of filter pipeline */
     if (NULL == H5O_msg_copy(H5O_PLINE_ID, &(*head)->ctx.ocpl_props.pline, pline))
@@ -6831,7 +6761,6 @@ bool
 H5CX_is_def_ocpl(void)
 {
     H5CX_node_t **head        = NULL;  /* Pointer to head of API context list */
-    bool          is_def_ocpl = false; /* Flag to indicate OCPL is default */
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
@@ -6839,15 +6768,7 @@ H5CX_is_def_ocpl(void)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    /* Set return value */
-    is_def_ocpl = ((*head)->ctx.ocpl_id == H5P_LST_FILE_CREATE_ID_g ||
-                   (*head)->ctx.ocpl_id == H5P_LST_DATASET_CREATE_ID_g ||
-                   (*head)->ctx.ocpl_id == H5P_LST_GROUP_CREATE_ID_g ||
-                   (*head)->ctx.ocpl_id == H5P_LST_DATATYPE_CREATE_ID_g ||
-                   (*head)->ctx.ocpl_id == H5P_LST_MAP_CREATE_ID_g ||
-                   (*head)->ctx.ocpl_id == H5P_LST_OBJECT_CREATE_ID_g);
-
-    FUNC_LEAVE_NOAPI(is_def_ocpl)
+    FUNC_LEAVE_NOAPI(H5P_PLIST_IS_DEFAULT((*head)->ctx.ocpl))
 } /* end H5CX_is_def_ocpl() */
 
 /*-------------------------------------------------------------------------
@@ -6882,9 +6803,6 @@ H5CX__reset_ocpl(H5CX_node_t *head)
     memset(&head->ctx.fcpl_flags, 0, sizeof(head->ctx.fcpl_flags));
     memset(&head->ctx.gcpl_flags, 0, sizeof(head->ctx.gcpl_flags));
     memset(&head->ctx.ocpl_flags, 0, sizeof(head->ctx.ocpl_flags));
-
-    /* Retrieve the OCPL pointer again also */
-    head->ctx.ocpl = NULL;
 
     FUNC_LEAVE_NOAPI_VOID
 } /* end H5CX__reset_ocpl() */
@@ -6941,8 +6859,7 @@ H5CX_peek_comm_dtype_merge_list(H5O_copy_dtype_merge_list_t **comm_dtype_merge_l
      * H5P_peek instead of H5P_get.  This prevents invocation of the property's
      * library-defined copy callback
      */
-    H5CX_PEEK_PROP_VALID_NEW(ocpypl, H5P_OBJECT_COPY_DEFAULT, H5O_CPY_MERGE_COMM_DT_LIST_NAME,
-                             comm_dtype_merge_list)
+    H5CX_PEEK_PROP_VALID_NEW(ocpypl, H5O_CPY_MERGE_COMM_DT_LIST_NAME, comm_dtype_merge_list)
 
     /* Get the value */
     *comm_dtype_merge_list = (*head)->ctx.ocpypl_props.comm_dtype_merge_list;
@@ -6973,7 +6890,7 @@ H5CX_get_mcdt_search_cb(H5O_mcdt_cb_info_t *mcdt_cb_info)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(ocpypl, H5P_OBJECT_COPY_DEFAULT, H5O_CPY_MCDT_SEARCH_CB_NAME, mcdt_cb_info)
+    H5CX_RETRIEVE_PROP_VALID_NEW(ocpypl, H5O_CPY_MCDT_SEARCH_CB_NAME, mcdt_cb_info)
 
     /* Get the value */
     *mcdt_cb_info = (*head)->ctx.ocpypl_props.mcdt_cb_info;
@@ -7004,7 +6921,7 @@ H5CX_get_cpy_options(unsigned *cpy_options)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    H5CX_RETRIEVE_PROP_VALID_NEW(ocpypl, H5P_OBJECT_COPY_DEFAULT, H5O_CPY_OPTION_NAME, cpy_options)
+    H5CX_RETRIEVE_PROP_VALID_NEW(ocpypl, H5O_CPY_OPTION_NAME, cpy_options)
 
     /* Get the value */
     *cpy_options = (*head)->ctx.ocpypl_props.cpy_options;
@@ -7070,11 +6987,11 @@ H5CX_pop(bool update_dxpl_props)
      */
     if (H5P_DATASET_ACCESS_DEFAULT != (*head)->ctx.dapl_id)
         H5CX__reset_dapl(*head);
-    if ((*head)->ctx.lapl)
+    if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.lapl))
         H5CX__reset_lapl(*head);
-    if (H5P_OBJECT_CREATE_DEFAULT != (*head)->ctx.ocpl_id)
+    if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.ocpl))
         H5CX__reset_ocpl(*head);
-    if ((*head)->ctx.fapl)
+    if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.fapl))
         H5CX__reset_fapl(*head);
 
     /* Pop the top context node from the stack */
