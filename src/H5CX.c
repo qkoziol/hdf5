@@ -1028,7 +1028,7 @@ H5CX_push(H5CX_node_t *cnode)
     cnode->ctx.lapl      = H5P_LST_LINK_ACCESS_g;
     cnode->ctx.lcpl      = H5P_LST_LINK_CREATE_g;
     cnode->ctx.ocpl      = H5P_LST_OBJECT_CREATE_g;
-    cnode->ctx.acpl_id   = H5P_ATTRIBUTE_CREATE_DEFAULT;
+    cnode->ctx.acpl      = H5P_LST_ATTRIBUTE_CREATE_g;
     cnode->ctx.ocpypl    = H5P_LST_OBJECT_COPY_g;
     cnode->ctx.dapl_id   = H5P_DATASET_ACCESS_DEFAULT;
     cnode->ctx.fapl      = H5P_LST_FILE_ACCESS_g;
@@ -1424,9 +1424,6 @@ H5CX__reset_lcpl(H5CX_node_t *head)
     /* Reset the LCPL flags to force the properties to be retrieved again */
     memset(&head->ctx.lcpl_flags, 0, sizeof(head->ctx.lcpl_flags));
 
-    /* Retrieve the LCPL pointer again also */
-    head->ctx.lcpl    = NULL;
-
     FUNC_LEAVE_NOAPI_VOID
 } /* end H5CX__reset_lcpl() */
 
@@ -1480,10 +1477,6 @@ H5CX__reset_acpl(H5CX_node_t *head)
     /* Reset the ACPL flags to force the properties to be retrieved again */
     memset(&head->ctx.acpl_flags, 0, sizeof(head->ctx.acpl_flags));
 
-    /* Retrieve the ACPL pointer again also */
-    head->ctx.acpl    = NULL;
-    head->ctx.acpl_id = H5P_ATTRIBUTE_CREATE_DEFAULT;
-
     FUNC_LEAVE_NOAPI_VOID
 } /* end H5CX__reset_acpl() */
 
@@ -1497,7 +1490,7 @@ H5CX__reset_acpl(H5CX_node_t *head)
  *-------------------------------------------------------------------------
  */
 void
-H5CX_set_acpl(hid_t acpl_id)
+H5CX_set_acpl(H5P_genplist_t *acpl)
 {
     H5CX_node_t **head = NULL; /* Pointer to head of API context list */
 
@@ -1506,13 +1499,13 @@ H5CX_set_acpl(hid_t acpl_id)
     /* Sanity check */
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != acpl_id);
+    assert(acpl);
 
     /* Reset the cached data */
     H5CX__reset_acpl(*head);
 
     /* Set the API context's ACPL to a new value */
-    (*head)->ctx.acpl_id = acpl_id;
+    (*head)->ctx.acpl = acpl;
 
     FUNC_LEAVE_NOAPI_VOID
 } /* end H5CX_set_acpl() */
@@ -1746,9 +1739,6 @@ H5CX__reset_fapl(H5CX_node_t *head)
 
     /* Reset the FAPL flags to force the properties to be retrieved again */
     memset(&head->ctx.fapl_flags, 0, sizeof(head->ctx.fapl_flags));
-
-    /* Retrieve the FAPL pointer again also */
-    head->ctx.fapl    = NULL;
 
     FUNC_LEAVE_NOAPI_VOID
 } /* end H5CX__reset_fapl() */
@@ -3725,9 +3715,6 @@ H5CX__reset_lapl(H5CX_node_t *head)
     /* Reset the LAPL flags to force the properties to be retrieved again */
     memset(&head->ctx.lapl_flags, 0, sizeof(head->ctx.lapl_flags));
 
-    /* Reset the LAPL pointer */
-    head->ctx.lapl    = NULL;
-
     FUNC_LEAVE_NOAPI_VOID
 } /* end H5CX__reset_lapl() */
 
@@ -5454,9 +5441,8 @@ H5CX_get_attr_encoding(H5T_cset_t *attr_encoding)
     assert(attr_encoding);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.acpl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(acpl, H5P_ATTRIBUTE_CREATE_DEFAULT, H5P_STRCRT_CHAR_ENCODING_NAME, attr_encoding)
+    H5CX_RETRIEVE_PROP_VALID_NEW(acpl, H5P_STRCRT_CHAR_ENCODING_NAME, attr_encoding)
 
     /* Get the value */
     *attr_encoding = (*head)->ctx.acpl_props.attr_encoding;

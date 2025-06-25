@@ -229,18 +229,16 @@ H5Acreate2(hid_t loc_id, const char *attr_name, hid_t type_id, hid_t space_id, h
     /* Get the pointer to the attribute creation property list */
     if (NULL == (acpl = H5P_object_verify(acpl_id, H5P_TYPE_ATTRIBUTE_CREATE, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute creation property list");
-    acpl_id = H5P_PLIST_ID(acpl); /* Allow for application passing H5P_DEFAULT */
 
     /* Get the pointer to the attribute access property list */
     if (NULL == (aapl = H5P_object_verify(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute access property list");
 
     /* Set the ACPL for the API context */
-    H5CX_set_acpl(acpl_id);
+    H5CX_set_acpl(acpl);
 
     /* Create the attribute synchronously */
-    if ((ret_value = H5A__create_api_common(loc_id, attr_name, type_id, space_id, acpl, aapl, NULL, NULL)) <
-        0)
+    if ((ret_value = H5A__create_api_common(loc_id, attr_name, type_id, space_id, acpl, aapl, NULL, NULL)) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTCREATE, H5I_INVALID_HID, "unable to synchronously create attribute");
 
 done:
@@ -274,29 +272,27 @@ H5Acreate_async(const char *app_file, const char *app_func, unsigned app_line, h
     /* Get the pointer to the attribute creation property list */
     if (NULL == (acpl = H5P_object_verify(acpl_id, H5P_TYPE_ATTRIBUTE_CREATE, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute creation property list");
-    acpl_id = H5P_PLIST_ID(acpl); /* Allow for application passing H5P_DEFAULT */
 
     /* Get the pointer to the attribute access property list */
     if (NULL == (aapl = H5P_object_verify(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute access property list");
 
     /* Set the ACPL for the API context */
-    H5CX_set_acpl(acpl_id);
+    H5CX_set_acpl(acpl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Create the attribute asynchronously */
-    if ((ret_value = H5A__create_api_common(loc_id, attr_name, type_id, space_id, acpl, aapl, token_ptr,
-                                            &vol_obj)) < 0)
+    if ((ret_value = H5A__create_api_common(loc_id, attr_name, type_id, space_id, acpl, aapl, token_ptr, &vol_obj)) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTCREATE, H5I_INVALID_HID, "unable to asynchronously create attribute");
 
     /* If a token was created, add the token to the event set */
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE10(__func__, "*s*sIui*siiiii", app_file, app_func, app_line, loc_id, attr_name, type_id, space_id, acpl_id, aapl_id, es_id)) < 0) {
+                        H5ARG_TRACE10(__func__, "*s*sIui*siiiii", app_file, app_func, app_line, loc_id, attr_name, type_id, space_id, H5P_PLIST_ID(acpl), H5P_PLIST_ID(aapl), es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref(ret_value) < 0)
                 HDONE_ERROR(H5E_ATTR, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on attribute ID");
@@ -404,13 +400,12 @@ H5Acreate_by_name(hid_t loc_id, const char *obj_name, const char *attr_name, hid
     /* Get the pointer to the attribute creation property list */
     if (NULL == (acpl = H5P_object_verify(acpl_id, H5P_TYPE_ATTRIBUTE_CREATE, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute creation property list");
-    acpl_id = H5P_PLIST_ID(acpl); /* Allow for application passing H5P_DEFAULT */
     /* Get the pointer to the attribute access property list */
     if (NULL == (aapl = H5P_object_verify(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute access property list");
 
     /* Set the ACPL for the API context */
-    H5CX_set_acpl(acpl_id);
+    H5CX_set_acpl(acpl);
 
     /* Create the attribute synchronously */
     if ((ret_value = H5A__create_by_name_api_common(loc_id, obj_name, attr_name, type_id, space_id, acpl,
@@ -453,14 +448,13 @@ H5Acreate_by_name_async(const char *app_file, const char *app_func, unsigned app
     /* Get the pointer to the attribute creation property list */
     if (NULL == (acpl = H5P_object_verify(acpl_id, H5P_TYPE_ATTRIBUTE_CREATE, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute creation property list");
-    acpl_id = H5P_PLIST_ID(acpl); /* Allow for application passing H5P_DEFAULT */
 
     /* Get the pointer to the attribute access property list */
     if (NULL == (aapl = H5P_object_verify(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute access property list");
 
     /* Set the ACPL for the API context */
-    H5CX_set_acpl(acpl_id);
+    H5CX_set_acpl(acpl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -475,7 +469,7 @@ H5Acreate_by_name_async(const char *app_file, const char *app_func, unsigned app
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE12(__func__, "*s*sIui*s*siiiiii", app_file, app_func, app_line, loc_id, obj_name, attr_name, type_id, space_id, acpl_id, aapl_id, lapl_id, es_id)) < 0) {
+                        H5ARG_TRACE12(__func__, "*s*sIui*s*siiiiii", app_file, app_func, app_line, loc_id, obj_name, attr_name, type_id, space_id, H5P_PLIST_ID(acpl), H5P_PLIST_ID(aapl), H5P_PLIST_ID(lapl), es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref(ret_value) < 0)
                 HDONE_ERROR(H5E_ATTR, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on attribute ID");

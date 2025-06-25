@@ -539,7 +539,6 @@ typedef struct H5CX_t {
     H5P_genplist_t *ocpl;    /* Object Creation Property List */
 
     /* ACPL */
-    hid_t           acpl_id; /* ACPL ID for API operation */
     H5P_genplist_t *acpl;    /* Attribute Creation Property List */
 
     /* OCPYPL */
@@ -657,7 +656,7 @@ H5_DLL herr_t H5CX_free_state(H5CX_state_t *api_state);
 H5_DLL herr_t H5CX_set_cpl(H5P_genplist_t *crtpl);
 H5_DLL herr_t H5CX_set_dxpl(hid_t dxpl_id);
 H5_DLL void   H5CX_set_lcpl(H5P_genplist_t *lcpl);
-H5_DLL void   H5CX_set_acpl(hid_t acpl_id);
+H5_DLL void   H5CX_set_acpl(H5P_genplist_t *acpl);
 H5_DLL herr_t H5CX_set_libver_bounds(H5F_t *f);
 H5_DLL herr_t H5CX_set_apl(H5P_genplist_t *acspl, hid_t loc_id, bool is_collective);
 H5_DLL void   H5CX_set_fapl(H5P_genplist_t *fapl);
