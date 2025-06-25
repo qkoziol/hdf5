@@ -91,7 +91,7 @@ H5T__commit_api_common(hid_t loc_id, const char *name, hid_t type_id, H5P_genpli
                        H5P_genplist_t *tcpl, H5P_genplist_t *tapl, void **token_ptr,
                        H5VL_object_t **_vol_obj_ptr)
 {
-    void           *data = NULL;        /* VOL-managed datatype data */
+    void           *data        = NULL; /* VOL-managed datatype data */
     H5VL_object_t  *new_obj     = NULL; /* VOL object that holds the datatype object and the VOL info */
     H5T_t          *dt          = NULL; /* High level datatype object that wraps the VOL object */
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
@@ -643,7 +643,7 @@ static hid_t
 H5T__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *tapl, void **token_ptr,
                      H5VL_object_t **_vol_obj_ptr)
 {
-    void           *dt = NULL;          /* datatype object created by VOL connector */
+    void           *dt          = NULL; /* datatype object created by VOL connector */
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
         (_vol_obj_ptr ? _vol_obj_ptr : &tmp_vol_obj); /* Ptr to object ptr for loc_id */

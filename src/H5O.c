@@ -1024,7 +1024,7 @@ H5Oexists_by_name(hid_t loc_id, const char *name, hid_t lapl_id)
     H5VL_object_t              *vol_obj;            /* Object of loc_id */
     H5VL_object_specific_args_t vol_cb_args;        /* Arguments to VOL callback */
     H5VL_loc_params_t           loc_params;         /* Location parameters for object access */
-    H5P_genplist_t         *lapl;            /* Link access property list */
+    H5P_genplist_t             *lapl;               /* Link access property list */
     bool                        obj_exists = false; /* Whether object exists */
     htri_t                      ret_value  = FAIL;  /* Return value */
 
@@ -1256,7 +1256,7 @@ H5Oget_info_by_idx3(hid_t loc_id, const char *group_name, H5_index_t idx_type, H
     H5VL_object_t         *vol_obj;     /* Object of loc_id */
     H5VL_object_get_args_t vol_cb_args; /* Arguments to VOL callback */
     H5VL_loc_params_t      loc_params;
-    H5P_genplist_t         *lapl;            /* Link access property list */
+    H5P_genplist_t        *lapl;                /* Link access property list */
     herr_t                 ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1372,7 +1372,7 @@ H5Oget_native_info_by_name(hid_t loc_id, const char *name, H5O_native_info_t *oi
     H5VL_optional_args_t               vol_cb_args;  /* Arguments to VOL callback */
     H5VL_native_object_optional_args_t obj_opt_args; /* Arguments for optional operation */
     H5VL_loc_params_t                  loc_params;
-    H5P_genplist_t         *lapl;            /* Link access property list */
+    H5P_genplist_t                    *lapl;                /* Link access property list */
     herr_t                             ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1438,7 +1438,7 @@ H5Oget_native_info_by_idx(hid_t loc_id, const char *group_name, H5_index_t idx_t
     H5VL_optional_args_t               vol_cb_args;  /* Arguments to VOL callback */
     H5VL_native_object_optional_args_t obj_opt_args; /* Arguments for optional operation */
     H5VL_loc_params_t                  loc_params;
-    H5P_genplist_t         *lapl;            /* Link access property list */
+    H5P_genplist_t                    *lapl;                /* Link access property list */
     herr_t                             ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1561,7 +1561,7 @@ H5Oset_comment_by_name(hid_t loc_id, const char *name, const char *comment, hid_
     H5VL_optional_args_t               vol_cb_args;  /* Arguments to VOL callback */
     H5VL_native_object_optional_args_t obj_opt_args; /* Arguments for optional operation */
     H5VL_loc_params_t                  loc_params;
-    H5P_genplist_t         *lapl;            /* Link access property list */
+    H5P_genplist_t                    *lapl;                /* Link access property list */
     herr_t                             ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1672,7 +1672,7 @@ H5Oget_comment_by_name(hid_t loc_id, const char *name, char *comment /*out*/, si
     H5VL_optional_args_t               vol_cb_args;  /* Arguments to VOL callback */
     H5VL_native_object_optional_args_t obj_opt_args; /* Arguments for optional operation */
     H5VL_loc_params_t                  loc_params;
-    H5P_genplist_t         *lapl;            /* Link access property list */
+    H5P_genplist_t                    *lapl;             /* Link access property list */
     size_t                             comment_len = 0;  /* Length of comment string */
     ssize_t                            ret_value   = -1; /* Return value */
 
@@ -1834,7 +1834,7 @@ H5Ovisit_by_name3(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_it
     H5VL_object_t              *vol_obj;     /* Object of loc_id */
     H5VL_object_specific_args_t vol_cb_args; /* Arguments to VOL callback */
     H5VL_loc_params_t           loc_params;  /* Location parameters for object access */
-    H5P_genplist_t         *lapl;            /* Link access property list */
+    H5P_genplist_t             *lapl;        /* Link access property list */
     herr_t                      ret_value;   /* Return value */
 
     FUNC_ENTER_API(FAIL)

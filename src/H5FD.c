@@ -313,9 +313,9 @@ H5FD_t *
 H5FDopen(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
 {
     H5P_genplist_t *fapl; /* File access property list */
-    H5FD_int_t     *fh          = NULL;
-    H5P_genplist_t *old_fapl = NULL; /* old FAPL in API context */
-    H5FD_t         *ret_value   = NULL;
+    H5FD_int_t     *fh        = NULL;
+    H5P_genplist_t *old_fapl  = NULL; /* old FAPL in API context */
+    H5FD_t         *ret_value = NULL;
 
     FUNC_ENTER_API(NULL)
 
@@ -773,11 +773,11 @@ done:
 herr_t
 H5FDget_vfd_handle(H5FD_t *file, hid_t fapl_id, void **file_handle /*out*/)
 {
-    H5FD_int_t      fh;                            /* Temporary internal file handle */
-    H5FD_driver_t   driver;                        /* Temporary VFD driver */
-    H5P_genplist_t *fapl;                          /* File access property list */
-    H5P_genplist_t *old_fapl = NULL; /* old FAPL in API context */
-    herr_t          ret_value   = SUCCEED;
+    H5FD_int_t      fh;               /* Temporary internal file handle */
+    H5FD_driver_t   driver;           /* Temporary VFD driver */
+    H5P_genplist_t *fapl;             /* File access property list */
+    H5P_genplist_t *old_fapl  = NULL; /* old FAPL in API context */
+    herr_t          ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
 
@@ -1860,9 +1860,9 @@ done:
 herr_t
 H5FDdelete(const char *filename, hid_t fapl_id)
 {
-    H5P_genplist_t *fapl;                          /* File access property list */
-    H5P_genplist_t *old_fapl = NULL; /* old FAPL in API context */
-    herr_t          ret_value   = SUCCEED;
+    H5P_genplist_t *fapl;             /* File access property list */
+    H5P_genplist_t *old_fapl  = NULL; /* old FAPL in API context */
+    herr_t          ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
 

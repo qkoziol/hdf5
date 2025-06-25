@@ -68,14 +68,14 @@
     H5_GLUE3(H5CX_TEST_, TST, _PROP)(PL, MTHD, SUB_PL, PROP_NAME, PROP_FIELD, ERR_RET)
 
 /* Common macro for the duplicated code to retrieve properties from a property list */
-#define H5CX_RETRIEVE_PROP_COMMON(PL, TST, MTHD, SUB_PL, PROP_NAME, PROP_FIELD, ERR_RET)             \
+#define H5CX_RETRIEVE_PROP_COMMON(PL, TST, MTHD, SUB_PL, PROP_NAME, PROP_FIELD, ERR_RET)                     \
     {                                                                                                        \
         /* Check for default property list */                                                                \
-        if (H5P_PLIST_IS_DEFAULT((*head)->ctx.PL)) \
+        if (H5P_PLIST_IS_DEFAULT((*head)->ctx.PL))                                                           \
             H5MM_memcpy(&(*head)->ctx.H5_GLUE(SUB_PL, _props).PROP_FIELD,                                    \
                         &H5_GLUE3(H5CX_def_, SUB_PL, _cache).PROP_FIELD,                                     \
                         sizeof(H5_GLUE3(H5CX_def_, SUB_PL, _cache).PROP_FIELD));                             \
-        else                                                                                                \
+        else                                                                                                 \
             /* Retrieve the property, possibly testing for existence */                                      \
             H5CX_TEST_GET_PROP(PL, TST, MTHD, SUB_PL, PROP_NAME, PROP_FIELD, ERR_RET)                        \
                                                                                                              \
@@ -84,7 +84,7 @@
     }
 
 /* Macro for the duplicated code to retrieve a value from a property list if the context value is invalid */
-#define H5CX_RETRIEVE_PROP_VALID(PL, PROP_NAME, PROP_FIELD)                                          \
+#define H5CX_RETRIEVE_PROP_VALID(PL, PROP_NAME, PROP_FIELD)                                                  \
     /* Check if the value has been retrieved already */                                                      \
     if (!(*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                       \
     H5CX_RETRIEVE_PROP_COMMON(PL, NO, get, PL, PROP_NAME, PROP_FIELD, FAIL)
@@ -92,32 +92,32 @@
 /* Macro for the duplicated code to test for and retrieve a value from a property list if the context value is
  * invalid
  */
-#define H5CX_TEST_RETRIEVE_PROP_VALID(PL, PROP_NAME, PROP_FIELD)                                     \
+#define H5CX_TEST_RETRIEVE_PROP_VALID(PL, PROP_NAME, PROP_FIELD)                                             \
     /* Check if the value has been retrieved already */                                                      \
     if (!(*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                       \
     H5CX_RETRIEVE_PROP_COMMON(PL, YES, get, PL, PROP_NAME, PROP_FIELD, FAIL)
 
 /* Macro for the duplicated code to "peek" a value from a property list if the context value is invalid */
-#define H5CX_PEEK_PROP_VALID(PL, PROP_NAME, PROP_FIELD)                                              \
+#define H5CX_PEEK_PROP_VALID(PL, PROP_NAME, PROP_FIELD)                                                      \
     /* Check if the value has been retrieved already */                                                      \
     if (!(*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                       \
     H5CX_RETRIEVE_PROP_COMMON(PL, NO, peek, PL, PROP_NAME, PROP_FIELD, FAIL)
 
 /* Macro for the duplicated code to "peek" a value from a property list if the context value is invalid */
-#define H5CX_PEEK_PROP_VALID_ERR(PL, PROP_NAME, PROP_FIELD, ERR_RET)                                 \
+#define H5CX_PEEK_PROP_VALID_ERR(PL, PROP_NAME, PROP_FIELD, ERR_RET)                                         \
     /* Check if the value has been retrieved already */                                                      \
     if (!(*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                       \
     H5CX_RETRIEVE_PROP_COMMON(PL, NO, peek, PL, PROP_NAME, PROP_FIELD, ERR_RET)
 
 /* Macro for the duplicated code to retrieve a value from a property list if the context value is invalid */
-#define H5CX_RETRIEVE_SUBCLS_PROP_VALID(PL, SUB_PL, PROP_NAME, PROP_FIELD)                           \
+#define H5CX_RETRIEVE_SUBCLS_PROP_VALID(PL, SUB_PL, PROP_NAME, PROP_FIELD)                                   \
     /* Check if the value has been retrieved already */                                                      \
     if (!(*head)->ctx.H5_GLUE(SUB_PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                   \
     H5CX_RETRIEVE_PROP_COMMON(PL, NO, get, SUB_PL, PROP_NAME, PROP_FIELD, FAIL)
 
 #ifdef H5O_ENABLE_BOGUS
 /* Macro for the duplicated code to retrieve a value from a property list if the context value is invalid */
-#define H5CX_TEST_RETRIEVE_SUBCLS_PROP_VALID(PL, SUB_PL, PROP_NAME, PROP_FIELD)                      \
+#define H5CX_TEST_RETRIEVE_SUBCLS_PROP_VALID(PL, SUB_PL, PROP_NAME, PROP_FIELD)                              \
     /* Check if the value has been retrieved already */                                                      \
     if (!(*head)->ctx.H5_GLUE(SUB_PL, _flags).H5_GLUE(PROP_FIELD, _valid))                                   \
     H5CX_RETRIEVE_PROP_COMMON(PL, YES, get, SUB_PL, PROP_NAME, PROP_FIELD, FAIL)
@@ -125,7 +125,7 @@
 
 /* Macro for the duplicated code to retrieve a value from a property list if the context value is invalid, or
  * the library has previously modified the context value for return */
-#define H5CX_RETRIEVE_PROP_VALID_SET(PL, PROP_NAME, PROP_FIELD)                                      \
+#define H5CX_RETRIEVE_PROP_VALID_SET(PL, PROP_NAME, PROP_FIELD)                                              \
     /* Check if the value has been retrieved already */                                                      \
     if (!((*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _valid) ||                                    \
           (*head)->ctx.H5_GLUE(PL, _flags).H5_GLUE(PROP_FIELD, _set)))                                       \
@@ -133,12 +133,12 @@
 
 #if defined(H5_HAVE_PARALLEL) && defined(H5_HAVE_INSTRUMENTED_LIBRARY)
 /* Macro for the duplicated code to set a context field that may not exist as a property */
-#define H5CX_TEST_SET_PROP_NEW(PROP_NAME, PROP_FIELD)                                                            \
+#define H5CX_TEST_SET_PROP_NEW(PROP_NAME, PROP_FIELD)                                                        \
     {                                                                                                        \
         htri_t check_prop = 0; /* Whether the property exists in the API context's DXPL */                   \
                                                                                                              \
         /* Check if property exists in DXPL */                                                               \
-        if (!(*head)->ctx.dxpl_flags.H5_GLUE(PROP_FIELD, _set))                                             \
+        if (!(*head)->ctx.dxpl_flags.H5_GLUE(PROP_FIELD, _set))                                              \
             if (H5_UNLIKELY((check_prop = H5P_exist_plist((*head)->ctx.dxpl, PROP_NAME)) < 0))               \
                 HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "error checking for property");                  \
                                                                                                              \
@@ -153,10 +153,10 @@
 
 /* Macro for the duplicated code to test and set properties for a property list from the context */
 #define H5CX_SET_PROP(PROP_NAME, PROP_FIELD)                                                                 \
-    if ((*head)->ctx.dxpl_flags.H5_GLUE(PROP_FIELD, _set))                                                  \
+    if ((*head)->ctx.dxpl_flags.H5_GLUE(PROP_FIELD, _set))                                                   \
         /* Set the property */                                                                               \
         if (H5_UNLIKELY(H5P_set((*head)->ctx.dxpl, PROP_NAME, &(*head)->ctx.dxpl_props.PROP_FIELD) < 0))     \
-            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTSET, FAIL, "error setting data xfer property");                 \
+            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTSET, FAIL, "error setting data xfer property");
 
 /******************/
 /* Local Typedefs */
@@ -955,16 +955,16 @@ H5CX_push(H5CX_node_t *cnode)
     assert(head);
 
     /* Set non-zero context info */
-    cnode->ctx.dxpl      = H5P_LST_DATASET_XFER_g;
-    cnode->ctx.lapl      = H5P_LST_LINK_ACCESS_g;
-    cnode->ctx.lcpl      = H5P_LST_LINK_CREATE_g;
-    cnode->ctx.ocpl      = H5P_LST_OBJECT_CREATE_g;
-    cnode->ctx.acpl      = H5P_LST_ATTRIBUTE_CREATE_g;
-    cnode->ctx.ocpypl    = H5P_LST_OBJECT_COPY_g;
-    cnode->ctx.dapl      = H5P_LST_DATASET_ACCESS_g;
-    cnode->ctx.fapl      = H5P_LST_FILE_ACCESS_g;
-    cnode->ctx.tag       = H5AC__INVALID_TAG;
-    cnode->ctx.ring      = H5AC_RING_USER;
+    cnode->ctx.dxpl   = H5P_LST_DATASET_XFER_g;
+    cnode->ctx.lapl   = H5P_LST_LINK_ACCESS_g;
+    cnode->ctx.lcpl   = H5P_LST_LINK_CREATE_g;
+    cnode->ctx.ocpl   = H5P_LST_OBJECT_CREATE_g;
+    cnode->ctx.acpl   = H5P_LST_ATTRIBUTE_CREATE_g;
+    cnode->ctx.ocpypl = H5P_LST_OBJECT_COPY_g;
+    cnode->ctx.dapl   = H5P_LST_DATASET_ACCESS_g;
+    cnode->ctx.fapl   = H5P_LST_FILE_ACCESS_g;
+    cnode->ctx.tag    = H5AC__INVALID_TAG;
+    cnode->ctx.ring   = H5AC_RING_USER;
 
 #ifdef H5_HAVE_PARALLEL
     cnode->ctx.btype = MPI_BYTE;
@@ -1258,7 +1258,7 @@ done:
 bool
 H5CX_is_def_dxpl(void)
 {
-    H5CX_node_t **head        = NULL;  /* Pointer to head of API context list */
+    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
@@ -1304,7 +1304,7 @@ H5CX__reset_dxpl(H5CX_node_t *head)
 void
 H5CX_set_dxpl(H5P_genplist_t *dxpl)
 {
-    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
@@ -1474,12 +1474,17 @@ H5CX_set_acpl(H5P_genplist_t *acpl)
 herr_t
 H5CX_set_cpl(H5P_genplist_t *crtpl)
 {
-    H5CX_node_t   **head  = NULL; /* Pointer to head of API context list */
-    htri_t is_dcpl = false; /* Whether the creation property list is (or is derived from) a dataset creation property list */
-    htri_t is_fcpl = false; /* Whether the creation property list is (or is derived from) a file creation property list */
-    htri_t is_gcpl = false; /* Whether the creation property list is (or is derived from) a group creation property list */
-    htri_t is_tcpl = false; /* Whether the creation property list is (or is derived from) a datatype creation property list */
-    htri_t is_ocpl = false; /* Whether the creation property list is (or is derived from) an object creation property list */
+    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
+    htri_t is_dcpl = false; /* Whether the creation property list is (or is derived from) a dataset creation
+                               property list */
+    htri_t is_fcpl =
+        false; /* Whether the creation property list is (or is derived from) a file creation property list */
+    htri_t is_gcpl =
+        false; /* Whether the creation property list is (or is derived from) a group creation property list */
+    htri_t is_tcpl = false; /* Whether the creation property list is (or is derived from) a datatype creation
+                               property list */
+    htri_t is_ocpl = false; /* Whether the creation property list is (or is derived from) an object creation
+                               property list */
     herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
@@ -1553,10 +1558,13 @@ H5CX_set_apl(H5P_genplist_t *acspl,
 #endif /* H5_HAVE_PARALLEL */
                      is_collective)
 {
-    H5CX_node_t   **head  = NULL; /* Pointer to head of API context list */
-    htri_t is_lapl = false; /* Whether the access property list is (or is derived from) a link access property list */
-    htri_t is_dapl = false; /* Whether the access property list is (or is derived from) a dataset access property list */
-    htri_t is_fapl = false; /* Whether the access property list is (or is derived from) a file access property list */
+    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
+    htri_t        is_lapl =
+        false; /* Whether the access property list is (or is derived from) a link access property list */
+    htri_t is_dapl =
+        false; /* Whether the access property list is (or is derived from) a dataset access property list */
+    htri_t is_fapl =
+        false; /* Whether the access property list is (or is derived from) a file access property list */
 #ifdef H5_HAVE_PARALLEL
     bool is_default = false;    /* Whether the access property list is the default */
 #endif                          /* H5_HAVE_PARALLEL */
@@ -1881,7 +1889,7 @@ done:
 H5P_genplist_t *
 H5CX_get_dxpl(void)
 {
-    H5CX_node_t **head    = NULL;            /* Pointer to head of API context list */
+    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
@@ -1904,7 +1912,7 @@ H5CX_get_dxpl(void)
 H5P_genplist_t *
 H5CX_get_fapl(void)
 {
-    H5CX_node_t **head    = NULL;            /* Pointer to head of API context list */
+    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
@@ -1929,7 +1937,7 @@ H5CX_get_fapl(void)
 H5P_genplist_t *
 H5CX_get_fcpl(void)
 {
-    H5CX_node_t **head    = NULL;            /* Pointer to head of API context list */
+    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
@@ -1954,7 +1962,7 @@ H5CX_get_fcpl(void)
 H5P_genplist_t *
 H5CX_get_ocpl(void)
 {
-    H5CX_node_t **head    = NULL;            /* Pointer to head of API context list */
+    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
@@ -1977,7 +1985,7 @@ H5CX_get_ocpl(void)
 H5P_genplist_t *
 H5CX_get_lapl(void)
 {
-    H5CX_node_t **head    = NULL;            /* Pointer to head of API context list */
+    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
@@ -2619,7 +2627,8 @@ H5CX_get_btree_split_ratios(double split_ratio[3])
     H5CX_RETRIEVE_PROP_VALID(dxpl, H5D_XFER_BTREE_SPLIT_RATIO_NAME, btree_split_ratio)
 
     /* Get the B-tree split ratio values */
-    H5MM_memcpy(split_ratio, &(*head)->ctx.dxpl_props.btree_split_ratio, sizeof((*head)->ctx.dxpl_props.btree_split_ratio));
+    H5MM_memcpy(split_ratio, &(*head)->ctx.dxpl_props.btree_split_ratio,
+                sizeof((*head)->ctx.dxpl_props.btree_split_ratio));
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -3126,13 +3135,17 @@ H5CX_get_vlen_alloc_info(H5T_vlen_alloc_info_t *vl_alloc_info)
             (*head)->ctx.dxpl_props.vl_alloc_info = H5CX_def_dxpl_cache.vl_alloc_info;
         else {
             /* Get VL datatype alloc info values */
-            if (H5P_get((*head)->ctx.dxpl, H5D_XFER_VLEN_ALLOC_NAME, &(*head)->ctx.dxpl_props.vl_alloc_info.alloc_func) < 0)
+            if (H5P_get((*head)->ctx.dxpl, H5D_XFER_VLEN_ALLOC_NAME,
+                        &(*head)->ctx.dxpl_props.vl_alloc_info.alloc_func) < 0)
                 HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve VL datatype alloc info");
-            if (H5P_get((*head)->ctx.dxpl, H5D_XFER_VLEN_ALLOC_INFO_NAME, &(*head)->ctx.dxpl_props.vl_alloc_info.alloc_info) < 0)
+            if (H5P_get((*head)->ctx.dxpl, H5D_XFER_VLEN_ALLOC_INFO_NAME,
+                        &(*head)->ctx.dxpl_props.vl_alloc_info.alloc_info) < 0)
                 HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve VL datatype alloc info");
-            if (H5P_get((*head)->ctx.dxpl, H5D_XFER_VLEN_FREE_NAME, &(*head)->ctx.dxpl_props.vl_alloc_info.free_func) < 0)
+            if (H5P_get((*head)->ctx.dxpl, H5D_XFER_VLEN_FREE_NAME,
+                        &(*head)->ctx.dxpl_props.vl_alloc_info.free_func) < 0)
                 HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve VL datatype alloc info");
-            if (H5P_get((*head)->ctx.dxpl, H5D_XFER_VLEN_FREE_INFO_NAME, &(*head)->ctx.dxpl_props.vl_alloc_info.free_info) < 0)
+            if (H5P_get((*head)->ctx.dxpl, H5D_XFER_VLEN_FREE_INFO_NAME,
+                        &(*head)->ctx.dxpl_props.vl_alloc_info.free_info) < 0)
                 HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve VL datatype alloc info");
         } /* end else */
 
@@ -3266,8 +3279,7 @@ H5CX_get_actual_selection_io_mode(uint32_t *actual_selection_io_mode)
 
     /* This property is a special case - we want to wipe out any previous setting.  Copy the default setting
      * if it has not been set yet. */
-    if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.dxpl) &&
-        !(*head)->ctx.dxpl_flags.actual_selection_io_mode_set &&
+    if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.dxpl) && !(*head)->ctx.dxpl_flags.actual_selection_io_mode_set &&
         !(*head)->ctx.dxpl_flags.actual_selection_io_mode_valid) {
         (*head)->ctx.dxpl_props.actual_selection_io_mode     = H5CX_def_dxpl_cache.actual_selection_io_mode;
         (*head)->ctx.dxpl_flags.actual_selection_io_mode_set = true;
@@ -5286,7 +5298,8 @@ H5CX_get_shared_mesg_index_types(unsigned *shmsg_index_types)
     H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5F_CRT_SHMSG_INDEX_TYPES_NAME, shmsg_index_types)
 
     /* Get the value */
-    memcpy(shmsg_index_types, (*head)->ctx.fcpl_props.shmsg_index_types, H5O_SHMESG_MAX_NINDEXES * sizeof(unsigned));
+    memcpy(shmsg_index_types, (*head)->ctx.fcpl_props.shmsg_index_types,
+           H5O_SHMESG_MAX_NINDEXES * sizeof(unsigned));
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -5317,7 +5330,8 @@ H5CX_get_shared_mesg_index_min_sizes(unsigned *shmsg_index_min_sizes)
     H5CX_RETRIEVE_SUBCLS_PROP_VALID(ocpl, fcpl, H5F_CRT_SHMSG_INDEX_MINSIZE_NAME, shmsg_index_min_sizes)
 
     /* Get the value */
-    memcpy(shmsg_index_min_sizes, (*head)->ctx.fcpl_props.shmsg_index_min_sizes, H5O_SHMESG_MAX_NINDEXES * sizeof(unsigned));
+    memcpy(shmsg_index_min_sizes, (*head)->ctx.fcpl_props.shmsg_index_min_sizes,
+           H5O_SHMESG_MAX_NINDEXES * sizeof(unsigned));
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -6631,7 +6645,7 @@ done:
 bool
 H5CX_is_def_ocpl(void)
 {
-    H5CX_node_t **head        = NULL;  /* Pointer to head of API context list */
+    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 

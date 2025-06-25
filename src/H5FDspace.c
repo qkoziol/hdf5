@@ -220,7 +220,8 @@ H5FD__alloc_real(H5FD_int_t *fh, H5FD_mem_t type, hsize_t size, haddr_t *frag_ad
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(HADDR_UNDEF)
             {
-                ret_value = (fh->driver->cls->alloc)(file, type, H5P_PLIST_ID(H5CX_get_dxpl()), use_alloc_size ? size : size + extra);
+                ret_value = (fh->driver->cls->alloc)(file, type, H5P_PLIST_ID(H5CX_get_dxpl()),
+                                                     use_alloc_size ? size : size + extra);
             }
         H5_AFTER_USER_CB(HADDR_UNDEF)
         if (!H5_addr_defined(ret_value))

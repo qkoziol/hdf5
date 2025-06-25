@@ -146,7 +146,7 @@ static hid_t
 H5G__create_api_common(hid_t loc_id, const char *name, H5P_genplist_t *lcpl, H5P_genplist_t *gcpl,
                        H5P_genplist_t *gapl, void **token_ptr, H5VL_object_t **_vol_obj_ptr)
 {
-    void           *grp = NULL;         /* Structure for new group */
+    void           *grp         = NULL; /* Structure for new group */
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
         (_vol_obj_ptr ? _vol_obj_ptr : &tmp_vol_obj); /* Ptr to object ptr for loc_id */
@@ -405,7 +405,7 @@ static hid_t
 H5G__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *gapl, void **token_ptr,
                      H5VL_object_t **_vol_obj_ptr)
 {
-    void           *grp = NULL;         /* Group opened */
+    void           *grp         = NULL; /* Group opened */
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
         (_vol_obj_ptr ? _vol_obj_ptr : &tmp_vol_obj); /* Ptr to object ptr for loc_id */

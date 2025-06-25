@@ -45,15 +45,15 @@
 
 /* API context state */
 typedef struct H5CX_state_t {
-    H5P_genplist_t *dxpl; /* DXPL for operation */
-    H5P_genplist_t *acpl; /* ACPL for operation */
-    H5P_genplist_t *dapl; /* DAPL for operation */
-    H5P_genplist_t *fapl; /* FAPL for operation */
-    H5P_genplist_t *lapl; /* LAPL for operation */
-    H5P_genplist_t *lcpl; /* LCPL for operation */
-    H5P_genplist_t *ocpl; /* FCPL/DCPL/GCPL/TCPL for operation */
-    H5P_genplist_t *ocpypl;    /* OCPYPL for operation */
-    void *vol_wrap_ctx; /* VOL connector's "wrap context" for creating IDs */
+    H5P_genplist_t *dxpl;         /* DXPL for operation */
+    H5P_genplist_t *acpl;         /* ACPL for operation */
+    H5P_genplist_t *dapl;         /* DAPL for operation */
+    H5P_genplist_t *fapl;         /* FAPL for operation */
+    H5P_genplist_t *lapl;         /* LAPL for operation */
+    H5P_genplist_t *lcpl;         /* LCPL for operation */
+    H5P_genplist_t *ocpl;         /* FCPL/DCPL/GCPL/TCPL for operation */
+    H5P_genplist_t *ocpypl;       /* OCPYPL for operation */
+    void           *vol_wrap_ctx; /* VOL connector's "wrap context" for creating IDs */
 
 #ifdef H5_HAVE_PARALLEL
     /* Internal: Parallel I/O settings */
@@ -528,14 +528,14 @@ typedef struct H5CX_fapl_cache_t {
 H5_GCC_CLANG_DIAG_OFF("c99-c11-compat")
 typedef struct H5CX_t {
     /* Cached pointers to property lists from API calls */
-    H5P_genplist_t *dxpl;    /* Dataset Transfer Property List */
-    H5P_genplist_t *lcpl;    /* Link Creation Property List */
-    H5P_genplist_t *lapl;    /* Link Access Property List */
-    H5P_genplist_t *ocpl;    /* Object Creation Property List */
-    H5P_genplist_t *acpl;    /* Attribute Creation Property List */
-    H5P_genplist_t *ocpypl;  /* Object Copy Property List */
-    H5P_genplist_t *dapl;    /* Dataset Access Property List */
-    H5P_genplist_t *fapl;    /* File Access Property List */
+    H5P_genplist_t *dxpl;   /* Dataset Transfer Property List */
+    H5P_genplist_t *lcpl;   /* Link Creation Property List */
+    H5P_genplist_t *lapl;   /* Link Access Property List */
+    H5P_genplist_t *ocpl;   /* Object Creation Property List */
+    H5P_genplist_t *acpl;   /* Attribute Creation Property List */
+    H5P_genplist_t *ocpypl; /* Object Copy Property List */
+    H5P_genplist_t *dapl;   /* Dataset Access Property List */
+    H5P_genplist_t *fapl;   /* File Access Property List */
 
     /* Internal: Object tagging info */
     haddr_t tag; /* Current object's tag (ohdr chunk #0 address) */
@@ -654,15 +654,15 @@ H5_DLL herr_t H5CX_set_vol_wrap_ctx(void *wrap_ctx);
 /* "Getter" routines for API context info */
 H5_DLL H5P_genplist_t *H5CX_get_fapl(void);
 H5_DLL H5P_genplist_t *H5CX_get_ocpl(void);
-H5_DLL bool        H5CX_is_def_ocpl(void);
+H5_DLL bool            H5CX_is_def_ocpl(void);
 H5_DLL H5P_genplist_t *H5CX_get_fcpl(void);
 H5_DLL H5P_genplist_t *H5CX_get_dxpl(void);
-H5_DLL bool        H5CX_is_def_dxpl(void);
+H5_DLL bool            H5CX_is_def_dxpl(void);
 H5_DLL H5P_genplist_t *H5CX_get_lapl(void);
-H5_DLL herr_t      H5CX_get_vol_wrap_ctx(void **wrap_ctx);
-H5_DLL haddr_t     H5CX_get_tag(void);
-H5_DLL H5AC_ring_t H5CX_get_ring(void);
-H5_DLL bool        H5CX_get_want_posix_fd(void);
+H5_DLL herr_t          H5CX_get_vol_wrap_ctx(void **wrap_ctx);
+H5_DLL haddr_t         H5CX_get_tag(void);
+H5_DLL H5AC_ring_t     H5CX_get_ring(void);
+H5_DLL bool            H5CX_get_want_posix_fd(void);
 #ifdef H5_HAVE_PARALLEL
 H5_DLL bool   H5CX_get_coll_metadata_read(void);
 H5_DLL herr_t H5CX_get_mpi_coll_datatypes(MPI_Datatype *btype, MPI_Datatype *ftype);

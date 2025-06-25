@@ -96,7 +96,7 @@ H5D__create_api_common(hid_t loc_id, const char *name, hid_t type_id, hid_t spac
                        H5P_genplist_t *dcpl, H5P_genplist_t *dapl, void **token_ptr,
                        H5VL_object_t **_vol_obj_ptr)
 {
-    void           *dset = NULL;        /* New dataset's info */
+    void           *dset        = NULL; /* New dataset's info */
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
         (_vol_obj_ptr ? _vol_obj_ptr : &tmp_vol_obj); /* Ptr to object ptr for loc_id */
@@ -189,7 +189,8 @@ H5Dcreate2(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t 
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Create the dataset synchronously */
-    if ((ret_value = H5D__create_api_common(loc_id, name, type_id, space_id, lcpl, dcpl, dapl, NULL, NULL)) < 0)
+    if ((ret_value = H5D__create_api_common(loc_id, name, type_id, space_id, lcpl, dcpl, dapl, NULL, NULL)) <
+        0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTCREATE, H5I_INVALID_HID, "unable to synchronously create dataset");
 
 done:
@@ -363,7 +364,7 @@ static hid_t
 H5D__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *dapl, void **token_ptr,
                      H5VL_object_t **_vol_obj_ptr)
 {
-    void           *dset = NULL;        /* dset object from VOL connector */
+    void           *dset        = NULL; /* dset object from VOL connector */
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
         (_vol_obj_ptr ? _vol_obj_ptr : &tmp_vol_obj); /* Ptr to object ptr for loc_id */

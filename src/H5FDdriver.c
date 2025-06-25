@@ -288,9 +288,9 @@ herr_t
 H5FD_open_wrap(bool try, H5FD_int_t **_fh, const char *name, unsigned flags, H5P_genplist_t *fapl,
                haddr_t maxaddr)
 {
-    H5P_genplist_t *old_fapl = NULL; /* old FAPL in API context */
-    H5F_close_degree_t old_fc_degree;                 /* file close degree        */
-    herr_t             ret_value = SUCCEED;           /* Return value */
+    H5P_genplist_t    *old_fapl = NULL;     /* old FAPL in API context */
+    H5F_close_degree_t old_fc_degree;       /* file close degree        */
+    herr_t             ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
@@ -784,8 +784,8 @@ done:
 herr_t
 H5FD_get_vfd_handle_wrap(H5FD_int_t *fh, H5P_genplist_t *fapl, void **file_handle)
 {
-    H5P_genplist_t *old_fapl = NULL; /* old FAPL in API context */
-    herr_t ret_value = SUCCEED;           /* Return value */
+    H5P_genplist_t *old_fapl  = NULL;    /* old FAPL in API context */
+    herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
@@ -915,8 +915,8 @@ H5FD_read(H5FD_int_t *fh, H5FD_mem_t type, haddr_t addr, size_t size, void *buf 
     H5_BEFORE_USER_CB(FAIL)
         {
             /* Dispatch to driver */
-            ret_value =
-                (fh->driver->cls->read)(file, type, H5P_PLIST_ID(H5CX_get_dxpl()), addr + file->base_addr, size, buf);
+            ret_value = (fh->driver->cls->read)(file, type, H5P_PLIST_ID(H5CX_get_dxpl()),
+                                                addr + file->base_addr, size, buf);
         }
     H5_AFTER_USER_CB(FAIL)
     if (ret_value < 0)
@@ -989,8 +989,8 @@ H5FD_write(H5FD_int_t *fh, H5FD_mem_t type, haddr_t addr, size_t size, const voi
     H5_BEFORE_USER_CB(FAIL)
         {
             /* Dispatch to driver */
-            ret_value =
-                (fh->driver->cls->write)(file, type, H5P_PLIST_ID(H5CX_get_dxpl()), addr + file->base_addr, size, buf);
+            ret_value = (fh->driver->cls->write)(file, type, H5P_PLIST_ID(H5CX_get_dxpl()),
+                                                 addr + file->base_addr, size, buf);
         }
     H5_AFTER_USER_CB(FAIL)
     if (ret_value < 0)
@@ -1162,8 +1162,8 @@ H5FD_read_vector(H5FD_int_t *fh, uint32_t count, H5FD_mem_t types[], haddr_t add
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
-                ret_value =
-                    (fh->driver->cls->read_vector)(file, H5P_PLIST_ID(H5CX_get_dxpl()), count, types, addrs, sizes, bufs);
+                ret_value = (fh->driver->cls->read_vector)(file, H5P_PLIST_ID(H5CX_get_dxpl()), count, types,
+                                                           addrs, sizes, bufs);
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
@@ -1212,7 +1212,8 @@ H5FD_read_vector(H5FD_int_t *fh, uint32_t count, H5FD_mem_t types[], haddr_t add
             /* Prepare & restore library for user callback */
             H5_BEFORE_USER_CB(FAIL)
                 {
-                    ret_value = (fh->driver->cls->read)(file, type, H5P_PLIST_ID(H5CX_get_dxpl()), addrs[i], size, bufs[i]);
+                    ret_value = (fh->driver->cls->read)(file, type, H5P_PLIST_ID(H5CX_get_dxpl()), addrs[i],
+                                                        size, bufs[i]);
                 }
             H5_AFTER_USER_CB(FAIL)
             if (ret_value < 0)
@@ -1381,8 +1382,8 @@ H5FD_write_vector(H5FD_int_t *fh, uint32_t count, H5FD_mem_t types[], haddr_t ad
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
-                ret_value =
-                    (fh->driver->cls->write_vector)(file, H5P_PLIST_ID(H5CX_get_dxpl()), count, types, addrs, sizes, bufs);
+                ret_value = (fh->driver->cls->write_vector)(file, H5P_PLIST_ID(H5CX_get_dxpl()), count, types,
+                                                            addrs, sizes, bufs);
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
@@ -1431,8 +1432,8 @@ H5FD_write_vector(H5FD_int_t *fh, uint32_t count, H5FD_mem_t types[], haddr_t ad
             /* Prepare & restore library for user callback */
             H5_BEFORE_USER_CB(FAIL)
                 {
-                    ret_value =
-                        (fh->driver->cls->write)(file, type, H5P_PLIST_ID(H5CX_get_dxpl()), addrs[i], size, bufs[i]);
+                    ret_value = (fh->driver->cls->write)(file, type, H5P_PLIST_ID(H5CX_get_dxpl()), addrs[i],
+                                                         size, bufs[i]);
                 }
             H5_AFTER_USER_CB(FAIL)
             if (ret_value < 0)
@@ -1611,8 +1612,9 @@ H5FD_read_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, H5S_t **mem
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
-                ret_value =
-                    (fh->driver->cls->read_selection)(file, type, H5P_PLIST_ID(H5CX_get_dxpl()), count, mem_space_ids, file_space_ids, offsets, element_sizes, bufs);
+                ret_value = (fh->driver->cls->read_selection)(file, type, H5P_PLIST_ID(H5CX_get_dxpl()),
+                                                              count, mem_space_ids, file_space_ids, offsets,
+                                                              element_sizes, bufs);
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
@@ -1795,8 +1797,9 @@ H5FD_write_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, H5S_t **me
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
-                ret_value =
-                    (fh->driver->cls->write_selection)(file, type, H5P_PLIST_ID(H5CX_get_dxpl()), count, mem_space_ids, file_space_ids, offsets, element_sizes, bufs);
+                ret_value = (fh->driver->cls->write_selection)(file, type, H5P_PLIST_ID(H5CX_get_dxpl()),
+                                                               count, mem_space_ids, file_space_ids, offsets,
+                                                               element_sizes, bufs);
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
@@ -2009,8 +2012,8 @@ done:
 herr_t
 H5FD_delete_wrap(const char *filename, H5P_genplist_t *fapl)
 {
-    H5P_genplist_t *old_fapl = NULL; /* old FAPL in API context */
-    herr_t ret_value = SUCCEED;           /* Return value */
+    H5P_genplist_t *old_fapl  = NULL;    /* old FAPL in API context */
+    herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 

@@ -189,9 +189,9 @@ done:
 herr_t
 H5VL__native_attr_read(void *attr, hid_t dtype_id, void *buf, hid_t dxpl_id, void H5_ATTR_UNUSED **req)
 {
-    H5T_t *mem_type;  /* Memory datatype */
-    H5P_genplist_t *dxpl;                /* Dataset transfer property list */
-    herr_t ret_value; /* Return value */
+    H5T_t          *mem_type;  /* Memory datatype */
+    H5P_genplist_t *dxpl;      /* Dataset transfer property list */
+    herr_t          ret_value; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -223,9 +223,9 @@ done:
 herr_t
 H5VL__native_attr_write(void *attr, hid_t dtype_id, const void *buf, hid_t dxpl_id, void H5_ATTR_UNUSED **req)
 {
-    H5T_t *mem_type;  /* Memory datatype */
-    H5P_genplist_t *dxpl;                /* Dataset transfer property list */
-    herr_t ret_value; /* Return value */
+    H5T_t          *mem_type;  /* Memory datatype */
+    H5P_genplist_t *dxpl;      /* Dataset transfer property list */
+    herr_t          ret_value; /* Return value */
 
     FUNC_ENTER_PACKAGE
 

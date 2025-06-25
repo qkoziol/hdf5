@@ -328,7 +328,9 @@ H5FD__read_selection_translate(bool skip_vector_cb, H5FD_int_t *fh, H5FD_mem_t t
                 H5_BEFORE_USER_CB(FAIL)
                     {
                         /* Issue scalar read call */
-                        ret_value = (fh->driver->cls->read)(file, type, H5P_PLIST_ID(H5CX_get_dxpl()), offsets[i] + file_off[file_seq_i], io_len, (void *)((uint8_t *)buf + mem_off[mem_seq_i]));
+                        ret_value = (fh->driver->cls->read)(file, type, H5P_PLIST_ID(H5CX_get_dxpl()),
+                                                            offsets[i] + file_off[file_seq_i], io_len,
+                                                            (void *)((uint8_t *)buf + mem_off[mem_seq_i]));
                     }
                 H5_AFTER_USER_CB(FAIL)
                 if (ret_value < 0)
@@ -373,7 +375,9 @@ H5FD__read_selection_translate(bool skip_vector_cb, H5FD_int_t *fh, H5FD_mem_t t
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
-                ret_value = (fh->driver->cls->read_vector)(file, H5P_PLIST_ID(H5CX_get_dxpl()), (uint32_t)vec_arr_nused, types, addrs, sizes, vec_bufs);
+                ret_value =
+                    (fh->driver->cls->read_vector)(file, H5P_PLIST_ID(H5CX_get_dxpl()),
+                                                   (uint32_t)vec_arr_nused, types, addrs, sizes, vec_bufs);
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
@@ -553,7 +557,9 @@ H5FD__read_selection_id(uint32_t skip_cb, H5FD_int_t *fh, H5FD_mem_t type, uint3
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
-                ret_value = (fh->driver->cls->read_selection)(file, type, H5P_PLIST_ID(H5CX_get_dxpl()), count, mem_space_ids, file_space_ids, offsets, element_sizes, bufs);
+                ret_value = (fh->driver->cls->read_selection)(file, type, H5P_PLIST_ID(H5CX_get_dxpl()),
+                                                              count, mem_space_ids, file_space_ids, offsets,
+                                                              element_sizes, bufs);
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
@@ -835,7 +841,9 @@ H5FD__write_selection_translate(bool skip_vector_cb, H5FD_int_t *fh, H5FD_mem_t 
                 H5_BEFORE_USER_CB(FAIL)
                     {
                         /* Issue scalar write call */
-                        ret_value = (fh->driver->cls->write)(file, type, H5P_PLIST_ID(H5CX_get_dxpl()), offsets[i] + file_off[file_seq_i], io_len, (const void *)((const uint8_t *)buf + mem_off[mem_seq_i]));
+                        ret_value = (fh->driver->cls->write)(
+                            file, type, H5P_PLIST_ID(H5CX_get_dxpl()), offsets[i] + file_off[file_seq_i],
+                            io_len, (const void *)((const uint8_t *)buf + mem_off[mem_seq_i]));
                     }
                 H5_AFTER_USER_CB(FAIL)
                 if (ret_value < 0)
@@ -880,7 +888,9 @@ H5FD__write_selection_translate(bool skip_vector_cb, H5FD_int_t *fh, H5FD_mem_t 
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
-                ret_value = (fh->driver->cls->write_vector)(file, H5P_PLIST_ID(H5CX_get_dxpl()), (uint32_t)vec_arr_nused, types, addrs, sizes, vec_bufs);
+                ret_value =
+                    (fh->driver->cls->write_vector)(file, H5P_PLIST_ID(H5CX_get_dxpl()),
+                                                    (uint32_t)vec_arr_nused, types, addrs, sizes, vec_bufs);
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
@@ -1049,7 +1059,9 @@ H5FD__write_selection_id(uint32_t skip_cb, H5FD_int_t *fh, H5FD_mem_t type, uint
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
-                ret_value = (fh->driver->cls->write_selection)(file, type, H5P_PLIST_ID(H5CX_get_dxpl()), count, mem_space_ids, file_space_ids, offsets, element_sizes, bufs);
+                ret_value = (fh->driver->cls->write_selection)(file, type, H5P_PLIST_ID(H5CX_get_dxpl()),
+                                                               count, mem_space_ids, file_space_ids, offsets,
+                                                               element_sizes, bufs);
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)

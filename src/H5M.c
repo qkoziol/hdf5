@@ -448,8 +448,8 @@ H5Mcreate_anon(hid_t loc_id, hid_t key_type_id, hid_t val_type_id, hid_t mcpl_id
     H5VL_object_t       *vol_obj = NULL;              /* object of loc_id */
     H5VL_optional_args_t vol_cb_args;                 /* Arguments to VOL callback */
     H5VL_map_args_t      map_args;                    /* Arguments for map operations */
-    H5P_genplist_t *mcpl;                        /* Map creation property list */
-    H5P_genplist_t *mapl;                        /* Map access property list */
+    H5P_genplist_t      *mcpl;                        /* Map creation property list */
+    H5P_genplist_t      *mapl;                        /* Map access property list */
     hid_t                ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)

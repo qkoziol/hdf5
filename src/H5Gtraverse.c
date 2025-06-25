@@ -145,7 +145,7 @@ H5G__traverse_ud(const H5G_loc_t *grp_loc /*in,out*/, const H5O_link_t *lnk, H5G
                  unsigned target, bool *obj_exists)
 {
     const H5L_class_t *link_class;     /* User-defined link class */
-    hid_t lapl_id;      /* LAPL ID to pass to the user callback */
+    hid_t              lapl_id;        /* LAPL ID to pass to the user callback */
     hid_t              cb_return = -1; /* The ID the user-defined callback returned */
     H5G_loc_t          grp_loc_copy;
     H5G_name_t         grp_path_copy;
@@ -194,7 +194,8 @@ H5G__traverse_ud(const H5G_loc_t *grp_loc /*in,out*/, const H5O_link_t *lnk, H5G
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
-                cb_return = (((const H5L_class_0_t *)link_class)->trav_func)(lnk->name, cur_grp, lnk->u.ud.udata, lnk->u.ud.size, lapl_id);
+                cb_return = (((const H5L_class_0_t *)link_class)->trav_func)(
+                    lnk->name, cur_grp, lnk->u.ud.udata, lnk->u.ud.size, lapl_id);
             }
         H5_AFTER_USER_CB(FAIL)
     }
@@ -202,7 +203,8 @@ H5G__traverse_ud(const H5G_loc_t *grp_loc /*in,out*/, const H5O_link_t *lnk, H5G
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
-                cb_return = (link_class->trav_func)(lnk->name, cur_grp, lnk->u.ud.udata, lnk->u.ud.size, lapl_id, H5P_PLIST_ID(H5CX_get_dxpl()));
+                cb_return = (link_class->trav_func)(lnk->name, cur_grp, lnk->u.ud.udata, lnk->u.ud.size,
+                                                    lapl_id, H5P_PLIST_ID(H5CX_get_dxpl()));
             }
         H5_AFTER_USER_CB(FAIL)
     }
@@ -210,7 +212,8 @@ H5G__traverse_ud(const H5G_loc_t *grp_loc /*in,out*/, const H5O_link_t *lnk, H5G
     /* Prepare & restore library for user callback */
     H5_BEFORE_USER_CB(FAIL)
         {
-            cb_return = (link_class->trav_func)(lnk->name, cur_grp, lnk->u.ud.udata, lnk->u.ud.size, lapl_id, H5P_PLIST_ID(H5CX_get_dxpl()));
+            cb_return = (link_class->trav_func)(lnk->name, cur_grp, lnk->u.ud.udata, lnk->u.ud.size, lapl_id,
+                                                H5P_PLIST_ID(H5CX_get_dxpl()));
         }
     H5_AFTER_USER_CB(FAIL)
 #endif /* H5_NO_DEPRECATED_SYMBOLS */

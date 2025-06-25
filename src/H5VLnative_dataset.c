@@ -347,8 +347,8 @@ H5VL__native_dataset_read(size_t count, void *obj[], hid_t mem_type_id[], hid_t 
                           hid_t file_space_id[], hid_t dxpl_id, void *buf[], void H5_ATTR_UNUSED **req)
 {
     H5D_dset_io_info_t  dinfo_local;
-    H5D_dset_io_info_t *dinfo    = &dinfo_local;
-    H5P_genplist_t *dxpl;                /* Dataset transfer property list */
+    H5D_dset_io_info_t *dinfo = &dinfo_local;
+    H5P_genplist_t     *dxpl;                /* Dataset transfer property list */
     herr_t              ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -397,8 +397,8 @@ H5VL__native_dataset_write(size_t count, void *obj[], hid_t mem_type_id[], hid_t
                            hid_t file_space_id[], hid_t dxpl_id, const void *buf[], void H5_ATTR_UNUSED **req)
 {
     H5D_dset_io_info_t  dinfo_local;
-    H5D_dset_io_info_t *dinfo     = &dinfo_local;
-    H5P_genplist_t *dxpl;                /* Dataset transfer property list */
+    H5D_dset_io_info_t *dinfo = &dinfo_local;
+    H5P_genplist_t     *dxpl;                /* Dataset transfer property list */
     herr_t              ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -575,10 +575,10 @@ done:
 herr_t
 H5VL__native_dataset_optional(void *obj, H5VL_optional_args_t *args, hid_t dxpl_id, void H5_ATTR_UNUSED **req)
 {
-    H5D_t                               *dset      = (H5D_t *)obj; /* Dataset */
-    H5VL_native_dataset_optional_args_t *opt_args  = args->args; /* Pointer to native operation's arguments */
-    H5P_genplist_t *dxpl;                /* Dataset transfer property list */
-    herr_t                               ret_value = SUCCEED;    /* Return value */
+    H5D_t                               *dset     = (H5D_t *)obj; /* Dataset */
+    H5VL_native_dataset_optional_args_t *opt_args = args->args; /* Pointer to native operation's arguments */
+    H5P_genplist_t                      *dxpl;                  /* Dataset transfer property list */
+    herr_t                               ret_value = SUCCEED;   /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -598,7 +598,8 @@ H5VL__native_dataset_optional(void *obj, H5VL_optional_args_t *args, hid_t dxpl_
                     /* Convert the chunk indexing type to version 1 B-tree if not */
                     if (dset->shared->layout.u.chunk.idx_type != H5D_CHUNK_IDX_BTREE)
                         if (H5D__format_convert(dset) < 0)
-                            HGOTO_ERROR(H5E_DATASET, H5E_CANTLOAD, FAIL, "unable to downgrade chunk indexing type for dataset");
+                            HGOTO_ERROR(H5E_DATASET, H5E_CANTLOAD, FAIL,
+                                        "unable to downgrade chunk indexing type for dataset");
                     break;
 
                 case H5D_CONTIGUOUS:

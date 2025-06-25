@@ -2868,9 +2868,9 @@ static herr_t
 H5D__check_filters(H5D_t *dataset)
 {
     H5O_fill_t     *fill; /* Dataset's fill value */
-    H5P_genplist_t *old_ocpl = NULL;
-    H5P_genplist_t *dcpl        = NULL;    /* DCPL for dataset */
-    herr_t          ret_value   = SUCCEED; /* Return value */
+    H5P_genplist_t *old_ocpl  = NULL;
+    H5P_genplist_t *dcpl      = NULL;    /* DCPL for dataset */
+    herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 

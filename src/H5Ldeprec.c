@@ -225,7 +225,7 @@ H5Literate_by_name1(hid_t loc_id, const char *group_name, H5_index_t idx_type, H
     H5VL_link_specific_args_t vol_cb_args;    /* Arguments to VOL callback */
     H5VL_loc_params_t         loc_params;
     H5L_shim_data_t           shim_data;
-    H5P_genplist_t *lapl = NULL;      /* Link access property list pointer */
+    H5P_genplist_t           *lapl = NULL; /* Link access property list pointer */
     bool                      is_native_vol_obj;
     herr_t                    ret_value; /* Return value */
 
@@ -307,8 +307,8 @@ H5Lget_info1(hid_t loc_id, const char *name, H5L_info1_t *linfo /*out*/, hid_t l
     H5VL_object_t       *vol_obj = NULL; /* object of loc_id */
     H5VL_link_get_args_t vol_cb_args;    /* Arguments to VOL callback */
     H5VL_loc_params_t    loc_params;
-    H5L_info2_t          linfo2; /* New-style link info */
-    H5P_genplist_t *lapl = NULL;      /* Link access property list pointer */
+    H5L_info2_t          linfo2;      /* New-style link info */
+    H5P_genplist_t      *lapl = NULL; /* Link access property list pointer */
     bool                 is_native_vol_obj;
     herr_t               ret_value = SUCCEED; /* Return value */
 
@@ -396,8 +396,8 @@ H5Lget_info_by_idx1(hid_t loc_id, const char *group_name, H5_index_t idx_type, H
     H5VL_object_t       *vol_obj = NULL; /* object of loc_id */
     H5VL_link_get_args_t vol_cb_args;    /* Arguments to VOL callback */
     H5VL_loc_params_t    loc_params;
-    H5L_info2_t          linfo2; /* New-style link info */
-    H5P_genplist_t *lapl = NULL;      /* Link access property list pointer */
+    H5L_info2_t          linfo2;      /* New-style link info */
+    H5P_genplist_t      *lapl = NULL; /* Link access property list pointer */
     bool                 is_native_vol_obj;
     herr_t               ret_value = SUCCEED; /* Return value */
 
@@ -594,7 +594,7 @@ H5Lvisit_by_name1(hid_t loc_id, const char *group_name, H5_index_t idx_type, H5_
     H5VL_link_specific_args_t vol_cb_args;    /* Arguments to VOL callback */
     H5VL_loc_params_t         loc_params;
     H5L_shim_data_t           shim_data;
-    H5P_genplist_t *lapl = NULL;      /* Link access property list pointer */
+    H5P_genplist_t           *lapl = NULL; /* Link access property list pointer */
     bool                      is_native_vol_obj;
     herr_t                    ret_value; /* Return value */
 

@@ -124,7 +124,8 @@ H5A__create_common(H5VL_object_t *vol_obj, H5VL_loc_params_t *loc_params, const 
     assert(attr_name);
 
     /* Create the attribute */
-    if (NULL == (attr = H5VL_attr_create(vol_obj, loc_params, attr_name, type_id, space_id, acpl, aapl, token_ptr)))
+    if (NULL ==
+        (attr = H5VL_attr_create(vol_obj, loc_params, attr_name, type_id, space_id, acpl, aapl, token_ptr)))
         HGOTO_ERROR(H5E_ATTR, H5E_CANTINIT, H5I_INVALID_HID, "unable to create attribute");
 
     /* Register the new attribute and get an ID for it */
@@ -238,7 +239,8 @@ H5Acreate2(hid_t loc_id, const char *attr_name, hid_t type_id, hid_t space_id, h
     H5CX_set_acpl(acpl);
 
     /* Create the attribute synchronously */
-    if ((ret_value = H5A__create_api_common(loc_id, attr_name, type_id, space_id, acpl, aapl, NULL, NULL)) < 0)
+    if ((ret_value = H5A__create_api_common(loc_id, attr_name, type_id, space_id, acpl, aapl, NULL, NULL)) <
+        0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTCREATE, H5I_INVALID_HID, "unable to synchronously create attribute");
 
 done:
@@ -285,7 +287,8 @@ H5Acreate_async(const char *app_file, const char *app_func, unsigned app_line, h
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Create the attribute asynchronously */
-    if ((ret_value = H5A__create_api_common(loc_id, attr_name, type_id, space_id, acpl, aapl, token_ptr, &vol_obj)) < 0)
+    if ((ret_value = H5A__create_api_common(loc_id, attr_name, type_id, space_id, acpl, aapl, token_ptr,
+                                            &vol_obj)) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTCREATE, H5I_INVALID_HID, "unable to asynchronously create attribute");
 
     /* If a token was created, add the token to the event set */
@@ -1390,11 +1393,11 @@ ssize_t
 H5Aget_name_by_idx(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t n,
                    char *name /*out*/, size_t size, hid_t lapl_id)
 {
-    H5VL_object_t       *vol_obj = NULL;    /* Attribute object for ID */
-    H5VL_attr_get_args_t vol_cb_args;       /* Arguments to VOL callback */
-    H5P_genplist_t *lapl = NULL;      /* Link access property list pointer */
-    size_t               attr_name_len = 0; /* Length of attribute name */
-    ssize_t              ret_value;         /* Return value */
+    H5VL_object_t       *vol_obj = NULL;       /* Attribute object for ID */
+    H5VL_attr_get_args_t vol_cb_args;          /* Arguments to VOL callback */
+    H5P_genplist_t      *lapl          = NULL; /* Link access property list pointer */
+    size_t               attr_name_len = 0;    /* Length of attribute name */
+    ssize_t              ret_value;            /* Return value */
 
     FUNC_ENTER_API(-1)
 
@@ -1545,7 +1548,7 @@ H5Aget_info_by_name(hid_t loc_id, const char *obj_name, const char *attr_name, H
 {
     H5VL_object_t       *vol_obj = NULL;      /* Attribute object for ID */
     H5VL_attr_get_args_t vol_cb_args;         /* Arguments to VOL callback */
-    H5P_genplist_t *lapl = NULL;      /* Link access property list pointer */
+    H5P_genplist_t      *lapl      = NULL;    /* Link access property list pointer */
     herr_t               ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1606,7 +1609,7 @@ H5Aget_info_by_idx(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_i
 {
     H5VL_object_t       *vol_obj = NULL;      /* Attribute object for ID */
     H5VL_attr_get_args_t vol_cb_args;         /* Arguments to VOL callback */
-    H5P_genplist_t *lapl = NULL;      /* Link access property list pointer */
+    H5P_genplist_t      *lapl      = NULL;    /* Link access property list pointer */
     herr_t               ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2061,7 +2064,7 @@ H5Aiterate_by_name(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_i
     H5VL_object_t            *vol_obj = NULL;      /* Object for loc_id */
     H5VL_loc_params_t         loc_params;          /* Location parameters for object access */
     H5VL_attr_specific_args_t vol_cb_args;         /* Arguments to VOL callback */
-    H5P_genplist_t *lapl = NULL;      /* Link access property list pointer */
+    H5P_genplist_t           *lapl      = NULL;    /* Link access property list pointer */
     herr_t                    ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2188,7 +2191,7 @@ H5Adelete_by_name(hid_t loc_id, const char *obj_name, const char *attr_name, hid
     H5VL_object_t            *vol_obj = NULL;      /* Object for loc_id */
     H5VL_loc_params_t         loc_params;          /* Location parameters for object access */
     H5VL_attr_specific_args_t vol_cb_args;         /* Arguments to VOL callback */
-    H5P_genplist_t *lapl = NULL;      /* Link access property list pointer */
+    H5P_genplist_t           *lapl      = NULL;    /* Link access property list pointer */
     herr_t                    ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2262,7 +2265,7 @@ H5Adelete_by_idx(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_ite
     H5VL_object_t            *vol_obj = NULL;      /* Object for loc_id */
     H5VL_loc_params_t         loc_params;          /* Location parameters for object access */
     H5VL_attr_specific_args_t vol_cb_args;         /* Arguments to VOL callback */
-    H5P_genplist_t *lapl = NULL;      /* Link access property list pointer */
+    H5P_genplist_t           *lapl      = NULL;    /* Link access property list pointer */
     herr_t                    ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)

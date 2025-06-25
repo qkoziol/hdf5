@@ -1075,7 +1075,7 @@ H5Lget_val(hid_t loc_id, const char *name, void *buf /*out*/, size_t size, hid_t
     H5VL_object_t       *vol_obj = NULL;      /* object of loc_id */
     H5VL_link_get_args_t vol_cb_args;         /* Arguments to VOL callback */
     H5VL_loc_params_t    loc_params;          /* Location parameters for object access */
-    H5P_genplist_t *lapl = NULL;      /* Link access property list pointer */
+    H5P_genplist_t      *lapl      = NULL;    /* Link access property list pointer */
     herr_t               ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1137,7 +1137,7 @@ H5Lget_val_by_idx(hid_t loc_id, const char *group_name, H5_index_t idx_type, H5_
     H5VL_object_t       *vol_obj = NULL;      /* object of loc_id */
     H5VL_link_get_args_t vol_cb_args;         /* Arguments to VOL callback */
     H5VL_loc_params_t    loc_params;          /* Location parameters for object access */
-    H5P_genplist_t *lapl = NULL;      /* Link access property list pointer */
+    H5P_genplist_t      *lapl      = NULL;    /* Link access property list pointer */
     herr_t               ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1321,7 +1321,7 @@ H5Lget_info2(hid_t loc_id, const char *name, H5L_info2_t *linfo /*out*/, hid_t l
     H5VL_object_t       *vol_obj = NULL;      /* object of loc_id */
     H5VL_link_get_args_t vol_cb_args;         /* Arguments to VOL callback */
     H5VL_loc_params_t    loc_params;          /* Location parameters for object access */
-    H5P_genplist_t *lapl = NULL;      /* Link access property list pointer */
+    H5P_genplist_t      *lapl      = NULL;    /* Link access property list pointer */
     herr_t               ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1378,7 +1378,7 @@ H5Lget_info_by_idx2(hid_t loc_id, const char *group_name, H5_index_t idx_type, H
     H5VL_object_t       *vol_obj = NULL;      /* object of loc_id */
     H5VL_link_get_args_t vol_cb_args;         /* Arguments to VOL callback */
     H5VL_loc_params_t    loc_params;          /* Location parameters for object access */
-    H5P_genplist_t *lapl = NULL;      /* Link access property list pointer */
+    H5P_genplist_t      *lapl      = NULL;    /* Link access property list pointer */
     herr_t               ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1565,12 +1565,12 @@ ssize_t
 H5Lget_name_by_idx(hid_t loc_id, const char *group_name, H5_index_t idx_type, H5_iter_order_t order,
                    hsize_t n, char *name /*out*/, size_t size, hid_t lapl_id)
 {
-    H5VL_object_t       *vol_obj = NULL;     /* object of loc_id */
-    H5VL_link_get_args_t vol_cb_args;        /* Arguments to VOL callback */
-    H5VL_loc_params_t    loc_params;         /* Location parameters for object access */
-    H5P_genplist_t *lapl = NULL;      /* Link access property list pointer */
-    size_t               link_name_len = 0;  /* Length of the link name string */
-    ssize_t              ret_value     = -1; /* Return value */
+    H5VL_object_t       *vol_obj = NULL;       /* object of loc_id */
+    H5VL_link_get_args_t vol_cb_args;          /* Arguments to VOL callback */
+    H5VL_loc_params_t    loc_params;           /* Location parameters for object access */
+    H5P_genplist_t      *lapl          = NULL; /* Link access property list pointer */
+    size_t               link_name_len = 0;    /* Length of the link name string */
+    ssize_t              ret_value     = -1;   /* Return value */
 
     FUNC_ENTER_API((-1))
 
@@ -1784,7 +1784,7 @@ H5Literate_by_name2(hid_t loc_id, const char *group_name, H5_index_t idx_type, H
     H5VL_object_t            *vol_obj = NULL; /* Object of loc_id */
     H5VL_link_specific_args_t vol_cb_args;    /* Arguments to VOL callback */
     H5VL_loc_params_t         loc_params;     /* Location parameters for object access */
-    H5P_genplist_t *lapl = NULL;      /* Link access property list pointer */
+    H5P_genplist_t           *lapl = NULL;    /* Link access property list pointer */
     herr_t                    ret_value;      /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1940,7 +1940,7 @@ H5Lvisit_by_name2(hid_t loc_id, const char *group_name, H5_index_t idx_type, H5_
     H5VL_object_t            *vol_obj = NULL; /* Object of loc_id */
     H5VL_link_specific_args_t vol_cb_args;    /* Arguments to VOL callback */
     H5VL_loc_params_t         loc_params;     /* Location parameters for object access */
-    H5P_genplist_t *lapl = NULL;      /* Link access property list pointer */
+    H5P_genplist_t           *lapl = NULL;    /* Link access property list pointer */
     herr_t                    ret_value;      /* Return value */
 
     FUNC_ENTER_API(FAIL)

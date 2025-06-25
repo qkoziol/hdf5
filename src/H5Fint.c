@@ -81,7 +81,8 @@ static char  *H5F__getenv_prefix_name(char **env_prefix /*in,out*/);
 static H5F_t *H5F__new(H5F_shared_t *shared, unsigned flags, H5FD_int_t *fh);
 static herr_t H5F__check_if_using_file_locks(bool *use_file_locking, bool *ignore_disabled_locks);
 static herr_t H5F__dest(H5F_t *f, bool flush, bool free_on_failure);
-static herr_t H5F__build_actual_name(const H5F_t *f, H5P_genplist_t *fapl, const char *name, char ** /*out*/ actual_name);
+static herr_t H5F__build_actual_name(const H5F_t *f, H5P_genplist_t *fapl, const char *name,
+                                     char ** /*out*/ actual_name);
 static herr_t H5F__flush_phase1(H5F_t *f);
 static herr_t H5F__flush_phase2(H5F_t *f, bool closing);
 
@@ -932,15 +933,15 @@ H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_op
                      const char *prop_prefix, const char *file_name, unsigned file_intent,
                      H5P_genplist_t *fapl)
 {
-    H5F_t     *src_file    = NULL;            /* Source file */
-    H5F_efc_t *efc         = NULL;            /* External file cache */
-    H5P_genplist_t *old_fapl = NULL; /* old FAPL in API context */
-    H5P_genplist_t *old_fcpl = NULL; /* ID for old FCPL in API context */
-    char      *full_name        = NULL;       /* File name with prefix */
-    char      *actual_file_name = NULL;       /* File's actual name */
-    char      *temp_file_name   = NULL;       /* Temporary pointer to file name */
-    size_t     temp_file_name_len;            /* Length of temporary file name */
-    herr_t     ret_value = SUCCEED;           /* Return value */
+    H5F_t          *src_file         = NULL; /* Source file */
+    H5F_efc_t      *efc              = NULL; /* External file cache */
+    H5P_genplist_t *old_fapl         = NULL; /* old FAPL in API context */
+    H5P_genplist_t *old_fcpl         = NULL; /* ID for old FCPL in API context */
+    char           *full_name        = NULL; /* File name with prefix */
+    char           *actual_file_name = NULL; /* File's actual name */
+    char           *temp_file_name   = NULL; /* Temporary pointer to file name */
+    size_t          temp_file_name_len;      /* Length of temporary file name */
+    herr_t          ret_value = SUCCEED;     /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
@@ -2737,7 +2738,7 @@ done:
 H5F_t *
 H5F__reopen(H5F_t *f)
 {
-    H5P_genplist_t *fapl = NULL;      /* File access property list pointer */
+    H5P_genplist_t *fapl      = NULL; /* File access property list pointer */
     H5F_t          *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE
