@@ -190,16 +190,18 @@ herr_t
 H5VL__native_attr_read(void *attr, hid_t dtype_id, void *buf, hid_t dxpl_id, void H5_ATTR_UNUSED **req)
 {
     H5T_t *mem_type;  /* Memory datatype */
+    H5P_genplist_t *dxpl;                /* Dataset transfer property list */
     herr_t ret_value; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
     if (NULL == (mem_type = (H5T_t *)H5I_object_verify(dtype_id, H5I_DATATYPE)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a datatype");
+    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+        HGOTO_ERROR(H5E_ATTR, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(dxpl_id) < 0)
-        HGOTO_ERROR(H5E_ATTR, H5E_CANTSET, FAIL, "can't set DXPL for operation");
+    H5CX_set_dxpl(dxpl);
 
     /* Go write the actual data to the attribute */
     if ((ret_value = H5A__read((H5A_t *)attr, mem_type, buf)) < 0)
@@ -222,16 +224,18 @@ herr_t
 H5VL__native_attr_write(void *attr, hid_t dtype_id, const void *buf, hid_t dxpl_id, void H5_ATTR_UNUSED **req)
 {
     H5T_t *mem_type;  /* Memory datatype */
+    H5P_genplist_t *dxpl;                /* Dataset transfer property list */
     herr_t ret_value; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
     if (NULL == (mem_type = (H5T_t *)H5I_object_verify(dtype_id, H5I_DATATYPE)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a datatype");
+    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+        HGOTO_ERROR(H5E_ATTR, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(dxpl_id) < 0)
-        HGOTO_ERROR(H5E_ATTR, H5E_CANTSET, FAIL, "can't set DXPL for operation");
+    H5CX_set_dxpl(dxpl);
 
     /* Go write the actual data to the attribute */
     if ((ret_value = H5A__write((H5A_t *)attr, mem_type, buf)) < 0)

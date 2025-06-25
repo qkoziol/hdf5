@@ -3189,8 +3189,7 @@ H5T__register(H5T_pers_t pers, const char *name, H5T_t *src, H5T_t *dst, H5T_con
                 /* Prepare & restore library for user callback */
                 H5_BEFORE_USER_CB(FAIL)
                     {
-                        ret_value = (conv->u.app_func)(tmp_sid, tmp_did, &cdata, 0, 0, 0, NULL, NULL,
-                                                       H5CX_get_dxpl());
+                        ret_value = (conv->u.app_func)(tmp_sid, tmp_did, &cdata, 0, 0, 0, NULL, NULL, H5P_PLIST_ID(H5CX_get_dxpl()));
                     }
                 H5_AFTER_USER_CB(FAIL)
                 if (ret_value < 0) {
@@ -3584,8 +3583,7 @@ H5Tconvert(hid_t src_id, hid_t dst_id, size_t nelmts, void *buf, void *backgroun
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(H5P_PLIST_ID(dxpl)) < 0)
-        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set DXPL for operation");
+    H5CX_set_dxpl(dxpl);
 
     /* Find the conversion function */
     if (NULL == (tpath = H5T_path_find(src, dst)))
@@ -3633,8 +3631,7 @@ H5Treclaim(hid_t type_id, hid_t space_id, hid_t dxpl_id, void *buf)
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(H5P_PLIST_ID(dxpl)) < 0)
-        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set DXPL for operation");
+    H5CX_set_dxpl(dxpl);
 
     /* Call internal routine */
     ret_value = H5T_reclaim(type, space, buf);
@@ -5870,8 +5867,7 @@ H5T__path_find_init_new_path(H5T_path_t *path, const H5T_t *src, const H5T_t *ds
             /* Prepare & restore library for user callback */
             H5_BEFORE_USER_CB(FAIL)
                 {
-                    status = (conv->u.app_func)(src_id, dst_id, &(path->cdata), 0, 0, 0, NULL, NULL,
-                                                H5CX_get_dxpl());
+                    status = (conv->u.app_func)(src_id, dst_id, &(path->cdata), 0, 0, 0, NULL, NULL, H5P_PLIST_ID(H5CX_get_dxpl()));
                 }
             H5_AFTER_USER_CB(FAIL)
         }
@@ -5930,8 +5926,7 @@ H5T__path_find_init_new_path(H5T_path_t *path, const H5T_t *src, const H5T_t *ds
             /* Prepare & restore library for user callback */
             H5_BEFORE_USER_CB(FAIL)
                 {
-                    status = (H5T_g.soft[i].conv.u.app_func)(src_id, dst_id, &path->cdata, 0, 0, 0, NULL,
-                                                             NULL, H5CX_get_dxpl());
+                    status = (H5T_g.soft[i].conv.u.app_func)(src_id, dst_id, &path->cdata, 0, 0, 0, NULL, NULL, H5P_PLIST_ID(H5CX_get_dxpl()));
                 }
             H5_AFTER_USER_CB(FAIL)
         }
@@ -6022,9 +6017,7 @@ H5T__path_free(H5T_path_t *path, H5T_conv_ctx_t *conv_ctx)
             /* Prepare & restore library for user callback */
             H5_BEFORE_USER_CB_NOERR(FAIL)
                 {
-                    status =
-                        (path->conv.u.app_func)(conv_ctx->u.free.src_type_id, conv_ctx->u.free.dst_type_id,
-                                                &path->cdata, 0, 0, 0, NULL, NULL, H5CX_get_dxpl());
+                    status = (path->conv.u.app_func)(conv_ctx->u.free.src_type_id, conv_ctx->u.free.dst_type_id, &path->cdata, 0, 0, 0, NULL, NULL, H5P_PLIST_ID(H5CX_get_dxpl()));
                 }
             H5_AFTER_USER_CB_NOERR(FAIL)
         }
@@ -6441,9 +6434,7 @@ H5T_convert_with_ctx(H5T_path_t *tpath, const H5T_t *src_type, const H5T_t *dst_
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
-                ret_value = (tpath->conv.u.app_func)(conv_ctx->u.conv.src_type_id,
-                                                     conv_ctx->u.conv.dst_type_id, &(tpath->cdata), nelmts,
-                                                     buf_stride, bkg_stride, buf, bkg, H5CX_get_dxpl());
+                ret_value = (tpath->conv.u.app_func)(conv_ctx->u.conv.src_type_id, conv_ctx->u.conv.dst_type_id, &(tpath->cdata), nelmts, buf_stride, bkg_stride, buf, bkg, H5P_PLIST_ID(H5CX_get_dxpl()));
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)

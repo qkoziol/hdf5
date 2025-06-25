@@ -202,7 +202,7 @@ H5G__traverse_ud(const H5G_loc_t *grp_loc /*in,out*/, const H5O_link_t *lnk, H5G
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
-                cb_return = (link_class->trav_func)(lnk->name, cur_grp, lnk->u.ud.udata, lnk->u.ud.size, lapl_id, H5CX_get_dxpl());
+                cb_return = (link_class->trav_func)(lnk->name, cur_grp, lnk->u.ud.udata, lnk->u.ud.size, lapl_id, H5P_PLIST_ID(H5CX_get_dxpl()));
             }
         H5_AFTER_USER_CB(FAIL)
     }
@@ -210,7 +210,7 @@ H5G__traverse_ud(const H5G_loc_t *grp_loc /*in,out*/, const H5O_link_t *lnk, H5G
     /* Prepare & restore library for user callback */
     H5_BEFORE_USER_CB(FAIL)
         {
-            cb_return = (link_class->trav_func)(lnk->name, cur_grp, lnk->u.ud.udata, lnk->u.ud.size, lapl_id, H5CX_get_dxpl());
+            cb_return = (link_class->trav_func)(lnk->name, cur_grp, lnk->u.ud.udata, lnk->u.ud.size, lapl_id, H5P_PLIST_ID(H5CX_get_dxpl()));
         }
     H5_AFTER_USER_CB(FAIL)
 #endif /* H5_NO_DEPRECATED_SYMBOLS */

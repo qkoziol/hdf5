@@ -321,11 +321,9 @@ H5Dvlen_reclaim(hid_t type_id, hid_t space_id, hid_t dxpl_id, void *buf)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "dataspace does not have extent set");
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
-    dxpl_id = H5P_PLIST_ID(dxpl); /* Allow for application passing H5P_DEFAULT */
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(dxpl_id) < 0)
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "can't set DXPL for operation");
+    H5CX_set_dxpl(dxpl);
 
     /* Call internal routine */
     ret_value = H5T_reclaim(type, space, buf);

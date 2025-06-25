@@ -916,7 +916,7 @@ H5FD_read(H5FD_int_t *fh, H5FD_mem_t type, haddr_t addr, size_t size, void *buf 
         {
             /* Dispatch to driver */
             ret_value =
-                (fh->driver->cls->read)(file, type, H5CX_get_dxpl(), addr + file->base_addr, size, buf);
+                (fh->driver->cls->read)(file, type, H5P_PLIST_ID(H5CX_get_dxpl()), addr + file->base_addr, size, buf);
         }
     H5_AFTER_USER_CB(FAIL)
     if (ret_value < 0)
@@ -990,7 +990,7 @@ H5FD_write(H5FD_int_t *fh, H5FD_mem_t type, haddr_t addr, size_t size, const voi
         {
             /* Dispatch to driver */
             ret_value =
-                (fh->driver->cls->write)(file, type, H5CX_get_dxpl(), addr + file->base_addr, size, buf);
+                (fh->driver->cls->write)(file, type, H5P_PLIST_ID(H5CX_get_dxpl()), addr + file->base_addr, size, buf);
         }
     H5_AFTER_USER_CB(FAIL)
     if (ret_value < 0)
@@ -1163,7 +1163,7 @@ H5FD_read_vector(H5FD_int_t *fh, uint32_t count, H5FD_mem_t types[], haddr_t add
         H5_BEFORE_USER_CB(FAIL)
             {
                 ret_value =
-                    (fh->driver->cls->read_vector)(file, H5CX_get_dxpl(), count, types, addrs, sizes, bufs);
+                    (fh->driver->cls->read_vector)(file, H5P_PLIST_ID(H5CX_get_dxpl()), count, types, addrs, sizes, bufs);
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
@@ -1212,7 +1212,7 @@ H5FD_read_vector(H5FD_int_t *fh, uint32_t count, H5FD_mem_t types[], haddr_t add
             /* Prepare & restore library for user callback */
             H5_BEFORE_USER_CB(FAIL)
                 {
-                    ret_value = (fh->driver->cls->read)(file, type, H5CX_get_dxpl(), addrs[i], size, bufs[i]);
+                    ret_value = (fh->driver->cls->read)(file, type, H5P_PLIST_ID(H5CX_get_dxpl()), addrs[i], size, bufs[i]);
                 }
             H5_AFTER_USER_CB(FAIL)
             if (ret_value < 0)
@@ -1382,7 +1382,7 @@ H5FD_write_vector(H5FD_int_t *fh, uint32_t count, H5FD_mem_t types[], haddr_t ad
         H5_BEFORE_USER_CB(FAIL)
             {
                 ret_value =
-                    (fh->driver->cls->write_vector)(file, H5CX_get_dxpl(), count, types, addrs, sizes, bufs);
+                    (fh->driver->cls->write_vector)(file, H5P_PLIST_ID(H5CX_get_dxpl()), count, types, addrs, sizes, bufs);
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
@@ -1432,7 +1432,7 @@ H5FD_write_vector(H5FD_int_t *fh, uint32_t count, H5FD_mem_t types[], haddr_t ad
             H5_BEFORE_USER_CB(FAIL)
                 {
                     ret_value =
-                        (fh->driver->cls->write)(file, type, H5CX_get_dxpl(), addrs[i], size, bufs[i]);
+                        (fh->driver->cls->write)(file, type, H5P_PLIST_ID(H5CX_get_dxpl()), addrs[i], size, bufs[i]);
                 }
             H5_AFTER_USER_CB(FAIL)
             if (ret_value < 0)
@@ -1612,8 +1612,7 @@ H5FD_read_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, H5S_t **mem
         H5_BEFORE_USER_CB(FAIL)
             {
                 ret_value =
-                    (fh->driver->cls->read_selection)(file, type, H5CX_get_dxpl(), count, mem_space_ids,
-                                                      file_space_ids, offsets, element_sizes, bufs);
+                    (fh->driver->cls->read_selection)(file, type, H5P_PLIST_ID(H5CX_get_dxpl()), count, mem_space_ids, file_space_ids, offsets, element_sizes, bufs);
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
@@ -1797,8 +1796,7 @@ H5FD_write_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, H5S_t **me
         H5_BEFORE_USER_CB(FAIL)
             {
                 ret_value =
-                    (fh->driver->cls->write_selection)(file, type, H5CX_get_dxpl(), count, mem_space_ids,
-                                                       file_space_ids, offsets, element_sizes, bufs);
+                    (fh->driver->cls->write_selection)(file, type, H5P_PLIST_ID(H5CX_get_dxpl()), count, mem_space_ids, file_space_ids, offsets, element_sizes, bufs);
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
@@ -1872,7 +1870,7 @@ H5FD_flush(H5FD_int_t *fh, bool closing)
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
-                ret_value = (fh->driver->cls->flush)(fh->file, H5CX_get_dxpl(), closing);
+                ret_value = (fh->driver->cls->flush)(fh->file, H5P_PLIST_ID(H5CX_get_dxpl()), closing);
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
@@ -1910,7 +1908,7 @@ H5FD_truncate(H5FD_int_t *fh, bool closing)
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
-                ret_value = (fh->driver->cls->truncate)(fh->file, H5CX_get_dxpl(), closing);
+                ret_value = (fh->driver->cls->truncate)(fh->file, H5P_PLIST_ID(H5CX_get_dxpl()), closing);
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)

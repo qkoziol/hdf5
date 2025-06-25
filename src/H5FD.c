@@ -551,8 +551,7 @@ H5FDalloc(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, hsize_t size)
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, HADDR_UNDEF, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(H5P_PLIST_ID(dxpl)) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, HADDR_UNDEF, "can't set DXPL for operation");
+    H5CX_set_dxpl(dxpl);
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -603,8 +602,7 @@ H5FDfree(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, hsize_t siz
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(H5P_PLIST_ID(dxpl)) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
+    H5CX_set_dxpl(dxpl);
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -858,8 +856,7 @@ H5FDread(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, size_t size
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(H5P_PLIST_ID(dxpl)) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
+    H5CX_set_dxpl(dxpl);
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -906,8 +903,7 @@ H5FDwrite(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, size_t siz
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(H5P_PLIST_ID(dxpl)) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
+    H5CX_set_dxpl(dxpl);
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -976,8 +972,7 @@ H5FDread_vector(H5FD_t *file, hid_t dxpl_id, uint32_t count, H5FD_mem_t types[],
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(H5P_PLIST_ID(dxpl)) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
+    H5CX_set_dxpl(dxpl);
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -1044,8 +1039,7 @@ H5FDwrite_vector(H5FD_t *file, hid_t dxpl_id, uint32_t count, H5FD_mem_t types[]
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(H5P_PLIST_ID(dxpl)) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
+    H5CX_set_dxpl(dxpl);
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -1136,8 +1130,7 @@ H5FDread_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, uint32_t count,
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(H5P_PLIST_ID(dxpl)) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
+    H5CX_set_dxpl(dxpl);
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -1227,8 +1220,7 @@ H5FDwrite_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, uint32_t count
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(H5P_PLIST_ID(dxpl)) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
+    H5CX_set_dxpl(dxpl);
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -1324,8 +1316,7 @@ H5FDread_vector_from_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, uin
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(H5P_PLIST_ID(dxpl)) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
+    H5CX_set_dxpl(dxpl);
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -1419,8 +1410,7 @@ H5FDwrite_vector_from_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, ui
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(H5P_PLIST_ID(dxpl)) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
+    H5CX_set_dxpl(dxpl);
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -1514,8 +1504,7 @@ H5FDread_from_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, uint32_t c
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(H5P_PLIST_ID(dxpl)) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
+    H5CX_set_dxpl(dxpl);
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -1608,8 +1597,7 @@ H5FDwrite_from_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, uint32_t 
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(H5P_PLIST_ID(dxpl)) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
+    H5CX_set_dxpl(dxpl);
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -1653,8 +1641,7 @@ H5FDflush(H5FD_t *file, hid_t dxpl_id, hbool_t closing)
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(H5P_PLIST_ID(dxpl)) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
+    H5CX_set_dxpl(dxpl);
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -1695,8 +1682,7 @@ H5FDtruncate(H5FD_t *file, hid_t dxpl_id, hbool_t closing)
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(H5P_PLIST_ID(dxpl)) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
+    H5CX_set_dxpl(dxpl);
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);

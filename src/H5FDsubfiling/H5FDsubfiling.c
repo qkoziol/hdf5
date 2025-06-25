@@ -1661,6 +1661,7 @@ H5FD__subfiling_read_vector(H5FD_t *_file, hid_t dxpl_id, uint32_t count, H5FD_m
                             size_t sizes[], void *bufs[] /* out */)
 {
     H5FD_subfiling_t *file      = (H5FD_subfiling_t *)_file;
+    H5P_genplist_t *dxpl;                /* Dataset transfer property list */
     herr_t            ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
@@ -1676,11 +1677,11 @@ H5FD__subfiling_read_vector(H5FD_t *_file, hid_t dxpl_id, uint32_t count, H5FD_m
     assert(count == 0 || types[0] != H5FD_MEM_NOLIST);
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(dxpl_id) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
+    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+        HGOTO_ERROR(H5E_VFL, H5E_BADID, FAIL, "can't find object for ID");
+    H5CX_set_dxpl(dxpl);
 
-    if (H5FD__subfiling_io_helper(file, (size_t)count, types, addrs, sizes, (H5_flexible_const_ptr_t *)bufs,
-                                  IO_TYPE_READ) < 0)
+    if (H5FD__subfiling_io_helper(file, (size_t)count, types, addrs, sizes, (H5_flexible_const_ptr_t *)bufs, IO_TYPE_READ) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_READERROR, FAIL, "couldn't read data");
 
 done:
@@ -1708,6 +1709,7 @@ H5FD__subfiling_write_vector(H5FD_t *_file, hid_t dxpl_id, uint32_t count, H5FD_
                              haddr_t addrs[], size_t sizes[], const void *bufs[] /* in */)
 {
     H5FD_subfiling_t *file      = (H5FD_subfiling_t *)_file;
+    H5P_genplist_t *dxpl;                /* Dataset transfer property list */
     herr_t            ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
@@ -1723,11 +1725,11 @@ H5FD__subfiling_write_vector(H5FD_t *_file, hid_t dxpl_id, uint32_t count, H5FD_
     assert(count == 0 || types[0] != H5FD_MEM_NOLIST);
 
     /* Set DXPL for operation */
-    if (H5CX_set_dxpl(dxpl_id) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set DXPL for operation");
+    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+        HGOTO_ERROR(H5E_VFL, H5E_BADID, FAIL, "can't find object for ID");
+    H5CX_set_dxpl(dxpl);
 
-    if (H5FD__subfiling_io_helper(file, (size_t)count, types, addrs, sizes, (H5_flexible_const_ptr_t *)bufs,
-                                  IO_TYPE_WRITE) < 0)
+    if (H5FD__subfiling_io_helper(file, (size_t)count, types, addrs, sizes, (H5_flexible_const_ptr_t *)bufs, IO_TYPE_WRITE) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_WRITEERROR, FAIL, "couldn't write data");
 
 done:

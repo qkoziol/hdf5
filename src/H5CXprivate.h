@@ -45,7 +45,7 @@
 
 /* API context state */
 typedef struct H5CX_state_t {
-    hid_t dxpl_id;      /* DXPL for operation */
+    H5P_genplist_t *dxpl; /* DXPL for operation */
     H5P_genplist_t *acpl; /* ACPL for operation */
     H5P_genplist_t *dapl; /* DAPL for operation */
     H5P_genplist_t *fapl; /* FAPL for operation */
@@ -527,29 +527,14 @@ typedef struct H5CX_fapl_cache_t {
  */
 H5_GCC_CLANG_DIAG_OFF("c99-c11-compat")
 typedef struct H5CX_t {
-    /* DXPL */
-    hid_t           dxpl_id; /* DXPL ID for API operation */
+    /* Cached pointers to property lists from API calls */
     H5P_genplist_t *dxpl;    /* Dataset Transfer Property List */
-
-    /* LCPL */
     H5P_genplist_t *lcpl;    /* Link Creation Property List */
-
-    /* LAPL */
     H5P_genplist_t *lapl;    /* Link Access Property List */
-
-    /* OCPL */
     H5P_genplist_t *ocpl;    /* Object Creation Property List */
-
-    /* ACPL */
     H5P_genplist_t *acpl;    /* Attribute Creation Property List */
-
-    /* OCPYPL */
-    H5P_genplist_t *ocpypl;    /* Object Copy Property List */
-
-    /* DAPL */
+    H5P_genplist_t *ocpypl;  /* Object Copy Property List */
     H5P_genplist_t *dapl;    /* Dataset Access Property List */
-
-    /* FAPL */
     H5P_genplist_t *fapl;    /* File Access Property List */
 
     /* Internal: Object tagging info */
@@ -655,7 +640,7 @@ H5_DLL herr_t H5CX_free_state(H5CX_state_t *api_state);
 
 /* "Setter" routines for API context info */
 H5_DLL herr_t H5CX_set_cpl(H5P_genplist_t *crtpl);
-H5_DLL herr_t H5CX_set_dxpl(hid_t dxpl_id);
+H5_DLL void   H5CX_set_dxpl(H5P_genplist_t *dxpl);
 H5_DLL void   H5CX_set_lcpl(H5P_genplist_t *lcpl);
 H5_DLL void   H5CX_set_acpl(H5P_genplist_t *acpl);
 H5_DLL herr_t H5CX_set_libver_bounds(H5F_t *f);
@@ -671,7 +656,7 @@ H5_DLL H5P_genplist_t *H5CX_get_fapl(void);
 H5_DLL H5P_genplist_t *H5CX_get_ocpl(void);
 H5_DLL bool        H5CX_is_def_ocpl(void);
 H5_DLL H5P_genplist_t *H5CX_get_fcpl(void);
-H5_DLL hid_t       H5CX_get_dxpl(void);
+H5_DLL H5P_genplist_t *H5CX_get_dxpl(void);
 H5_DLL bool        H5CX_is_def_dxpl(void);
 H5_DLL H5P_genplist_t *H5CX_get_lapl(void);
 H5_DLL herr_t      H5CX_get_vol_wrap_ctx(void **wrap_ctx);
