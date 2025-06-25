@@ -1030,7 +1030,7 @@ H5CX_push(H5CX_node_t *cnode)
     cnode->ctx.ocpl      = H5P_LST_OBJECT_CREATE_g;
     cnode->ctx.acpl      = H5P_LST_ATTRIBUTE_CREATE_g;
     cnode->ctx.ocpypl    = H5P_LST_OBJECT_COPY_g;
-    cnode->ctx.dapl_id   = H5P_DATASET_ACCESS_DEFAULT;
+    cnode->ctx.dapl      = H5P_LST_DATASET_ACCESS_g;
     cnode->ctx.fapl      = H5P_LST_FILE_ACCESS_g;
     cnode->ctx.tag       = H5AC__INVALID_TAG;
     cnode->ctx.ring      = H5AC_RING_USER;
@@ -1082,6 +1082,15 @@ H5CX_retrieve_state(H5CX_state_t **api_state)
     if (NULL == (*api_state = H5FL_CALLOC(H5CX_state_t)))
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTALLOC, FAIL, "unable to allocate new API context state");
 
+    /* Check for non-default ACPL */
+    if (H5P_LST_ATTRIBUTE_CREATE_g != (*head)->ctx.acpl) {
+        /* Copy the ACPL */
+        if (NULL == ((*api_state)->acpl = H5P_copy_plist((H5P_genplist_t *)(*head)->ctx.acpl, false)))
+            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy property list");
+    }
+    else
+        (*api_state)->acpl = H5P_LST_ATTRIBUTE_CREATE_g;
+
     /* Check for non-default OCPL */
     if (H5P_LST_OBJECT_CREATE_g != (*head)->ctx.ocpl) {
         /* Copy the OCPL */
@@ -1099,6 +1108,15 @@ H5CX_retrieve_state(H5CX_state_t **api_state)
     }
     else
         (*api_state)->ocpypl = H5P_LST_OBJECT_COPY_g;
+
+    /* Check for non-default DAPL */
+    if (H5P_LST_DATASET_ACCESS_g != (*head)->ctx.dapl) {
+        /* Copy the DAPL */
+        if (NULL == ((*api_state)->dapl = H5P_copy_plist((H5P_genplist_t *)(*head)->ctx.dapl, false)))
+            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy property list");
+    }
+    else
+        (*api_state)->dapl = H5P_LST_DATASET_ACCESS_g;
 
     /* Check for non-default DXPL */
     if (H5P_DATASET_XFER_DEFAULT != (*head)->ctx.dxpl_id) {
@@ -1192,11 +1210,17 @@ H5CX_restore_state(const H5CX_state_t *api_state)
     assert(head && *head);
     assert(api_state);
 
+    /* Restore the ACPL info */
+    (*head)->ctx.acpl = api_state->acpl;
+
     /* Restore the OCPL info */
     (*head)->ctx.ocpl = api_state->ocpl;
 
     /* Restore the OCPYPL info */
     (*head)->ctx.ocpypl = api_state->ocpypl;
+
+    /* Restore the DAPL info */
+    (*head)->ctx.dapl = api_state->dapl;
 
     /* Restore the DXPL info */
     (*head)->ctx.dxpl_id = api_state->dxpl_id;
@@ -1243,6 +1267,11 @@ H5CX_free_state(H5CX_state_t *api_state)
     /* Sanity check */
     assert(api_state);
 
+    /* Release the ACPL */
+    if (H5P_LST_ATTRIBUTE_CREATE_g != api_state->acpl)
+        if (H5P_release(api_state->acpl) < 0)
+            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't decrement refcount on ACPL");
+
     /* Release the OCPL */
     if (H5P_LST_OBJECT_CREATE_g != api_state->ocpl)
         if (H5P_release(api_state->ocpl) < 0)
@@ -1252,6 +1281,11 @@ H5CX_free_state(H5CX_state_t *api_state)
     if (H5P_LST_OBJECT_COPY_g != api_state->ocpypl)
         if (H5P_release(api_state->ocpypl) < 0)
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't decrement refcount on OCPYPL");
+
+    /* Release the DAPL */
+    if (H5P_LST_DATASET_ACCESS_g != api_state->dapl)
+        if (H5P_release(api_state->dapl) < 0)
+            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't decrement refcount on DAPL");
 
     /* Release the DXPL */
     if (0 != api_state->dxpl_id && H5P_DATASET_XFER_DEFAULT != api_state->dxpl_id)
@@ -1645,7 +1679,7 @@ H5CX_set_apl(H5P_genplist_t *acspl,
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for dataset access class");
     if (is_dapl) {
         H5CX__reset_dapl(*head);
-        (*head)->ctx.dapl_id = H5P_PLIST_ID(acspl);
+        (*head)->ctx.dapl = acspl;
     }
 
     /* Check for file access property and set API context if so */
@@ -5472,13 +5506,12 @@ H5CX_peek_ext_file_prefix(const char **extfile_prefix)
     assert(extfile_prefix);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.dapl_id);
 
     /* This getter does not use H5CX_RETRIEVE_PROP_VALID in order to use
      * H5P_peek instead of H5P_get.  This prevents invocation of the property's
      * library-defined copy callback
      */
-    H5CX_PEEK_PROP_VALID(dapl, H5P_DATASET_ACCESS_DEFAULT, H5D_ACS_EFILE_PREFIX_NAME, extfile_prefix)
+    H5CX_PEEK_PROP_VALID_NEW(dapl, H5D_ACS_EFILE_PREFIX_NAME, extfile_prefix)
 
     /* Get the value */
     *extfile_prefix = (*head)->ctx.dapl_props.extfile_prefix;
@@ -5508,13 +5541,12 @@ H5CX_peek_vds_prefix(const char **vds_prefix)
     assert(vds_prefix);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.dapl_id);
 
     /* This getter does not use H5CX_RETRIEVE_PROP_VALID in order to use
      * H5P_peek instead of H5P_get.  This prevents invocation of the property's
      * library-defined copy callback
      */
-    H5CX_PEEK_PROP_VALID(dapl, H5P_DATASET_ACCESS_DEFAULT, H5D_ACS_VDS_PREFIX_NAME, vds_prefix)
+    H5CX_PEEK_PROP_VALID_NEW(dapl, H5D_ACS_VDS_PREFIX_NAME, vds_prefix)
 
     /* Get the value */
     *vds_prefix = (*head)->ctx.dapl_props.vds_prefix;
@@ -5544,9 +5576,8 @@ H5CX_get_append_flush(H5D_append_flush_t *append_flush)
     assert(append_flush);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.dapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(dapl, H5P_DATASET_ACCESS_DEFAULT, H5D_ACS_APPEND_FLUSH_NAME, append_flush)
+    H5CX_RETRIEVE_PROP_VALID_NEW(dapl, H5D_ACS_APPEND_FLUSH_NAME, append_flush)
 
     /* Get the value */
     *append_flush = (*head)->ctx.dapl_props.append_flush;
@@ -5576,10 +5607,8 @@ H5CX_get_rdcc_nbytes(size_t *rdcc_nbytes)
     assert(rdcc_nbytes);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.dapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(dapl, H5P_DATASET_ACCESS_DEFAULT, H5D_ACS_DATA_CACHE_BYTE_SIZE_NAME,
-                             dapl_rdcc_nbytes)
+    H5CX_RETRIEVE_PROP_VALID_NEW(dapl, H5D_ACS_DATA_CACHE_BYTE_SIZE_NAME, dapl_rdcc_nbytes)
 
     /* Get the value */
     *rdcc_nbytes = (*head)->ctx.dapl_props.dapl_rdcc_nbytes;
@@ -5609,10 +5638,8 @@ H5CX_get_rdcc_nslots(size_t *rdcc_nslots)
     assert(rdcc_nslots);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.dapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(dapl, H5P_DATASET_ACCESS_DEFAULT, H5D_ACS_DATA_CACHE_NUM_SLOTS_NAME,
-                             dapl_rdcc_nslots)
+    H5CX_RETRIEVE_PROP_VALID_NEW(dapl, H5D_ACS_DATA_CACHE_NUM_SLOTS_NAME, dapl_rdcc_nslots)
 
     /* Get the value */
     *rdcc_nslots = (*head)->ctx.dapl_props.dapl_rdcc_nslots;
@@ -5642,9 +5669,8 @@ H5CX_get_rdcc_w0(double *rdcc_w0)
     assert(rdcc_w0);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.dapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(dapl, H5P_DATASET_ACCESS_DEFAULT, H5D_ACS_PREEMPT_READ_CHUNKS_NAME, dapl_rdcc_w0)
+    H5CX_RETRIEVE_PROP_VALID_NEW(dapl, H5D_ACS_PREEMPT_READ_CHUNKS_NAME, dapl_rdcc_w0)
 
     /* Get the value */
     *rdcc_w0 = (*head)->ctx.dapl_props.dapl_rdcc_w0;
@@ -5674,9 +5700,8 @@ H5CX_get_vds_printf_gap(hsize_t *vds_printf_gap)
     assert(vds_printf_gap);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.dapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(dapl, H5P_DATASET_ACCESS_DEFAULT, H5D_ACS_VDS_PRINTF_GAP_NAME, vds_printf_gap)
+    H5CX_RETRIEVE_PROP_VALID_NEW(dapl, H5D_ACS_VDS_PRINTF_GAP_NAME, vds_printf_gap)
 
     /* Get the value */
     *vds_printf_gap = (*head)->ctx.dapl_props.vds_printf_gap;
@@ -5706,9 +5731,8 @@ H5CX_get_vds_view(H5D_vds_view_t *vds_view)
     assert(vds_view);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.dapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(dapl, H5P_DATASET_ACCESS_DEFAULT, H5D_ACS_VDS_VIEW_NAME, vds_view)
+    H5CX_RETRIEVE_PROP_VALID_NEW(dapl, H5D_ACS_VDS_VIEW_NAME, vds_view)
 
     /* Get the value */
     *vds_view = (*head)->ctx.dapl_props.vds_view;
@@ -5736,10 +5760,6 @@ H5CX__reset_dapl(H5CX_node_t *head)
 
     /* Reset the DAPL flags to force the properties to be retrieved again */
     memset(&head->ctx.dapl_flags, 0, sizeof(head->ctx.dapl_flags));
-
-    /* Retrieve the DAPL pointer again also */
-    head->ctx.dapl    = NULL;
-    head->ctx.dapl_id = H5P_DATASET_ACCESS_DEFAULT;
 
     FUNC_LEAVE_NOAPI_VOID
 } /* end H5CX__reset_dapl() */
@@ -6971,7 +6991,7 @@ H5CX_pop(bool update_dxpl_props)
     /* Reset any non-default property lists in the current context that have cached values that
      * need to be reset when the context is popped.
      */
-    if (H5P_DATASET_ACCESS_DEFAULT != (*head)->ctx.dapl_id)
+    if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.dapl))
         H5CX__reset_dapl(*head);
     if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.lapl))
         H5CX__reset_lapl(*head);

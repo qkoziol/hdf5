@@ -46,6 +46,8 @@
 /* API context state */
 typedef struct H5CX_state_t {
     hid_t dxpl_id;      /* DXPL for operation */
+    H5P_genplist_t *acpl; /* ACPL for operation */
+    H5P_genplist_t *dapl; /* DAPL for operation */
     H5P_genplist_t *fapl; /* FAPL for operation */
     H5P_genplist_t *lapl; /* LAPL for operation */
     H5P_genplist_t *lcpl; /* LCPL for operation */
@@ -545,7 +547,6 @@ typedef struct H5CX_t {
     H5P_genplist_t *ocpypl;    /* Object Copy Property List */
 
     /* DAPL */
-    hid_t           dapl_id; /* DAPL ID for API operation */
     H5P_genplist_t *dapl;    /* Dataset Access Property List */
 
     /* FAPL */
