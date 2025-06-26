@@ -642,7 +642,7 @@ H5Aopen_async(const char *app_file, const char *app_func, unsigned app_line, hid
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE7(__func__, "*s*sIui*sii", app_file, app_func, app_line, loc_id, attr_name, aapl_id, es_id)) < 0) {
+                        H5ARG_TRACE7(__func__, "*s*sIui*sii", app_file, app_func, app_line, loc_id, attr_name, H5P_PLIST_ID(aapl), es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref(ret_value) < 0)
                 HDONE_ERROR(H5E_ATTR, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on attribute ID");
@@ -789,7 +789,7 @@ H5Aopen_by_name_async(const char *app_file, const char *app_func, unsigned app_l
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE9(__func__, "*s*sIui*s*siii", app_file, app_func, app_line, loc_id, obj_name, attr_name, aapl_id, lapl_id, es_id)) < 0) {
+                        H5ARG_TRACE9(__func__, "*s*sIui*s*siii", app_file, app_func, app_line, loc_id, obj_name, attr_name, H5P_PLIST_ID(aapl), H5P_PLIST_ID(lapl), es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref(ret_value) < 0)
                 HDONE_ERROR(H5E_ATTR, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on attribute ID");
@@ -945,7 +945,7 @@ H5Aopen_by_idx_async(const char *app_file, const char *app_func, unsigned app_li
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE11(__func__, "*s*sIui*sIiIohiii", app_file, app_func, app_line, loc_id, obj_name, idx_type, order, n, aapl_id, lapl_id, es_id)) < 0) {
+                        H5ARG_TRACE11(__func__, "*s*sIui*sIiIohiii", app_file, app_func, app_line, loc_id, obj_name, idx_type, order, n, H5P_PLIST_ID(aapl), H5P_PLIST_ID(lapl), es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref(ret_value) < 0)
                 HDONE_ERROR(H5E_ATTR, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on attribute ID");
@@ -1922,7 +1922,7 @@ H5Arename_by_name_async(const char *app_file, const char *app_func, unsigned app
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE9(__func__, "*s*sIui*s*s*sii", app_file, app_func, app_line, loc_id, obj_name, old_attr_name, new_attr_name, lapl_id, es_id)) < 0)
+                        H5ARG_TRACE9(__func__, "*s*sIui*s*s*sii", app_file, app_func, app_line, loc_id, obj_name, old_attr_name, new_attr_name, H5P_PLIST_ID(lapl), es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_ATTR, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 
@@ -2667,7 +2667,7 @@ H5Aexists_by_name_async(const char *app_file, const char *app_func, unsigned app
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE9(__func__, "*s*sIui*s*s*bii", app_file, app_func, app_line, loc_id, obj_name, attr_name, attr_exists, lapl_id, es_id)) < 0)
+                        H5ARG_TRACE9(__func__, "*s*sIui*s*s*bii", app_file, app_func, app_line, loc_id, obj_name, attr_name, attr_exists, H5P_PLIST_ID(lapl), es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_ATTR, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 

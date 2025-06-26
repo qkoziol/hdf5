@@ -915,7 +915,7 @@ H5Ldelete_async(const char *app_file, const char *app_func, unsigned app_line, h
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE7(__func__, "*s*sIui*sii", app_file, app_func, app_line, loc_id, name, lapl_id, es_id)) < 0)
+                        H5ARG_TRACE7(__func__, "*s*sIui*sii", app_file, app_func, app_line, loc_id, name, H5P_PLIST_ID(lapl), es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_LINK, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 
@@ -1045,7 +1045,7 @@ H5Ldelete_by_idx_async(const char *app_file, const char *app_func, unsigned app_
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE10(__func__, "*s*sIui*sIiIohii", app_file, app_func, app_line, loc_id, group_name, idx_type, order, n, lapl_id, es_id)) < 0)
+                        H5ARG_TRACE10(__func__, "*s*sIui*sIiIohii", app_file, app_func, app_line, loc_id, group_name, idx_type, order, n, H5P_PLIST_ID(lapl), es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_LINK, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 
@@ -1297,7 +1297,7 @@ H5Lexists_async(const char *app_file, const char *app_func, unsigned app_line, h
     if (NULL != token)
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
                         /* clang-format off */
-                        H5ARG_TRACE8(__func__, "*s*sIui*s*bii", app_file, app_func, app_line, loc_id, name, exists, lapl_id, es_id)) < 0)
+                        H5ARG_TRACE8(__func__, "*s*sIui*s*bii", app_file, app_func, app_line, loc_id, name, exists, H5P_PLIST_ID(lapl), es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_LINK, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 

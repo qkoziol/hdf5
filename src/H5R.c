@@ -646,6 +646,7 @@ H5Ropen_object_async(const char *app_file, const char *app_func, unsigned app_li
         /* Attempt to re-open file and pass RAPL as a FAPL */
         if (NULL == (rapl = H5P_object_verify(rapl_id, H5P_TYPE_REFERENCE_ACCESS, true)))
             HGOTO_ERROR(H5E_REFERENCE, H5E_BADTYPE, H5I_INVALID_HID, "not a file access property list");
+        rapl_id = H5P_PLIST_ID(rapl);
         if ((file_id = H5R__reopen_file((H5R_ref_priv_t *)ref_ptr, rapl)) < 0)
             HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENFILE, H5I_INVALID_HID, "cannot re-open referenced file");
     }
@@ -658,7 +659,7 @@ H5Ropen_object_async(const char *app_file, const char *app_func, unsigned app_li
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE7(__func__, "*s*sIu*Rriii", app_file, app_func, app_line, ref_ptr, rapl_id, oapl_id, es_id)) < 0) {
+                        H5ARG_TRACE7(__func__, "*s*sIu*Rriii", app_file, app_func, app_line, ref_ptr, rapl_id, H5P_PLIST_ID(dapl), es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref_always_close(ret_value) < 0)
                 HGOTO_ERROR(H5E_REFERENCE, H5E_CANTDEC, H5I_INVALID_HID,
@@ -840,6 +841,7 @@ H5Ropen_region_async(const char *app_file, const char *app_func, unsigned app_li
         /* Attempt to re-open file and pass RAPL as a FAPL */
         if (NULL == (rapl = H5P_object_verify(rapl_id, H5P_TYPE_REFERENCE_ACCESS, true)))
             HGOTO_ERROR(H5E_REFERENCE, H5E_BADTYPE, H5I_INVALID_HID, "not a file access property list");
+        rapl_id = H5P_PLIST_ID(rapl);
         if ((file_id = H5R__reopen_file((H5R_ref_priv_t *)ref_ptr, rapl)) < 0)
             HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENFILE, H5I_INVALID_HID, "cannot re-open referenced file");
     }
@@ -852,7 +854,7 @@ H5Ropen_region_async(const char *app_file, const char *app_func, unsigned app_li
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE7(__func__, "*s*sIu*Rriii", app_file, app_func, app_line, ref_ptr, rapl_id, oapl_id, es_id)) < 0) {
+                        H5ARG_TRACE7(__func__, "*s*sIu*Rriii", app_file, app_func, app_line, ref_ptr, rapl_id, H5P_PLIST_ID(dapl), es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref_always_close(ret_value) < 0)
                 HGOTO_ERROR(H5E_REFERENCE, H5E_CANTDEC, H5I_INVALID_HID,
@@ -1025,6 +1027,7 @@ H5Ropen_attr_async(const char *app_file, const char *app_func, unsigned app_line
         /* Attempt to re-open file and pass RAPL as a FAPL */
         if (NULL == (rapl = H5P_object_verify(rapl_id, H5P_TYPE_REFERENCE_ACCESS, true)))
             HGOTO_ERROR(H5E_REFERENCE, H5E_BADTYPE, H5I_INVALID_HID, "not a file access property list");
+        rapl_id = H5P_PLIST_ID(rapl);
         if ((file_id = H5R__reopen_file((H5R_ref_priv_t *)ref_ptr, rapl)) < 0)
             HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENFILE, H5I_INVALID_HID, "cannot re-open referenced file");
     }
@@ -1037,7 +1040,7 @@ H5Ropen_attr_async(const char *app_file, const char *app_func, unsigned app_line
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE7(__func__, "*s*sIu*Rriii", app_file, app_func, app_line, ref_ptr, rapl_id, aapl_id, es_id)) < 0) {
+                        H5ARG_TRACE7(__func__, "*s*sIu*Rriii", app_file, app_func, app_line, ref_ptr, rapl_id, H5P_PLIST_ID(aapl), es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref_always_close(ret_value) < 0)
                 HGOTO_ERROR(H5E_REFERENCE, H5E_CANTDEC, H5I_INVALID_HID,

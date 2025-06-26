@@ -407,7 +407,7 @@ H5Mcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE11(__func__, "*s*sIui*siiiiii", app_file, app_func, app_line, loc_id, name, key_type_id, val_type_id, lcpl_id, mcpl_id, mapl_id, es_id)) < 0) {
+                        H5ARG_TRACE11(__func__, "*s*sIui*siiiiii", app_file, app_func, app_line, loc_id, name, key_type_id, val_type_id, H5P_PLIST_ID(lcpl), H5P_PLIST_ID(mcpl), H5P_PLIST_ID(mapl), es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref_always_close(ret_value) < 0)
                 HDONE_ERROR(H5E_MAP, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on map ID");
@@ -643,7 +643,7 @@ H5Mopen_async(const char *app_file, const char *app_func, unsigned app_line, hid
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE7(__func__, "*s*sIui*sii", app_file, app_func, app_line, loc_id, name, mapl_id, es_id)) < 0) {
+                        H5ARG_TRACE7(__func__, "*s*sIui*sii", app_file, app_func, app_line, loc_id, name, H5P_PLIST_ID(mapl), es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref_always_close(ret_value) < 0)
                 HDONE_ERROR(H5E_MAP, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on map ID");
@@ -1097,7 +1097,7 @@ H5Mput_async(const char *app_file, const char *app_func, unsigned app_line, hid_
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE10(__func__, "*s*sIuii*xi*xii", app_file, app_func, app_line, map_id, key_mem_type_id, key, val_mem_type_id, value, dxpl_id, es_id)) < 0)
+                        H5ARG_TRACE10(__func__, "*s*sIuii*xi*xii", app_file, app_func, app_line, map_id, key_mem_type_id, key, val_mem_type_id, value, H5P_PLIST_ID(dxpl), es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_MAP, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 
@@ -1232,7 +1232,7 @@ H5Mget_async(const char *app_file, const char *app_func, unsigned app_line, hid_
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE10(__func__, "*s*sIuii*xi*xii", app_file, app_func, app_line, map_id, key_mem_type_id, key, val_mem_type_id, value, dxpl_id, es_id)) < 0)
+                        H5ARG_TRACE10(__func__, "*s*sIuii*xi*xii", app_file, app_func, app_line, map_id, key_mem_type_id, key, val_mem_type_id, value, H5P_PLIST_ID(dxpl), es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_MAP, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 

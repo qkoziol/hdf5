@@ -752,7 +752,7 @@ H5Topen_async(const char *app_file, const char *app_func, unsigned app_line, hid
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE7(__func__, "*s*sIui*sii", app_file, app_func, app_line, loc_id, name, tapl_id, es_id)) < 0) {
+                        H5ARG_TRACE7(__func__, "*s*sIui*sii", app_file, app_func, app_line, loc_id, name, H5P_PLIST_ID(tapl), es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref_always_close(ret_value) < 0)
                 HGOTO_ERROR(H5E_DATATYPE, H5E_CANTDEC, H5I_INVALID_HID,
