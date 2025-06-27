@@ -1865,7 +1865,8 @@ H5VLattr_optional_op(const char *app_file, const char *app_func, unsigned app_li
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Call the common VOL connector optional routine */
-    if ((ret_value = H5VL__common_optional_op(attr_id, H5I_ATTR, H5VL__attr_optional, args, dxpl, token_ptr, &vol_obj)) < 0)
+    if ((ret_value = H5VL__common_optional_op(attr_id, H5I_ATTR, H5VL__attr_optional, args, dxpl, token_ptr,
+                                              &vol_obj)) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "unable to execute attribute optional callback");
 
     /* If a token was created, add the token to the event set */
@@ -2862,7 +2863,8 @@ H5VLdataset_optional_op(const char *app_file, const char *app_func, unsigned app
     dxpl_id = H5P_PLIST_ID(dxpl);
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__common_optional_op(dset_id, H5I_DATASET, H5VL__dataset_optional, args, dxpl, token_ptr, &vol_obj) < 0)
+    if (H5VL__common_optional_op(dset_id, H5I_DATASET, H5VL__dataset_optional, args, dxpl, token_ptr,
+                                 &vol_obj) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "unable to execute dataset optional callback");
 
     /* If a token was created, add the token to the event set */
@@ -5182,7 +5184,8 @@ H5VLgroup_optional_op(const char *app_file, const char *app_func, unsigned app_l
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Call the corresponding internal VOL routine */
-    if ((ret_value = H5VL__common_optional_op(group_id, H5I_GROUP, H5VL__group_optional, args, dxpl, token_ptr, &vol_obj)) < 0)
+    if ((ret_value = H5VL__common_optional_op(group_id, H5I_GROUP, H5VL__group_optional, args, dxpl,
+                                              token_ptr, &vol_obj)) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "unable to execute group optional callback");
 
     /* If a token was created, add the token to the event set */
