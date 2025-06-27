@@ -385,14 +385,17 @@ H5Mcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
     /* Get link creation property list */
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_MAP, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+    lcpl_id = H5P_PLIST_ID(lcpl);
 
     /* Get the map creation property list */
     if (NULL == (mcpl = H5P_object_verify(mcpl_id, H5P_TYPE_MAP_CREATE, true)))
         HGOTO_ERROR(H5E_MAP, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+    mcpl_id = H5P_PLIST_ID(mcpl);
 
     /* Get the map access property list */
     if (NULL == (mapl = H5P_object_verify(mapl_id, H5P_TYPE_MAP_ACCESS, true)))
         HGOTO_ERROR(H5E_MAP, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+    mapl_id = H5P_PLIST_ID(mapl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -407,7 +410,7 @@ H5Mcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE11(__func__, "*s*sIui*siiiiii", app_file, app_func, app_line, loc_id, name, key_type_id, val_type_id, H5P_PLIST_ID(lcpl), H5P_PLIST_ID(mcpl), H5P_PLIST_ID(mapl), es_id)) < 0) {
+                        H5ARG_TRACE11(__func__, "*s*sIui*siiiiii", app_file, app_func, app_line, loc_id, name, key_type_id, val_type_id, lcpl_id, mcpl_id, mapl_id, es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref_always_close(ret_value) < 0)
                 HDONE_ERROR(H5E_MAP, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on map ID");
@@ -630,6 +633,7 @@ H5Mopen_async(const char *app_file, const char *app_func, unsigned app_line, hid
     /* Get the map access property list */
     if (NULL == (mapl = H5P_object_verify(mapl_id, H5P_TYPE_MAP_ACCESS, true)))
         HGOTO_ERROR(H5E_MAP, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+    mapl_id = H5P_PLIST_ID(mapl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -643,7 +647,7 @@ H5Mopen_async(const char *app_file, const char *app_func, unsigned app_line, hid
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE7(__func__, "*s*sIui*sii", app_file, app_func, app_line, loc_id, name, H5P_PLIST_ID(mapl), es_id)) < 0) {
+                        H5ARG_TRACE7(__func__, "*s*sIui*sii", app_file, app_func, app_line, loc_id, name, mapl_id, es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref_always_close(ret_value) < 0)
                 HDONE_ERROR(H5E_MAP, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on map ID");
@@ -1083,21 +1087,21 @@ H5Mput_async(const char *app_file, const char *app_func, unsigned app_line, hid_
     /* Get the default dataset transfer property list */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_MAP, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+    dxpl_id = H5P_PLIST_ID(dxpl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token;
 
     /* Add key-value pair to the map asynchronously */
-    if (H5M__put_api_common(map_id, key_mem_type_id, key, val_mem_type_id, value, dxpl, token_ptr, &vol_obj) <
-        0)
+    if (H5M__put_api_common(map_id, key_mem_type_id, key, val_mem_type_id, value, dxpl, token_ptr, &vol_obj) < 0)
         HGOTO_ERROR(H5E_MAP, H5E_CANTPUT, FAIL, "unable to put value to map asynchronously");
 
     /* If a token was created, add the token to the event set */
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE10(__func__, "*s*sIuii*xi*xii", app_file, app_func, app_line, map_id, key_mem_type_id, key, val_mem_type_id, value, H5P_PLIST_ID(dxpl), es_id)) < 0)
+                        H5ARG_TRACE10(__func__, "*s*sIuii*xi*xii", app_file, app_func, app_line, map_id, key_mem_type_id, key, val_mem_type_id, value, dxpl_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_MAP, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 
@@ -1218,21 +1222,21 @@ H5Mget_async(const char *app_file, const char *app_func, unsigned app_line, hid_
     /* Get the default dataset transfer property list */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_MAP, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
+    dxpl_id = H5P_PLIST_ID(dxpl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token;
 
     /* Get key-value pair from the map asynchronously */
-    if (H5M__get_api_common(map_id, key_mem_type_id, key, val_mem_type_id, value, dxpl, token_ptr, &vol_obj) <
-        0)
+    if (H5M__get_api_common(map_id, key_mem_type_id, key, val_mem_type_id, value, dxpl, token_ptr, &vol_obj) < 0)
         HGOTO_ERROR(H5E_MAP, H5E_CANTGET, FAIL, "unable to get value from map asynchronously");
 
     /* If a token was created, add the token to the event set */
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE10(__func__, "*s*sIuii*xi*xii", app_file, app_func, app_line, map_id, key_mem_type_id, key, val_mem_type_id, value, H5P_PLIST_ID(dxpl), es_id)) < 0)
+                        H5ARG_TRACE10(__func__, "*s*sIuii*xi*xii", app_file, app_func, app_line, map_id, key_mem_type_id, key, val_mem_type_id, value, dxpl_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_MAP, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 

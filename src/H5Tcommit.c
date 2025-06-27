@@ -201,10 +201,13 @@ H5Tcommit_async(const char *app_file, const char *app_func, unsigned app_line, h
     /* Get correct property lists */
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
+    lcpl_id = H5P_PLIST_ID(lcpl);
     if (NULL == (tcpl = H5P_object_verify(tcpl_id, H5P_TYPE_DATATYPE_CREATE, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
+    tcpl_id = H5P_PLIST_ID(tcpl);
     if (NULL == (tapl = H5P_object_verify(tapl_id, H5P_TYPE_DATATYPE_ACCESS, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
+    tapl_id = H5P_PLIST_ID(tapl);
 
     /* Set the TCPL for the API context */
     if (H5CX_set_cpl(tcpl) < 0)
@@ -226,7 +229,7 @@ H5Tcommit_async(const char *app_file, const char *app_func, unsigned app_line, h
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE10(__func__, "*s*sIui*siiiii", app_file, app_func, app_line, loc_id, name, type_id, H5P_PLIST_ID(lcpl), H5P_PLIST_ID(tcpl), H5P_PLIST_ID(tapl), es_id)) < 0)
+                        H5ARG_TRACE10(__func__, "*s*sIui*siiiii", app_file, app_func, app_line, loc_id, name, type_id, lcpl_id, tcpl_id, tapl_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 
@@ -742,6 +745,7 @@ H5Topen_async(const char *app_file, const char *app_func, unsigned app_line, hid
     /* Check group access property list */
     if (NULL == (tapl = H5P_object_verify(tapl_id, H5P_TYPE_DATATYPE_ACCESS, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+    tapl_id = H5P_PLIST_ID(tapl);
 
     /* Open the datatype asynchronously */
     if ((ret_value = H5T__open_api_common(loc_id, name, tapl, token_ptr, &vol_obj)) < 0)
@@ -752,7 +756,7 @@ H5Topen_async(const char *app_file, const char *app_func, unsigned app_line, hid
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE7(__func__, "*s*sIui*sii", app_file, app_func, app_line, loc_id, name, H5P_PLIST_ID(tapl), es_id)) < 0) {
+                        H5ARG_TRACE7(__func__, "*s*sIui*sii", app_file, app_func, app_line, loc_id, name, tapl_id, es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref_always_close(ret_value) < 0)
                 HGOTO_ERROR(H5E_DATATYPE, H5E_CANTDEC, H5I_INVALID_HID,

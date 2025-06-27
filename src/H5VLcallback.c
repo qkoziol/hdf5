@@ -1858,21 +1858,21 @@ H5VLattr_optional_op(const char *app_file, const char *app_func, unsigned app_li
     /* Get the pointer to the dataset transfer property list */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
+    dxpl_id = H5P_PLIST_ID(dxpl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
-    /* Call the common VOL connector optional routine */ if ((ret_value = H5VL__common_optional_op(
-                                                                  attr_id, H5I_ATTR, H5VL__attr_optional,
-                                                                  args, dxpl, token_ptr, &vol_obj)) < 0)
+    /* Call the common VOL connector optional routine */
+    if ((ret_value = H5VL__common_optional_op(attr_id, H5I_ATTR, H5VL__attr_optional, args, dxpl, token_ptr, &vol_obj)) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "unable to execute attribute optional callback");
 
     /* If a token was created, add the token to the event set */
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, vol_obj->connector, token,
-                        H5ARG_TRACE7(__func__, "*s*sIui*!ii", app_file, app_func, app_line, attr_id, args, H5P_PLIST_ID(dxpl), es_id)) < 0)
+                        H5ARG_TRACE7(__func__, "*s*sIui*!ii", app_file, app_func, app_line, attr_id, args, dxpl_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_VOL, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 
@@ -2859,17 +2859,17 @@ H5VLdataset_optional_op(const char *app_file, const char *app_func, unsigned app
     /* Get the pointer to the dataset transfer property list */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
+    dxpl_id = H5P_PLIST_ID(dxpl);
 
     /* Call the corresponding internal VOL routine */
-    if (H5VL__common_optional_op(dset_id, H5I_DATASET, H5VL__dataset_optional, args, dxpl, token_ptr,
-                                 &vol_obj) < 0)
+    if (H5VL__common_optional_op(dset_id, H5I_DATASET, H5VL__dataset_optional, args, dxpl, token_ptr, &vol_obj) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "unable to execute dataset optional callback");
 
     /* If a token was created, add the token to the event set */
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, vol_obj->connector, token,
-                        H5ARG_TRACE7(__func__, "*s*sIui*!ii", app_file, app_func, app_line, dset_id, args, H5P_PLIST_ID(dxpl), es_id)) < 0)
+                        H5ARG_TRACE7(__func__, "*s*sIui*!ii", app_file, app_func, app_line, dset_id, args, dxpl_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_VOL, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 
@@ -3604,6 +3604,7 @@ H5VLdatatype_optional_op(const char *app_file, const char *app_func, unsigned ap
     /* Get dataset transfer property list */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
+    dxpl_id = H5P_PLIST_ID(dxpl);
 
     /* Only invoke callback if VOL object is set for the datatype */
     if (H5T_invoke_vol_optional(dt, args, dxpl, token_ptr, &vol_obj) < 0)
@@ -3613,7 +3614,7 @@ H5VLdatatype_optional_op(const char *app_file, const char *app_func, unsigned ap
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, vol_obj->connector, token,
-                        H5ARG_TRACE7(__func__, "*s*sIui*!ii", app_file, app_func, app_line, type_id, args, H5P_PLIST_ID(dxpl), es_id)) < 0)
+                        H5ARG_TRACE7(__func__, "*s*sIui*!ii", app_file, app_func, app_line, type_id, args, dxpl_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_VOL, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 
@@ -4450,6 +4451,7 @@ H5VLfile_optional_op(const char *app_file, const char *app_func, unsigned app_li
     /* Get DXPL */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
+    dxpl_id = H5P_PLIST_ID(dxpl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -4463,7 +4465,7 @@ H5VLfile_optional_op(const char *app_file, const char *app_func, unsigned app_li
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, vol_obj->connector, token,
-                        H5ARG_TRACE7(__func__, "*s*sIui*!ii", app_file, app_func, app_line, file_id, args, H5P_PLIST_ID(dxpl), es_id)) < 0)
+                        H5ARG_TRACE7(__func__, "*s*sIui*!ii", app_file, app_func, app_line, file_id, args, dxpl_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_VOL, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 
@@ -5173,21 +5175,21 @@ H5VLgroup_optional_op(const char *app_file, const char *app_func, unsigned app_l
     /* Get DXPL */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
+    dxpl_id = H5P_PLIST_ID(dxpl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Call the corresponding internal VOL routine */
-    if ((ret_value = H5VL__common_optional_op(group_id, H5I_GROUP, H5VL__group_optional, args, dxpl,
-                                              token_ptr, &vol_obj)) < 0)
+    if ((ret_value = H5VL__common_optional_op(group_id, H5I_GROUP, H5VL__group_optional, args, dxpl, token_ptr, &vol_obj)) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "unable to execute group optional callback");
 
     /* If a token was created, add the token to the event set */
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, vol_obj->connector, token,
-                        H5ARG_TRACE7(__func__, "*s*sIui*!ii", app_file, app_func, app_line, group_id, args, H5P_PLIST_ID(dxpl), es_id)) < 0)
+                        H5ARG_TRACE7(__func__, "*s*sIui*!ii", app_file, app_func, app_line, group_id, args, dxpl_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_VOL, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 
@@ -6007,8 +6009,10 @@ H5VLlink_optional_op(const char *app_file, const char *app_func, unsigned app_li
     /* Check the link create property list */
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
+    lapl_id = H5P_PLIST_ID(lapl);
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
+    dxpl_id = H5P_PLIST_ID(dxpl);
 
     /* Set up object access arguments */
     if (H5VL_setup_name_args(loc_id, name, false, lapl, &vol_obj, &loc_params) < 0)
@@ -6031,7 +6035,7 @@ H5VLlink_optional_op(const char *app_file, const char *app_func, unsigned app_li
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, vol_obj->connector, token,
-                        H5ARG_TRACE9(__func__, "*s*sIui*si*!ii", app_file, app_func, app_line, loc_id, name, lapl_id, args, H5P_PLIST_ID(dxpl), es_id)) < 0)
+                        H5ARG_TRACE9(__func__, "*s*sIui*si*!ii", app_file, app_func, app_line, loc_id, name, lapl_id, args, dxpl_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_VOL, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 
@@ -6640,8 +6644,10 @@ H5VLobject_optional_op(const char *app_file, const char *app_func, unsigned app_
     /* Check the link create property list */
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
+    lapl_id = H5P_PLIST_ID(lapl);
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for ID");
+    dxpl_id = H5P_PLIST_ID(dxpl);
 
     /* Set up object access arguments */
     if (H5VL_setup_name_args(loc_id, name, false, lapl, &vol_obj, &loc_params) < 0)
@@ -6664,7 +6670,7 @@ H5VLobject_optional_op(const char *app_file, const char *app_func, unsigned app_
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, vol_obj->connector, token,
-                        H5ARG_TRACE9(__func__, "*s*sIui*si*!ii", app_file, app_func, app_line, loc_id, name, lapl_id, args, H5P_PLIST_ID(dxpl), es_id)) < 0)
+                        H5ARG_TRACE9(__func__, "*s*sIui*si*!ii", app_file, app_func, app_line, loc_id, name, lapl_id, args, dxpl_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_VOL, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 

@@ -274,10 +274,12 @@ H5Acreate_async(const char *app_file, const char *app_func, unsigned app_line, h
     /* Get the pointer to the attribute creation property list */
     if (NULL == (acpl = H5P_object_verify(acpl_id, H5P_TYPE_ATTRIBUTE_CREATE, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute creation property list");
+    acpl_id = H5P_PLIST_ID(acpl);
 
     /* Get the pointer to the attribute access property list */
     if (NULL == (aapl = H5P_object_verify(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute access property list");
+    aapl_id = H5P_PLIST_ID(aapl);
 
     /* Set the ACPL for the API context */
     H5CX_set_acpl(acpl);
@@ -295,7 +297,7 @@ H5Acreate_async(const char *app_file, const char *app_func, unsigned app_line, h
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE10(__func__, "*s*sIui*siiiii", app_file, app_func, app_line, loc_id, attr_name, type_id, space_id, H5P_PLIST_ID(acpl), H5P_PLIST_ID(aapl), es_id)) < 0) {
+                        H5ARG_TRACE10(__func__, "*s*sIui*siiiii", app_file, app_func, app_line, loc_id, attr_name, type_id, space_id, acpl_id, aapl_id, es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref(ret_value) < 0)
                 HDONE_ERROR(H5E_ATTR, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on attribute ID");
@@ -447,14 +449,17 @@ H5Acreate_by_name_async(const char *app_file, const char *app_func, unsigned app
     /* Check the link access property list */
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+    lapl_id = H5P_PLIST_ID(lapl);
 
     /* Get the pointer to the attribute creation property list */
     if (NULL == (acpl = H5P_object_verify(acpl_id, H5P_TYPE_ATTRIBUTE_CREATE, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute creation property list");
+    acpl_id = H5P_PLIST_ID(acpl);
 
     /* Get the pointer to the attribute access property list */
     if (NULL == (aapl = H5P_object_verify(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute access property list");
+    aapl_id = H5P_PLIST_ID(aapl);
 
     /* Set the ACPL for the API context */
     H5CX_set_acpl(acpl);
@@ -472,7 +477,7 @@ H5Acreate_by_name_async(const char *app_file, const char *app_func, unsigned app
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE12(__func__, "*s*sIui*s*siiiiii", app_file, app_func, app_line, loc_id, obj_name, attr_name, type_id, space_id, H5P_PLIST_ID(acpl), H5P_PLIST_ID(aapl), H5P_PLIST_ID(lapl), es_id)) < 0) {
+                        H5ARG_TRACE12(__func__, "*s*sIui*s*siiiiii", app_file, app_func, app_line, loc_id, obj_name, attr_name, type_id, space_id, acpl_id, aapl_id, lapl_id, es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref(ret_value) < 0)
                 HDONE_ERROR(H5E_ATTR, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on attribute ID");
@@ -629,6 +634,7 @@ H5Aopen_async(const char *app_file, const char *app_func, unsigned app_line, hid
     /* Get the pointer to the attribute access property list */
     if (NULL == (aapl = H5P_object_verify(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute access property list");
+    aapl_id = H5P_PLIST_ID(aapl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -642,7 +648,7 @@ H5Aopen_async(const char *app_file, const char *app_func, unsigned app_line, hid
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE7(__func__, "*s*sIui*sii", app_file, app_func, app_line, loc_id, attr_name, H5P_PLIST_ID(aapl), es_id)) < 0) {
+                        H5ARG_TRACE7(__func__, "*s*sIui*sii", app_file, app_func, app_line, loc_id, attr_name, aapl_id, es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref(ret_value) < 0)
                 HDONE_ERROR(H5E_ATTR, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on attribute ID");
@@ -771,10 +777,12 @@ H5Aopen_by_name_async(const char *app_file, const char *app_func, unsigned app_l
     /* Get the pointer to the attribute access property list */
     if (NULL == (aapl = H5P_object_verify(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute access property list");
+    aapl_id = H5P_PLIST_ID(aapl);
 
     /* Check the link access property list */
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+    lapl_id = H5P_PLIST_ID(lapl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -789,7 +797,7 @@ H5Aopen_by_name_async(const char *app_file, const char *app_func, unsigned app_l
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE9(__func__, "*s*sIui*s*siii", app_file, app_func, app_line, loc_id, obj_name, attr_name, H5P_PLIST_ID(aapl), H5P_PLIST_ID(lapl), es_id)) < 0) {
+                        H5ARG_TRACE9(__func__, "*s*sIui*s*siii", app_file, app_func, app_line, loc_id, obj_name, attr_name, aapl_id, lapl_id, es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref(ret_value) < 0)
                 HDONE_ERROR(H5E_ATTR, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on attribute ID");
@@ -927,10 +935,12 @@ H5Aopen_by_idx_async(const char *app_file, const char *app_func, unsigned app_li
     /* Get the pointer to the attribute access property list */
     if (NULL == (aapl = H5P_object_verify(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute access property list");
+    aapl_id = H5P_PLIST_ID(aapl);
 
     /* Check the link access property list */
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+    lapl_id = H5P_PLIST_ID(lapl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -945,7 +955,7 @@ H5Aopen_by_idx_async(const char *app_file, const char *app_func, unsigned app_li
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE11(__func__, "*s*sIui*sIiIohiii", app_file, app_func, app_line, loc_id, obj_name, idx_type, order, n, H5P_PLIST_ID(aapl), H5P_PLIST_ID(lapl), es_id)) < 0) {
+                        H5ARG_TRACE11(__func__, "*s*sIui*sIiIohiii", app_file, app_func, app_line, loc_id, obj_name, idx_type, order, n, aapl_id, lapl_id, es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref(ret_value) < 0)
                 HDONE_ERROR(H5E_ATTR, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on attribute ID");
@@ -1908,6 +1918,7 @@ H5Arename_by_name_async(const char *app_file, const char *app_func, unsigned app
     /* Check the link access property list */
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, FAIL, "can't find object for ID");
+    lapl_id = H5P_PLIST_ID(lapl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -1922,7 +1933,7 @@ H5Arename_by_name_async(const char *app_file, const char *app_func, unsigned app
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE9(__func__, "*s*sIui*s*s*sii", app_file, app_func, app_line, loc_id, obj_name, old_attr_name, new_attr_name, H5P_PLIST_ID(lapl), es_id)) < 0)
+                        H5ARG_TRACE9(__func__, "*s*sIui*s*s*sii", app_file, app_func, app_line, loc_id, obj_name, old_attr_name, new_attr_name, lapl_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_ATTR, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 
@@ -2652,22 +2663,21 @@ H5Aexists_by_name_async(const char *app_file, const char *app_func, unsigned app
     /* Check the link access property list */
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, FAIL, "can't find object for ID");
+    lapl_id = H5P_PLIST_ID(lapl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Asynchronously check if an attribute exists */
-    if (H5A__exists_by_name_api_common(loc_id, obj_name, attr_name, attr_exists, lapl, token_ptr, &vol_obj) <
-        0)
-        HGOTO_ERROR(H5E_ATTR, H5E_CANTGET, FAIL,
-                    "can't asynchronously determine if attribute exists by name");
+    if (H5A__exists_by_name_api_common(loc_id, obj_name, attr_name, attr_exists, lapl, token_ptr, &vol_obj) < 0)
+        HGOTO_ERROR(H5E_ATTR, H5E_CANTGET, FAIL, "can't asynchronously determine if attribute exists by name");
 
     /* If a token was created, add the token to the event set */
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE9(__func__, "*s*sIui*s*s*bii", app_file, app_func, app_line, loc_id, obj_name, attr_name, attr_exists, H5P_PLIST_ID(lapl), es_id)) < 0)
+                        H5ARG_TRACE9(__func__, "*s*sIui*s*s*bii", app_file, app_func, app_line, loc_id, obj_name, attr_name, attr_exists, lapl_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_ATTR, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 

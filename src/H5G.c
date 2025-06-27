@@ -268,14 +268,17 @@ H5Gcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
     /* Check link creation property list */
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_SYM, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+    lcpl_id = H5P_PLIST_ID(lcpl);
 
     /* Check group creation property list */
     if (NULL == (gcpl = H5P_object_verify(gcpl_id, H5P_TYPE_GROUP_CREATE, true)))
         HGOTO_ERROR(H5E_SYM, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+    gcpl_id = H5P_PLIST_ID(gcpl);
 
     /* Check group access property list */
     if (NULL == (gapl = H5P_object_verify(gapl_id, H5P_TYPE_GROUP_ACCESS, true)))
         HGOTO_ERROR(H5E_SYM, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+    gapl_id = H5P_PLIST_ID(gapl);
 
     /* Set the GCPL for the API context */
     if (H5CX_set_cpl(gcpl) < 0)
@@ -296,7 +299,7 @@ H5Gcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE9(__func__, "*s*sIui*siiii", app_file, app_func, app_line, loc_id, name, H5P_PLIST_ID(lcpl), H5P_PLIST_ID(gcpl), H5P_PLIST_ID(gapl), es_id)) < 0) {
+                        H5ARG_TRACE9(__func__, "*s*sIui*siiii", app_file, app_func, app_line, loc_id, name, lcpl_id, gcpl_id, gapl_id, es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref_always_close(ret_value) < 0)
                 HDONE_ERROR(H5E_SYM, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on group ID");
@@ -499,6 +502,7 @@ H5Gopen_async(const char *app_file, const char *app_func, unsigned app_line, hid
     /* Check group access property list */
     if (NULL == (gapl = H5P_object_verify(gapl_id, H5P_TYPE_GROUP_ACCESS, true)))
         HGOTO_ERROR(H5E_SYM, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+    gapl_id = H5P_PLIST_ID(gapl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -512,7 +516,7 @@ H5Gopen_async(const char *app_file, const char *app_func, unsigned app_line, hid
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE7(__func__, "*s*sIui*sii", app_file, app_func, app_line, loc_id, name, H5P_PLIST_ID(gapl), es_id)) < 0) {
+                        H5ARG_TRACE7(__func__, "*s*sIui*sii", app_file, app_func, app_line, loc_id, name, gapl_id, es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref_always_close(ret_value) < 0)
                 HDONE_ERROR(H5E_SYM, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on group ID");
@@ -767,6 +771,7 @@ H5Gget_info_by_name_async(const char *app_file, const char *app_func, unsigned a
     /* Check the link access property list */
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_SYM, H5E_BADID, FAIL, "can't find object for ID");
+    lapl_id = H5P_PLIST_ID(lapl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -780,7 +785,7 @@ H5Gget_info_by_name_async(const char *app_file, const char *app_func, unsigned a
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE8(__func__, "*s*sIui*s*GIii", app_file, app_func, app_line, loc_id, name, group_info, H5P_PLIST_ID(lapl), es_id)) < 0)
+                        H5ARG_TRACE8(__func__, "*s*sIui*s*GIii", app_file, app_func, app_line, loc_id, name, group_info, lapl_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_SYM, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 
@@ -887,6 +892,7 @@ H5Gget_info_by_idx_async(const char *app_file, const char *app_func, unsigned ap
     /* Check the link access property list */
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_SYM, H5E_BADID, FAIL, "can't find object for ID");
+    lapl_id = H5P_PLIST_ID(lapl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -901,7 +907,7 @@ H5Gget_info_by_idx_async(const char *app_file, const char *app_func, unsigned ap
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE11(__func__, "*s*sIui*sIiIoh*GIii", app_file, app_func, app_line, loc_id, group_name, idx_type, order, n, group_info, H5P_PLIST_ID(lapl), es_id)) < 0)
+                        H5ARG_TRACE11(__func__, "*s*sIui*sIiIoh*GIii", app_file, app_func, app_line, loc_id, group_name, idx_type, order, n, group_info, lapl_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_SYM, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 

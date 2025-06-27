@@ -701,10 +701,12 @@ H5Fcreate_async(const char *app_file, const char *app_func, unsigned app_line, c
     /* Get the pointer to the file create property list */
     if (NULL == (fcpl = H5P_object_verify(fcpl_id, H5P_TYPE_FILE_CREATE, true)))
         HGOTO_ERROR(H5E_FILE, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+    fcpl_id = H5P_PLIST_ID(fcpl);
 
     /* Get the pointer to the file access property list */
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a file access property list");
+    fapl_id = H5P_PLIST_ID(fapl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -722,7 +724,7 @@ H5Fcreate_async(const char *app_file, const char *app_func, unsigned app_line, c
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE8(__func__, "*s*sIu*sIuiii", app_file, app_func, app_line, filename, flags, H5P_PLIST_ID(fcpl), H5P_PLIST_ID(fapl), es_id)) < 0) {
+                        H5ARG_TRACE8(__func__, "*s*sIu*sIuiii", app_file, app_func, app_line, filename, flags, fcpl_id, fapl_id, es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref(ret_value) < 0)
                 HDONE_ERROR(H5E_FILE, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on file ID");
@@ -741,7 +743,7 @@ H5Fcreate_async(const char *app_file, const char *app_func, unsigned app_line, c
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE8(__func__, "*s*sIu*sIuiii", app_file, app_func, app_line, filename, flags, H5P_PLIST_ID(fcpl), H5P_PLIST_ID(fapl), es_id)) < 0)
+                        H5ARG_TRACE8(__func__, "*s*sIu*sIuiii", app_file, app_func, app_line, filename, flags, fcpl_id, fapl_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_FILE, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
 
@@ -886,6 +888,7 @@ H5Fopen_async(const char *app_file, const char *app_func, unsigned app_line, con
     /* Open the file, possibly asynchronously */
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a file access property list");
+    fapl_id = H5P_PLIST_ID(fapl);
 
     /* Open the file, possibly asynchronously */
     if ((ret_value = H5F__open_api_common(filename, flags, fapl, token_ptr)) < 0)
@@ -899,7 +902,7 @@ H5Fopen_async(const char *app_file, const char *app_func, unsigned app_line, con
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE7(__func__, "*s*sIu*sIuii", app_file, app_func, app_line, filename, flags, H5P_PLIST_ID(fapl), es_id)) < 0) {
+                        H5ARG_TRACE7(__func__, "*s*sIu*sIuii", app_file, app_func, app_line, filename, flags, fapl_id, es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref(ret_value) < 0)
                 HDONE_ERROR(H5E_FILE, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on file ID");
@@ -918,7 +921,7 @@ H5Fopen_async(const char *app_file, const char *app_func, unsigned app_line, con
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE7(__func__, "*s*sIu*sIuii", app_file, app_func, app_line, filename, flags, H5P_PLIST_ID(fapl), es_id)) < 0)
+                        H5ARG_TRACE7(__func__, "*s*sIu*sIuii", app_file, app_func, app_line, filename, flags, fapl_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_FILE, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
 

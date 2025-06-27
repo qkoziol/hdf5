@@ -402,6 +402,7 @@ H5Lcreate_soft_async(const char *app_file, const char *app_func, unsigned app_li
     /* Get the link creation property list */
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
+    lcpl_id = H5P_PLIST_ID(lcpl);
 
     /* Set the LCPL for the API context */
     H5CX_set_lcpl(lcpl);
@@ -409,6 +410,7 @@ H5Lcreate_soft_async(const char *app_file, const char *app_func, unsigned app_li
     /* Get the link access property list */
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
+    lapl_id = H5P_PLIST_ID(lapl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -422,7 +424,7 @@ H5Lcreate_soft_async(const char *app_file, const char *app_func, unsigned app_li
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE9(__func__, "*s*sIu*si*siii", app_file, app_func, app_line, link_target, link_loc_id, link_name, H5P_PLIST_ID(lcpl), H5P_PLIST_ID(lapl), es_id)) < 0)
+                        H5ARG_TRACE9(__func__, "*s*sIu*si*siii", app_file, app_func, app_line, link_target, link_loc_id, link_name, lcpl_id, lapl_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_LINK, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 
@@ -591,6 +593,7 @@ H5Lcreate_hard_async(const char *app_file, const char *app_func, unsigned app_li
     /* Get the link creation property list */
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
+    lcpl_id = H5P_PLIST_ID(lcpl);
 
     /* Set the LCPL for the API context */
     H5CX_set_lcpl(lcpl);
@@ -598,6 +601,7 @@ H5Lcreate_hard_async(const char *app_file, const char *app_func, unsigned app_li
     /* Get the link access property list */
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
+    lapl_id = H5P_PLIST_ID(lapl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -613,7 +617,7 @@ H5Lcreate_hard_async(const char *app_file, const char *app_func, unsigned app_li
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, connector, token,
-                        H5ARG_TRACE10(__func__, "*s*sIui*si*siii", app_file, app_func, app_line, cur_loc_id, cur_name, new_loc_id, new_name, H5P_PLIST_ID(lcpl), H5P_PLIST_ID(lapl), es_id)) < 0)
+                        H5ARG_TRACE10(__func__, "*s*sIui*si*siii", app_file, app_func, app_line, cur_loc_id, cur_name, new_loc_id, new_name, lcpl_id, lapl_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_LINK, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 
@@ -902,6 +906,7 @@ H5Ldelete_async(const char *app_file, const char *app_func, unsigned app_line, h
     /* Check the link access property list */
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
+    lapl_id = H5P_PLIST_ID(lapl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -915,7 +920,7 @@ H5Ldelete_async(const char *app_file, const char *app_func, unsigned app_line, h
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE7(__func__, "*s*sIui*sii", app_file, app_func, app_line, loc_id, name, H5P_PLIST_ID(lapl), es_id)) < 0)
+                        H5ARG_TRACE7(__func__, "*s*sIui*sii", app_file, app_func, app_line, loc_id, name, lapl_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_LINK, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 
@@ -1032,6 +1037,7 @@ H5Ldelete_by_idx_async(const char *app_file, const char *app_func, unsigned app_
     /* Check the link access property list */
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
+    lapl_id = H5P_PLIST_ID(lapl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -1045,7 +1051,7 @@ H5Ldelete_by_idx_async(const char *app_file, const char *app_func, unsigned app_
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE10(__func__, "*s*sIui*sIiIohii", app_file, app_func, app_line, loc_id, group_name, idx_type, order, n, H5P_PLIST_ID(lapl), es_id)) < 0)
+                        H5ARG_TRACE10(__func__, "*s*sIui*sIiIohii", app_file, app_func, app_line, loc_id, group_name, idx_type, order, n, lapl_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_LINK, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 
@@ -1284,6 +1290,7 @@ H5Lexists_async(const char *app_file, const char *app_func, unsigned app_line, h
     /* Check the link access property list */
     if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
+    lapl_id = H5P_PLIST_ID(lapl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -1297,7 +1304,7 @@ H5Lexists_async(const char *app_file, const char *app_func, unsigned app_line, h
     if (NULL != token)
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
                         /* clang-format off */
-                        H5ARG_TRACE8(__func__, "*s*sIui*s*bii", app_file, app_func, app_line, loc_id, name, exists, H5P_PLIST_ID(lapl), es_id)) < 0)
+                        H5ARG_TRACE8(__func__, "*s*sIui*s*bii", app_file, app_func, app_line, loc_id, name, exists, lapl_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_LINK, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 

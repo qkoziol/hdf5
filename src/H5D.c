@@ -224,6 +224,7 @@ H5Dcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
     /* Get link creation property list */
     if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+    lcpl_id = H5P_PLIST_ID(lcpl);
 
     /* Set the LCPL for the API context */
     H5CX_set_lcpl(lcpl);
@@ -231,6 +232,7 @@ H5Dcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
     /* Get the pointer to the dataset create property list */
     if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+    dcpl_id = H5P_PLIST_ID(dcpl);
 
     /* Set the DCPL for the API context */
     if (H5CX_set_cpl(dcpl) < 0)
@@ -239,6 +241,7 @@ H5Dcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
     /* Get the pointer to the dataset access property list */
     if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+    dapl_id = H5P_PLIST_ID(dapl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -253,7 +256,7 @@ H5Dcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE11(__func__, "*s*sIui*siiiiii", app_file, app_func, app_line, loc_id, name, type_id, space_id, H5P_PLIST_ID(lcpl), H5P_PLIST_ID(dcpl), H5P_PLIST_ID(dapl), es_id)) < 0) {
+                        H5ARG_TRACE11(__func__, "*s*sIui*siiiiii", app_file, app_func, app_line, loc_id, name, type_id, space_id, lcpl_id, dcpl_id, dapl_id, es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref_always_close(ret_value) < 0)
                 HDONE_ERROR(H5E_DATASET, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on dataset ID");
@@ -463,6 +466,7 @@ H5Dopen_async(const char *app_file, const char *app_func, unsigned app_line, hid
     /* Get the pointer to the dataset access property list */
     if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+    dapl_id = H5P_PLIST_ID(dapl);
 
     /* Open the dataset asynchronously */
     if ((ret_value = H5D__open_api_common(loc_id, name, dapl, token_ptr, &vol_obj)) < 0)
@@ -472,7 +476,7 @@ H5Dopen_async(const char *app_file, const char *app_func, unsigned app_line, hid
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE7(__func__, "*s*sIui*sii", app_file, app_func, app_line, loc_id, name, H5P_PLIST_ID(dapl), es_id)) < 0) {
+                        H5ARG_TRACE7(__func__, "*s*sIui*sii", app_file, app_func, app_line, loc_id, name, dapl_id, es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref_always_close(ret_value) < 0)
                 HDONE_ERROR(H5E_DATASET, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on dataset ID");
@@ -1112,6 +1116,7 @@ H5Dread_async(const char *app_file, const char *app_func, unsigned app_line, hid
     /* Get the pointer to the dataset transfer property list */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
+    dxpl_id = H5P_PLIST_ID(dxpl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -1126,7 +1131,7 @@ H5Dread_async(const char *app_file, const char *app_func, unsigned app_line, hid
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE10(__func__, "*s*sIuiiiii*xi", app_file, app_func, app_line, dset_id, mem_type_id, mem_space_id, file_space_id, H5P_PLIST_ID(dxpl), buf, es_id)) < 0)
+                        H5ARG_TRACE10(__func__, "*s*sIuiiiii*xi", app_file, app_func, app_line, dset_id, mem_type_id, mem_space_id, file_space_id, dxpl_id, buf, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_DATASET, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 
@@ -1195,6 +1200,7 @@ H5Dread_multi_async(const char *app_file, const char *app_func, unsigned app_lin
     /* Get the pointer to the dataset transfer property list */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
+    dxpl_id = H5P_PLIST_ID(dxpl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -1209,7 +1215,7 @@ H5Dread_multi_async(const char *app_file, const char *app_func, unsigned app_lin
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE11(__func__, "*s*sIuz*i*i*i*ii**xi", app_file, app_func, app_line, count, dset_id, mem_type_id, mem_space_id, file_space_id, H5P_PLIST_ID(dxpl), buf, es_id)) < 0)
+                        H5ARG_TRACE11(__func__, "*s*sIuz*i*i*i*ii**xi", app_file, app_func, app_line, count, dset_id, mem_type_id, mem_space_id, file_space_id, dxpl_id, buf, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_DATASET, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 
@@ -1433,6 +1439,7 @@ H5Dwrite_async(const char *app_file, const char *app_func, unsigned app_line, hi
     /* Get the pointer to the dataset transfer property list */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
+    dxpl_id = H5P_PLIST_ID(dxpl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -1447,7 +1454,7 @@ H5Dwrite_async(const char *app_file, const char *app_func, unsigned app_line, hi
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE10(__func__, "*s*sIuiiiii*xi", app_file, app_func, app_line, dset_id, mem_type_id, mem_space_id, file_space_id, H5P_PLIST_ID(dxpl), buf, es_id)) < 0)
+                        H5ARG_TRACE10(__func__, "*s*sIuiiiii*xi", app_file, app_func, app_line, dset_id, mem_type_id, mem_space_id, file_space_id, dxpl_id, buf, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_DATASET, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 
@@ -1516,6 +1523,7 @@ H5Dwrite_multi_async(const char *app_file, const char *app_func, unsigned app_li
     /* Get the pointer to the dataset transfer property list */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
+    dxpl_id = H5P_PLIST_ID(dxpl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -1530,7 +1538,7 @@ H5Dwrite_multi_async(const char *app_file, const char *app_func, unsigned app_li
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE11(__func__, "*s*sIuz*i*i*i*ii**xi", app_file, app_func, app_line, count, dset_id, mem_type_id, mem_space_id, file_space_id, H5P_PLIST_ID(dxpl), buf, es_id)) < 0)
+                        H5ARG_TRACE11(__func__, "*s*sIuz*i*i*i*ii**xi", app_file, app_func, app_line, count, dset_id, mem_type_id, mem_space_id, file_space_id, dxpl_id, buf, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_DATASET, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 

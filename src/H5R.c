@@ -634,6 +634,7 @@ H5Ropen_object_async(const char *app_file, const char *app_func, unsigned app_li
     /* (the OAPL is treated as a DAPL currently) */
     if (NULL == (dapl = H5P_object_verify(oapl_id, H5P_TYPE_DATASET_ACCESS, true)))
         HGOTO_ERROR(H5E_OHDR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+    oapl_id = H5P_PLIST_ID(dapl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -659,7 +660,7 @@ H5Ropen_object_async(const char *app_file, const char *app_func, unsigned app_li
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE7(__func__, "*s*sIu*Rriii", app_file, app_func, app_line, ref_ptr, rapl_id, H5P_PLIST_ID(dapl), es_id)) < 0) {
+                        H5ARG_TRACE7(__func__, "*s*sIu*Rriii", app_file, app_func, app_line, ref_ptr, rapl_id, oapl_id, es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref_always_close(ret_value) < 0)
                 HGOTO_ERROR(H5E_REFERENCE, H5E_CANTDEC, H5I_INVALID_HID,
@@ -829,6 +830,7 @@ H5Ropen_region_async(const char *app_file, const char *app_func, unsigned app_li
     /* (the OAPL is treated as a DAPL currently) */
     if (NULL == (dapl = H5P_object_verify(oapl_id, H5P_TYPE_DATASET_ACCESS, true)))
         HGOTO_ERROR(H5E_OHDR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+    oapl_id = H5P_PLIST_ID(dapl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -854,7 +856,7 @@ H5Ropen_region_async(const char *app_file, const char *app_func, unsigned app_li
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE7(__func__, "*s*sIu*Rriii", app_file, app_func, app_line, ref_ptr, rapl_id, H5P_PLIST_ID(dapl), es_id)) < 0) {
+                        H5ARG_TRACE7(__func__, "*s*sIu*Rriii", app_file, app_func, app_line, ref_ptr, rapl_id, oapl_id, es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref_always_close(ret_value) < 0)
                 HGOTO_ERROR(H5E_REFERENCE, H5E_CANTDEC, H5I_INVALID_HID,
@@ -1015,6 +1017,7 @@ H5Ropen_attr_async(const char *app_file, const char *app_func, unsigned app_line
     /* Get the pointer to the attribute access property list */
     if (NULL == (aapl = H5P_object_verify(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute access property list");
+    aapl_id = H5P_PLIST_ID(aapl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -1040,7 +1043,7 @@ H5Ropen_attr_async(const char *app_file, const char *app_func, unsigned app_line
     if (NULL != token)
         /* clang-format off */
         if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE7(__func__, "*s*sIu*Rriii", app_file, app_func, app_line, ref_ptr, rapl_id, H5P_PLIST_ID(aapl), es_id)) < 0) {
+                        H5ARG_TRACE7(__func__, "*s*sIu*Rriii", app_file, app_func, app_line, ref_ptr, rapl_id, aapl_id, es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref_always_close(ret_value) < 0)
                 HGOTO_ERROR(H5E_REFERENCE, H5E_CANTDEC, H5I_INVALID_HID,
