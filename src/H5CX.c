@@ -1258,8 +1258,8 @@ done:
 bool
 H5CX_is_def_dxpl(void)
 {
-    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
-    bool is_def_dxpl = false;
+    H5CX_node_t **head        = NULL; /* Pointer to head of API context list */
+    bool          is_def_dxpl = false;
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
@@ -1892,7 +1892,7 @@ done:
 H5P_genplist_t *
 H5CX_get_dxpl(void)
 {
-    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
+    H5CX_node_t   **head = NULL; /* Pointer to head of API context list */
     H5P_genplist_t *dxpl = NULL;
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
@@ -1943,7 +1943,7 @@ H5CX_get_fapl(void)
 H5P_genplist_t *
 H5CX_get_fcpl(void)
 {
-    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
+    H5CX_node_t   **head = NULL; /* Pointer to head of API context list */
     H5P_genplist_t *fcpl = NULL;
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
@@ -1971,7 +1971,7 @@ H5CX_get_fcpl(void)
 H5P_genplist_t *
 H5CX_get_ocpl(void)
 {
-    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
+    H5CX_node_t   **head = NULL; /* Pointer to head of API context list */
     H5P_genplist_t *ocpl = NULL;
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
@@ -1997,7 +1997,7 @@ H5CX_get_ocpl(void)
 H5P_genplist_t *
 H5CX_get_lapl(void)
 {
-    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
+    H5CX_node_t   **head = NULL; /* Pointer to head of API context list */
     H5P_genplist_t *lapl = NULL;
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
@@ -6660,8 +6660,8 @@ done:
 bool
 H5CX_is_def_ocpl(void)
 {
-    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
-    bool is_def_ocpl = false;
+    H5CX_node_t **head        = NULL; /* Pointer to head of API context list */
+    bool          is_def_ocpl = false;
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
