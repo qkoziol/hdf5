@@ -1919,6 +1919,7 @@ H5P_genplist_t *
 H5CX_get_fapl(void)
 {
     H5CX_node_t **head = NULL; /* Pointer to head of API context list */
+    H5P_genplist_t *fapl = NULL;
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
@@ -1926,7 +1927,9 @@ H5CX_get_fapl(void)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    FUNC_LEAVE_NOAPI((*head)->ctx.fapl)
+    fapl = (*head)->ctx.fapl;
+
+    FUNC_LEAVE_NOAPI(fapl)
 } /* end H5CX_get_fapl() */
 
 /*-------------------------------------------------------------------------
