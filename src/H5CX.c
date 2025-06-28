@@ -1918,7 +1918,7 @@ H5CX_get_dxpl(void)
 H5P_genplist_t *
 H5CX_get_fapl(void)
 {
-    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
+    H5CX_node_t   **head = NULL; /* Pointer to head of API context list */
     H5P_genplist_t *fapl = NULL;
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
