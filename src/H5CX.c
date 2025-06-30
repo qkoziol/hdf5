@@ -6863,7 +6863,8 @@ H5CX_pop(bool update_dxpl_props)
          * it was never set by the library, in that case it indicates no I/O was performed and we don't want
          * to leave the (possibly incorrect) old value in the property list, so set from the default property
          * list */
-        if (!H5_TERM_GLOBAL && (*head)->ctx.dxpl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.dxpl) && !(*head)->ctx.dxpl_flags.actual_selection_io_mode_set) {
+        if (!H5_TERM_GLOBAL && (*head)->ctx.dxpl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.dxpl) &&
+            !(*head)->ctx.dxpl_flags.actual_selection_io_mode_set) {
             (*head)->ctx.dxpl_props.actual_selection_io_mode = H5CX_def_dxpl_cache.actual_selection_io_mode;
             (*head)->ctx.dxpl_flags.actual_selection_io_mode_set = true;
         }

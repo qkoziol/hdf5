@@ -448,9 +448,9 @@ H5FD__set_def_driver(void)
 {
     const char        *driver_env_var;
     const char        *driver_config_env_var = NULL;
-    H5FD_driver_t     *driver                = NULL;         /* VFD driver */
-    H5FD_driver_prop_t def_driver_prop = {NULL, NULL, NULL}; /* VFD driver for default FAPL */
-    herr_t             ret_value       = SUCCEED;
+    H5FD_driver_t     *driver                = NULL;               /* VFD driver */
+    H5FD_driver_prop_t def_driver_prop       = {NULL, NULL, NULL}; /* VFD driver for default FAPL */
+    herr_t             ret_value             = SUCCEED;
 
     FUNC_ENTER_PACKAGE
 
