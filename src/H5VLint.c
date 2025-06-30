@@ -137,6 +137,9 @@ H5FL_DEFINE(H5VL_object_t);
 /* Declare a free list to manage the H5VL_wrap_ctx_t struct */
 H5FL_DEFINE_STATIC(H5VL_wrap_ctx_t);
 
+/* Flag indicating "top" of interface has been initialized */
+static bool H5VL_top_package_initialize_s = false;
+
 /* List of currently active VOL connectors */
 static H5VL_connector_t *H5VL_conn_list_head_g = NULL;
 
@@ -235,9 +238,46 @@ H5VL_init_phase2(void)
     if (H5VL__set_def_conn() < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTSET, FAIL, "unable to set default VOL connector");
 
+    /* Mark "top" of interface as initialized */
+    H5VL_top_package_initialize_s = true;
+
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5VL_init_phase2() */
+
+/*-------------------------------------------------------------------------
+ * Function: H5VL_top_term_package
+ *
+ * Purpose:  Close the "top" of the interface, releasing IDs, etc.
+ *
+ * Return:   Success:    Positive if anything was done that might
+ *                affect other interfaces; zero otherwise.
+ *           Failure:    Negative.
+ *-------------------------------------------------------------------------
+ */
+int
+H5VL_top_term_package(void)
+{
+    int n = 0;
+
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    if (H5VL_top_package_initialize_s) {
+        H5VL_connector_prop_t def_vol_prop = {NULL, NULL}; /* VOL connector for default FAPL */
+
+        /* Reset the default VOL for the default FAPL */
+        n += (H5P_set_vol(H5P_LST_FILE_ACCESS_g, NULL, NULL) < 0);
+
+        /* Reset the default VOL for the default file access pclass */
+        n += (H5P_reset_vol_class(H5P_CLS_FILE_ACCESS_g, &def_vol_prop) < 0);
+
+        /* Mark closed */
+        if (0 == n)
+            H5VL_top_package_initialize_s = false;
+    } /* end if */
+
+    FUNC_LEAVE_NOAPI(n)
+} /* end H5VL_top_term_package() */
 
 /*-------------------------------------------------------------------------
  * Function:	H5VL_term_package
@@ -347,7 +387,6 @@ done:
 herr_t
 H5VL__set_def_conn(void)
 {
-    H5P_genclass_t       *def_fapclass;                /* Default file access property class */
     H5VL_connector_prop_t def_vol_prop = {NULL, NULL}; /* VOL connector for default FAPL */
     const char           *env_var;                     /* Environment variable for default VOL connector */
     char                 *buf       = NULL;            /* Buffer for tokenizing string */
@@ -417,12 +456,8 @@ H5VL__set_def_conn(void)
     if (H5P_peek(H5P_LST_FILE_ACCESS_g, H5F_ACS_VOL_CONN_NAME, &def_vol_prop) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTGET, FAIL, "can't get VOL connector info");
 
-    /* Get default file access pclass */
-    if (NULL == (def_fapclass = H5I_object(H5P_FILE_ACCESS)))
-        HGOTO_ERROR(H5E_VOL, H5E_BADID, FAIL, "can't find object for default file access property class ID");
-
     /* Change the default VOL for the default file access pclass */
-    if (H5P_reset_vol_class(def_fapclass, &def_vol_prop) < 0)
+    if (H5P_reset_vol_class(H5P_CLS_FILE_ACCESS_g, &def_vol_prop) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTSET, FAIL,
                     "can't set default VOL connector for default file access property class");
 

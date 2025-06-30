@@ -403,6 +403,18 @@ H5_term_library(void)
         if (pending == 0)
             pending += DOWN(F);
 
+        /* Wait to shut down the "top" of the pluggable interfaces until we're
+         * ready to close the property list interface.
+         */
+        if (pending == 0) {
+            /* Shut down the "top" of the pluggable interfaces that use
+             * environment variables to modify the default property lists
+             * before the property lists get shut down.
+             */
+            pending += DOWN(FD_top);
+            pending += DOWN(VL_top);
+        } /* end if */
+
         /* Don't shut down the property list code until all objects that might
          * use property lists are shut down */
         if (pending == 0)

@@ -144,6 +144,9 @@ static H5I_class_t H5I_VFL_CLS[1] = {{
     (H5I_free_t)H5FD__driver_free_id /* Callback routine for closing objects of this class */
 }};
 
+/* Flag indicating "top" of interface has been initialized */
+static bool H5FD_top_package_initialize_s = false;
+
 /* List of currently active VFD drivers */
 static H5FD_driver_t *H5FD_driver_list_head_g = NULL;
 
@@ -271,9 +274,46 @@ H5FD_init_phase2(void)
     if (H5FD__set_def_driver() < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "unable to set default VFD driver");
 
+    /* Mark "top" of interface as initialized */
+    H5FD_top_package_initialize_s = true;
+
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FD_init_phase2() */
+
+/*-------------------------------------------------------------------------
+ * Function: H5FD_top_term_package
+ *
+ * Purpose:  Close the "top" of the interface, releasing IDs, etc.
+ *
+ * Return:   Success:    Positive if anything was done that might
+ *                affect other interfaces; zero otherwise.
+ *           Failure:    Negative.
+ *-------------------------------------------------------------------------
+ */
+int
+H5FD_top_term_package(void)
+{
+    int n = 0;
+
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    if (H5FD_top_package_initialize_s) {
+        H5FD_driver_prop_t def_driver_prop = {NULL, NULL, NULL}; /* VFD driver for default FAPL */
+
+        /* Reset default VFL driver for default FAPL */
+        n += (H5P_set_driver(H5P_LST_FILE_ACCESS_g, NULL, NULL, NULL) < 0);
+
+        /* Reset default VFL driver for default file access pclass */
+        n += (H5P_reset_vfd_class(H5P_CLS_FILE_ACCESS_g, &def_driver_prop) < 0);
+
+        /* Mark closed */
+        if (0 == n)
+            H5FD_top_package_initialize_s = false;
+    } /* end if */
+
+    FUNC_LEAVE_NOAPI(n)
+} /* end H5FD_top_term_package() */
 
 /*-------------------------------------------------------------------------
  * Function:    H5FD_term_package
@@ -409,7 +449,6 @@ H5FD__set_def_driver(void)
     const char        *driver_env_var;
     const char        *driver_config_env_var = NULL;
     H5FD_driver_t     *driver                = NULL;         /* VFD driver */
-    H5P_genclass_t    *def_fapclass;                         /* Default file access property class */
     H5FD_driver_prop_t def_driver_prop = {NULL, NULL, NULL}; /* VFD driver for default FAPL */
     herr_t             ret_value       = SUCCEED;
 
@@ -462,12 +501,8 @@ H5FD__set_def_driver(void)
     if (H5P_peek(H5P_LST_FILE_ACCESS_g, H5F_ACS_FILE_DRV_NAME, &def_driver_prop) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get VFL driver info");
 
-    /* Get default file access pclass */
-    if (NULL == (def_fapclass = H5I_object(H5P_FILE_ACCESS)))
-        HGOTO_ERROR(H5E_VFL, H5E_BADID, FAIL, "can't find object for default file access property class ID");
-
     /* Set new default VFL driver for default file access pclass */
-    if (H5P_reset_vfd_class(def_fapclass, &def_driver_prop) < 0)
+    if (H5P_reset_vfd_class(H5P_CLS_FILE_ACCESS_g, &def_driver_prop) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL,
                     "can't set default VFD driver for default file access property class");
 

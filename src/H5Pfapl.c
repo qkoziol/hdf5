@@ -937,6 +937,9 @@ H5P_set_driver(H5P_genplist_t *fapl, H5FD_driver_t *new_driver, const void *new_
 
     FUNC_ENTER_NOAPI(FAIL)
 
+    /* Sanity check */
+    assert(fapl);
+
     /* If VFD configuration information is supplied, ensure that either binary
      * configuration data or a configuration string is supplied, but not both.
      */
@@ -5472,7 +5475,7 @@ H5P_set_vol(H5P_genplist_t *fapl, H5VL_connector_t *connector, const void *vol_i
     FUNC_ENTER_NOAPI(FAIL)
 
     /* Sanity check */
-    assert(connector);
+    assert(fapl);
 
     if (true == H5P_isa_type(fapl, H5P_TYPE_FILE_ACCESS)) {
         H5VL_connector_prop_t vol_prop; /* Property for VOL ID & info */

@@ -718,6 +718,26 @@ H5P_term_package(void)
 
                 /* Reset the default property lists, if they've been closed */
                 if (H5I_nmembers(H5I_GENPROP_LST) == 0) {
+                    H5P_LST_ATTRIBUTE_ACCESS_g = NULL;
+                    H5P_LST_ATTRIBUTE_CREATE_g = NULL;
+                    H5P_LST_DATASET_ACCESS_g = NULL;
+                    H5P_LST_DATASET_CREATE_g = NULL;
+                    H5P_LST_DATASET_XFER_g = NULL;
+                    H5P_LST_DATATYPE_ACCESS_g = NULL;
+                    H5P_LST_DATATYPE_CREATE_g = NULL;
+                    H5P_LST_FILE_ACCESS_g = NULL;
+                    H5P_LST_FILE_CREATE_g = NULL;
+                    H5P_LST_GROUP_ACCESS_g = NULL;
+                    H5P_LST_GROUP_CREATE_g = NULL;
+                    H5P_LST_LINK_ACCESS_g = NULL;
+                    H5P_LST_LINK_CREATE_g = NULL;
+                    H5P_LST_MAP_ACCESS_g = NULL;
+                    H5P_LST_MAP_CREATE_g = NULL;
+                    H5P_LST_OBJECT_COPY_g = NULL;
+                    H5P_LST_OBJECT_CREATE_g = NULL;
+                    H5P_LST_REFERENCE_ACCESS_g = NULL;
+                    H5P_LST_VOL_INITIALIZE_g = NULL;
+
                     H5P_LST_ATTRIBUTE_ACCESS_ID_g = H5I_INVALID_HID;
                     H5P_LST_ATTRIBUTE_CREATE_ID_g = H5I_INVALID_HID;
                     H5P_LST_DATASET_ACCESS_ID_g   = H5I_INVALID_HID;

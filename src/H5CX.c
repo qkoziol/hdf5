@@ -6863,8 +6863,7 @@ H5CX_pop(bool update_dxpl_props)
          * it was never set by the library, in that case it indicates no I/O was performed and we don't want
          * to leave the (possibly incorrect) old value in the property list, so set from the default property
          * list */
-        if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.dxpl) &&
-            !(*head)->ctx.dxpl_flags.actual_selection_io_mode_set) {
+        if (!H5_TERM_GLOBAL && (*head)->ctx.dxpl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.dxpl) && !(*head)->ctx.dxpl_flags.actual_selection_io_mode_set) {
             (*head)->ctx.dxpl_props.actual_selection_io_mode = H5CX_def_dxpl_cache.actual_selection_io_mode;
             (*head)->ctx.dxpl_flags.actual_selection_io_mode_set = true;
         }
@@ -6891,13 +6890,13 @@ H5CX_pop(bool update_dxpl_props)
     /* Reset any non-default property lists in the current context that have cached values that
      * need to be reset when the context is popped.
      */
-    if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.dapl))
+    if ((*head)->ctx.dapl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.dapl))
         H5CX__reset_dapl(*head);
-    if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.lapl))
+    if ((*head)->ctx.lapl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.lapl))
         H5CX__reset_lapl(*head);
-    if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.ocpl))
+    if ((*head)->ctx.ocpl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.ocpl))
         H5CX__reset_ocpl(*head);
-    if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.fapl))
+    if ((*head)->ctx.fapl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.fapl))
         H5CX__reset_fapl(*head);
 
     /* Pop the top context node from the stack */
