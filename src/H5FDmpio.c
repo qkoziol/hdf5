@@ -876,10 +876,14 @@ done:
  *-------------------------------------------------------------------------
  */
 static H5FD_t *
-H5FD__mpio_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t H5_ATTR_UNUSED maxaddr)
+H5FD__mpio_open(const char *name, unsigned flags, hid_t
+#ifndef H5FDmpio_DEBUG
+    H5_ATTR_UNUSED
+#endif
+    fapl_id,
+    haddr_t H5_ATTR_UNUSED maxaddr)
 {
     H5FD_mpio_t    *file = NULL;          /* VFD File struct for new file */
-    H5P_genplist_t *fapl;                 /* Property list pointer */
     MPI_Comm        comm = MPI_COMM_NULL; /* MPI Communicator, from plist */
     MPI_Info        info = MPI_INFO_NULL; /* MPI Info, from plist */
     MPI_Info        info_used;            /* MPI Info returned from MPI_File_open */
@@ -901,10 +905,6 @@ H5FD__mpio_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t H5_ATTR
     if (!H5FD_mpio_init_s)
         if (H5FD__mpio_init() < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, NULL, "can't initialize driver");
-
-    /* Get a pointer to the fapl */
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file access property list");
 
     if (H5FD_mpi_self_initialized_s)
         comm = MPI_COMM_WORLD;
