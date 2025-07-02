@@ -57,8 +57,8 @@ static char H5FD_mpi_native_g[] = "native";
 
 /* Driver-specific file access properties */
 typedef struct H5FD_mpio_fapl_t {
-    MPI_Comm comm; /* MPI Communicator */
-    MPI_Info info; /* MPI info object  */
+    MPI_Comm comm;                   /* MPI Communicator */
+    MPI_Info info;                   /* MPI info object  */
 } H5FD_mpio_fapl_t;
 
 /*
@@ -68,16 +68,16 @@ typedef struct H5FD_mpio_fapl_t {
  * driver doesn't bother to keep it updated since it's an expensive operation.
  */
 typedef struct H5FD_mpio_t {
-    H5FD_t           pub;                    /* Public stuff, must be first                  */
-    H5FD_mpio_fapl_t fa;                     /* MPIO driver info */
-    MPI_File         f;                      /* MPIO file handle                             */
-    int              mpi_rank;               /* This process's rank                          */
-    int              mpi_size;               /* Total number of processes                    */
-    haddr_t          eof;                    /* End-of-file marker                           */
-    haddr_t          eoa;                    /* End-of-address marker                        */
-    haddr_t          last_eoa;               /* Last known end-of-address marker             */
-    haddr_t          local_eof;              /* Local end-of-file address for each process   */
-    bool             mpi_file_sync_required; /* Whether the ROMIO driver requires MPI_File_sync after write */
+    H5FD_t   pub;                    /* Public stuff, must be first                  */
+    H5FD_mpio_fapl_t fa;        /* MPIO driver info */
+    MPI_File f;                      /* MPIO file handle                             */
+    int      mpi_rank;               /* This process's rank                          */
+    int      mpi_size;               /* Total number of processes                    */
+    haddr_t  eof;                    /* End-of-file marker                           */
+    haddr_t  eoa;                    /* End-of-address marker                        */
+    haddr_t  last_eoa;               /* Last known end-of-address marker             */
+    haddr_t  local_eof;              /* Local end-of-file address for each process   */
+    bool     mpi_file_sync_required; /* Whether the ROMIO driver requires MPI_File_sync after write */
 } H5FD_mpio_t;
 
 /* Private Prototypes */
@@ -438,9 +438,9 @@ H5FD__mpio_term(void)
 herr_t
 H5Pset_fapl_mpio(hid_t fapl_id, MPI_Comm comm, MPI_Info info)
 {
-    H5P_genplist_t  *fapl; /* Property list pointer */
+    H5P_genplist_t *fapl; /* Property list pointer */
     H5FD_mpio_fapl_t fa;
-    herr_t           ret_value = SUCCEED; /* Return value */
+    herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -888,7 +888,7 @@ static void *
 H5FD__mpio_fapl_get(H5FD_t *_file)
 {
     H5FD_mpio_t *file      = (H5FD_mpio_t *)_file;
-    void        *ret_value = NULL; /* Return value */
+    void          *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -914,7 +914,7 @@ H5FD__mpio_fapl_copy(const void *_old_fa)
 {
     const H5FD_mpio_fapl_t *old_fa    = (const H5FD_mpio_fapl_t *)_old_fa;
     H5FD_mpio_fapl_t       *new_fa    = NULL;
-    void                   *ret_value = NULL; /* Return value */
+    void                     *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -954,7 +954,7 @@ static herr_t
 H5FD__mpio_fapl_free(void *_fa)
 {
     H5FD_mpio_fapl_t *fa        = (H5FD_mpio_fapl_t *)_fa;
-    herr_t            ret_value = SUCCEED; /* Return value */
+    herr_t              ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
