@@ -876,23 +876,24 @@ done:
  *-------------------------------------------------------------------------
  */
 static H5FD_t *
-H5FD__mpio_open(const char *name, unsigned flags, hid_t
+H5FD__mpio_open(const char *name, unsigned flags,
+                hid_t
 #ifndef H5FDmpio_DEBUG
-    H5_ATTR_UNUSED
+                    H5_ATTR_UNUSED
 #endif
-    fapl_id,
-    haddr_t H5_ATTR_UNUSED maxaddr)
+                                       fapl_id,
+                haddr_t H5_ATTR_UNUSED maxaddr)
 {
-    H5FD_mpio_t    *file = NULL;          /* VFD File struct for new file */
-    MPI_Comm        comm = MPI_COMM_NULL; /* MPI Communicator, from plist */
-    MPI_Info        info = MPI_INFO_NULL; /* MPI Info, from plist */
-    MPI_Info        info_used;            /* MPI Info returned from MPI_File_open */
-    MPI_File        fh;                   /* MPI file handle */
-    bool            file_opened = false;  /* Flag to indicate that the file was successfully opened */
-    int             mpi_amode;            /* MPI file access flags */
-    int             mpi_rank = INT_MAX;   /* MPI rank of this process */
-    int             mpi_size;             /* Total number of MPI processes */
-    MPI_Offset      file_size;            /* File size (of existing files) */
+    H5FD_mpio_t *file = NULL;          /* VFD File struct for new file */
+    MPI_Comm     comm = MPI_COMM_NULL; /* MPI Communicator, from plist */
+    MPI_Info     info = MPI_INFO_NULL; /* MPI Info, from plist */
+    MPI_Info     info_used;            /* MPI Info returned from MPI_File_open */
+    MPI_File     fh;                   /* MPI file handle */
+    bool         file_opened = false;  /* Flag to indicate that the file was successfully opened */
+    int          mpi_amode;            /* MPI file access flags */
+    int          mpi_rank = INT_MAX;   /* MPI rank of this process */
+    int          mpi_size;             /* Total number of MPI processes */
+    MPI_Offset   file_size;            /* File size (of existing files) */
 #ifdef H5FDmpio_DEBUG
     bool H5FD_mpio_debug_t_flag = false;
 #endif
