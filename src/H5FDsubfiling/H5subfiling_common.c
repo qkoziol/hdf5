@@ -489,7 +489,6 @@ H5FD__subfiling_open_stub_file(const char *name, unsigned flags, MPI_Comm file_c
                                uint64_t *file_id)
 {
     H5P_genplist_t *old_fapl      = NULL; /* old FAPL in API context */
-    H5P_genplist_t *fapl          = NULL;
     uint64_t        stub_file_id  = H5FD_SUBFILING_BAD_FILE_ID;
     bool            bcasted_inode = false;
     H5FD_int_t     *stub_file     = NULL;
@@ -522,23 +521,9 @@ H5FD__subfiling_open_stub_file(const char *name, unsigned flags, MPI_Comm file_c
     /* Open stub file on MPI rank 0 only */
     if (mpi_rank == 0) {
         h5_stat_t st;
-        MPI_Comm  stub_comm = MPI_COMM_SELF;
-        MPI_Info  stub_info = MPI_INFO_NULL;
-
-        /* Create new file access property list */
-        if (NULL == (fapl = H5P_new_plist_of_type(H5P_TYPE_FILE_ACCESS, false)))
-            HGOTO_ERROR(H5E_VFL, H5E_CANTCREATE, FAIL, "can't create FAPL for stub file");
-
-        /* Use MPI I/O driver for stub file to allow access to vector I/O */
-        if (H5P_set(fapl, H5F_ACS_MPI_PARAMS_COMM_NAME, &stub_comm) < 0)
-            HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set MPI communicator");
-        if (H5P_set(fapl, H5F_ACS_MPI_PARAMS_INFO_NAME, &stub_info) < 0)
-            HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set MPI info object");
-        if (H5P_set_driver(fapl, H5FD_MPIO_driver_g, NULL, NULL) < 0)
-            HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set MPI I/O driver on FAPL");
 
         /* Verify access property list and set up collective metadata if appropriate */
-        if (H5CX_set_apl(fapl, H5I_INVALID_HID, true) < 0)
+        if (H5CX_set_apl(H5P_LST_FILE_ACCESS_g, H5I_INVALID_HID, true) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set access property list info");
 
         /* NOTE: Can't call H5FD_open_wrap() here, since that routine resets
@@ -548,7 +533,7 @@ H5FD__subfiling_open_stub_file(const char *name, unsigned flags, MPI_Comm file_c
          * because the non-zero ranks are on the old communicator and rank 0
          * is on the new one. -QAK, 2025/04/15
          */
-        if (H5FD_open(false, &stub_file, name, flags, fapl, HADDR_UNDEF) < 0)
+        if (H5FD_open(false, &stub_file, name, flags, H5P_LST_FILE_ACCESS_g, HADDR_UNDEF) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, FAIL, "couldn't open HDF5 stub file");
 
         HDcompile_assert(sizeof(uint64_t) >= sizeof(ino_t));
@@ -578,9 +563,6 @@ done:
     /* Restore previous FAPL in the API contxt */
     if (old_fapl)
         H5CX_set_fapl(old_fapl);
-
-    if (fapl && H5P_release(fapl) < 0)
-        HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "can't close FAPL ID");
 
     if (ret_value < 0) {
         if (!bcasted_inode && (mpi_size > 1))
