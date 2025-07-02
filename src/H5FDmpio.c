@@ -997,9 +997,6 @@ H5FD__mpio_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t H5_ATTR
             if (MPI_SUCCESS != (mpi_code = MPI_Info_free(&info_used)))
                 HMPI_GOTO_ERROR(NULL, "MPI_Info_free failed", mpi_code)
         }
-        /* Add info to the file access property list */
-        if (H5P_set(fapl, H5F_ACS_MPI_PARAMS_INFO_NAME, &info) < 0)
-            HGOTO_ERROR(H5E_VFL, H5E_CANTSET, NULL, "can't set MPI info object");
     }
 
     /* Build the return value and initialize it */
