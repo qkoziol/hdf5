@@ -25,7 +25,6 @@
 /* Headers */
 /***********/
 #include "H5private.h"   /* Generic Functions                        */
-#include "H5CXprivate.h" /* API Contexts                             */
 #include "H5Dpkg.h"      /* Datasets                                 */
 #include "H5Eprivate.h"  /* Error handling                           */
 #include "H5Fprivate.h"  /* Files                                    */
@@ -361,7 +360,6 @@ H5VL__native_dataset_read(size_t count, void *obj[], hid_t mem_type_id[], hid_t 
     /* Set DXPL for operation */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
-    H5CX_set_dxpl(dxpl);
 
     /* Get file & memory dataspaces */
     if (H5VL__native_dataset_io_setup(count, obj, mem_type_id, mem_space_id, file_space_id,
@@ -411,7 +409,6 @@ H5VL__native_dataset_write(size_t count, void *obj[], hid_t mem_type_id[], hid_t
     /* Set DXPL for operation */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
-    H5CX_set_dxpl(dxpl);
 
     /* Get file & memory dataspaces */
     if (H5VL__native_dataset_io_setup(count, obj, mem_type_id, mem_space_id, file_space_id,
@@ -588,7 +585,6 @@ H5VL__native_dataset_optional(void *obj, H5VL_optional_args_t *args, hid_t dxpl_
     /* Set DXPL for operation */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
-    H5CX_set_dxpl(dxpl);
 
     switch (args->op_type) {
         /* H5Dformat_convert */

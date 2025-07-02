@@ -938,6 +938,9 @@ H5Dget_offset(hid_t dset_id)
     if (NULL == (vol_obj = H5VL_vol_object_verify(dset_id, H5I_DATASET)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, HADDR_UNDEF, "invalid dataset identifier");
 
+    /* Set the DXPL for the API context */
+    H5CX_set_dxpl(H5P_LST_DATASET_XFER_g);
+
     /* Set up VOL callback arguments */
     dset_opt_args.get_offset.offset = &dset_offset;
     vol_cb_args.op_type             = H5VL_NATIVE_DATASET_GET_OFFSET;
@@ -992,6 +995,9 @@ H5D__read_api_common(size_t count, hid_t dset_id[], hid_t mem_type_id[], hid_t m
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "file_space_id array not provided");
     if (!buf)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "buf array not provided");
+
+    /* Set the DXPL for the API context */
+    H5CX_set_dxpl(dxpl);
 
     /* Allocate obj array if necessary */
     if (count > 1)
@@ -1257,6 +1263,9 @@ H5Dread_chunk(hid_t dset_id, hid_t dxpl_id, const hsize_t *offset, uint32_t *fil
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
 
+    /* Set the DXPL for the API context */
+    H5CX_set_dxpl(dxpl);
+
     /* Set up VOL callback arguments */
     dset_opt_args.chunk_read.offset  = offset;
     dset_opt_args.chunk_read.filters = 0;
@@ -1313,6 +1322,9 @@ H5D__write_api_common(size_t count, hid_t dset_id[], hid_t mem_type_id[], hid_t 
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "file_space_id array not provided");
     if (!buf)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "buf array not provided");
+
+    /* Set the DXPL for the API context */
+    H5CX_set_dxpl(dxpl);
 
     /* Allocate obj array if necessary */
     if (count > 1)
@@ -1586,6 +1598,9 @@ H5Dwrite_chunk(hid_t dset_id, hid_t dxpl_id, uint32_t filters, const hsize_t *of
     /* Get the pointer to the dataset transfer property list */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
+
+    /* Set the DXPL for the API context */
+    H5CX_set_dxpl(dxpl);
 
     /* Set up VOL callback arguments */
     dset_opt_args.chunk_write.offset  = offset;
@@ -1977,6 +1992,9 @@ H5Dvlen_get_buf_size(hid_t dataset_id, hid_t type_id, hid_t space_id, hsize_t *s
     if (size == NULL)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid 'size' pointer");
 
+    /* Set the DXPL for the API context */
+    H5CX_set_dxpl(H5P_LST_DATASET_XFER_g);
+
     /* Check if the 'get_vlen_buf_size' callback is supported */
     supported = 0;
     if (H5VL_introspect_opt_query(vol_obj, H5VL_SUBCLS_DATASET, H5VL_NATIVE_DATASET_GET_VLEN_BUF_SIZE,
@@ -2226,6 +2244,9 @@ H5Dformat_convert(hid_t dset_id)
     if (H5CX_set_loc(dset_id) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "can't set collective metadata read info");
 
+    /* Set the DXPL for the API context */
+    H5CX_set_dxpl(H5P_LST_DATASET_XFER_g);
+
     /* Set up VOL callback arguments */
     vol_cb_args.op_type = H5VL_NATIVE_DATASET_FORMAT_CONVERT;
     vol_cb_args.args    = NULL;
@@ -2262,6 +2283,9 @@ H5Dget_chunk_index_type(hid_t dset_id, H5D_chunk_index_t *idx_type /*out*/)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "dset_id parameter is not a valid dataset identifier");
     if (NULL == idx_type)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "idx_type parameter cannot be NULL");
+
+    /* Set the DXPL for the API context */
+    H5CX_set_dxpl(H5P_LST_DATASET_XFER_g);
 
     /* Set up VOL callback arguments */
     dset_opt_args.get_chunk_idx_type.idx_type = idx_type;
@@ -2305,6 +2329,9 @@ H5Dget_chunk_storage_size(hid_t dset_id, const hsize_t *offset, hsize_t *chunk_n
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "offset parameter cannot be NULL");
     if (NULL == chunk_nbytes)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "chunk_nbytes parameter cannot be NULL");
+
+    /* Set the DXPL for the API context */
+    H5CX_set_dxpl(H5P_LST_DATASET_XFER_g);
 
     /* Set up VOL callback arguments */
     dset_opt_args.get_chunk_storage_size.offset = offset;
@@ -2353,6 +2380,9 @@ H5Dget_num_chunks(hid_t dset_id, hid_t fspace_id, hsize_t *nchunks /*out*/)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid dataset identifier");
     if (NULL == nchunks)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid argument (null)");
+
+    /* Set the DXPL for the API context */
+    H5CX_set_dxpl(H5P_LST_DATASET_XFER_g);
 
     /* Set up VOL callback arguments */
     dset_opt_args.get_num_chunks.space_id = fspace_id;
@@ -2405,6 +2435,9 @@ H5Dget_chunk_info(hid_t dset_id, hid_t fspace_id, hsize_t chk_index, hsize_t *of
                     "invalid arguments, must have at least one non-null output argument");
     if (NULL == (vol_obj = H5VL_vol_object_verify(dset_id, H5I_DATASET)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid dataset identifier");
+
+    /* Set the DXPL for the API context */
+    H5CX_set_dxpl(H5P_LST_DATASET_XFER_g);
 
     /* Set up VOL callback arguments */
     dset_opt_args.get_num_chunks.space_id = fspace_id;
@@ -2476,6 +2509,9 @@ H5Dget_chunk_info_by_coord(hid_t dset_id, const hsize_t *offset, unsigned *filte
     if (NULL == offset)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid argument (null)");
 
+    /* Set the DXPL for the API context */
+    H5CX_set_dxpl(H5P_LST_DATASET_XFER_g);
+
     /* Set up VOL callback arguments */
     dset_opt_args.get_chunk_info_by_coord.offset      = offset;
     dset_opt_args.get_chunk_info_by_coord.filter_mask = filter_mask;
@@ -2527,6 +2563,9 @@ H5Dchunk_iter(hid_t dset_id, hid_t dxpl_id, H5D_chunk_iter_op_t op, void *op_dat
     /* Get the default dataset transfer property list if the user didn't provide one */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
+
+    /* Set the DXPL for the API context */
+    H5CX_set_dxpl(dxpl);
 
     /* Set up VOL callback arguments */
     dset_opt_args.chunk_iter.op      = op;

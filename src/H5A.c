@@ -991,6 +991,9 @@ H5A__write_api_common(hid_t attr_id, hid_t type_id, const void *buf, void **toke
     if (NULL == buf)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "buf parameter can't be NULL");
 
+    /* Set DXPL for operation */
+    H5CX_set_dxpl(H5P_LST_DATASET_XFER_g);
+
     /* Get attribute pointer */
     if (H5VL_setup_args(attr_id, H5I_ATTR, vol_obj_ptr) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTGET, FAIL, "can't get VOL object for attribute");
@@ -1096,6 +1099,9 @@ H5A__read_api_common(hid_t attr_id, hid_t dtype_id, void *buf, void **token_ptr,
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a datatype");
     if (NULL == buf)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "buf parameter can't be NULL");
+
+    /* Set DXPL for operation */
+    H5CX_set_dxpl(H5P_LST_DATASET_XFER_g);
 
     /* Get attribute object pointer */
     if (NULL == (*vol_obj_ptr = H5VL_vol_object_verify(attr_id, H5I_ATTR)))
