@@ -55,12 +55,6 @@ static bool H5FD_mpi_self_initialized_s = false;
  */
 static char H5FD_mpi_native_g[] = "native";
 
-/* Driver-specific file access properties */
-typedef struct H5FD_mpio_fapl_t {
-    MPI_Comm comm;                   /* MPI Communicator */
-    MPI_Info info;                   /* MPI info object  */
-} H5FD_mpio_fapl_t;
-
 /*
  * The description of a file belonging to this driver.
  * The EOF value is only used just after the file is opened in order for the
@@ -69,8 +63,9 @@ typedef struct H5FD_mpio_fapl_t {
  */
 typedef struct H5FD_mpio_t {
     H5FD_t   pub;                    /* Public stuff, must be first                  */
-    H5FD_mpio_fapl_t fa;        /* MPIO driver info */
     MPI_File f;                      /* MPIO file handle                             */
+    MPI_Comm comm;                   /* MPI Communicator                             */
+    MPI_Info info;                   /* MPI info object                              */
     int      mpi_rank;               /* This process's rank                          */
     int      mpi_size;               /* Total number of processes                    */
     haddr_t  eof;                    /* End-of-file marker                           */
@@ -84,9 +79,6 @@ typedef struct H5FD_mpio_t {
 
 /* Callbacks */
 static herr_t  H5FD__mpio_term(void);
-static void   *H5FD__mpio_fapl_get(H5FD_t *file);
-static void   *H5FD__mpio_fapl_copy(const void *_old_fa);
-static herr_t  H5FD__mpio_fapl_free(void *_fa);
 static H5FD_t *H5FD__mpio_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr);
 static herr_t  H5FD__mpio_close(H5FD_t *_file);
 static herr_t  H5FD__mpio_query(const H5FD_t *_f1, unsigned long *flags);
@@ -145,10 +137,10 @@ static const H5FD_class_t H5FD_mpio_g = {
     NULL,                       /* sb_size               */
     NULL,                       /* sb_encode             */
     NULL,                       /* sb_decode             */
-    sizeof(H5FD_mpio_fapl_t),   /* fapl_size             */
-    H5FD__mpio_fapl_get,        /* fapl_get              */
-    H5FD__mpio_fapl_copy,       /* fapl_copy             */
-    H5FD__mpio_fapl_free,       /* fapl_free             */
+    0,                          /* fapl_size             */
+    NULL,                       /* fapl_get              */
+    NULL,                       /* fapl_copy             */
+    NULL,                       /* fapl_free             */
     0,                          /* dxpl_size             */
     NULL,                       /* dxpl_copy             */
     NULL,                       /* dxpl_free             */
@@ -167,8 +159,8 @@ static const H5FD_class_t H5FD_mpio_g = {
     H5FD__mpio_write,           /* write                 */
     H5FD__mpio_read_vector,     /* read_vector           */
     H5FD__mpio_write_vector,    /* write_vector          */
-    H5FD__mpio_read_selection,  /* read_selection        */
-    H5FD__mpio_write_selection, /* write_selection       */
+    H5FD__mpio_read_selection,  /* read_selection     */
+    H5FD__mpio_write_selection, /* write_selection    */
     H5FD__mpio_flush,           /* flush                 */
     H5FD__mpio_truncate,        /* truncate              */
     NULL,                       /* lock                  */
@@ -439,8 +431,7 @@ herr_t
 H5Pset_fapl_mpio(hid_t fapl_id, MPI_Comm comm, MPI_Info info)
 {
     H5P_genplist_t *fapl; /* Property list pointer */
-    H5FD_mpio_fapl_t fa;
-    herr_t          ret_value = SUCCEED; /* Return value */
+    herr_t          ret_value;
 
     FUNC_ENTER_API(FAIL)
 
@@ -461,12 +452,8 @@ H5Pset_fapl_mpio(hid_t fapl_id, MPI_Comm comm, MPI_Info info)
     if (H5P_set(fapl, H5F_ACS_MPI_PARAMS_INFO_NAME, &info) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set MPI info object");
 
-    /* Initialize driver specific information. */
-    /* (duplication is done during driver setting) */
-    fa.comm = comm;
-    fa.info = info;
-    if (H5P_set_driver(fapl, H5FD_MPIO_driver_g, &fa, NULL) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "Can't set the onion VFD");
+    /* duplication is done during driver setting. */
+    ret_value = H5P_set_driver(fapl, H5FD_MPIO_driver_g, NULL, NULL);
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -872,106 +859,6 @@ done:
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FD_get_mpio_atomicity() */
-
-/*-------------------------------------------------------------------------
- * Function:  H5FD__mpio_fapl_get
- *
- * Purpose:   Gets a file access property list which could be used to
- *            create an identical file.
- *
- * Return:    Success:    Ptr to new file access property list.
- *            Failure:    NULL
- *
- *-------------------------------------------------------------------------
- */
-static void *
-H5FD__mpio_fapl_get(H5FD_t *_file)
-{
-    H5FD_mpio_t *file      = (H5FD_mpio_t *)_file;
-    void          *ret_value = NULL; /* Return value */
-
-    FUNC_ENTER_PACKAGE
-
-    if (NULL == (ret_value = H5FD__mpio_fapl_copy(&file->fa)))
-        HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, NULL, "can't copy driver info");
-
-done:
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5FD__mpio_fapl_get() */
-
-/*-------------------------------------------------------------------------
- * Function:  H5FD__mpio_fapl_copy
- *
- * Purpose:   Copies the driver-specific file access properties.
- *
- * Return:    Success:    Ptr to a new property list
- *            Failure:    NULL
- *
- *-------------------------------------------------------------------------
- */
-static void *
-H5FD__mpio_fapl_copy(const void *_old_fa)
-{
-    const H5FD_mpio_fapl_t *old_fa    = (const H5FD_mpio_fapl_t *)_old_fa;
-    H5FD_mpio_fapl_t       *new_fa    = NULL;
-    void                     *ret_value = NULL; /* Return value */
-
-    FUNC_ENTER_PACKAGE
-
-    if (NULL == (new_fa = H5MM_calloc(sizeof(H5FD_mpio_fapl_t))))
-        HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "memory allocation failed");
-
-    /* Make a copy of the MPI communicator */
-    if (H5_mpi_comm_dup(old_fa->comm, &new_fa->comm) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, NULL, "unable to duplicate MPI communicator");
-
-    /* Make a copy of the MPI info object */
-    if (H5_mpi_info_dup(old->fa->info, &new_fa->info) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, NULL, "unable to duplicate MPI info object");
-
-    /* Set return value */
-    ret_value = new_fa;
-
-done:
-    if (ret_value == NULL)
-        if (new_fa && H5FD__mpio_fapl_free(new_fa) < 0)
-            HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, NULL, "can't close mpio driver info");
-
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5FD__mpio_fapl_copy() */
-
-/*-------------------------------------------------------------------------
- * Function:  H5FD__mpio_fapl_free
- *
- * Purpose:   Frees the driver-specific file access properties.
- *
- * Return:    Success:    0
- *            Failure:    -1
- *
- *-------------------------------------------------------------------------
- */
-static herr_t
-H5FD__mpio_fapl_free(void *_fa)
-{
-    H5FD_mpio_fapl_t *fa        = (H5FD_mpio_fapl_t *)_fa;
-    herr_t              ret_value = SUCCEED; /* Return value */
-
-    FUNC_ENTER_PACKAGE
-
-    /* Free the MPI communicator */
-    if (H5_mpi_comm_free(&fa->comm) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTFREE, FAIL, "unable to free MPI communicator");
-
-    /* Free the MPI info object */
-    if (H5_mpi_info_free(&fa->info) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTFREE, FAIL, "unable to free MPI info object");
-
-    /* Free the driver property */
-    H5MM_xfree(fa);
-
-done:
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5FD__mpio_fapl_free() */
 
 /*-------------------------------------------------------------------------
  * Function:    H5FD__mpio_open
