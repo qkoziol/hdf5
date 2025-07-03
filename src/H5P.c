@@ -1074,19 +1074,21 @@ done:
 htri_t
 H5Pisa_class(hid_t plist_id, hid_t pclass_id)
 {
+    H5P_genplist_t *plist;            /* Property list to query */
+    H5P_genclass_t *pclass;           /* Property list class */
     htri_t ret_value; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Check arguments. */
-    if (H5I_GENPROP_LST != H5I_get_type(plist_id))
+    if (NULL == (plist = (H5P_genplist_t *)H5I_object_verify(plist_id, H5I_GENPROP_LST)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
-    if (H5I_GENPROP_CLS != H5I_get_type(pclass_id))
+    if (NULL == (pclass = (H5P_genclass_t *)H5I_object_verify(pclass_id, H5I_GENPROP_CLS)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property class");
 
     /* Compare the property list's class against the other class */
-    if ((ret_value = H5P_isa_class(plist_id, pclass_id)) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, FAIL, "unable to compare property list classes");
+    if ((ret_value = H5P_class_isa(plist->pclass, pclass)) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTCOMPARE, FAIL, "unable to compare property list classes");
 
 done:
     FUNC_LEAVE_API(ret_value)

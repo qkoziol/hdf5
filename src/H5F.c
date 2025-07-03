@@ -1207,6 +1207,7 @@ H5Fmount(hid_t loc_id, const char *name, hid_t child_id, hid_t fmpl_id)
     H5VL_object_t             *loc_vol_obj   = NULL; /* Parent object        */
     H5VL_object_t             *child_vol_obj = NULL; /* Child object         */
     H5VL_group_specific_args_t vol_cb_args;          /* Arguments to VOL callback */
+    H5P_genplist_t                  *fmpl;                /* File mount property list */
     void                      *grp = NULL;           /* Root group opened */
     H5I_type_t                 loc_type;             /* ID type of location  */
     htri_t                     same_connector; /* Whether parent and child files use the same connector */
@@ -1224,10 +1225,10 @@ H5Fmount(hid_t loc_id, const char *name, hid_t child_id, hid_t fmpl_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "name parameter cannot be the empty string");
     if (H5I_FILE != H5I_get_type(child_id))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "child_id parameter not a file ID");
-    if (H5P_DEFAULT == fmpl_id)
-        fmpl_id = H5P_FILE_MOUNT_DEFAULT;
-    else if (true != H5P_isa_class(fmpl_id, H5P_FILE_MOUNT))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "fmpl_id is not a file mount property list ID");
+
+    /* Get the pointer to the file mount property list */
+    if (NULL == (fmpl = H5P_object_verify(fmpl_id, H5P_TYPE_FILE_MOUNT, true)))
+        HGOTO_ERROR(H5E_FILE, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set up collective metadata if appropriate */
     if (H5CX_set_loc(loc_id) < 0)
@@ -1280,7 +1281,7 @@ H5Fmount(hid_t loc_id, const char *name, hid_t child_id, hid_t fmpl_id)
     vol_cb_args.args.mount.name = name;
     vol_cb_args.args.mount.child_file =
         H5VL_OBJ_DATA(child_vol_obj); /* Don't unwrap fully, so each connector can see its object */
-    vol_cb_args.args.mount.fmpl_id = fmpl_id;
+    vol_cb_args.args.mount.fmpl_id = H5P_PLIST_ID(fmpl);
 
     /* Perform the mount operation */
     /* (This is on a group, so that the VOL framework always sees groups for

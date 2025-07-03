@@ -1045,7 +1045,7 @@ done:
  PURPOSE
     Internal routine to copy a generic property list
  USAGE
-        H5P_genplist_t *H5P_copy_plist_id(old_plist, app_ref)
+        H5P_genplist_t *H5P_copy_plist(old_plist, app_ref)
             H5P_genplist_t *old_plist;         IN: Property list ID to copy
             bool app_ref;                      IN: The old plist is from the app
  RETURNS
@@ -1347,9 +1347,9 @@ done:
  PURPOSE
     Internal routine to copy a generic property list
  USAGE
-        hid_t H5P_copy_plist_id(old_plist_id, app_ref)
-            hid_t old_plist_id;    IN: Property list ID to copy
-            bool app_ref;          IN: The old plist is from the app
+        hid_t H5P_copy_plist_id(old_plist, app_ref)
+            H5P_genplist_t *old_plist;  IN: Property list ID to copy
+            bool app_ref;               IN: The old plist is from the app
  RETURNS
     Success: valid property list ID on success (non-negative)
     Failure: H5I_INVALID_HID
@@ -4314,54 +4314,6 @@ H5P_class_isa(const H5P_genclass_t *pclass1, const H5P_genclass_t *pclass2)
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5P_class_isa() */
-
-/*--------------------------------------------------------------------------
- NAME
-    H5P_isa_class
- PURPOSE
-    Internal routine to query whether a property list is a certain class
- USAGE
-    htri_t H5P_isa_class(plist_id, pclass_id)
-        hid_t plist_id;         IN: Property list to query
-        hid_t pclass_id;        IN: Property class to query
- RETURNS
-    Success: true (1) or false (0)
-    Failure: negative
- DESCRIPTION
-    This routine queries whether a property list is a member of the property
-    list class.
-
- GLOBAL VARIABLES
- COMMENTS, BUGS, ASSUMPTIONS
-    This function is special in that it is an internal library function, but
-    accepts hid_t's as parameters.  Since it is used in basically the same way
-    as the H5I functions, this should be OK.  Don't make more library functions
-    which accept hid_t's without thorough discussion. -QAK
- EXAMPLES
- REVISION LOG
---------------------------------------------------------------------------*/
-htri_t
-H5P_isa_class(hid_t plist_id, hid_t pclass_id)
-{
-    H5P_genplist_t *plist;            /* Property list to query */
-    H5P_genclass_t *pclass;           /* Property list class */
-    htri_t          ret_value = FAIL; /* Return value */
-
-    FUNC_ENTER_NOAPI(FAIL)
-
-    /* Check arguments. */
-    if (NULL == (plist = (H5P_genplist_t *)H5I_object_verify(plist_id, H5I_GENPROP_LST)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
-    if (NULL == (pclass = (H5P_genclass_t *)H5I_object_verify(pclass_id, H5I_GENPROP_CLS)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property class");
-
-    /* Compare the property list's class against the other class */
-    if ((ret_value = H5P_class_isa(plist->pclass, pclass)) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, FAIL, "unable to compare property list classes");
-
-done:
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* H5P_isa_class() */
 
 /*--------------------------------------------------------------------------
  NAME
