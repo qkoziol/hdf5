@@ -1207,7 +1207,7 @@ H5Fmount(hid_t loc_id, const char *name, hid_t child_id, hid_t fmpl_id)
     H5VL_object_t             *loc_vol_obj   = NULL; /* Parent object        */
     H5VL_object_t             *child_vol_obj = NULL; /* Child object         */
     H5VL_group_specific_args_t vol_cb_args;          /* Arguments to VOL callback */
-    H5P_genplist_t                  *fmpl;                /* File mount property list */
+    H5P_genplist_t            *fmpl;                 /* File mount property list */
     void                      *grp = NULL;           /* Root group opened */
     H5I_type_t                 loc_type;             /* ID type of location  */
     htri_t                     same_connector; /* Whether parent and child files use the same connector */
