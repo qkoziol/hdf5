@@ -112,6 +112,7 @@ struct H5P_genplist_t {
     size_t          nprops;     /* Number of properties in this list */
     bool            class_init; /* Whether the class initialization callback finished successfully */
     bool            is_default; /* Whether this property list is the default list for the class */
+    bool            is_readonly; /* Whether this property list can be modified */
     H5SL_t         *del;        /* Skip list containing names of deleted properties */
     H5SL_t         *props;      /* Skip list containing properties modified from the parent class */
 };

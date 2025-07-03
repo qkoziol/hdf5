@@ -266,7 +266,9 @@ H5VL_top_term_package(void)
         H5VL_connector_prop_t def_vol_prop = {NULL, NULL}; /* VOL connector for default FAPL */
 
         /* Reset the default VOL for the default FAPL */
+        n += (H5P_allow_write(H5P_LST_FILE_ACCESS_g) < 0);
         n += (H5P_set_vol(H5P_LST_FILE_ACCESS_g, NULL, NULL) < 0);
+        n += (H5P_disallow_write(H5P_LST_FILE_ACCESS_g) < 0);
 
         /* Reset the default VOL for the default file access pclass */
         n += (H5P_reset_vol_class(H5P_CLS_FILE_ACCESS_g, &def_vol_prop) < 0);
@@ -449,8 +451,12 @@ H5VL__set_def_conn(void)
     } /* end else */
 
     /* Change the default VOL for the default FAPL */
+    if (H5P_allow_write(H5P_LST_FILE_ACCESS_g) < 0)
+        HGOTO_ERROR(H5E_VOL, H5E_CANTSET, FAIL, "can't modify read-only flag on default FAPL");
     if (H5P_set_vol(H5P_LST_FILE_ACCESS_g, connector, vol_info) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTSET, FAIL, "can't set default VOL connector for default FAPL");
+    if (H5P_disallow_write(H5P_LST_FILE_ACCESS_g) < 0)
+        HGOTO_ERROR(H5E_VOL, H5E_CANTSET, FAIL, "can't modify read-only flag on default FAPL");
 
     /* Get the [updated] connector property to use for the class */
     if (H5P_peek(H5P_LST_FILE_ACCESS_g, H5F_ACS_VOL_CONN_NAME, &def_vol_prop) < 0)

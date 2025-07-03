@@ -251,6 +251,10 @@ H5_DLL H5P_genclass_t *H5P_get_class(const H5P_genplist_t *plist);
 /* *SPECIAL* Don't make more of these! -QAK */
 H5_DLL H5P_genplist_t *H5P_object_verify(hid_t plist_id, H5P_plist_type_t type, bool allow_default);
 
+/* Bootstrap / shutdown routines */
+H5_DLL herr_t H5P_allow_write(H5P_genplist_t *plist);
+H5_DLL herr_t H5P_disallow_write(H5P_genplist_t *plist);
+
 /* Private DCPL routines */
 H5_DLL herr_t H5P_fill_value_defined(H5P_genplist_t *plist, H5D_fill_value_t *status);
 H5_DLL herr_t H5P_get_fill_value(H5P_genplist_t *plist, const struct H5T_t *type, void *value);

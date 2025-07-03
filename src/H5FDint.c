@@ -302,7 +302,9 @@ H5FD_top_term_package(void)
         H5FD_driver_prop_t def_driver_prop = {NULL, NULL, NULL}; /* VFD driver for default FAPL */
 
         /* Reset default VFL driver for default FAPL */
+        n += (H5P_allow_write(H5P_LST_FILE_ACCESS_g) < 0);
         n += (H5P_set_driver(H5P_LST_FILE_ACCESS_g, NULL, NULL, NULL) < 0);
+        n += (H5P_disallow_write(H5P_LST_FILE_ACCESS_g) < 0);
 
         /* Reset default VFL driver for default file access pclass */
         n += (H5P_reset_vfd_class(H5P_CLS_FILE_ACCESS_g, &def_driver_prop) < 0);
@@ -494,8 +496,12 @@ H5FD__set_def_driver(void)
     }
 
     /* Set new default VFL driver for default FAPL */
+    if (H5P_allow_write(H5P_LST_FILE_ACCESS_g) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't modify read-only flag on default FAPL");
     if (H5P_set_driver(H5P_LST_FILE_ACCESS_g, driver, NULL, driver_config_env_var) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set default VFL driver for default FAPL");
+    if (H5P_disallow_write(H5P_LST_FILE_ACCESS_g) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't modify read-only flag on default FAPL");
 
     /* Get the [updated] driver property to use for the class */
     if (H5P_peek(H5P_LST_FILE_ACCESS_g, H5F_ACS_FILE_DRV_NAME, &def_driver_prop) < 0)

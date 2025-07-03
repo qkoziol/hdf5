@@ -631,6 +631,9 @@ H5P__init_package(void)
                         HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, FAIL,
                                     "can't create default property list for class");
 
+                    /* Mark default property lists as read-only */
+                    def_plist->is_readonly = true;
+
                     /* Set the ID for the default property list for the new class*/
                     *lib_class->def_plist_id = def_plist->plist_id;
 
@@ -3463,6 +3466,10 @@ H5P_set(H5P_genplist_t *plist, const char *name, const void *value)
     assert(name);
     assert(value);
 
+    /* Check for property list being read-only */
+    if (plist->is_readonly)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTMODIFY, FAIL, "can't modify read-only plist");
+
     /* Find the property and set the value */
     udata.value = value;
     if (H5P__do_prop(plist, name, H5P__set_plist_cb, H5P__set_pclass_cb, &udata) < 0)
@@ -6021,3 +6028,77 @@ H5P_get_class(const H5P_genplist_t *plist)
 
     FUNC_LEAVE_NOAPI(plist->pclass)
 } /* end H5P_get_class() */
+
+/*-------------------------------------------------------------------------
+ * Function:	H5P_allow_write
+ *
+ * Purpose:	Reset the read-only flag on a default property list.
+ *
+ * Note:	This routine should _ONLY_ be used in library init / term
+ *              routines, with thoughtful care.
+ *
+ * Return:      Non-negative on success/Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5P_allow_write(H5P_genplist_t *plist)
+{
+    herr_t ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity checks */
+    assert(plist);
+
+    /* Check for non-default property list (for now) */
+    if (!plist->is_default)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "attempting to change read-only flag on non-default property list");
+
+    /* Check if property list already has flag reset */
+    if (!plist->is_readonly)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "default property list is already writeable");
+
+    /* Mark property list as writeable */
+    plist->is_readonly = false;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5P_allow_write() */
+
+/*-------------------------------------------------------------------------
+ * Function:	H5P_disallow_write
+ *
+ * Purpose:	Set the read-only flag on a default property list.
+ *
+ * Note:	This routine should _ONLY_ be used in library init / term
+ *              routines, with thoughtful care.
+ *
+ * Return:      Non-negative on success/Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5P_disallow_write(H5P_genplist_t *plist)
+{
+    herr_t ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity checks */
+    assert(plist);
+
+    /* Check for non-default property list (for now) */
+    if (!plist->is_default)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "attempting to change read-only flag on non-default property list");
+
+    /* Check if property list already has flag set */
+    if (plist->is_readonly)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "default property list is already read-only");
+
+    /* Mark property list as read-only */
+    plist->is_readonly = true;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5P_disallow_write() */
