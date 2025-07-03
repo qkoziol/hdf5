@@ -188,6 +188,7 @@ H5P_genplist_t *H5P_LST_FILE_ACCESS_g         = NULL;
 hid_t           H5P_LST_FILE_CREATE_ID_g      = H5I_INVALID_HID;
 H5P_genplist_t *H5P_LST_FILE_CREATE_g         = NULL;
 hid_t           H5P_LST_FILE_MOUNT_ID_g       = H5I_INVALID_HID;
+H5P_genplist_t *H5P_LST_FILE_MOUNT_g          = NULL;
 hid_t           H5P_LST_GROUP_ACCESS_ID_g     = H5I_INVALID_HID;
 H5P_genplist_t *H5P_LST_GROUP_ACCESS_g        = NULL;
 hid_t           H5P_LST_GROUP_CREATE_ID_g     = H5I_INVALID_HID;
@@ -484,7 +485,7 @@ static H5P_genplist_t **H5P_def_plist_list_s[] = {
     &H5P_LST_DATASET_CREATE_g,   /* H5P_TYPE_DATASET_CREATE (5) */
     &H5P_LST_DATASET_ACCESS_g,   /* H5P_TYPE_DATASET_ACCESS (6) */
     &H5P_LST_DATASET_XFER_g,     /* H5P_TYPE_DATASET_XFER (7) */
-    NULL,                        /* H5P_TYPE_FILE_MOUNT (8) */
+    &H5P_LST_FILE_MOUNT_g,       /* H5P_TYPE_FILE_MOUNT (8) */
     &H5P_LST_GROUP_CREATE_g,     /* H5P_TYPE_GROUP_CREATE (9) */
     &H5P_LST_GROUP_ACCESS_g,     /* H5P_TYPE_GROUP_ACCESS (10) */
     &H5P_LST_DATATYPE_CREATE_g,  /* H5P_TYPE_DATATYPE_CREATE (11) */
@@ -727,6 +728,7 @@ H5P_term_package(void)
                     H5P_LST_DATATYPE_CREATE_g  = NULL;
                     H5P_LST_FILE_ACCESS_g      = NULL;
                     H5P_LST_FILE_CREATE_g      = NULL;
+                    H5P_LST_FILE_MOUNT_g       = NULL;
                     H5P_LST_GROUP_ACCESS_g     = NULL;
                     H5P_LST_GROUP_CREATE_g     = NULL;
                     H5P_LST_LINK_ACCESS_g      = NULL;
