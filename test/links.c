@@ -9649,7 +9649,7 @@ external_set_elink_fapl3(bool new_format)
         TEST_ERROR;
 
     /* Try closing out_fapl, should succeed since H5Pget() should clone its fapl */
-    if (H5P_release(out_fapl) < 0)
+    if (H5P_dissolve(out_fapl) < 0)
         TEST_ERROR;
     out_fapl = NULL;
 
@@ -9666,7 +9666,7 @@ external_set_elink_fapl3(bool new_format)
         TEST_ERROR;
 
     /* Try closing out_fapl, should succeed since H5Pget() should clone its fapl */
-    if (H5P_release(out_fapl) < 0)
+    if (H5P_dissolve(out_fapl) < 0)
         TEST_ERROR;
 
     if (H5Pclose(l_fapl_id) < 0)

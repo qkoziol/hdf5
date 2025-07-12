@@ -435,7 +435,7 @@ H5P__lacc_elink_fapl_del(hid_t H5_ATTR_UNUSED prop_id, const char H5_ATTR_UNUSED
     assert(_value);
 
     /* Close the FAPL */
-    if (l_fapl && H5P_release(l_fapl) < 0)
+    if (l_fapl && H5P_dissolve(l_fapl) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, FAIL, "unable to close file access property list");
 
 done:
@@ -532,7 +532,7 @@ H5P__lacc_elink_fapl_close(const char H5_ATTR_UNUSED *name, size_t H5_ATTR_UNUSE
     assert(_value);
 
     /* Close the FAPL */
-    if (l_fapl && H5P_release(l_fapl) < 0)
+    if (l_fapl && H5P_dissolve(l_fapl) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, FAIL, "unable to close file access property list");
 
 done:

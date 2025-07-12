@@ -234,7 +234,7 @@ H5L__extern_traverse(const char H5_ATTR_UNUSED *link_name, hid_t cur_group, cons
 done:
     /* XXX (VOL MERGE): Probably also want to consider closing ext_obj here on failures */
     /* Release resources */
-    if (fapl_copied && fapl && H5P_release(fapl) < 0)
+    if (fapl_copied && fapl && H5P_dissolve(fapl) < 0)
         HDONE_ERROR(H5E_LINK, H5E_CANTCLOSEOBJ, H5I_INVALID_HID, "unable to close file access property list");
     if (ext_file && H5F_efc_close(loc.oloc->file, ext_file) < 0)
         HDONE_ERROR(H5E_LINK, H5E_CANTCLOSEFILE, H5I_INVALID_HID, "problem closing external file");

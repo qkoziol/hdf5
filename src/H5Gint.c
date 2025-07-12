@@ -1338,7 +1338,7 @@ H5G_get_create_plist(const H5G_t *grp)
 
 done:
     if (NULL == ret_value)
-        if (new_gcpl && H5P_release(new_gcpl) < 0)
+        if (new_gcpl && H5P_dissolve(new_gcpl) < 0)
             HDONE_ERROR(H5E_SYM, H5E_CANTCLOSEOBJ, NULL, "can't close group creation property list");
 
     FUNC_LEAVE_NOAPI(ret_value)

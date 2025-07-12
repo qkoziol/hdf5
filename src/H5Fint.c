@@ -503,7 +503,7 @@ done:
         HDONE_ERROR(H5E_FILE, H5E_CANTCLOSEOBJ, NULL, "can't close copy of driver info");
 
     if (NULL == ret_value)
-        if (new_fapl && H5P_release(new_fapl) < 0)
+        if (new_fapl && H5P_dissolve(new_fapl) < 0)
             HDONE_ERROR(H5E_FILE, H5E_CANTCLOSEOBJ, NULL, "can't free property list");
 
     FUNC_LEAVE_NOAPI(ret_value)
@@ -571,7 +571,7 @@ H5F_get_create_plist(H5F_t *f)
 
 done:
     if (NULL == ret_value)
-        if (new_fcpl && H5P_release(new_fcpl) < 0)
+        if (new_fcpl && H5P_dissolve(new_fcpl) < 0)
             HDONE_ERROR(H5E_FILE, H5E_CANTCLOSEOBJ, NULL, "can't free property list");
 
     FUNC_LEAVE_NOAPI(ret_value)
@@ -2760,7 +2760,7 @@ H5F__reopen(H5F_t *f)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_dissolve(fapl) < 0)
         HDONE_ERROR(H5E_FILE, H5E_CANTCLOSEOBJ, NULL, "unable to close file access property list");
 
     FUNC_LEAVE_NOAPI(ret_value)
@@ -4124,7 +4124,7 @@ done:
     /* Free access property lists */
     if (obj_dapls) {
         for (u = 0; u < grp_dset_count; u++)
-            if (obj_dapls[u] && H5P_release(obj_dapls[u]) < 0)
+            if (obj_dapls[u] && H5P_dissolve(obj_dapls[u]) < 0)
                 HDONE_ERROR(H5E_FILE, H5E_CANTCLOSEOBJ, FAIL, "closing property list failed");
         H5MM_xfree(obj_dapls);
     }

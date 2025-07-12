@@ -799,7 +799,7 @@ done:
 
     /* Cleanup on error */
     if (NULL == ret_value)
-        if (plist && H5P_release(plist) < 0)
+        if (plist && H5P_dissolve(plist) < 0)
             HDONE_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, NULL,
                         "unable to close partially initialized property list");
 

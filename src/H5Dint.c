@@ -2850,7 +2850,7 @@ done:
         vlen_bufsize.common.fl_tbuf = H5FL_BLK_FREE(vlen_fl_buf, vlen_bufsize.common.fl_tbuf);
     if (vlen_bufsize.common.vl_tbuf != NULL)
         vlen_bufsize.common.vl_tbuf = H5FL_BLK_FREE(vlen_vl_buf, vlen_bufsize.common.vl_tbuf);
-    if (vlen_bufsize.dxpl && H5P_release(vlen_bufsize.dxpl) < 0)
+    if (vlen_bufsize.dxpl && H5P_dissolve(vlen_bufsize.dxpl) < 0)
         HDONE_ERROR(H5E_DATASET, H5E_CANTRELEASE, FAIL, "unable to release DXPL");
 
     FUNC_LEAVE_NOAPI(ret_value)
@@ -2917,7 +2917,7 @@ done:
         H5CX_set_cpl(old_ocpl);
 
     /* Clean up resources */
-    if (dcpl && H5P_release(dcpl) < 0)
+    if (dcpl && H5P_dissolve(dcpl) < 0)
         HDONE_ERROR(H5E_DATASET, H5E_CANTCLOSEOBJ, FAIL, "unable to close dataset creation property list");
 
     FUNC_LEAVE_NOAPI(ret_value)
@@ -3673,7 +3673,7 @@ done:
         HDONE_ERROR(H5E_DATASET, H5E_CANTRESET, NULL, "unable to reset external file list info");
 
     if (NULL == ret_value) {
-        if (new_dcpl && H5P_release(new_dcpl) < 0)
+        if (new_dcpl && H5P_dissolve(new_dcpl) < 0)
             HDONE_ERROR(H5E_DATASET, H5E_CANTCLOSEOBJ, NULL, "can't close dataset creation property list");
 
         if (copied_fill.type && (H5T_close_real(copied_fill.type) < 0))
@@ -3736,7 +3736,7 @@ H5D_get_access_plist(const H5D_t *dset)
 
 done:
     if (NULL == ret_value)
-        if (new_dapl && H5P_release(new_dapl) < 0)
+        if (new_dapl && H5P_dissolve(new_dapl) < 0)
             HDONE_ERROR(H5E_DATASET, H5E_CANTCLOSEOBJ, NULL, "can't close dataset access property list");
 
     FUNC_LEAVE_NOAPI(ret_value)

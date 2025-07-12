@@ -959,7 +959,7 @@ H5T__get_create_plist(const H5T_t *type)
 
 done:
     if (NULL == ret_value)
-        if (new_tcpl && H5P_release(new_tcpl) < 0)
+        if (new_tcpl && H5P_dissolve(new_tcpl) < 0)
             HDONE_ERROR(H5E_DATATYPE, H5E_CANTCLOSEOBJ, NULL, "can't close datatype creation property list");
 
     FUNC_LEAVE_NOAPI(ret_value)

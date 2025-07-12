@@ -93,10 +93,6 @@ test_cont(char *filename, hid_t fapl)
         goto error;
     } /* end if */
 
-    /* Set the default OCPL for the object header creations */
-    if (H5CX_set_cpl(H5P_LST_OBJECT_CREATE_g) < 0)
-        FAIL_STACK_ERROR;
-
     if (H5O_create(f, (size_t)H5O_MIN_SIZE, (size_t)0, &oh_locA /*out*/) < 0)
         FAIL_STACK_ERROR;
 
@@ -228,10 +224,6 @@ test_ohdr_cache(char *filename, hid_t fapl)
 
     /* Protect local heap (which actually pins it in the cache) */
     if (NULL == (lheap = H5HL_protect(f, lheap_addr, H5AC__READ_ONLY_FLAG)))
-        FAIL_STACK_ERROR;
-
-    /* Set the default OCPL for the object header creations */
-    if (H5CX_set_cpl(H5P_LST_OBJECT_CREATE_g) < 0)
         FAIL_STACK_ERROR;
 
     /* Create an object header */
@@ -1862,10 +1854,6 @@ main(void)
     if (H5CX_push(&api_ctx) < 0)
         FAIL_STACK_ERROR;
     api_ctx_pushed = true;
-
-    /* Set the default OCPL for the object header creations */
-    if (H5CX_set_cpl(H5P_LST_OBJECT_CREATE_g) < 0)
-        FAIL_STACK_ERROR;
 
     /* Loop through all the combinations of low/high library format bounds */
     for (low = H5F_LIBVER_EARLIEST; low < H5F_LIBVER_NBOUNDS; low++) {

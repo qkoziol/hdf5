@@ -350,7 +350,7 @@ done:
         H5CX_set_cpl(old_ocpl);
 
     /* Close the open objects */
-    if (gcpl && H5P_release(gcpl) < 0)
+    if (gcpl && H5P_dissolve(gcpl) < 0)
         HDONE_ERROR(H5E_DATASET, H5E_CANTCLOSEOBJ, FAIL, "unable to close dataset creation property list");
     if (fheap && H5HF_close(fheap) < 0)
         HDONE_ERROR(H5E_SYM, H5E_CLOSEERROR, FAIL, "can't close fractal heap");

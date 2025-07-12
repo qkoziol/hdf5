@@ -727,7 +727,7 @@ H5D__virtual_reset_layout(H5O_layout_t *layout)
 
     /* Close access property lists */
     if (virt->source_fapl) {
-        if (H5P_release(virt->source_fapl) < 0)
+        if (H5P_dissolve(virt->source_fapl) < 0)
             HDONE_ERROR(H5E_DATASET, H5E_CANTCLOSEOBJ, FAIL, "can't close source fapl");
         virt->source_fapl = NULL;
     }

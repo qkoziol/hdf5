@@ -23,7 +23,8 @@ typedef struct H5P_genplist_t H5P_genplist_t;
 #include "H5Ppublic.h"
 
 /* Private headers needed by this file */
-#include "H5private.h" /* Generic Functions			*/
+#include "H5private.h"  /* Generic Functions */
+#include "H5Iprivate.h" /* IDs               */
 
 /**************************/
 /* Library Private Macros */
@@ -200,7 +201,7 @@ H5_DLL herr_t H5P_init(void);
 
 /* Internal versions of API routines */
 H5_DLL herr_t          H5P_close(H5P_genplist_t *plist);
-H5_DLL herr_t          H5P_release(H5P_genplist_t *plist);
+H5_DLL herr_t          H5P_dissolve(H5P_genplist_t *plist);
 H5_DLL hid_t           H5P_copy_plist_id(const H5P_genplist_t *old_plist, bool app_ref);
 H5_DLL H5P_genplist_t *H5P_copy_plist(const H5P_genplist_t *old_plist, bool app_ref);
 H5_DLL herr_t          H5P_get(H5P_genplist_t *plist, const char *name, void *value);
@@ -247,6 +248,12 @@ H5_DLL htri_t H5P_isa_type(const H5P_genplist_t *plist, H5P_plist_type_t type);
 H5_DLL hid_t           H5P_get_plist_id(const H5P_genplist_t *plist);
 H5_DLL bool            H5P_is_default_plist(const H5P_genplist_t *plist);
 H5_DLL H5P_genclass_t *H5P_get_class(const H5P_genplist_t *plist);
+
+/* Lock/unlock operations */
+H5_DLL void H5P_lock(H5P_genplist_t *plist, H5I_lock_mode_t mode);
+H5_DLL void H5P_unlock(H5P_genplist_t *plist);
+H5_DLL H5P_genplist_t *H5P_acquire(hid_t plist_id, H5P_plist_type_t type, H5I_lock_mode_t mode, bool allow_default);
+H5_DLL herr_t H5P_release(H5P_genplist_t *plist);
 
 /* *SPECIAL* Don't make more of these! -QAK */
 H5_DLL H5P_genplist_t *H5P_object_verify(hid_t plist_id, H5P_plist_type_t type, bool allow_default);

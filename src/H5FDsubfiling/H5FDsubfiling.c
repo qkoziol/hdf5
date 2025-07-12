@@ -531,7 +531,7 @@ H5Pset_fapl_subfiling(hid_t fapl_id, const H5FD_subfiling_config_t *vfd_config)
 
 done:
     if (NULL == vfd_config)
-        if (fa.ioc_fapl && H5P_release(fa.ioc_fapl) < 0)
+        if (fa.ioc_fapl && H5P_dissolve(fa.ioc_fapl) < 0)
             HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "can't close IOC FAPL");
 
     FUNC_LEAVE_API(ret_value)
@@ -589,7 +589,7 @@ H5Pget_fapl_subfiling(hid_t fapl_id, H5FD_subfiling_config_t *config_out)
 
 done:
     if (use_default_config && fa == &default_fa)
-        if (default_fa.ioc_fapl && H5P_release(default_fa.ioc_fapl) < 0)
+        if (default_fa.ioc_fapl && H5P_dissolve(default_fa.ioc_fapl) < 0)
             HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "can't close FAPL");
 
     FUNC_LEAVE_API(ret_value)
@@ -711,7 +711,7 @@ H5FD__subfiling_get_default_info(H5P_genplist_t *fapl, H5FD_subfiling_fapl_t *fa
 
 done:
     if (ret_value < 0) {
-        if (fa_out->ioc_fapl && H5P_release(fa_out->ioc_fapl) < 0)
+        if (fa_out->ioc_fapl && H5P_dissolve(fa_out->ioc_fapl) < 0)
             HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "can't close FAPL");
         fa_out->ioc_fapl = NULL;
     }
@@ -1133,7 +1133,7 @@ H5FD__subfiling_fapl_free(void *_fa)
 
     /* Release the IOC FAPL */
     if (fa->ioc_fapl)
-        if (H5P_release(fa->ioc_fapl) < 0)
+        if (H5P_dissolve(fa->ioc_fapl) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "can't close IOC FAPL");
 
     /* Free the property */
@@ -1277,7 +1277,7 @@ H5FD__subfiling_open(const char *name, unsigned flags, hid_t H5_ATTR_UNUSED fapl
 
 done:
     if (fa == &default_fa)
-        if (H5P_release(fa->ioc_fapl) < 0)
+        if (H5P_dissolve(fa->ioc_fapl) < 0)
             HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, NULL, "can't close IOC FAPL");
 
     if (NULL == ret_value)
@@ -1326,7 +1326,7 @@ H5FD__subfiling_close_int(H5FD_subfiling_t *file)
         HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEFILE, FAIL, "unable to close HDF5 stub file");
 
     /* If set, close the copy of the FAPL for the underlying VFD. */
-    if (file->fa.ioc_fapl && H5P_release(file->fa.ioc_fapl) < 0)
+    if (file->fa.ioc_fapl && H5P_dissolve(file->fa.ioc_fapl) < 0)
         HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "can't close IOC FAPL");
 
     if (MPI_SUCCESS != (mpi_code = MPI_Finalized(&mpi_finalized)))
@@ -1844,7 +1844,7 @@ H5FD__subfiling_delete(const char *name, hid_t H5_ATTR_UNUSED fapl_id)
 
 done:
     if (subfiling_fa == &default_fa)
-        if (H5P_release(subfiling_fa->ioc_fapl) < 0)
+        if (H5P_dissolve(subfiling_fa->ioc_fapl) < 0)
             HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "unable to close IOC FAPL");
 
     FUNC_LEAVE_NOAPI(ret_value)

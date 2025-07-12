@@ -1690,6 +1690,7 @@ extern char H5_lib_vers_info_g[];
 #define FUNC_LEAVE_NOAPI_NAMECHECK_ONLY(ret_value)                                                           \
     return (ret_value);                                                                                      \
     } /* end scope from beginning of FUNC_ENTER */
+
 #define FUNC_LEAVE_NOAPI_VOID_NAMECHECK_ONLY                                                                 \
     return;                                                                                                  \
     } /* end scope from beginning of FUNC_ENTER */

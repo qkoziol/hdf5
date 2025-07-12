@@ -3955,7 +3955,7 @@ done:
         HDONE_ERROR(H5E_VOL, H5E_CANTDEC, H5_ITER_ERROR, "unable to unregister VOL connector");
 
     if (ret_value != H5_ITER_STOP)
-        if (fapl_copy && H5P_release(fapl_copy) < 0)
+        if (fapl_copy && H5P_dissolve(fapl_copy) < 0)
             HDONE_ERROR(H5E_VOL, H5E_CANTCLOSEOBJ, H5_ITER_ERROR, "can't free property list");
 
     FUNC_LEAVE_NOAPI(ret_value)
@@ -4027,7 +4027,7 @@ H5VL_file_open(H5VL_connector_t *connector, const char *name, unsigned flags, H5
     } /* end if */
 
 done:
-    if (found_connector && H5P_release(find_connector_ud.fapl) < 0)
+    if (found_connector && H5P_dissolve(find_connector_ud.fapl) < 0)
         HDONE_ERROR(H5E_VOL, H5E_CANTCLOSEOBJ, NULL, "can't free property list");
 
     FUNC_LEAVE_NOAPI(ret_value)

@@ -1387,7 +1387,7 @@ H5Pcopy_prop(hid_t dst_id, hid_t src_id, const char *name)
     if (!name || !*name)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "no name given");
 
-    /* Compare property lists */
+    /* Copy between property lists */
     if (H5I_GENPROP_LST == src_id_type) {
         H5P_genplist_t *dst_plist; /* Pointer to destination property list */
         H5P_genplist_t *src_plist; /* Pointer to source property list */

@@ -181,7 +181,7 @@ H5FD__family_get_default_config(H5FD_family_fapl_t *fa_out)
 
 done:
     if (ret_value < 0)
-        if (fa_out->memb_fapl && H5P_release(fa_out->memb_fapl) < 0)
+        if (fa_out->memb_fapl && H5P_dissolve(fa_out->memb_fapl) < 0)
             HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "can't close member FAPL");
 
     FUNC_LEAVE_NOAPI(ret_value)
@@ -357,7 +357,7 @@ H5Pset_fapl_family(hid_t fapl_id, hsize_t msize, hid_t memb_fapl_id)
 
 done:
     if (is_default)
-        if (fa.memb_fapl && H5P_release(fa.memb_fapl) < 0)
+        if (fa.memb_fapl && H5P_dissolve(fa.memb_fapl) < 0)
             HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "can't close family driver info");
 
     FUNC_LEAVE_API(ret_value)
@@ -551,7 +551,7 @@ H5FD__family_fapl_free(void *_fa)
     FUNC_ENTER_PACKAGE
 
     if (fa->memb_fapl)
-        if (H5P_release(fa->memb_fapl) < 0)
+        if (H5P_dissolve(fa->memb_fapl) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "can't close driver FAPL");
     H5MM_xfree(fa);
 
@@ -829,7 +829,7 @@ done:
         if (file->memb)
             H5MM_xfree(file->memb);
         if (file->fa.memb_fapl)
-            if (H5P_release(file->fa.memb_fapl) < 0)
+            if (H5P_dissolve(file->fa.memb_fapl) < 0)
                 HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, NULL, "can't close member FAPL");
         if (file->name)
             H5MM_xfree(file->name);
@@ -879,7 +879,7 @@ H5FD__family_close(H5FD_t *_file)
 
     /* Clean up other stuff */
     if (file->fa.memb_fapl)
-        if (H5P_release(file->fa.memb_fapl) < 0)
+        if (H5P_dissolve(file->fa.memb_fapl) < 0)
             /* Push error, but keep going*/
             HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "can't close member FAPL");
     H5MM_xfree(file->memb);
@@ -1505,7 +1505,7 @@ done:
 
     /* Only close memb_fapl if we created one from the default configuration */
     if (default_config)
-        if (H5P_release(memb_fapl) < 0)
+        if (H5P_dissolve(memb_fapl) < 0)
             HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "can't close member FAPL");
 
     FUNC_LEAVE_NOAPI(ret_value)

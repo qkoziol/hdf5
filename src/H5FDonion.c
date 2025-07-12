@@ -599,7 +599,7 @@ H5FD__onion_fapl_free(void *_fa)
 
     /* Release the backing store FAPL */
     if (fa->backing_fapl)
-        if (H5P_release(fa->backing_fapl) < 0)
+        if (H5P_dissolve(fa->backing_fapl) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "can't close backing store FAPL");
 
     /* Free the property */
@@ -770,7 +770,7 @@ done:
             HDONE_ERROR(H5E_VFL, H5E_CANTRELEASE, FAIL, "can't close revision index");
 
     /* Release the backing store FAPL */
-    if (H5P_release(file->fa.backing_fapl) < 0)
+    if (H5P_dissolve(file->fa.backing_fapl) < 0)
         HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "can't close backing store FAPL");
     H5MM_xfree(file->recovery_file_name);
     H5MM_xfree(file->history.record_locs);

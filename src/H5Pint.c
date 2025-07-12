@@ -25,11 +25,11 @@
 /***********/
 #include "H5private.h"   /* Generic Functions			*/
 #include "H5Eprivate.h"  /* Error handling		  	*/
-#include "H5FLprivate.h" /* Free lists                           */
+#include "H5FLprivate.h" /* Free lists                          */
 #include "H5Iprivate.h"  /* IDs			  		*/
 #include "H5MMprivate.h" /* Memory management			*/
 #include "H5Ppkg.h"      /* Property lists		  	*/
-#include "H5SLprivate.h" /* Skip Lists                               */
+#include "H5SLprivate.h" /* Skip Lists                          */
 
 /****************/
 /* Local Macros */
@@ -91,8 +91,10 @@ typedef herr_t (*H5P_do_pclass_op_t)(H5P_genplist_t *plist, const char *name, H5
 /********************/
 
 /* Infrastructure routines */
-static herr_t H5P__close_class_cb(void *space, void **request);
-static herr_t H5P__close_list_cb(void *space, void **request);
+static herr_t H5P__close_class_cb(void *_pclass, void **request);
+static herr_t H5P__lock_list_cb(void *_plist, H5I_lock_mode_t mode);
+static herr_t H5P__unlock_list_cb(void *_plist);
+static herr_t H5P__close_list_cb(void *_plist, void **request);
 
 /* General helper routines */
 static H5P_genprop_t *H5P__create_prop(const char *name, size_t size, H5P_prop_within_t type,
@@ -110,6 +112,7 @@ static int            H5P__open_class_path_cb(void *_obj, hid_t H5_ATTR_UNUSED i
 static H5P_genprop_t *H5P__find_prop_pclass(H5P_genclass_t *pclass, const char *name);
 static herr_t         H5P__free_prop_cb(void *item, void H5_ATTR_UNUSED *key, void *op_data);
 static herr_t H5P__free_del_name_cb(void *item, void H5_ATTR_UNUSED *key, void H5_ATTR_UNUSED *op_data);
+static herr_t H5P__close(H5P_genplist_t *plist);
 
 /*********************/
 /* Package Variables */
@@ -513,22 +516,22 @@ H5FL_DEFINE_STATIC(H5P_genplist_t);
 
 /* Generic Property Class ID class */
 static H5I_class_t H5I_GENPROPCLS_CLS[1] = {{
-    H5I_GENPROP_CLS,                /* ID class value */
-    0,                              /* Class flags */
-    0,                              /* # of reserved IDs for class */
-    NULL,                           /* Callback for locking objects of this class */
-    NULL,                           /* Callback for unlocking objects of this class */
-    (H5I_free_t)H5P__close_class_cb /* Callback routine for closing objects of this class */
+    H5I_GENPROP_CLS,    /* ID class value */
+    0,                  /* Class flags */
+    0,                  /* # of reserved IDs for class */
+    NULL,               /* Callback for locking objects of this class */
+    NULL,               /* Callback for unlocking objects of this class */
+    H5P__close_class_cb /* Callback routine for closing objects of this class */
 }};
 
 /* Generic Property List ID class */
 static H5I_class_t H5I_GENPROPLST_CLS[1] = {{
-    H5I_GENPROP_LST,               /* ID class value */
-    0,                             /* Class flags */
-    0,                             /* # of reserved IDs for class */
-    NULL,                          /* Callback for locking objects of this class */
-    NULL,                          /* Callback for unlocking objects of this class */
-    (H5I_free_t)H5P__close_list_cb /* Callback routine for closing objects of this class */
+    H5I_GENPROP_LST,     /* ID class value */
+    0,                   /* Class flags */
+    0,                   /* # of reserved IDs for class */
+    H5P__lock_list_cb,   /* Callback for locking objects of this class */
+    H5P__unlock_list_cb, /* Callback for unlocking objects of this class */
+    H5P__close_list_cb   /* Callback routine for closing objects of this class */
 }};
 
 /*-------------------------------------------------------------------------
@@ -865,6 +868,56 @@ H5P__close_class_cb(void *_pclass, void H5_ATTR_UNUSED **request)
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5P__close_class_cb() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5P__lock_list_cb
+ *
+ * Purpose:     Called to lock a property list while looking it up from an ID
+ *
+ * Return:      SUCCEED / FAIL
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t
+H5P__lock_list_cb(void *_plist, H5I_lock_mode_t mode)
+{
+    H5P_genplist_t *plist     = (H5P_genplist_t *)_plist; /* Property list to lock */
+
+    FUNC_ENTER_PACKAGE_NOERR
+
+    /* Sanity check */
+    assert(plist);
+
+    /* Lock the property list */
+    H5P_lock(plist, mode);
+
+    FUNC_LEAVE_NOAPI(SUCCEED)
+} /* end H5P__lock_list_cb() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5P__unlock_list_cb
+ *
+ * Purpose:     Called to unlock a property list from looking it up from an ID
+ *
+ * Return:      SUCCEED / FAIL
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t
+H5P__unlock_list_cb(void *_plist)
+{
+    H5P_genplist_t *plist     = (H5P_genplist_t *)_plist; /* Property list to lock */
+
+    FUNC_ENTER_PACKAGE_NOERR
+
+    /* Sanity check */
+    assert(plist);
+
+    /* Unlock the property list */
+    H5P_unlock(plist);
+
+    FUNC_LEAVE_NOAPI(SUCCEED)
+} /* end H5P__unlock_list_cb() */
 
 /*-------------------------------------------------------------------------
  * Function:    H5P__close_list_cb
@@ -1334,7 +1387,7 @@ done:
     if (NULL == ret_value)
         if (new_plist) {
             if (new_plist_id > 0) {
-                if (H5P_release(new_plist) < 0)
+                if (H5P_dissolve(new_plist) < 0)
                     HDONE_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, NULL, "can't free property list");
             }
             else {
@@ -1387,7 +1440,7 @@ H5P_copy_plist_id(const H5P_genplist_t *old_plist, bool app_ref)
 
 done:
     if (ret_value < 0)
-        if (new_plist && H5P_release(new_plist) < 0)
+        if (new_plist && H5P_dissolve(new_plist) < 0)
             HDONE_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, H5I_INVALID_HID, "can't free property list");
 
     FUNC_LEAVE_NOAPI(ret_value)
@@ -3468,7 +3521,11 @@ H5P_set(H5P_genplist_t *plist, const char *name, const void *value)
 
     /* Check for property list being read-only */
     if (plist->is_readonly)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTMODIFY, FAIL, "can't modify read-only plist");
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTMODIFY, FAIL, "can't modify read-only property list");
+
+    /* Check for property list being locked */
+    if (plist->locked)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTMODIFY, FAIL, "can't modify locked property list");
 
     /* Find the property and set the value */
     udata.value = value;
@@ -5194,6 +5251,14 @@ H5P_remove(H5P_genplist_t *plist, const char *name)
     assert(plist);
     assert(name);
 
+    /* Check for property list being read-only */
+    if (plist->is_readonly)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTMODIFY, FAIL, "can't modify read-only property list");
+
+    /* Check for property list being locked */
+    if (plist->locked)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTMODIFY, FAIL, "can't modify locked property list");
+
     /* Find the property and get the value */
     if (H5P__do_prop(plist, name, H5P__del_plist_cb, H5P__del_pclass_cb, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTOPERATE, FAIL, "can't operate on plist to remove value");
@@ -5424,9 +5489,49 @@ done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5P__unregister() */
 
+/*-------------------------------------------------------------------------
+ * Function:	H5P_close
+ *
+ * Purpose:	Close a property list
+ *
+ * Note:        Only actually closes the list if it's unlocked, otherwise
+ *              just marks it for closing.
+ *
+ * Return:      Non-negative on success/Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5P_close(H5P_genplist_t *plist)
+{
+    herr_t          ret_value = SUCCEED; /* return value */
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    assert(plist);
+
+    /* Check for property list being locked */
+    if (plist->locked) {
+        /* Check for property list already closed */
+        if (plist->is_closed)
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, FAIL, "property list already closed");
+
+        /* Defer closing property list */
+        plist->is_closed = true;
+    }
+    else {
+        /* Close property list immediately */
+        if (H5P__close(plist) < 0)
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, FAIL, "can't close property list");
+    }
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* H5P_close() */
+
 /*--------------------------------------------------------------------------
  NAME
-    H5P_close
+    H5P__close
  PURPOSE
     Internal routine to close a property list.
  USAGE
@@ -5448,8 +5553,8 @@ done:
  EXAMPLES
  REVISION LOG
 --------------------------------------------------------------------------*/
-herr_t
-H5P_close(H5P_genplist_t *plist)
+static herr_t
+H5P__close(H5P_genplist_t *plist)
 {
     H5P_genclass_t *tclass;              /* Temporary class pointer */
     H5SL_t         *seen = NULL;         /* Skip list to hold names of properties already seen */
@@ -5462,9 +5567,13 @@ H5P_close(H5P_genplist_t *plist)
     unsigned        make_cb   = 0;       /* Operator data for property free callback */
     herr_t          ret_value = SUCCEED; /* return value */
 
-    FUNC_ENTER_NOAPI_NOINIT
+    FUNC_ENTER_PACKAGE
 
     assert(plist);
+
+    /* Check for property list being locked */
+    if (plist->locked)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, FAIL, "can't close locked property list");
 
     /* Make call to property list class close callback, if needed
      * (up through chain of parent classes also)
@@ -5624,15 +5733,15 @@ done:
         H5SL_close(seen);
 
     FUNC_LEAVE_NOAPI(ret_value)
-} /* H5P_close() */
+} /* H5P__close() */
 
 /*--------------------------------------------------------------------------
  NAME
-    H5P_release
+    H5P_dissolve
  PURPOSE
     Internal routine to release a property list created for internal library use
  USAGE
-    herr_t H5P_release(plist)
+    herr_t H5P_dissolve(plist)
         H5P_genplist_t *plist;  IN: Property list to release
  RETURNS
     Returns non-negative on success, negative on failure.
@@ -5646,7 +5755,7 @@ done:
  REVISION LOG
 --------------------------------------------------------------------------*/
 herr_t
-H5P_release(H5P_genplist_t *plist)
+H5P_dissolve(H5P_genplist_t *plist)
 {
     hid_t  plist_id;            /* ID of property list to close */
     herr_t ret_value = SUCCEED; /* return value */
@@ -5671,7 +5780,7 @@ H5P_release(H5P_genplist_t *plist)
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
-} /* H5P_release() */
+} /* H5P_dissolve() */
 
 /*--------------------------------------------------------------------------
  NAME
@@ -6102,3 +6211,140 @@ H5P_disallow_write(H5P_genplist_t *plist)
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5P_disallow_write() */
+
+/*-------------------------------------------------------------------------
+ * Function:	H5P_lock
+ *
+ * Purpose:	Lock a property list
+ *
+ * Return:      Non-negative on success/Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+void
+H5P_lock(H5P_genplist_t *plist, H5I_lock_mode_t mode)
+{
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    /* Sanity checks */
+    assert(plist);
+
+    /* Increment lock counter on property list */
+    plist->locked++;
+
+    FUNC_LEAVE_NOAPI_VOID
+} /* end H5P_lock() */
+
+/*-------------------------------------------------------------------------
+ * Function:	H5P_unlock
+ *
+ * Purpose:	Unlock a property list
+ *
+ * Return:      None
+ *
+ *-------------------------------------------------------------------------
+ */
+void
+H5P_unlock(H5P_genplist_t *plist)
+{
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    /* Sanity checks */
+    assert(plist);
+
+    /* Decrement lock counter on property list */
+    plist->locked--;
+
+    /* Check for last lock on closed property list */
+    if (0 == plist->locked && plist->is_closed)
+        /* Close property list */
+        H5P__close(plist);
+
+    FUNC_LEAVE_NOAPI_VOID
+} /* end H5P_unlock() */
+
+/*-------------------------------------------------------------------------
+ * Function:	H5P_acquire
+ *
+ * Purpose:	Retrieve the property list object associated with an ID,
+ *              while also invoking the 'lock' callback on it.
+ *
+ * Note:        Operates the same as H5P_object_verify, with the addition
+ *              of acquiring the lock.
+ *
+ * Return:      Success:        Non-NULL pointer to property list.
+ *              Failure:        NULL
+ *
+ *-------------------------------------------------------------------------
+ */
+H5P_genplist_t *
+H5P_acquire(hid_t plist_id, H5P_plist_type_t type, H5I_lock_mode_t mode, bool allow_default)
+{
+    H5P_genplist_t *plist = NULL;     /* Property list for ID */
+    H5P_genplist_t *ret_value = NULL; /* Return value */
+
+    FUNC_ENTER_NOAPI(NULL)
+
+    /* Allow H5P_DEFAULT for the plist_id parameter, when allow_default is true */
+    /* (But default property lists don't get locked) */
+    if (H5P_DEFAULT == plist_id) {
+        if (allow_default)
+            plist = *H5P_def_plist_list_s[type];
+        else
+            HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, NULL, "property list is a default list");
+    }
+    else {
+        /* Get & lock the property list */
+        if (NULL == (plist = H5I_acquire(plist_id, H5I_GENPROP_LST, mode)))
+            HGOTO_ERROR(H5E_PLIST, H5E_BADID, NULL, "can't find object for ID");
+
+        /* Compare the property list's class against the other class */
+        if (H5P_isa_type(plist, type) != true)
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTCOMPARE, NULL, "property list is not a member of the class");
+
+        if (!allow_default && plist->is_default)
+            HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, NULL, "property list is a default list");
+    }
+
+    /* Set the return value */
+    ret_value = plist;
+
+done:
+    /* Release an acquired list on error */
+    if (NULL == ret_value && plist)
+        if (H5I_release(plist, H5I_GENPROP_LST) < 0)
+            HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, NULL, "can't release property list object");
+
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* H5P_acquire() */
+
+/*-------------------------------------------------------------------------
+ * Function:	H5P_release
+ *
+ * Purpose:	Release a lock on a property list.
+ *
+ * Note:        Operates the same as H5P_object_verify, with the addition
+ *              of acquiring the lock.
+ *
+ * Return:      Success:        Non-NULL pointer to property list.
+ *              Failure:        NULL
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5P_release(H5P_genplist_t *plist)
+{
+    herr_t ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Default property lists don't get locked */
+    if (!H5P_PLIST_IS_DEFAULT(plist))
+        /* Unlock the property list */
+        if (H5I_release(plist, H5I_GENPROP_LST) < 0)
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "can't release property list object");
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* H5P_release() */
+

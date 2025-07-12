@@ -1191,42 +1191,42 @@ H5CX_free_state(H5CX_state_t *api_state)
 
     /* Release the ACPL */
     if (H5P_LST_ATTRIBUTE_CREATE_g != api_state->acpl)
-        if (H5P_release(api_state->acpl) < 0)
+        if (H5P_dissolve(api_state->acpl) < 0)
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't decrement refcount on ACPL");
 
     /* Release the OCPL */
     if (H5P_LST_OBJECT_CREATE_g != api_state->ocpl)
-        if (H5P_release(api_state->ocpl) < 0)
+        if (H5P_dissolve(api_state->ocpl) < 0)
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't decrement refcount on OCPL");
 
     /* Release the OCPYPL */
     if (H5P_LST_OBJECT_COPY_g != api_state->ocpypl)
-        if (H5P_release(api_state->ocpypl) < 0)
+        if (H5P_dissolve(api_state->ocpypl) < 0)
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't decrement refcount on OCPYPL");
 
     /* Release the DAPL */
     if (H5P_LST_DATASET_ACCESS_g != api_state->dapl)
-        if (H5P_release(api_state->dapl) < 0)
+        if (H5P_dissolve(api_state->dapl) < 0)
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't decrement refcount on DAPL");
 
     /* Release the DXPL */
     if (H5P_LST_DATASET_XFER_g != api_state->dxpl)
-        if (H5P_release(api_state->dxpl) < 0)
+        if (H5P_dissolve(api_state->dxpl) < 0)
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTDEC, FAIL, "can't decrement refcount on DXPL");
 
     /* Release the FAPL */
     if (H5P_LST_FILE_ACCESS_g != api_state->fapl)
-        if (H5P_release(api_state->fapl) < 0)
+        if (H5P_dissolve(api_state->fapl) < 0)
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't decrement refcount on FAPL");
 
     /* Release the LAPL */
     if (H5P_LST_LINK_ACCESS_g != api_state->lapl)
-        if (H5P_release(api_state->lapl) < 0)
+        if (H5P_dissolve(api_state->lapl) < 0)
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't decrement refcount on LAPL");
 
     /* Release the LCPL */
     if (H5P_LST_LINK_CREATE_g != api_state->lcpl)
-        if (H5P_release(api_state->lcpl) < 0)
+        if (H5P_dissolve(api_state->lcpl) < 0)
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't decrement refcount on LCPL");
 
     /* Release the VOL wrapper context */
@@ -1310,6 +1310,17 @@ H5CX_set_dxpl(H5P_genplist_t *dxpl)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
     assert(dxpl);
+
+    /* Check for changing the property list */
+    if((*head)->ctx.dxpl != dxpl) {
+        /* Unlock any previous (non-default) list */
+        if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.dxpl))
+            H5P_unlock((*head)->ctx.dxpl);
+
+        /* Lock any non-default lists */
+        if (!H5P_PLIST_IS_DEFAULT(dxpl))
+            H5P_lock(dxpl, H5I_LOCK_SHARED);
+    }
 
     /* Reset the cached data */
     H5CX__reset_dxpl(*head);
@@ -1397,6 +1408,17 @@ H5CX_set_lcpl(H5P_genplist_t *lcpl)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
     assert(lcpl);
+
+    /* Check for changing the property list */
+    if((*head)->ctx.lcpl != lcpl) {
+        /* Unlock any previous (non-default) list */
+        if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.lcpl))
+            H5P_unlock((*head)->ctx.lcpl);
+
+        /* Lock any non-default lists */
+        if (!H5P_PLIST_IS_DEFAULT(lcpl))
+            H5P_lock(lcpl, H5I_LOCK_SHARED);
+    }
 
     /* Reset the cached data */
     H5CX__reset_lcpl(*head);
@@ -1523,6 +1545,17 @@ H5CX_set_cpl(H5P_genplist_t *crtpl)
     }
     assert(is_dcpl || is_fcpl || is_gcpl || is_tcpl || is_ocpl);
 
+    /* Check for changing the property list */
+    if((*head)->ctx.ocpl != crtpl) {
+        /* Unlock any previous (non-default) list */
+        if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.ocpl))
+            H5P_unlock((*head)->ctx.ocpl);
+
+        /* Lock any non-default lists */
+        if (!H5P_PLIST_IS_DEFAULT(crtpl))
+            H5P_lock(crtpl, H5I_LOCK_SHARED);
+    }
+
     /* Reset any cached data */
     H5CX__reset_ocpl(*head);
 
@@ -1587,6 +1620,17 @@ H5CX_set_apl(H5P_genplist_t *acspl,
     else if ((is_lapl = H5P_class_isa(H5P_CLASS(acspl), H5P_CLS_LINK_ACCESS_g)) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for link access class");
     if (is_lapl) {
+        /* Check for changing the property list */
+        if((*head)->ctx.lapl != acspl) {
+            /* Unlock any previous (non-default) list */
+            if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.lapl))
+                H5P_unlock((*head)->ctx.lapl);
+
+            /* Lock any non-default lists */
+            if (!H5P_PLIST_IS_DEFAULT(acspl))
+                H5P_lock(acspl, H5I_LOCK_SHARED);
+        }
+
         H5CX__reset_lapl(*head);
         (*head)->ctx.lapl = acspl;
     }
@@ -1602,6 +1646,17 @@ H5CX_set_apl(H5P_genplist_t *acspl,
     else if ((is_dapl = H5P_class_isa(H5P_CLASS(acspl), H5P_CLS_DATASET_ACCESS_g)) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for dataset access class");
     if (is_dapl) {
+        /* Check for changing the property list */
+        if((*head)->ctx.dapl != acspl) {
+            /* Unlock any previous (non-default) list */
+            if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.dapl))
+                H5P_unlock((*head)->ctx.dapl);
+
+            /* Lock any non-default lists */
+            if (!H5P_PLIST_IS_DEFAULT(acspl))
+                H5P_lock(acspl, H5I_LOCK_SHARED);
+        }
+
         H5CX__reset_dapl(*head);
         (*head)->ctx.dapl = acspl;
     }
@@ -1616,6 +1671,17 @@ H5CX_set_apl(H5P_genplist_t *acspl,
     else if ((is_fapl = H5P_class_isa(H5P_CLASS(acspl), H5P_CLS_FILE_ACCESS_g)) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for file access class");
     if (is_fapl) {
+        /* Check for changing the property list */
+        if((*head)->ctx.fapl != acspl) {
+            /* Unlock any previous (non-default) list */
+            if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.fapl))
+                H5P_unlock((*head)->ctx.fapl);
+
+            /* Lock any non-default lists */
+            if (!H5P_PLIST_IS_DEFAULT(acspl))
+                H5P_lock(acspl, H5I_LOCK_SHARED);
+        }
+
         H5CX__reset_fapl(*head);
         (*head)->ctx.fapl = acspl;
     }
@@ -1721,6 +1787,17 @@ H5CX_set_fapl(H5P_genplist_t *fapl)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
+    /* Check for changing the property list */
+    if((*head)->ctx.fapl != fapl) {
+        /* Unlock any previous (non-default) list */
+        if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.fapl))
+            H5P_unlock((*head)->ctx.fapl);
+
+        /* Lock any non-default lists */
+        if (!H5P_PLIST_IS_DEFAULT(fapl))
+            H5P_lock(fapl, H5I_LOCK_SHARED);
+    }
+
     /* Reset the cached data */
     H5CX__reset_fapl(*head);
 
@@ -1752,6 +1829,17 @@ H5CX_set_fcpl(H5P_genplist_t *fcpl)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
+    /* Check for changing the property list */
+    if((*head)->ctx.ocpl != fcpl) {
+        /* Unlock any previous (non-default) list */
+        if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.ocpl))
+            H5P_unlock((*head)->ctx.ocpl);
+
+        /* Lock any non-default lists */
+        if (!H5P_PLIST_IS_DEFAULT(fcpl))
+            H5P_lock(fcpl, H5I_LOCK_SHARED);
+    }
+
     /* Reset the cached data */
     H5CX__reset_ocpl(*head);
 
@@ -1780,6 +1868,17 @@ H5CX_set_ocpypl(H5P_genplist_t *ocpypl)
     /* Sanity check */
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
+
+    /* Check for changing the property list */
+    if((*head)->ctx.ocpypl != ocpypl) {
+        /* Unlock any previous (non-default) list */
+        if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.ocpypl))
+            H5P_unlock((*head)->ctx.ocpypl);
+
+        /* Lock any non-default lists */
+        if (!H5P_PLIST_IS_DEFAULT(ocpypl))
+            H5P_lock(ocpypl, H5I_LOCK_SHARED);
+    }
 
     /* Set the API context's OCPYPL to a new value */
     (*head)->ctx.ocpypl = ocpypl;
@@ -6852,6 +6951,15 @@ H5CX_pop(bool update_dxpl_props)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
+    /* Unlock any non-default property lists in the current context that have
+     * been locked when the context is popped.
+     * (Note: must unlock DXPL before the H5CX_SET_PROP macros, which modify it)
+     */
+    if ((*head)->ctx.ocpypl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.ocpypl))
+        H5P_unlock((*head)->ctx.ocpypl);
+    if ((*head)->ctx.dxpl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.dxpl))
+        H5P_unlock((*head)->ctx.dxpl);
+
     /* Check for cached DXPL properties to return to application */
     if (update_dxpl_props) {
         /* actual_selection_io_mode is a special case - we always want to set it in the property list even if
@@ -6883,17 +6991,29 @@ H5CX_pop(bool update_dxpl_props)
 #endif /* H5_HAVE_PARALLEL */
     }  /* end if */
 
-    /* Reset any non-default property lists in the current context that have cached values that
-     * need to be reset when the context is popped.
+    /* Unlock and reset any non-default property lists in the current context
+     * that have cached values that need to be reset when the context is popped.
      */
-    if ((*head)->ctx.dapl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.dapl))
+    if ((*head)->ctx.dapl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.dapl)) {
+        H5P_unlock((*head)->ctx.dapl);
         H5CX__reset_dapl(*head);
-    if ((*head)->ctx.lapl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.lapl))
+    }
+    if ((*head)->ctx.lapl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.lapl)) {
+        H5P_unlock((*head)->ctx.lapl);
         H5CX__reset_lapl(*head);
-    if ((*head)->ctx.ocpl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.ocpl))
+    }
+    if ((*head)->ctx.lcpl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.lcpl)) {
+        H5P_unlock((*head)->ctx.lcpl);
+        H5CX__reset_lcpl(*head);
+    }
+    if ((*head)->ctx.ocpl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.ocpl)) {
+        H5P_unlock((*head)->ctx.ocpl);
         H5CX__reset_ocpl(*head);
-    if ((*head)->ctx.fapl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.fapl))
+    }
+    if ((*head)->ctx.fapl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.fapl)) {
+        H5P_unlock((*head)->ctx.fapl);
         H5CX__reset_fapl(*head);
+    }
 
     /* Pop the top context node from the stack */
     (*head) = (*head)->next;

@@ -162,22 +162,22 @@ hid_t
 H5Dcreate2(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t lcpl_id, hid_t dcpl_id,
            hid_t dapl_id)
 {
-    H5P_genplist_t *lcpl;                        /* Link creation property list */
-    H5P_genplist_t *dcpl;                        /* Dataset creation property list */
-    H5P_genplist_t *dapl;                        /* Dataset access property list */
+    H5P_genplist_t *lcpl = NULL;                 /* Link creation property list */
+    H5P_genplist_t *dcpl = NULL;                 /* Dataset creation property list */
+    H5P_genplist_t *dapl = NULL;                 /* Dataset access property list */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Get link creation property list */
-    if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
+    if (NULL == (lcpl = H5P_acquire(lcpl_id, H5P_TYPE_LINK_CREATE, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Set the LCPL for the API context */
     H5CX_set_lcpl(lcpl);
 
     /* Get the pointer to the dataset create property list */
-    if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, true)))
+    if (NULL == (dcpl = H5P_acquire(dcpl_id, H5P_TYPE_DATASET_CREATE, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Set the DCPL for the API context */
@@ -185,15 +185,22 @@ H5Dcreate2(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t 
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, H5I_INVALID_HID, "can't set creation property list info");
 
     /* Get the pointer to the dataset access property list */
-    if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, true)))
+    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Create the dataset synchronously */
-    if ((ret_value = H5D__create_api_common(loc_id, name, type_id, space_id, lcpl, dcpl, dapl, NULL, NULL)) <
-        0)
+    if ((ret_value = H5D__create_api_common(loc_id, name, type_id, space_id, lcpl, dcpl, dapl, NULL, NULL)) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTCREATE, H5I_INVALID_HID, "unable to synchronously create dataset");
 
 done:
+    /* Release resources */
+    if (lcpl && H5P_release(lcpl) < 0)
+        HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
+    if (dcpl && H5P_release(dcpl) < 0)
+        HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
+    if (dapl && H5P_release(dapl) < 0)
+        HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Dcreate2() */
 
@@ -937,9 +944,6 @@ H5Dget_offset(hid_t dset_id)
     /* Check args */
     if (NULL == (vol_obj = H5VL_vol_object_verify(dset_id, H5I_DATASET)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, HADDR_UNDEF, "invalid dataset identifier");
-
-    /* Set the DXPL for the API context */
-    H5CX_set_dxpl(H5P_LST_DATASET_XFER_g);
 
     /* Set up VOL callback arguments */
     dset_opt_args.get_offset.offset = &dset_offset;
@@ -1992,9 +1996,6 @@ H5Dvlen_get_buf_size(hid_t dataset_id, hid_t type_id, hid_t space_id, hsize_t *s
     if (size == NULL)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid 'size' pointer");
 
-    /* Set the DXPL for the API context */
-    H5CX_set_dxpl(H5P_LST_DATASET_XFER_g);
-
     /* Check if the 'get_vlen_buf_size' callback is supported */
     supported = 0;
     if (H5VL_introspect_opt_query(vol_obj, H5VL_SUBCLS_DATASET, H5VL_NATIVE_DATASET_GET_VLEN_BUF_SIZE,
@@ -2244,9 +2245,6 @@ H5Dformat_convert(hid_t dset_id)
     if (H5CX_set_loc(dset_id) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "can't set collective metadata read info");
 
-    /* Set the DXPL for the API context */
-    H5CX_set_dxpl(H5P_LST_DATASET_XFER_g);
-
     /* Set up VOL callback arguments */
     vol_cb_args.op_type = H5VL_NATIVE_DATASET_FORMAT_CONVERT;
     vol_cb_args.args    = NULL;
@@ -2283,9 +2281,6 @@ H5Dget_chunk_index_type(hid_t dset_id, H5D_chunk_index_t *idx_type /*out*/)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "dset_id parameter is not a valid dataset identifier");
     if (NULL == idx_type)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "idx_type parameter cannot be NULL");
-
-    /* Set the DXPL for the API context */
-    H5CX_set_dxpl(H5P_LST_DATASET_XFER_g);
 
     /* Set up VOL callback arguments */
     dset_opt_args.get_chunk_idx_type.idx_type = idx_type;
@@ -2329,9 +2324,6 @@ H5Dget_chunk_storage_size(hid_t dset_id, const hsize_t *offset, hsize_t *chunk_n
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "offset parameter cannot be NULL");
     if (NULL == chunk_nbytes)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "chunk_nbytes parameter cannot be NULL");
-
-    /* Set the DXPL for the API context */
-    H5CX_set_dxpl(H5P_LST_DATASET_XFER_g);
 
     /* Set up VOL callback arguments */
     dset_opt_args.get_chunk_storage_size.offset = offset;
@@ -2380,9 +2372,6 @@ H5Dget_num_chunks(hid_t dset_id, hid_t fspace_id, hsize_t *nchunks /*out*/)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid dataset identifier");
     if (NULL == nchunks)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid argument (null)");
-
-    /* Set the DXPL for the API context */
-    H5CX_set_dxpl(H5P_LST_DATASET_XFER_g);
 
     /* Set up VOL callback arguments */
     dset_opt_args.get_num_chunks.space_id = fspace_id;
@@ -2435,9 +2424,6 @@ H5Dget_chunk_info(hid_t dset_id, hid_t fspace_id, hsize_t chk_index, hsize_t *of
                     "invalid arguments, must have at least one non-null output argument");
     if (NULL == (vol_obj = H5VL_vol_object_verify(dset_id, H5I_DATASET)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid dataset identifier");
-
-    /* Set the DXPL for the API context */
-    H5CX_set_dxpl(H5P_LST_DATASET_XFER_g);
 
     /* Set up VOL callback arguments */
     dset_opt_args.get_num_chunks.space_id = fspace_id;
@@ -2508,9 +2494,6 @@ H5Dget_chunk_info_by_coord(hid_t dset_id, const hsize_t *offset, unsigned *filte
                     "invalid arguments, must have at least one non-null output argument");
     if (NULL == offset)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid argument (null)");
-
-    /* Set the DXPL for the API context */
-    H5CX_set_dxpl(H5P_LST_DATASET_XFER_g);
 
     /* Set up VOL callback arguments */
     dset_opt_args.get_chunk_info_by_coord.offset      = offset;

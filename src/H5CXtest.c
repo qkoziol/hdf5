@@ -68,8 +68,15 @@ H5CX_reset_fapl_test(void)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
+    /* Unlock any non-default FAPL */
+    if ((*head)->ctx.fapl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.fapl))
+        H5P_unlock((*head)->ctx.fapl);
+
     /* Reset the cached data */
     H5CX__reset_fapl(*head);
+
+    /* Reset back to the default FAPL */
+    (*head)->ctx.fapl = H5P_LST_FILE_ACCESS_g;
 
     FUNC_LEAVE_NOAPI_VOID
 } /* end H5CX_reset_fapl_test() */

@@ -215,7 +215,7 @@ H5Gcreate1(hid_t loc_id, const char *name, size_t size_hint)
 
 done:
     if (tmp_gcpl && !H5P_PLIST_IS_DEFAULT(tmp_gcpl))
-        if (H5P_release(tmp_gcpl) < 0)
+        if (H5P_dissolve(tmp_gcpl) < 0)
             HDONE_ERROR(H5E_SYM, H5E_CANTCLOSEOBJ, H5I_INVALID_HID,
                         "can't close group creation property list");
 

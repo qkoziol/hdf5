@@ -113,6 +113,8 @@ struct H5P_genplist_t {
     bool            class_init; /* Whether the class initialization callback finished successfully */
     bool            is_default; /* Whether this property list is the default list for the class */
     bool            is_readonly; /* Whether this property list can be modified */
+    bool            is_closed;  /* Whether this property list has been closed */
+    unsigned        locked;     /* Whether the property list is locked */
     H5SL_t         *del;        /* Skip list containing names of deleted properties */
     H5SL_t         *props;      /* Skip list containing properties modified from the parent class */
 };

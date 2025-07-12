@@ -675,10 +675,10 @@ H5FD__splitter_fapl_free(void *_fapl)
     assert(fapl);
 
     if (fapl->rw_fapl)
-        if (H5P_release(fapl->rw_fapl) < 0)
+        if (H5P_dissolve(fapl->rw_fapl) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "can't close R/W FAPL");
     if (fapl->wo_fapl)
-        if (H5P_release(fapl->wo_fapl) < 0)
+        if (H5P_dissolve(fapl->wo_fapl) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "can't close W/O FAPL");
 
     /* Free the property list */
@@ -802,10 +802,10 @@ H5FD__splitter_close(H5FD_t *_file)
     assert(file);
 
     if (file->fa.rw_fapl)
-        if (H5P_release(file->fa.rw_fapl) < 0)
+        if (H5P_dissolve(file->fa.rw_fapl) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_VFL, FAIL, "can't close R/W FAPL");
     if (file->fa.wo_fapl)
-        if (H5P_release(file->fa.wo_fapl) < 0)
+        if (H5P_dissolve(file->fa.wo_fapl) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_VFL, FAIL, "can't close W/O FAPL");
 
     if (file->rw_file)
