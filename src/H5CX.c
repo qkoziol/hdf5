@@ -1312,7 +1312,7 @@ H5CX_set_dxpl(H5P_genplist_t *dxpl)
     assert(dxpl);
 
     /* Check for changing the property list */
-    if((*head)->ctx.dxpl != dxpl) {
+    if ((*head)->ctx.dxpl != dxpl) {
         /* Unlock any previous (non-default) list */
         if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.dxpl))
             H5P_unlock((*head)->ctx.dxpl);
@@ -1410,7 +1410,7 @@ H5CX_set_lcpl(H5P_genplist_t *lcpl)
     assert(lcpl);
 
     /* Check for changing the property list */
-    if((*head)->ctx.lcpl != lcpl) {
+    if ((*head)->ctx.lcpl != lcpl) {
         /* Unlock any previous (non-default) list */
         if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.lcpl))
             H5P_unlock((*head)->ctx.lcpl);
@@ -1546,7 +1546,7 @@ H5CX_set_cpl(H5P_genplist_t *crtpl)
     assert(is_dcpl || is_fcpl || is_gcpl || is_tcpl || is_ocpl);
 
     /* Check for changing the property list */
-    if((*head)->ctx.ocpl != crtpl) {
+    if ((*head)->ctx.ocpl != crtpl) {
         /* Unlock any previous (non-default) list */
         if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.ocpl))
             H5P_unlock((*head)->ctx.ocpl);
@@ -1621,7 +1621,7 @@ H5CX_set_apl(H5P_genplist_t *acspl,
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for link access class");
     if (is_lapl) {
         /* Check for changing the property list */
-        if((*head)->ctx.lapl != acspl) {
+        if ((*head)->ctx.lapl != acspl) {
             /* Unlock any previous (non-default) list */
             if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.lapl))
                 H5P_unlock((*head)->ctx.lapl);
@@ -1647,7 +1647,7 @@ H5CX_set_apl(H5P_genplist_t *acspl,
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for dataset access class");
     if (is_dapl) {
         /* Check for changing the property list */
-        if((*head)->ctx.dapl != acspl) {
+        if ((*head)->ctx.dapl != acspl) {
             /* Unlock any previous (non-default) list */
             if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.dapl))
                 H5P_unlock((*head)->ctx.dapl);
@@ -1672,7 +1672,7 @@ H5CX_set_apl(H5P_genplist_t *acspl,
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for file access class");
     if (is_fapl) {
         /* Check for changing the property list */
-        if((*head)->ctx.fapl != acspl) {
+        if ((*head)->ctx.fapl != acspl) {
             /* Unlock any previous (non-default) list */
             if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.fapl))
                 H5P_unlock((*head)->ctx.fapl);
@@ -1788,7 +1788,7 @@ H5CX_set_fapl(H5P_genplist_t *fapl)
     assert(head && *head);
 
     /* Check for changing the property list */
-    if((*head)->ctx.fapl != fapl) {
+    if ((*head)->ctx.fapl != fapl) {
         /* Unlock any previous (non-default) list */
         if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.fapl))
             H5P_unlock((*head)->ctx.fapl);
@@ -1830,7 +1830,7 @@ H5CX_set_fcpl(H5P_genplist_t *fcpl)
     assert(head && *head);
 
     /* Check for changing the property list */
-    if((*head)->ctx.ocpl != fcpl) {
+    if ((*head)->ctx.ocpl != fcpl) {
         /* Unlock any previous (non-default) list */
         if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.ocpl))
             H5P_unlock((*head)->ctx.ocpl);
@@ -1870,7 +1870,7 @@ H5CX_set_ocpypl(H5P_genplist_t *ocpypl)
     assert(head && *head);
 
     /* Check for changing the property list */
-    if((*head)->ctx.ocpypl != ocpypl) {
+    if ((*head)->ctx.ocpypl != ocpypl) {
         /* Unlock any previous (non-default) list */
         if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.ocpypl))
             H5P_unlock((*head)->ctx.ocpypl);

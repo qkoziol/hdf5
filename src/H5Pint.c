@@ -881,7 +881,7 @@ done:
 static herr_t
 H5P__lock_list_cb(void *_plist, H5I_lock_mode_t mode)
 {
-    H5P_genplist_t *plist     = (H5P_genplist_t *)_plist; /* Property list to lock */
+    H5P_genplist_t *plist = (H5P_genplist_t *)_plist; /* Property list to lock */
 
     FUNC_ENTER_PACKAGE_NOERR
 
@@ -906,7 +906,7 @@ H5P__lock_list_cb(void *_plist, H5I_lock_mode_t mode)
 static herr_t
 H5P__unlock_list_cb(void *_plist)
 {
-    H5P_genplist_t *plist     = (H5P_genplist_t *)_plist; /* Property list to lock */
+    H5P_genplist_t *plist = (H5P_genplist_t *)_plist; /* Property list to lock */
 
     FUNC_ENTER_PACKAGE_NOERR
 
@@ -5504,7 +5504,7 @@ done:
 herr_t
 H5P_close(H5P_genplist_t *plist)
 {
-    herr_t          ret_value = SUCCEED; /* return value */
+    herr_t ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_NOAPI_NOINIT
 
@@ -6162,7 +6162,8 @@ H5P_allow_write(H5P_genplist_t *plist)
 
     /* Check for non-default property list (for now) */
     if (!plist->is_default)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "attempting to change read-only flag on non-default property list");
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL,
+                    "attempting to change read-only flag on non-default property list");
 
     /* Check if property list already has flag reset */
     if (!plist->is_readonly)
@@ -6199,7 +6200,8 @@ H5P_disallow_write(H5P_genplist_t *plist)
 
     /* Check for non-default property list (for now) */
     if (!plist->is_default)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "attempting to change read-only flag on non-default property list");
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL,
+                    "attempting to change read-only flag on non-default property list");
 
     /* Check if property list already has flag set */
     if (plist->is_readonly)
@@ -6280,7 +6282,7 @@ H5P_unlock(H5P_genplist_t *plist)
 H5P_genplist_t *
 H5P_acquire(hid_t plist_id, H5P_plist_type_t type, H5I_lock_mode_t mode, bool allow_default)
 {
-    H5P_genplist_t *plist = NULL;     /* Property list for ID */
+    H5P_genplist_t *plist     = NULL; /* Property list for ID */
     H5P_genplist_t *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_NOAPI(NULL)
@@ -6347,4 +6349,3 @@ H5P_release(H5P_genplist_t *plist)
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5P_release() */
-

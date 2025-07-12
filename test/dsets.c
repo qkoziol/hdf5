@@ -1453,42 +1453,41 @@ test_conv_buffer(hid_t fid)
     /* Read should succeed since library will set conversion buffer big enough */
     if ((cfrR = (CmpFieldR *)calloc((size_t)1, sizeof(CmpFieldR))) == 0)
         goto error;
-fprintf(stderr, "%s:%u\n", __func__, __LINE__);
+    fprintf(stderr, "%s:%u\n", __func__, __LINE__);
     if (H5Dread(dataset, ctype2, H5S_ALL, H5S_ALL, H5P_DEFAULT, cfrR) < 0)
         goto error;
-fprintf(stderr, "%s:%u\n", __func__, __LINE__);
+    fprintf(stderr, "%s:%u\n", __func__, __LINE__);
 
     /* Read should fail since conversion buffer isn't big enough */
     xfer_list = H5Pcreate(H5P_DATASET_XFER);
-//    size      = (DIM2 * DIM3 * (sizeof(int)) + DIM2 * (sizeof(float)) + DIM3 * (sizeof(double)));
-//    if (H5Pset_buffer(xfer_list, size, NULL, NULL) < 0)
-//        goto error;
+    //    size      = (DIM2 * DIM3 * (sizeof(int)) + DIM2 * (sizeof(float)) + DIM3 * (sizeof(double)));
+    //    if (H5Pset_buffer(xfer_list, size, NULL, NULL) < 0)
+    //        goto error;
 
-fprintf(stderr, "%s:%u\n", __func__, __LINE__);
-//    H5E_BEGIN_TRY
-//    {
-//        status = H5Dread(dataset, ctype2, H5S_ALL, H5S_ALL, xfer_list, cfrR);
-//    }
-//    H5E_END_TRY
-fprintf(stderr, "%s:%u\n", __func__, __LINE__);
-//    if (status >= 0) {
-//        H5_FAILED();
-//        puts("    Library shouldn't allow conversion buffer too small");
-//        goto error;
-//    }
+    fprintf(stderr, "%s:%u\n", __func__, __LINE__);
+    //    H5E_BEGIN_TRY
+    //    {
+    //        status = H5Dread(dataset, ctype2, H5S_ALL, H5S_ALL, xfer_list, cfrR);
+    //    }
+    //    H5E_END_TRY
+    fprintf(stderr, "%s:%u\n", __func__, __LINE__);
+    //    if (status >= 0) {
+    //        H5_FAILED();
+    //        puts("    Library shouldn't allow conversion buffer too small");
+    //        goto error;
+    //    }
 
     /* Read will succeed since conversion buffer is big enough */
-//    size = (DIM1 * DIM2 * DIM3 * (sizeof(int)) + DIM2 * (sizeof(float)) + DIM3 * (sizeof(double)));
-//    if (H5Pset_buffer(xfer_list, size, NULL, NULL) < 0)
-//        goto error;
+    //    size = (DIM1 * DIM2 * DIM3 * (sizeof(int)) + DIM2 * (sizeof(float)) + DIM3 * (sizeof(double)));
+    //    if (H5Pset_buffer(xfer_list, size, NULL, NULL) < 0)
+    //        goto error;
 
-fprintf(stderr, "%s:%u\n", __func__, __LINE__);
-    if (H5Dread(dataset, ctype2, H5S_ALL, H5S_ALL, xfer_list, cfrR) < 0)
-{
-fprintf(stderr, "%s:%u\n", __func__, __LINE__);
+    fprintf(stderr, "%s:%u\n", __func__, __LINE__);
+    if (H5Dread(dataset, ctype2, H5S_ALL, H5S_ALL, xfer_list, cfrR) < 0) {
+        fprintf(stderr, "%s:%u\n", __func__, __LINE__);
         goto error;
-}
-fprintf(stderr, "%s:%u\n", __func__, __LINE__);
+    }
+    fprintf(stderr, "%s:%u\n", __func__, __LINE__);
 
     if (H5Pclose(xfer_list) < 0)
         goto error;
