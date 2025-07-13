@@ -6266,6 +6266,28 @@ H5P_unlock(H5P_genplist_t *plist)
 } /* end H5P_unlock() */
 
 /*-------------------------------------------------------------------------
+ * Function:	H5P_get_lock_count
+ *
+ * Purpose:	Quick and dirty routine to retrieve property list lock count from
+ *		property list structure.
+ *
+ * Return:      Success:        Lock counter
+ *              Failure:        N/A
+ *
+ *-------------------------------------------------------------------------
+ */
+H5_ATTR_PURE unsigned
+H5P_get_lock_count(const H5P_genplist_t *plist)
+{
+    /* Use FUNC_ENTER_NOAPI_NOINIT_NOERR here to avoid performance issues */
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    assert(plist);
+
+    FUNC_LEAVE_NOAPI(plist->locked)
+} /* end H5P_get_lock_count() */
+
+/*-------------------------------------------------------------------------
  * Function:	H5P_acquire
  *
  * Purpose:	Retrieve the property list object associated with an ID,

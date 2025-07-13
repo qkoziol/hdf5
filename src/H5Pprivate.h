@@ -42,10 +42,12 @@ typedef struct H5P_genplist_t H5P_genplist_t;
 #ifdef H5P_MODULE
 #define H5P_PLIST_ID(P)         ((P)->plist_id)
 #define H5P_PLIST_IS_DEFAULT(P) ((P)->is_default)
+#define H5P_PLIST_LOCK_COUNT(P) ((P)->locked)
 #define H5P_CLASS(P)            ((P)->pclass)
 #else /* H5P_MODULE */
 #define H5P_PLIST_ID(P)         (H5P_get_plist_id(P))
 #define H5P_PLIST_IS_DEFAULT(P) (H5P_is_default_plist(P))
+#define H5P_PLIST_LOCK_COUNT(P) (H5P_get_lock_count(P))
 #define H5P_CLASS(P)            (H5P_get_class(P))
 #endif /* H5P_MODULE */
 
@@ -250,11 +252,11 @@ H5_DLL bool            H5P_is_default_plist(const H5P_genplist_t *plist);
 H5_DLL H5P_genclass_t *H5P_get_class(const H5P_genplist_t *plist);
 
 /* Lock/unlock operations */
-H5_DLL void            H5P_lock(H5P_genplist_t *plist, H5I_lock_mode_t mode);
-H5_DLL void            H5P_unlock(H5P_genplist_t *plist);
-H5_DLL H5P_genplist_t *H5P_acquire(hid_t plist_id, H5P_plist_type_t type, H5I_lock_mode_t mode,
-                                   bool allow_default);
-H5_DLL herr_t          H5P_release(H5P_genplist_t *plist);
+H5_DLL void H5P_lock(H5P_genplist_t *plist, H5I_lock_mode_t mode);
+H5_DLL void H5P_unlock(H5P_genplist_t *plist);
+H5_DLL unsigned H5P_get_lock_count(const H5P_genplist_t *plist);
+H5_DLL H5P_genplist_t *H5P_acquire(hid_t plist_id, H5P_plist_type_t type, H5I_lock_mode_t mode, bool allow_default);
+H5_DLL herr_t H5P_release(H5P_genplist_t *plist);
 
 /* *SPECIAL* Don't make more of these! -QAK */
 H5_DLL H5P_genplist_t *H5P_object_verify(hid_t plist_id, H5P_plist_type_t type, bool allow_default);
