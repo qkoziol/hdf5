@@ -6965,7 +6965,7 @@ H5CX_pop(bool update_dxpl_props)
      *          recursively invoked calls, when the lock counter has dropped
      *          to zero.
      */
-    if (update_dxpl_props && 0 == H5P_PLIST_LOCK_COUNT((*head)->ctx.dxpl)) {
+    if (update_dxpl_props && (*head)->ctx.dxpl && 0 == H5P_PLIST_LOCK_COUNT((*head)->ctx.dxpl)) {
         /* actual_selection_io_mode is a special case - we always want to set it in the property list even if
          * it was never set by the library, in that case it indicates no I/O was performed and we don't want
          * to leave the (possibly incorrect) old value in the property list, so set from the default property
