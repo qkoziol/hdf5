@@ -6224,7 +6224,7 @@ done:
  *-------------------------------------------------------------------------
  */
 void
-H5P_lock(H5P_genplist_t *plist, H5I_lock_mode_t mode)
+H5P_lock(H5P_genplist_t *plist, H5I_lock_mode_t H5_ATTR_UNUSED mode)
 {
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
