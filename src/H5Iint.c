@@ -257,7 +257,7 @@ H5I_term_package(void)
  *-------------------------------------------------------------------------
  */
 herr_t
-H5I_register_type(H5I_class_t *cls)
+H5I_register_type(H5I_class_t *cls, bool internal)
 {
     H5I_type_info_t *type_info      = NULL;    /* Pointer to the ID type*/
     bool             have_type_lock = false;   /* Whether the type's lock is held */
@@ -276,6 +276,7 @@ H5I_register_type(H5I_class_t *cls)
     type_info->cls        = cls;
     type_info->nextid     = cls->reserved;
     type_info->init_count = 1;
+    type_info->is_internal = internal;
 
     /* Generate a new H5I_type_t value, if necessary */
     if (H5I_UNINIT == cls->type) {
@@ -996,12 +997,16 @@ H5I_acquire(hid_t id, H5I_type_t type, H5I_lock_mode_t mode)
     if (type_info->cls->lock_func) {
         herr_t status = FAIL;
 
-        /* Prepare & restore library for user callback */
-        H5_BEFORE_USER_CB(NULL)
-            {
-                status = (type_info->cls->lock_func)(info->u.object, mode);
-            }
-        H5_AFTER_USER_CB(NULL)
+        if (type_info->is_internal)
+            status = (type_info->cls->lock_func)(info->u.object, mode);
+        else {
+            /* Prepare & restore library for user callback */
+            H5_BEFORE_USER_CB(NULL)
+                {
+                    status = (type_info->cls->lock_func)(info->u.object, mode);
+                }
+            H5_AFTER_USER_CB(NULL)
+        }
         if (status < 0)
             HGOTO_ERROR(H5E_ID, H5E_CALLBACK, NULL, "ID lock callback failed");
     }
@@ -1034,8 +1039,8 @@ herr_t
 H5I_release(void *obj, H5I_type_t type)
 {
     H5I_type_info_t *type_info      = NULL; /* Pointer to the ID type */
-    herr_t           status         = FAIL;
     bool             have_type_lock = false;   /* Whether the type lock is held */
+    herr_t           status         = FAIL;
     herr_t           ret_value      = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
@@ -1052,13 +1057,16 @@ H5I_release(void *obj, H5I_type_t type)
 
     /* Call 'unlock' callback */
     assert(type_info->cls->unlock_func);
-
-    /* Prepare & restore library for user callback */
-    H5_BEFORE_USER_CB(FAIL)
-        {
-            status = (type_info->cls->unlock_func)(obj);
-        }
-    H5_AFTER_USER_CB(FAIL)
+    if (type_info->is_internal)
+        status = (type_info->cls->unlock_func)(obj);
+    else {
+        /* Prepare & restore library for user callback */
+        H5_BEFORE_USER_CB(FAIL)
+            {
+                status = (type_info->cls->unlock_func)(obj);
+            }
+        H5_AFTER_USER_CB(FAIL)
+    }
     if (status < 0)
         HGOTO_ERROR(H5E_ID, H5E_CALLBACK, FAIL, "ID unlock callback failed");
 
@@ -1227,12 +1235,16 @@ H5I__remove_id_info(H5I_type_info_t *type_info, H5I_id_info_t *info, void **requ
         else {
             /* Check for a 'free' function and call it, if it exists */
             if (type_info->cls->free_func) {
-                /* Prepare & restore library for user callback */
-                H5_BEFORE_USER_CB(FAIL)
-                    {
-                        status = (type_info->cls->free_func)(info->u.object, request);
-                    }
-                H5_AFTER_USER_CB(FAIL)
+                if (type_info->is_internal)
+                    status = (type_info->cls->free_func)(info->u.object, request);
+                else {
+                    /* Prepare & restore library for user callback */
+                    H5_BEFORE_USER_CB(FAIL)
+                        {
+                            status = (type_info->cls->free_func)(info->u.object, request);
+                        }
+                    H5_AFTER_USER_CB(FAIL)
+                }
                 if (status < 0)
                     if (!force) {
                         /* Leave without pushing error when only trying */

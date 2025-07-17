@@ -151,13 +151,13 @@ done:
 herr_t
 H5Pset_map_iterate_hints(hid_t mapl_id, size_t key_prefetch_size, size_t key_alloc_size)
 {
-    H5P_genplist_t *mapl;                /* Property list pointer */
+    H5P_genplist_t *mapl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the map access property list structure */
-    if (NULL == (mapl = H5P_object_verify(mapl_id, H5P_TYPE_MAP_ACCESS, false)))
+    if (NULL == (mapl = H5P_acquire(mapl_id, H5P_TYPE_MAP_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set sizes */
@@ -165,6 +165,10 @@ H5Pset_map_iterate_hints(hid_t mapl_id, size_t key_prefetch_size, size_t key_all
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set key prefetch size");
     if (H5P_set(mapl, H5M_ACS_KEY_ALLOC_SIZE_NAME, &key_alloc_size) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set key allocation size");
+
+    /* Release resources */
+    if (mapl && H5P_release(mapl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -182,13 +186,13 @@ done:
 herr_t
 H5Pget_map_iterate_hints(hid_t mapl_id, size_t *key_prefetch_size /*out*/, size_t *key_alloc_size /*out*/)
 {
-    H5P_genplist_t *mapl;                /* Property list pointer */
+    H5P_genplist_t *mapl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the map access property list structure */
-    if (NULL == (mapl = H5P_object_verify(mapl_id, H5P_TYPE_MAP_ACCESS, true)))
+    if (NULL == (mapl = H5P_acquire(mapl_id, H5P_TYPE_MAP_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get the properties */
@@ -202,6 +206,10 @@ H5Pget_map_iterate_hints(hid_t mapl_id, size_t *key_prefetch_size /*out*/, size_
     } /* end if */
 
 done:
+    /* Release resources */
+    if (mapl && H5P_release(mapl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_map_iterate_hints() */
 #endif

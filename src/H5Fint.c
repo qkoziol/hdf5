@@ -165,7 +165,7 @@ H5F__init_package(void)
     FUNC_ENTER_PACKAGE
 
     /* Initialize the ID group for the file IDs */
-    if (H5I_register_type(H5I_FILE_CLS) < 0)
+    if (H5I_register_type(H5I_FILE_CLS, true) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, FAIL, "unable to initialize interface");
 
     /* Check the file locking environment variable */

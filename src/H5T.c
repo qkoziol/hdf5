@@ -973,7 +973,7 @@ H5T__init_package(void)
     FUNC_ENTER_PACKAGE
 
     /* Initialize the ID group for the file IDs */
-    if (H5I_register_type(H5I_DATATYPE_CLS) < 0)
+    if (H5I_register_type(H5I_DATATYPE_CLS, true) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINIT, FAIL, "unable to initialize interface");
 
     /* Make certain there aren't too many classes of datatypes defined */
@@ -3570,7 +3570,7 @@ H5Tconvert(hid_t src_id, hid_t dst_id, size_t nelmts, void *buf, void *backgroun
 {
     H5T_path_t     *tpath;               /* type conversion info    */
     H5T_t          *src, *dst;           /* unregistered types      */
-    H5P_genplist_t *dxpl;                /* Dataset transfer property list */
+    H5P_genplist_t *dxpl = NULL;                /* Dataset transfer property list */
     herr_t          ret_value = SUCCEED; /* Return value            */
 
     FUNC_ENTER_API(FAIL)
@@ -3580,7 +3580,7 @@ H5Tconvert(hid_t src_id, hid_t dst_id, size_t nelmts, void *buf, void *backgroun
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a datatype");
     if (NULL == (dst = H5I_object_verify(dst_id, H5I_DATATYPE)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a datatype");
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
@@ -3594,6 +3594,10 @@ H5Tconvert(hid_t src_id, hid_t dst_id, size_t nelmts, void *buf, void *backgroun
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINIT, FAIL, "data type conversion failed");
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_DATATYPE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Tconvert() */
 
@@ -3612,7 +3616,7 @@ done:
 herr_t
 H5Treclaim(hid_t type_id, hid_t space_id, hid_t dxpl_id, void *buf)
 {
-    H5P_genplist_t *dxpl; /* Dataset transfer property list */
+    H5P_genplist_t *dxpl = NULL; /* Dataset transfer property list */
     const H5T_t    *type;
     H5S_t          *space;     /* Dataspace for iteration */
     herr_t          ret_value; /* Return value */
@@ -3628,7 +3632,7 @@ H5Treclaim(hid_t type_id, hid_t space_id, hid_t dxpl_id, void *buf)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid dataspace");
     if (!(H5S_has_extent(space)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "dataspace does not have extent set");
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
@@ -3638,6 +3642,10 @@ H5Treclaim(hid_t type_id, hid_t space_id, hid_t dxpl_id, void *buf)
     ret_value = H5T_reclaim(type, space, buf);
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_DATATYPE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Treclaim() */
 

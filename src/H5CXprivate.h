@@ -629,9 +629,8 @@ H5_DLL herr_t H5CX_init_phase2(void);
 
 /* Library private routines */
 H5_DLL herr_t H5CX_push(H5CX_node_t *cnode);
-H5_DLL herr_t H5CX_pop(bool update_dxpl_props);
+H5_DLL void H5CX_pop(void);
 H5_DLL bool   H5CX_pushed(void);
-H5_DLL void   H5CX_reset_ocpl(void);
 
 /* API context state routines */
 H5_DLL herr_t H5CX_retrieve_state(H5CX_state_t **api_state);
@@ -860,6 +859,7 @@ H5_DLL herr_t H5CX_test_set_mpio_coll_chunk_multi_ratio_ind(int mpio_coll_chunk_
 H5_DLL herr_t H5CX_test_set_mpio_coll_rank0_bcast(bool rank0_bcast);
 #endif /* H5_HAVE_INSTRUMENTED_LIBRARY */
 #endif /* H5_HAVE_PARALLEL */
+H5_DLL herr_t H5CX_update_dxpl(void);
 
 /* "Setter" routines for LAPL properties cached in API context */
 H5_DLL herr_t H5CX_set_nlinks(size_t nlinks);
@@ -867,6 +867,9 @@ H5_DLL herr_t H5CX_set_nlinks(size_t nlinks);
 /* "Setter" routines for FAPL properties cached in API context */
 H5_DLL herr_t H5CX_set_mdc_init_config(H5AC_cache_config_t *mdc_init_config);
 H5_DLL herr_t H5CX_set_close_degree(H5F_close_degree_t close_degree);
+
+/* "Setter" routines for OCPL properties cached in API context */
+H5_DLL void H5CX_reset_ocpl(void);
 
 /* Testing functions */
 #ifdef H5CX_TESTING

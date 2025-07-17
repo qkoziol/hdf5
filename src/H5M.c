@@ -124,7 +124,7 @@ H5M__init_package(void)
     FUNC_ENTER_PACKAGE
 
     /* Initialize the ID group for the map IDs */
-    if (H5I_register_type(H5I_MAP_CLS) < 0)
+    if (H5I_register_type(H5I_MAP_CLS, true) < 0)
         HGOTO_ERROR(H5E_MAP, H5E_CANTINIT, FAIL, "unable to initialize interface");
 
     /* Mark "top" of interface as initialized, too */
@@ -328,23 +328,23 @@ hid_t
 H5Mcreate(hid_t loc_id, const char *name, hid_t key_type_id, hid_t val_type_id, hid_t lcpl_id, hid_t mcpl_id,
           hid_t mapl_id)
 {
-    H5P_genplist_t *lcpl;                        /* Link creation property list */
-    H5P_genplist_t *mcpl;                        /* Map creation property list */
-    H5P_genplist_t *mapl;                        /* Map access property list */
+    H5P_genplist_t *lcpl = NULL;                        /* Link creation property list */
+    H5P_genplist_t *mcpl = NULL;                        /* Map creation property list */
+    H5P_genplist_t *mapl = NULL;                        /* Map access property list */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Get link creation property list */
-    if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
+    if (NULL == (lcpl = H5P_acquire(lcpl_id, H5P_TYPE_LINK_CREATE, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_MAP, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Get the map creation property list */
-    if (NULL == (mcpl = H5P_object_verify(mcpl_id, H5P_TYPE_MAP_CREATE, true)))
+    if (NULL == (mcpl = H5P_acquire(mcpl_id, H5P_TYPE_MAP_CREATE, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_MAP, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Get the map access property list */
-    if (NULL == (mapl = H5P_object_verify(mapl_id, H5P_TYPE_MAP_ACCESS, true)))
+    if (NULL == (mapl = H5P_acquire(mapl_id, H5P_TYPE_MAP_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_MAP, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Create the map synchronously */
@@ -353,6 +353,14 @@ H5Mcreate(hid_t loc_id, const char *name, hid_t key_type_id, hid_t val_type_id, 
         HGOTO_ERROR(H5E_MAP, H5E_CANTCREATE, H5I_INVALID_HID, "unable to create map synchronously");
 
 done:
+    /* Release resources */
+    if (lcpl && H5P_release(lcpl) < 0)
+        HDONE_ERROR(H5E_MAP, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
+    if (mcpl && H5P_release(mcpl) < 0)
+        HDONE_ERROR(H5E_MAP, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
+    if (mapl && H5P_release(mapl) < 0)
+        HDONE_ERROR(H5E_MAP, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Mcreate() */
 
@@ -373,9 +381,9 @@ H5Mcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
                 hid_t es_id)
 {
     H5VL_object_t  *vol_obj = NULL;              /* Object for loc_id */
-    H5P_genplist_t *lcpl;                        /* Link creation property list */
-    H5P_genplist_t *mcpl;                        /* Map creation property list */
-    H5P_genplist_t *mapl;                        /* Map access property list */
+    H5P_genplist_t *lcpl = NULL;                        /* Link creation property list */
+    H5P_genplist_t *mcpl = NULL;                        /* Map creation property list */
+    H5P_genplist_t *mapl = NULL;                        /* Map access property list */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
@@ -383,17 +391,17 @@ H5Mcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Get link creation property list */
-    if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
+    if (NULL == (lcpl = H5P_acquire(lcpl_id, H5P_TYPE_LINK_CREATE, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_MAP, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
     lcpl_id = H5P_PLIST_ID(lcpl);
 
     /* Get the map creation property list */
-    if (NULL == (mcpl = H5P_object_verify(mcpl_id, H5P_TYPE_MAP_CREATE, true)))
+    if (NULL == (mcpl = H5P_acquire(mcpl_id, H5P_TYPE_MAP_CREATE, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_MAP, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
     mcpl_id = H5P_PLIST_ID(mcpl);
 
     /* Get the map access property list */
-    if (NULL == (mapl = H5P_object_verify(mapl_id, H5P_TYPE_MAP_ACCESS, true)))
+    if (NULL == (mapl = H5P_acquire(mapl_id, H5P_TYPE_MAP_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_MAP, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
     mapl_id = H5P_PLIST_ID(mapl);
 
@@ -418,6 +426,14 @@ H5Mcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
         } /* end if */
 
 done:
+    /* Release resources */
+    if (lcpl && H5P_release(lcpl) < 0)
+        HDONE_ERROR(H5E_MAP, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
+    if (mcpl && H5P_release(mcpl) < 0)
+        HDONE_ERROR(H5E_MAP, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
+    if (mapl && H5P_release(mapl) < 0)
+        HDONE_ERROR(H5E_MAP, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Mcreate_async() */
 
@@ -451,18 +467,18 @@ H5Mcreate_anon(hid_t loc_id, hid_t key_type_id, hid_t val_type_id, hid_t mcpl_id
     H5VL_object_t       *vol_obj = NULL;              /* object of loc_id */
     H5VL_optional_args_t vol_cb_args;                 /* Arguments to VOL callback */
     H5VL_map_args_t      map_args;                    /* Arguments for map operations */
-    H5P_genplist_t      *mcpl;                        /* Map creation property list */
-    H5P_genplist_t      *mapl;                        /* Map access property list */
+    H5P_genplist_t      *mcpl = NULL;                        /* Map creation property list */
+    H5P_genplist_t      *mapl = NULL;                        /* Map access property list */
     hid_t                ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Get the map creation property list */
-    if (NULL == (mcpl = H5P_object_verify(mcpl_id, H5P_TYPE_MAP_CREATE, true)))
+    if (NULL == (mcpl = H5P_acquire(mcpl_id, H5P_TYPE_MAP_CREATE, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_MAP, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Get the map access property list */
-    if (NULL == (mapl = H5P_object_verify(mapl_id, H5P_TYPE_MAP_ACCESS, true)))
+    if (NULL == (mapl = H5P_acquire(mapl_id, H5P_TYPE_MAP_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_MAP, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
@@ -496,6 +512,12 @@ H5Mcreate_anon(hid_t loc_id, hid_t key_type_id, hid_t val_type_id, hid_t mcpl_id
         HGOTO_ERROR(H5E_MAP, H5E_CANTREGISTER, H5I_INVALID_HID, "unable to register map");
 
 done:
+    /* Release resources */
+    if (mcpl && H5P_release(mcpl) < 0)
+        HDONE_ERROR(H5E_MAP, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
+    if (mapl && H5P_release(mapl) < 0)
+        HDONE_ERROR(H5E_MAP, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
+
     /* Cleanup on failure */
     if (H5I_INVALID_HID == ret_value) {
         /* Set up VOL callback arguments */
@@ -590,13 +612,13 @@ done:
 hid_t
 H5Mopen(hid_t loc_id, const char *name, hid_t mapl_id)
 {
-    H5P_genplist_t *mapl;                        /* Map access property list */
+    H5P_genplist_t *mapl = NULL;                        /* Map access property list */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Get the map access property list */
-    if (NULL == (mapl = H5P_object_verify(mapl_id, H5P_TYPE_MAP_ACCESS, true)))
+    if (NULL == (mapl = H5P_acquire(mapl_id, H5P_TYPE_MAP_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_MAP, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Open the map synchronously */
@@ -604,6 +626,10 @@ H5Mopen(hid_t loc_id, const char *name, hid_t mapl_id)
         HGOTO_ERROR(H5E_MAP, H5E_CANTCREATE, H5I_INVALID_HID, "unable to open map synchronously");
 
 done:
+    /* Release resources */
+    if (mapl && H5P_release(mapl) < 0)
+        HDONE_ERROR(H5E_MAP, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Mopen() */
 
@@ -625,13 +651,13 @@ H5Mopen_async(const char *app_file, const char *app_func, unsigned app_line, hid
     H5VL_object_t  *vol_obj   = NULL;            /* Object for loc_id */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    H5P_genplist_t *mapl;                        /* Map access property list */
+    H5P_genplist_t *mapl = NULL;                        /* Map access property list */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Get the map access property list */
-    if (NULL == (mapl = H5P_object_verify(mapl_id, H5P_TYPE_MAP_ACCESS, true)))
+    if (NULL == (mapl = H5P_acquire(mapl_id, H5P_TYPE_MAP_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_MAP, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
     mapl_id = H5P_PLIST_ID(mapl);
 
@@ -655,6 +681,10 @@ H5Mopen_async(const char *app_file, const char *app_func, unsigned app_line, hid
         } /* end if */
 
 done:
+    /* Release resources */
+    if (mapl && H5P_release(mapl) < 0)
+        HDONE_ERROR(H5E_MAP, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Mopen_async() */
 
@@ -946,7 +976,7 @@ H5Mget_count(hid_t map_id, hsize_t *count /*out*/, hid_t dxpl_id)
     H5VL_object_t       *vol_obj;             /* Map structure    */
     H5VL_optional_args_t vol_cb_args;         /* Arguments to VOL callback */
     H5VL_map_args_t      map_args;            /* Arguments for map operations */
-    H5P_genplist_t      *dxpl;                /* Dataset transfer property list */
+    H5P_genplist_t      *dxpl = NULL;                /* Dataset transfer property list */
     herr_t               ret_value = SUCCEED; /* Return value         */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -956,7 +986,7 @@ H5Mget_count(hid_t map_id, hsize_t *count /*out*/, hid_t dxpl_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "invalid map identifier");
 
     /* Get the default dataset transfer property list if the user didn't provide one */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not xfer parms");
 
     /* Set up VOL callback arguments */
@@ -974,6 +1004,10 @@ H5Mget_count(hid_t map_id, hsize_t *count /*out*/, hid_t dxpl_id)
         *count = map_args.get.args.get_count.count;
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_MAP, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Mget_count() */
 
@@ -1045,13 +1079,13 @@ herr_t
 H5Mput(hid_t map_id, hid_t key_mem_type_id, const void *key, hid_t val_mem_type_id, const void *value,
        hid_t dxpl_id)
 {
-    H5P_genplist_t *dxpl;                /* Default dataset property list */
+    H5P_genplist_t *dxpl = NULL;                /* Default dataset property list */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the default dataset transfer property list */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_MAP, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Add key-value pair to the map synchronously */
@@ -1059,6 +1093,10 @@ H5Mput(hid_t map_id, hid_t key_mem_type_id, const void *key, hid_t val_mem_type_
         HGOTO_ERROR(H5E_MAP, H5E_CANTPUT, FAIL, "unable to put value to map synchronously");
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_MAP, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Mput() */
 
@@ -1079,13 +1117,13 @@ H5Mput_async(const char *app_file, const char *app_func, unsigned app_line, hid_
     H5VL_object_t  *vol_obj   = NULL;            /* Object for loc_id */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    H5P_genplist_t *dxpl;                        /* Default dataset property list */
+    H5P_genplist_t *dxpl = NULL;                        /* Default dataset property list */
     herr_t          ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the default dataset transfer property list */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_MAP, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
     dxpl_id = H5P_PLIST_ID(dxpl);
 
@@ -1107,6 +1145,10 @@ H5Mput_async(const char *app_file, const char *app_func, unsigned app_line, hid_
             HGOTO_ERROR(H5E_MAP, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_MAP, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Mput_async() */
 
@@ -1181,13 +1223,13 @@ herr_t
 H5Mget(hid_t map_id, hid_t key_mem_type_id, const void *key, hid_t val_mem_type_id, void *value,
        hid_t dxpl_id)
 {
-    H5P_genplist_t *dxpl;                /* Default dataset property list */
+    H5P_genplist_t *dxpl = NULL;                /* Default dataset property list */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the default dataset transfer property list */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_MAP, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Get key-value pair from the map synchronously */
@@ -1195,6 +1237,10 @@ H5Mget(hid_t map_id, hid_t key_mem_type_id, const void *key, hid_t val_mem_type_
         HGOTO_ERROR(H5E_MAP, H5E_CANTGET, FAIL, "unable to get value from map synchronously");
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_MAP, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Mget() */
 
@@ -1215,13 +1261,13 @@ H5Mget_async(const char *app_file, const char *app_func, unsigned app_line, hid_
     H5VL_object_t  *vol_obj   = NULL;            /* Object for loc_id */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    H5P_genplist_t *dxpl;                        /* Dataset property list */
+    H5P_genplist_t *dxpl = NULL;                        /* Dataset property list */
     herr_t          ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the default dataset transfer property list */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_MAP, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
     dxpl_id = H5P_PLIST_ID(dxpl);
 
@@ -1243,6 +1289,10 @@ H5Mget_async(const char *app_file, const char *app_func, unsigned app_line, hid_
             HGOTO_ERROR(H5E_MAP, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_MAP, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Mget_async() */
 
@@ -1265,7 +1315,7 @@ H5Mexists(hid_t map_id, hid_t key_mem_type_id, const void *key, hbool_t *exists,
     H5VL_object_t       *vol_obj = NULL;
     H5VL_optional_args_t vol_cb_args;         /* Arguments to VOL callback */
     H5VL_map_args_t      map_args;            /* Arguments for map operations */
-    H5P_genplist_t      *dxpl;                /* Dataset transfer property list */
+    H5P_genplist_t      *dxpl = NULL;                /* Dataset transfer property list */
     herr_t               ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1279,7 +1329,7 @@ H5Mexists(hid_t map_id, hid_t key_mem_type_id, const void *key, hbool_t *exists,
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "map_id is not a map ID");
 
     /* Get the default dataset transfer property list if the user didn't provide one */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not xfer parms");
 
     /* Set up VOL callback arguments */
@@ -1298,6 +1348,10 @@ H5Mexists(hid_t map_id, hid_t key_mem_type_id, const void *key, hbool_t *exists,
         *exists = map_args.exists.exists;
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_MAP, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Mexists() */
 
@@ -1338,7 +1392,7 @@ H5Miterate(hid_t map_id, hsize_t *idx, hid_t key_mem_type_id, H5M_iterate_t op, 
     H5VL_object_t       *vol_obj = NULL;
     H5VL_optional_args_t vol_cb_args;         /* Arguments to VOL callback */
     H5VL_map_args_t      map_args;            /* Arguments for map operations */
-    H5P_genplist_t      *dxpl;                /* Dataset transfer property list */
+    H5P_genplist_t      *dxpl = NULL;                /* Dataset transfer property list */
     herr_t               ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1354,7 +1408,7 @@ H5Miterate(hid_t map_id, hsize_t *idx, hid_t key_mem_type_id, H5M_iterate_t op, 
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "map_id is not a map ID");
 
     /* Get the default dataset transfer property list if the user didn't provide one */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not xfer parms");
 
     /* Set up VOL callback arguments */
@@ -1377,6 +1431,10 @@ H5Miterate(hid_t map_id, hsize_t *idx, hid_t key_mem_type_id, H5M_iterate_t op, 
         *idx = map_args.specific.args.iterate.idx;
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_MAP, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Miterate() */
 
@@ -1418,7 +1476,7 @@ H5Miterate_by_name(hid_t loc_id, const char *map_name, hsize_t *idx, hid_t key_m
     H5VL_object_t       *vol_obj = NULL;
     H5VL_optional_args_t vol_cb_args;         /* Arguments to VOL callback */
     H5VL_map_args_t      map_args;            /* Arguments for map operations */
-    H5P_genplist_t      *dxpl;                /* Dataset transfer property list */
+    H5P_genplist_t      *dxpl = NULL;                /* Dataset transfer property list */
     herr_t               ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1438,7 +1496,7 @@ H5Miterate_by_name(hid_t loc_id, const char *map_name, hsize_t *idx, hid_t key_m
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid location identifier");
 
     /* Get the default dataset transfer property list if the user didn't provide one */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not xfer parms");
 
     /* Set up VOL callback arguments */
@@ -1463,6 +1521,10 @@ H5Miterate_by_name(hid_t loc_id, const char *map_name, hsize_t *idx, hid_t key_m
         *idx = map_args.specific.args.iterate.idx;
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_MAP, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Miterate_by_name() */
 
@@ -1487,7 +1549,7 @@ H5Mdelete(hid_t map_id, hid_t key_mem_type_id, const void *key, hid_t dxpl_id)
     H5VL_object_t       *vol_obj = NULL;
     H5VL_optional_args_t vol_cb_args;         /* Arguments to VOL callback */
     H5VL_map_args_t      map_args;            /* Arguments for map operations */
-    H5P_genplist_t      *dxpl;                /* Dataset transfer property list */
+    H5P_genplist_t      *dxpl = NULL;                /* Dataset transfer property list */
     herr_t               ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1501,7 +1563,7 @@ H5Mdelete(hid_t map_id, hid_t key_mem_type_id, const void *key, hid_t dxpl_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "map_id is not a map ID");
 
     /* Get the default dataset transfer property list if the user didn't provide one */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not xfer parms");
 
     /* Set up VOL callback arguments */
@@ -1518,6 +1580,10 @@ H5Mdelete(hid_t map_id, hid_t key_mem_type_id, const void *key, hid_t dxpl_id)
         HGOTO_ERROR(H5E_MAP, H5E_CANTSET, FAIL, "unable to delete key/value pair");
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_MAP, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Mdelete() */
 

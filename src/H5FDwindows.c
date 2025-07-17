@@ -42,17 +42,21 @@
 herr_t
 H5Pset_fapl_windows(hid_t fapl_id)
 {
-    H5P_genplist_t *fapl; /* Property list pointer */
+    H5P_genplist_t *fapl = NULL; /* Property list pointer */
     herr_t          ret_value;
 
     FUNC_ENTER_API(FAIL)
 
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
 
     ret_value = H5P_set_driver(fapl, H5FD_WINDOWS_DRIVER, NULL, NULL);
 
 done:
+    /* Release resources */
+    if (fapl && H5P_release(fapl) < 0)
+        HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_fapl_windows() */
 

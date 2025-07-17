@@ -607,7 +607,7 @@ H5P__ocpy_merge_comm_dt_list_close(const char H5_ATTR_UNUSED *name, size_t H5_AT
 herr_t
 H5Pset_copy_object(hid_t ocpyl_id, unsigned cpy_option)
 {
-    H5P_genplist_t *ocpypl;              /* Property list pointer */
+    H5P_genplist_t *ocpypl = NULL;              /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -617,7 +617,7 @@ H5Pset_copy_object(hid_t ocpyl_id, unsigned cpy_option)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "unknown option specified");
 
     /* Get the property list structure */
-    if (NULL == (ocpypl = H5P_object_verify(ocpyl_id, H5P_TYPE_OBJECT_COPY, false)))
+    if (NULL == (ocpypl = H5P_acquire(ocpyl_id, H5P_TYPE_OBJECT_COPY, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set value */
@@ -625,6 +625,10 @@ H5Pset_copy_object(hid_t ocpyl_id, unsigned cpy_option)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set copy object flag");
 
 done:
+    /* Release resources */
+    if (ocpypl && H5P_release(ocpypl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_copy_object() */
 
@@ -641,13 +645,13 @@ done:
 herr_t
 H5Pget_copy_object(hid_t ocpyl_id, unsigned *cpy_option /*out*/)
 {
-    H5P_genplist_t *ocpypl;              /* Property list pointer */
+    H5P_genplist_t *ocpypl = NULL;              /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (ocpypl = H5P_object_verify(ocpyl_id, H5P_TYPE_OBJECT_COPY, true)))
+    if (NULL == (ocpypl = H5P_acquire(ocpyl_id, H5P_TYPE_OBJECT_COPY, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get values */
@@ -656,6 +660,10 @@ H5Pget_copy_object(hid_t ocpyl_id, unsigned *cpy_option /*out*/)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get object copy flag");
 
 done:
+    /* Release resources */
+    if (ocpypl && H5P_release(ocpypl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_copy_object() */
 
@@ -680,7 +688,7 @@ done:
 herr_t
 H5Padd_merge_committed_dtype_path(hid_t ocpyl_id, const char *path)
 {
-    H5P_genplist_t              *ocpypl;              /* Property list pointer */
+    H5P_genplist_t              *ocpypl = NULL;              /* Property list pointer */
     H5O_copy_dtype_merge_list_t *old_list;            /* Merge committed dtype list currently present */
     H5O_copy_dtype_merge_list_t *new_obj   = NULL;    /* New object to add to list */
     herr_t                       ret_value = SUCCEED; /* Return value */
@@ -694,7 +702,7 @@ H5Padd_merge_committed_dtype_path(hid_t ocpyl_id, const char *path)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "path is empty string");
 
     /* Get the property list structure */
-    if (NULL == (ocpypl = H5P_object_verify(ocpyl_id, H5P_TYPE_OBJECT_COPY, false)))
+    if (NULL == (ocpypl = H5P_acquire(ocpyl_id, H5P_TYPE_OBJECT_COPY, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get dtype list */
@@ -713,6 +721,10 @@ H5Padd_merge_committed_dtype_path(hid_t ocpyl_id, const char *path)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set merge named dtype list");
 
 done:
+    /* Release resources */
+    if (ocpypl && H5P_release(ocpypl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     if (ret_value < 0)
         if (new_obj) {
             new_obj->path = (char *)H5MM_xfree(new_obj->path);
@@ -739,14 +751,14 @@ done:
 herr_t
 H5Pfree_merge_committed_dtype_paths(hid_t ocpyl_id)
 {
-    H5P_genplist_t              *ocpypl;              /* Property list pointer */
+    H5P_genplist_t              *ocpypl = NULL;              /* Property list pointer */
     H5O_copy_dtype_merge_list_t *dt_list;             /* Merge committed dtype list currently present */
     herr_t                       ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (ocpypl = H5P_object_verify(ocpyl_id, H5P_TYPE_OBJECT_COPY, false)))
+    if (NULL == (ocpypl = H5P_acquire(ocpyl_id, H5P_TYPE_OBJECT_COPY, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get dtype list */
@@ -761,6 +773,10 @@ H5Pfree_merge_committed_dtype_paths(hid_t ocpyl_id)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set merge committed dtype list");
 
 done:
+    /* Release resources */
+    if (ocpypl && H5P_release(ocpypl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pfree_merge_committed_dtype_paths() */
 
@@ -784,7 +800,7 @@ done:
 herr_t
 H5Pset_mcdt_search_cb(hid_t ocpyl_id, H5O_mcdt_search_cb_t func, void *op_data)
 {
-    H5P_genplist_t    *ocpypl;              /* Property list pointer */
+    H5P_genplist_t    *ocpypl = NULL;              /* Property list pointer */
     H5O_mcdt_cb_info_t cb_info;             /* Callback info struct */
     herr_t             ret_value = SUCCEED; /* Return value */
 
@@ -796,7 +812,7 @@ H5Pset_mcdt_search_cb(hid_t ocpyl_id, H5O_mcdt_search_cb_t func, void *op_data)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "callback is NULL while user data is not");
 
     /* Get the property list structure */
-    if (NULL == (ocpypl = H5P_object_verify(ocpyl_id, H5P_TYPE_OBJECT_COPY, false)))
+    if (NULL == (ocpypl = H5P_acquire(ocpyl_id, H5P_TYPE_OBJECT_COPY, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Populate the callback info struct */
@@ -808,6 +824,10 @@ H5Pset_mcdt_search_cb(hid_t ocpyl_id, H5O_mcdt_search_cb_t func, void *op_data)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set callback info");
 
 done:
+    /* Release resources */
+    if (ocpypl && H5P_release(ocpypl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_mcdt_search_cb() */
 
@@ -829,14 +849,14 @@ done:
 herr_t
 H5Pget_mcdt_search_cb(hid_t ocpyl_id, H5O_mcdt_search_cb_t *func /*out*/, void **op_data /*out*/)
 {
-    H5P_genplist_t    *ocpypl;              /* Property list pointer */
+    H5P_genplist_t    *ocpypl = NULL;              /* Property list pointer */
     H5O_mcdt_cb_info_t cb_info;             /* Callback info struct */
     herr_t             ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (ocpypl = H5P_object_verify(ocpyl_id, H5P_TYPE_OBJECT_COPY, true)))
+    if (NULL == (ocpypl = H5P_acquire(ocpyl_id, H5P_TYPE_OBJECT_COPY, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get callback info */
@@ -850,5 +870,9 @@ H5Pget_mcdt_search_cb(hid_t ocpyl_id, H5O_mcdt_search_cb_t *func /*out*/, void *
         *op_data = cb_info.user_data;
 
 done:
+    /* Release resources */
+    if (ocpypl && H5P_release(ocpypl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_mcdt_search_cb() */

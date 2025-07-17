@@ -960,7 +960,7 @@ done:
 herr_t
 H5Pset_data_transform(hid_t dxpl_id, const char *expression)
 {
-    H5P_genplist_t   *dxpl;                      /* Property list pointer */
+    H5P_genplist_t   *dxpl = NULL;                      /* Property list pointer */
     H5Z_data_xform_t *data_xform_prop = NULL;    /* New data xform property */
     herr_t            ret_value       = SUCCEED; /* return value */
 
@@ -971,7 +971,7 @@ H5Pset_data_transform(hid_t dxpl_id, const char *expression)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "expression cannot be NULL");
 
     /* Get the property list structure */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, false)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* See if a data transform is already set, and free it if it is */
@@ -994,6 +994,10 @@ done:
     if (ret_value < 0)
         if (data_xform_prop && H5Z_xform_destroy(data_xform_prop) < 0)
             HDONE_ERROR(H5E_PLIST, H5E_CLOSEERROR, FAIL, "unable to release data transform expression");
+
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_data_transform() */
@@ -1020,7 +1024,7 @@ done:
 ssize_t
 H5Pget_data_transform(hid_t dxpl_id, char *expression /*out*/, size_t size)
 {
-    H5P_genplist_t   *dxpl;                   /* Property list pointer */
+    H5P_genplist_t   *dxpl = NULL;                   /* Property list pointer */
     H5Z_data_xform_t *data_xform_prop = NULL; /* New data xform property */
     size_t            len;
     const char       *pexp;
@@ -1029,7 +1033,7 @@ H5Pget_data_transform(hid_t dxpl_id, char *expression /*out*/, size_t size)
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     if (H5P_peek(dxpl, H5D_XFER_XFORM_NAME, &data_xform_prop) < 0)
@@ -1053,6 +1057,10 @@ H5Pget_data_transform(hid_t dxpl_id, char *expression /*out*/, size_t size)
     ret_value = (ssize_t)len;
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_data_transform() */
 
@@ -1077,7 +1085,7 @@ done:
 herr_t
 H5Pset_buffer(hid_t dxpl_id, size_t size, void *tconv, void *bkg)
 {
-    H5P_genplist_t *dxpl;                /* Property list pointer */
+    H5P_genplist_t *dxpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1087,7 +1095,7 @@ H5Pset_buffer(hid_t dxpl_id, size_t size, void *tconv, void *bkg)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "buffer size must not be zero");
 
     /* Get the property list structure */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, false)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Update property list */
@@ -1099,6 +1107,10 @@ H5Pset_buffer(hid_t dxpl_id, size_t size, void *tconv, void *bkg)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "Can't set background type conversion buffer");
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_buffer() */
 
@@ -1116,14 +1128,14 @@ done:
 size_t
 H5Pget_buffer(hid_t dxpl_id, void **tconv /*out*/, void **bkg /*out*/)
 {
-    H5P_genplist_t *dxpl;      /* Property list pointer */
+    H5P_genplist_t *dxpl = NULL;      /* Property list pointer */
     size_t          size;      /* Type conversion buffer size */
     size_t          ret_value; /* Return value */
 
     FUNC_ENTER_API(0)
 
     /* Get the property list structure */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, 0, "can't find object for ID");
 
     /* Return values */
@@ -1142,6 +1154,10 @@ H5Pget_buffer(hid_t dxpl_id, void **tconv /*out*/, void **bkg /*out*/)
     ret_value = size;
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, 0, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_buffer() */
 
@@ -1161,14 +1177,14 @@ done:
 herr_t
 H5Pset_preserve(hid_t dxpl_id, hbool_t status)
 {
-    H5P_genplist_t *dxpl;                /* Property list pointer */
+    H5P_genplist_t *dxpl = NULL;                /* Property list pointer */
     H5T_bkg_t       need_bkg;            /* Value for background buffer type */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, false)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Update property list */
@@ -1177,6 +1193,10 @@ H5Pset_preserve(hid_t dxpl_id, hbool_t status)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "unable to set value");
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_preserve() */
 
@@ -1195,13 +1215,13 @@ int
 H5Pget_preserve(hid_t dxpl_id)
 {
     H5T_bkg_t       need_bkg;  /* Background value */
-    H5P_genplist_t *dxpl;      /* Property list pointer */
+    H5P_genplist_t *dxpl = NULL;      /* Property list pointer */
     int             ret_value; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get value */
@@ -1212,6 +1232,10 @@ H5Pget_preserve(hid_t dxpl_id)
     ret_value = need_bkg ? true : false;
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_preserve() */
 
@@ -1230,7 +1254,7 @@ done:
 herr_t
 H5Pset_edc_check(hid_t dxpl_id, H5Z_EDC_t check)
 {
-    H5P_genplist_t *dxpl;                /* Property list pointer */
+    H5P_genplist_t *dxpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1240,7 +1264,7 @@ H5Pset_edc_check(hid_t dxpl_id, H5Z_EDC_t check)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "not a valid value");
 
     /* Get the property list structure */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, false)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Update property list */
@@ -1248,6 +1272,10 @@ H5Pset_edc_check(hid_t dxpl_id, H5Z_EDC_t check)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "unable to set value");
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_edc_check() */
 
@@ -1266,13 +1294,13 @@ done:
 H5Z_EDC_t
 H5Pget_edc_check(hid_t dxpl_id)
 {
-    H5P_genplist_t *dxpl;      /* Property list pointer */
+    H5P_genplist_t *dxpl = NULL;      /* Property list pointer */
     H5Z_EDC_t       ret_value; /* Return value */
 
     FUNC_ENTER_API(H5Z_ERROR_EDC)
 
     /* Get the property list structure */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, H5Z_ERROR_EDC, "can't find object for ID");
 
     /* Update property list */
@@ -1280,6 +1308,10 @@ H5Pget_edc_check(hid_t dxpl_id)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, H5Z_ERROR_EDC, "unable to set value");
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_edc_check() */
 
@@ -1297,14 +1329,14 @@ done:
 herr_t
 H5Pset_filter_callback(hid_t dxpl_id, H5Z_filter_func_t func, void *op_data)
 {
-    H5P_genplist_t *dxpl;                /* Property list pointer */
+    H5P_genplist_t *dxpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
     H5Z_cb_t        cb_struct;
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, false)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Update property list */
@@ -1315,8 +1347,12 @@ H5Pset_filter_callback(hid_t dxpl_id, H5Z_filter_func_t func, void *op_data)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "unable to set value");
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
-}
+} /* end H5Pset_filter_callback() */
 
 /*-------------------------------------------------------------------------
  * Function:	H5Pset_type_conv_cb
@@ -1332,14 +1368,14 @@ done:
 herr_t
 H5Pset_type_conv_cb(hid_t dxpl_id, H5T_conv_except_func_t op, void *operate_data)
 {
-    H5P_genplist_t *dxpl;                /* Property list pointer */
+    H5P_genplist_t *dxpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
     H5T_conv_cb_t   cb_struct;
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, false)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Update property list */
@@ -1350,8 +1386,12 @@ H5Pset_type_conv_cb(hid_t dxpl_id, H5T_conv_except_func_t op, void *operate_data
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "unable to set value");
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
-}
+} /* end H5Pset_type_conv_cb() */
 
 /*-------------------------------------------------------------------------
  * Function:	H5Pget_type_conv_cb
@@ -1367,14 +1407,14 @@ done:
 herr_t
 H5Pget_type_conv_cb(hid_t dxpl_id, H5T_conv_except_func_t *op /*out*/, void **operate_data /*out*/)
 {
-    H5P_genplist_t *dxpl; /* Property list pointer */
+    H5P_genplist_t *dxpl = NULL; /* Property list pointer */
     H5T_conv_cb_t   cb_struct;
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get property */
@@ -1386,8 +1426,12 @@ H5Pget_type_conv_cb(hid_t dxpl_id, H5T_conv_except_func_t *op /*out*/, void **op
     *operate_data = cb_struct.user_data;
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
-}
+} /* end H5Pget_type_conv_cb() */
 
 /*-------------------------------------------------------------------------
  * Function:	H5Pget_btree_ratios
@@ -1404,14 +1448,14 @@ done:
 herr_t
 H5Pget_btree_ratios(hid_t dxpl_id, double *left /*out*/, double *middle /*out*/, double *right /*out*/)
 {
-    H5P_genplist_t *dxpl;                 /* Property list pointer */
+    H5P_genplist_t *dxpl = NULL;                 /* Property list pointer */
     double          btree_split_ratio[3]; /* B-tree node split ratios */
     herr_t          ret_value = SUCCEED;  /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get the split ratios */
@@ -1427,6 +1471,10 @@ H5Pget_btree_ratios(hid_t dxpl_id, double *left /*out*/, double *middle /*out*/,
         *right = btree_split_ratio[2];
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_btree_ratios() */
 
@@ -1450,7 +1498,7 @@ done:
 herr_t
 H5Pset_btree_ratios(hid_t dxpl_id, double left, double middle, double right)
 {
-    H5P_genplist_t *dxpl;                /* Property list pointer */
+    H5P_genplist_t *dxpl = NULL;                /* Property list pointer */
     double          split_ratio[3];      /* B-tree node split ratios */
     herr_t          ret_value = SUCCEED; /* Return value */
 
@@ -1461,7 +1509,7 @@ H5Pset_btree_ratios(hid_t dxpl_id, double left, double middle, double right)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "split ratio must satisfy 0.0 <= X <= 1.0");
 
     /* Get the property list structure */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, false)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set values */
@@ -1474,6 +1522,10 @@ H5Pset_btree_ratios(hid_t dxpl_id, double left, double middle, double right)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "unable to set value");
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_btree_ratios() */
 
@@ -1537,13 +1589,13 @@ herr_t
 H5Pset_vlen_mem_manager(hid_t dxpl_id, H5MM_allocate_t alloc_func, void *alloc_info, H5MM_free_t free_func,
                         void *free_info)
 {
-    H5P_genplist_t *dxpl;                /* Property list pointer */
+    H5P_genplist_t *dxpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Check arguments */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, false)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a dataset transfer property list");
 
     /* Update property list */
@@ -1551,6 +1603,10 @@ H5Pset_vlen_mem_manager(hid_t dxpl_id, H5MM_allocate_t alloc_func, void *alloc_i
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "unable to set values");
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_vlen_mem_manager() */
 
@@ -1567,13 +1623,13 @@ herr_t
 H5Pget_vlen_mem_manager(hid_t dxpl_id, H5MM_allocate_t *alloc_func /*out*/, void **alloc_info /*out*/,
                         H5MM_free_t *free_func /*out*/, void **free_info /*out*/)
 {
-    H5P_genplist_t *dxpl;                /* Property list pointer */
+    H5P_genplist_t *dxpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     if (alloc_func)
@@ -1590,6 +1646,10 @@ H5Pget_vlen_mem_manager(hid_t dxpl_id, H5MM_allocate_t *alloc_func /*out*/, void
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "unable to get value");
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_vlen_mem_manager() */
 
@@ -1614,7 +1674,7 @@ done:
 herr_t
 H5Pset_hyper_vector_size(hid_t dxpl_id, size_t vector_size)
 {
-    H5P_genplist_t *dxpl;                /* Property list pointer */
+    H5P_genplist_t *dxpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1624,7 +1684,7 @@ H5Pset_hyper_vector_size(hid_t dxpl_id, size_t vector_size)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "vector size too small");
 
     /* Get the property list structure */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, false)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Update property list */
@@ -1632,6 +1692,10 @@ H5Pset_hyper_vector_size(hid_t dxpl_id, size_t vector_size)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "unable to set value");
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_hyper_vector_size() */
 
@@ -1647,13 +1711,13 @@ done:
 herr_t
 H5Pget_hyper_vector_size(hid_t dxpl_id, size_t *vector_size /*out*/)
 {
-    H5P_genplist_t *dxpl;                /* Property list pointer */
+    H5P_genplist_t *dxpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Return values */
@@ -1662,6 +1726,10 @@ H5Pget_hyper_vector_size(hid_t dxpl_id, size_t *vector_size /*out*/)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "unable to get value");
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_hyper_vector_size() */
 
@@ -1878,13 +1946,13 @@ herr_t
 H5Pget_mpio_actual_chunk_opt_mode(hid_t                             dxpl_id,
                                   H5D_mpio_actual_chunk_opt_mode_t *actual_chunk_opt_mode /*out*/)
 {
-    H5P_genplist_t *dxpl;
+    H5P_genplist_t *dxpl = NULL;
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Return values */
@@ -1893,6 +1961,10 @@ H5Pget_mpio_actual_chunk_opt_mode(hid_t                             dxpl_id,
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "unable to get value");
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_mpio_actual_chunk_opt_mode() */
 
@@ -1909,13 +1981,13 @@ done:
 herr_t
 H5Pget_mpio_actual_io_mode(hid_t dxpl_id, H5D_mpio_actual_io_mode_t *actual_io_mode /*out*/)
 {
-    H5P_genplist_t *dxpl;
+    H5P_genplist_t *dxpl = NULL;
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Return values */
@@ -1924,6 +1996,10 @@ H5Pget_mpio_actual_io_mode(hid_t dxpl_id, H5D_mpio_actual_io_mode_t *actual_io_m
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "unable to get value");
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_mpio_actual_io_mode() */
 
@@ -1940,13 +2016,13 @@ herr_t
 H5Pget_mpio_no_collective_cause(hid_t dxpl_id, uint32_t *local_no_collective_cause /*out*/,
                                 uint32_t *global_no_collective_cause /*out*/)
 {
-    H5P_genplist_t *dxpl;
+    H5P_genplist_t *dxpl = NULL;
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Return values */
@@ -1958,6 +2034,10 @@ H5Pget_mpio_no_collective_cause(hid_t dxpl_id, uint32_t *local_no_collective_cau
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "unable to get global value");
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_mpio_no_collective_cause() */
 #endif /* H5_HAVE_PARALLEL */
@@ -2266,7 +2346,7 @@ H5Pset_dataset_io_hyperslab_selection(hid_t dxpl_id, unsigned rank, H5S_seloper_
     /* block is allowed to be NULL, and will be assumed to be all '1's when NULL */
 
     /* Get the property list structure */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, false)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* See if a dataset I/O selection is already set, and free it if it is */
@@ -2325,6 +2405,10 @@ H5Pset_dataset_io_hyperslab_selection(hid_t dxpl_id, unsigned rank, H5S_seloper_
     space_created = false; /* Reset now that property owns the dataspace */
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     /* Cleanup on failure */
     if (ret_value < 0) {
         if (reset_prop_on_error && dxpl && H5P_poke(dxpl, H5D_XFER_DSET_IO_SEL_NAME, &space) < 0)
@@ -2353,13 +2437,13 @@ done:
 herr_t
 H5Pset_selection_io(hid_t dxpl_id, H5D_selection_io_mode_t selection_io_mode)
 {
-    H5P_genplist_t *dxpl;                /* Property list pointer */
+    H5P_genplist_t *dxpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Check arguments */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, false)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADTYPE, FAIL, "not a dxpl");
 
     /* Set the selection I/O mode */
@@ -2367,6 +2451,10 @@ H5Pset_selection_io(hid_t dxpl_id, H5D_selection_io_mode_t selection_io_mode)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "unable to set value");
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_selection_io() */
 
@@ -2387,13 +2475,13 @@ done:
 herr_t
 H5Pget_selection_io(hid_t dxpl_id, H5D_selection_io_mode_t *selection_io_mode /*out*/)
 {
-    H5P_genplist_t *dxpl;                /* Property list pointer */
+    H5P_genplist_t *dxpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Check arguments */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADTYPE, FAIL, "not a dxpl");
 
     /* Get the selection I/O mode */
@@ -2402,6 +2490,10 @@ H5Pget_selection_io(hid_t dxpl_id, H5D_selection_io_mode_t *selection_io_mode /*
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "unable to get value");
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_selection_io() */
 
@@ -2417,13 +2509,13 @@ done:
 herr_t
 H5Pget_no_selection_io_cause(hid_t dxpl_id, uint32_t *no_selection_io_cause /*out*/)
 {
-    H5P_genplist_t *dxpl;
+    H5P_genplist_t *dxpl = NULL;
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Return values */
@@ -2449,13 +2541,13 @@ done:
 herr_t
 H5Pget_actual_selection_io_mode(hid_t dxpl_id, uint32_t *actual_selection_io_mode /*out*/)
 {
-    H5P_genplist_t *dxpl;
+    H5P_genplist_t *dxpl = NULL;
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Return values */
@@ -2464,6 +2556,10 @@ H5Pget_actual_selection_io_mode(hid_t dxpl_id, uint32_t *actual_selection_io_mod
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "unable to get actual_selection_io_mode value");
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_actual_selection_io_mode() */
 
@@ -2546,13 +2642,13 @@ H5P__dxfr_modify_write_buf_dec(const void **_pp, void *_value /*out*/)
 herr_t
 H5Pset_modify_write_buf(hid_t dxpl_id, hbool_t modify_write_buf)
 {
-    H5P_genplist_t *dxpl;                /* Property list pointer */
+    H5P_genplist_t *dxpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Check arguments */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, false)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADTYPE, FAIL, "not a dxpl");
 
     /* Set the selection I/O mode */
@@ -2560,6 +2656,10 @@ H5Pset_modify_write_buf(hid_t dxpl_id, hbool_t modify_write_buf)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "unable to set value");
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_modify_write_buf() */
 
@@ -2576,13 +2676,13 @@ done:
 herr_t
 H5Pget_modify_write_buf(hid_t dxpl_id, hbool_t *modify_write_buf /*out*/)
 {
-    H5P_genplist_t *dxpl;                /* Property list pointer */
+    H5P_genplist_t *dxpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Check arguments */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADTYPE, FAIL, "not a dxpl");
 
     /* Get the selection I/O mode */
@@ -2591,5 +2691,9 @@ H5Pget_modify_write_buf(hid_t dxpl_id, hbool_t *modify_write_buf /*out*/)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "unable to get value");
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_modify_write_buf() */

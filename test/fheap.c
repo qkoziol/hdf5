@@ -16527,8 +16527,8 @@ main(void)
         TEST_ERROR;
 
     /* Pop API context */
-    if (api_ctx_pushed && H5CX_pop(false) < 0)
-        FAIL_STACK_ERROR;
+    if (api_ctx_pushed)
+        H5CX_pop();
     api_ctx_pushed = false;
 
     /* Clean up file used */
@@ -16553,7 +16553,7 @@ error:
     H5E_END_TRY
 
     if (api_ctx_pushed)
-        H5CX_pop(false);
+        H5CX_pop();
 
     return 1;
 } /* end main() */

@@ -531,7 +531,7 @@ done:
 haddr_t
 H5FDalloc(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, hsize_t size)
 {
-    H5P_genplist_t *dxpl;   /* Dataset transfer property list */
+    H5P_genplist_t *dxpl = NULL;   /* Dataset transfer property list */
     H5FD_int_t      fh;     /* Temporary internal file handle */
     H5FD_driver_t   driver; /* Temporary VFD driver */
     haddr_t         ret_value = HADDR_UNDEF;

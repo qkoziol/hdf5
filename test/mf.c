@@ -9261,8 +9261,8 @@ main(void)
     h5_cleanup(FILENAME, fapl);
 
     /* Pop API context */
-    if (api_ctx_pushed && H5CX_pop(false) < 0)
-        FAIL_STACK_ERROR;
+    if (api_ctx_pushed)
+        H5CX_pop();
     api_ctx_pushed = false;
 
     if (nerrors)
@@ -9281,7 +9281,7 @@ error:
     H5E_END_TRY
 
     if (api_ctx_pushed)
-        H5CX_pop(false);
+        H5CX_pop();
 
     return (1);
 } /* main() */

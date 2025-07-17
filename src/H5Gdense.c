@@ -249,7 +249,7 @@ H5G__dense_create(H5F_t *f, H5O_linfo_t *linfo, const H5O_pline_t *pline)
     H5B2_t         *bt2_corder = NULL; /* v2 B-tree handle for creation order */
     size_t          fheap_id_len;      /* Fractal heap ID length */
     H5P_genplist_t *old_ocpl  = NULL;
-    H5P_genplist_t *gcpl      = NULL;    /* DCPL for dataset */
+    H5P_genplist_t *tmp_gcpl      = NULL;    /* DCPL for dataset */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -285,15 +285,15 @@ H5G__dense_create(H5F_t *f, H5O_linfo_t *linfo, const H5O_pline_t *pline)
         old_ocpl = H5CX_get_ocpl();
 
         /* Get a new default group creation property list */
-        if (NULL == (gcpl = H5P_new_plist_of_type(H5P_TYPE_GROUP_CREATE, true)))
+        if (NULL == (tmp_gcpl = H5P_new_plist_of_type(H5P_TYPE_GROUP_CREATE, false)))
             HGOTO_ERROR(H5E_SYM, H5E_CANTCREATE, FAIL, "unable to create the group creation property list");
 
         /* Set the filter pipeline property */
-        if (H5P_set(gcpl, H5O_CRT_PIPELINE_NAME, pline) < 0)
+        if (H5P_set(tmp_gcpl, H5O_CRT_PIPELINE_NAME, pline) < 0)
             HGOTO_ERROR(H5E_SYM, H5E_CANTSET, FAIL, "can't set pipeline filter");
 
         /* Set the GCPL for the operations in this routine */
-        H5CX_set_cpl(gcpl);
+        H5CX_set_cpl(tmp_gcpl);
     }
 
     /* Create fractal heap for storing links */
@@ -350,7 +350,7 @@ done:
         H5CX_set_cpl(old_ocpl);
 
     /* Close the open objects */
-    if (gcpl && H5P_dissolve(gcpl) < 0)
+    if (tmp_gcpl && H5P_dissolve(tmp_gcpl) < 0)
         HDONE_ERROR(H5E_DATASET, H5E_CANTCLOSEOBJ, FAIL, "unable to close dataset creation property list");
     if (fheap && H5HF_close(fheap) < 0)
         HDONE_ERROR(H5E_SYM, H5E_CLOSEERROR, FAIL, "can't close fractal heap");

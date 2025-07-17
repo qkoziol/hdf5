@@ -3064,8 +3064,8 @@ test_missing_filter(hid_t file)
 #endif /* H5_HAVE_FILTER_DEFLATE */
 
     /* Pop API context */
-    if (api_ctx_pushed && H5CX_pop(false) < 0)
-        FAIL_STACK_ERROR;
+    if (api_ctx_pushed)
+        H5CX_pop();
     api_ctx_pushed = false;
 
     PASSED();
@@ -3073,7 +3073,7 @@ test_missing_filter(hid_t file)
 
 error:
     if (api_ctx_pushed)
-        H5CX_pop(false);
+        H5CX_pop();
 
     return FAIL;
 } /* end test_missing_filter() */

@@ -129,8 +129,8 @@ H5A__get_shared_rc_test(hid_t attr_id, hsize_t *ref_count)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTGET, FAIL, "can't retrieve shared message ref count");
 
 done:
-    if (api_ctx_pushed && H5CX_pop(false) < 0)
-        HDONE_ERROR(H5E_ATTR, H5E_CANTRESET, FAIL, "can't reset API context");
+    if (api_ctx_pushed)
+        H5CX_pop();
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5A__get_shared_rc_test() */

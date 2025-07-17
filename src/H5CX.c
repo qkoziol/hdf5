@@ -1311,17 +1311,6 @@ H5CX_set_dxpl(H5P_genplist_t *dxpl)
     assert(head && *head);
     assert(dxpl);
 
-    /* Check for changing the property list */
-    if ((*head)->ctx.dxpl != dxpl) {
-        /* Unlock any previous (non-default) list */
-        if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.dxpl))
-            H5P_unlock((*head)->ctx.dxpl);
-
-        /* Lock any non-default lists */
-        if (!H5P_PLIST_IS_DEFAULT(dxpl))
-            H5P_lock(dxpl, H5I_LOCK_SHARED);
-    }
-
     /* Reset the cached data */
     H5CX__reset_dxpl(*head);
 
@@ -1408,17 +1397,6 @@ H5CX_set_lcpl(H5P_genplist_t *lcpl)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
     assert(lcpl);
-
-    /* Check for changing the property list */
-    if ((*head)->ctx.lcpl != lcpl) {
-        /* Unlock any previous (non-default) list */
-        if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.lcpl))
-            H5P_unlock((*head)->ctx.lcpl);
-
-        /* Lock any non-default lists */
-        if (!H5P_PLIST_IS_DEFAULT(lcpl))
-            H5P_lock(lcpl, H5I_LOCK_SHARED);
-    }
 
     /* Reset the cached data */
     H5CX__reset_lcpl(*head);
@@ -1545,17 +1523,6 @@ H5CX_set_cpl(H5P_genplist_t *crtpl)
     }
     assert(is_dcpl || is_fcpl || is_gcpl || is_tcpl || is_ocpl);
 
-    /* Check for changing the property list */
-    if ((*head)->ctx.ocpl != crtpl) {
-        /* Unlock any previous (non-default) list */
-        if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.ocpl))
-            H5P_unlock((*head)->ctx.ocpl);
-
-        /* Lock any non-default lists */
-        if (!H5P_PLIST_IS_DEFAULT(crtpl))
-            H5P_lock(crtpl, H5I_LOCK_SHARED);
-    }
-
     /* Reset any cached data */
     H5CX__reset_ocpl(*head);
 
@@ -1620,17 +1587,6 @@ H5CX_set_apl(H5P_genplist_t *acspl,
     else if ((is_lapl = H5P_class_isa(H5P_CLASS(acspl), H5P_CLS_LINK_ACCESS_g)) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for link access class");
     if (is_lapl) {
-        /* Check for changing the property list */
-        if ((*head)->ctx.lapl != acspl) {
-            /* Unlock any previous (non-default) list */
-            if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.lapl))
-                H5P_unlock((*head)->ctx.lapl);
-
-            /* Lock any non-default lists */
-            if (!H5P_PLIST_IS_DEFAULT(acspl))
-                H5P_lock(acspl, H5I_LOCK_SHARED);
-        }
-
         H5CX__reset_lapl(*head);
         (*head)->ctx.lapl = acspl;
     }
@@ -1646,17 +1602,6 @@ H5CX_set_apl(H5P_genplist_t *acspl,
     else if ((is_dapl = H5P_class_isa(H5P_CLASS(acspl), H5P_CLS_DATASET_ACCESS_g)) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for dataset access class");
     if (is_dapl) {
-        /* Check for changing the property list */
-        if ((*head)->ctx.dapl != acspl) {
-            /* Unlock any previous (non-default) list */
-            if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.dapl))
-                H5P_unlock((*head)->ctx.dapl);
-
-            /* Lock any non-default lists */
-            if (!H5P_PLIST_IS_DEFAULT(acspl))
-                H5P_lock(acspl, H5I_LOCK_SHARED);
-        }
-
         H5CX__reset_dapl(*head);
         (*head)->ctx.dapl = acspl;
     }
@@ -1671,17 +1616,6 @@ H5CX_set_apl(H5P_genplist_t *acspl,
     else if ((is_fapl = H5P_class_isa(H5P_CLASS(acspl), H5P_CLS_FILE_ACCESS_g)) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for file access class");
     if (is_fapl) {
-        /* Check for changing the property list */
-        if ((*head)->ctx.fapl != acspl) {
-            /* Unlock any previous (non-default) list */
-            if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.fapl))
-                H5P_unlock((*head)->ctx.fapl);
-
-            /* Lock any non-default lists */
-            if (!H5P_PLIST_IS_DEFAULT(acspl))
-                H5P_lock(acspl, H5I_LOCK_SHARED);
-        }
-
         H5CX__reset_fapl(*head);
         (*head)->ctx.fapl = acspl;
     }
@@ -1787,17 +1721,6 @@ H5CX_set_fapl(H5P_genplist_t *fapl)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    /* Check for changing the property list */
-    if ((*head)->ctx.fapl != fapl) {
-        /* Unlock any previous (non-default) list */
-        if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.fapl))
-            H5P_unlock((*head)->ctx.fapl);
-
-        /* Lock any non-default lists */
-        if (!H5P_PLIST_IS_DEFAULT(fapl))
-            H5P_lock(fapl, H5I_LOCK_SHARED);
-    }
-
     /* Reset the cached data */
     H5CX__reset_fapl(*head);
 
@@ -1829,17 +1752,6 @@ H5CX_set_fcpl(H5P_genplist_t *fcpl)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
-    /* Check for changing the property list */
-    if ((*head)->ctx.ocpl != fcpl) {
-        /* Unlock any previous (non-default) list */
-        if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.ocpl))
-            H5P_unlock((*head)->ctx.ocpl);
-
-        /* Lock any non-default lists */
-        if (!H5P_PLIST_IS_DEFAULT(fcpl))
-            H5P_lock(fcpl, H5I_LOCK_SHARED);
-    }
-
     /* Reset the cached data */
     H5CX__reset_ocpl(*head);
 
@@ -1868,17 +1780,6 @@ H5CX_set_ocpypl(H5P_genplist_t *ocpypl)
     /* Sanity check */
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-
-    /* Check for changing the property list */
-    if ((*head)->ctx.ocpypl != ocpypl) {
-        /* Unlock any previous (non-default) list */
-        if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.ocpypl))
-            H5P_unlock((*head)->ctx.ocpypl);
-
-        /* Lock any non-default lists */
-        if (!H5P_PLIST_IS_DEFAULT(ocpypl))
-            H5P_lock(ocpypl, H5I_LOCK_SHARED);
-    }
 
     /* Set the API context's OCPYPL to a new value */
     (*head)->ctx.ocpypl = ocpypl;
@@ -6931,16 +6832,16 @@ done:
 } /* end H5CX_get_cpy_options() */
 
 /*-------------------------------------------------------------------------
- * Function:    H5CX_pop
+ * Function:    H5CX_update_dxpl
  *
- * Purpose:     Pops the context for an API call.
+ * Purpose:     Update the DXPL properties from cached API context changes
  *
  * Return:      Non-negative on success / Negative on failure
  *
  *-------------------------------------------------------------------------
  */
 herr_t
-H5CX_pop(bool update_dxpl_props)
+H5CX_update_dxpl(void)
 {
     H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
     herr_t        ret_value = SUCCEED; /* Return value */
@@ -6950,78 +6851,79 @@ H5CX_pop(bool update_dxpl_props)
     /* Sanity check */
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
+    assert((*head)->ctx.dxpl);
+//    assert(1 == H5P_PLIST_LOCK_COUNT((*head)->ctx.dxpl));
 
-    /* Unlock any non-default property lists in the current context that have
-     * been locked when the context is popped.
-     * (Note: must unlock DXPL before the H5CX_SET_PROP macros, which modify it)
+    /* Special case for actual_selection_io_mode: we always want to set it
+     * in the property list, even if it was never set by the library.
+     * In that case it indicates no I/O was performed and we don't want to
+     * leave the (possibly incorrect) old value in the property list, so
+     * set to the default value.
      */
-    if ((*head)->ctx.ocpypl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.ocpypl))
-        H5P_unlock((*head)->ctx.ocpypl);
-    if ((*head)->ctx.dxpl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.dxpl))
-        H5P_unlock((*head)->ctx.dxpl);
+    if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.dxpl) && !(*head)->ctx.dxpl_flags.actual_selection_io_mode_set) {
+        (*head)->ctx.dxpl_props.actual_selection_io_mode = H5CX_def_dxpl_cache.actual_selection_io_mode;
+        (*head)->ctx.dxpl_flags.actual_selection_io_mode_set = true;
+    }
 
     /* Check for cached DXPL properties to return to application */
-    /* Note: don't try modifying the property list until the last call of
-     *          recursively invoked calls, when the lock counter has dropped
-     *          to zero.
-     */
-    if (update_dxpl_props && (*head)->ctx.dxpl && 0 == H5P_PLIST_LOCK_COUNT((*head)->ctx.dxpl)) {
-        /* actual_selection_io_mode is a special case - we always want to set it in the property list even if
-         * it was never set by the library, in that case it indicates no I/O was performed and we don't want
-         * to leave the (possibly incorrect) old value in the property list, so set from the default property
-         * list */
-        if (!H5_TERM_GLOBAL && (*head)->ctx.dxpl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.dxpl) &&
-            !(*head)->ctx.dxpl_flags.actual_selection_io_mode_set) {
-            (*head)->ctx.dxpl_props.actual_selection_io_mode = H5CX_def_dxpl_cache.actual_selection_io_mode;
-            (*head)->ctx.dxpl_flags.actual_selection_io_mode_set = true;
-        }
-
-        H5CX_SET_PROP(H5D_XFER_NO_SELECTION_IO_CAUSE_NAME, no_selection_io_cause)
-        H5CX_SET_PROP(H5D_XFER_ACTUAL_SELECTION_IO_MODE_NAME, actual_selection_io_mode)
+    H5CX_SET_PROP(H5D_XFER_NO_SELECTION_IO_CAUSE_NAME, no_selection_io_cause)
+    H5CX_SET_PROP(H5D_XFER_ACTUAL_SELECTION_IO_MODE_NAME, actual_selection_io_mode)
 #ifdef H5_HAVE_PARALLEL
-        H5CX_SET_PROP(H5D_MPIO_ACTUAL_CHUNK_OPT_MODE_NAME, mpio_actual_chunk_opt)
-        H5CX_SET_PROP(H5D_MPIO_ACTUAL_IO_MODE_NAME, mpio_actual_io_mode)
-        H5CX_SET_PROP(H5D_MPIO_LOCAL_NO_COLLECTIVE_CAUSE_NAME, mpio_local_no_coll_cause)
-        H5CX_SET_PROP(H5D_MPIO_GLOBAL_NO_COLLECTIVE_CAUSE_NAME, mpio_global_no_coll_cause)
+    H5CX_SET_PROP(H5D_MPIO_ACTUAL_CHUNK_OPT_MODE_NAME, mpio_actual_chunk_opt)
+    H5CX_SET_PROP(H5D_MPIO_ACTUAL_IO_MODE_NAME, mpio_actual_io_mode)
+    H5CX_SET_PROP(H5D_MPIO_LOCAL_NO_COLLECTIVE_CAUSE_NAME, mpio_local_no_coll_cause)
+    H5CX_SET_PROP(H5D_MPIO_GLOBAL_NO_COLLECTIVE_CAUSE_NAME, mpio_global_no_coll_cause)
 #ifdef H5_HAVE_INSTRUMENTED_LIBRARY
-        H5CX_SET_PROP(H5D_XFER_COLL_CHUNK_LINK_HARD_NAME, mpio_coll_chunk_link_hard)
-        H5CX_SET_PROP(H5D_XFER_COLL_CHUNK_MULTI_HARD_NAME, mpio_coll_chunk_multi_hard)
-        H5CX_SET_PROP(H5D_XFER_COLL_CHUNK_LINK_NUM_TRUE_NAME, mpio_coll_chunk_link_num_true)
-        H5CX_SET_PROP(H5D_XFER_COLL_CHUNK_LINK_NUM_FALSE_NAME, mpio_coll_chunk_link_num_false)
-        H5CX_SET_PROP(H5D_XFER_COLL_CHUNK_MULTI_RATIO_COLL_NAME, mpio_coll_chunk_multi_ratio_coll)
-        H5CX_SET_PROP(H5D_XFER_COLL_CHUNK_MULTI_RATIO_IND_NAME, mpio_coll_chunk_multi_ratio_ind)
-        H5CX_SET_PROP(H5D_XFER_COLL_RANK0_BCAST_NAME, mpio_coll_rank0_bcast)
+    H5CX_SET_PROP(H5D_XFER_COLL_CHUNK_LINK_HARD_NAME, mpio_coll_chunk_link_hard)
+    H5CX_SET_PROP(H5D_XFER_COLL_CHUNK_MULTI_HARD_NAME, mpio_coll_chunk_multi_hard)
+    H5CX_SET_PROP(H5D_XFER_COLL_CHUNK_LINK_NUM_TRUE_NAME, mpio_coll_chunk_link_num_true)
+    H5CX_SET_PROP(H5D_XFER_COLL_CHUNK_LINK_NUM_FALSE_NAME, mpio_coll_chunk_link_num_false)
+    H5CX_SET_PROP(H5D_XFER_COLL_CHUNK_MULTI_RATIO_COLL_NAME, mpio_coll_chunk_multi_ratio_coll)
+    H5CX_SET_PROP(H5D_XFER_COLL_CHUNK_MULTI_RATIO_IND_NAME, mpio_coll_chunk_multi_ratio_ind)
+    H5CX_SET_PROP(H5D_XFER_COLL_RANK0_BCAST_NAME, mpio_coll_rank0_bcast)
 #endif /* H5_HAVE_INSTRUMENTED_LIBRARY */
 #endif /* H5_HAVE_PARALLEL */
-    }  /* end if */
 
-    /* Unlock and reset any non-default property lists in the current context
-     * that have cached values that need to be reset when the context is popped.
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_update_dxpl() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_pop
+ *
+ * Purpose:     Pops the context for an API call.
+ *
+ * Return:      None
+ *
+ *-------------------------------------------------------------------------
+ */
+void
+H5CX_pop(void)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    /* Sanity check */
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+
+    /* Reset any non-default property lists in the current context that have
+     * cached values that need to be reset when the context is popped.
      */
-    if ((*head)->ctx.dapl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.dapl)) {
-        H5P_unlock((*head)->ctx.dapl);
+    if ((*head)->ctx.dapl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.dapl))
         H5CX__reset_dapl(*head);
-    }
-    if ((*head)->ctx.lapl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.lapl)) {
-        H5P_unlock((*head)->ctx.lapl);
+    if ((*head)->ctx.lapl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.lapl))
         H5CX__reset_lapl(*head);
-    }
-    if ((*head)->ctx.lcpl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.lcpl)) {
-        H5P_unlock((*head)->ctx.lcpl);
+    if ((*head)->ctx.lcpl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.lcpl))
         H5CX__reset_lcpl(*head);
-    }
-    if ((*head)->ctx.ocpl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.ocpl)) {
-        H5P_unlock((*head)->ctx.ocpl);
+    if ((*head)->ctx.ocpl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.ocpl))
         H5CX__reset_ocpl(*head);
-    }
-    if ((*head)->ctx.fapl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.fapl)) {
-        H5P_unlock((*head)->ctx.fapl);
+    if ((*head)->ctx.fapl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.fapl))
         H5CX__reset_fapl(*head);
-    }
 
     /* Pop the top context node from the stack */
     (*head) = (*head)->next;
 
-done:
-    FUNC_LEAVE_NOAPI(ret_value)
+    FUNC_LEAVE_NOAPI_VOID
 } /* end H5CX_pop() */

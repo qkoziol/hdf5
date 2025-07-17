@@ -189,7 +189,7 @@ H5VL__init_package(void)
     FUNC_ENTER_PACKAGE
 
     /* Initialize the ID group for the VL IDs */
-    if (H5I_register_type(H5I_VOL_CLS) < 0)
+    if (H5I_register_type(H5I_VOL_CLS, true) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTINIT, FAIL, "unable to initialize H5VL interface");
 
     /* Register internal VOL connectors */
@@ -2233,8 +2233,7 @@ H5VL_finish_lib_state(void *context)
     assert(context);
 
     /* Pop the API context off the stack */
-    if (H5CX_pop(false) < 0)
-        HGOTO_ERROR(H5E_VOL, H5E_CANTRESET, FAIL, "can't pop API context");
+    H5CX_pop();
 
     /* Release library context */
     H5MM_xfree(context);

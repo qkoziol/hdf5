@@ -478,7 +478,7 @@ H5Pset_fapl_subfiling(hid_t fapl_id, const H5FD_subfiling_config_t *vfd_config)
 
     FUNC_ENTER_API(FAIL)
 
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
 
     /* Initialize driver, if it's not yet */
@@ -500,7 +500,7 @@ H5Pset_fapl_subfiling(hid_t fapl_id, const H5FD_subfiling_config_t *vfd_config)
 
         /* Copy fields */
         fa.require_ioc = vfd_config->require_ioc;
-        if (NULL == (fa.ioc_fapl = H5P_object_verify(vfd_config->ioc_fapl_id, H5P_TYPE_FILE_ACCESS, false)))
+        if (NULL == (fa.ioc_fapl = H5P_acquire(vfd_config->ioc_fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
             HGOTO_ERROR(H5E_VFL, H5E_BADTYPE, FAIL, "not a file access property list");
 
         /* Check for correct (IOC) driver */
@@ -530,9 +530,18 @@ H5Pset_fapl_subfiling(hid_t fapl_id, const H5FD_subfiling_config_t *vfd_config)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set subfiling driver");
 
 done:
-    if (NULL == vfd_config)
+    /* Release resources */
+    if (fapl && H5P_release(fapl) < 0)
+        HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
+    if (NULL == vfd_config) {
         if (fa.ioc_fapl && H5P_dissolve(fa.ioc_fapl) < 0)
             HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "can't close IOC FAPL");
+    }
+    else {
+        if (fa.ioc_fapl && H5P_release(fa.ioc_fapl) < 0)
+            HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+    }
 
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_fapl_subfiling() */
@@ -550,7 +559,7 @@ done:
 herr_t
 H5Pget_fapl_subfiling(hid_t fapl_id, H5FD_subfiling_config_t *config_out)
 {
-    H5P_genplist_t              *fapl;
+    H5P_genplist_t              *fapl = NULL;
     H5FD_subfiling_fapl_t        default_fa; /* Default driver info, if not set */
     const H5FD_subfiling_fapl_t *fa;
     bool                         use_default_config = false;
@@ -560,7 +569,7 @@ H5Pget_fapl_subfiling(hid_t fapl_id, H5FD_subfiling_config_t *config_out)
 
     if (config_out == NULL)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "config_out is NULL");
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
 
     /* Initialize driver, if it's not yet */
@@ -588,6 +597,10 @@ H5Pget_fapl_subfiling(hid_t fapl_id, H5FD_subfiling_config_t *config_out)
     memcpy(&config_out->shared_cfg, &fa->shared_cfg, sizeof(config_out->shared_cfg));
 
 done:
+    /* Release resources */
+    if (fapl && H5P_release(fapl) < 0)
+        HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     if (use_default_config && fa == &default_fa)
         if (default_fa.ioc_fapl && H5P_dissolve(default_fa.ioc_fapl) < 0)
             HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "can't close FAPL");
@@ -1657,11 +1670,10 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5FD__subfiling_read_vector(H5FD_t *_file, hid_t dxpl_id, uint32_t count, H5FD_mem_t types[], haddr_t addrs[],
+H5FD__subfiling_read_vector(H5FD_t *_file, hid_t H5_ATTR_UNUSED dxpl_id, uint32_t count, H5FD_mem_t types[], haddr_t addrs[],
                             size_t sizes[], void *bufs[] /* out */)
 {
     H5FD_subfiling_t *file = (H5FD_subfiling_t *)_file;
-    H5P_genplist_t   *dxpl; /* Dataset transfer property list */
     herr_t            ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
@@ -1675,11 +1687,6 @@ H5FD__subfiling_read_vector(H5FD_t *_file, hid_t dxpl_id, uint32_t count, H5FD_m
     /* Verify that the first elements of the sizes and types arrays are valid */
     assert(count == 0 || sizes[0] != 0);
     assert(count == 0 || types[0] != H5FD_MEM_NOLIST);
-
-    /* Set DXPL for operation */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
-        HGOTO_ERROR(H5E_VFL, H5E_BADID, FAIL, "can't find object for ID");
-    H5CX_set_dxpl(dxpl);
 
     if (H5FD__subfiling_io_helper(file, (size_t)count, types, addrs, sizes, (H5_flexible_const_ptr_t *)bufs,
                                   IO_TYPE_READ) < 0)
@@ -1706,11 +1713,10 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5FD__subfiling_write_vector(H5FD_t *_file, hid_t dxpl_id, uint32_t count, H5FD_mem_t types[],
+H5FD__subfiling_write_vector(H5FD_t *_file, hid_t H5_ATTR_UNUSED dxpl_id, uint32_t count, H5FD_mem_t types[],
                              haddr_t addrs[], size_t sizes[], const void *bufs[] /* in */)
 {
     H5FD_subfiling_t *file = (H5FD_subfiling_t *)_file;
-    H5P_genplist_t   *dxpl; /* Dataset transfer property list */
     herr_t            ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
@@ -1724,11 +1730,6 @@ H5FD__subfiling_write_vector(H5FD_t *_file, hid_t dxpl_id, uint32_t count, H5FD_
     /* Verify that the first elements of the sizes and types arrays are valid */
     assert(count == 0 || sizes[0] != 0);
     assert(count == 0 || types[0] != H5FD_MEM_NOLIST);
-
-    /* Set DXPL for operation */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
-        HGOTO_ERROR(H5E_VFL, H5E_BADID, FAIL, "can't find object for ID");
-    H5CX_set_dxpl(dxpl);
 
     if (H5FD__subfiling_io_helper(file, (size_t)count, types, addrs, sizes, (H5_flexible_const_ptr_t *)bufs,
                                   IO_TYPE_WRITE) < 0)

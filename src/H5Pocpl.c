@@ -201,7 +201,7 @@ done:
 herr_t
 H5Pset_attr_phase_change(hid_t ocpl_id, unsigned max_compact, unsigned min_dense)
 {
-    H5P_genplist_t *ocpl;                /* Property list pointer */
+    H5P_genplist_t *ocpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -215,7 +215,7 @@ H5Pset_attr_phase_change(hid_t ocpl_id, unsigned max_compact, unsigned min_dense
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, FAIL, "min dense value must be < 65536");
 
     /* Get the property list structure */
-    if (NULL == (ocpl = H5P_object_verify(ocpl_id, H5P_TYPE_OBJECT_CREATE, false)))
+    if (NULL == (ocpl = H5P_acquire(ocpl_id, H5P_TYPE_OBJECT_CREATE, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set property values */
@@ -223,6 +223,10 @@ H5Pset_attr_phase_change(hid_t ocpl_id, unsigned max_compact, unsigned min_dense
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set max. # of compact attributes in property list");
     if (H5P_set(ocpl, H5O_CRT_ATTR_MIN_DENSE_NAME, &min_dense) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set min. # of dense attributes in property list");
+
+    /* Release resources */
+    if (ocpl && H5P_release(ocpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -240,13 +244,13 @@ done:
 herr_t
 H5Pget_attr_phase_change(hid_t ocpl_id, unsigned *max_compact /*out*/, unsigned *min_dense /*out*/)
 {
-    H5P_genplist_t *ocpl;                /* Property list pointer */
+    H5P_genplist_t *ocpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (ocpl = H5P_object_verify(ocpl_id, H5P_TYPE_OBJECT_CREATE, true)))
+    if (NULL == (ocpl = H5P_acquire(ocpl_id, H5P_TYPE_OBJECT_CREATE, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get values */
@@ -260,6 +264,10 @@ H5Pget_attr_phase_change(hid_t ocpl_id, unsigned *max_compact /*out*/, unsigned 
     } /* end if */
 
 done:
+    /* Release resources */
+    if (ocpl && H5P_release(ocpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_attr_phase_change() */
 
@@ -275,7 +283,7 @@ done:
 herr_t
 H5Pset_attr_creation_order(hid_t ocpl_id, unsigned crt_order_flags)
 {
-    H5P_genplist_t *ocpl;                /* Property list pointer */
+    H5P_genplist_t *ocpl = NULL;                /* Property list pointer */
     uint8_t         ohdr_flags;          /* Object header flags */
     herr_t          ret_value = SUCCEED; /* Return value */
 
@@ -286,7 +294,7 @@ H5Pset_attr_creation_order(hid_t ocpl_id, unsigned crt_order_flags)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "tracking creation order is required for index");
 
     /* Get the property list structure */
-    if (NULL == (ocpl = H5P_object_verify(ocpl_id, H5P_TYPE_OBJECT_CREATE, false)))
+    if (NULL == (ocpl = H5P_acquire(ocpl_id, H5P_TYPE_OBJECT_CREATE, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get object header flags */
@@ -307,6 +315,10 @@ H5Pset_attr_creation_order(hid_t ocpl_id, unsigned crt_order_flags)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set object header flags");
 
 done:
+    /* Release resources */
+    if (ocpl && H5P_release(ocpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_attr_creation_order() */
 
@@ -323,20 +335,20 @@ done:
 herr_t
 H5Pget_attr_creation_order(hid_t ocpl_id, unsigned *crt_order_flags /*out*/)
 {
+    H5P_genplist_t *ocpl = NULL;       /* Property list pointer */
     herr_t ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get values */
     if (crt_order_flags) {
-        H5P_genplist_t *ocpl;       /* Property list pointer */
         uint8_t         ohdr_flags; /* Object header flags */
 
         /* Reset the value to return */
         *crt_order_flags = 0;
 
         /* Get the property list structure */
-        if (NULL == (ocpl = H5P_object_verify(ocpl_id, H5P_TYPE_OBJECT_CREATE, true)))
+        if (NULL == (ocpl = H5P_acquire(ocpl_id, H5P_TYPE_OBJECT_CREATE, H5I_LOCK_SHARED, true)))
             HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
         /* Get object header flags */
@@ -349,6 +361,10 @@ H5Pget_attr_creation_order(hid_t ocpl_id, unsigned *crt_order_flags /*out*/)
     } /* end if */
 
 done:
+    /* Release resources */
+    if (ocpl && H5P_release(ocpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_attr_creation_order() */
 
@@ -378,14 +394,14 @@ done:
 herr_t
 H5Pset_obj_track_times(hid_t ocpl_id, hbool_t track_times)
 {
-    H5P_genplist_t *ocpl;                /* Property list pointer */
+    H5P_genplist_t *ocpl = NULL;                /* Property list pointer */
     uint8_t         ohdr_flags;          /* Object header flags */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (ocpl = H5P_object_verify(ocpl_id, H5P_TYPE_OBJECT_CREATE, false)))
+    if (NULL == (ocpl = H5P_acquire(ocpl_id, H5P_TYPE_OBJECT_CREATE, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get object header flags */
@@ -403,6 +419,10 @@ H5Pset_obj_track_times(hid_t ocpl_id, hbool_t track_times)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set object header flags");
 
 done:
+    /* Release resources */
+    if (ocpl && H5P_release(ocpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_obj_track_times() */
 
@@ -418,17 +438,17 @@ done:
 herr_t
 H5Pget_obj_track_times(hid_t ocpl_id, hbool_t *track_times /*out*/)
 {
+    H5P_genplist_t *ocpl = NULL;       /* Property list pointer */
     herr_t ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get values */
     if (track_times) {
-        H5P_genplist_t *ocpl;       /* Property list pointer */
         uint8_t         ohdr_flags; /* Object header flags */
 
         /* Get the property list structure */
-        if (NULL == (ocpl = H5P_object_verify(ocpl_id, H5P_TYPE_OBJECT_CREATE, true)))
+        if (NULL == (ocpl = H5P_acquire(ocpl_id, H5P_TYPE_OBJECT_CREATE, H5I_LOCK_SHARED, true)))
             HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
         /* Get object header flags */
@@ -440,6 +460,10 @@ H5Pget_obj_track_times(hid_t ocpl_id, hbool_t *track_times /*out*/)
     } /* end if */
 
 done:
+    /* Release resources */
+    if (ocpl && H5P_release(ocpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_obj_track_times() */
 
@@ -538,7 +562,7 @@ herr_t
 H5Pmodify_filter(hid_t ocpl_id, H5Z_filter_t filter, unsigned int flags, size_t cd_nelmts,
                  const unsigned int cd_values[/*cd_nelmts*/])
 {
-    H5P_genplist_t *ocpl;                /* Property list */
+    H5P_genplist_t *ocpl = NULL;                /* Property list */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -552,7 +576,7 @@ H5Pmodify_filter(hid_t ocpl_id, H5Z_filter_t filter, unsigned int flags, size_t 
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "no client data values supplied");
 
     /* Get the property list structure */
-    if (NULL == (ocpl = H5P_object_verify(ocpl_id, H5P_TYPE_OBJECT_CREATE, false)))
+    if (NULL == (ocpl = H5P_acquire(ocpl_id, H5P_TYPE_OBJECT_CREATE, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Modify the filter parameters of the I/O pipeline */
@@ -560,6 +584,10 @@ H5Pmodify_filter(hid_t ocpl_id, H5Z_filter_t filter, unsigned int flags, size_t 
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, FAIL, "can't modify filter");
 
 done:
+    /* Release resources */
+    if (ocpl && H5P_release(ocpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pmodify_filter() */
 
@@ -596,7 +624,7 @@ herr_t
 H5Pset_filter(hid_t ocpl_id, H5Z_filter_t filter, unsigned int flags, size_t cd_nelmts,
               const unsigned int cd_values[/*cd_nelmts*/])
 {
-    H5P_genplist_t *ocpl;                /* Property list */
+    H5P_genplist_t *ocpl = NULL;                /* Property list */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -610,7 +638,7 @@ H5Pset_filter(hid_t ocpl_id, H5Z_filter_t filter, unsigned int flags, size_t cd_
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "no client data values supplied");
 
     /* Get the property list structure */
-    if (NULL == (ocpl = H5P_object_verify(ocpl_id, H5P_TYPE_OBJECT_CREATE, false)))
+    if (NULL == (ocpl = H5P_acquire(ocpl_id, H5P_TYPE_OBJECT_CREATE, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Call the private function */
@@ -618,6 +646,10 @@ H5Pset_filter(hid_t ocpl_id, H5Z_filter_t filter, unsigned int flags, size_t cd_
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "failed to call private function");
 
 done:
+    /* Release resources */
+    if (ocpl && H5P_release(ocpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_filter() */
 
@@ -703,14 +735,14 @@ done:
 int
 H5Pget_nfilters(hid_t ocpl_id)
 {
-    H5P_genplist_t *ocpl;      /* Property list */
+    H5P_genplist_t *ocpl = NULL;      /* Property list */
     H5O_pline_t     pline;     /* Filter pipeline */
     int             ret_value; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (ocpl = H5P_object_verify(ocpl_id, H5P_TYPE_OBJECT_CREATE, true)))
+    if (NULL == (ocpl = H5P_acquire(ocpl_id, H5P_TYPE_OBJECT_CREATE, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get the pipeline property to query */
@@ -721,6 +753,10 @@ H5Pget_nfilters(hid_t ocpl_id)
     ret_value = (int)(pline.nused);
 
 done:
+    /* Release resources */
+    if (ocpl && H5P_release(ocpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_nfilters */
 
@@ -750,7 +786,7 @@ H5Pget_filter2(hid_t ocpl_id, unsigned idx, unsigned int *flags /*out*/, size_t 
                unsigned cd_values[] /*out*/, size_t namelen, char name[] /*out*/,
                unsigned *filter_config /*out*/)
 {
-    H5P_genplist_t          *ocpl;      /* Property list */
+    H5P_genplist_t          *ocpl = NULL;      /* Property list */
     H5O_pline_t              pline;     /* Filter pipeline */
     const H5Z_filter_info_t *filter;    /* Pointer to filter information */
     H5Z_filter_t             ret_value; /* return value */
@@ -780,7 +816,7 @@ H5Pget_filter2(hid_t ocpl_id, unsigned idx, unsigned int *flags /*out*/, size_t 
     } /* end if */
 
     /* Get the property list structure */
-    if (NULL == (ocpl = H5P_object_verify(ocpl_id, H5P_TYPE_OBJECT_CREATE, true)))
+    if (NULL == (ocpl = H5P_acquire(ocpl_id, H5P_TYPE_OBJECT_CREATE, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, H5Z_FILTER_ERROR, "can't find object for ID");
 
     /* Get the pipeline property to query */
@@ -802,6 +838,10 @@ H5Pget_filter2(hid_t ocpl_id, unsigned idx, unsigned int *flags /*out*/, size_t 
     ret_value = filter->id;
 
 done:
+    /* Release resources */
+    if (ocpl && H5P_release(ocpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_filter2() */
 
@@ -875,7 +915,7 @@ H5Pget_filter_by_id2(hid_t ocpl_id, H5Z_filter_t id, unsigned int *flags /*out*/
                      size_t *cd_nelmts /*in,out*/, unsigned cd_values[] /*out*/, size_t namelen,
                      char name[] /*out*/, unsigned *filter_config /*out*/)
 {
-    H5P_genplist_t *ocpl;                /* Property list */
+    H5P_genplist_t *ocpl = NULL;                /* Property list */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -904,7 +944,7 @@ H5Pget_filter_by_id2(hid_t ocpl_id, H5Z_filter_t id, unsigned int *flags /*out*/
     } /* end if */
 
     /* Get the property list structure */
-    if (NULL == (ocpl = H5P_object_verify(ocpl_id, H5P_TYPE_OBJECT_CREATE, true)))
+    if (NULL == (ocpl = H5P_acquire(ocpl_id, H5P_TYPE_OBJECT_CREATE, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get filter information */
@@ -912,6 +952,10 @@ H5Pget_filter_by_id2(hid_t ocpl_id, H5Z_filter_t id, unsigned int *flags /*out*/
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get filter info");
 
 done:
+    /* Release resources */
+    if (ocpl && H5P_release(ocpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_filter_by_id2() */
 
@@ -930,14 +974,14 @@ done:
 htri_t
 H5Pall_filters_avail(hid_t ocpl_id)
 {
-    H5P_genplist_t *ocpl;      /* Property list */
+    H5P_genplist_t *ocpl = NULL;      /* Property list */
     H5O_pline_t     pline;     /* Filter pipeline */
     htri_t          ret_value; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (ocpl = H5P_object_verify(ocpl_id, H5P_TYPE_OBJECT_CREATE, true)))
+    if (NULL == (ocpl = H5P_acquire(ocpl_id, H5P_TYPE_OBJECT_CREATE, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get the pipeline property to query */
@@ -949,6 +993,10 @@ H5Pall_filters_avail(hid_t ocpl_id)
         HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, FAIL, "can't check pipeline information");
 
 done:
+    /* Release resources */
+    if (ocpl && H5P_release(ocpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pall_filters_avail() */
 
@@ -997,14 +1045,14 @@ done:
 herr_t
 H5Premove_filter(hid_t ocpl_id, H5Z_filter_t filter)
 {
-    H5P_genplist_t *ocpl;                /* Property list */
+    H5P_genplist_t *ocpl = NULL;                /* Property list */
     H5O_pline_t     pline;               /* Filter pipeline */
     herr_t          ret_value = SUCCEED; /* return value          */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (ocpl = H5P_object_verify(ocpl_id, H5P_TYPE_OBJECT_CREATE, false)))
+    if (NULL == (ocpl = H5P_acquire(ocpl_id, H5P_TYPE_OBJECT_CREATE, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get the pipeline property to modify */
@@ -1023,6 +1071,10 @@ H5Premove_filter(hid_t ocpl_id, H5Z_filter_t filter)
     } /* end if */
 
 done:
+    /* Release resources */
+    if (ocpl && H5P_release(ocpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Premove_filter() */
 
@@ -1044,7 +1096,7 @@ done:
 herr_t
 H5Pset_deflate(hid_t ocpl_id, unsigned level)
 {
-    H5P_genplist_t *ocpl;                /* Property list */
+    H5P_genplist_t *ocpl = NULL;                /* Property list */
     H5O_pline_t     pline;               /* Filter pipeline */
     herr_t          ret_value = SUCCEED; /* return value */
 
@@ -1055,7 +1107,7 @@ H5Pset_deflate(hid_t ocpl_id, unsigned level)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid deflate level");
 
     /* Get the property list structure */
-    if (NULL == (ocpl = H5P_object_verify(ocpl_id, H5P_TYPE_OBJECT_CREATE, false)))
+    if (NULL == (ocpl = H5P_acquire(ocpl_id, H5P_TYPE_OBJECT_CREATE, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get the pipeline property to append to */
@@ -1071,6 +1123,10 @@ H5Pset_deflate(hid_t ocpl_id, unsigned level)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set pipeline");
 
 done:
+    /* Release resources */
+    if (ocpl && H5P_release(ocpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_deflate() */
 
@@ -1087,14 +1143,14 @@ done:
 herr_t
 H5Pset_fletcher32(hid_t ocpl_id)
 {
-    H5P_genplist_t *ocpl;                /* Property list */
+    H5P_genplist_t *ocpl = NULL;                /* Property list */
     H5O_pline_t     pline;               /* Filter pipeline */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (ocpl = H5P_object_verify(ocpl_id, H5P_TYPE_OBJECT_CREATE, false)))
+    if (NULL == (ocpl = H5P_acquire(ocpl_id, H5P_TYPE_OBJECT_CREATE, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get the pipeline property to append to */
@@ -1110,6 +1166,10 @@ H5Pset_fletcher32(hid_t ocpl_id)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set pipeline");
 
 done:
+    /* Release resources */
+    if (ocpl && H5P_release(ocpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_fletcher32() */
 
@@ -1646,7 +1706,7 @@ H5Pget_filter1(hid_t ocpl_id, unsigned idx, unsigned int *flags /*out*/, size_t 
 {
     H5O_pline_t              pline;     /* Filter pipeline */
     const H5Z_filter_info_t *filter;    /* Pointer to filter information */
-    H5P_genplist_t          *ocpl;      /* Property list pointer */
+    H5P_genplist_t          *ocpl = NULL;      /* Property list pointer */
     H5Z_filter_t             ret_value; /* return value */
 
     FUNC_ENTER_API(H5Z_FILTER_ERROR)
@@ -1674,7 +1734,7 @@ H5Pget_filter1(hid_t ocpl_id, unsigned idx, unsigned int *flags /*out*/, size_t 
     } /* end if */
 
     /* Get the property list structure */
-    if (NULL == (ocpl = H5P_object_verify(ocpl_id, H5P_TYPE_OBJECT_CREATE, true)))
+    if (NULL == (ocpl = H5P_acquire(ocpl_id, H5P_TYPE_OBJECT_CREATE, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, H5Z_FILTER_ERROR, "can't find object for ID");
 
     /* Get pipeline info */
@@ -1696,6 +1756,10 @@ H5Pget_filter1(hid_t ocpl_id, unsigned idx, unsigned int *flags /*out*/, size_t 
     ret_value = filter->id;
 
 done:
+    /* Release resources */
+    if (ocpl && H5P_release(ocpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_filter1() */
 
@@ -1722,7 +1786,7 @@ H5Pget_filter_by_id1(hid_t ocpl_id, H5Z_filter_t id, unsigned int *flags /*out*/
                      size_t *cd_nelmts /*in,out*/, unsigned cd_values[] /*out*/, size_t namelen,
                      char name[] /*out*/)
 {
-    H5P_genplist_t *ocpl;                /* Property list pointer */
+    H5P_genplist_t *ocpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1751,7 +1815,7 @@ H5Pget_filter_by_id1(hid_t ocpl_id, H5Z_filter_t id, unsigned int *flags /*out*/
     } /* end if */
 
     /* Get the property list structure */
-    if (NULL == (ocpl = H5P_object_verify(ocpl_id, H5P_TYPE_OBJECT_CREATE, true)))
+    if (NULL == (ocpl = H5P_acquire(ocpl_id, H5P_TYPE_OBJECT_CREATE, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get filter info */
@@ -1759,6 +1823,10 @@ H5Pget_filter_by_id1(hid_t ocpl_id, H5Z_filter_t id, unsigned int *flags /*out*/
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get filter info");
 
 done:
+    /* Release resources */
+    if (ocpl && H5P_release(ocpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_filter_by_id1() */
 #endif /* H5_NO_DEPRECATED_SYMBOLS */

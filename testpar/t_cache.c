@@ -3745,7 +3745,7 @@ setup_cache_for_test(hid_t *fid_ptr, H5F_t **file_ptr_ptr, H5C_t **cache_ptr_ptr
     }
 
     /* Pop API context */
-    H5CX_pop(false);
+    H5CX_pop();
 
     return (success);
 } /* setup_cache_for_test() */
@@ -3966,7 +3966,7 @@ take_down_cache(hid_t fid, H5C_t *cache_ptr)
     }
 
     /* Pop API context */
-    H5CX_pop(false);
+    H5CX_pop();
 
     /* close the file */
     if (success && H5Fclose(fid) < 0) {
@@ -4977,7 +4977,7 @@ smoke_check_1(int metadata_write_strategy)
         }
 
         /* Pop API context */
-        H5CX_pop(false);
+        H5CX_pop();
     }
 
     max_nerrors = get_max_nerrors();
@@ -5179,7 +5179,7 @@ smoke_check_2(int metadata_write_strategy)
         }
 
         /* Pop API context */
-        H5CX_pop(false);
+        H5CX_pop();
     }
 
     max_nerrors = get_max_nerrors();
@@ -5468,7 +5468,7 @@ smoke_check_3(int metadata_write_strategy)
         }
 
         /* Pop API context */
-        H5CX_pop(false);
+        H5CX_pop();
     }
 
     max_nerrors = get_max_nerrors();
@@ -5756,7 +5756,7 @@ smoke_check_4(int metadata_write_strategy)
         }
 
         /* Pop API context */
-        H5CX_pop(false);
+        H5CX_pop();
     }
 
     max_nerrors = get_max_nerrors();
@@ -5952,7 +5952,7 @@ smoke_check_5(int metadata_write_strategy)
         }
 
         /* Pop API context */
-        H5CX_pop(false);
+        H5CX_pop();
     }
 
     max_nerrors = get_max_nerrors();
@@ -6356,7 +6356,7 @@ trace_file_check(int metadata_write_strategy)
         }
 
         /* Pop API context */
-        H5CX_pop(false);
+        H5CX_pop();
     } /* end giant else that runs clients */
 
     max_nerrors = get_max_nerrors();
@@ -6613,7 +6613,7 @@ smoke_check_6(int metadata_write_strategy)
         virt_num_data_entries = temp;
 
         /* Pop API context */
-        H5CX_pop(false);
+        H5CX_pop();
     }
 
     max_nerrors = get_max_nerrors();

@@ -146,7 +146,7 @@ H5ES__init_package(void)
     FUNC_ENTER_PACKAGE
 
     /* Initialize the ID group for the event set IDs */
-    if (H5I_register_type(H5I_EVENTSET_CLS) < 0)
+    if (H5I_register_type(H5I_EVENTSET_CLS, true) < 0)
         HGOTO_ERROR(H5E_EVENTSET, H5E_CANTINIT, FAIL, "unable to initialize interface");
 
 done:

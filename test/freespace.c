@@ -2914,8 +2914,8 @@ main(void)
     puts("All free-space tests passed.");
 
     /* Pop API context */
-    if (api_ctx_pushed && H5CX_pop(false) < 0)
-        FAIL_STACK_ERROR;
+    if (api_ctx_pushed)
+        H5CX_pop();
     api_ctx_pushed = false;
 
     h5_cleanup(FILENAME, fapl);
@@ -2930,7 +2930,7 @@ error:
     H5E_END_TRY
 
     if (api_ctx_pushed)
-        H5CX_pop(false);
+        H5CX_pop();
 
     exit(EXIT_FAILURE);
 } /* main() */

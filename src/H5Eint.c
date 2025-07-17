@@ -252,15 +252,15 @@ H5E__init_package(void)
     FUNC_ENTER_PACKAGE
 
     /* Initialize the ID group for the error class IDs */
-    if (H5I_register_type(H5I_ERRCLS_CLS) < 0)
+    if (H5I_register_type(H5I_ERRCLS_CLS, true) < 0)
         HGOTO_ERROR(H5E_ID, H5E_CANTINIT, FAIL, "unable to initialize ID group");
 
     /* Initialize the ID group for the major error IDs */
-    if (H5I_register_type(H5I_ERRMSG_CLS) < 0)
+    if (H5I_register_type(H5I_ERRMSG_CLS, true) < 0)
         HGOTO_ERROR(H5E_ID, H5E_CANTINIT, FAIL, "unable to initialize ID group");
 
     /* Initialize the ID group for the error stacks */
-    if (H5I_register_type(H5I_ERRSTK_CLS) < 0)
+    if (H5I_register_type(H5I_ERRSTK_CLS, true) < 0)
         HGOTO_ERROR(H5E_ID, H5E_CANTINIT, FAIL, "unable to initialize ID group");
 
 #ifndef H5_HAVE_THREADSAFE_API

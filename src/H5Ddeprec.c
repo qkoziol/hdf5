@@ -98,7 +98,7 @@ hid_t
 H5Dcreate1(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t dcpl_id)
 {
     void             *dset = NULL;    /* dset object from VOL connector */
-    H5P_genplist_t   *dcpl;           /* Dataset creation property list */
+    H5P_genplist_t   *dcpl = NULL;           /* Dataset creation property list */
     H5VL_object_t    *vol_obj = NULL; /* object of loc_id */
     H5VL_loc_params_t loc_params;
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */
@@ -116,7 +116,7 @@ H5Dcreate1(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t 
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, H5I_INVALID_HID, "can't set collective metadata read");
 
     /* Get the pointer to the dataset create property list */
-    if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, true)))
+    if (NULL == (dcpl = H5P_acquire(dcpl_id, H5P_TYPE_DATASET_CREATE, H5I_LOCK_EXCLUSIVE, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Set the DCPL for the API context */
@@ -139,8 +139,11 @@ H5Dcreate1(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t 
     /* Register the new dataset to get an ID for it */
     if ((ret_value = H5VL_register(H5I_DATASET, dset, H5VL_OBJ_CONNECTOR(vol_obj), true)) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTREGISTER, H5I_INVALID_HID, "unable to register dataset");
-
 done:
+    /* Release resources */
+    if (dcpl && H5P_release(dcpl) < 0)
+        HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
+
     if (H5I_INVALID_HID == ret_value)
         if (dset && H5VL_dataset_close(vol_obj, H5_REQUEST_NULL) < 0)
             HDONE_ERROR(H5E_DATASET, H5E_CLOSEERROR, H5I_INVALID_HID, "unable to release dataset");
@@ -303,7 +306,7 @@ done:
 herr_t
 H5Dvlen_reclaim(hid_t type_id, hid_t space_id, hid_t dxpl_id, void *buf)
 {
-    H5P_genplist_t *dxpl; /* Dataset transfer property list */
+    H5P_genplist_t *dxpl = NULL; /* Dataset transfer property list */
     const H5T_t    *type;
     H5S_t          *space;     /* Dataspace for iteration */
     herr_t          ret_value; /* Return value */
@@ -319,7 +322,7 @@ H5Dvlen_reclaim(hid_t type_id, hid_t space_id, hid_t dxpl_id, void *buf)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid dataspace");
     if (!(H5S_has_extent(space)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "dataspace does not have extent set");
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
@@ -329,6 +332,10 @@ H5Dvlen_reclaim(hid_t type_id, hid_t space_id, hid_t dxpl_id, void *buf)
     ret_value = H5T_reclaim(type, space, buf);
 
 done:
+    /* Release resources */
+    if (dxpl && H5P_release(dxpl) < 0)
+        HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Dvlen_reclaim() */
 

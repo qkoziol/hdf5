@@ -174,7 +174,7 @@ H5FD__family_get_default_config(H5FD_family_fapl_t *fa_out)
      * default driver might have been replaced with the family VFD, which
      * would cause recursion badness in the child members.
      */
-    if (NULL == (fa_out->memb_fapl = H5P_copy_plist(H5P_LST_FILE_ACCESS_g, false)))
+    if (NULL == (fa_out->memb_fapl = H5P_new_plist_of_type(H5P_TYPE_FILE_ACCESS, false)))
         HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, FAIL, "can't copy property list");
     if (H5P_set_driver_by_value(fa_out->memb_fapl, H5_VFD_SEC2, NULL) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set default driver on member FAPL");
@@ -332,15 +332,15 @@ H5FD__family_unregister(void)
 herr_t
 H5Pset_fapl_family(hid_t fapl_id, hsize_t msize, hid_t memb_fapl_id)
 {
-    H5P_genplist_t    *fapl; /* Property list pointer */
-    H5FD_family_fapl_t fa;
+    H5P_genplist_t    *fapl = NULL; /* Property list pointer */
+    H5FD_family_fapl_t fa = {0, NULL};
     bool               is_default = false;
     herr_t             ret_value;
 
     FUNC_ENTER_API(FAIL)
 
     /* Check arguments */
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
     if (H5P_DEFAULT == memb_fapl_id || H5P_FILE_ACCESS_DEFAULT == memb_fapl_id) {
         /* Get default configuration for member FAPL */
@@ -348,7 +348,7 @@ H5Pset_fapl_family(hid_t fapl_id, hsize_t msize, hid_t memb_fapl_id)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get default driver configuration info");
         is_default = true;
     }
-    else if (NULL == (fa.memb_fapl = H5P_object_verify(memb_fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+    else if (NULL == (fa.memb_fapl = H5P_acquire(memb_fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "not a file access property list");
 
     /* Initialize driver specific information. */
@@ -356,9 +356,18 @@ H5Pset_fapl_family(hid_t fapl_id, hsize_t msize, hid_t memb_fapl_id)
     ret_value    = H5P_set_driver(fapl, H5FD_FAMILY_driver_g, &fa, NULL);
 
 done:
-    if (is_default)
+    /* Release resources */
+    if (fapl && H5P_release(fapl) < 0)
+        HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
+    if (is_default) {
         if (fa.memb_fapl && H5P_dissolve(fa.memb_fapl) < 0)
             HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "can't close family driver info");
+    }
+    else {
+        if (fa.memb_fapl && H5P_release(fa.memb_fapl) < 0)
+            HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+    }
 
     FUNC_LEAVE_API(ret_value)
 }
@@ -378,13 +387,13 @@ done:
 herr_t
 H5Pget_fapl_family(hid_t fapl_id, hsize_t *msize /*out*/, hid_t *memb_fapl_id /*out*/)
 {
-    H5P_genplist_t           *fapl; /* Property list pointer */
+    H5P_genplist_t           *fapl = NULL; /* Property list pointer */
     const H5FD_family_fapl_t *fa;
     herr_t                    ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access list");
     if (H5FD_FAMILY_VALUE != H5P_get_driver_value(fapl))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "incorrect VFL driver");
@@ -398,6 +407,10 @@ H5Pget_fapl_family(hid_t fapl_id, hsize_t *msize /*out*/, hid_t *memb_fapl_id /*
             HGOTO_ERROR(H5E_ARGS, H5E_CANTCOPY, FAIL, "can't copy file access list");
 
 done:
+    /* Release resources */
+    if (fapl && H5P_release(fapl) < 0)
+        HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 }
 
@@ -416,13 +429,13 @@ done:
 herr_t
 H5Pset_family_offset(hid_t fapl_id, hsize_t offset)
 {
-    H5P_genplist_t *fapl;                /* Property list pointer */
+    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set value */
@@ -430,6 +443,10 @@ H5Pset_family_offset(hid_t fapl_id, hsize_t offset)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set offset for family file");
 
 done:
+    /* Release resources */
+    if (fapl && H5P_release(fapl) < 0)
+        HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_family_offset() */
 
@@ -454,7 +471,7 @@ H5Pget_family_offset(hid_t fapl_id, hsize_t *offset /*out*/)
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get value */
@@ -463,6 +480,10 @@ H5Pget_family_offset(hid_t fapl_id, hsize_t *offset /*out*/)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't set offset for family file");
 
 done:
+    /* Release resources */
+    if (fapl && H5P_release(fapl) < 0)
+        HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_family_offset() */
 
@@ -1124,7 +1145,7 @@ static herr_t
 H5FD__family_get_handle(H5FD_t *_file, hid_t fapl_id, void **file_handle)
 {
     H5FD_family_t  *file = (H5FD_family_t *)_file;
-    H5P_genplist_t *fapl;
+    H5P_genplist_t *fapl = NULL;
     hsize_t         offset;
     int             memb;
     herr_t          ret_value = FAIL; /* Return value */
@@ -1132,7 +1153,7 @@ H5FD__family_get_handle(H5FD_t *_file, hid_t fapl_id, void **file_handle)
     FUNC_ENTER_PACKAGE
 
     /* Get the fapl structure and family offset */
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_VFL, H5E_BADID, FAIL, "can't find object for ID");
     if (H5CX_get_family_offset(&offset) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get offset for family driver");
@@ -1144,6 +1165,10 @@ H5FD__family_get_handle(H5FD_t *_file, hid_t fapl_id, void **file_handle)
     ret_value = H5FD_get_vfd_handle_wrap(file->memb[memb], file->fa.memb_fapl, file_handle);
 
 done:
+    /* Release resources */
+    if (fapl && H5P_release(fapl) < 0)
+        HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_NOAPI(ret_value)
 }
 

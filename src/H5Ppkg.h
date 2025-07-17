@@ -26,6 +26,7 @@
 #include "H5Pprivate.h"
 
 /* Other private headers needed by this file */
+#include "H5Iprivate.h" /* ID management */
 #include "H5SLprivate.h" /* Skip lists				*/
 
 /**************************/
@@ -114,7 +115,9 @@ struct H5P_genplist_t {
     bool            is_default;  /* Whether this property list is the default list for the class */
     bool            is_readonly; /* Whether this property list can be modified */
     bool            is_closed;   /* Whether this property list has been closed */
+    bool            is_private;  /* Whether this property list is private within the library */
     unsigned        locked;      /* Whether the property list is locked */
+    H5I_lock_mode_t lock_mode;   /* Lock mode of the property list */
     H5SL_t         *del;         /* Skip list containing names of deleted properties */
     H5SL_t         *props;       /* Skip list containing properties modified from the parent class */
 };

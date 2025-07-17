@@ -143,11 +143,11 @@ H5S__init_package(void)
     FUNC_ENTER_PACKAGE
 
     /* Initialize the ID group for the dataspace IDs */
-    if (H5I_register_type(H5I_DATASPACE_CLS) < 0)
+    if (H5I_register_type(H5I_DATASPACE_CLS, true) < 0)
         HGOTO_ERROR(H5E_DATASPACE, H5E_CANTINIT, FAIL, "unable to initialize dataspace ID class");
 
     /* Initialize the ID group for the dataspace selection iterator IDs */
-    if (H5I_register_type(H5I_SPACE_SEL_ITER_CLS) < 0)
+    if (H5I_register_type(H5I_SPACE_SEL_ITER_CLS, true) < 0)
         HGOTO_ERROR(H5E_DATASPACE, H5E_CANTINIT, FAIL,
                     "unable to initialize dataspace selection iterator ID class");
 
@@ -1428,7 +1428,7 @@ herr_t
 H5Sencode2(hid_t obj_id, void *buf, size_t *nalloc, hid_t fapl_id)
 {
     H5S_t          *dspace;
-    H5P_genplist_t *fapl; /* File access property list */
+    H5P_genplist_t *fapl = NULL; /* File access property list */
     herr_t          ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
@@ -1438,7 +1438,7 @@ H5Sencode2(hid_t obj_id, void *buf, size_t *nalloc, hid_t fapl_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a dataspace");
 
     /* Get the file access property list */
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_DATASPACE, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
@@ -1449,6 +1449,10 @@ H5Sencode2(hid_t obj_id, void *buf, size_t *nalloc, hid_t fapl_id)
         HGOTO_ERROR(H5E_DATASPACE, H5E_CANTENCODE, FAIL, "can't encode dataspace");
 
 done:
+    /* Release resources */
+    if (fapl && H5P_release(fapl) < 0)
+        HDONE_ERROR(H5E_DATASPACE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Sencode2() */
 

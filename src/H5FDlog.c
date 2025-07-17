@@ -270,18 +270,18 @@ herr_t
 H5Pset_fapl_log(hid_t fapl_id, const char *logfile, unsigned long long flags, size_t buf_size)
 {
     H5FD_log_fapl_t fa;        /* File access property list information */
-    H5P_genplist_t *fapl;      /* Property list pointer */
+    H5P_genplist_t *fapl = NULL;      /* Property list pointer */
     herr_t          ret_value; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Do this first, so that we don't try to free a wild pointer if
-     * H5P_object_verify() fails.
+     * H5P_acquire() fails.
      */
     memset(&fa, 0, sizeof(H5FD_log_fapl_t));
 
     /* Check arguments */
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
 
     /* Duplicate the log file string
@@ -297,6 +297,10 @@ H5Pset_fapl_log(hid_t fapl_id, const char *logfile, unsigned long long flags, si
     ret_value   = H5P_set_driver(fapl, H5FD_LOG_driver_g, &fa, NULL);
 
 done:
+    /* Release resources */
+    if (fapl && H5P_release(fapl) < 0)
+        HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     if (fa.logfile)
         H5MM_free(fa.logfile);
 

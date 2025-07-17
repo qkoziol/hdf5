@@ -137,7 +137,7 @@ done:
 herr_t
 H5Pset_char_encoding(hid_t strcpl_id, H5T_cset_t encoding)
 {
-    H5P_genplist_t *strcpl;              /* Property list pointer */
+    H5P_genplist_t *strcpl = NULL;              /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -147,7 +147,7 @@ H5Pset_char_encoding(hid_t strcpl_id, H5T_cset_t encoding)
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, FAIL, "character encoding is not valid");
 
     /* Get the property list structure */
-    if (NULL == (strcpl = H5P_object_verify(strcpl_id, H5P_TYPE_STRING_CREATE, false)))
+    if (NULL == (strcpl = H5P_acquire(strcpl_id, H5P_TYPE_STRING_CREATE, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set the character encoding */
@@ -155,6 +155,10 @@ H5Pset_char_encoding(hid_t strcpl_id, H5T_cset_t encoding)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set character encoding");
 
 done:
+    /* Release resources */
+    if (strcpl && H5P_release(strcpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5P_set_char_encoding() */
 
@@ -170,13 +174,13 @@ done:
 herr_t
 H5Pget_char_encoding(hid_t strcpl_id, H5T_cset_t *encoding /*out*/)
 {
-    H5P_genplist_t *strcpl;              /* Property list pointer */
+    H5P_genplist_t *strcpl = NULL;              /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (strcpl = H5P_object_verify(strcpl_id, H5P_TYPE_STRING_CREATE, true)))
+    if (NULL == (strcpl = H5P_acquire(strcpl_id, H5P_TYPE_STRING_CREATE, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get value */
@@ -185,6 +189,10 @@ H5Pget_char_encoding(hid_t strcpl_id, H5T_cset_t *encoding /*out*/)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get character encoding flag");
 
 done:
+    /* Release resources */
+    if (strcpl && H5P_release(strcpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_char_encoding() */
 

@@ -194,7 +194,7 @@ H5D__init_package(void)
     FUNC_ENTER_PACKAGE
 
     /* Initialize the ID group for the dataset IDs */
-    if (H5I_register_type(H5I_DATASET_CLS) < 0)
+    if (H5I_register_type(H5I_DATASET_CLS, true) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, FAIL, "unable to initialize interface");
 
     /* Reset the "default dataset" information */
@@ -2761,8 +2761,7 @@ done:
 herr_t
 H5D__vlen_get_buf_size_gen(H5VL_object_t *vol_obj, hid_t type_id, hid_t space_id, hsize_t *size)
 {
-    H5D_vlen_bufsize_generic_t vlen_bufsize = {NULL, H5I_INVALID_HID,   NULL, H5I_INVALID_HID,
-                                               NULL, {NULL, NULL, 0, 0}};
+    H5D_vlen_bufsize_generic_t vlen_bufsize = {0};
     H5S_t                     *mspace       = NULL; /* Memory dataspace */
     char                       bogus;               /* Bogus value to pass to H5Diterate() */
     H5S_t                     *space;               /* Dataspace for iteration */
@@ -2789,7 +2788,7 @@ H5D__vlen_get_buf_size_gen(H5VL_object_t *vol_obj, hid_t type_id, hid_t space_id
     vol_cb_args.args.get_space.space_id = H5I_INVALID_HID;
 
     /* Get a DXPL for this operation */
-    if (NULL == (vlen_bufsize.dxpl = H5P_copy_plist(H5P_LST_DATASET_XFER_g, false)))
+    if (NULL == (vlen_bufsize.dxpl = H5P_new_plist_of_type(H5P_TYPE_DATASET_XFER, false)))
         HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get default DXPL");
 
     /* Get a copy of the dataset's dataspace */
@@ -3701,7 +3700,7 @@ H5D_get_access_plist(const H5D_t *dset)
     FUNC_ENTER_NOAPI(NULL)
 
     /* Make a copy of the default dataset access property list */
-    if (NULL == (new_dapl = H5P_copy_plist(H5P_LST_DATASET_ACCESS_g, true)))
+    if (NULL == (new_dapl = H5P_new_plist_of_type(H5P_TYPE_DATASET_ACCESS, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_CANTCREATE, NULL, "unable to create access property list");
 
     /* If the dataset is chunked then copy the chunk-related parameters */

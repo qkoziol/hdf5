@@ -32365,7 +32365,7 @@ takedown_cache(H5F_t *file_ptr, bool dump_stats, bool dump_detailed_stats)
         }
 
         /* Pop API context */
-        H5CX_pop(false);
+        H5CX_pop();
 
         if ((!try_core_file_driver) || (core_file_driver_failed)) {
 

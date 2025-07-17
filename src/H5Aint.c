@@ -179,7 +179,7 @@ H5A__init_package(void)
     /*
      * Create attribute ID type.
      */
-    if (H5I_register_type(H5I_ATTR_CLS) < 0)
+    if (H5I_register_type(H5I_ATTR_CLS, true) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTINIT, FAIL, "unable to initialize interface");
 
     /* Mark "top" of interface as initialized, too */

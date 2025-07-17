@@ -314,7 +314,7 @@ done:
 herr_t
 H5Pset_userblock(hid_t fcpl_id, hsize_t size)
 {
-    H5P_genplist_t *fcpl;                /* Property list pointer */
+    H5P_genplist_t *fcpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -331,7 +331,7 @@ H5Pset_userblock(hid_t fcpl_id, hsize_t size)
     } /* end if */
 
     /* Get the property list structure */
-    if (NULL == (fcpl = H5P_object_verify(fcpl_id, H5P_TYPE_FILE_CREATE, false)))
+    if (NULL == (fcpl = H5P_acquire(fcpl_id, H5P_TYPE_FILE_CREATE, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set value */
@@ -339,6 +339,10 @@ H5Pset_userblock(hid_t fcpl_id, hsize_t size)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set user block");
 
 done:
+    /* Release resources */
+    if (fcpl && H5P_release(fcpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_userblock() */
 
@@ -357,13 +361,13 @@ done:
 herr_t
 H5Pget_userblock(hid_t fcpl_id, hsize_t *size /*out*/)
 {
-    H5P_genplist_t *fcpl;                /* Property list pointer */
+    H5P_genplist_t *fcpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (fcpl = H5P_object_verify(fcpl_id, H5P_TYPE_FILE_CREATE, true)))
+    if (NULL == (fcpl = H5P_acquire(fcpl_id, H5P_TYPE_FILE_CREATE, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get value */
@@ -372,8 +376,12 @@ H5Pget_userblock(hid_t fcpl_id, hsize_t *size /*out*/)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get user block");
 
 done:
+    /* Release resources */
+    if (fcpl && H5P_release(fcpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
-}
+} /* end H5Pget_userblock() */
 
 /*-------------------------------------------------------------------------
  * Function:	H5Pset_sizes
@@ -389,7 +397,7 @@ done:
 herr_t
 H5Pset_sizes(hid_t fcpl_id, size_t sizeof_addr, size_t sizeof_size)
 {
-    H5P_genplist_t *fcpl;                /* Property list pointer */
+    H5P_genplist_t *fcpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -405,7 +413,7 @@ H5Pset_sizes(hid_t fcpl_id, size_t sizeof_addr, size_t sizeof_size)
     } /* end if */
 
     /* Get the property list structure */
-    if (NULL == (fcpl = H5P_object_verify(fcpl_id, H5P_TYPE_FILE_CREATE, false)))
+    if (NULL == (fcpl = H5P_acquire(fcpl_id, H5P_TYPE_FILE_CREATE, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set value */
@@ -423,6 +431,10 @@ H5Pset_sizes(hid_t fcpl_id, size_t sizeof_addr, size_t sizeof_size)
     } /* end if */
 
 done:
+    /* Release resources */
+    if (fcpl && H5P_release(fcpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_sizes() */
 
@@ -441,13 +453,13 @@ done:
 herr_t
 H5Pget_sizes(hid_t fcpl_id, size_t *sizeof_addr /*out*/, size_t *sizeof_size /*out*/)
 {
-    H5P_genplist_t *fcpl;                /* Property list pointer */
+    H5P_genplist_t *fcpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (fcpl = H5P_object_verify(fcpl_id, H5P_TYPE_FILE_CREATE, true)))
+    if (NULL == (fcpl = H5P_acquire(fcpl_id, H5P_TYPE_FILE_CREATE, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get values */
@@ -467,6 +479,10 @@ H5Pget_sizes(hid_t fcpl_id, size_t *sizeof_addr /*out*/, size_t *sizeof_size /*o
     } /* end if */
 
 done:
+    /* Release resources */
+    if (fcpl && H5P_release(fcpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_sizes() */
 
@@ -496,13 +512,13 @@ herr_t
 H5Pset_sym_k(hid_t fcpl_id, unsigned ik, unsigned lk)
 {
     unsigned        btree_k[H5B_NUM_BTREE_ID];
-    H5P_genplist_t *fcpl;                /* Property list pointer */
+    H5P_genplist_t *fcpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (fcpl = H5P_object_verify(fcpl_id, H5P_TYPE_FILE_CREATE, false)))
+    if (NULL == (fcpl = H5P_acquire(fcpl_id, H5P_TYPE_FILE_CREATE, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set values */
@@ -521,8 +537,12 @@ H5Pset_sym_k(hid_t fcpl_id, unsigned ik, unsigned lk)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set rank for symbol table leaf nodes");
 
 done:
+    /* Release resources */
+    if (fcpl && H5P_release(fcpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
-}
+} /* end H5Pset_sym_k() */
 
 /*-------------------------------------------------------------------------
  * Function:	H5Pget_sym_k
@@ -540,13 +560,13 @@ herr_t
 H5Pget_sym_k(hid_t fcpl_id, unsigned *ik /*out*/, unsigned *lk /*out*/)
 {
     unsigned        btree_k[H5B_NUM_BTREE_ID];
-    H5P_genplist_t *fcpl;                /* Property list pointer */
+    H5P_genplist_t *fcpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (fcpl = H5P_object_verify(fcpl_id, H5P_TYPE_FILE_CREATE, true)))
+    if (NULL == (fcpl = H5P_acquire(fcpl_id, H5P_TYPE_FILE_CREATE, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get values */
@@ -560,8 +580,12 @@ H5Pget_sym_k(hid_t fcpl_id, unsigned *ik /*out*/, unsigned *lk /*out*/)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get rank for symbol table leaf nodes");
 
 done:
+    /* Release resources */
+    if (fcpl && H5P_release(fcpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
-}
+} /* end H5Pget_sym_k() */
 
 /*-------------------------------------------------------------------------
  * Function:	H5Pset_istore_k
@@ -578,7 +602,7 @@ herr_t
 H5Pset_istore_k(hid_t fcpl_id, unsigned ik)
 {
     unsigned        btree_k[H5B_NUM_BTREE_ID];
-    H5P_genplist_t *fcpl;                /* Property list pointer */
+    H5P_genplist_t *fcpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -591,7 +615,7 @@ H5Pset_istore_k(hid_t fcpl_id, unsigned ik)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "istore IK value exceeds maximum B-tree entries");
 
     /* Get the property list structure */
-    if (NULL == (fcpl = H5P_object_verify(fcpl_id, H5P_TYPE_FILE_CREATE, false)))
+    if (NULL == (fcpl = H5P_acquire(fcpl_id, H5P_TYPE_FILE_CREATE, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set value */
@@ -602,8 +626,12 @@ H5Pset_istore_k(hid_t fcpl_id, unsigned ik)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set rank for btree internal nodes");
 
 done:
+    /* Release resources */
+    if (fcpl && H5P_release(fcpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
-}
+} /* end H5Pset_istore_k() */
 
 /*-------------------------------------------------------------------------
  * Function:	H5Pget_istore_k
@@ -622,13 +650,13 @@ herr_t
 H5Pget_istore_k(hid_t fcpl_id, unsigned *ik /*out*/)
 {
     unsigned        btree_k[H5B_NUM_BTREE_ID];
-    H5P_genplist_t *fcpl;                /* Property list pointer */
+    H5P_genplist_t *fcpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (fcpl = H5P_object_verify(fcpl_id, H5P_TYPE_FILE_CREATE, true)))
+    if (NULL == (fcpl = H5P_acquire(fcpl_id, H5P_TYPE_FILE_CREATE, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get value */
@@ -639,6 +667,10 @@ H5Pget_istore_k(hid_t fcpl_id, unsigned *ik /*out*/)
     } /* end if */
 
 done:
+    /* Release resources */
+    if (fcpl && H5P_release(fcpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_istore_k() */
 
@@ -744,7 +776,7 @@ done:
 herr_t
 H5Pset_shared_mesg_nindexes(hid_t fcpl_id, unsigned nindexes)
 {
-    H5P_genplist_t *fcpl;                /* Property list pointer */
+    H5P_genplist_t *fcpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -755,13 +787,17 @@ H5Pset_shared_mesg_nindexes(hid_t fcpl_id, unsigned nindexes)
                     "number of indexes is greater than H5O_SHMESG_MAX_NINDEXES");
 
     /* Get the property list structure */
-    if (NULL == (fcpl = H5P_object_verify(fcpl_id, H5P_TYPE_FILE_CREATE, false)))
+    if (NULL == (fcpl = H5P_acquire(fcpl_id, H5P_TYPE_FILE_CREATE, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     if (H5P_set(fcpl, H5F_CRT_SHMSG_NINDEXES_NAME, &nindexes) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't set number of indexes");
 
 done:
+    /* Release resources */
+    if (fcpl && H5P_release(fcpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_shared_mesg_nindexes() */
 
@@ -778,19 +814,23 @@ done:
 herr_t
 H5Pget_shared_mesg_nindexes(hid_t fcpl_id, unsigned *nindexes /*out*/)
 {
-    H5P_genplist_t *fcpl;                /* Property list pointer */
+    H5P_genplist_t *fcpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (fcpl = H5P_object_verify(fcpl_id, H5P_TYPE_FILE_CREATE, true)))
+    if (NULL == (fcpl = H5P_acquire(fcpl_id, H5P_TYPE_FILE_CREATE, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     if (H5P_get(fcpl, H5F_CRT_SHMSG_NINDEXES_NAME, nindexes) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get number of indexes");
 
 done:
+    /* Release resources */
+    if (fcpl && H5P_release(fcpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_shared_mesg_nindexes() */
 
@@ -811,7 +851,7 @@ done:
 herr_t
 H5Pset_shared_mesg_index(hid_t fcpl_id, unsigned index_num, unsigned mesg_type_flags, unsigned min_mesg_size)
 {
-    H5P_genplist_t *fcpl;                                /* Property list pointer */
+    H5P_genplist_t *fcpl = NULL;                                /* Property list pointer */
     unsigned        nindexes;                            /* Number of SOHM indexes */
     unsigned        type_flags[H5O_SHMESG_MAX_NINDEXES]; /* Array of mesg_type_flags*/
     unsigned        minsizes[H5O_SHMESG_MAX_NINDEXES];   /* Array of min_mesg_sizes*/
@@ -824,7 +864,7 @@ H5Pset_shared_mesg_index(hid_t fcpl_id, unsigned index_num, unsigned mesg_type_f
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, FAIL, "unrecognized flags in mesg_type_flags");
 
     /* Get the property list structure */
-    if (NULL == (fcpl = H5P_object_verify(fcpl_id, H5P_TYPE_FILE_CREATE, false)))
+    if (NULL == (fcpl = H5P_acquire(fcpl_id, H5P_TYPE_FILE_CREATE, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Read the current number of indexes */
@@ -852,6 +892,10 @@ H5Pset_shared_mesg_index(hid_t fcpl_id, unsigned index_num, unsigned mesg_type_f
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set min mesg sizes");
 
 done:
+    /* Release resources */
+    if (fcpl && H5P_release(fcpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_shared_mesg_index() */
 
@@ -870,7 +914,7 @@ herr_t
 H5Pget_shared_mesg_index(hid_t fcpl_id, unsigned index_num, unsigned *mesg_type_flags /*out*/,
                          unsigned *min_mesg_size /*out*/)
 {
-    H5P_genplist_t *fcpl;                                /* Property list pointer */
+    H5P_genplist_t *fcpl = NULL;                                /* Property list pointer */
     unsigned        nindexes;                            /* Number of SOHM indexes */
     unsigned        type_flags[H5O_SHMESG_MAX_NINDEXES]; /* Array of mesg_type_flags*/
     unsigned        minsizes[H5O_SHMESG_MAX_NINDEXES];   /* Array of min_mesg_sizes*/
@@ -879,7 +923,7 @@ H5Pget_shared_mesg_index(hid_t fcpl_id, unsigned index_num, unsigned *mesg_type_
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (fcpl = H5P_object_verify(fcpl_id, H5P_TYPE_FILE_CREATE, true)))
+    if (NULL == (fcpl = H5P_acquire(fcpl_id, H5P_TYPE_FILE_CREATE, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Read the current number of indexes */
@@ -903,6 +947,10 @@ H5Pget_shared_mesg_index(hid_t fcpl_id, unsigned index_num, unsigned *mesg_type_
         *min_mesg_size = minsizes[index_num];
 
 done:
+    /* Release resources */
+    if (fcpl && H5P_release(fcpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_shared_mesg_index() */
 
@@ -1095,7 +1143,7 @@ done:
 herr_t
 H5Pset_shared_mesg_phase_change(hid_t fcpl_id, unsigned max_list, unsigned min_btree)
 {
-    H5P_genplist_t *fcpl;                /* Property list pointer */
+    H5P_genplist_t *fcpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1119,7 +1167,7 @@ H5Pset_shared_mesg_phase_change(hid_t fcpl_id, unsigned max_list, unsigned min_b
         min_btree = 0;
 
     /* Get the property list structure */
-    if (NULL == (fcpl = H5P_object_verify(fcpl_id, H5P_TYPE_FILE_CREATE, false)))
+    if (NULL == (fcpl = H5P_acquire(fcpl_id, H5P_TYPE_FILE_CREATE, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     if (H5P_set(fcpl, H5F_CRT_SHMSG_LIST_MAX_NAME, &max_list) < 0)
@@ -1128,6 +1176,10 @@ H5Pset_shared_mesg_phase_change(hid_t fcpl_id, unsigned max_list, unsigned min_b
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't set B-tree minimum in property list");
 
 done:
+    /* Release resources */
+    if (fcpl && H5P_release(fcpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_shared_mesg_phase_change() */
 
@@ -1144,13 +1196,13 @@ done:
 herr_t
 H5Pget_shared_mesg_phase_change(hid_t fcpl_id, unsigned *max_list /*out*/, unsigned *min_btree /*out*/)
 {
-    H5P_genplist_t *fcpl;                /* Property list pointer */
+    H5P_genplist_t *fcpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (fcpl = H5P_object_verify(fcpl_id, H5P_TYPE_FILE_CREATE, true)))
+    if (NULL == (fcpl = H5P_acquire(fcpl_id, H5P_TYPE_FILE_CREATE, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get value(s) */
@@ -1162,6 +1214,10 @@ H5Pget_shared_mesg_phase_change(hid_t fcpl_id, unsigned *max_list /*out*/, unsig
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get SOHM information");
 
 done:
+    /* Release resources */
+    if (fcpl && H5P_release(fcpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_shared_mesg_phase_change() */
 
@@ -1215,7 +1271,7 @@ done:
 herr_t
 H5Pset_file_space_strategy(hid_t fcpl_id, H5F_fspace_strategy_t strategy, hbool_t persist, hsize_t threshold)
 {
-    H5P_genplist_t *fcpl;                /* Property list pointer */
+    H5P_genplist_t *fcpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1225,7 +1281,7 @@ H5Pset_file_space_strategy(hid_t fcpl_id, H5F_fspace_strategy_t strategy, hbool_
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid strategy");
 
     /* Get the property list structure */
-    if (NULL == (fcpl = H5P_object_verify(fcpl_id, H5P_TYPE_FILE_CREATE, false)))
+    if (NULL == (fcpl = H5P_acquire(fcpl_id, H5P_TYPE_FILE_CREATE, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set value(s) */
@@ -1233,6 +1289,10 @@ H5Pset_file_space_strategy(hid_t fcpl_id, H5F_fspace_strategy_t strategy, hbool_
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set file space strategy values");
 
 done:
+    /* Release resources */
+    if (fcpl && H5P_release(fcpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* H5Pset_file_space_strategy() */
 
@@ -1283,13 +1343,13 @@ herr_t
 H5Pget_file_space_strategy(hid_t fcpl_id, H5F_fspace_strategy_t *strategy /*out*/, hbool_t *persist /*out*/,
                            hsize_t *threshold /*out*/)
 {
-    H5P_genplist_t *fcpl;                /* Property list pointer */
+    H5P_genplist_t *fcpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (fcpl = H5P_object_verify(fcpl_id, H5P_TYPE_FILE_CREATE, true)))
+    if (NULL == (fcpl = H5P_acquire(fcpl_id, H5P_TYPE_FILE_CREATE, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get value(s) */
@@ -1297,6 +1357,10 @@ H5Pget_file_space_strategy(hid_t fcpl_id, H5F_fspace_strategy_t *strategy /*out*
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get file space strategy values");
 
 done:
+    /* Release resources */
+    if (fcpl && H5P_release(fcpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* H5Pget_file_space_strategy() */
 
@@ -1378,13 +1442,13 @@ H5P__fcrt_fspace_strategy_dec(const void **_pp, void *_value)
 herr_t
 H5Pset_file_space_page_size(hid_t fcpl_id, hsize_t fsp_size)
 {
-    H5P_genplist_t *fcpl;                /* Property list pointer */
+    H5P_genplist_t *fcpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (fcpl = H5P_object_verify(fcpl_id, H5P_TYPE_FILE_CREATE, false)))
+    if (NULL == (fcpl = H5P_acquire(fcpl_id, H5P_TYPE_FILE_CREATE, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     if (fsp_size < H5F_FILE_SPACE_PAGE_SIZE_MIN)
@@ -1398,6 +1462,10 @@ H5Pset_file_space_page_size(hid_t fcpl_id, hsize_t fsp_size)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't set file space page size");
 
 done:
+    /* Release resources */
+    if (fcpl && H5P_release(fcpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* H5Pset_file_space_page_size() */
 
@@ -1414,13 +1482,13 @@ done:
 herr_t
 H5Pget_file_space_page_size(hid_t fcpl_id, hsize_t *fsp_size /*out*/)
 {
-    H5P_genplist_t *fcpl;                /* Property list pointer */
+    H5P_genplist_t *fcpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (fcpl = H5P_object_verify(fcpl_id, H5P_TYPE_FILE_CREATE, true)))
+    if (NULL == (fcpl = H5P_acquire(fcpl_id, H5P_TYPE_FILE_CREATE, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get value */
@@ -1429,5 +1497,9 @@ H5Pget_file_space_page_size(hid_t fcpl_id, hsize_t *fsp_size /*out*/)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get file space page size");
 
 done:
+    /* Release resources */
+    if (fcpl && H5P_release(fcpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* H5Pget_file_space_page_size() */

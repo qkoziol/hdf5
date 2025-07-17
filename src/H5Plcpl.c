@@ -136,19 +136,23 @@ done:
 herr_t
 H5Pset_create_intermediate_group(hid_t lcpl_id, unsigned crt_intmd_group)
 {
-    H5P_genplist_t *lcpl;                /* Property list pointer */
+    H5P_genplist_t *lcpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, false)))
+    if (NULL == (lcpl = H5P_acquire(lcpl_id, H5P_TYPE_LINK_CREATE, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set value */
     crt_intmd_group = (unsigned)(crt_intmd_group > 0 ? 1 : 0);
     if (H5P_set(lcpl, H5L_CRT_INTERMEDIATE_GROUP_NAME, &crt_intmd_group) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set intermediate group creation flag");
+
+    /* Release resources */
+    if (lcpl && H5P_release(lcpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -167,13 +171,13 @@ done:
 herr_t
 H5Pget_create_intermediate_group(hid_t lcpl_id, unsigned *crt_intmd_group /*out*/)
 {
-    H5P_genplist_t *lcpl;                /* Property list pointer */
+    H5P_genplist_t *lcpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
+    if (NULL == (lcpl = H5P_acquire(lcpl_id, H5P_TYPE_LINK_CREATE, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get values */
@@ -182,5 +186,9 @@ H5Pget_create_intermediate_group(hid_t lcpl_id, unsigned *crt_intmd_group /*out*
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get intermediate group creation flag");
 
 done:
+    /* Release resources */
+    if (lcpl && H5P_release(lcpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_create_intermediate_group() */

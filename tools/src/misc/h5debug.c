@@ -808,7 +808,7 @@ done:
 
     /* Pop API context */
     if (api_ctx_pushed)
-        H5CX_pop(false);
+        H5CX_pop();
 
     H5Eset_auto2(H5E_DEFAULT, func, edata);
 

@@ -169,7 +169,7 @@ H5G__init_package(void)
     FUNC_ENTER_PACKAGE
 
     /* Initialize the ID group for the group IDs */
-    if (H5I_register_type(H5I_GROUP_CLS) < 0)
+    if (H5I_register_type(H5I_GROUP_CLS, true) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTINIT, FAIL, "unable to initialize interface");
 
     /* Mark "top" of interface as initialized, too */

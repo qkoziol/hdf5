@@ -468,8 +468,9 @@ H5Z__check_unregister(hid_t ocpl_id, H5Z_filter_t filter_id)
 
     FUNC_ENTER_PACKAGE
 
-    /* Get the property list structure of object creation */
-    if (NULL == (ocpl = H5P_object_verify(ocpl_id, H5P_TYPE_OBJECT_CREATE, true)))
+    /* Get the property liost structure of object creation */
+    /* Note: no need to lock the property list w/H5P_acquire, as this list is private */
+    if (NULL == (ocpl = H5P_object_verify(ocpl_id, H5P_TYPE_OBJECT_CREATE, false)))
         HGOTO_ERROR(H5E_PLINE, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Check if the object creation property list uses the filter */
@@ -497,7 +498,7 @@ done:
 static int
 H5Z__check_unregister_group_cb(void H5_ATTR_UNUSED *obj_ptr, hid_t obj_id, void *key)
 {
-    hid_t                 ocpl_id = -1;
+    hid_t                 ocpl_id = H5I_INVALID_HID;
     H5Z_object_t         *object  = (H5Z_object_t *)key;
     H5VL_object_t        *vol_obj;     /* Object for loc_id */
     H5VL_group_get_args_t vol_cb_args; /* Arguments to VOL callback */
@@ -558,7 +559,7 @@ done:
 static int
 H5Z__check_unregister_dset_cb(void H5_ATTR_UNUSED *obj_ptr, hid_t obj_id, void *key)
 {
-    hid_t                   ocpl_id = -1;
+    hid_t                   ocpl_id = H5I_INVALID_HID;
     H5Z_object_t           *object  = (H5Z_object_t *)key;
     H5VL_object_t          *vol_obj;     /* Object for loc_id */
     H5VL_dataset_get_args_t vol_cb_args; /* Arguments to VOL callback */

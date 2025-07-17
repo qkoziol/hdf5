@@ -324,7 +324,7 @@ H5Pset_fapl_ioc(hid_t fapl_id, H5FD_ioc_config_t *vfd_config)
 
     FUNC_ENTER_API(FAIL)
 
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
 
     /* Initialize driver, if it's not yet */
@@ -346,6 +346,10 @@ H5Pset_fapl_ioc(hid_t fapl_id, H5FD_ioc_config_t *vfd_config)
     ret_value = H5P_set_driver(fapl, H5FD_IOC_driver_g, vfd_config, NULL);
 
 done:
+    /* Release resources */
+    if (fapl && H5P_release(fapl) < 0)
+        HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_fapl_ioc() */
 
@@ -374,7 +378,7 @@ H5Pget_fapl_ioc(hid_t fapl_id, H5FD_ioc_config_t *config_out)
     /* Check arguments */
     if (config_out == NULL)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "config_out is NULL");
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
 
     /* Initialize driver, if it's not yet */
@@ -399,6 +403,10 @@ H5Pget_fapl_ioc(hid_t fapl_id, H5FD_ioc_config_t *config_out)
         H5MM_memcpy(config_out, config, sizeof(H5FD_ioc_config_t));
 
 done:
+    /* Release resources */
+    if (fapl && H5P_release(fapl) < 0)
+        HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_fapl_ioc() */
 
@@ -597,13 +605,12 @@ done:
  *-------------------------------------------------------------------------
  */
 static H5FD_t *
-H5FD__ioc_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
+H5FD__ioc_open(const char *name, unsigned flags, hid_t H5_ATTR_UNUSED fapl_id, haddr_t maxaddr)
 {
     H5FD_ioc_t              *file       = NULL; /* Ioc VFD info */
     const H5FD_ioc_config_t *config_ptr = NULL; /* Driver-specific property list */
     subfiling_context_t     *sf_context = NULL;
     H5FD_ioc_config_t        default_config;
-    H5P_genplist_t          *fapl = NULL;
     int                      ioc_flags;
     int                      mpi_inited = 0;
     int                      mpi_code; /* MPI return code */
@@ -635,10 +642,6 @@ H5FD__ioc_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
     file->subf_config.ioc_selection = SELECT_IOC_ONE_PER_NODE;
     file->subf_config.stripe_size   = H5FD_SUBFILING_DEFAULT_STRIPE_SIZE;
     file->subf_config.stripe_count  = H5FD_SUBFILING_DEFAULT_STRIPE_COUNT;
-
-    /* Get the driver-specific file access properties */
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file access property list");
 
     if (H5FD_mpi_self_initialized_s) {
         file->comm = MPI_COMM_WORLD;

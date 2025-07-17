@@ -1613,7 +1613,7 @@ extern char H5_lib_vers_info_g[];
     ;                                                                                                        \
     } /* end scope from end of FUNC_ENTER */                                                                 \
     if (H5_LIKELY(api_ctx_pushed)) {                                                                         \
-        (void)H5CX_pop(true);                                                                                \
+        H5CX_pop();                                                                                \
         api_ctx_pushed = false;                                                                              \
     }                                                                                                        \
     if (H5_UNLIKELY(err_occurred))                                                                           \

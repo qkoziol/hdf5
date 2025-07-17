@@ -89,7 +89,7 @@ H5Rcreate_object(hid_t loc_id, const char *name, hid_t oapl_id, H5R_ref_t *ref_p
     H5O_token_t                 obj_token = {0};                /* Object token */
     H5VL_file_cont_info_t       cont_info = {H5VL_CONTAINER_INFO_VERSION, 0, 0, 0};
     H5VL_file_get_args_t        file_get_vol_cb_args; /* Arguments to VOL callback */
-    H5P_genplist_t             *oapl;                 /* Object access property list */
+    H5P_genplist_t             *oapl = NULL;                 /* Object access property list */
     herr_t                      ret_value = SUCCEED;  /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -101,7 +101,7 @@ H5Rcreate_object(hid_t loc_id, const char *name, hid_t oapl_id, H5R_ref_t *ref_p
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "no name given");
 
     /* Get object access property list */
-    if (NULL == (oapl = H5P_object_verify(oapl_id, H5P_TYPE_LINK_ACCESS, true)))
+    if (NULL == (oapl = H5P_acquire(oapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get the VOL object */
@@ -152,8 +152,13 @@ H5Rcreate_object(hid_t loc_id, const char *name, hid_t oapl_id, H5R_ref_t *ref_p
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTSET, FAIL, "unable to attach location id to reference");
 
 done:
+    /* Release resources */
+    if (oapl && H5P_release(oapl) < 0)
+        HDONE_ERROR(H5E_REFERENCE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     if (file_id != H5I_INVALID_HID && H5I_dec_ref(file_id) < 0)
         HDONE_ERROR(H5E_REFERENCE, H5E_CANTDEC, FAIL, "unable to decrement refcount on file");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Rcreate_object() */
 
@@ -181,7 +186,7 @@ H5Rcreate_region(hid_t loc_id, const char *name, hid_t space_id, hid_t oapl_id, 
     H5VL_file_cont_info_t       cont_info = {H5VL_CONTAINER_INFO_VERSION, 0, 0, 0};
     H5VL_file_get_args_t        file_get_vol_cb_args; /* Arguments to VOL callback */
     struct H5S_t               *space = NULL;         /* Pointer to dataspace containing region */
-    H5P_genplist_t             *oapl;                 /* Object access property list */
+    H5P_genplist_t             *oapl = NULL;                 /* Object access property list */
     herr_t                      ret_value = SUCCEED;  /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -197,7 +202,7 @@ H5Rcreate_region(hid_t loc_id, const char *name, hid_t space_id, hid_t oapl_id, 
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a dataspace");
 
     /* Get object access property list */
-    if (NULL == (oapl = H5P_object_verify(oapl_id, H5P_TYPE_LINK_ACCESS, true)))
+    if (NULL == (oapl = H5P_acquire(oapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get the VOL object */
@@ -249,8 +254,13 @@ H5Rcreate_region(hid_t loc_id, const char *name, hid_t space_id, hid_t oapl_id, 
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTSET, FAIL, "unable to attach location id to reference");
 
 done:
+    /* Release resources */
+    if (oapl && H5P_release(oapl) < 0)
+        HDONE_ERROR(H5E_REFERENCE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     if (file_id != H5I_INVALID_HID && H5I_dec_ref(file_id) < 0)
         HDONE_ERROR(H5E_REFERENCE, H5E_CANTDEC, FAIL, "unable to decrement refcount on file");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Rcreate_region() */
 
@@ -276,7 +286,7 @@ H5Rcreate_attr(hid_t loc_id, const char *name, const char *attr_name, hid_t oapl
     H5O_token_t                 obj_token = {0};                /* Object token */
     H5VL_file_cont_info_t       cont_info = {H5VL_CONTAINER_INFO_VERSION, 0, 0, 0};
     H5VL_file_get_args_t        file_get_vol_cb_args; /* Arguments to VOL callback */
-    H5P_genplist_t             *oapl;                 /* Object access property list */
+    H5P_genplist_t             *oapl = NULL;                 /* Object access property list */
     herr_t                      ret_value = SUCCEED;  /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -290,7 +300,7 @@ H5Rcreate_attr(hid_t loc_id, const char *name, const char *attr_name, hid_t oapl
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "no attribute name given");
 
     /* Get object access property list */
-    if (NULL == (oapl = H5P_object_verify(oapl_id, H5P_TYPE_LINK_ACCESS, true)))
+    if (NULL == (oapl = H5P_acquire(oapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get the VOL object */
@@ -342,8 +352,13 @@ H5Rcreate_attr(hid_t loc_id, const char *name, const char *attr_name, hid_t oapl
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTSET, FAIL, "unable to attach location id to reference");
 
 done:
+    /* Release resources */
+    if (oapl && H5P_release(oapl) < 0)
+        HDONE_ERROR(H5E_REFERENCE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     if (file_id != H5I_INVALID_HID && H5I_dec_ref(file_id) < 0)
         HDONE_ERROR(H5E_REFERENCE, H5E_CANTDEC, FAIL, "unable to decrement refcount on file");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Rcreate_attr() */
 
@@ -552,7 +567,8 @@ hid_t
 H5Ropen_object(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t oapl_id)
 {
     hid_t           file_id;                     /* Reference file ID */
-    H5P_genplist_t *dapl;                        /* Dataset access property list */
+    H5P_genplist_t *dapl = NULL;                        /* Dataset access property list */
+    H5P_genplist_t *rapl = NULL; /* Property list for RAPL */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -568,15 +584,13 @@ H5Ropen_object(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t oapl_id)
 
     /* Get the object access property list */
     /* (the OAPL is treated as a DAPL currently) */
-    if (NULL == (dapl = H5P_object_verify(oapl_id, H5P_TYPE_DATASET_ACCESS, true)))
+    if (NULL == (dapl = H5P_acquire(oapl_id, H5P_TYPE_DATASET_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_OHDR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Retrieve file_id from reference */
     if (H5I_INVALID_HID == (file_id = H5R__get_file_id((const H5R_ref_priv_t *)ref_ptr))) {
-        H5P_genplist_t *rapl; /* Property list for RAPL */
-
         /* Attempt to re-open file and pass RAPL as a FAPL */
-        if (NULL == (rapl = H5P_object_verify(rapl_id, H5P_TYPE_REFERENCE_ACCESS, true)))
+        if (NULL == (rapl = H5P_acquire(rapl_id, H5P_TYPE_REFERENCE_ACCESS, H5I_LOCK_SHARED, true)))
             HGOTO_ERROR(H5E_REFERENCE, H5E_BADTYPE, H5I_INVALID_HID, "not a file access property list");
         if ((file_id = H5R__reopen_file((H5R_ref_priv_t *)ref_ptr, rapl)) < 0)
             HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENFILE, H5I_INVALID_HID, "cannot re-open referenced file");
@@ -587,6 +601,12 @@ H5Ropen_object(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t oapl_id)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open object synchronously");
 
 done:
+    /* Release resources */
+    if (dapl && H5P_release(dapl) < 0)
+        HDONE_ERROR(H5E_REFERENCE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+    if (rapl && H5P_release(rapl) < 0)
+        HDONE_ERROR(H5E_REFERENCE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Ropen_object() */
 
@@ -607,7 +627,8 @@ H5Ropen_object_async(const char *app_file, const char *app_func, unsigned app_li
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     hid_t           file_id;                     /* Reference file ID */
-    H5P_genplist_t *dapl;                        /* Dataset access property list */
+    H5P_genplist_t *dapl = NULL;                        /* Dataset access property list */
+    H5P_genplist_t *rapl = NULL; /* Property list for RAPL */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -623,7 +644,7 @@ H5Ropen_object_async(const char *app_file, const char *app_func, unsigned app_li
 
     /* Get the object access property list */
     /* (the OAPL is treated as a DAPL currently) */
-    if (NULL == (dapl = H5P_object_verify(oapl_id, H5P_TYPE_DATASET_ACCESS, true)))
+    if (NULL == (dapl = H5P_acquire(oapl_id, H5P_TYPE_DATASET_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_OHDR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
     oapl_id = H5P_PLIST_ID(dapl);
 
@@ -633,10 +654,8 @@ H5Ropen_object_async(const char *app_file, const char *app_func, unsigned app_li
 
     /* Retrieve file_id from reference */
     if (H5I_INVALID_HID == (file_id = H5R__get_file_id((const H5R_ref_priv_t *)ref_ptr))) {
-        H5P_genplist_t *rapl; /* Property list for RAPL */
-
         /* Attempt to re-open file and pass RAPL as a FAPL */
-        if (NULL == (rapl = H5P_object_verify(rapl_id, H5P_TYPE_REFERENCE_ACCESS, true)))
+        if (NULL == (rapl = H5P_acquire(rapl_id, H5P_TYPE_REFERENCE_ACCESS, H5I_LOCK_SHARED, true)))
             HGOTO_ERROR(H5E_REFERENCE, H5E_BADTYPE, H5I_INVALID_HID, "not a file access property list");
         rapl_id = H5P_PLIST_ID(rapl);
         if ((file_id = H5R__reopen_file((H5R_ref_priv_t *)ref_ptr, rapl)) < 0)
@@ -660,6 +679,12 @@ H5Ropen_object_async(const char *app_file, const char *app_func, unsigned app_li
         } /* end if */
 
 done:
+    /* Release resources */
+    if (dapl && H5P_release(dapl) < 0)
+        HDONE_ERROR(H5E_REFERENCE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+    if (rapl && H5P_release(rapl) < 0)
+        HDONE_ERROR(H5E_REFERENCE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Ropen_object_async() */
 
@@ -748,7 +773,8 @@ hid_t
 H5Ropen_region(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t oapl_id)
 {
     hid_t           file_id;                     /* Reference file ID */
-    H5P_genplist_t *dapl;                        /* Dataset access property list */
+    H5P_genplist_t *dapl = NULL;                        /* Dataset access property list */
+    H5P_genplist_t *rapl = NULL; /* Property list for RAPL */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -764,15 +790,13 @@ H5Ropen_region(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t oapl_id)
 
     /* Get the object access property list */
     /* (the OAPL is treated as a DAPL currently) */
-    if (NULL == (dapl = H5P_object_verify(oapl_id, H5P_TYPE_DATASET_ACCESS, true)))
+    if (NULL == (dapl = H5P_acquire(oapl_id, H5P_TYPE_DATASET_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_OHDR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Retrieve file_id from reference */
     if (H5I_INVALID_HID == (file_id = H5R__get_file_id((const H5R_ref_priv_t *)ref_ptr))) {
-        H5P_genplist_t *rapl; /* Property list for RAPL */
-
         /* Attempt to re-open file and pass RAPL as a FAPL */
-        if (NULL == (rapl = H5P_object_verify(rapl_id, H5P_TYPE_REFERENCE_ACCESS, true)))
+        if (NULL == (rapl = H5P_acquire(rapl_id, H5P_TYPE_REFERENCE_ACCESS, H5I_LOCK_SHARED, true)))
             HGOTO_ERROR(H5E_REFERENCE, H5E_BADTYPE, H5I_INVALID_HID, "not a file access property list");
         if ((file_id = H5R__reopen_file((H5R_ref_priv_t *)ref_ptr, rapl)) < 0)
             HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENFILE, H5I_INVALID_HID, "cannot re-open referenced file");
@@ -783,6 +807,12 @@ H5Ropen_region(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t oapl_id)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open region synchronously");
 
 done:
+    /* Release resources */
+    if (dapl && H5P_release(dapl) < 0)
+        HDONE_ERROR(H5E_REFERENCE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+    if (rapl && H5P_release(rapl) < 0)
+        HDONE_ERROR(H5E_REFERENCE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Ropen_region() */
 
@@ -803,7 +833,8 @@ H5Ropen_region_async(const char *app_file, const char *app_func, unsigned app_li
     void           *token     = NULL;            /* Request token for async operation */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation */
     hid_t           file_id;                     /* Reference file ID */
-    H5P_genplist_t *dapl;                        /* Dataset access property list */
+    H5P_genplist_t *dapl = NULL;                        /* Dataset access property list */
+    H5P_genplist_t *rapl = NULL; /* Property list for RAPL */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -819,7 +850,7 @@ H5Ropen_region_async(const char *app_file, const char *app_func, unsigned app_li
 
     /* Get the object access property list */
     /* (the OAPL is treated as a DAPL currently) */
-    if (NULL == (dapl = H5P_object_verify(oapl_id, H5P_TYPE_DATASET_ACCESS, true)))
+    if (NULL == (dapl = H5P_acquire(oapl_id, H5P_TYPE_DATASET_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_OHDR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
     oapl_id = H5P_PLIST_ID(dapl);
 
@@ -829,10 +860,8 @@ H5Ropen_region_async(const char *app_file, const char *app_func, unsigned app_li
 
     /* Retrieve file_id from reference */
     if (H5I_INVALID_HID == (file_id = H5R__get_file_id((const H5R_ref_priv_t *)ref_ptr))) {
-        H5P_genplist_t *rapl; /* Property list for RAPL */
-
         /* Attempt to re-open file and pass RAPL as a FAPL */
-        if (NULL == (rapl = H5P_object_verify(rapl_id, H5P_TYPE_REFERENCE_ACCESS, true)))
+        if (NULL == (rapl = H5P_acquire(rapl_id, H5P_TYPE_REFERENCE_ACCESS, H5I_LOCK_SHARED, true)))
             HGOTO_ERROR(H5E_REFERENCE, H5E_BADTYPE, H5I_INVALID_HID, "not a file access property list");
         rapl_id = H5P_PLIST_ID(rapl);
         if ((file_id = H5R__reopen_file((H5R_ref_priv_t *)ref_ptr, rapl)) < 0)
@@ -856,6 +885,12 @@ H5Ropen_region_async(const char *app_file, const char *app_func, unsigned app_li
         } /* end if */
 
 done:
+    /* Release resources */
+    if (dapl && H5P_release(dapl) < 0)
+        HDONE_ERROR(H5E_REFERENCE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+    if (rapl && H5P_release(rapl) < 0)
+        HDONE_ERROR(H5E_REFERENCE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Ropen_region_async() */
 
@@ -938,7 +973,8 @@ done:
 hid_t
 H5Ropen_attr(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t aapl_id)
 {
-    H5P_genplist_t *aapl;                        /* Attribute access property list */
+    H5P_genplist_t *aapl = NULL;                        /* Attribute access property list */
+    H5P_genplist_t *rapl = NULL; /* Property list for RAPL */
     hid_t           file_id;                     /* Reference file ID */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
@@ -953,15 +989,13 @@ H5Ropen_attr(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t aapl_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, H5I_INVALID_HID, "invalid reference type");
 
     /* Get the pointer to the attribute access property list */
-    if (NULL == (aapl = H5P_object_verify(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, true)))
+    if (NULL == (aapl = H5P_acquire(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute access property list");
 
     /* Retrieve file_id from reference */
     if (H5I_INVALID_HID == (file_id = H5R__get_file_id((const H5R_ref_priv_t *)ref_ptr))) {
-        H5P_genplist_t *rapl; /* Property list for RAPL */
-
         /* Attempt to re-open file and pass RAPL as a FAPL */
-        if (NULL == (rapl = H5P_object_verify(rapl_id, H5P_TYPE_REFERENCE_ACCESS, true)))
+        if (NULL == (rapl = H5P_acquire(rapl_id, H5P_TYPE_REFERENCE_ACCESS, H5I_LOCK_SHARED, true)))
             HGOTO_ERROR(H5E_REFERENCE, H5E_BADTYPE, H5I_INVALID_HID, "not a file access property list");
         if ((file_id = H5R__reopen_file((H5R_ref_priv_t *)ref_ptr, rapl)) < 0)
             HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENFILE, H5I_INVALID_HID, "cannot re-open referenced file");
@@ -972,6 +1006,12 @@ H5Ropen_attr(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t aapl_id)
         HGOTO_ERROR(H5E_REFERENCE, H5E_OPENERROR, H5I_INVALID_HID, "unable to open attribute synchronously");
 
 done:
+    /* Release resources */
+    if (aapl && H5P_release(aapl) < 0)
+        HDONE_ERROR(H5E_REFERENCE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+    if (rapl && H5P_release(rapl) < 0)
+        HDONE_ERROR(H5E_REFERENCE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Ropen_attr() */
 
@@ -991,7 +1031,8 @@ H5Ropen_attr_async(const char *app_file, const char *app_func, unsigned app_line
     H5VL_object_t  *vol_obj   = NULL;            /* Object for file_id */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    H5P_genplist_t *aapl;                        /* Attribute access property list */
+    H5P_genplist_t *aapl = NULL;                        /* Attribute access property list */
+    H5P_genplist_t *rapl = NULL; /* Property list for RAPL */
     hid_t           file_id;                     /* Reference file ID */
     hid_t           ret_value;                   /* Return value */
 
@@ -1006,7 +1047,7 @@ H5Ropen_attr_async(const char *app_file, const char *app_func, unsigned app_line
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, H5I_INVALID_HID, "invalid reference type");
 
     /* Get the pointer to the attribute access property list */
-    if (NULL == (aapl = H5P_object_verify(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, true)))
+    if (NULL == (aapl = H5P_acquire(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute access property list");
     aapl_id = H5P_PLIST_ID(aapl);
 
@@ -1016,10 +1057,8 @@ H5Ropen_attr_async(const char *app_file, const char *app_func, unsigned app_line
 
     /* Retrieve file_id from reference */
     if (H5I_INVALID_HID == (file_id = H5R__get_file_id((const H5R_ref_priv_t *)ref_ptr))) {
-        H5P_genplist_t *rapl; /* Property list for RAPL */
-
         /* Attempt to re-open file and pass RAPL as a FAPL */
-        if (NULL == (rapl = H5P_object_verify(rapl_id, H5P_TYPE_REFERENCE_ACCESS, true)))
+        if (NULL == (rapl = H5P_acquire(rapl_id, H5P_TYPE_REFERENCE_ACCESS, H5I_LOCK_SHARED, true)))
             HGOTO_ERROR(H5E_REFERENCE, H5E_BADTYPE, H5I_INVALID_HID, "not a file access property list");
         rapl_id = H5P_PLIST_ID(rapl);
         if ((file_id = H5R__reopen_file((H5R_ref_priv_t *)ref_ptr, rapl)) < 0)
@@ -1043,6 +1082,12 @@ H5Ropen_attr_async(const char *app_file, const char *app_func, unsigned app_line
         } /* end if */
 
 done:
+    /* Release resources */
+    if (aapl && H5P_release(aapl) < 0)
+        HDONE_ERROR(H5E_REFERENCE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+    if (rapl && H5P_release(rapl) < 0)
+        HDONE_ERROR(H5E_REFERENCE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* H5Ropen_attr_async() */
 
@@ -1063,6 +1108,7 @@ H5Rget_obj_type3(H5R_ref_t *ref_ptr, hid_t rapl_id, H5O_type_t *obj_type /*out*/
     H5VL_object_t         *vol_obj = NULL;      /* Object of file_id */
     H5VL_object_get_args_t vol_cb_args;         /* Arguments to VOL callback */
     H5VL_loc_params_t      loc_params;          /* Location parameters */
+    H5P_genplist_t *rapl = NULL; /* Property list for RAPL */
     H5O_token_t            obj_token = {0};     /* Object token */
     herr_t                 ret_value = SUCCEED; /* Return value */
 
@@ -1079,10 +1125,8 @@ H5Rget_obj_type3(H5R_ref_t *ref_ptr, hid_t rapl_id, H5O_type_t *obj_type /*out*/
 
     /* Retrieve file_id from reference */
     if (H5I_INVALID_HID == (file_id = H5R__get_file_id((const H5R_ref_priv_t *)ref_ptr))) {
-        H5P_genplist_t *rapl; /* Property list for RAPL */
-
         /* Attempt to re-open file and pass RAPL as a FAPL */
-        if (NULL == (rapl = H5P_object_verify(rapl_id, H5P_TYPE_REFERENCE_ACCESS, true)))
+        if (NULL == (rapl = H5P_acquire(rapl_id, H5P_TYPE_REFERENCE_ACCESS, H5I_LOCK_SHARED, true)))
             HGOTO_ERROR(H5E_REFERENCE, H5E_BADTYPE, H5I_INVALID_HID, "not a file access property list");
         if ((file_id = H5R__reopen_file((H5R_ref_priv_t *)ref_ptr, rapl)) < 0)
             HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENFILE, FAIL, "cannot re-open referenced file");
@@ -1110,6 +1154,10 @@ H5Rget_obj_type3(H5R_ref_t *ref_ptr, hid_t rapl_id, H5O_type_t *obj_type /*out*/
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTGET, FAIL, "can't retrieve object type");
 
 done:
+    /* Release resources */
+    if (rapl && H5P_release(rapl) < 0)
+        HDONE_ERROR(H5E_REFERENCE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Rget_obj_type3() */
 
@@ -1190,6 +1238,7 @@ H5Rget_obj_name(H5R_ref_t *ref_ptr, hid_t rapl_id, char *buf /*out*/, size_t siz
     H5VL_object_t         *vol_obj = NULL;     /* Object of file_id */
     H5VL_object_get_args_t vol_cb_args;        /* Arguments to VOL callback */
     H5VL_loc_params_t      loc_params;         /* Location parameters */
+    H5P_genplist_t *rapl = NULL; /* Property list for RAPL */
     H5O_token_t            obj_token    = {0}; /* Object token */
     size_t                 obj_name_len = 0;   /* Length of object's name */
     ssize_t                ret_value    = 0;   /* Return value */
@@ -1207,10 +1256,8 @@ H5Rget_obj_name(H5R_ref_t *ref_ptr, hid_t rapl_id, char *buf /*out*/, size_t siz
 
     /* Retrieve file_id from reference */
     if (H5I_INVALID_HID == (file_id = H5R__get_file_id((const H5R_ref_priv_t *)ref_ptr))) {
-        H5P_genplist_t *rapl; /* Property list for RAPL */
-
         /* Attempt to re-open file and pass RAPL as a FAPL */
-        if (NULL == (rapl = H5P_object_verify(rapl_id, H5P_TYPE_REFERENCE_ACCESS, true)))
+        if (NULL == (rapl = H5P_acquire(rapl_id, H5P_TYPE_REFERENCE_ACCESS, H5I_LOCK_SHARED, true)))
             HGOTO_ERROR(H5E_REFERENCE, H5E_BADTYPE, (-1), "not a file access property list");
         if ((file_id = H5R__reopen_file((H5R_ref_priv_t *)ref_ptr, rapl)) < 0)
             HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENFILE, (-1), "cannot re-open referenced file");
@@ -1243,6 +1290,10 @@ H5Rget_obj_name(H5R_ref_t *ref_ptr, hid_t rapl_id, char *buf /*out*/, size_t siz
     ret_value = (ssize_t)obj_name_len;
 
 done:
+    /* Release resources */
+    if (rapl && H5P_release(rapl) < 0)
+        HDONE_ERROR(H5E_REFERENCE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Rget_obj_name() */
 

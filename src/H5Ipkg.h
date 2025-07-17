@@ -90,6 +90,7 @@ typedef struct H5I_id_info_t {
 /* Type information structure used */
 typedef struct H5I_type_info_t {
     const H5I_class_t *cls;          /* Pointer to ID class */
+    bool               is_internal;  /* ID type is internal to the library, not from application */
     unsigned           init_count;   /* # of times this type has been initialized */
     uint64_t           id_count;     /* Current number of IDs held */
     uint64_t           num_fut_ids;  /* Number of IDs which are future IDs */

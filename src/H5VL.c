@@ -82,13 +82,13 @@ hid_t
 H5VLregister_connector(const H5VL_class_t *cls, hid_t vipl_id)
 {
     H5VL_connector_t *connector = NULL;
-    H5P_genplist_t   *vipl;                        /* VOL initialization property list */
+    H5P_genplist_t   *vipl = NULL;                        /* VOL initialization property list */
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Check VOL initialization property list */
-    if (NULL == (vipl = H5P_object_verify(vipl_id, H5P_TYPE_VOL_INITIALIZE, true)))
+    if (NULL == (vipl = H5P_acquire(vipl_id, H5P_TYPE_VOL_INITIALIZE, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a VOL initialize property list");
 
     /* Register connector */
@@ -100,6 +100,10 @@ H5VLregister_connector(const H5VL_class_t *cls, hid_t vipl_id)
         HGOTO_ERROR(H5E_VOL, H5E_CANTREGISTER, H5I_INVALID_HID, "unable to register VOL connector");
 
 done:
+    /* Release resources */
+    if (vipl && H5P_release(vipl) < 0)
+        HDONE_ERROR(H5E_VOL, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
+
     if (ret_value < 0)
         /* Decrement refcount on connector */
         if (connector && H5VL_conn_dec_rc(connector) < 0)
@@ -143,7 +147,7 @@ H5VLregister_connector_by_name(const char *name, hid_t vipl_id)
                     "zero-length VOL connector name is disallowed");
 
     /* Check VOL initialization property list */
-    if (NULL == (vipl = H5P_object_verify(vipl_id, H5P_TYPE_VOL_INITIALIZE, true)))
+    if (NULL == (vipl = H5P_acquire(vipl_id, H5P_TYPE_VOL_INITIALIZE, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a VOL initialize property list");
 
     /* Register connector */
@@ -155,6 +159,10 @@ H5VLregister_connector_by_name(const char *name, hid_t vipl_id)
         HGOTO_ERROR(H5E_VOL, H5E_CANTREGISTER, H5I_INVALID_HID, "unable to register VOL connector ID");
 
 done:
+    /* Release resources */
+    if (vipl && H5P_release(vipl) < 0)
+        HDONE_ERROR(H5E_VOL, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
+
     if (ret_value < 0)
         /* Decrement refcount on connector */
         if (connector && H5VL_conn_dec_rc(connector) < 0)
@@ -196,7 +204,7 @@ H5VLregister_connector_by_value(H5VL_class_value_t value, hid_t vipl_id)
                     "negative VOL connector value is disallowed");
 
     /* Check VOL initialization property list */
-    if (NULL == (vipl = H5P_object_verify(vipl_id, H5P_TYPE_VOL_INITIALIZE, true)))
+    if (NULL == (vipl = H5P_acquire(vipl_id, H5P_TYPE_VOL_INITIALIZE, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a VOL initialize property list");
 
     /* Register connector */
@@ -208,6 +216,10 @@ H5VLregister_connector_by_value(H5VL_class_value_t value, hid_t vipl_id)
         HGOTO_ERROR(H5E_VOL, H5E_CANTREGISTER, H5I_INVALID_HID, "unable to register VOL connector ID");
 
 done:
+    /* Release resources */
+    if (vipl && H5P_release(vipl) < 0)
+        HDONE_ERROR(H5E_VOL, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
+
     if (ret_value < 0)
         /* Decrement refcount on connector */
         if (connector && H5VL_conn_dec_rc(connector) < 0)

@@ -2748,8 +2748,8 @@ main(void)
     nerrors += (h5_verify_cached_stabs(FILENAME, fapl_id) < 0 ? 1 : 0);
 
     /* Pop API context */
-    if (api_ctx_pushed && H5CX_pop(false) < 0)
-        FAIL_STACK_ERROR;
+    if (api_ctx_pushed)
+        H5CX_pop();
     api_ctx_pushed = false;
 
     if (nerrors)
@@ -2775,7 +2775,7 @@ error:
     H5E_END_TRY
 
     if (api_ctx_pushed)
-        H5CX_pop(false);
+        H5CX_pop();
 
     for (i = 0; i < N_FILENAMES; i++) {
         free(filename[i]);

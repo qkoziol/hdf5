@@ -99,7 +99,7 @@ H5Iregister_type1(size_t H5_ATTR_UNUSED hash_size, unsigned reserved, H5I_free_t
     cls->free_func = free_func;
 
     /* Register the new ID class */
-    if (H5I_register_type(cls) < 0)
+    if (H5I_register_type(cls, false) < 0)
         HGOTO_ERROR(H5E_ID, H5E_CANTINIT, H5I_BADID, "can't initialize ID class");
 
     /* Indicate that the class object should be freed when the type is destroyed */

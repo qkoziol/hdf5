@@ -134,8 +134,8 @@ main(void)
     nerrors += test_random_write(f);
 
     /* Pop API context */
-    if (api_ctx_pushed && H5CX_pop(false) < 0)
-        FAIL_STACK_ERROR;
+    if (api_ctx_pushed)
+        H5CX_pop();
     api_ctx_pushed = false;
 
     /* End of test code, close and delete file */
@@ -155,7 +155,7 @@ main(void)
 
 error:
     if (api_ctx_pushed)
-        H5CX_pop(false);
+        H5CX_pop();
 
     puts("*** TESTS FAILED ***");
     return 1;
@@ -2260,8 +2260,8 @@ test_swmr_write_big(bool newest_format)
         FAIL_STACK_ERROR;
 
     /* Pop API context */
-    if (api_ctx_pushed && H5CX_pop(false) < 0)
-        FAIL_STACK_ERROR;
+    if (api_ctx_pushed)
+        H5CX_pop();
     api_ctx_pushed = false;
 
     /* Release memory */
@@ -2278,7 +2278,7 @@ error:
     H5Fclose(fid);
 
     if (api_ctx_pushed)
-        H5CX_pop(false);
+        H5CX_pop();
 
     H5Pclose(fapl);
 

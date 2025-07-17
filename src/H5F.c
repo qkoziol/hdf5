@@ -425,7 +425,7 @@ H5Fget_vfd_handle(hid_t file_id, hid_t fapl_id, void **file_handle /*out*/)
     H5VL_object_t                   *vol_obj;             /* File info */
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
-    H5P_genplist_t                  *fapl;                /* File access property list */
+    H5P_genplist_t                  *fapl = NULL;                /* File access property list */
     herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -435,7 +435,7 @@ H5Fget_vfd_handle(hid_t file_id, hid_t fapl_id, void **file_handle /*out*/)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid file handle pointer");
 
     /* Get the pointer to the file access property list */
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_FILE, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
@@ -457,6 +457,10 @@ H5Fget_vfd_handle(hid_t file_id, hid_t fapl_id, void **file_handle /*out*/)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to get VFD handle");
 
 done:
+    /* Release resources */
+    if (fapl && H5P_release(fapl) < 0)
+        HDONE_ERROR(H5E_FILE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Fget_vfd_handle() */
 
@@ -474,7 +478,7 @@ htri_t
 H5Fis_accessible(const char *filename, hid_t fapl_id)
 {
     H5VL_file_specific_args_t vol_cb_args;           /* Arguments to VOL callback */
-    H5P_genplist_t           *fapl;                  /* File access property list */
+    H5P_genplist_t           *fapl = NULL;                  /* File access property list */
     bool                      is_accessible = false; /* Whether file is accessible */
     htri_t                    ret_value;             /* Return value */
 
@@ -485,7 +489,7 @@ H5Fis_accessible(const char *filename, hid_t fapl_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, FAIL, "no file name specified");
 
     /* Get the pointer to the file access property list */
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_FILE, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
@@ -506,6 +510,10 @@ H5Fis_accessible(const char *filename, hid_t fapl_id)
     ret_value = (htri_t)is_accessible;
 
 done:
+    /* Release resources */
+    if (fapl && H5P_release(fapl) < 0)
+        HDONE_ERROR(H5E_FILE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Fis_accessible() */
 
@@ -644,18 +652,18 @@ hid_t
 H5Fcreate(const char *filename, unsigned flags, hid_t fcpl_id, hid_t fapl_id)
 {
     H5VL_object_t  *vol_obj = NULL;              /* File object */
-    H5P_genplist_t *fcpl;                        /* File creation property list pointer */
-    H5P_genplist_t *fapl;                        /* File access property list pointer */
+    H5P_genplist_t *fcpl = NULL;                        /* File creation property list pointer */
+    H5P_genplist_t *fapl = NULL;                        /* File access property list pointer */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Get the pointer to the file create property list */
-    if (NULL == (fcpl = H5P_object_verify(fcpl_id, H5P_TYPE_FILE_CREATE, true)))
+    if (NULL == (fcpl = H5P_acquire(fcpl_id, H5P_TYPE_FILE_CREATE, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_FILE, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Get the pointer to the file access property list */
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a file access property list");
 
     /* Create the file synchronously */
@@ -671,6 +679,12 @@ H5Fcreate(const char *filename, unsigned flags, hid_t fcpl_id, hid_t fapl_id)
         HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, H5I_INVALID_HID, "'post open' operation failed");
 
 done:
+    /* Release resources */
+    if (fcpl && H5P_release(fcpl) < 0)
+        HDONE_ERROR(H5E_FILE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+    if (fapl && H5P_release(fapl) < 0)
+        HDONE_ERROR(H5E_FILE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Fcreate() */
 
@@ -690,8 +704,8 @@ H5Fcreate_async(const char *app_file, const char *app_func, unsigned app_line, c
                 unsigned flags, hid_t fcpl_id, hid_t fapl_id, hid_t es_id)
 {
     H5VL_object_t  *vol_obj = NULL;              /* File object */
-    H5P_genplist_t *fcpl;                        /* File creation property list pointer */
-    H5P_genplist_t *fapl;                        /* File access property list pointer */
+    H5P_genplist_t *fcpl = NULL;                        /* File creation property list pointer */
+    H5P_genplist_t *fapl = NULL;                        /* File access property list pointer */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
@@ -699,12 +713,12 @@ H5Fcreate_async(const char *app_file, const char *app_func, unsigned app_line, c
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Get the pointer to the file create property list */
-    if (NULL == (fcpl = H5P_object_verify(fcpl_id, H5P_TYPE_FILE_CREATE, true)))
+    if (NULL == (fcpl = H5P_acquire(fcpl_id, H5P_TYPE_FILE_CREATE, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_FILE, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
     fcpl_id = H5P_PLIST_ID(fcpl);
 
     /* Get the pointer to the file access property list */
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a file access property list");
     fapl_id = H5P_PLIST_ID(fapl);
 
@@ -748,6 +762,12 @@ H5Fcreate_async(const char *app_file, const char *app_func, unsigned app_line, c
             HGOTO_ERROR(H5E_FILE, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
 
 done:
+    /* Release resources */
+    if (fcpl && H5P_release(fcpl) < 0)
+        HDONE_ERROR(H5E_FILE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+    if (fapl && H5P_release(fapl) < 0)
+        HDONE_ERROR(H5E_FILE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Fcreate_async() */
 
@@ -833,13 +853,13 @@ hid_t
 H5Fopen(const char *filename, unsigned flags, hid_t fapl_id)
 {
     H5VL_object_t  *vol_obj = NULL;              /* File object */
-    H5P_genplist_t *fapl;                        /* File access property list pointer */
+    H5P_genplist_t *fapl = NULL;                        /* File access property list pointer */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Open the file synchronously */
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a file access property list");
 
     if ((ret_value = H5F__open_api_common(filename, flags, fapl, NULL)) < 0)
@@ -854,6 +874,10 @@ H5Fopen(const char *filename, unsigned flags, hid_t fapl_id)
         HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, H5I_INVALID_HID, "'post open' operation failed");
 
 done:
+    /* Release resources */
+    if (fapl && H5P_release(fapl) < 0)
+        HDONE_ERROR(H5E_FILE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Fopen() */
 
@@ -874,7 +898,7 @@ H5Fopen_async(const char *app_file, const char *app_func, unsigned app_line, con
               unsigned flags, hid_t fapl_id, hid_t es_id)
 {
     H5VL_object_t  *vol_obj = NULL;              /* File object */
-    H5P_genplist_t *fapl;                        /* File access property list pointer */
+    H5P_genplist_t *fapl = NULL;                        /* File access property list pointer */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
@@ -886,7 +910,7 @@ H5Fopen_async(const char *app_file, const char *app_func, unsigned app_line, con
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Open the file, possibly asynchronously */
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a file access property list");
     fapl_id = H5P_PLIST_ID(fapl);
 
@@ -926,6 +950,10 @@ H5Fopen_async(const char *app_file, const char *app_func, unsigned app_line, con
             HGOTO_ERROR(H5E_FILE, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
 
 done:
+    /* Release resources */
+    if (fapl && H5P_release(fapl) < 0)
+        HDONE_ERROR(H5E_FILE, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Fopen_async() */
 
@@ -1148,7 +1176,7 @@ herr_t
 H5Fdelete(const char *filename, hid_t fapl_id)
 {
     H5VL_file_specific_args_t vol_cb_args;           /* Arguments to VOL callback */
-    H5P_genplist_t           *fapl;                  /* File access property list */
+    H5P_genplist_t           *fapl = NULL;                  /* File access property list */
     bool                      is_accessible = false; /* Whether file is accessible */
     herr_t                    ret_value     = SUCCEED;
 
@@ -1159,7 +1187,7 @@ H5Fdelete(const char *filename, hid_t fapl_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, FAIL, "no file name specified");
 
     /* Get the pointer to the file access property list */
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_FILE, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
@@ -1188,6 +1216,10 @@ H5Fdelete(const char *filename, hid_t fapl_id)
         HGOTO_ERROR(H5E_FILE, H5E_CANTDELETEFILE, FAIL, "unable to delete the file");
 
 done:
+    /* Release resources */
+    if (fapl && H5P_release(fapl) < 0)
+        HDONE_ERROR(H5E_FILE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Fdelete() */
 
@@ -1207,7 +1239,7 @@ H5Fmount(hid_t loc_id, const char *name, hid_t child_id, hid_t fmpl_id)
     H5VL_object_t             *loc_vol_obj   = NULL; /* Parent object        */
     H5VL_object_t             *child_vol_obj = NULL; /* Child object         */
     H5VL_group_specific_args_t vol_cb_args;          /* Arguments to VOL callback */
-    H5P_genplist_t            *fmpl;                 /* File mount property list */
+    H5P_genplist_t            *fmpl = NULL;                 /* File mount property list */
     void                      *grp = NULL;           /* Root group opened */
     H5I_type_t                 loc_type;             /* ID type of location  */
     htri_t                     same_connector; /* Whether parent and child files use the same connector */
@@ -1227,7 +1259,7 @@ H5Fmount(hid_t loc_id, const char *name, hid_t child_id, hid_t fmpl_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "child_id parameter not a file ID");
 
     /* Get the pointer to the file mount property list */
-    if (NULL == (fmpl = H5P_object_verify(fmpl_id, H5P_TYPE_FILE_MOUNT, true)))
+    if (NULL == (fmpl = H5P_acquire(fmpl_id, H5P_TYPE_FILE_MOUNT, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_FILE, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set up collective metadata if appropriate */
@@ -1291,6 +1323,10 @@ H5Fmount(hid_t loc_id, const char *name, hid_t child_id, hid_t fmpl_id)
         HGOTO_ERROR(H5E_FILE, H5E_MOUNT, FAIL, "unable to mount file");
 
 done:
+    /* Release resources */
+    if (fmpl && H5P_release(fmpl) < 0)
+        HDONE_ERROR(H5E_FILE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     /* Clean up if we temporarily opened the root group for a file */
     if (grp) {
         assert(loc_vol_obj);

@@ -145,14 +145,14 @@ done:
 herr_t
 H5Pset_local_heap_size_hint(hid_t gcpl_id, size_t size_hint)
 {
-    H5P_genplist_t *gcpl;                /* Property list pointer */
+    H5P_genplist_t *gcpl = NULL;                /* Property list pointer */
     H5O_ginfo_t     ginfo;               /* Group information structure */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (gcpl = H5P_object_verify(gcpl_id, H5P_TYPE_GROUP_CREATE, false)))
+    if (NULL == (gcpl = H5P_acquire(gcpl_id, H5P_TYPE_GROUP_CREATE, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get value */
@@ -167,6 +167,10 @@ H5Pset_local_heap_size_hint(hid_t gcpl_id, size_t size_hint)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set group info");
 
 done:
+    /* Release resources */
+    if (gcpl && H5P_release(gcpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_local_heap_size_hint() */
 
@@ -183,16 +187,16 @@ done:
 herr_t
 H5Pget_local_heap_size_hint(hid_t gcpl_id, size_t *size_hint /*out*/)
 {
+    H5P_genplist_t *gcpl = NULL;  /* Property list pointer */
     herr_t ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     if (size_hint) {
-        H5P_genplist_t *gcpl;  /* Property list pointer */
         H5O_ginfo_t     ginfo; /* Group information structure */
 
         /* Get the property list structure */
-        if (NULL == (gcpl = H5P_object_verify(gcpl_id, H5P_TYPE_GROUP_CREATE, true)))
+        if (NULL == (gcpl = H5P_acquire(gcpl_id, H5P_TYPE_GROUP_CREATE, H5I_LOCK_SHARED, true)))
             HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
         /* Get value */
@@ -204,6 +208,10 @@ H5Pget_local_heap_size_hint(hid_t gcpl_id, size_t *size_hint /*out*/)
     } /* end if */
 
 done:
+    /* Release resources */
+    if (gcpl && H5P_release(gcpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_local_heap_size_hint() */
 
@@ -225,7 +233,7 @@ done:
 herr_t
 H5Pset_link_phase_change(hid_t gcpl_id, unsigned max_compact, unsigned min_dense)
 {
-    H5P_genplist_t *gcpl;                /* Property list pointer */
+    H5P_genplist_t *gcpl = NULL;                /* Property list pointer */
     H5O_ginfo_t     ginfo;               /* Group information structure */
     herr_t          ret_value = SUCCEED; /* Return value */
 
@@ -240,7 +248,7 @@ H5Pset_link_phase_change(hid_t gcpl_id, unsigned max_compact, unsigned min_dense
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, FAIL, "min dense value must be < 65536");
 
     /* Get the property list structure */
-    if (NULL == (gcpl = H5P_object_verify(gcpl_id, H5P_TYPE_GROUP_CREATE, false)))
+    if (NULL == (gcpl = H5P_acquire(gcpl_id, H5P_TYPE_GROUP_CREATE, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get group info */
@@ -260,6 +268,10 @@ H5Pset_link_phase_change(hid_t gcpl_id, unsigned max_compact, unsigned min_dense
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set group info");
 
 done:
+    /* Release resources */
+    if (gcpl && H5P_release(gcpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_link_phase_change() */
 
@@ -276,17 +288,17 @@ done:
 herr_t
 H5Pget_link_phase_change(hid_t gcpl_id, unsigned *max_compact /*out*/, unsigned *min_dense /*out*/)
 {
+    H5P_genplist_t *gcpl = NULL;  /* Property list pointer */
     herr_t ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get values */
     if (max_compact || min_dense) {
-        H5P_genplist_t *gcpl;  /* Property list pointer */
         H5O_ginfo_t     ginfo; /* Group information structure */
 
         /* Get the property list structure */
-        if (NULL == (gcpl = H5P_object_verify(gcpl_id, H5P_TYPE_GROUP_CREATE, true)))
+        if (NULL == (gcpl = H5P_acquire(gcpl_id, H5P_TYPE_GROUP_CREATE, H5I_LOCK_SHARED, true)))
             HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
         /* Get group info */
@@ -300,6 +312,10 @@ H5Pget_link_phase_change(hid_t gcpl_id, unsigned *max_compact /*out*/, unsigned 
     } /* end if */
 
 done:
+    /* Release resources */
+    if (gcpl && H5P_release(gcpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_link_phase_change() */
 
@@ -323,7 +339,7 @@ done:
 herr_t
 H5Pset_est_link_info(hid_t gcpl_id, unsigned est_num_entries, unsigned est_name_len)
 {
-    H5P_genplist_t *gcpl;                /* Property list pointer */
+    H5P_genplist_t *gcpl = NULL;                /* Property list pointer */
     H5O_ginfo_t     ginfo;               /* Group information structure */
     herr_t          ret_value = SUCCEED; /* Return value */
 
@@ -336,7 +352,7 @@ H5Pset_est_link_info(hid_t gcpl_id, unsigned est_num_entries, unsigned est_name_
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, FAIL, "est. name length must be < 65536");
 
     /* Get the property list structure */
-    if (NULL == (gcpl = H5P_object_verify(gcpl_id, H5P_TYPE_GROUP_CREATE, false)))
+    if (NULL == (gcpl = H5P_acquire(gcpl_id, H5P_TYPE_GROUP_CREATE, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get group info */
@@ -356,6 +372,10 @@ H5Pset_est_link_info(hid_t gcpl_id, unsigned est_num_entries, unsigned est_name_
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set group info");
 
 done:
+    /* Release resources */
+    if (gcpl && H5P_release(gcpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_est_link_info() */
 
@@ -372,17 +392,17 @@ done:
 herr_t
 H5Pget_est_link_info(hid_t gcpl_id, unsigned *est_num_entries /*out*/, unsigned *est_name_len /*out*/)
 {
+    H5P_genplist_t *gcpl = NULL;  /* Property list pointer */
     herr_t ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get values */
     if (est_num_entries || est_name_len) {
-        H5P_genplist_t *gcpl;  /* Property list pointer */
         H5O_ginfo_t     ginfo; /* Group information structure */
 
         /* Get the property list structure */
-        if (NULL == (gcpl = H5P_object_verify(gcpl_id, H5P_TYPE_GROUP_CREATE, true)))
+        if (NULL == (gcpl = H5P_acquire(gcpl_id, H5P_TYPE_GROUP_CREATE, H5I_LOCK_SHARED, true)))
             HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
         /* Get group info */
@@ -396,6 +416,10 @@ H5Pget_est_link_info(hid_t gcpl_id, unsigned *est_num_entries /*out*/, unsigned 
     } /* end if */
 
 done:
+    /* Release resources */
+    if (gcpl && H5P_release(gcpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_est_link_info() */
 
@@ -411,7 +435,7 @@ done:
 herr_t
 H5Pset_link_creation_order(hid_t gcpl_id, unsigned crt_order_flags)
 {
-    H5P_genplist_t *gcpl;                /* Property list pointer */
+    H5P_genplist_t *gcpl = NULL;                /* Property list pointer */
     H5O_linfo_t     linfo;               /* Link information structure */
     herr_t          ret_value = SUCCEED; /* Return value */
 
@@ -422,7 +446,7 @@ H5Pset_link_creation_order(hid_t gcpl_id, unsigned crt_order_flags)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "tracking creation order is required for index");
 
     /* Get the property list structure */
-    if (NULL == (gcpl = H5P_object_verify(gcpl_id, H5P_TYPE_GROUP_CREATE, false)))
+    if (NULL == (gcpl = H5P_acquire(gcpl_id, H5P_TYPE_GROUP_CREATE, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get link info */
@@ -438,6 +462,10 @@ H5Pset_link_creation_order(hid_t gcpl_id, unsigned crt_order_flags)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set link info");
 
 done:
+    /* Release resources */
+    if (gcpl && H5P_release(gcpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_link_creation_order() */
 
@@ -454,20 +482,20 @@ done:
 herr_t
 H5Pget_link_creation_order(hid_t gcpl_id, unsigned *crt_order_flags /*out*/)
 {
+    H5P_genplist_t *gcpl = NULL;  /* Property list pointer */
     herr_t ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get values */
     if (crt_order_flags) {
-        H5P_genplist_t *gcpl;  /* Property list pointer */
         H5O_linfo_t     linfo; /* Link information structure */
 
         /* Reset the value to return */
         *crt_order_flags = 0;
 
         /* Get the property list structure */
-        if (NULL == (gcpl = H5P_object_verify(gcpl_id, H5P_TYPE_GROUP_CREATE, true)))
+        if (NULL == (gcpl = H5P_acquire(gcpl_id, H5P_TYPE_GROUP_CREATE, H5I_LOCK_SHARED, true)))
             HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
         /* Get link info */
@@ -479,6 +507,10 @@ H5Pget_link_creation_order(hid_t gcpl_id, unsigned *crt_order_flags /*out*/)
     } /* end if */
 
 done:
+    /* Release resources */
+    if (gcpl && H5P_release(gcpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_link_creation_order() */
 

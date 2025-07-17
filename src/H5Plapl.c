@@ -810,7 +810,7 @@ H5P__lacc_elink_pref_close(const char H5_ATTR_UNUSED *name, size_t H5_ATTR_UNUSE
 herr_t
 H5Pset_nlinks(hid_t lapl_id, size_t nlinks)
 {
-    H5P_genplist_t *lapl;                /* Property list pointer */
+    H5P_genplist_t *lapl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -819,7 +819,7 @@ H5Pset_nlinks(hid_t lapl_id, size_t nlinks)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "number of links must be positive");
 
     /* Get the property list structure */
-    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, false)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set number of links */
@@ -827,6 +827,10 @@ H5Pset_nlinks(hid_t lapl_id, size_t nlinks)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set nlink info");
 
 done:
+    /* Release resources */
+    if (lapl && H5P_release(lapl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_nlinks() */
 
@@ -846,7 +850,7 @@ done:
 herr_t
 H5Pget_nlinks(hid_t lapl_id, size_t *nlinks /*out*/)
 {
-    H5P_genplist_t *lapl;                /* Property list pointer */
+    H5P_genplist_t *lapl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -855,7 +859,7 @@ H5Pget_nlinks(hid_t lapl_id, size_t *nlinks /*out*/)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid pointer passed in");
 
     /* Get the property list structure */
-    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get the current number of links */
@@ -863,8 +867,12 @@ H5Pget_nlinks(hid_t lapl_id, size_t *nlinks /*out*/)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get number of links");
 
 done:
+    /* Release resources */
+    if (lapl && H5P_release(lapl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
-}
+} /* end H5Pget_nlinks() */
 
 /*-------------------------------------------------------------------------
  * Function:    H5Pset_elink_prefix
@@ -880,13 +888,13 @@ done:
 herr_t
 H5Pset_elink_prefix(hid_t lapl_id, const char *prefix)
 {
-    H5P_genplist_t *lapl;                /* Property list pointer */
+    H5P_genplist_t *lapl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, false)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set prefix */
@@ -894,6 +902,10 @@ H5Pset_elink_prefix(hid_t lapl_id, const char *prefix)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set prefix info");
 
 done:
+    /* Release resources */
+    if (lapl && H5P_release(lapl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_elink_prefix() */
 
@@ -913,7 +925,7 @@ done:
 ssize_t
 H5Pget_elink_prefix(hid_t lapl_id, char *prefix /*out*/, size_t size)
 {
-    H5P_genplist_t *lapl;      /* Property list pointer */
+    H5P_genplist_t *lapl = NULL;      /* Property list pointer */
     char           *my_prefix; /* Library's copy of the prefix */
     size_t          len;       /* Length of prefix string */
     ssize_t         ret_value; /* Return value */
@@ -921,7 +933,7 @@ H5Pget_elink_prefix(hid_t lapl_id, char *prefix /*out*/, size_t size)
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get the current prefix */
@@ -945,6 +957,10 @@ H5Pget_elink_prefix(hid_t lapl_id, char *prefix /*out*/, size_t size)
     ret_value = (ssize_t)len;
 
 done:
+    /* Release resources */
+    if (lapl && H5P_release(lapl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_elink_prefix() */
 
@@ -960,16 +976,16 @@ done:
 herr_t
 H5Pset_elink_fapl(hid_t lapl_id, hid_t fapl_id)
 {
-    H5P_genplist_t *lapl;                /* LAPL pointer */
-    H5P_genplist_t *elink_fapl;          /* FAPL pointer */
+    H5P_genplist_t *lapl = NULL;                /* LAPL pointer */
+    H5P_genplist_t *elink_fapl = NULL;          /* FAPL pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Check arguments */
-    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, false)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a link access property list");
-    if (NULL == (elink_fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+    if (NULL == (elink_fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
 
     /* Set the file access property list for the link access */
@@ -977,6 +993,12 @@ H5Pset_elink_fapl(hid_t lapl_id, hid_t fapl_id)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set fapl for link");
 
 done:
+    /* Release resources */
+    if (lapl && H5P_release(lapl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+    if (elink_fapl && H5P_release(elink_fapl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_elink_fapl() */
 
@@ -993,14 +1015,14 @@ done:
 hid_t
 H5Pget_elink_fapl(hid_t lapl_id)
 {
-    H5P_genplist_t *lapl;       /* LAPL pointer */
+    H5P_genplist_t *lapl = NULL;       /* LAPL pointer */
     H5P_genplist_t *elink_fapl; /* FAPL pointer */
     hid_t           ret_value;  /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Get the property list structure */
-    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     if (H5P_get(lapl, H5L_ACS_ELINK_FAPL_NAME, &elink_fapl) < 0)
@@ -1015,6 +1037,10 @@ H5Pget_elink_fapl(hid_t lapl_id)
     ret_value = H5P_PLIST_ID(elink_fapl);
 
 done:
+    /* Release resources */
+    if (lapl && H5P_release(lapl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_elink_fapl() */
 
@@ -1032,7 +1058,7 @@ done:
 herr_t
 H5Pset_elink_acc_flags(hid_t lapl_id, unsigned flags)
 {
-    H5P_genplist_t *lapl;                /* Property list pointer */
+    H5P_genplist_t *lapl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1044,7 +1070,7 @@ H5Pset_elink_acc_flags(hid_t lapl_id, unsigned flags)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid file open flags");
 
     /* Get the property list structure */
-    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, false)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set flags */
@@ -1052,6 +1078,10 @@ H5Pset_elink_acc_flags(hid_t lapl_id, unsigned flags)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set access flags");
 
 done:
+    /* Release resources */
+    if (lapl && H5P_release(lapl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_elink_acc_flags() */
 
@@ -1068,13 +1098,13 @@ done:
 herr_t
 H5Pget_elink_acc_flags(hid_t lapl_id, unsigned *flags /*out*/)
 {
-    H5P_genplist_t *lapl;                /* Property list pointer */
+    H5P_genplist_t *lapl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get flags */
@@ -1083,6 +1113,10 @@ H5Pget_elink_acc_flags(hid_t lapl_id, unsigned *flags /*out*/)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, 0, "can't get access flags");
 
 done:
+    /* Release resources */
+    if (lapl && H5P_release(lapl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_elink_acc_flags() */
 
@@ -1100,7 +1134,7 @@ done:
 herr_t
 H5Pset_elink_cb(hid_t lapl_id, H5L_elink_traverse_t func, void *op_data)
 {
-    H5P_genplist_t *lapl;                /* Property list pointer */
+    H5P_genplist_t *lapl = NULL;                /* Property list pointer */
     H5L_elink_cb_t  cb_info;             /* Callback info struct */
     herr_t          ret_value = SUCCEED; /* Return value */
 
@@ -1112,7 +1146,7 @@ H5Pset_elink_cb(hid_t lapl_id, H5L_elink_traverse_t func, void *op_data)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "callback is NULL while user data is not");
 
     /* Get the property list structure */
-    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, false)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Populate the callback info struct */
@@ -1124,6 +1158,10 @@ H5Pset_elink_cb(hid_t lapl_id, H5L_elink_traverse_t func, void *op_data)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set callback info");
 
 done:
+    /* Release resources */
+    if (lapl && H5P_release(lapl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_elink_acc_flags() */
 
@@ -1140,14 +1178,14 @@ done:
 herr_t
 H5Pget_elink_cb(hid_t lapl_id, H5L_elink_traverse_t *func /*out*/, void **op_data /*out*/)
 {
-    H5P_genplist_t *lapl;                /* Property list pointer */
+    H5P_genplist_t *lapl = NULL;                /* Property list pointer */
     H5L_elink_cb_t  cb_info;             /* Callback info struct */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get callback_info */
@@ -1160,5 +1198,9 @@ H5Pget_elink_cb(hid_t lapl_id, H5L_elink_traverse_t *func /*out*/, void **op_dat
         *op_data = cb_info.user_data;
 
 done:
+    /* Release resources */
+    if (lapl && H5P_release(lapl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_elink_cb() */

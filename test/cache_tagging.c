@@ -4417,8 +4417,8 @@ check_invalid_tag_application(void)
         TEST_ERROR;
 
     /* Pop API context */
-    if (api_ctx_pushed && H5CX_pop(false) < 0)
-        TEST_ERROR;
+    if (api_ctx_pushed)
+        H5CX_pop();
     api_ctx_pushed = false;
 
     /* Close open objects and file */
@@ -4437,7 +4437,7 @@ check_invalid_tag_application(void)
 #ifdef H5C_DO_TAGGING_SANITY_CHECKS
 error:
     if (api_ctx_pushed)
-        H5CX_pop(false);
+        H5CX_pop();
 
     return 1;
 #endif /* H5C_DO_TAGGING_SANITY_CHECKS */

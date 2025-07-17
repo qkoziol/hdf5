@@ -444,13 +444,13 @@ herr_t
 H5Pget_version(hid_t fcpl_id, unsigned *super /*out*/, unsigned *freelist /*out*/, unsigned *stab /*out*/,
                unsigned *shhdr /*out*/)
 {
-    H5P_genplist_t *fcpl;                /* Property list pointer */
+    H5P_genplist_t *fcpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (fcpl = H5P_object_verify(fcpl_id, H5P_TYPE_FILE_CREATE, true)))
+    if (NULL == (fcpl = H5P_acquire(fcpl_id, H5P_TYPE_FILE_CREATE, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get values */
@@ -465,6 +465,10 @@ H5Pget_version(hid_t fcpl_id, unsigned *super /*out*/, unsigned *freelist /*out*
         *shhdr = HDF5_SHAREDHEADER_VERSION; /* (hard-wired) */
 
 done:
+    /* Release resources */
+    if (fcpl && H5P_release(fcpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_version() */
 
@@ -521,8 +525,7 @@ done:
 herr_t
 H5Pset_file_space(hid_t fcpl_id, H5F_file_space_type_t strategy, hsize_t threshold)
 {
-
-    H5P_genplist_t       *fcpl;                                         /* Property list pointer */
+    H5P_genplist_t       *fcpl = NULL;                                         /* Property list pointer */
     H5F_fspace_strategy_t new_strategy;                                 /* File space strategy type */
     bool                  new_persist   = H5F_FREE_SPACE_PERSIST_DEF;   /* Persisting free-space or not */
     hsize_t               new_threshold = H5F_FREE_SPACE_THRESHOLD_DEF; /* Free-space section threshold */
@@ -537,7 +540,7 @@ H5Pset_file_space(hid_t fcpl_id, H5F_file_space_type_t strategy, hsize_t thresho
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid strategy");
 
     /* Get the property list structure */
-    if (NULL == (fcpl = H5P_object_verify(fcpl_id, H5P_TYPE_FILE_CREATE, false)))
+    if (NULL == (fcpl = H5P_acquire(fcpl_id, H5P_TYPE_FILE_CREATE, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
 
     /*
@@ -584,6 +587,10 @@ H5Pset_file_space(hid_t fcpl_id, H5F_file_space_type_t strategy, hsize_t thresho
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set file space strategy");
 
 done:
+    /* Release resources */
+    if (fcpl && H5P_release(fcpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* H5Pset_file_space() */
 
@@ -655,13 +662,13 @@ done:
 herr_t
 H5Pget_file_space(hid_t fcpl_id, H5F_file_space_type_t *strategy /*out*/, hsize_t *threshold /*out*/)
 {
-    H5P_genplist_t *fcpl;                /* Property list pointer */
+    H5P_genplist_t *fcpl = NULL;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get the plist structure */
-    if (NULL == (fcpl = H5P_object_verify(fcpl_id, H5P_TYPE_FILE_CREATE, true)))
+    if (NULL == (fcpl = H5P_acquire(fcpl_id, H5P_TYPE_FILE_CREATE, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get current file space info */
@@ -669,6 +676,10 @@ H5Pget_file_space(hid_t fcpl_id, H5F_file_space_type_t *strategy /*out*/, hsize_
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get file space strategy");
 
 done:
+    /* Release resources */
+    if (fcpl && H5P_release(fcpl) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* H5Pget_file_space() */
 #endif /* H5_NO_DEPRECATED_SYMBOLS */

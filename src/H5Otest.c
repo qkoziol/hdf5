@@ -125,8 +125,8 @@ H5O__is_attr_dense_test(hid_t oid)
 done:
     if (oh && H5O_unprotect(loc, oh, H5AC__NO_FLAGS_SET) < 0)
         HDONE_ERROR(H5E_OHDR, H5E_CANTUNPROTECT, FAIL, "unable to release object header");
-    if (api_ctx_pushed && H5CX_pop(false) < 0)
-        HDONE_ERROR(H5E_OHDR, H5E_CANTRESET, FAIL, "can't reset API context");
+    if (api_ctx_pushed)
+        H5CX_pop();
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5O__is_attr_dense_test() */
@@ -228,8 +228,8 @@ done:
         HDONE_ERROR(H5E_OHDR, H5E_CANTCLOSEOBJ, FAIL, "can't close v2 B-tree for name index");
     if (oh && H5O_unprotect(loc, oh, H5AC__NO_FLAGS_SET) < 0)
         HDONE_ERROR(H5E_OHDR, H5E_CANTUNPROTECT, FAIL, "unable to release object header");
-    if (api_ctx_pushed && H5CX_pop(false) < 0)
-        HDONE_ERROR(H5E_OHDR, H5E_CANTRESET, FAIL, "can't reset API context");
+    if (api_ctx_pushed)
+        H5CX_pop();
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5O__is_attr_empty_test() */
@@ -326,8 +326,8 @@ done:
         HDONE_ERROR(H5E_OHDR, H5E_CANTCLOSEOBJ, FAIL, "can't close v2 B-tree for name index");
     if (oh && H5O_unprotect(loc, oh, H5AC__NO_FLAGS_SET) < 0)
         HDONE_ERROR(H5E_OHDR, H5E_CANTUNPROTECT, FAIL, "unable to release object header");
-    if (api_ctx_pushed && H5CX_pop(false) < 0)
-        HDONE_ERROR(H5E_OHDR, H5E_CANTRESET, FAIL, "can't reset API context");
+    if (api_ctx_pushed)
+        H5CX_pop();
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5O__num_attrs_test() */
@@ -431,8 +431,8 @@ done:
         HDONE_ERROR(H5E_OHDR, H5E_CANTCLOSEOBJ, FAIL, "can't close v2 B-tree for creation order index");
     if (oh && H5O_unprotect(loc, oh, H5AC__NO_FLAGS_SET) < 0)
         HDONE_ERROR(H5E_OHDR, H5E_CANTUNPROTECT, FAIL, "unable to release object header");
-    if (api_ctx_pushed && H5CX_pop(false) < 0)
-        HDONE_ERROR(H5E_OHDR, H5E_CANTRESET, FAIL, "can't reset API context");
+    if (api_ctx_pushed)
+        H5CX_pop();
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5O__attr_dense_info_test() */
@@ -668,8 +668,8 @@ H5O__msg_get_chunkno_test(hid_t oid, unsigned msg_type, unsigned *chunk_num)
 done:
     if (oh && H5O_unprotect(loc, oh, H5AC__NO_FLAGS_SET) < 0)
         HDONE_ERROR(H5E_OHDR, H5E_CANTUNPROTECT, FAIL, "unable to release object header");
-    if (api_ctx_pushed && H5CX_pop(false) < 0)
-        HDONE_ERROR(H5E_OHDR, H5E_CANTRESET, FAIL, "can't reset API context");
+    if (api_ctx_pushed)
+        H5CX_pop();
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5O__msg_get_chunkno_test() */
@@ -780,8 +780,8 @@ H5O__msg_move_to_new_chunk_test(hid_t oid, unsigned msg_type)
 done:
     if (oh && H5O_unprotect(loc, oh, H5AC__NO_FLAGS_SET) < 0)
         HDONE_ERROR(H5E_OHDR, H5E_CANTUNPROTECT, FAIL, "unable to release object header");
-    if (api_ctx_pushed && H5CX_pop(false) < 0)
-        HDONE_ERROR(H5E_OHDR, H5E_CANTRESET, FAIL, "can't reset API context");
+    if (api_ctx_pushed)
+        H5CX_pop();
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5O__msg_move_to_new_chunk_test() */

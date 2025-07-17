@@ -343,7 +343,7 @@ H5Pget_fapl_onion(hid_t fapl_id, H5FD_onion_fapl_info_t *info_out)
     /* Check parameters */
     if (NULL == info_out)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "NULL info-out pointer");
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "Not a valid FAPL ID");
     if (H5FD_ONION_VALUE != H5P_get_driver_value(fapl))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "Incorrect VFL driver");
@@ -367,6 +367,10 @@ H5Pget_fapl_onion(hid_t fapl_id, H5FD_onion_fapl_info_t *info_out)
         HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, FAIL, "unable to copy file access property list");
 
 done:
+    /* Release resources */
+    if (fapl && H5P_release(fapl) < 0)
+        HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_fapl_onion() */
 
@@ -386,12 +390,12 @@ herr_t
 H5Pset_fapl_onion(hid_t fapl_id, const H5FD_onion_fapl_info_t *info)
 {
     H5P_genplist_t   *fapl = NULL;
-    H5FD_onion_fapl_t fa; /* Temporary copy of driver info */
+    H5FD_onion_fapl_t fa = {0}; /* Temporary copy of driver info */
     herr_t            ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
 
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "Not a valid FAPL ID");
     if (NULL == info)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "NULL info pointer");
@@ -403,7 +407,7 @@ H5Pset_fapl_onion(hid_t fapl_id, const H5FD_onion_fapl_info_t *info)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid info page size");
 
     /* Get the backing store FAPL */
-    if (NULL == (fa.backing_fapl = H5P_object_verify(info->backing_fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+    if (NULL == (fa.backing_fapl = H5P_acquire(info->backing_fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "invalid backing fapl id");
 
     /* The only backing fapl that is currently supported is sec2 */
@@ -423,6 +427,12 @@ H5Pset_fapl_onion(hid_t fapl_id, const H5FD_onion_fapl_info_t *info)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "Can't set the onion VFD");
 
 done:
+    /* Release resources */
+    if (fapl && H5P_release(fapl) < 0)
+        HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+    if (fa.backing_fapl && H5P_release(fa.backing_fapl) < 0)
+        HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_fapl_onion() */
 
@@ -1750,7 +1760,7 @@ H5FDonion_get_revision_count(const char *filename, hid_t fapl_id, uint64_t *revi
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "revision count can't be null");
 
     /* Make sure using the correct driver */
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "not a valid FAPL ID");
     if (H5FD_ONION_VALUE != H5P_get_driver_value(fapl))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "not a Onion VFL driver");
@@ -1768,6 +1778,10 @@ H5FDonion_get_revision_count(const char *filename, hid_t fapl_id, uint64_t *revi
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "failed to get the number of revisions");
 
 done:
+    /* Release resources */
+    if (fapl && H5P_release(fapl) < 0)
+        HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     /* Close H5FD_t structure pointer */
     if (file && H5FD_close(file) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTCLOSEFILE, FAIL, "unable to close file");

@@ -95,7 +95,7 @@ static hid_t
 H5L__extern_traverse(const char H5_ATTR_UNUSED *link_name, hid_t cur_group, const void *_udata,
                      size_t H5_ATTR_UNUSED udata_size, hid_t lapl_id, hid_t H5_ATTR_UNUSED dxpl_id)
 {
-    H5P_genplist_t *lapl;                               /* Property list pointer */
+    H5P_genplist_t *lapl = NULL;                               /* Property list pointer */
     H5G_loc_t       root_loc;                           /* Location of root group in external file */
     H5G_loc_t       loc;                                /* Location of object */
     H5F_t          *ext_file = NULL;                    /* File struct for external file */
@@ -133,7 +133,7 @@ H5L__extern_traverse(const char H5_ATTR_UNUSED *link_name, hid_t cur_group, cons
     obj_name  = (const char *)p + fname_len + 1;
 
     /* Get the property list structure */
-    if (NULL == (lapl = H5P_object_verify(lapl_id, H5P_TYPE_LINK_ACCESS, true)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Get the location for the group holding the external link */
@@ -234,6 +234,8 @@ H5L__extern_traverse(const char H5_ATTR_UNUSED *link_name, hid_t cur_group, cons
 done:
     /* XXX (VOL MERGE): Probably also want to consider closing ext_obj here on failures */
     /* Release resources */
+    if (lapl && H5P_release(lapl) < 0)
+        HDONE_ERROR(H5E_LINK, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
     if (fapl_copied && fapl && H5P_dissolve(fapl) < 0)
         HDONE_ERROR(H5E_LINK, H5E_CANTCLOSEOBJ, H5I_INVALID_HID, "unable to close file access property list");
     if (ext_file && H5F_efc_close(loc.oloc->file, ext_file) < 0)

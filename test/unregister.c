@@ -299,8 +299,8 @@ main(void)
     printf("All filter unregistration tests passed.\n");
 
     /* Pop API context */
-    if (api_ctx_pushed && H5CX_pop(false) < 0)
-        FAIL_STACK_ERROR;
+    if (api_ctx_pushed)
+        H5CX_pop();
     api_ctx_pushed = false;
 
     exit(EXIT_SUCCESS);
@@ -310,7 +310,7 @@ error:
     printf("***** %d FILTER UNREGISTRATION TEST%s FAILED! *****\n", nerrors, 1 == nerrors ? "" : "S");
 
     if (api_ctx_pushed)
-        H5CX_pop(false);
+        H5CX_pop();
 
     exit(EXIT_FAILURE);
 } /* end main() */

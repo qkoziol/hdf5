@@ -42,7 +42,7 @@
 /****************************/
 
 /* Types of locks that can be acquired */
-typedef enum H5I_lock_mode_t { H5I_LOCK_EXCLUSIVE = 0, H5I_LOCK_SHARED = 1 } H5I_lock_mode_t;
+typedef enum H5I_lock_mode_t { H5I_LOCK_UNLOCKED = 0, H5I_LOCK_EXCLUSIVE = 1, H5I_LOCK_SHARED = 2 } H5I_lock_mode_t;
 
 /**
  * Functions for locking and unlocking an object of a given class.
@@ -83,7 +83,7 @@ typedef struct H5I_class_t {
 /***************************************/
 /* Library-private Function Prototypes */
 /***************************************/
-H5_DLL herr_t     H5I_register_type(H5I_class_t *cls);
+H5_DLL herr_t     H5I_register_type(H5I_class_t *cls, bool internal);
 H5_DLL int64_t    H5I_nmembers(H5I_type_t type);
 H5_DLL herr_t     H5I_clear_type(H5I_type_t type, bool force, bool app_ref);
 H5_DLL H5I_type_t H5I_get_type(hid_t id);
