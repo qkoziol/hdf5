@@ -809,7 +809,7 @@ H5FD__ros3_open(const char *url, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
 done:
     /* Release resources */
     if (fapl && H5P_release(fapl) < 0)
-        HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+        HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, NULL, "unable to unlock property list");
 
     if (ret_value == NULL) {
         if (handle != NULL)
