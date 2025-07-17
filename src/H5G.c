@@ -207,9 +207,9 @@ done:
 hid_t
 H5Gcreate2(hid_t loc_id, const char *name, hid_t lcpl_id, hid_t gcpl_id, hid_t gapl_id)
 {
-    H5P_genplist_t *lcpl = NULL;                        /* Link creation property list */
-    H5P_genplist_t *gcpl = NULL;                        /* Group creation property list */
-    H5P_genplist_t *gapl = NULL;                        /* Group access property list */
+    H5P_genplist_t *lcpl      = NULL;            /* Link creation property list */
+    H5P_genplist_t *gcpl      = NULL;            /* Group creation property list */
+    H5P_genplist_t *gapl      = NULL;            /* Group access property list */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -263,10 +263,10 @@ hid_t
 H5Gcreate_async(const char *app_file, const char *app_func, unsigned app_line, hid_t loc_id, const char *name,
                 hid_t lcpl_id, hid_t gcpl_id, hid_t gapl_id, hid_t es_id)
 {
-    H5VL_object_t  *vol_obj = NULL;              /* Object for loc_id */
-    H5P_genplist_t *lcpl = NULL;                        /* Link creation property list */
-    H5P_genplist_t *gcpl = NULL;                        /* Group creation property list */
-    H5P_genplist_t *gapl = NULL;                        /* Group access property list */
+    H5VL_object_t  *vol_obj   = NULL;            /* Object for loc_id */
+    H5P_genplist_t *lcpl      = NULL;            /* Link creation property list */
+    H5P_genplist_t *gcpl      = NULL;            /* Group creation property list */
+    H5P_genplist_t *gapl      = NULL;            /* Group access property list */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
@@ -361,9 +361,9 @@ done:
 hid_t
 H5Gcreate_anon(hid_t loc_id, hid_t gcpl_id, hid_t gapl_id)
 {
-    void             *grp = NULL;                  /* Structure for new group */
-    H5P_genplist_t   *gcpl = NULL;                        /* Group creation property list */
-    H5P_genplist_t   *gapl = NULL;                        /* Group access property list */
+    void             *grp     = NULL;              /* Structure for new group */
+    H5P_genplist_t   *gcpl    = NULL;              /* Group creation property list */
+    H5P_genplist_t   *gapl    = NULL;              /* Group access property list */
     H5VL_object_t    *vol_obj = NULL;              /* Object for loc_id */
     H5VL_loc_params_t loc_params;                  /* Location parameters for object access */
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */
@@ -482,7 +482,7 @@ done:
 hid_t
 H5Gopen2(hid_t loc_id, const char *name, hid_t gapl_id)
 {
-    H5P_genplist_t *gapl = NULL;                        /* Group access property list */
+    H5P_genplist_t *gapl      = NULL;            /* Group access property list */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -517,8 +517,8 @@ hid_t
 H5Gopen_async(const char *app_file, const char *app_func, unsigned app_line, hid_t loc_id, const char *name,
               hid_t gapl_id, hid_t es_id)
 {
-    H5VL_object_t  *vol_obj = NULL;              /* Object for loc_id */
-    H5P_genplist_t *gapl = NULL;                        /* Group access property list */
+    H5VL_object_t  *vol_obj   = NULL;            /* Object for loc_id */
+    H5P_genplist_t *gapl      = NULL;            /* Group access property list */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
@@ -760,7 +760,7 @@ done:
 herr_t
 H5Gget_info_by_name(hid_t loc_id, const char *name, H5G_info_t *group_info /*out*/, hid_t lapl_id)
 {
-    H5P_genplist_t *lapl = NULL;                /* Link access property list */
+    H5P_genplist_t *lapl      = NULL;    /* Link access property list */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -797,7 +797,7 @@ H5Gget_info_by_name_async(const char *app_file, const char *app_func, unsigned a
     H5VL_object_t  *vol_obj   = NULL;            /* Object for loc_id */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    H5P_genplist_t *lapl = NULL;                        /* Link access property list */
+    H5P_genplist_t *lapl      = NULL;            /* Link access property list */
     herr_t          ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -887,7 +887,7 @@ herr_t
 H5Gget_info_by_idx(hid_t loc_id, const char *group_name, H5_index_t idx_type, H5_iter_order_t order,
                    hsize_t n, H5G_info_t *group_info /*out*/, hid_t lapl_id)
 {
-    H5P_genplist_t *lapl = NULL;                /* Link access property list */
+    H5P_genplist_t *lapl      = NULL;    /* Link access property list */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -926,7 +926,7 @@ H5Gget_info_by_idx_async(const char *app_file, const char *app_func, unsigned ap
     H5VL_object_t  *vol_obj   = NULL;            /* Object for loc_id */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    H5P_genplist_t *lapl = NULL;                        /* Link access property list */
+    H5P_genplist_t *lapl      = NULL;            /* Link access property list */
     herr_t          ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API(FAIL)

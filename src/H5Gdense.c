@@ -249,7 +249,7 @@ H5G__dense_create(H5F_t *f, H5O_linfo_t *linfo, const H5O_pline_t *pline)
     H5B2_t         *bt2_corder = NULL; /* v2 B-tree handle for creation order */
     size_t          fheap_id_len;      /* Fractal heap ID length */
     H5P_genplist_t *old_ocpl  = NULL;
-    H5P_genplist_t *tmp_gcpl      = NULL;    /* DCPL for dataset */
+    H5P_genplist_t *tmp_gcpl  = NULL;    /* DCPL for dataset */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE

@@ -273,9 +273,9 @@ H5I_register_type(H5I_class_t *cls, bool internal)
         HGOTO_ERROR(H5E_ID, H5E_CANTALLOC, FAIL, "ID type allocation failed");
 
     /* Initialize the non-zero fields */
-    type_info->cls        = cls;
-    type_info->nextid     = cls->reserved;
-    type_info->init_count = 1;
+    type_info->cls         = cls;
+    type_info->nextid      = cls->reserved;
+    type_info->init_count  = 1;
     type_info->is_internal = internal;
 
     /* Generate a new H5I_type_t value, if necessary */
@@ -1038,8 +1038,8 @@ done:
 herr_t
 H5I_release(void *obj, H5I_type_t type)
 {
-    H5I_type_info_t *type_info      = NULL; /* Pointer to the ID type */
-    bool             have_type_lock = false;   /* Whether the type lock is held */
+    H5I_type_info_t *type_info      = NULL;  /* Pointer to the ID type */
+    bool             have_type_lock = false; /* Whether the type lock is held */
     herr_t           status         = FAIL;
     herr_t           ret_value      = SUCCEED; /* Return value */
 

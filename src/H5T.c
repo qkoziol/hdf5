@@ -3570,7 +3570,7 @@ H5Tconvert(hid_t src_id, hid_t dst_id, size_t nelmts, void *buf, void *backgroun
 {
     H5T_path_t     *tpath;               /* type conversion info    */
     H5T_t          *src, *dst;           /* unregistered types      */
-    H5P_genplist_t *dxpl = NULL;                /* Dataset transfer property list */
+    H5P_genplist_t *dxpl      = NULL;    /* Dataset transfer property list */
     herr_t          ret_value = SUCCEED; /* Return value            */
 
     FUNC_ENTER_API(FAIL)

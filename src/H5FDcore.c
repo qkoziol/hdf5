@@ -508,7 +508,7 @@ H5FD__core_unregister(void)
 herr_t
 H5Pset_core_write_tracking(hid_t fapl_id, hbool_t is_enabled, size_t page_size)
 {
-    H5P_genplist_t         *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t         *fapl = NULL;         /* Property list pointer */
     H5FD_core_fapl_t        fa;                  /* Core VFD info */
     const H5FD_core_fapl_t *old_fa;              /* Old core VFD info */
     herr_t                  ret_value = SUCCEED; /* Return value */
@@ -559,7 +559,7 @@ done:
 herr_t
 H5Pget_core_write_tracking(hid_t fapl_id, hbool_t *is_enabled /*out*/, size_t *page_size /*out*/)
 {
-    H5P_genplist_t         *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t         *fapl = NULL;         /* Property list pointer */
     const H5FD_core_fapl_t *fa;                  /* Core VFD info */
     herr_t                  ret_value = SUCCEED; /* Return value */
 
@@ -601,7 +601,7 @@ done:
 herr_t
 H5Pset_fapl_core(hid_t fapl_id, size_t increment, hbool_t backing_store)
 {
-    H5P_genplist_t  *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t  *fapl = NULL;         /* Property list pointer */
     H5FD_core_fapl_t fa;                  /* Core VFD info */
     herr_t           ret_value = SUCCEED; /* Return value */
 
@@ -642,7 +642,7 @@ done:
 herr_t
 H5Pget_fapl_core(hid_t fapl_id, size_t *increment /*out*/, hbool_t *backing_store /*out*/)
 {
-    H5P_genplist_t         *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t         *fapl = NULL;         /* Property list pointer */
     const H5FD_core_fapl_t *fa;                  /* Core VFD info */
     herr_t                  ret_value = SUCCEED; /* Return value */
 

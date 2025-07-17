@@ -42,7 +42,11 @@
 /****************************/
 
 /* Types of locks that can be acquired */
-typedef enum H5I_lock_mode_t { H5I_LOCK_UNLOCKED = 0, H5I_LOCK_EXCLUSIVE = 1, H5I_LOCK_SHARED = 2 } H5I_lock_mode_t;
+typedef enum H5I_lock_mode_t {
+    H5I_LOCK_UNLOCKED  = 0,
+    H5I_LOCK_EXCLUSIVE = 1,
+    H5I_LOCK_SHARED    = 2
+} H5I_lock_mode_t;
 
 /**
  * Functions for locking and unlocking an object of a given class.

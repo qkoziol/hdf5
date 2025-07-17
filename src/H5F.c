@@ -425,7 +425,7 @@ H5Fget_vfd_handle(hid_t file_id, hid_t fapl_id, void **file_handle /*out*/)
     H5VL_object_t                   *vol_obj;             /* File info */
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_file_optional_args_t file_opt_args;       /* Arguments for optional operation */
-    H5P_genplist_t                  *fapl = NULL;                /* File access property list */
+    H5P_genplist_t                  *fapl      = NULL;    /* File access property list */
     herr_t                           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -478,7 +478,7 @@ htri_t
 H5Fis_accessible(const char *filename, hid_t fapl_id)
 {
     H5VL_file_specific_args_t vol_cb_args;           /* Arguments to VOL callback */
-    H5P_genplist_t           *fapl = NULL;                  /* File access property list */
+    H5P_genplist_t           *fapl          = NULL;  /* File access property list */
     bool                      is_accessible = false; /* Whether file is accessible */
     htri_t                    ret_value;             /* Return value */
 
@@ -651,9 +651,9 @@ done:
 hid_t
 H5Fcreate(const char *filename, unsigned flags, hid_t fcpl_id, hid_t fapl_id)
 {
-    H5VL_object_t  *vol_obj = NULL;              /* File object */
-    H5P_genplist_t *fcpl = NULL;                        /* File creation property list pointer */
-    H5P_genplist_t *fapl = NULL;                        /* File access property list pointer */
+    H5VL_object_t  *vol_obj   = NULL;            /* File object */
+    H5P_genplist_t *fcpl      = NULL;            /* File creation property list pointer */
+    H5P_genplist_t *fapl      = NULL;            /* File access property list pointer */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -703,9 +703,9 @@ hid_t
 H5Fcreate_async(const char *app_file, const char *app_func, unsigned app_line, const char *filename,
                 unsigned flags, hid_t fcpl_id, hid_t fapl_id, hid_t es_id)
 {
-    H5VL_object_t  *vol_obj = NULL;              /* File object */
-    H5P_genplist_t *fcpl = NULL;                        /* File creation property list pointer */
-    H5P_genplist_t *fapl = NULL;                        /* File access property list pointer */
+    H5VL_object_t  *vol_obj   = NULL;            /* File object */
+    H5P_genplist_t *fcpl      = NULL;            /* File creation property list pointer */
+    H5P_genplist_t *fapl      = NULL;            /* File access property list pointer */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
@@ -852,8 +852,8 @@ done:
 hid_t
 H5Fopen(const char *filename, unsigned flags, hid_t fapl_id)
 {
-    H5VL_object_t  *vol_obj = NULL;              /* File object */
-    H5P_genplist_t *fapl = NULL;                        /* File access property list pointer */
+    H5VL_object_t  *vol_obj   = NULL;            /* File object */
+    H5P_genplist_t *fapl      = NULL;            /* File access property list pointer */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -897,8 +897,8 @@ hid_t
 H5Fopen_async(const char *app_file, const char *app_func, unsigned app_line, const char *filename,
               unsigned flags, hid_t fapl_id, hid_t es_id)
 {
-    H5VL_object_t  *vol_obj = NULL;              /* File object */
-    H5P_genplist_t *fapl = NULL;                        /* File access property list pointer */
+    H5VL_object_t  *vol_obj   = NULL;            /* File object */
+    H5P_genplist_t *fapl      = NULL;            /* File access property list pointer */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
@@ -1176,7 +1176,7 @@ herr_t
 H5Fdelete(const char *filename, hid_t fapl_id)
 {
     H5VL_file_specific_args_t vol_cb_args;           /* Arguments to VOL callback */
-    H5P_genplist_t           *fapl = NULL;                  /* File access property list */
+    H5P_genplist_t           *fapl          = NULL;  /* File access property list */
     bool                      is_accessible = false; /* Whether file is accessible */
     herr_t                    ret_value     = SUCCEED;
 
@@ -1239,8 +1239,8 @@ H5Fmount(hid_t loc_id, const char *name, hid_t child_id, hid_t fmpl_id)
     H5VL_object_t             *loc_vol_obj   = NULL; /* Parent object        */
     H5VL_object_t             *child_vol_obj = NULL; /* Child object         */
     H5VL_group_specific_args_t vol_cb_args;          /* Arguments to VOL callback */
-    H5P_genplist_t            *fmpl = NULL;                 /* File mount property list */
-    void                      *grp = NULL;           /* Root group opened */
+    H5P_genplist_t            *fmpl = NULL;          /* File mount property list */
+    void                      *grp  = NULL;          /* Root group opened */
     H5I_type_t                 loc_type;             /* ID type of location  */
     htri_t                     same_connector; /* Whether parent and child files use the same connector */
     herr_t                     ret_value = SUCCEED; /* Return value         */

@@ -145,7 +145,7 @@ done:
 herr_t
 H5Pset_local_heap_size_hint(hid_t gcpl_id, size_t size_hint)
 {
-    H5P_genplist_t *gcpl = NULL;                /* Property list pointer */
+    H5P_genplist_t *gcpl = NULL;         /* Property list pointer */
     H5O_ginfo_t     ginfo;               /* Group information structure */
     herr_t          ret_value = SUCCEED; /* Return value */
 
@@ -187,13 +187,13 @@ done:
 herr_t
 H5Pget_local_heap_size_hint(hid_t gcpl_id, size_t *size_hint /*out*/)
 {
-    H5P_genplist_t *gcpl = NULL;  /* Property list pointer */
-    herr_t ret_value = SUCCEED; /* return value */
+    H5P_genplist_t *gcpl      = NULL;    /* Property list pointer */
+    herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     if (size_hint) {
-        H5O_ginfo_t     ginfo; /* Group information structure */
+        H5O_ginfo_t ginfo; /* Group information structure */
 
         /* Get the property list structure */
         if (NULL == (gcpl = H5P_acquire(gcpl_id, H5P_TYPE_GROUP_CREATE, H5I_LOCK_SHARED, true)))
@@ -233,7 +233,7 @@ done:
 herr_t
 H5Pset_link_phase_change(hid_t gcpl_id, unsigned max_compact, unsigned min_dense)
 {
-    H5P_genplist_t *gcpl = NULL;                /* Property list pointer */
+    H5P_genplist_t *gcpl = NULL;         /* Property list pointer */
     H5O_ginfo_t     ginfo;               /* Group information structure */
     herr_t          ret_value = SUCCEED; /* Return value */
 
@@ -288,14 +288,14 @@ done:
 herr_t
 H5Pget_link_phase_change(hid_t gcpl_id, unsigned *max_compact /*out*/, unsigned *min_dense /*out*/)
 {
-    H5P_genplist_t *gcpl = NULL;  /* Property list pointer */
-    herr_t ret_value = SUCCEED; /* return value */
+    H5P_genplist_t *gcpl      = NULL;    /* Property list pointer */
+    herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get values */
     if (max_compact || min_dense) {
-        H5O_ginfo_t     ginfo; /* Group information structure */
+        H5O_ginfo_t ginfo; /* Group information structure */
 
         /* Get the property list structure */
         if (NULL == (gcpl = H5P_acquire(gcpl_id, H5P_TYPE_GROUP_CREATE, H5I_LOCK_SHARED, true)))
@@ -339,7 +339,7 @@ done:
 herr_t
 H5Pset_est_link_info(hid_t gcpl_id, unsigned est_num_entries, unsigned est_name_len)
 {
-    H5P_genplist_t *gcpl = NULL;                /* Property list pointer */
+    H5P_genplist_t *gcpl = NULL;         /* Property list pointer */
     H5O_ginfo_t     ginfo;               /* Group information structure */
     herr_t          ret_value = SUCCEED; /* Return value */
 
@@ -392,14 +392,14 @@ done:
 herr_t
 H5Pget_est_link_info(hid_t gcpl_id, unsigned *est_num_entries /*out*/, unsigned *est_name_len /*out*/)
 {
-    H5P_genplist_t *gcpl = NULL;  /* Property list pointer */
-    herr_t ret_value = SUCCEED; /* return value */
+    H5P_genplist_t *gcpl      = NULL;    /* Property list pointer */
+    herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get values */
     if (est_num_entries || est_name_len) {
-        H5O_ginfo_t     ginfo; /* Group information structure */
+        H5O_ginfo_t ginfo; /* Group information structure */
 
         /* Get the property list structure */
         if (NULL == (gcpl = H5P_acquire(gcpl_id, H5P_TYPE_GROUP_CREATE, H5I_LOCK_SHARED, true)))
@@ -435,7 +435,7 @@ done:
 herr_t
 H5Pset_link_creation_order(hid_t gcpl_id, unsigned crt_order_flags)
 {
-    H5P_genplist_t *gcpl = NULL;                /* Property list pointer */
+    H5P_genplist_t *gcpl = NULL;         /* Property list pointer */
     H5O_linfo_t     linfo;               /* Link information structure */
     herr_t          ret_value = SUCCEED; /* Return value */
 
@@ -482,14 +482,14 @@ done:
 herr_t
 H5Pget_link_creation_order(hid_t gcpl_id, unsigned *crt_order_flags /*out*/)
 {
-    H5P_genplist_t *gcpl = NULL;  /* Property list pointer */
-    herr_t ret_value = SUCCEED; /* return value */
+    H5P_genplist_t *gcpl      = NULL;    /* Property list pointer */
+    herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get values */
     if (crt_order_flags) {
-        H5O_linfo_t     linfo; /* Link information structure */
+        H5O_linfo_t linfo; /* Link information structure */
 
         /* Reset the value to return */
         *crt_order_flags = 0;

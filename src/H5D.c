@@ -219,10 +219,10 @@ hid_t
 H5Dcreate_async(const char *app_file, const char *app_func, unsigned app_line, hid_t loc_id, const char *name,
                 hid_t type_id, hid_t space_id, hid_t lcpl_id, hid_t dcpl_id, hid_t dapl_id, hid_t es_id)
 {
-    H5VL_object_t  *vol_obj = NULL;              /* Object for loc_id */
-    H5P_genplist_t *lcpl = NULL;                        /* Link creation property list */
-    H5P_genplist_t *dcpl = NULL;                        /* Dataset creation property list */
-    H5P_genplist_t *dapl = NULL;                        /* Dataset access property list */
+    H5VL_object_t  *vol_obj   = NULL;            /* Object for loc_id */
+    H5P_genplist_t *lcpl      = NULL;            /* Link creation property list */
+    H5P_genplist_t *dcpl      = NULL;            /* Dataset creation property list */
+    H5P_genplist_t *dapl      = NULL;            /* Dataset access property list */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
@@ -318,9 +318,9 @@ done:
 hid_t
 H5Dcreate_anon(hid_t loc_id, hid_t type_id, hid_t space_id, hid_t dcpl_id, hid_t dapl_id)
 {
-    void             *dset = NULL;                 /* dset object from VOL connector */
-    H5P_genplist_t   *dcpl = NULL;                        /* Dataset creation property list */
-    H5P_genplist_t   *dapl = NULL;                        /* Dataset access property list */
+    void             *dset    = NULL;              /* dset object from VOL connector */
+    H5P_genplist_t   *dcpl    = NULL;              /* Dataset creation property list */
+    H5P_genplist_t   *dapl    = NULL;              /* Dataset access property list */
     H5VL_object_t    *vol_obj = NULL;              /* Object for loc_id */
     H5VL_loc_params_t loc_params;                  /* Location parameters for object access */
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */
@@ -442,7 +442,7 @@ done:
 hid_t
 H5Dopen2(hid_t loc_id, const char *name, hid_t dapl_id)
 {
-    H5P_genplist_t *dapl = NULL;                        /* Dataset access property list */
+    H5P_genplist_t *dapl      = NULL;            /* Dataset access property list */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -477,8 +477,8 @@ hid_t
 H5Dopen_async(const char *app_file, const char *app_func, unsigned app_line, hid_t loc_id, const char *name,
               hid_t dapl_id, hid_t es_id)
 {
-    H5VL_object_t  *vol_obj = NULL;              /* Object for loc_id */
-    H5P_genplist_t *dapl = NULL;                        /* Dataset access property list */
+    H5VL_object_t  *vol_obj   = NULL;            /* Object for loc_id */
+    H5P_genplist_t *dapl      = NULL;            /* Dataset access property list */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
@@ -1107,7 +1107,7 @@ herr_t
 H5Dread(hid_t dset_id, hid_t mem_type_id, hid_t mem_space_id, hid_t file_space_id, hid_t dxpl_id,
         void *buf /*out*/)
 {
-    H5P_genplist_t *dxpl = NULL;                /* Dataset transfer property list pointer */
+    H5P_genplist_t *dxpl      = NULL;    /* Dataset transfer property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1149,7 +1149,7 @@ H5Dread_async(const char *app_file, const char *app_func, unsigned app_line, hid
     H5VL_object_t  *vol_obj   = NULL;            /* Dataset VOL object */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    H5P_genplist_t *dxpl = NULL;                        /* Dataset transfer property list pointer */
+    H5P_genplist_t *dxpl      = NULL;            /* Dataset transfer property list pointer */
     herr_t          ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1202,7 +1202,7 @@ herr_t
 H5Dread_multi(size_t count, hid_t dset_id[], hid_t mem_type_id[], hid_t mem_space_id[], hid_t file_space_id[],
               hid_t dxpl_id, void *buf[] /*out*/)
 {
-    H5P_genplist_t *dxpl = NULL;                /* Dataset transfer property list pointer */
+    H5P_genplist_t *dxpl      = NULL;    /* Dataset transfer property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1249,7 +1249,7 @@ H5Dread_multi_async(const char *app_file, const char *app_func, unsigned app_lin
     H5VL_object_t  *vol_obj   = NULL;            /* Dataset VOL object */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    H5P_genplist_t *dxpl = NULL;                        /* Dataset transfer property list pointer */
+    H5P_genplist_t *dxpl      = NULL;            /* Dataset transfer property list pointer */
     herr_t          ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1303,7 +1303,7 @@ H5Dread_chunk(hid_t dset_id, hid_t dxpl_id, const hsize_t *offset, uint32_t *fil
     H5VL_object_t                      *vol_obj;             /* Dataset for this operation   */
     H5VL_optional_args_t                vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_dataset_optional_args_t dset_opt_args;       /* Arguments for optional operation */
-    H5P_genplist_t                     *dxpl = NULL;                /* Dataset transfer property list */
+    H5P_genplist_t                     *dxpl      = NULL;    /* Dataset transfer property list */
     herr_t                              ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1471,7 +1471,7 @@ herr_t
 H5Dwrite(hid_t dset_id, hid_t mem_type_id, hid_t mem_space_id, hid_t file_space_id, hid_t dxpl_id,
          const void *buf)
 {
-    H5P_genplist_t *dxpl = NULL;                /* Dataset transfer property list pointer */
+    H5P_genplist_t *dxpl      = NULL;    /* Dataset transfer property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1514,7 +1514,7 @@ H5Dwrite_async(const char *app_file, const char *app_func, unsigned app_line, hi
     H5VL_object_t  *vol_obj   = NULL;            /* Dataset VOL object */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    H5P_genplist_t *dxpl = NULL;                        /* Dataset transfer property list pointer */
+    H5P_genplist_t *dxpl      = NULL;            /* Dataset transfer property list pointer */
     herr_t          ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1567,7 +1567,7 @@ herr_t
 H5Dwrite_multi(size_t count, hid_t dset_id[], hid_t mem_type_id[], hid_t mem_space_id[],
                hid_t file_space_id[], hid_t dxpl_id, const void *buf[])
 {
-    H5P_genplist_t *dxpl = NULL;                /* Dataset transfer property list pointer */
+    H5P_genplist_t *dxpl      = NULL;    /* Dataset transfer property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1614,7 +1614,7 @@ H5Dwrite_multi_async(const char *app_file, const char *app_func, unsigned app_li
     H5VL_object_t  *vol_obj   = NULL;            /* Dataset VOL object */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    H5P_genplist_t *dxpl = NULL;                        /* Dataset transfer property list pointer */
+    H5P_genplist_t *dxpl      = NULL;            /* Dataset transfer property list pointer */
     herr_t          ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1666,11 +1666,11 @@ herr_t
 H5Dwrite_chunk(hid_t dset_id, hid_t dxpl_id, uint32_t filters, const hsize_t *offset, size_t data_size,
                const void *buf)
 {
-    H5VL_object_t                      *vol_obj;       /* Dataset for this operation   */
-    H5VL_optional_args_t                vol_cb_args;   /* Arguments to VOL callback */
-    H5VL_native_dataset_optional_args_t dset_opt_args; /* Arguments for optional operation */
-    uint32_t                            data_size_32;  /* Chunk data size (limited to 32-bits currently) */
-    H5P_genplist_t                     *dxpl = NULL;          /* Dataset transfer property list pointer */
+    H5VL_object_t                      *vol_obj;          /* Dataset for this operation   */
+    H5VL_optional_args_t                vol_cb_args;      /* Arguments to VOL callback */
+    H5VL_native_dataset_optional_args_t dset_opt_args;    /* Arguments for optional operation */
+    uint32_t                            data_size_32;     /* Chunk data size (limited to 32-bits currently) */
+    H5P_genplist_t                     *dxpl      = NULL; /* Dataset transfer property list pointer */
     herr_t                              ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2624,10 +2624,10 @@ done:
 herr_t
 H5Dchunk_iter(hid_t dset_id, hid_t dxpl_id, H5D_chunk_iter_op_t op, void *op_data)
 {
-    H5VL_object_t                      *vol_obj = NULL; /* Dataset for this operation */
-    H5VL_optional_args_t                vol_cb_args;    /* Arguments to VOL callback */
-    H5VL_native_dataset_optional_args_t dset_opt_args;  /* Arguments for optional operation */
-    H5P_genplist_t                     *dxpl = NULL;           /* Dataset transfer property list */
+    H5VL_object_t                      *vol_obj = NULL;   /* Dataset for this operation */
+    H5VL_optional_args_t                vol_cb_args;      /* Arguments to VOL callback */
+    H5VL_native_dataset_optional_args_t dset_opt_args;    /* Arguments for optional operation */
+    H5P_genplist_t                     *dxpl      = NULL; /* Dataset transfer property list */
     herr_t                              ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)

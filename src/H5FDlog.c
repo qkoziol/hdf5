@@ -269,9 +269,9 @@ H5FD__log_unregister(void)
 herr_t
 H5Pset_fapl_log(hid_t fapl_id, const char *logfile, unsigned long long flags, size_t buf_size)
 {
-    H5FD_log_fapl_t fa;        /* File access property list information */
-    H5P_genplist_t *fapl = NULL;      /* Property list pointer */
-    herr_t          ret_value; /* Return value */
+    H5FD_log_fapl_t fa;          /* File access property list information */
+    H5P_genplist_t *fapl = NULL; /* Property list pointer */
+    herr_t          ret_value;   /* Return value */
 
     FUNC_ENTER_API(FAIL)
 

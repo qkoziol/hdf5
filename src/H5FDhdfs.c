@@ -581,7 +581,7 @@ done:
 herr_t
 H5Pset_fapl_hdfs(hid_t fapl_id, H5FD_hdfs_fapl_t *fa)
 {
-    H5P_genplist_t *fapl = NULL; /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL; /* Property list pointer */
     herr_t          ret_value = FAIL;
 
     FUNC_ENTER_API(FAIL)

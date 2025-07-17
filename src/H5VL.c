@@ -82,7 +82,7 @@ hid_t
 H5VLregister_connector(const H5VL_class_t *cls, hid_t vipl_id)
 {
     H5VL_connector_t *connector = NULL;
-    H5P_genplist_t   *vipl = NULL;                        /* VOL initialization property list */
+    H5P_genplist_t   *vipl      = NULL;            /* VOL initialization property list */
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)

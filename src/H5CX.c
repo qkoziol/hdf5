@@ -6852,7 +6852,7 @@ H5CX_update_dxpl(void)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
     assert((*head)->ctx.dxpl);
-//    assert(1 == H5P_PLIST_LOCK_COUNT((*head)->ctx.dxpl));
+    //    assert(1 == H5P_PLIST_LOCK_COUNT((*head)->ctx.dxpl));
 
     /* Special case for actual_selection_io_mode: we always want to set it
      * in the property list, even if it was never set by the library.
@@ -6861,7 +6861,7 @@ H5CX_update_dxpl(void)
      * set to the default value.
      */
     if (!H5P_PLIST_IS_DEFAULT((*head)->ctx.dxpl) && !(*head)->ctx.dxpl_flags.actual_selection_io_mode_set) {
-        (*head)->ctx.dxpl_props.actual_selection_io_mode = H5CX_def_dxpl_cache.actual_selection_io_mode;
+        (*head)->ctx.dxpl_props.actual_selection_io_mode     = H5CX_def_dxpl_cache.actual_selection_io_mode;
         (*head)->ctx.dxpl_flags.actual_selection_io_mode_set = true;
     }
 
@@ -6900,7 +6900,7 @@ done:
 void
 H5CX_pop(void)
 {
-    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 

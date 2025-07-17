@@ -94,8 +94,8 @@ H5Lmove(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *ds
     H5VL_object_t    *vol_obj2 = NULL; /* Object of dst_id */
     H5VL_loc_params_t loc_params1;
     H5VL_loc_params_t loc_params2;
-    H5P_genplist_t   *lcpl = NULL; /* Link creation property list */
-    H5P_genplist_t   *lapl = NULL; /* Link access property list */
+    H5P_genplist_t   *lcpl        = NULL; /* Link creation property list */
+    H5P_genplist_t   *lapl        = NULL; /* Link access property list */
     H5I_type_t        src_id_type = H5I_BADID, dst_id_type = H5I_BADID;
     herr_t            ret_value = SUCCEED; /* Return value */
 
@@ -203,8 +203,8 @@ H5Lcopy(hid_t src_loc_id, const char *src_name, hid_t dst_loc_id, const char *ds
     H5VL_loc_params_t loc_params1;
     H5VL_object_t    *vol_obj2 = NULL; /* Object of dst_id */
     H5VL_loc_params_t loc_params2;
-    H5P_genplist_t   *lcpl = NULL; /* Link creation property list */
-    H5P_genplist_t   *lapl = NULL; /* Link access property list */
+    H5P_genplist_t   *lcpl        = NULL; /* Link creation property list */
+    H5P_genplist_t   *lapl        = NULL; /* Link access property list */
     H5I_type_t        src_id_type = H5I_BADID, dst_id_type = H5I_BADID;
     herr_t            ret_value = SUCCEED; /* Return value */
 
@@ -364,8 +364,8 @@ herr_t
 H5Lcreate_soft(const char *link_target, hid_t link_loc_id, const char *link_name, hid_t lcpl_id,
                hid_t lapl_id)
 {
-    H5P_genplist_t *lcpl = NULL;                /* Link creation property list */
-    H5P_genplist_t *lapl = NULL;                /* Link access property list */
+    H5P_genplist_t *lcpl      = NULL;    /* Link creation property list */
+    H5P_genplist_t *lapl      = NULL;    /* Link access property list */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -408,9 +408,9 @@ herr_t
 H5Lcreate_soft_async(const char *app_file, const char *app_func, unsigned app_line, const char *link_target,
                      hid_t link_loc_id, const char *link_name, hid_t lcpl_id, hid_t lapl_id, hid_t es_id)
 {
-    H5VL_object_t  *vol_obj = NULL;              /* Object for loc_id */
-    H5P_genplist_t *lcpl = NULL;                        /* Link creation property list */
-    H5P_genplist_t *lapl = NULL;                        /* Link access property list */
+    H5VL_object_t  *vol_obj   = NULL;            /* Object for loc_id */
+    H5P_genplist_t *lcpl      = NULL;            /* Link creation property list */
+    H5P_genplist_t *lapl      = NULL;            /* Link access property list */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     herr_t          ret_value = SUCCEED;         /* Return value */
@@ -561,8 +561,8 @@ herr_t
 H5Lcreate_hard(hid_t cur_loc_id, const char *cur_name, hid_t new_loc_id, const char *new_name, hid_t lcpl_id,
                hid_t lapl_id)
 {
-    H5P_genplist_t *lcpl = NULL;                /* Link creation property list */
-    H5P_genplist_t *lapl = NULL;                /* Link access property list */
+    H5P_genplist_t *lcpl      = NULL;    /* Link creation property list */
+    H5P_genplist_t *lapl      = NULL;    /* Link access property list */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -612,8 +612,8 @@ H5Lcreate_hard_async(const char *app_file, const char *app_func, unsigned app_li
                      hid_t lapl_id, hid_t es_id)
 {
     H5VL_connector_t *connector = NULL;            /* Connector for operation */
-    H5P_genplist_t   *lcpl = NULL;                        /* Link creation property list */
-    H5P_genplist_t   *lapl = NULL;                        /* Link access property list */
+    H5P_genplist_t   *lcpl      = NULL;            /* Link creation property list */
+    H5P_genplist_t   *lapl      = NULL;            /* Link access property list */
     void             *token     = NULL;            /* Request token for async operation        */
     void            **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     herr_t            ret_value = SUCCEED;         /* Return value */
@@ -683,8 +683,8 @@ H5Lcreate_external(const char *file_name, const char *obj_name, hid_t link_loc_i
                    hid_t lcpl_id, hid_t lapl_id)
 {
     H5VL_object_t          *vol_obj = NULL;       /* Object of loc_id */
-    H5P_genplist_t         *lcpl = NULL;                 /* Link creation property list */
-    H5P_genplist_t         *lapl = NULL;                 /* Link access property list */
+    H5P_genplist_t         *lcpl    = NULL;       /* Link creation property list */
+    H5P_genplist_t         *lapl    = NULL;       /* Link access property list */
     H5VL_link_create_args_t vol_cb_args;          /* Arguments to VOL callback */
     H5VL_loc_params_t       loc_params;           /* Location parameters for object access */
     char                   *norm_obj_name = NULL; /* Pointer to normalized current name */
@@ -796,8 +796,8 @@ H5Lcreate_ud(hid_t link_loc_id, const char *link_name, H5L_type_t link_type, con
              size_t udata_size, hid_t lcpl_id, hid_t lapl_id)
 {
     H5VL_object_t          *vol_obj = NULL;      /* Object of loc_id */
-    H5P_genplist_t         *lcpl = NULL;                /* Link creation property list */
-    H5P_genplist_t         *lapl = NULL;                /* Link access property list */
+    H5P_genplist_t         *lcpl    = NULL;      /* Link creation property list */
+    H5P_genplist_t         *lapl    = NULL;      /* Link access property list */
     H5VL_link_create_args_t vol_cb_args;         /* Arguments to VOL callback */
     H5VL_loc_params_t       loc_params;          /* Location parameters for object access */
     herr_t                  ret_value = SUCCEED; /* Return value */
@@ -913,7 +913,7 @@ done:
 herr_t
 H5Ldelete(hid_t loc_id, const char *name, hid_t lapl_id)
 {
-    H5P_genplist_t *lapl = NULL;                /* Link access property list */
+    H5P_genplist_t *lapl      = NULL;    /* Link access property list */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -950,7 +950,7 @@ H5Ldelete_async(const char *app_file, const char *app_func, unsigned app_line, h
     H5VL_object_t  *vol_obj   = NULL;            /* Object for loc_id */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    H5P_genplist_t *lapl = NULL;                        /* Link access property list */
+    H5P_genplist_t *lapl      = NULL;            /* Link access property list */
     herr_t          ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1051,7 +1051,7 @@ herr_t
 H5Ldelete_by_idx(hid_t loc_id, const char *group_name, H5_index_t idx_type, H5_iter_order_t order, hsize_t n,
                  hid_t lapl_id)
 {
-    H5P_genplist_t *lapl = NULL;                /* Link access property list */
+    H5P_genplist_t *lapl      = NULL;    /* Link access property list */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1089,7 +1089,7 @@ H5Ldelete_by_idx_async(const char *app_file, const char *app_func, unsigned app_
     H5VL_object_t  *vol_obj   = NULL;            /* Object for loc_id */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    H5P_genplist_t *lapl = NULL;                        /* Link access property list */
+    H5P_genplist_t *lapl      = NULL;            /* Link access property list */
     herr_t          ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1317,7 +1317,7 @@ done:
 htri_t
 H5Lexists(hid_t loc_id, const char *name, hid_t lapl_id)
 {
-    H5P_genplist_t *lapl = NULL;             /* Link access property list */
+    H5P_genplist_t *lapl = NULL;      /* Link access property list */
     bool            exists;           /* Flag to indicate if link exists */
     htri_t          ret_value = FAIL; /* Return value */
 
@@ -1358,7 +1358,7 @@ H5Lexists_async(const char *app_file, const char *app_func, unsigned app_line, h
     H5VL_object_t  *vol_obj   = NULL;            /* Object for loc_id */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    H5P_genplist_t *lapl = NULL;                        /* Link access property list */
+    H5P_genplist_t *lapl      = NULL;            /* Link access property list */
     herr_t          ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API(FAIL)

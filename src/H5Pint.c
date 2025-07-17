@@ -18,7 +18,7 @@
 /* Module Setup */
 /****************/
 
-#define H5TS_FRIEND     /*suppress error about including H5TSpkg      */
+#define H5TS_FRIEND    /*suppress error about including H5TSpkg      */
 #include "H5Pmodule.h" /* This source code file is part of the H5P module */
 
 /***********/
@@ -31,7 +31,7 @@
 #include "H5MMprivate.h" /* Memory management			*/
 #include "H5Ppkg.h"      /* Property lists		  	*/
 #include "H5SLprivate.h" /* Skip Lists                          */
-#include "H5TSpkg.h"      /* Threadsafety                           */
+#include "H5TSpkg.h"     /* Threadsafety                           */
 
 /****************/
 /* Local Macros */
@@ -3299,16 +3299,16 @@ H5P_poke(H5P_genplist_t *plist, const char *name, const void *value)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTMODIFY, FAIL, "can't modify read-only property list");
 
 #ifdef H5_HAVE_CONCURRENCY
-{
-    unsigned dlftt;
+    {
+        unsigned dlftt;
 
-    H5TS__get_dlftt(&dlftt);
-// fprintf(stderr, "%s:%u - dlftt = %u\n", __func__, __LINE__, dlftt);
+        H5TS__get_dlftt(&dlftt);
+        // fprintf(stderr, "%s:%u - dlftt = %u\n", __func__, __LINE__, dlftt);
 
-    /* Check for public property list being locked */
-    if(1 == dlftt && !plist->is_private && plist->locked && H5I_LOCK_EXCLUSIVE != plist->lock_mode)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTMODIFY, FAIL, "can't modify locked property list");
-}
+        /* Check for public property list being locked */
+        if (1 == dlftt && !plist->is_private && plist->locked && H5I_LOCK_EXCLUSIVE != plist->lock_mode)
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTMODIFY, FAIL, "can't modify locked property list");
+    }
 #endif /* H5_HAVE_CONCURRENCY */
 
     /* Find the property and set the value */
@@ -3546,16 +3546,16 @@ H5P_set(H5P_genplist_t *plist, const char *name, const void *value)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTMODIFY, FAIL, "can't modify read-only property list");
 
 #ifdef H5_HAVE_CONCURRENCY
-{
-    unsigned dlftt;
+    {
+        unsigned dlftt;
 
-    H5TS__get_dlftt(&dlftt);
-// fprintf(stderr, "%s:%u - dlftt = %u\n", __func__, __LINE__, dlftt);
+        H5TS__get_dlftt(&dlftt);
+        // fprintf(stderr, "%s:%u - dlftt = %u\n", __func__, __LINE__, dlftt);
 
-    /* Check for public property list being locked */
-    if(1 == dlftt && !plist->is_private && plist->locked && H5I_LOCK_EXCLUSIVE != plist->lock_mode)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTMODIFY, FAIL, "can't modify locked property list");
-}
+        /* Check for public property list being locked */
+        if (1 == dlftt && !plist->is_private && plist->locked && H5I_LOCK_EXCLUSIVE != plist->lock_mode)
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTMODIFY, FAIL, "can't modify locked property list");
+    }
 #endif /* H5_HAVE_CONCURRENCY */
 
     /* Find the property and set the value */
@@ -5287,16 +5287,16 @@ H5P_remove(H5P_genplist_t *plist, const char *name)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTMODIFY, FAIL, "can't modify read-only property list");
 
 #ifdef H5_HAVE_CONCURRENCY
-{
-    unsigned dlftt;
+    {
+        unsigned dlftt;
 
-    H5TS__get_dlftt(&dlftt);
-// fprintf(stderr, "%s:%u - dlftt = %u\n", __func__, __LINE__, dlftt);
+        H5TS__get_dlftt(&dlftt);
+        // fprintf(stderr, "%s:%u - dlftt = %u\n", __func__, __LINE__, dlftt);
 
-    /* Check for public property list being locked */
-    if(1 == dlftt && !plist->is_private && plist->locked && H5I_LOCK_EXCLUSIVE != plist->lock_mode)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTMODIFY, FAIL, "can't modify locked property list");
-}
+        /* Check for public property list being locked */
+        if (1 == dlftt && !plist->is_private && plist->locked && H5I_LOCK_EXCLUSIVE != plist->lock_mode)
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTMODIFY, FAIL, "can't modify locked property list");
+    }
 #endif /* H5_HAVE_CONCURRENCY */
 
     /* Find the property and get the value */
@@ -5565,7 +5565,7 @@ H5P_close(H5P_genplist_t *plist)
         if (H5P__close(plist) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, FAIL, "can't close property list");
     }
-#else /* H5_HAVE_CONCURRENCY */
+#else  /* H5_HAVE_CONCURRENCY */
     /* Close property list immediately */
     if (H5P__close(plist) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, FAIL, "can't close property list");
@@ -6278,27 +6278,27 @@ H5P_lock(H5P_genplist_t *plist, H5I_lock_mode_t mode)
     assert(plist);
 
 #ifdef H5_HAVE_CONCURRENCY
-{
-    unsigned dlftt;
+    {
+        unsigned dlftt;
 
-    H5TS__get_dlftt(&dlftt);
-// fprintf(stderr, "%s:%u - dlftt = %u\n", __func__, __LINE__, dlftt);
+        H5TS__get_dlftt(&dlftt);
+        // fprintf(stderr, "%s:%u - dlftt = %u\n", __func__, __LINE__, dlftt);
 
-    /* Don't lock default property lists */
-    if (1 == dlftt && !H5P_PLIST_IS_DEFAULT(plist)) {
-        /* Private lists don't need to be locked */
-        assert(!plist->is_private);
+        /* Don't lock default property lists */
+        if (1 == dlftt && !H5P_PLIST_IS_DEFAULT(plist)) {
+            /* Private lists don't need to be locked */
+            assert(!plist->is_private);
 
-        /* Don't allow recursive write locks */
-        assert(H5I_LOCK_EXCLUSIVE != plist->lock_mode);
+            /* Don't allow recursive write locks */
+            assert(H5I_LOCK_EXCLUSIVE != plist->lock_mode);
 
-        /* Increment lock counter on property list */
-        plist->locked++;
+            /* Increment lock counter on property list */
+            plist->locked++;
 
-        /* Set the lock mode */
-        plist->lock_mode = mode;
+            /* Set the lock mode */
+            plist->lock_mode = mode;
+        }
     }
-}
 #endif /* H5_HAVE_CONCURRENCY */
 
     FUNC_LEAVE_NOAPI_VOID
@@ -6322,28 +6322,28 @@ H5P_unlock(H5P_genplist_t *plist)
     assert(plist);
 
 #ifdef H5_HAVE_CONCURRENCY
-{
-    unsigned dlftt;
+    {
+        unsigned dlftt;
 
-    H5TS__get_dlftt(&dlftt);
-// fprintf(stderr, "%s:%u - dlftt = %u\n", __func__, __LINE__, dlftt);
+        H5TS__get_dlftt(&dlftt);
+        // fprintf(stderr, "%s:%u - dlftt = %u\n", __func__, __LINE__, dlftt);
 
-    /* Default property lists are never locked */
-    if (1 == dlftt && !H5P_PLIST_IS_DEFAULT(plist)) {
-        /* Decrement lock counter on property list */
-        plist->locked--;
+        /* Default property lists are never locked */
+        if (1 == dlftt && !H5P_PLIST_IS_DEFAULT(plist)) {
+            /* Decrement lock counter on property list */
+            plist->locked--;
 
-        /* Check for last lock on closed property list */
-        if (0 == plist->locked) {
-            /* Reset the lock mode */
-            plist->lock_mode = H5I_LOCK_UNLOCKED;
+            /* Check for last lock on closed property list */
+            if (0 == plist->locked) {
+                /* Reset the lock mode */
+                plist->lock_mode = H5I_LOCK_UNLOCKED;
 
-            /* Check if property list close was deferred by lock */
-            if (plist->is_closed)
-                H5P__close(plist);
+                /* Check if property list close was deferred by lock */
+                if (plist->is_closed)
+                    H5P__close(plist);
+            }
         }
     }
-}
 #endif /* H5_HAVE_CONCURRENCY */
 
     FUNC_LEAVE_NOAPI_VOID

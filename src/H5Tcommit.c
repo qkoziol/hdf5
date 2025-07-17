@@ -145,9 +145,9 @@ done:
 herr_t
 H5Tcommit2(hid_t loc_id, const char *name, hid_t type_id, hid_t lcpl_id, hid_t tcpl_id, hid_t tapl_id)
 {
-    H5P_genplist_t *lcpl = NULL;                /* Link creation property list */
-    H5P_genplist_t *tcpl = NULL;                /* Datatype creation property list */
-    H5P_genplist_t *tapl = NULL;                /* Datatype access property list */
+    H5P_genplist_t *lcpl      = NULL;    /* Link creation property list */
+    H5P_genplist_t *tcpl      = NULL;    /* Datatype creation property list */
+    H5P_genplist_t *tapl      = NULL;    /* Datatype access property list */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -196,10 +196,10 @@ herr_t
 H5Tcommit_async(const char *app_file, const char *app_func, unsigned app_line, hid_t loc_id, const char *name,
                 hid_t type_id, hid_t lcpl_id, hid_t tcpl_id, hid_t tapl_id, hid_t es_id)
 {
-    H5VL_object_t  *vol_obj = NULL;              /* Object for loc_id */
-    H5P_genplist_t *lcpl = NULL;                        /* Link creation property list */
-    H5P_genplist_t *tcpl = NULL;                        /* Datatype creation property list */
-    H5P_genplist_t *tapl = NULL;                        /* Datatype access property list */
+    H5VL_object_t  *vol_obj   = NULL;            /* Object for loc_id */
+    H5P_genplist_t *lcpl      = NULL;            /* Link creation property list */
+    H5P_genplist_t *tcpl      = NULL;            /* Datatype creation property list */
+    H5P_genplist_t *tapl      = NULL;            /* Datatype access property list */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     herr_t          ret_value = SUCCEED;         /* Return value */
@@ -345,9 +345,9 @@ done:
 herr_t
 H5Tcommit_anon(hid_t loc_id, hid_t type_id, hid_t tcpl_id, hid_t tapl_id)
 {
-    void             *dt = NULL;      /* datatype object created by VOL connector */
-    H5P_genplist_t   *tcpl = NULL;           /* Datatype creation property list */
-    H5P_genplist_t   *tapl = NULL;           /* Datatype access property list */
+    void             *dt      = NULL; /* datatype object created by VOL connector */
+    H5P_genplist_t   *tcpl    = NULL; /* Datatype creation property list */
+    H5P_genplist_t   *tapl    = NULL; /* Datatype access property list */
     H5VL_object_t    *new_obj = NULL; /* VOL object that holds the datatype object and the VOL info */
     H5T_t            *type    = NULL; /* Datatype created */
     H5VL_object_t    *vol_obj = NULL; /* object of loc_id */
@@ -719,7 +719,7 @@ done:
 hid_t
 H5Topen2(hid_t loc_id, const char *name, hid_t tapl_id)
 {
-    H5P_genplist_t *tapl = NULL;                        /* Datatype access property list */
+    H5P_genplist_t *tapl      = NULL;            /* Datatype access property list */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -756,8 +756,8 @@ hid_t
 H5Topen_async(const char *app_file, const char *app_func, unsigned app_line, hid_t loc_id, const char *name,
               hid_t tapl_id, hid_t es_id)
 {
-    H5VL_object_t  *vol_obj = NULL;              /* Object for loc_id */
-    H5P_genplist_t *tapl = NULL;                        /* Datatype access property list */
+    H5VL_object_t  *vol_obj   = NULL;            /* Object for loc_id */
+    H5P_genplist_t *tapl      = NULL;            /* Datatype access property list */
     void           *token     = NULL;            /* Request token for async operation */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */

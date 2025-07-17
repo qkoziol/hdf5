@@ -629,7 +629,7 @@ H5_DLL herr_t H5CX_init_phase2(void);
 
 /* Library private routines */
 H5_DLL herr_t H5CX_push(H5CX_node_t *cnode);
-H5_DLL void H5CX_pop(void);
+H5_DLL void   H5CX_pop(void);
 H5_DLL bool   H5CX_pushed(void);
 
 /* API context state routines */

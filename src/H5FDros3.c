@@ -725,7 +725,7 @@ static H5FD_t *
 H5FD__ros3_open(const char *url, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
 {
     H5FD_ros3_t            *file       = NULL;
-    H5P_genplist_t *fapl = NULL;
+    H5P_genplist_t         *fapl       = NULL;
     s3r_t                  *handle     = NULL;
     const H5FD_ros3_fapl_t *fa         = NULL;
     char                   *fapl_token = NULL;
@@ -758,7 +758,7 @@ H5FD__ros3_open(const char *url, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
 
     /* Get the token, if it exists */
     if (fa->authenticate) {
-        htri_t          token_exists;
+        htri_t token_exists;
 
         if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file access property list");

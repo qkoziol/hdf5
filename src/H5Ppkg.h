@@ -26,7 +26,7 @@
 #include "H5Pprivate.h"
 
 /* Other private headers needed by this file */
-#include "H5Iprivate.h" /* ID management */
+#include "H5Iprivate.h"  /* ID management */
 #include "H5SLprivate.h" /* Skip lists				*/
 
 /**************************/

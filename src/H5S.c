@@ -1428,7 +1428,7 @@ herr_t
 H5Sencode2(hid_t obj_id, void *buf, size_t *nalloc, hid_t fapl_id)
 {
     H5S_t          *dspace;
-    H5P_genplist_t *fapl = NULL; /* File access property list */
+    H5P_genplist_t *fapl      = NULL; /* File access property list */
     herr_t          ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)

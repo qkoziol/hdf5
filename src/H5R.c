@@ -89,7 +89,7 @@ H5Rcreate_object(hid_t loc_id, const char *name, hid_t oapl_id, H5R_ref_t *ref_p
     H5O_token_t                 obj_token = {0};                /* Object token */
     H5VL_file_cont_info_t       cont_info = {H5VL_CONTAINER_INFO_VERSION, 0, 0, 0};
     H5VL_file_get_args_t        file_get_vol_cb_args; /* Arguments to VOL callback */
-    H5P_genplist_t             *oapl = NULL;                 /* Object access property list */
+    H5P_genplist_t             *oapl      = NULL;     /* Object access property list */
     herr_t                      ret_value = SUCCEED;  /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -185,8 +185,8 @@ H5Rcreate_region(hid_t loc_id, const char *name, hid_t space_id, hid_t oapl_id, 
     H5O_token_t                 obj_token = {0};                /* Object token */
     H5VL_file_cont_info_t       cont_info = {H5VL_CONTAINER_INFO_VERSION, 0, 0, 0};
     H5VL_file_get_args_t        file_get_vol_cb_args; /* Arguments to VOL callback */
-    struct H5S_t               *space = NULL;         /* Pointer to dataspace containing region */
-    H5P_genplist_t             *oapl = NULL;                 /* Object access property list */
+    struct H5S_t               *space     = NULL;     /* Pointer to dataspace containing region */
+    H5P_genplist_t             *oapl      = NULL;     /* Object access property list */
     herr_t                      ret_value = SUCCEED;  /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -286,7 +286,7 @@ H5Rcreate_attr(hid_t loc_id, const char *name, const char *attr_name, hid_t oapl
     H5O_token_t                 obj_token = {0};                /* Object token */
     H5VL_file_cont_info_t       cont_info = {H5VL_CONTAINER_INFO_VERSION, 0, 0, 0};
     H5VL_file_get_args_t        file_get_vol_cb_args; /* Arguments to VOL callback */
-    H5P_genplist_t             *oapl = NULL;                 /* Object access property list */
+    H5P_genplist_t             *oapl      = NULL;     /* Object access property list */
     herr_t                      ret_value = SUCCEED;  /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -567,8 +567,8 @@ hid_t
 H5Ropen_object(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t oapl_id)
 {
     hid_t           file_id;                     /* Reference file ID */
-    H5P_genplist_t *dapl = NULL;                        /* Dataset access property list */
-    H5P_genplist_t *rapl = NULL; /* Property list for RAPL */
+    H5P_genplist_t *dapl      = NULL;            /* Dataset access property list */
+    H5P_genplist_t *rapl      = NULL;            /* Property list for RAPL */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -627,8 +627,8 @@ H5Ropen_object_async(const char *app_file, const char *app_func, unsigned app_li
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
     hid_t           file_id;                     /* Reference file ID */
-    H5P_genplist_t *dapl = NULL;                        /* Dataset access property list */
-    H5P_genplist_t *rapl = NULL; /* Property list for RAPL */
+    H5P_genplist_t *dapl      = NULL;            /* Dataset access property list */
+    H5P_genplist_t *rapl      = NULL;            /* Property list for RAPL */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -773,8 +773,8 @@ hid_t
 H5Ropen_region(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t oapl_id)
 {
     hid_t           file_id;                     /* Reference file ID */
-    H5P_genplist_t *dapl = NULL;                        /* Dataset access property list */
-    H5P_genplist_t *rapl = NULL; /* Property list for RAPL */
+    H5P_genplist_t *dapl      = NULL;            /* Dataset access property list */
+    H5P_genplist_t *rapl      = NULL;            /* Property list for RAPL */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -833,8 +833,8 @@ H5Ropen_region_async(const char *app_file, const char *app_func, unsigned app_li
     void           *token     = NULL;            /* Request token for async operation */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation */
     hid_t           file_id;                     /* Reference file ID */
-    H5P_genplist_t *dapl = NULL;                        /* Dataset access property list */
-    H5P_genplist_t *rapl = NULL; /* Property list for RAPL */
+    H5P_genplist_t *dapl      = NULL;            /* Dataset access property list */
+    H5P_genplist_t *rapl      = NULL;            /* Property list for RAPL */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
@@ -973,8 +973,8 @@ done:
 hid_t
 H5Ropen_attr(H5R_ref_t *ref_ptr, hid_t rapl_id, hid_t aapl_id)
 {
-    H5P_genplist_t *aapl = NULL;                        /* Attribute access property list */
-    H5P_genplist_t *rapl = NULL; /* Property list for RAPL */
+    H5P_genplist_t *aapl = NULL;                 /* Attribute access property list */
+    H5P_genplist_t *rapl = NULL;                 /* Property list for RAPL */
     hid_t           file_id;                     /* Reference file ID */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
@@ -1031,8 +1031,8 @@ H5Ropen_attr_async(const char *app_file, const char *app_func, unsigned app_line
     H5VL_object_t  *vol_obj   = NULL;            /* Object for file_id */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    H5P_genplist_t *aapl = NULL;                        /* Attribute access property list */
-    H5P_genplist_t *rapl = NULL; /* Property list for RAPL */
+    H5P_genplist_t *aapl      = NULL;            /* Attribute access property list */
+    H5P_genplist_t *rapl      = NULL;            /* Property list for RAPL */
     hid_t           file_id;                     /* Reference file ID */
     hid_t           ret_value;                   /* Return value */
 
@@ -1108,7 +1108,7 @@ H5Rget_obj_type3(H5R_ref_t *ref_ptr, hid_t rapl_id, H5O_type_t *obj_type /*out*/
     H5VL_object_t         *vol_obj = NULL;      /* Object of file_id */
     H5VL_object_get_args_t vol_cb_args;         /* Arguments to VOL callback */
     H5VL_loc_params_t      loc_params;          /* Location parameters */
-    H5P_genplist_t *rapl = NULL; /* Property list for RAPL */
+    H5P_genplist_t        *rapl      = NULL;    /* Property list for RAPL */
     H5O_token_t            obj_token = {0};     /* Object token */
     herr_t                 ret_value = SUCCEED; /* Return value */
 
@@ -1234,14 +1234,14 @@ done:
 ssize_t
 H5Rget_obj_name(H5R_ref_t *ref_ptr, hid_t rapl_id, char *buf /*out*/, size_t size)
 {
-    hid_t                  file_id;            /* Reference file ID */
-    H5VL_object_t         *vol_obj = NULL;     /* Object of file_id */
-    H5VL_object_get_args_t vol_cb_args;        /* Arguments to VOL callback */
-    H5VL_loc_params_t      loc_params;         /* Location parameters */
-    H5P_genplist_t *rapl = NULL; /* Property list for RAPL */
-    H5O_token_t            obj_token    = {0}; /* Object token */
-    size_t                 obj_name_len = 0;   /* Length of object's name */
-    ssize_t                ret_value    = 0;   /* Return value */
+    hid_t                  file_id;             /* Reference file ID */
+    H5VL_object_t         *vol_obj = NULL;      /* Object of file_id */
+    H5VL_object_get_args_t vol_cb_args;         /* Arguments to VOL callback */
+    H5VL_loc_params_t      loc_params;          /* Location parameters */
+    H5P_genplist_t        *rapl         = NULL; /* Property list for RAPL */
+    H5O_token_t            obj_token    = {0};  /* Object token */
+    size_t                 obj_name_len = 0;    /* Length of object's name */
+    ssize_t                ret_value    = 0;    /* Return value */
 
     FUNC_ENTER_API((-1))
 

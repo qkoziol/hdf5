@@ -852,7 +852,7 @@ done:
 herr_t
 H5Pset_alignment(hid_t fapl_id, hsize_t threshold, hsize_t alignment)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -893,7 +893,7 @@ done:
 herr_t
 H5Pget_alignment(hid_t fapl_id, hsize_t *threshold /*out*/, hsize_t *alignment /*out*/)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1019,7 +1019,7 @@ done:
 herr_t
 H5Pset_driver(hid_t fapl_id, hid_t new_driver_id, const void *new_driver_info)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl = NULL;         /* Property list pointer */
     H5FD_driver_t  *driver;              /* Driver for ID */
     herr_t          ret_value = SUCCEED; /* Return value */
 
@@ -1115,7 +1115,7 @@ done:
 herr_t
 H5Pset_driver_by_name(hid_t fapl_id, const char *driver_name, const char *driver_config)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1212,7 +1212,7 @@ done:
 herr_t
 H5Pset_driver_by_value(hid_t fapl_id, H5FD_class_value_t driver_value, const char *driver_config)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1321,7 +1321,7 @@ done:
 hid_t
 H5Pget_driver(hid_t fapl_id)
 {
-    H5P_genplist_t    *fapl = NULL;        /* Property list pointer */
+    H5P_genplist_t    *fapl = NULL; /* Property list pointer */
     H5FD_driver_prop_t driver_prop; /* Property for VOL connector ID & info */
     hid_t              ret_value;   /* Return value */
 
@@ -1484,7 +1484,7 @@ done:
 ssize_t
 H5Pget_driver_config_str(hid_t fapl_id, char *config_buf, size_t buf_size)
 {
-    H5P_genplist_t *fapl = NULL; /* Property list pointer */
+    H5P_genplist_t *fapl       = NULL; /* Property list pointer */
     const char     *config_str = NULL;
     ssize_t         ret_value  = -1;
 
@@ -1539,7 +1539,7 @@ done:
 H5FD_class_value_t
 H5Pget_driver_cls_value(hid_t fapl_id)
 {
-    H5P_genplist_t    *fapl = NULL;        /* Property list pointer */
+    H5P_genplist_t    *fapl = NULL; /* Property list pointer */
     H5FD_driver_prop_t driver_prop; /* Property for VOL connector ID & info */
     H5FD_class_value_t ret_value;   /* Return value */
 
@@ -1773,7 +1773,7 @@ done:
 herr_t
 H5Pset_multi_type(hid_t fapl_id, H5FD_mem_t type)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1809,7 +1809,7 @@ done:
 herr_t
 H5Pget_multi_type(hid_t fapl_id, H5FD_mem_t *type /*out*/)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1854,7 +1854,7 @@ herr_t
 H5Pset_cache(hid_t fapl_id, int H5_ATTR_UNUSED mdc_nelmts, size_t rdcc_nslots, size_t rdcc_nbytes,
              double rdcc_w0)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1901,7 +1901,7 @@ herr_t
 H5Pget_cache(hid_t fapl_id, int *mdc_nelmts, size_t *rdcc_nslots /*out*/, size_t *rdcc_nbytes /*out*/,
              double *rdcc_w0 /*out*/)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1947,7 +1947,7 @@ done:
 herr_t
 H5Pset_mdc_image_config(hid_t fapl_id, H5AC_cache_image_config_t *config_ptr)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1994,7 +1994,7 @@ done:
 herr_t
 H5Pget_mdc_image_config(hid_t fapl_id, H5AC_cache_image_config_t *config /*out*/)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2039,7 +2039,7 @@ done:
 herr_t
 H5Pset_mdc_config(hid_t fapl_id, H5AC_cache_config_t *config_ptr)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2086,7 +2086,7 @@ done:
 herr_t
 H5Pget_mdc_config(hid_t fapl_id, H5AC_cache_config_t *config /*out*/)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2142,7 +2142,7 @@ done:
 herr_t
 H5Pset_gc_references(hid_t fapl_id, unsigned gc_ref)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2176,7 +2176,7 @@ done:
 herr_t
 H5Pget_gc_references(hid_t fapl_id, unsigned *gc_ref /*out*/)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2211,7 +2211,7 @@ done:
 herr_t
 H5Pset_fclose_degree(hid_t fapl_id, H5F_close_degree_t degree)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2244,7 +2244,7 @@ done:
 herr_t
 H5Pget_fclose_degree(hid_t fapl_id, H5F_close_degree_t *degree /*out*/)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2286,7 +2286,7 @@ done:
 herr_t
 H5Pset_meta_block_size(hid_t fapl_id, hsize_t size)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2320,7 +2320,7 @@ done:
 herr_t
 H5Pget_meta_block_size(hid_t fapl_id, hsize_t *size /*out*/)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2365,7 +2365,7 @@ done:
 herr_t
 H5Pset_sieve_buf_size(hid_t fapl_id, size_t size)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2399,7 +2399,7 @@ done:
 herr_t
 H5Pget_sieve_buf_size(hid_t fapl_id, size_t *size /*out*/)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2443,7 +2443,7 @@ done:
 herr_t
 H5Pset_small_data_block_size(hid_t fapl_id, hsize_t size)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2477,7 +2477,7 @@ done:
 herr_t
 H5Pget_small_data_block_size(hid_t fapl_id, hsize_t *size /*out*/)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2604,7 +2604,7 @@ done:
 herr_t
 H5Pset_libver_bounds(hid_t fapl_id, H5F_libver_t low, H5F_libver_t high)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2654,7 +2654,7 @@ done:
 herr_t
 H5Pget_libver_bounds(hid_t fapl_id, H5F_libver_t *low /*out*/, H5F_libver_t *high /*out*/)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2696,7 +2696,7 @@ done:
 herr_t
 H5Pset_elink_file_cache_size(hid_t fapl_id, unsigned efc_size)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2733,7 +2733,7 @@ done:
 herr_t
 H5Pget_elink_file_cache_size(hid_t fapl_id, unsigned *efc_size /*out*/)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2768,7 +2768,7 @@ done:
 herr_t
 H5Pset_file_image(hid_t fapl_id, void *buf_ptr, size_t buf_len)
 {
-    H5P_genplist_t        *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t        *fapl = NULL;         /* Property list pointer */
     H5FD_file_image_info_t image_info;          /* File image info */
     herr_t                 ret_value = SUCCEED; /* Return value */
 
@@ -2884,7 +2884,7 @@ done:
 herr_t
 H5Pget_file_image(hid_t fapl_id, void **buf /*out*/, size_t *buf_len /*out*/)
 {
-    H5P_genplist_t        *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t        *fapl = NULL;         /* Property list pointer */
     H5FD_file_image_info_t image_info;          /* File image info */
     herr_t                 ret_value = SUCCEED; /* Return value */
 
@@ -2973,7 +2973,7 @@ done:
 herr_t
 H5Pset_file_image_callbacks(hid_t fapl_id, H5FD_file_image_callbacks_t *callbacks_ptr)
 {
-    H5P_genplist_t        *fapl = NULL;                   /* Property list pointer */
+    H5P_genplist_t        *fapl = NULL;            /* Property list pointer */
     H5FD_file_image_info_t info;                   /* File image info */
     bool                   copied_udata = false;   /* Whether udata structure was copied */
     herr_t                 ret_value    = SUCCEED; /* Return value */
@@ -3079,7 +3079,7 @@ done:
 herr_t
 H5Pget_file_image_callbacks(hid_t fapl_id, H5FD_file_image_callbacks_t *callbacks /*out*/)
 {
-    H5P_genplist_t        *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t        *fapl = NULL;         /* Property list pointer */
     H5FD_file_image_info_t info;                /* File image info */
     herr_t                 ret_value = SUCCEED; /* Return value */
 
@@ -4273,7 +4273,7 @@ H5P__facc_libver_type_dec(const void **_pp, void *_value)
 herr_t
 H5Pset_metadata_read_attempts(hid_t fapl_id, unsigned attempts)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -4311,8 +4311,8 @@ done:
 herr_t
 H5Pget_metadata_read_attempts(hid_t fapl_id, unsigned *attempts /*out*/)
 {
-    H5P_genplist_t *fapl = NULL; /* Property list pointer */
-    herr_t ret_value = SUCCEED; /* Return value */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
+    herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -4436,7 +4436,7 @@ done:
 herr_t
 H5Pset_mdc_log_options(hid_t fapl_id, hbool_t is_enabled, const char *location, hbool_t start_on_access)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl = NULL;         /* Property list pointer */
     char           *new_location;        /* Working location pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
@@ -4483,7 +4483,7 @@ herr_t
 H5Pget_mdc_log_options(hid_t fapl_id, hbool_t *is_enabled /*out*/, char *location /*out*/,
                        size_t *location_size /*out*/, hbool_t *start_on_access /*out*/)
 {
-    H5P_genplist_t *fapl = NULL;                   /* Property list pointer */
+    H5P_genplist_t *fapl         = NULL;    /* Property list pointer */
     char           *location_ptr = NULL;    /* Pointer to location string */
     herr_t          ret_value    = SUCCEED; /* Return value */
 
@@ -4745,7 +4745,7 @@ H5P__facc_mdc_log_location_close(const char H5_ATTR_UNUSED *name, size_t H5_ATTR
 herr_t
 H5Pset_evict_on_close(hid_t fapl_id, hbool_t evict_on_close)
 {
-    H5P_genplist_t *fapl = NULL;                /* property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -4784,7 +4784,7 @@ done:
 herr_t
 H5Pget_evict_on_close(hid_t fapl_id, hbool_t *evict_on_close /*out*/)
 {
-    H5P_genplist_t *fapl = NULL;                /* property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -4825,7 +4825,7 @@ done:
 herr_t
 H5Pset_file_locking(hid_t fapl_id, hbool_t use_file_locking, hbool_t ignore_when_disabled)
 {
-    H5P_genplist_t *fapl = NULL;                /* property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -4863,7 +4863,7 @@ done:
 herr_t
 H5Pget_file_locking(hid_t fapl_id, hbool_t *use_file_locking /*out*/, hbool_t *ignore_when_disabled /*out*/)
 {
-    H5P_genplist_t *fapl = NULL;                /* property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -4976,7 +4976,7 @@ H5P__decode_coll_md_read_flag_t(const void **_pp, void *_value)
 herr_t
 H5Pset_all_coll_metadata_ops(hid_t apl_id, hbool_t is_collective)
 {
-    H5P_genplist_t         *apl = NULL;                 /* Property list pointer */
+    H5P_genplist_t         *apl = NULL;          /* Property list pointer */
     H5P_coll_md_read_flag_t coll_meta_read;      /* Property value */
     herr_t                  ret_value = SUCCEED; /* return value */
 
@@ -5028,7 +5028,7 @@ done:
 herr_t
 H5Pget_all_coll_metadata_ops(hid_t apl_id, hbool_t *is_collective /*out*/)
 {
-    H5P_genplist_t *apl = NULL;                 /* Property list pointer */
+    H5P_genplist_t *apl       = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -5079,7 +5079,7 @@ done:
 herr_t
 H5Pset_coll_metadata_write(hid_t fapl_id, hbool_t is_collective)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -5112,7 +5112,7 @@ done:
 herr_t
 H5Pget_mpi_params(hid_t fapl_id, MPI_Comm *comm /*out*/, MPI_Info *info /*out*/)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -5147,7 +5147,7 @@ done:
 herr_t
 H5Pset_mpi_params(hid_t fapl_id, MPI_Comm comm, MPI_Info info)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -5554,7 +5554,7 @@ done:
 herr_t
 H5Pget_coll_metadata_write(hid_t fapl_id, hbool_t *is_collective /*out*/)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -5589,7 +5589,7 @@ done:
 herr_t
 H5Pset_page_buffer_size(hid_t fapl_id, size_t buf_size, unsigned min_meta_perc, unsigned min_raw_perc)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -5638,7 +5638,7 @@ herr_t
 H5Pget_page_buffer_size(hid_t fapl_id, size_t *buf_size /*out*/, unsigned *min_meta_perc /*out*/,
                         unsigned *min_raw_perc /*out*/)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -5749,7 +5749,7 @@ done:
 herr_t
 H5Pset_vol(hid_t fapl_id, hid_t new_vol_id, const void *new_vol_info)
 {
-    H5P_genplist_t   *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t   *fapl = NULL;         /* Property list pointer */
     H5VL_connector_t *connector;           /* VOL connector */
     herr_t            ret_value = SUCCEED; /* Return value */
 
@@ -5787,7 +5787,7 @@ done:
 herr_t
 H5Pget_vol_id(hid_t fapl_id, hid_t *vol_id /*out*/)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -5831,7 +5831,7 @@ done:
 herr_t
 H5Pget_vol_info(hid_t fapl_id, void **vol_info /*out*/)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -5894,8 +5894,8 @@ done:
 herr_t
 H5Pget_vol_cap_flags(hid_t fapl_id, uint64_t *cap_flags)
 {
-    H5P_genplist_t       *fapl = NULL;           /* Property list pointer */
-    herr_t ret_value = SUCCEED; /* Return value */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
+    herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -6132,7 +6132,7 @@ done:
 herr_t
 H5Pset_relax_file_integrity_checks(hid_t fapl_id, uint64_t flags)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -6169,7 +6169,7 @@ done:
 herr_t
 H5Pget_relax_file_integrity_checks(hid_t fapl_id, uint64_t *flags /*out*/)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)

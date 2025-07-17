@@ -500,7 +500,8 @@ H5Pset_fapl_subfiling(hid_t fapl_id, const H5FD_subfiling_config_t *vfd_config)
 
         /* Copy fields */
         fa.require_ioc = vfd_config->require_ioc;
-        if (NULL == (fa.ioc_fapl = H5P_acquire(vfd_config->ioc_fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+        if (NULL == (fa.ioc_fapl = H5P_acquire(vfd_config->ioc_fapl_id, H5P_TYPE_FILE_ACCESS,
+                                               H5I_LOCK_EXCLUSIVE, false)))
             HGOTO_ERROR(H5E_VFL, H5E_BADTYPE, FAIL, "not a file access property list");
 
         /* Check for correct (IOC) driver */
@@ -1670,10 +1671,10 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5FD__subfiling_read_vector(H5FD_t *_file, hid_t H5_ATTR_UNUSED dxpl_id, uint32_t count, H5FD_mem_t types[], haddr_t addrs[],
-                            size_t sizes[], void *bufs[] /* out */)
+H5FD__subfiling_read_vector(H5FD_t *_file, hid_t H5_ATTR_UNUSED dxpl_id, uint32_t count, H5FD_mem_t types[],
+                            haddr_t addrs[], size_t sizes[], void *bufs[] /* out */)
 {
-    H5FD_subfiling_t *file = (H5FD_subfiling_t *)_file;
+    H5FD_subfiling_t *file      = (H5FD_subfiling_t *)_file;
     herr_t            ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
@@ -1716,7 +1717,7 @@ static herr_t
 H5FD__subfiling_write_vector(H5FD_t *_file, hid_t H5_ATTR_UNUSED dxpl_id, uint32_t count, H5FD_mem_t types[],
                              haddr_t addrs[], size_t sizes[], const void *bufs[] /* in */)
 {
-    H5FD_subfiling_t *file = (H5FD_subfiling_t *)_file;
+    H5FD_subfiling_t *file      = (H5FD_subfiling_t *)_file;
     herr_t            ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE

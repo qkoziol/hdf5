@@ -960,7 +960,7 @@ done:
 herr_t
 H5Pset_data_transform(hid_t dxpl_id, const char *expression)
 {
-    H5P_genplist_t   *dxpl = NULL;                      /* Property list pointer */
+    H5P_genplist_t   *dxpl            = NULL;    /* Property list pointer */
     H5Z_data_xform_t *data_xform_prop = NULL;    /* New data xform property */
     herr_t            ret_value       = SUCCEED; /* return value */
 
@@ -1024,7 +1024,7 @@ done:
 ssize_t
 H5Pget_data_transform(hid_t dxpl_id, char *expression /*out*/, size_t size)
 {
-    H5P_genplist_t   *dxpl = NULL;                   /* Property list pointer */
+    H5P_genplist_t   *dxpl            = NULL; /* Property list pointer */
     H5Z_data_xform_t *data_xform_prop = NULL; /* New data xform property */
     size_t            len;
     const char       *pexp;
@@ -1085,7 +1085,7 @@ done:
 herr_t
 H5Pset_buffer(hid_t dxpl_id, size_t size, void *tconv, void *bkg)
 {
-    H5P_genplist_t *dxpl = NULL;                /* Property list pointer */
+    H5P_genplist_t *dxpl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1128,9 +1128,9 @@ done:
 size_t
 H5Pget_buffer(hid_t dxpl_id, void **tconv /*out*/, void **bkg /*out*/)
 {
-    H5P_genplist_t *dxpl = NULL;      /* Property list pointer */
-    size_t          size;      /* Type conversion buffer size */
-    size_t          ret_value; /* Return value */
+    H5P_genplist_t *dxpl = NULL; /* Property list pointer */
+    size_t          size;        /* Type conversion buffer size */
+    size_t          ret_value;   /* Return value */
 
     FUNC_ENTER_API(0)
 
@@ -1177,7 +1177,7 @@ done:
 herr_t
 H5Pset_preserve(hid_t dxpl_id, hbool_t status)
 {
-    H5P_genplist_t *dxpl = NULL;                /* Property list pointer */
+    H5P_genplist_t *dxpl = NULL;         /* Property list pointer */
     H5T_bkg_t       need_bkg;            /* Value for background buffer type */
     herr_t          ret_value = SUCCEED; /* return value */
 
@@ -1214,9 +1214,9 @@ done:
 int
 H5Pget_preserve(hid_t dxpl_id)
 {
-    H5T_bkg_t       need_bkg;  /* Background value */
-    H5P_genplist_t *dxpl = NULL;      /* Property list pointer */
-    int             ret_value; /* return value */
+    H5T_bkg_t       need_bkg;    /* Background value */
+    H5P_genplist_t *dxpl = NULL; /* Property list pointer */
+    int             ret_value;   /* return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -1254,7 +1254,7 @@ done:
 herr_t
 H5Pset_edc_check(hid_t dxpl_id, H5Z_EDC_t check)
 {
-    H5P_genplist_t *dxpl = NULL;                /* Property list pointer */
+    H5P_genplist_t *dxpl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1294,8 +1294,8 @@ done:
 H5Z_EDC_t
 H5Pget_edc_check(hid_t dxpl_id)
 {
-    H5P_genplist_t *dxpl = NULL;      /* Property list pointer */
-    H5Z_EDC_t       ret_value; /* Return value */
+    H5P_genplist_t *dxpl = NULL; /* Property list pointer */
+    H5Z_EDC_t       ret_value;   /* Return value */
 
     FUNC_ENTER_API(H5Z_ERROR_EDC)
 
@@ -1329,7 +1329,7 @@ done:
 herr_t
 H5Pset_filter_callback(hid_t dxpl_id, H5Z_filter_func_t func, void *op_data)
 {
-    H5P_genplist_t *dxpl = NULL;                /* Property list pointer */
+    H5P_genplist_t *dxpl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
     H5Z_cb_t        cb_struct;
 
@@ -1368,7 +1368,7 @@ done:
 herr_t
 H5Pset_type_conv_cb(hid_t dxpl_id, H5T_conv_except_func_t op, void *operate_data)
 {
-    H5P_genplist_t *dxpl = NULL;                /* Property list pointer */
+    H5P_genplist_t *dxpl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
     H5T_conv_cb_t   cb_struct;
 
@@ -1448,7 +1448,7 @@ done:
 herr_t
 H5Pget_btree_ratios(hid_t dxpl_id, double *left /*out*/, double *middle /*out*/, double *right /*out*/)
 {
-    H5P_genplist_t *dxpl = NULL;                 /* Property list pointer */
+    H5P_genplist_t *dxpl = NULL;          /* Property list pointer */
     double          btree_split_ratio[3]; /* B-tree node split ratios */
     herr_t          ret_value = SUCCEED;  /* Return value */
 
@@ -1498,7 +1498,7 @@ done:
 herr_t
 H5Pset_btree_ratios(hid_t dxpl_id, double left, double middle, double right)
 {
-    H5P_genplist_t *dxpl = NULL;                /* Property list pointer */
+    H5P_genplist_t *dxpl = NULL;         /* Property list pointer */
     double          split_ratio[3];      /* B-tree node split ratios */
     herr_t          ret_value = SUCCEED; /* Return value */
 
@@ -1589,7 +1589,7 @@ herr_t
 H5Pset_vlen_mem_manager(hid_t dxpl_id, H5MM_allocate_t alloc_func, void *alloc_info, H5MM_free_t free_func,
                         void *free_info)
 {
-    H5P_genplist_t *dxpl = NULL;                /* Property list pointer */
+    H5P_genplist_t *dxpl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1623,7 +1623,7 @@ herr_t
 H5Pget_vlen_mem_manager(hid_t dxpl_id, H5MM_allocate_t *alloc_func /*out*/, void **alloc_info /*out*/,
                         H5MM_free_t *free_func /*out*/, void **free_info /*out*/)
 {
-    H5P_genplist_t *dxpl = NULL;                /* Property list pointer */
+    H5P_genplist_t *dxpl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1674,7 +1674,7 @@ done:
 herr_t
 H5Pset_hyper_vector_size(hid_t dxpl_id, size_t vector_size)
 {
-    H5P_genplist_t *dxpl = NULL;                /* Property list pointer */
+    H5P_genplist_t *dxpl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1711,7 +1711,7 @@ done:
 herr_t
 H5Pget_hyper_vector_size(hid_t dxpl_id, size_t *vector_size /*out*/)
 {
-    H5P_genplist_t *dxpl = NULL;                /* Property list pointer */
+    H5P_genplist_t *dxpl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1946,7 +1946,7 @@ herr_t
 H5Pget_mpio_actual_chunk_opt_mode(hid_t                             dxpl_id,
                                   H5D_mpio_actual_chunk_opt_mode_t *actual_chunk_opt_mode /*out*/)
 {
-    H5P_genplist_t *dxpl = NULL;
+    H5P_genplist_t *dxpl      = NULL;
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1981,7 +1981,7 @@ done:
 herr_t
 H5Pget_mpio_actual_io_mode(hid_t dxpl_id, H5D_mpio_actual_io_mode_t *actual_io_mode /*out*/)
 {
-    H5P_genplist_t *dxpl = NULL;
+    H5P_genplist_t *dxpl      = NULL;
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2016,7 +2016,7 @@ herr_t
 H5Pget_mpio_no_collective_cause(hid_t dxpl_id, uint32_t *local_no_collective_cause /*out*/,
                                 uint32_t *global_no_collective_cause /*out*/)
 {
-    H5P_genplist_t *dxpl = NULL;
+    H5P_genplist_t *dxpl      = NULL;
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2437,7 +2437,7 @@ done:
 herr_t
 H5Pset_selection_io(hid_t dxpl_id, H5D_selection_io_mode_t selection_io_mode)
 {
-    H5P_genplist_t *dxpl = NULL;                /* Property list pointer */
+    H5P_genplist_t *dxpl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2475,7 +2475,7 @@ done:
 herr_t
 H5Pget_selection_io(hid_t dxpl_id, H5D_selection_io_mode_t *selection_io_mode /*out*/)
 {
-    H5P_genplist_t *dxpl = NULL;                /* Property list pointer */
+    H5P_genplist_t *dxpl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2509,7 +2509,7 @@ done:
 herr_t
 H5Pget_no_selection_io_cause(hid_t dxpl_id, uint32_t *no_selection_io_cause /*out*/)
 {
-    H5P_genplist_t *dxpl = NULL;
+    H5P_genplist_t *dxpl      = NULL;
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2541,7 +2541,7 @@ done:
 herr_t
 H5Pget_actual_selection_io_mode(hid_t dxpl_id, uint32_t *actual_selection_io_mode /*out*/)
 {
-    H5P_genplist_t *dxpl = NULL;
+    H5P_genplist_t *dxpl      = NULL;
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2642,7 +2642,7 @@ H5P__dxfr_modify_write_buf_dec(const void **_pp, void *_value /*out*/)
 herr_t
 H5Pset_modify_write_buf(hid_t dxpl_id, hbool_t modify_write_buf)
 {
-    H5P_genplist_t *dxpl = NULL;                /* Property list pointer */
+    H5P_genplist_t *dxpl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2676,7 +2676,7 @@ done:
 herr_t
 H5Pget_modify_write_buf(hid_t dxpl_id, hbool_t *modify_write_buf /*out*/)
 {
-    H5P_genplist_t *dxpl = NULL;                /* Property list pointer */
+    H5P_genplist_t *dxpl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)

@@ -586,7 +586,7 @@ H5Rdereference2(hid_t obj_id, hid_t oapl_id, H5R_type_t ref_type, const void *re
     H5VL_loc_params_t    loc_params;                                     /* Location parameters */
     H5O_token_t          obj_token = {0};                                /* Object token */
     H5I_type_t           opened_type;                                    /* Opened object type */
-    H5P_genplist_t      *oapl = NULL;                                           /* Object access property list */
+    H5P_genplist_t      *oapl              = NULL;                       /* Object access property list */
     void                *opened_obj        = NULL;                       /* Opened object */
     const unsigned char *buf               = (const unsigned char *)ref; /* Reference pointer */
     bool                 is_native_vol_obj = false;           /* Whether the native VOL connector is in use */

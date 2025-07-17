@@ -1813,7 +1813,7 @@ done:
 herr_t
 H5Pset_layout(hid_t dcpl_id, H5D_layout_t layout_type)
 {
-    H5P_genplist_t     *dcpl = NULL;                /* Property list pointer */
+    H5P_genplist_t     *dcpl = NULL;         /* Property list pointer */
     const H5O_layout_t *layout;              /* Pointer to default layout information for type specified */
     herr_t              ret_value = SUCCEED; /* Return value */
 
@@ -1877,9 +1877,9 @@ done:
 H5D_layout_t
 H5Pget_layout(hid_t dcpl_id)
 {
-    H5P_genplist_t *dcpl = NULL;      /* Property list pointer */
-    H5O_layout_t    layout;    /* Layout property */
-    H5D_layout_t    ret_value; /* Return value */
+    H5P_genplist_t *dcpl = NULL; /* Property list pointer */
+    H5O_layout_t    layout;      /* Layout property */
+    H5D_layout_t    ret_value;   /* Return value */
 
     FUNC_ENTER_API(H5D_LAYOUT_ERROR)
 
@@ -1919,7 +1919,7 @@ done:
 herr_t
 H5Pset_chunk(hid_t dcpl_id, int ndims, const hsize_t dim[/*ndims*/])
 {
-    H5P_genplist_t *dcpl = NULL;                /* Property list pointer */
+    H5P_genplist_t *dcpl = NULL;         /* Property list pointer */
     H5O_layout_t    chunk_layout;        /* Layout information for setting chunk info */
     uint64_t        chunk_nelmts;        /* Number of elements in chunk */
     unsigned        u;                   /* Local index variable */
@@ -1984,9 +1984,9 @@ done:
 int
 H5Pget_chunk(hid_t dcpl_id, int max_ndims, hsize_t dim[] /*out*/)
 {
-    H5P_genplist_t *dcpl = NULL;      /* Property list pointer */
-    H5O_layout_t    layout;    /* Layout information */
-    int             ret_value; /* Return value */
+    H5P_genplist_t *dcpl = NULL; /* Property list pointer */
+    H5O_layout_t    layout;      /* Layout information */
+    int             ret_value;   /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -2213,7 +2213,7 @@ done:
 herr_t
 H5Pget_virtual_count(hid_t dcpl_id, size_t *count /*out*/)
 {
-    H5P_genplist_t *dcpl = NULL;                /* Property list pointer */
+    H5P_genplist_t *dcpl = NULL;         /* Property list pointer */
     H5O_layout_t    layout;              /* Layout information */
     herr_t          ret_value = SUCCEED; /* Return value */
 
@@ -2258,7 +2258,7 @@ done:
 hid_t
 H5Pget_virtual_vspace(hid_t dcpl_id, size_t idx)
 {
-    H5P_genplist_t *dcpl = NULL;         /* Property list pointer */
+    H5P_genplist_t *dcpl = NULL;  /* Property list pointer */
     H5O_layout_t    layout;       /* Layout information */
     H5S_t          *space = NULL; /* Dataspace pointer */
     hid_t           ret_value;    /* Return value */
@@ -2315,7 +2315,7 @@ done:
 hid_t
 H5Pget_virtual_srcspace(hid_t dcpl_id, size_t idx)
 {
-    H5P_genplist_t *dcpl = NULL;             /* Property list pointer */
+    H5P_genplist_t *dcpl = NULL;      /* Property list pointer */
     H5O_layout_t    layout;           /* Layout information */
     H5S_t          *space     = NULL; /* Dataspace pointer */
     hid_t           ret_value = FAIL; /* Return value */
@@ -2419,9 +2419,9 @@ done:
 ssize_t
 H5Pget_virtual_filename(hid_t dcpl_id, size_t idx, char *name /*out*/, size_t size)
 {
-    H5P_genplist_t *dcpl = NULL;      /* Property list pointer */
-    H5O_layout_t    layout;    /* Layout information */
-    ssize_t         ret_value; /* Return value */
+    H5P_genplist_t *dcpl = NULL; /* Property list pointer */
+    H5O_layout_t    layout;      /* Layout information */
+    ssize_t         ret_value;   /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -2480,9 +2480,9 @@ done:
 ssize_t
 H5Pget_virtual_dsetname(hid_t dcpl_id, size_t idx, char *name /*out*/, size_t size)
 {
-    H5P_genplist_t *dcpl = NULL;      /* Property list pointer */
-    H5O_layout_t    layout;    /* Layout information */
-    ssize_t         ret_value; /* Return value */
+    H5P_genplist_t *dcpl = NULL; /* Property list pointer */
+    H5O_layout_t    layout;      /* Layout information */
+    ssize_t         ret_value;   /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -2526,7 +2526,7 @@ done:
 herr_t
 H5Pset_chunk_opts(hid_t dcpl_id, unsigned options)
 {
-    H5P_genplist_t *dcpl = NULL;                   /* Property list pointer */
+    H5P_genplist_t *dcpl = NULL;            /* Property list pointer */
     H5O_layout_t    layout;                 /* Layout information for setting chunk info */
     uint8_t         layout_flags = 0;       /* "options" translated into layout message flags format */
     herr_t          ret_value    = SUCCEED; /* Return value */
@@ -2582,7 +2582,7 @@ done:
 herr_t
 H5Pget_chunk_opts(hid_t dcpl_id, unsigned *options /*out*/)
 {
-    H5P_genplist_t *dcpl = NULL;                /* Property list pointer */
+    H5P_genplist_t *dcpl = NULL;         /* Property list pointer */
     H5O_layout_t    layout;              /* Layout information for setting chunk info */
     herr_t          ret_value = SUCCEED; /* Return value */
 
@@ -2640,7 +2640,7 @@ H5Pset_external(hid_t dcpl_id, const char *name, HDoff_t offset, hsize_t size)
     size_t          idx;
     hsize_t         total, tmp;
     H5O_efl_t       efl;
-    H5P_genplist_t *dcpl = NULL;                /* Property list pointer */
+    H5P_genplist_t *dcpl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2712,8 +2712,8 @@ int
 H5Pget_external_count(hid_t dcpl_id)
 {
     H5O_efl_t       efl;
-    H5P_genplist_t *dcpl = NULL;      /* Property list pointer */
-    int             ret_value; /* return value */
+    H5P_genplist_t *dcpl = NULL; /* Property list pointer */
+    int             ret_value;   /* return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -2762,7 +2762,7 @@ H5Pget_external(hid_t dcpl_id, unsigned idx, size_t name_size, char *name /*out*
                 hsize_t *size /*out*/)
 {
     H5O_efl_t       efl;
-    H5P_genplist_t *dcpl = NULL;                /* Property list pointer */
+    H5P_genplist_t *dcpl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2811,7 +2811,7 @@ herr_t
 H5Pset_szip(hid_t dcpl_id, unsigned options_mask, unsigned pixels_per_block)
 {
     H5O_pline_t     pline;
-    H5P_genplist_t *dcpl = NULL;         /* Property list pointer */
+    H5P_genplist_t *dcpl = NULL;  /* Property list pointer */
     unsigned        cd_values[2]; /* Filter parameters */
     unsigned int    config_flags;
     herr_t          ret_value = SUCCEED; /* Return value */
@@ -2880,7 +2880,7 @@ herr_t
 H5Pset_shuffle(hid_t dcpl_id)
 {
     H5O_pline_t     pline;
-    H5P_genplist_t *dcpl = NULL;                /* Property list pointer */
+    H5P_genplist_t *dcpl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2918,7 +2918,7 @@ herr_t
 H5Pset_nbit(hid_t dcpl_id)
 {
     H5O_pline_t     pline;
-    H5P_genplist_t *dcpl = NULL;                /* Property list pointer */
+    H5P_genplist_t *dcpl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -2972,7 +2972,7 @@ herr_t
 H5Pset_scaleoffset(hid_t dcpl_id, H5Z_SO_scale_type_t scale_type, int scale_factor)
 {
     H5O_pline_t     pline;
-    H5P_genplist_t *dcpl = NULL;                /* Property list pointer */
+    H5P_genplist_t *dcpl = NULL;         /* Property list pointer */
     unsigned        cd_values[2];        /* Filter parameters */
     herr_t          ret_value = SUCCEED; /* return value */
 
@@ -3032,7 +3032,7 @@ done:
 herr_t
 H5Pset_fill_value(hid_t dcpl_id, hid_t type_id, const void *value)
 {
-    H5P_genplist_t *dcpl = NULL;                /* Property list pointer */
+    H5P_genplist_t *dcpl = NULL;         /* Property list pointer */
     H5O_fill_t      fill;                /* Fill value to modify */
     herr_t          ret_value = SUCCEED; /* Return value */
 
@@ -3213,7 +3213,7 @@ done:
 herr_t
 H5Pget_fill_value(hid_t dcpl_id, hid_t type_id, void *value /*out*/)
 {
-    H5P_genplist_t *dcpl = NULL;                /* Property list pointer */
+    H5P_genplist_t *dcpl = NULL;         /* Property list pointer */
     H5T_t          *type;                /* Datatype		*/
     herr_t          ret_value = SUCCEED; /* Return value */
 
@@ -3321,7 +3321,7 @@ done:
 herr_t
 H5Pfill_value_defined(hid_t dcpl_id, H5D_fill_value_t *status)
 {
-    H5P_genplist_t *dcpl = NULL; /* Property list to query */
+    H5P_genplist_t *dcpl      = NULL; /* Property list to query */
     herr_t          ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
@@ -3358,7 +3358,7 @@ done:
 herr_t
 H5Pset_alloc_time(hid_t dcpl_id, H5D_alloc_time_t alloc_time)
 {
-    H5P_genplist_t *dcpl = NULL;                /* Property list pointer */
+    H5P_genplist_t *dcpl = NULL;         /* Property list pointer */
     H5O_fill_t      fill;                /* Fill value property to modify */
     unsigned        alloc_time_state;    /* State of allocation time property */
     herr_t          ret_value = SUCCEED; /* return value 	 */
@@ -3447,14 +3447,14 @@ done:
 herr_t
 H5Pget_alloc_time(hid_t dcpl_id, H5D_alloc_time_t *alloc_time /*out*/)
 {
-    H5P_genplist_t *dcpl = NULL; /* Property list pointer */
-    herr_t ret_value = SUCCEED; /* return value          */
+    H5P_genplist_t *dcpl      = NULL;    /* Property list pointer */
+    herr_t          ret_value = SUCCEED; /* return value          */
 
     FUNC_ENTER_API(FAIL)
 
     /* Get values */
     if (alloc_time) {
-        H5O_fill_t      fill; /* Fill value property to query */
+        H5O_fill_t fill; /* Fill value property to query */
 
         /* Get the property list structure */
         if (NULL == (dcpl = H5P_acquire(dcpl_id, H5P_TYPE_DATASET_CREATE, H5I_LOCK_SHARED, true)))
@@ -3489,7 +3489,7 @@ done:
 herr_t
 H5Pset_fill_time(hid_t dcpl_id, H5D_fill_time_t fill_time)
 {
-    H5P_genplist_t *dcpl = NULL;                /* Property list pointer */
+    H5P_genplist_t *dcpl = NULL;         /* Property list pointer */
     H5O_fill_t      fill;                /* Fill value property to modify */
     herr_t          ret_value = SUCCEED; /* return value          */
 
@@ -3535,14 +3535,14 @@ done:
 herr_t
 H5Pget_fill_time(hid_t dcpl_id, H5D_fill_time_t *fill_time /*out*/)
 {
-    H5P_genplist_t *dcpl = NULL; /* Property list pointer */
-    herr_t ret_value = SUCCEED; /* return value          */
+    H5P_genplist_t *dcpl      = NULL;    /* Property list pointer */
+    herr_t          ret_value = SUCCEED; /* return value          */
 
     FUNC_ENTER_API(FAIL)
 
     /* Set values */
     if (fill_time) {
-        H5O_fill_t      fill; /* Fill value property to query */
+        H5O_fill_t fill; /* Fill value property to query */
 
         /* Get the property list structure */
         if (NULL == (dcpl = H5P_acquire(dcpl_id, H5P_TYPE_DATASET_CREATE, H5I_LOCK_SHARED, true)))

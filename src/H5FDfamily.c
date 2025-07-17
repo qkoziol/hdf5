@@ -332,8 +332,8 @@ H5FD__family_unregister(void)
 herr_t
 H5Pset_fapl_family(hid_t fapl_id, hsize_t msize, hid_t memb_fapl_id)
 {
-    H5P_genplist_t    *fapl = NULL; /* Property list pointer */
-    H5FD_family_fapl_t fa = {0, NULL};
+    H5P_genplist_t    *fapl       = NULL; /* Property list pointer */
+    H5FD_family_fapl_t fa         = {0, NULL};
     bool               is_default = false;
     herr_t             ret_value;
 
@@ -429,7 +429,7 @@ done:
 herr_t
 H5Pset_family_offset(hid_t fapl_id, hsize_t offset)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)

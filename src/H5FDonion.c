@@ -389,8 +389,8 @@ done:
 herr_t
 H5Pset_fapl_onion(hid_t fapl_id, const H5FD_onion_fapl_info_t *info)
 {
-    H5P_genplist_t   *fapl = NULL;
-    H5FD_onion_fapl_t fa = {0}; /* Temporary copy of driver info */
+    H5P_genplist_t   *fapl      = NULL;
+    H5FD_onion_fapl_t fa        = {0}; /* Temporary copy of driver info */
     herr_t            ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
@@ -407,7 +407,8 @@ H5Pset_fapl_onion(hid_t fapl_id, const H5FD_onion_fapl_info_t *info)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid info page size");
 
     /* Get the backing store FAPL */
-    if (NULL == (fa.backing_fapl = H5P_acquire(info->backing_fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL ==
+        (fa.backing_fapl = H5P_acquire(info->backing_fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "invalid backing fapl id");
 
     /* The only backing fapl that is currently supported is sec2 */

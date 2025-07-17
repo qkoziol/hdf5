@@ -95,7 +95,7 @@ static hid_t
 H5L__extern_traverse(const char H5_ATTR_UNUSED *link_name, hid_t cur_group, const void *_udata,
                      size_t H5_ATTR_UNUSED udata_size, hid_t lapl_id, hid_t H5_ATTR_UNUSED dxpl_id)
 {
-    H5P_genplist_t *lapl = NULL;                               /* Property list pointer */
+    H5P_genplist_t *lapl = NULL;                        /* Property list pointer */
     H5G_loc_t       root_loc;                           /* Location of root group in external file */
     H5G_loc_t       loc;                                /* Location of object */
     H5F_t          *ext_file = NULL;                    /* File struct for external file */

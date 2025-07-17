@@ -137,7 +137,7 @@ done:
 herr_t
 H5Pset_char_encoding(hid_t strcpl_id, H5T_cset_t encoding)
 {
-    H5P_genplist_t *strcpl = NULL;              /* Property list pointer */
+    H5P_genplist_t *strcpl    = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -174,7 +174,7 @@ done:
 herr_t
 H5Pget_char_encoding(hid_t strcpl_id, H5T_cset_t *encoding /*out*/)
 {
-    H5P_genplist_t *strcpl = NULL;              /* Property list pointer */
+    H5P_genplist_t *strcpl    = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
