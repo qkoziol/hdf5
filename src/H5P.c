@@ -87,9 +87,9 @@ bool H5_PKG_INIT_VAR = false;
 hid_t
 H5Pcopy(hid_t id)
 {
-    H5P_genplist_t *plist = NULL;     /* Property list to copy */
-    H5P_genclass_t *pclass = NULL;    /* Property class to copy */
-    hid_t ret_value = H5I_INVALID_HID; /* return value */
+    H5P_genplist_t *plist     = NULL;            /* Property list to copy */
+    H5P_genclass_t *pclass    = NULL;            /* Property class to copy */
+    hid_t           ret_value = H5I_INVALID_HID; /* return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
@@ -118,7 +118,8 @@ H5Pcopy(hid_t id)
             /* Get an ID for the copied class */
             if ((ret_value = H5I_register(H5I_GENPROP_CLS, copy_class, true)) < 0) {
                 H5P__close_class(copy_class);
-                HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, H5I_INVALID_HID, "unable to register property list class");
+                HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, H5I_INVALID_HID,
+                            "unable to register property list class");
             } /* end if */
         }     /* end else */
         else
@@ -597,8 +598,8 @@ H5Pinsert2(hid_t plist_id, const char *name, size_t size, void *value, H5P_prp_s
            H5P_prp_get_func_t prp_get, H5P_prp_delete_func_t prp_delete, H5P_prp_copy_func_t prp_copy,
            H5P_prp_compare_func_t prp_cmp, H5P_prp_close_func_t prp_close)
 {
-    H5P_genplist_t *plist = NULL;     /* Property list to modify */
-    herr_t          ret_value; /* return value */
+    H5P_genplist_t *plist = NULL; /* Property list to modify */
+    herr_t          ret_value;    /* return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -611,7 +612,8 @@ H5Pinsert2(hid_t plist_id, const char *name, size_t size, void *value, H5P_prp_s
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "properties >0 size must have default");
 
     /* Create the new property list class */
-    if ((ret_value = H5P_insert(plist, name, size, value, prp_set, prp_get, NULL, NULL, prp_delete, prp_copy, prp_cmp, prp_close)) < 0)
+    if ((ret_value = H5P_insert(plist, name, size, value, prp_set, prp_get, NULL, NULL, prp_delete, prp_copy,
+                                prp_cmp, prp_close)) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, FAIL, "unable to register property in plist");
 
 done:
@@ -656,7 +658,7 @@ done:
 herr_t
 H5Pset(hid_t plist_id, const char *name, const void *value)
 {
-    H5P_genplist_t *plist = NULL;               /* Property list to modify */
+    H5P_genplist_t *plist     = NULL;    /* Property list to modify */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -706,9 +708,9 @@ done:
 htri_t
 H5Pexist(hid_t id, const char *name)
 {
-    H5P_genplist_t *plist = NULL;     /* Property list to query */
-    H5P_genclass_t *pclass = NULL;    /* Property class to query */
-    htri_t          ret_value; /* return value */
+    H5P_genplist_t *plist  = NULL; /* Property list to query */
+    H5P_genclass_t *pclass = NULL; /* Property class to query */
+    htri_t          ret_value;     /* return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -768,9 +770,9 @@ done:
 herr_t
 H5Pget_size(hid_t id, const char *name, size_t *size /*out*/)
 {
-    H5P_genclass_t *pclass = NULL;    /* Property class to query */
-    H5P_genplist_t *plist = NULL;     /* Property list to query */
-    herr_t          ret_value; /* return value */
+    H5P_genclass_t *pclass = NULL; /* Property class to query */
+    H5P_genplist_t *plist  = NULL; /* Property list to query */
+    herr_t          ret_value;     /* return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -933,7 +935,7 @@ done:
 hid_t
 H5Pget_class(hid_t plist_id)
 {
-    H5P_genplist_t *plist = NULL;                       /* Property list to query */
+    H5P_genplist_t *plist     = NULL;            /* Property list to query */
     H5P_genclass_t *pclass    = NULL;            /* Property list class */
     hid_t           ret_value = H5I_INVALID_HID; /* return value */
 
@@ -992,8 +994,8 @@ done:
 herr_t
 H5Pget_nprops(hid_t id, size_t *nprops /*out*/)
 {
-    H5P_genplist_t *plist = NULL;               /* Property list to query */
-    H5P_genclass_t *pclass = NULL;              /* Property class to query */
+    H5P_genplist_t *plist     = NULL;    /* Property list to query */
+    H5P_genclass_t *pclass    = NULL;    /* Property class to query */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1052,9 +1054,9 @@ done:
 htri_t
 H5Pequal(hid_t id1, hid_t id2)
 {
-    H5P_genplist_t *plist1 = NULL, *plist2 = NULL; /* Property lists to compare */
+    H5P_genplist_t *plist1 = NULL, *plist2 = NULL;   /* Property lists to compare */
     H5P_genclass_t *pclass1 = NULL, *pclass2 = NULL; /* Property classes to compare */
-    htri_t ret_value = false; /* return value */
+    htri_t          ret_value = false;               /* return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -1127,9 +1129,9 @@ done:
 htri_t
 H5Pisa_class(hid_t plist_id, hid_t pclass_id)
 {
-    H5P_genplist_t *plist = NULL;     /* Property list to query */
-    H5P_genclass_t *pclass = NULL;    /* Property list class */
-    htri_t          ret_value; /* return value */
+    H5P_genplist_t *plist  = NULL; /* Property list to query */
+    H5P_genclass_t *pclass = NULL; /* Property list class */
+    htri_t          ret_value;     /* return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -1246,11 +1248,11 @@ iteration, the function's behavior is undefined.
 int
 H5Piterate(hid_t id, int *idx, H5P_iterate_t iter_func, void *iter_data)
 {
-    H5P_genplist_t *plist = NULL;     /* Property list to query */
-    H5P_genclass_t *pclass = NULL;    /* Property class to query */
-    H5P_iter_ud_t udata;        /* User data for internal iterator callback */
-    int           fake_idx = 0; /* Index when user doesn't provide one */
-    int           ret_value;    /* return value */
+    H5P_genplist_t *plist  = NULL; /* Property list to query */
+    H5P_genclass_t *pclass = NULL; /* Property class to query */
+    H5P_iter_ud_t   udata;         /* User data for internal iterator callback */
+    int             fake_idx = 0;  /* Index when user doesn't provide one */
+    int             ret_value;     /* return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -1270,7 +1272,8 @@ H5Piterate(hid_t id, int *idx, H5P_iterate_t iter_func, void *iter_data)
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
 
         /* Iterate over a property list */
-        if ((ret_value = H5P__iterate_plist(plist, true, (idx ? idx : &fake_idx), H5P__iterate_cb, &udata)) < 0)
+        if ((ret_value = H5P__iterate_plist(plist, true, (idx ? idx : &fake_idx), H5P__iterate_cb, &udata)) <
+            0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, FAIL, "unable to iterate over list");
     } /* end if */
     else if (H5I_GENPROP_CLS == H5I_get_type(id)) {
@@ -1323,7 +1326,7 @@ done:
 herr_t
 H5Pget(hid_t plist_id, const char *name, void *value /*out*/)
 {
-    H5P_genplist_t *plist = NULL;               /* Property list pointer */
+    H5P_genplist_t *plist     = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1377,8 +1380,8 @@ done:
 herr_t
 H5Premove(hid_t plist_id, const char *name)
 {
-    H5P_genplist_t *plist = NULL;     /* Property list to modify */
-    herr_t          ret_value; /* return value */
+    H5P_genplist_t *plist = NULL; /* Property list to modify */
+    herr_t          ret_value;    /* return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -1441,10 +1444,10 @@ done:
 herr_t
 H5Pcopy_prop(hid_t dst_id, hid_t src_id, const char *name)
 {
-    H5P_genplist_t *dst_plist = NULL; /* Pointer to destination property list */
-    H5P_genplist_t *src_plist = NULL; /* Pointer to source property list */
-    H5I_type_t src_id_type, dst_id_type; /* ID types */
-    herr_t     ret_value = SUCCEED;      /* return value */
+    H5P_genplist_t *dst_plist = NULL;         /* Pointer to destination property list */
+    H5P_genplist_t *src_plist = NULL;         /* Pointer to source property list */
+    H5I_type_t      src_id_type, dst_id_type; /* ID types */
+    herr_t          ret_value = SUCCEED;      /* return value */
 
     FUNC_ENTER_API(FAIL)
 

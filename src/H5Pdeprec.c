@@ -398,8 +398,8 @@ H5Pinsert1(hid_t plist_id, const char *name, size_t size, void *value, H5P_prp_s
            H5P_prp_get_func_t prp_get, H5P_prp_delete_func_t prp_delete, H5P_prp_copy_func_t prp_copy,
            H5P_prp_close_func_t prp_close)
 {
-    H5P_genplist_t *plist = NULL;     /* Property list to modify */
-    herr_t          ret_value; /* return value */
+    H5P_genplist_t *plist = NULL; /* Property list to modify */
+    herr_t          ret_value;    /* return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -500,7 +500,7 @@ done:
 herr_t
 H5Pencode1(hid_t plist_id, void *buf, size_t *nalloc)
 {
-    H5P_genplist_t *plist = NULL;               /* Property list to query */
+    H5P_genplist_t *plist     = NULL;    /* Property list to query */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
