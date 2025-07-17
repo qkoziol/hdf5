@@ -6289,13 +6289,14 @@ done:
 void
 H5P_lock(H5P_genplist_t
 #ifndef H5_HAVE_CONCURRENCY
-    H5_ATTR_UNUSED
+             H5_ATTR_UNUSED
 #endif /* H5_HAVE_CONCURRENCY */
-    *plist, H5I_lock_mode_t
+                 *plist,
+         H5I_lock_mode_t
 #ifndef H5_HAVE_CONCURRENCY
-    H5_ATTR_UNUSED
+             H5_ATTR_UNUSED
 #endif /* H5_HAVE_CONCURRENCY */
-    mode)
+                 mode)
 {
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
@@ -6341,9 +6342,9 @@ H5P_lock(H5P_genplist_t
 void
 H5P_unlock(H5P_genplist_t
 #ifndef H5_HAVE_CONCURRENCY
-    H5_ATTR_UNUSED
+               H5_ATTR_UNUSED
 #endif /* H5_HAVE_CONCURRENCY */
-    *plist)
+                   *plist)
 {
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
