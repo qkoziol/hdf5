@@ -3000,6 +3000,23 @@ H5P_insert(H5P_genplist_t *plist, const char *name, size_t size, void *value, H5
     assert(name);
     assert((size > 0 && value != NULL) || (size == 0));
 
+    /* Check for property list being read-only */
+    if (plist->is_readonly)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTMODIFY, FAIL, "can't modify read-only property list");
+
+#ifdef H5_HAVE_CONCURRENCY
+    {
+        unsigned dlftt;
+
+        H5TS__get_dlftt(&dlftt);
+        // fprintf(stderr, "%s:%u - dlftt = %u\n", __func__, __LINE__, dlftt);
+
+        /* Check for public property list being locked */
+        if (1 == dlftt && !plist->is_private && plist->locked && H5I_LOCK_EXCLUSIVE != plist->lock_mode)
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTMODIFY, FAIL, "can't modify locked property list");
+    }
+#endif /* H5_HAVE_CONCURRENCY */
+
     /* Check for duplicate named properties */
     if (NULL != H5SL_search(plist->props, name))
         HGOTO_ERROR(H5E_PLIST, H5E_EXISTS, FAIL, "property already exists");
@@ -6270,7 +6287,15 @@ done:
  *-------------------------------------------------------------------------
  */
 void
-H5P_lock(H5P_genplist_t *plist, H5I_lock_mode_t mode)
+H5P_lock(H5P_genplist_t
+#ifndef H5_HAVE_CONCURRENCY
+    H5_ATTR_UNUSED
+#endif /* H5_HAVE_CONCURRENCY */
+    *plist, H5I_lock_mode_t
+#ifndef H5_HAVE_CONCURRENCY
+    H5_ATTR_UNUSED
+#endif /* H5_HAVE_CONCURRENCY */
+    mode)
 {
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
@@ -6314,7 +6339,11 @@ H5P_lock(H5P_genplist_t *plist, H5I_lock_mode_t mode)
  *-------------------------------------------------------------------------
  */
 void
-H5P_unlock(H5P_genplist_t *plist)
+H5P_unlock(H5P_genplist_t
+#ifndef H5_HAVE_CONCURRENCY
+    H5_ATTR_UNUSED
+#endif /* H5_HAVE_CONCURRENCY */
+    *plist)
 {
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
