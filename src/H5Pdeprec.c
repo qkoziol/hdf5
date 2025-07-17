@@ -398,13 +398,13 @@ H5Pinsert1(hid_t plist_id, const char *name, size_t size, void *value, H5P_prp_s
            H5P_prp_get_func_t prp_get, H5P_prp_delete_func_t prp_delete, H5P_prp_copy_func_t prp_copy,
            H5P_prp_close_func_t prp_close)
 {
-    H5P_genplist_t *plist;     /* Property list to modify */
+    H5P_genplist_t *plist = NULL;     /* Property list to modify */
     herr_t          ret_value; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Check arguments. */
-    if (NULL == (plist = (H5P_genplist_t *)H5I_object_verify(plist_id, H5I_GENPROP_LST)))
+    if (NULL == (plist = H5I_acquire(plist_id, H5I_GENPROP_LST, H5I_LOCK_EXCLUSIVE)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
     if (!name || !*name)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid property name");
@@ -417,6 +417,10 @@ H5Pinsert1(hid_t plist_id, const char *name, size_t size, void *value, H5P_prp_s
         HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, FAIL, "unable to register property in plist");
 
 done:
+    /* Release resources */
+    if (plist && H5P_release(plist) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* H5Pinsert1() */
 
@@ -496,13 +500,13 @@ done:
 herr_t
 H5Pencode1(hid_t plist_id, void *buf, size_t *nalloc)
 {
-    H5P_genplist_t *plist;               /* Property list to query */
+    H5P_genplist_t *plist = NULL;               /* Property list to query */
     herr_t          ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Check arguments. */
-    if (NULL == (plist = (H5P_genplist_t *)H5I_object_verify(plist_id, H5I_GENPROP_LST)))
+    if (NULL == (plist = H5I_acquire(plist_id, H5I_GENPROP_LST, H5I_LOCK_SHARED)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
 
     /* Call the internal encode routine */
@@ -510,6 +514,10 @@ H5Pencode1(hid_t plist_id, void *buf, size_t *nalloc)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTENCODE, FAIL, "unable to encode property list");
 
 done:
+    /* Release resources */
+    if (plist && H5P_release(plist) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+
     FUNC_LEAVE_API(ret_value)
 } /* H5Pencode1() */
 
