@@ -465,7 +465,7 @@ done:
 herr_t
 H5Pget_family_offset(hid_t fapl_id, hsize_t *offset /*out*/)
 {
-    H5P_genplist_t *fapl = NULL;                /* Property list pointer */
+    H5P_genplist_t *fapl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
