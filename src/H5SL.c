@@ -73,38 +73,38 @@
     }
 
 /* Define a code template for comparing scalar keys for the "CMP" in the H5SL_LOCATE macro */
-#define H5SL_LOCATE_SCALAR_CMP(SLIST, TYPE, PNODE, PKEY, HASHVAL) (*(TYPE *)((PNODE)->c_key) < *(TYPE *)PKEY)
+#define H5SL_LOCATE_SCALAR_CMP(SLIST, TYPE, PNODE, PKEY, HASHVAL) (*(TYPE *)((PNODE)->u.c_key) < *(TYPE *)PKEY)
 
 /* Define a code template for comparing string keys for the "CMP" in the H5SL_LOCATE macro */
 #define H5SL_LOCATE_STRING_CMP(SLIST, TYPE, PNODE, PKEY, HASHVAL)                                            \
-    (((PNODE)->hashval == HASHVAL) ? (strcmp((const char *)(PNODE)->c_key, (const char *)PKEY) < 0)          \
+    (((PNODE)->hashval == HASHVAL) ? (strcmp((const char *)(PNODE)->u.c_key, (const char *)PKEY) < 0)          \
                                    : ((PNODE)->hashval < HASHVAL))
 
 /* Define a code template for comparing H5_obj_t keys for the "CMP" in the H5SL_LOCATE macro */
 #define H5SL_LOCATE_OBJ_CMP(SLIST, TYPE, PNODE, PKEY, HASHVAL)                                               \
-    ((((TYPE *)((PNODE)->c_key))->fileno == ((TYPE *)PKEY)->fileno)                                          \
-         ? (((TYPE *)((PNODE)->c_key))->addr < ((TYPE *)PKEY)->addr)                                         \
-         : (((TYPE *)((PNODE)->c_key))->fileno < ((TYPE *)PKEY)->fileno))
+    ((((TYPE *)((PNODE)->u.c_key))->fileno == ((TYPE *)PKEY)->fileno)                                          \
+         ? (((TYPE *)((PNODE)->u.c_key))->addr < ((TYPE *)PKEY)->addr)                                         \
+         : (((TYPE *)((PNODE)->u.c_key))->fileno < ((TYPE *)PKEY)->fileno))
 
 /* Define a code template for comparing generic keys for the "CMP" in the H5SL_LOCATE macro */
 #define H5SL_LOCATE_GENERIC_CMP(SLIST, TYPE, PNODE, PKEY, HASHVAL)                                           \
-    ((SLIST)->cmp((TYPE *)((PNODE)->c_key), (TYPE *)PKEY) < 0)
+    ((SLIST)->cmp((TYPE *)((PNODE)->u.c_key), (TYPE *)PKEY) < 0)
 
 /* Define a code template for comparing scalar keys for the "EQ" in the H5SL_LOCATE macro */
-#define H5SL_LOCATE_SCALAR_EQ(SLIST, TYPE, PNODE, PKEY, HASHVAL) (*(TYPE *)((PNODE)->c_key) == *(TYPE *)PKEY)
+#define H5SL_LOCATE_SCALAR_EQ(SLIST, TYPE, PNODE, PKEY, HASHVAL) (*(TYPE *)((PNODE)->u.c_key) == *(TYPE *)PKEY)
 
 /* Define a code template for comparing string keys for the "EQ" in the H5SL_LOCATE macro */
 #define H5SL_LOCATE_STRING_EQ(SLIST, TYPE, PNODE, PKEY, HASHVAL)                                             \
-    (((PNODE)->hashval == HASHVAL) && (strcmp((const char *)(PNODE)->c_key, (const char *)PKEY) == 0))
+    (((PNODE)->hashval == HASHVAL) && (strcmp((const char *)(PNODE)->u.c_key, (const char *)PKEY) == 0))
 
 /* Define a code template for comparing H5_obj_t keys for the "EQ" in the H5SL_LOCATE macro */
 #define H5SL_LOCATE_OBJ_EQ(SLIST, TYPE, PNODE, PKEY, HASHVAL)                                                \
-    ((((TYPE *)((PNODE)->c_key))->fileno == ((TYPE *)PKEY)->fileno) &&                                       \
-     (((TYPE *)((PNODE)->c_key))->addr == ((TYPE *)PKEY)->addr))
+    ((((TYPE *)((PNODE)->u.c_key))->fileno == ((TYPE *)PKEY)->fileno) &&                                       \
+     (((TYPE *)((PNODE)->u.c_key))->addr == ((TYPE *)PKEY)->addr))
 
 /* Define a code template for comparing generic keys for the "EQ" in the H5SL_LOCATE macro */
 #define H5SL_LOCATE_GENERIC_EQ(SLIST, TYPE, PNODE, PKEY, HASHVAL)                                            \
-    ((SLIST)->cmp((TYPE *)((PNODE)->c_key), (TYPE *)PKEY) == 0)
+    ((SLIST)->cmp((TYPE *)((PNODE)->u.c_key), (TYPE *)PKEY) == 0)
 
 /* Define a code template for initializing the hash value for scalar keys for the "HASHINIT" in the
  * H5SL_LOCATE macro */
@@ -369,7 +369,7 @@
         (KEY, HASHVAL)                                                                                       \
                                                                                                              \
             /* Find the gap to drop in to at the highest level */                                            \
-            while (X && (!X->c_key || H5_GLUE3(H5SL_LOCATE_, CMP, _CMP)(SLIST, TYPE, X, KEY, HASHVAL)))      \
+            while (X && (!X->u.c_key || H5_GLUE3(H5SL_LOCATE_, CMP, _CMP)(SLIST, TYPE, X, KEY, HASHVAL)))      \
         {                                                                                                    \
             _llast = _last;                                                                                  \
             _last  = X;                                                                                      \
@@ -496,7 +496,7 @@
             /* neighbor */                                                                                   \
             if (X->level) {                                                                                  \
                 X              = X->backward;                                                                \
-                _next->c_key   = X->c_key;                                                                   \
+                _next->u.c_key = X->u.c_key;                                                                   \
                 _next->item    = X->item;                                                                    \
                 _next->hashval = X->hashval;                                                                 \
             }                                                                                                \
@@ -548,8 +548,8 @@ H5TS_DEF_ATOMIC_TYPE(size_t)
 struct H5SL_node_t {
     union {
         void       *key;   /* Pointer to node's key */
-        const void *c_key; /* Pointer to node's key */
-    };
+        const void *c_key; /* Const pointer to node's key */
+    } u;
     void    *item;       /* Pointer to node's item */
     size_t   level;      /* The level of this node */
     size_t   log_nalloc; /* log2(Number of slots allocated in forward) */
@@ -736,7 +736,7 @@ H5SL__new_node(void *item, const void *key, uint32_t hashval)
         HGOTO_ERROR(H5E_SLIST, H5E_NOSPACE, NULL, "memory allocation failed");
 
     /* Initialize non-zero/NULL values */
-    ret_value->c_key   = key;
+    ret_value->u.c_key   = key;
     ret_value->item    = item;
     ret_value->hashval = hashval;
     if (NULL == (ret_value->forward = (H5SL_node_t **)H5FL_FAC_MALLOC(H5SL_fac_g[0]))) {
@@ -973,7 +973,7 @@ H5SL__release_common(H5SL_t *slist, bool closing, H5SL_operator_t op, void *op_d
          */
         H5_GCC_CLANG_DIAG_OFF("cast-qual")
         if (op)
-            (void)(op)(node->item, (void *)node->key, op_data);
+            (void)(op)(node->item, (void *)node->u.key, op_data);
         H5_GCC_CLANG_DIAG_ON("cast-qual")
 
         H5SL__dest_node(node);
@@ -2612,7 +2612,7 @@ H5SL_prev(H5SL_node_t *slist_node)
     /* (Pre-condition) */
 
     /* Walk backward, detecting the header node (which has it's key set to NULL) */
-    ret_value = (slist_node->backward->c_key == NULL) ? NULL : slist_node->backward;
+    ret_value = (slist_node->backward->u.c_key == NULL) ? NULL : slist_node->backward;
 
     if (ret_value) {
         /* Change the # of times the nodes are checked out */
@@ -2679,7 +2679,7 @@ H5SL_before(H5SL_node_t *slist_node)
     /* (Pre-condition) */
 
     /* Walk backward, detecting the header node (which has it's key set to NULL) */
-    ret_value = (slist_node->backward->c_key == NULL) ? NULL : slist_node->backward;
+    ret_value = (slist_node->backward->u.c_key == NULL) ? NULL : slist_node->backward;
 
     if (ret_value) {
         /* Increment the # of times the node is checked out and increment # of checked out nodes */
@@ -2891,7 +2891,7 @@ H5SL_iterate(H5SL_t *slist, H5SL_operator_t op, void *op_data)
          * container can do what it likes with the elements.
          */
         H5_GCC_CLANG_DIAG_OFF("cast-qual")
-        if ((ret_value = (op)(node->item, (void *)node->key, op_data)) != 0)
+        if ((ret_value = (op)(node->item, (void *)node->u.key, op_data)) != 0)
             break;
         H5_GCC_CLANG_DIAG_ON("cast-qual")
 

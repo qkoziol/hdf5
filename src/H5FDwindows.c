@@ -54,7 +54,7 @@ H5Pset_fapl_windows(hid_t fapl_id)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)

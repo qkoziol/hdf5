@@ -666,7 +666,7 @@ H5Pset_fapl_ros3_token(hid_t fapl_id, const char *token)
 
     FUNC_ENTER_API(FAIL)
 
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADTYPE, FAIL, "not a file access property list");
     if (H5_VFD_ROS3 != H5P_get_driver_value(fapl))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "incorrect VFL driver");
@@ -760,7 +760,7 @@ H5FD__ros3_open(const char *url, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
     if (fa->authenticate) {
         htri_t token_exists;
 
-        if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+        if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file access property list");
 
         /* Does the token exist in the fapl? */
