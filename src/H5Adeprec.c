@@ -120,7 +120,7 @@ H5Acreate1(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t 
         HGOTO_ERROR(H5E_ATTR, H5E_CANTSET, H5I_INVALID_HID, "can't set collective metadata read");
 
     /* Get the pointer to the attribute creation property list */
-    if (NULL == (acpl = H5P_acquire(acpl_id, H5P_TYPE_ATTRIBUTE_CREATE, H5I_LOCK_SHARED, true)))
+    if (NULL == (acpl = H5P_acquire(acpl_id, H5P_TYPE_ATTRIBUTE_CREATE, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Set location parameters */
@@ -141,7 +141,7 @@ H5Acreate1(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t 
         HGOTO_ERROR(H5E_ATTR, H5E_CANTREGISTER, H5I_INVALID_HID, "unable to register attribute for ID");
 
 done:
-    if (acpl && H5P_release(acpl) < 0)
+    if (acpl && H5P_release(acpl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_ATTR, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
 
     /* Clean up on failure */

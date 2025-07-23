@@ -157,7 +157,7 @@ H5Pset_map_iterate_hints(hid_t mapl_id, size_t key_prefetch_size, size_t key_all
     FUNC_ENTER_API(FAIL)
 
     /* Get the map access property list structure */
-    if (NULL == (mapl = H5P_acquire(mapl_id, H5P_TYPE_MAP_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (mapl = H5P_acquire(mapl_id, H5P_TYPE_MAP_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set sizes */
@@ -167,7 +167,7 @@ H5Pset_map_iterate_hints(hid_t mapl_id, size_t key_prefetch_size, size_t key_all
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set key allocation size");
 
     /* Release resources */
-    if (mapl && H5P_release(mapl) < 0)
+    if (mapl && H5P_release(mapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
 done:
@@ -192,7 +192,7 @@ H5Pget_map_iterate_hints(hid_t mapl_id, size_t *key_prefetch_size /*out*/, size_
     FUNC_ENTER_API(FAIL)
 
     /* Get the map access property list structure */
-    if (NULL == (mapl = H5P_acquire(mapl_id, H5P_TYPE_MAP_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (mapl = H5P_acquire(mapl_id, H5P_TYPE_MAP_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get the properties */
@@ -207,7 +207,7 @@ H5Pget_map_iterate_hints(hid_t mapl_id, size_t *key_prefetch_size /*out*/, size_
 
 done:
     /* Release resources */
-    if (mapl && H5P_release(mapl) < 0)
+    if (mapl && H5P_release(mapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)

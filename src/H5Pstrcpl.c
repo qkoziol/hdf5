@@ -147,7 +147,7 @@ H5Pset_char_encoding(hid_t strcpl_id, H5T_cset_t encoding)
         HGOTO_ERROR(H5E_ARGS, H5E_BADRANGE, FAIL, "character encoding is not valid");
 
     /* Get the property list structure */
-    if (NULL == (strcpl = H5P_acquire(strcpl_id, H5P_TYPE_STRING_CREATE, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (strcpl = H5P_acquire(strcpl_id, H5P_TYPE_STRING_CREATE, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set the character encoding */
@@ -156,7 +156,7 @@ H5Pset_char_encoding(hid_t strcpl_id, H5T_cset_t encoding)
 
 done:
     /* Release resources */
-    if (strcpl && H5P_release(strcpl) < 0)
+    if (strcpl && H5P_release(strcpl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -180,7 +180,7 @@ H5Pget_char_encoding(hid_t strcpl_id, H5T_cset_t *encoding /*out*/)
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (strcpl = H5P_acquire(strcpl_id, H5P_TYPE_STRING_CREATE, H5I_LOCK_SHARED, true)))
+    if (NULL == (strcpl = H5P_acquire(strcpl_id, H5P_TYPE_STRING_CREATE, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get value */
@@ -190,7 +190,7 @@ H5Pget_char_encoding(hid_t strcpl_id, H5T_cset_t *encoding /*out*/)
 
 done:
     /* Release resources */
-    if (strcpl && H5P_release(strcpl) < 0)
+    if (strcpl && H5P_release(strcpl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)

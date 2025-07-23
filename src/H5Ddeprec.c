@@ -116,7 +116,7 @@ H5Dcreate1(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t 
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, H5I_INVALID_HID, "can't set collective metadata read");
 
     /* Get the pointer to the dataset create property list */
-    if (NULL == (dcpl = H5P_acquire(dcpl_id, H5P_TYPE_DATASET_CREATE, H5I_LOCK_EXCLUSIVE, true)))
+    if (NULL == (dcpl = H5P_acquire(dcpl_id, H5P_TYPE_DATASET_CREATE, H5P_LOCK_EXCLUSIVE, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Set the DCPL for the API context */
@@ -141,7 +141,7 @@ H5Dcreate1(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t 
         HGOTO_ERROR(H5E_DATASET, H5E_CANTREGISTER, H5I_INVALID_HID, "unable to register dataset");
 done:
     /* Release resources */
-    if (dcpl && H5P_release(dcpl) < 0)
+    if (dcpl && H5P_release(dcpl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
 
     if (H5I_INVALID_HID == ret_value)
@@ -322,18 +322,19 @@ H5Dvlen_reclaim(hid_t type_id, hid_t space_id, hid_t dxpl_id, void *buf)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid dataspace");
     if (!(H5S_has_extent(space)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "dataspace does not have extent set");
-    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_SHARED, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl);
+    if (H5CX_set_dxpl(dxpl) < 0)
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "can't set dataset transfer property list");
 
     /* Call internal routine */
     ret_value = H5T_reclaim(type, space, buf);
 
 done:
     /* Release resources */
-    if (dxpl && H5P_release(dxpl) < 0)
+    if (dxpl && H5P_release(dxpl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)

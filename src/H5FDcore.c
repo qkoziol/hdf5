@@ -520,7 +520,7 @@ H5Pset_core_write_tracking(hid_t fapl_id, hbool_t is_enabled, size_t page_size)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "page_size cannot be zero");
 
     /* Get the property list */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
     if (H5FD_CORE_VALUE != H5P_get_driver_value(fapl))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "incorrect VFL driver");
@@ -540,7 +540,7 @@ H5Pset_core_write_tracking(hid_t fapl_id, hbool_t is_enabled, size_t page_size)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -566,7 +566,7 @@ H5Pget_core_write_tracking(hid_t fapl_id, hbool_t *is_enabled /*out*/, size_t *p
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
     if (H5FD_CORE_VALUE != H5P_get_driver_value(fapl))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "incorrect VFL driver");
@@ -581,7 +581,7 @@ H5Pget_core_write_tracking(hid_t fapl_id, hbool_t *is_enabled /*out*/, size_t *p
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -608,7 +608,7 @@ H5Pset_fapl_core(hid_t fapl_id, size_t increment, hbool_t backing_store)
     FUNC_ENTER_API(FAIL)
 
     /* Check argument */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
 
     /* Set VFD info values */
@@ -624,7 +624,7 @@ H5Pset_fapl_core(hid_t fapl_id, size_t increment, hbool_t backing_store)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -648,7 +648,7 @@ H5Pget_fapl_core(hid_t fapl_id, size_t *increment /*out*/, hbool_t *backing_stor
 
     FUNC_ENTER_API(FAIL)
 
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
     if (H5FD_CORE_VALUE != H5P_get_driver_value(fapl))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "incorrect VFL driver");
@@ -662,7 +662,7 @@ H5Pget_fapl_core(hid_t fapl_id, size_t *increment /*out*/, hbool_t *backing_stor
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)

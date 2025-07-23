@@ -3580,11 +3580,12 @@ H5Tconvert(hid_t src_id, hid_t dst_id, size_t nelmts, void *buf, void *backgroun
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a datatype");
     if (NULL == (dst = H5I_object_verify(dst_id, H5I_DATATYPE)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a datatype");
-    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_SHARED, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl);
+    if (H5CX_set_dxpl(dxpl) < 0)
+        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set dataset transfer property list");
 
     /* Find the conversion function */
     if (NULL == (tpath = H5T_path_find(src, dst)))
@@ -3595,7 +3596,7 @@ H5Tconvert(hid_t src_id, hid_t dst_id, size_t nelmts, void *buf, void *backgroun
 
 done:
     /* Release resources */
-    if (dxpl && H5P_release(dxpl) < 0)
+    if (dxpl && H5P_release(dxpl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_DATATYPE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -3632,18 +3633,19 @@ H5Treclaim(hid_t type_id, hid_t space_id, hid_t dxpl_id, void *buf)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid dataspace");
     if (!(H5S_has_extent(space)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "dataspace does not have extent set");
-    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_SHARED, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl);
+    if (H5CX_set_dxpl(dxpl) < 0)
+        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set dataset transfer property list");
 
     /* Call internal routine */
     ret_value = H5T_reclaim(type, space, buf);
 
 done:
     /* Release resources */
-    if (dxpl && H5P_release(dxpl) < 0)
+    if (dxpl && H5P_release(dxpl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_DATATYPE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -6392,9 +6394,9 @@ done:
     /* Remove IDs, but don't decrement their reference counts, as they
      * could have been registered for datatypes that weren't copied
      */
-    if ((src_type_id >= 0) && (NULL == H5I_remove(src_type_id)))
+    if ((src_type_id >= 0) && (NULL == H5I_remove(src_type_id, false)))
         HDONE_ERROR(H5E_DATATYPE, H5E_CANTFREE, FAIL, "can't decrement temporary datatype ID");
-    if ((dst_type_id >= 0) && (NULL == H5I_remove(dst_type_id)))
+    if ((dst_type_id >= 0) && (NULL == H5I_remove(dst_type_id, false)))
         HDONE_ERROR(H5E_DATATYPE, H5E_CANTFREE, FAIL, "can't decrement temporary datatype ID");
 
 #ifdef H5T_DEBUG

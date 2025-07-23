@@ -63,7 +63,7 @@ typedef enum H5I_lock_mode_t {
  *
  */
 typedef herr_t (*H5I_lock_cb_t)(void *obj, H5I_lock_mode_t mode);
-typedef herr_t (*H5I_unlock_cb_t)(void *obj);
+typedef herr_t (*H5I_unlock_cb_t)(void *obj, H5I_lock_mode_t mode);
 
 typedef struct H5I_class_t {
     H5I_type_t type;             /* Class "value" for the type */
@@ -115,11 +115,11 @@ H5_DLL herr_t     H5I_find_id(const void *object, H5I_type_t type, hid_t *id /*o
 /* Functions that manipulate objects */
 H5_DLL void  *H5I_object(hid_t id);
 H5_DLL void  *H5I_object_verify(hid_t id, H5I_type_t type);
-H5_DLL void  *H5I_remove(hid_t id);
+H5_DLL void  *H5I_remove(hid_t id, bool make_free_cb);
 H5_DLL void  *H5I_subst(hid_t id, const void *new_object);
 H5_DLL htri_t H5I_is_file_object(hid_t id);
 H5_DLL void  *H5I_acquire(hid_t id, H5I_type_t type, H5I_lock_mode_t mode);
-H5_DLL herr_t H5I_release(void *obj, H5I_type_t type);
+H5_DLL herr_t H5I_release(void *obj, H5I_type_t type, H5I_lock_mode_t mode);
 
 /* ID registration functions */
 H5_DLL hid_t  H5I_register(H5I_type_t type, const void *object, bool app_ref);

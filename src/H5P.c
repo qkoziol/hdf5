@@ -24,7 +24,7 @@
 /* Headers */
 /***********/
 #include "H5private.h"   /* Generic Functions			*/
-#include "H5CXprivate.h" /* API Contexts                         */
+#include "H5CXprivate.h" /* API Contexts                        */
 #include "H5Eprivate.h"  /* Error handling		  	*/
 #include "H5Iprivate.h"  /* IDs			  		*/
 #include "H5Ppkg.h"      /* Property lists		  	*/
@@ -128,7 +128,7 @@ H5Pcopy(hid_t id)
 
 done:
     /* Release resources */
-    if (plist && H5P_release(plist) < 0)
+    if (plist && H5I_release(plist, H5I_GENPROP_LST, H5I_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -612,13 +612,12 @@ H5Pinsert2(hid_t plist_id, const char *name, size_t size, void *value, H5P_prp_s
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "properties >0 size must have default");
 
     /* Create the new property list class */
-    if ((ret_value = H5P_insert(plist, name, size, value, prp_set, prp_get, NULL, NULL, prp_delete, prp_copy,
-                                prp_cmp, prp_close)) < 0)
+    if ((ret_value = H5P_insert(plist, name, size, value, prp_set, prp_get, NULL, NULL, prp_delete, prp_copy, prp_cmp, prp_close)) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, FAIL, "unable to register property in plist");
 
 done:
     /* Release resources */
-    if (plist && H5P_release(plist) < 0)
+    if (plist && H5I_release(plist, H5I_GENPROP_LST, H5I_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -677,7 +676,7 @@ H5Pset(hid_t plist_id, const char *name, const void *value)
 
 done:
     /* Release resources */
-    if (plist && H5P_release(plist) < 0)
+    if (plist && H5I_release(plist, H5I_GENPROP_LST, H5I_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -738,7 +737,7 @@ H5Pexist(hid_t id, const char *name)
 
 done:
     /* Release resources */
-    if (plist && H5P_release(plist) < 0)
+    if (plist && H5I_release(plist, H5I_GENPROP_LST, H5I_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -805,7 +804,7 @@ H5Pget_size(hid_t id, const char *name, size_t *size /*out*/)
 
 done:
     /* Release resources */
-    if (plist && H5P_release(plist) < 0)
+    if (plist && H5I_release(plist, H5I_GENPROP_LST, H5I_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -849,7 +848,7 @@ H5Pencode2(hid_t plist_id, void *buf, size_t *nalloc, hid_t fapl_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
 
     /* Get the file access property list */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
@@ -862,9 +861,9 @@ H5Pencode2(hid_t plist_id, void *buf, size_t *nalloc, hid_t fapl_id)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
-    if (plist && H5I_release(plist, H5I_GENPROP_LST) < 0)
+    if (plist && H5I_release(plist, H5I_GENPROP_LST, H5I_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -959,7 +958,7 @@ H5Pget_class(hid_t plist_id)
 
 done:
     /* Release resources */
-    if (plist && H5P_release(plist) < 0)
+    if (plist && H5I_release(plist, H5I_GENPROP_LST, H5I_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     if (H5I_INVALID_HID == ret_value && pclass)
@@ -1025,7 +1024,7 @@ H5Pget_nprops(hid_t id, size_t *nprops /*out*/)
 
 done:
     /* Release resources */
-    if (plist && H5P_release(plist) < 0)
+    if (plist && H5I_release(plist, H5I_GENPROP_LST, H5I_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1095,9 +1094,9 @@ H5Pequal(hid_t id1, hid_t id2)
 
 done:
     /* Release resources */
-    if (plist1 && H5P_release(plist1) < 0)
+    if (plist2 && H5I_release(plist2, H5I_GENPROP_LST, H5I_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
-    if (plist2 && H5P_release(plist2) < 0)
+    if (plist1 && H5I_release(plist1, H5I_GENPROP_LST, H5I_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1147,7 +1146,7 @@ H5Pisa_class(hid_t plist_id, hid_t pclass_id)
 
 done:
     /* Release resources */
-    if (plist && H5P_release(plist) < 0)
+    if (plist && H5I_release(plist, H5I_GENPROP_LST, H5I_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1289,7 +1288,7 @@ H5Piterate(hid_t id, int *idx, H5P_iterate_t iter_func, void *iter_data)
 
 done:
     /* Release resources */
-    if (plist && H5P_release(plist) < 0)
+    if (plist && H5I_release(plist, H5I_GENPROP_LST, H5I_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1345,7 +1344,7 @@ H5Pget(hid_t plist_id, const char *name, void *value /*out*/)
 
 done:
     /* Release resources */
-    if (plist && H5P_release(plist) < 0)
+    if (plist && H5I_release(plist, H5I_GENPROP_LST, H5I_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1397,7 +1396,7 @@ H5Premove(hid_t plist_id, const char *name)
 
 done:
     /* Release resources */
-    if (plist && H5P_release(plist) < 0)
+    if (plist && H5I_release(plist, H5I_GENPROP_LST, H5I_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1504,16 +1503,15 @@ H5Pcopy_prop(hid_t dst_id, hid_t src_id, const char *name)
 
             /* Close the previous class */
             if (H5P__close_class(old_dst_pclass) < 0)
-                HGOTO_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, FAIL,
-                            "unable to close original property class after substitution");
+                HGOTO_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, FAIL, "unable to close original property class after substitution");
         } /* end if */
     }     /* end else */
 
 done:
     /* Release resources */
-    if (src_plist && H5P_release(src_plist) < 0)
+    if (dst_plist && H5I_release(dst_plist, H5I_GENPROP_LST, H5I_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
-    if (dst_plist && H5P_release(dst_plist) < 0)
+    if (src_plist && H5I_release(src_plist, H5I_GENPROP_LST, H5I_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)

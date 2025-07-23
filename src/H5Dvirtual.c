@@ -648,7 +648,11 @@ H5D__virtual_copy_layout(H5O_layout_t *layout)
 
     /* Copy property lists */
     if (orig_source_fapl)
-        if (NULL == (virt->source_fapl = H5P_copy_plist(orig_source_fapl, false)))
+        /* This FAPL needs to be a "public" one, since its ID may get passed
+         * to the user callback for a VFD, which could be an external VFD that
+         * calls public HDF5 API routines.  So, set the 'app_ref' to true.
+         */
+        if (NULL == (virt->source_fapl = H5P_copy_plist(orig_source_fapl, true)))
             HGOTO_ERROR(H5E_DATASET, H5E_CANTCOPY, FAIL, "can't copy fapl");
 
     /* New layout is not fully initialized */
@@ -735,8 +739,6 @@ H5D__virtual_reset_layout(H5O_layout_t *layout)
     /* The list is no longer initialized */
     virt->init = false;
 
-    /* Note the lack of a done: label.  This is because there are no HGOTO_ERROR
-     * calls.  If one is added, a done: label must also be added */
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5D__virtual_reset_layout() */
 
@@ -989,8 +991,6 @@ H5D__virtual_reset_source_dset(H5O_storage_virtual_ent_t     *virtual_ent,
      * called */
     assert(!source_dset->projected_mem_space);
 
-    /* Note the lack of a done: label.  This is because there are no HGOTO_ERROR
-     * calls.  If one is added, a done: label must also be added */
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5D__virtual_reset_source_dset() */
 
@@ -2171,7 +2171,11 @@ H5D__virtual_init(H5F_t *f, const H5D_t *dset)
     /* Retrieve VDS file FAPL to layout */
     if (NULL == storage->source_fapl) {
         /* Get a copy of the FAPL, to open source files with */
-        if (NULL == (storage->source_fapl = H5F_get_access_plist(f, false)))
+        /* This FAPL needs to be a "public" one, since its ID may get passed
+         * to the user callback for a VFD, which could be an external VFD that
+         * calls public HDF5 API routines.  So, set the 'app_ref' to true.
+         */
+        if (NULL == (storage->source_fapl = H5F_get_access_plist(f, true)))
             HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get fapl");
     } /* end if */
 
@@ -2584,8 +2588,6 @@ H5D__virtual_post_io(H5O_storage_virtual_t *storage)
                 storage->list[i].source_dset.projected_mem_space = NULL;
             } /* end if */
 
-    /* Note the lack of a done: label.  This is because there are no HGOTO_ERROR
-     * calls.  If one is added, a done: label must also be added */
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5D__virtual_post_io() */
 
@@ -3070,7 +3072,7 @@ H5D__virtual_refresh_source_dset(H5D_t **dset)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTFLUSH, FAIL, "unable to refresh source dataset");
 
     /* Discard the identifier & replace the dataset */
-    if (NULL == (vol_obj = (H5VL_object_t *)H5I_remove(temp_id)))
+    if (NULL == (vol_obj = (H5VL_object_t *)H5I_remove(temp_id, false)))
         HGOTO_ERROR(H5E_DATASET, H5E_CANTREMOVE, FAIL, "can't unregister source dataset ID");
     if (NULL == (*dset = (H5D_t *)H5VL_object_unwrap(vol_obj)))
         HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't retrieve library object from VOL object");

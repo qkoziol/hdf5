@@ -169,37 +169,37 @@ H5Dcreate2(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t 
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
+    /* Get the pointer to the dataset create property list */
+    if (NULL == (dcpl = H5P_acquire(dcpl_id, H5P_TYPE_DATASET_CREATE, H5P_LOCK_EXCLUSIVE, true)))
+        HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+
+    /* Get the pointer to the dataset access property list */
+    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5P_LOCK_SHARED, true)))
+        HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+
     /* Get link creation property list */
-    if (NULL == (lcpl = H5P_acquire(lcpl_id, H5P_TYPE_LINK_CREATE, H5I_LOCK_SHARED, true)))
+    if (NULL == (lcpl = H5P_acquire(lcpl_id, H5P_TYPE_LINK_CREATE, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Set the LCPL for the API context */
-    H5CX_set_lcpl(lcpl);
-
-    /* Get the pointer to the dataset create property list */
-    if (NULL == (dcpl = H5P_acquire(dcpl_id, H5P_TYPE_DATASET_CREATE, H5I_LOCK_EXCLUSIVE, true)))
-        HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+    if (H5CX_set_lcpl(lcpl) < 0)
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, H5I_INVALID_HID, "can't set link creation property list info");
 
     /* Set the DCPL for the API context */
     if (H5CX_set_cpl(dcpl) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, H5I_INVALID_HID, "can't set creation property list info");
 
-    /* Get the pointer to the dataset access property list */
-    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5I_LOCK_SHARED, true)))
-        HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
-
     /* Create the dataset synchronously */
-    if ((ret_value = H5D__create_api_common(loc_id, name, type_id, space_id, lcpl, dcpl, dapl, NULL, NULL)) <
-        0)
+    if ((ret_value = H5D__create_api_common(loc_id, name, type_id, space_id, lcpl, dcpl, dapl, NULL, NULL)) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTCREATE, H5I_INVALID_HID, "unable to synchronously create dataset");
 
 done:
     /* Release resources */
-    if (lcpl && H5P_release(lcpl) < 0)
+    if (lcpl && H5P_release(lcpl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
-    if (dcpl && H5P_release(dcpl) < 0)
+    if (dapl && H5P_release(dapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
-    if (dapl && H5P_release(dapl) < 0)
+    if (dcpl && H5P_release(dcpl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -229,27 +229,28 @@ H5Dcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
+    /* Get the pointer to the dataset create property list */
+    if (NULL == (dcpl = H5P_acquire(dcpl_id, H5P_TYPE_DATASET_CREATE, H5P_LOCK_EXCLUSIVE, true)))
+        HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+    dcpl_id = H5P_PLIST_ID(dcpl);
+
+    /* Get the pointer to the dataset access property list */
+    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5P_LOCK_SHARED, true)))
+        HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+    dapl_id = H5P_PLIST_ID(dapl);
+
     /* Get link creation property list */
-    if (NULL == (lcpl = H5P_acquire(lcpl_id, H5P_TYPE_LINK_CREATE, H5I_LOCK_SHARED, true)))
+    if (NULL == (lcpl = H5P_acquire(lcpl_id, H5P_TYPE_LINK_CREATE, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
     lcpl_id = H5P_PLIST_ID(lcpl);
 
     /* Set the LCPL for the API context */
-    H5CX_set_lcpl(lcpl);
-
-    /* Get the pointer to the dataset create property list */
-    if (NULL == (dcpl = H5P_acquire(dcpl_id, H5P_TYPE_DATASET_CREATE, H5I_LOCK_EXCLUSIVE, true)))
-        HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
-    dcpl_id = H5P_PLIST_ID(dcpl);
+    if (H5CX_set_lcpl(lcpl) < 0)
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, H5I_INVALID_HID, "can't set link creation property list info");
 
     /* Set the DCPL for the API context */
     if (H5CX_set_cpl(dcpl) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, H5I_INVALID_HID, "can't set creation property list info");
-
-    /* Get the pointer to the dataset access property list */
-    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5I_LOCK_SHARED, true)))
-        HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
-    dapl_id = H5P_PLIST_ID(dapl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -273,11 +274,11 @@ H5Dcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
 
 done:
     /* Release resources */
-    if (lcpl && H5P_release(lcpl) < 0)
+    if (lcpl && H5P_release(lcpl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
-    if (dcpl && H5P_release(dcpl) < 0)
+    if (dapl && H5P_release(dapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
-    if (dapl && H5P_release(dapl) < 0)
+    if (dcpl && H5P_release(dcpl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -328,16 +329,16 @@ H5Dcreate_anon(hid_t loc_id, hid_t type_id, hid_t space_id, hid_t dcpl_id, hid_t
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Check arguments */
-    if (NULL == (dcpl = H5P_acquire(dcpl_id, H5P_TYPE_DATASET_CREATE, H5I_LOCK_EXCLUSIVE, true)))
+    if (NULL == (dcpl = H5P_acquire(dcpl_id, H5P_TYPE_DATASET_CREATE, H5P_LOCK_EXCLUSIVE, true)))
+        HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+
+    /* Get the pointer to the dataset access property list */
+    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Set the DCPL for the API context */
     if (H5CX_set_cpl(dcpl) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, H5I_INVALID_HID, "can't set creation property list info");
-
-    /* Get the pointer to the dataset access property list */
-    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5I_LOCK_SHARED, true)))
-        HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
     if (H5CX_set_apl(dapl, loc_id, true) < 0)
@@ -362,9 +363,9 @@ H5Dcreate_anon(hid_t loc_id, hid_t type_id, hid_t space_id, hid_t dcpl_id, hid_t
 
 done:
     /* Release resources */
-    if (dcpl && H5P_release(dcpl) < 0)
+    if (dapl && H5P_release(dapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
-    if (dapl && H5P_release(dapl) < 0)
+    if (dcpl && H5P_release(dcpl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
 
     /* Cleanup on failure */
@@ -448,7 +449,7 @@ H5Dopen2(hid_t loc_id, const char *name, hid_t dapl_id)
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Get the pointer to the dataset access property list */
-    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Open the dataset synchronously */
@@ -457,7 +458,7 @@ H5Dopen2(hid_t loc_id, const char *name, hid_t dapl_id)
 
 done:
     /* Release resources */
-    if (dapl && H5P_release(dapl) < 0)
+    if (dapl && H5P_release(dapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -490,7 +491,7 @@ H5Dopen_async(const char *app_file, const char *app_func, unsigned app_line, hid
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Get the pointer to the dataset access property list */
-    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
     dapl_id = H5P_PLIST_ID(dapl);
 
@@ -511,7 +512,7 @@ H5Dopen_async(const char *app_file, const char *app_func, unsigned app_line, hid
 
 done:
     /* Release resources */
-    if (dapl && H5P_release(dapl) < 0)
+    if (dapl && H5P_release(dapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1024,7 +1025,8 @@ H5D__read_api_common(size_t count, hid_t dset_id[], hid_t mem_type_id[], hid_t m
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "buf array not provided");
 
     /* Set the DXPL for the API context */
-    H5CX_set_dxpl(dxpl);
+    if (H5CX_set_dxpl(dxpl) < 0)
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "can't set dataset transfer property list");
 
     /* Allocate obj array if necessary */
     if (count > 1)
@@ -1113,12 +1115,11 @@ H5Dread(hid_t dset_id, hid_t mem_type_id, hid_t mem_space_id, hid_t file_space_i
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the dataset transfer property list */
-    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_EXCLUSIVE, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5P_LOCK_EXCLUSIVE, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Read the data */
-    if (H5D__read_api_common(1, &dset_id, &mem_type_id, &mem_space_id, &file_space_id, dxpl, &buf, NULL,
-                             NULL) < 0)
+    if (H5D__read_api_common(1, &dset_id, &mem_type_id, &mem_space_id, &file_space_id, dxpl, &buf, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_READERROR, FAIL, "can't synchronously read data");
 
 done:
@@ -1126,7 +1127,7 @@ done:
     if (dxpl) {
         if (H5CX_update_dxpl() < 0)
             HDONE_ERROR(H5E_DATASET, H5E_CANTUPDATE, FAIL, "unable to update DXPL");
-        if (H5P_release(dxpl) < 0)
+        if (H5P_release(dxpl, H5P_LOCK_EXCLUSIVE) < 0)
             HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
     }
 
@@ -1155,7 +1156,7 @@ H5Dread_async(const char *app_file, const char *app_func, unsigned app_line, hid
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the dataset transfer property list */
-    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_EXCLUSIVE, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5P_LOCK_EXCLUSIVE, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
     dxpl_id = H5P_PLIST_ID(dxpl);
 
@@ -1181,7 +1182,7 @@ done:
     if (dxpl) {
         if (H5CX_update_dxpl() < 0)
             HDONE_ERROR(H5E_DATASET, H5E_CANTUPDATE, FAIL, "unable to update DXPL");
-        if (H5P_release(dxpl) < 0)
+        if (H5P_release(dxpl, H5P_LOCK_EXCLUSIVE) < 0)
             HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
     }
 
@@ -1208,15 +1209,14 @@ H5Dread_multi(size_t count, hid_t dset_id[], hid_t mem_type_id[], hid_t mem_spac
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the dataset transfer property list */
-    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_EXCLUSIVE, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5P_LOCK_EXCLUSIVE, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
 
     if (count == 0)
         HGOTO_DONE(SUCCEED);
 
     /* Read the data */
-    if (H5D__read_api_common(count, dset_id, mem_type_id, mem_space_id, file_space_id, dxpl, buf, NULL,
-                             NULL) < 0)
+    if (H5D__read_api_common(count, dset_id, mem_type_id, mem_space_id, file_space_id, dxpl, buf, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_READERROR, FAIL, "can't synchronously read data");
 
 done:
@@ -1224,7 +1224,7 @@ done:
     if (dxpl) {
         if (H5CX_update_dxpl() < 0)
             HDONE_ERROR(H5E_DATASET, H5E_CANTUPDATE, FAIL, "unable to update DXPL");
-        if (H5P_release(dxpl) < 0)
+        if (H5P_release(dxpl, H5P_LOCK_EXCLUSIVE) < 0)
             HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
     }
 
@@ -1255,7 +1255,7 @@ H5Dread_multi_async(const char *app_file, const char *app_func, unsigned app_lin
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the dataset transfer property list */
-    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_EXCLUSIVE, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5P_LOCK_EXCLUSIVE, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
     dxpl_id = H5P_PLIST_ID(dxpl);
 
@@ -1281,7 +1281,7 @@ done:
     if (dxpl) {
         if (H5CX_update_dxpl() < 0)
             HDONE_ERROR(H5E_DATASET, H5E_CANTUPDATE, FAIL, "unable to update DXPL");
-        if (H5P_release(dxpl) < 0)
+        if (H5P_release(dxpl, H5P_LOCK_EXCLUSIVE) < 0)
             HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
     }
 
@@ -1319,11 +1319,12 @@ H5Dread_chunk(hid_t dset_id, hid_t dxpl_id, const hsize_t *offset, uint32_t *fil
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "filters cannot be NULL");
 
     /* Get the default dataset transfer property list if the user didn't provide one */
-    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_SHARED, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set the DXPL for the API context */
-    H5CX_set_dxpl(dxpl);
+    if (H5CX_set_dxpl(dxpl) < 0)
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "can't set dataset transfer property list");
 
     /* Set up VOL callback arguments */
     dset_opt_args.chunk_read.offset  = offset;
@@ -1341,7 +1342,7 @@ H5Dread_chunk(hid_t dset_id, hid_t dxpl_id, const hsize_t *offset, uint32_t *fil
 
 done:
     /* Release resources */
-    if (dxpl && H5P_release(dxpl) < 0)
+    if (dxpl && H5P_release(dxpl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1387,7 +1388,8 @@ H5D__write_api_common(size_t count, hid_t dset_id[], hid_t mem_type_id[], hid_t 
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "buf array not provided");
 
     /* Set the DXPL for the API context */
-    H5CX_set_dxpl(dxpl);
+    if (H5CX_set_dxpl(dxpl) < 0)
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "can't set dataset transfer property list");
 
     /* Allocate obj array if necessary */
     if (count > 1)
@@ -1477,12 +1479,11 @@ H5Dwrite(hid_t dset_id, hid_t mem_type_id, hid_t mem_space_id, hid_t file_space_
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the dataset transfer property list */
-    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_EXCLUSIVE, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5P_LOCK_EXCLUSIVE, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Write the data */
-    if (H5D__write_api_common(1, &dset_id, &mem_type_id, &mem_space_id, &file_space_id, dxpl, &buf, NULL,
-                              NULL) < 0)
+    if (H5D__write_api_common(1, &dset_id, &mem_type_id, &mem_space_id, &file_space_id, dxpl, &buf, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_WRITEERROR, FAIL, "can't synchronously write data");
 
 done:
@@ -1490,7 +1491,7 @@ done:
     if (dxpl) {
         if (H5CX_update_dxpl() < 0)
             HDONE_ERROR(H5E_DATASET, H5E_CANTUPDATE, FAIL, "unable to update DXPL");
-        if (H5P_release(dxpl) < 0)
+        if (H5P_release(dxpl, H5P_LOCK_EXCLUSIVE) < 0)
             HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
     }
 
@@ -1520,7 +1521,7 @@ H5Dwrite_async(const char *app_file, const char *app_func, unsigned app_line, hi
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the dataset transfer property list */
-    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_EXCLUSIVE, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5P_LOCK_EXCLUSIVE, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
     dxpl_id = H5P_PLIST_ID(dxpl);
 
@@ -1529,8 +1530,7 @@ H5Dwrite_async(const char *app_file, const char *app_func, unsigned app_line, hi
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Write the data */
-    if (H5D__write_api_common(1, &dset_id, &mem_type_id, &mem_space_id, &file_space_id, dxpl, &buf, token_ptr,
-                              &vol_obj) < 0)
+    if (H5D__write_api_common(1, &dset_id, &mem_type_id, &mem_space_id, &file_space_id, dxpl, &buf, token_ptr, &vol_obj) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_WRITEERROR, FAIL, "can't asynchronously write data");
 
     /* If a token was created, add the token to the event set */
@@ -1546,7 +1546,7 @@ done:
     if (dxpl) {
         if (H5CX_update_dxpl() < 0)
             HDONE_ERROR(H5E_DATASET, H5E_CANTUPDATE, FAIL, "unable to update DXPL");
-        if (H5P_release(dxpl) < 0)
+        if (H5P_release(dxpl, H5P_LOCK_EXCLUSIVE) < 0)
             HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
     }
 
@@ -1573,15 +1573,14 @@ H5Dwrite_multi(size_t count, hid_t dset_id[], hid_t mem_type_id[], hid_t mem_spa
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the dataset transfer property list */
-    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_EXCLUSIVE, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5P_LOCK_EXCLUSIVE, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
 
     if (count == 0)
         HGOTO_DONE(SUCCEED);
 
     /* Write the data */
-    if (H5D__write_api_common(count, dset_id, mem_type_id, mem_space_id, file_space_id, dxpl, buf, NULL,
-                              NULL) < 0)
+    if (H5D__write_api_common(count, dset_id, mem_type_id, mem_space_id, file_space_id, dxpl, buf, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_WRITEERROR, FAIL, "can't synchronously write data");
 
 done:
@@ -1589,7 +1588,7 @@ done:
     if (dxpl) {
         if (H5CX_update_dxpl() < 0)
             HDONE_ERROR(H5E_DATASET, H5E_CANTUPDATE, FAIL, "unable to update DXPL");
-        if (H5P_release(dxpl) < 0)
+        if (H5P_release(dxpl, H5P_LOCK_EXCLUSIVE) < 0)
             HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
     }
 
@@ -1620,7 +1619,7 @@ H5Dwrite_multi_async(const char *app_file, const char *app_func, unsigned app_li
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the dataset transfer property list */
-    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_EXCLUSIVE, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5P_LOCK_EXCLUSIVE, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
     dxpl_id = H5P_PLIST_ID(dxpl);
 
@@ -1646,7 +1645,7 @@ done:
     if (dxpl) {
         if (H5CX_update_dxpl() < 0)
             HDONE_ERROR(H5E_DATASET, H5E_CANTUPDATE, FAIL, "unable to update DXPL");
-        if (H5P_release(dxpl) < 0)
+        if (H5P_release(dxpl, H5P_LOCK_EXCLUSIVE) < 0)
             HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
     }
 
@@ -1691,11 +1690,12 @@ H5Dwrite_chunk(hid_t dset_id, hid_t dxpl_id, uint32_t filters, const hsize_t *of
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid data_size - chunks cannot be > 4 GiB");
 
     /* Get the pointer to the dataset transfer property list */
-    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_SHARED, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set the DXPL for the API context */
-    H5CX_set_dxpl(dxpl);
+    if (H5CX_set_dxpl(dxpl) < 0)
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "can't set dataset transfer property list");
 
     /* Set up VOL callback arguments */
     dset_opt_args.chunk_write.offset  = offset;
@@ -1711,7 +1711,7 @@ H5Dwrite_chunk(hid_t dset_id, hid_t dxpl_id, uint32_t filters, const hsize_t *of
 
 done:
     /* Release resources */
-    if (dxpl && H5P_release(dxpl) < 0)
+    if (dxpl && H5P_release(dxpl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -2639,11 +2639,12 @@ H5Dchunk_iter(hid_t dset_id, hid_t dxpl_id, H5D_chunk_iter_op_t op, void *op_dat
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid callback to chunk iteration");
 
     /* Get the default dataset transfer property list if the user didn't provide one */
-    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5I_LOCK_SHARED, true)))
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set the DXPL for the API context */
-    H5CX_set_dxpl(dxpl);
+    if (H5CX_set_dxpl(dxpl) < 0)
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "can't set dataset transfer property list");
 
     /* Set up VOL callback arguments */
     dset_opt_args.chunk_iter.op      = op;
@@ -2657,7 +2658,7 @@ H5Dchunk_iter(hid_t dset_id, hid_t dxpl_id, H5D_chunk_iter_op_t op, void *op_dat
 
 done:
     /* Release resources */
-    if (dxpl && H5P_release(dxpl) < 0)
+    if (dxpl && H5P_release(dxpl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)

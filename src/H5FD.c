@@ -340,8 +340,8 @@ H5FDopen(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
 
 done:
     /* Restore previous FAPL in the API contxt */
-    if (old_fapl)
-        H5CX_set_fapl(old_fapl);
+    if (old_fapl && H5CX_set_fapl(old_fapl) < 0)
+        HDONE_ERROR(H5E_VFL, H5E_CANTSET, NULL, "can't set file access property list");
 
     /* Clean up */
     if (fh) {
@@ -551,7 +551,8 @@ H5FDalloc(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, hsize_t size)
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, HADDR_UNDEF, "can't find object for ID");
 
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl);
+    if (H5CX_set_dxpl(dxpl) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, HADDR_UNDEF, "can't set dataset transfer property list");
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -602,7 +603,8 @@ H5FDfree(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, hsize_t siz
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl);
+    if (H5CX_set_dxpl(dxpl) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set dataset transfer property list");
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -808,8 +810,8 @@ H5FDget_vfd_handle(H5FD_t *file, hid_t fapl_id, void **file_handle /*out*/)
 
 done:
     /* Restore previous FAPL in the API contxt */
-    if (old_fapl)
-        H5CX_set_fapl(old_fapl);
+    if (old_fapl && H5CX_set_fapl(old_fapl) < 0)
+        HDONE_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set file access property list");
 
     if (FAIL == ret_value)
         if (file_handle)
@@ -856,7 +858,8 @@ H5FDread(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, size_t size
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl);
+    if (H5CX_set_dxpl(dxpl) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set dataset transfer property list");
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -903,7 +906,8 @@ H5FDwrite(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, size_t siz
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl);
+    if (H5CX_set_dxpl(dxpl) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set dataset transfer property list");
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -972,7 +976,8 @@ H5FDread_vector(H5FD_t *file, hid_t dxpl_id, uint32_t count, H5FD_mem_t types[],
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl);
+    if (H5CX_set_dxpl(dxpl) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set dataset transfer property list");
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -1039,7 +1044,8 @@ H5FDwrite_vector(H5FD_t *file, hid_t dxpl_id, uint32_t count, H5FD_mem_t types[]
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl);
+    if (H5CX_set_dxpl(dxpl) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set dataset transfer property list");
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -1130,7 +1136,8 @@ H5FDread_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, uint32_t count,
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl);
+    if (H5CX_set_dxpl(dxpl) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set dataset transfer property list");
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -1220,7 +1227,8 @@ H5FDwrite_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, uint32_t count
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl);
+    if (H5CX_set_dxpl(dxpl) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set dataset transfer property list");
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -1316,7 +1324,8 @@ H5FDread_vector_from_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, uin
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl);
+    if (H5CX_set_dxpl(dxpl) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set dataset transfer property list");
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -1410,7 +1419,8 @@ H5FDwrite_vector_from_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, ui
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl);
+    if (H5CX_set_dxpl(dxpl) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set dataset transfer property list");
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -1504,7 +1514,8 @@ H5FDread_from_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, uint32_t c
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl);
+    if (H5CX_set_dxpl(dxpl) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set dataset transfer property list");
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -1597,7 +1608,8 @@ H5FDwrite_from_selection(H5FD_t *file, H5FD_mem_t type, hid_t dxpl_id, uint32_t 
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl);
+    if (H5CX_set_dxpl(dxpl) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set dataset transfer property list");
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -1641,7 +1653,8 @@ H5FDflush(H5FD_t *file, hid_t dxpl_id, hbool_t closing)
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl);
+    if (H5CX_set_dxpl(dxpl) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set dataset transfer property list");
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -1682,7 +1695,8 @@ H5FDtruncate(H5FD_t *file, hid_t dxpl_id, hbool_t closing)
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set DXPL for operation */
-    H5CX_set_dxpl(dxpl);
+    if (H5CX_set_dxpl(dxpl) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set dataset transfer property list");
 
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh(file, &fh, &driver);
@@ -1888,8 +1902,8 @@ H5FDdelete(const char *filename, hid_t fapl_id)
 
 done:
     /* Restore previous FAPL in the API contxt */
-    if (old_fapl)
-        H5CX_set_fapl(old_fapl);
+    if (old_fapl && H5CX_set_fapl(old_fapl) < 0)
+        HDONE_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set file access property list");
 
     FUNC_LEAVE_API(ret_value)
 } /* end H5FDdelete() */

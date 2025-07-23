@@ -1011,7 +1011,7 @@ H5CX_retrieve_state(H5CX_state_t **api_state)
     /* Check for non-default ACPL */
     if (H5P_LST_ATTRIBUTE_CREATE_g != (*head)->ctx.acpl) {
         /* Copy the ACPL */
-        if (NULL == ((*api_state)->acpl = H5P_copy_plist((H5P_genplist_t *)(*head)->ctx.acpl, false)))
+        if (NULL == ((*api_state)->acpl = H5P_copy_plist((*head)->ctx.acpl, false)))
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy property list");
     }
     else
@@ -1020,7 +1020,7 @@ H5CX_retrieve_state(H5CX_state_t **api_state)
     /* Check for non-default OCPL */
     if (H5P_LST_OBJECT_CREATE_g != (*head)->ctx.ocpl) {
         /* Copy the OCPL */
-        if (NULL == ((*api_state)->ocpl = H5P_copy_plist((H5P_genplist_t *)(*head)->ctx.ocpl, false)))
+        if (NULL == ((*api_state)->ocpl = H5P_copy_plist((*head)->ctx.ocpl, false)))
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy property list");
     }
     else
@@ -1029,7 +1029,7 @@ H5CX_retrieve_state(H5CX_state_t **api_state)
     /* Check for non-default OCPYPL */
     if (H5P_LST_OBJECT_COPY_g != (*head)->ctx.ocpypl) {
         /* Copy the OCPYPL */
-        if (NULL == ((*api_state)->ocpypl = H5P_copy_plist((H5P_genplist_t *)(*head)->ctx.ocpypl, false)))
+        if (NULL == ((*api_state)->ocpypl = H5P_copy_plist((*head)->ctx.ocpypl, false)))
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy property list");
     }
     else
@@ -1038,7 +1038,7 @@ H5CX_retrieve_state(H5CX_state_t **api_state)
     /* Check for non-default DAPL */
     if (H5P_LST_DATASET_ACCESS_g != (*head)->ctx.dapl) {
         /* Copy the DAPL */
-        if (NULL == ((*api_state)->dapl = H5P_copy_plist((H5P_genplist_t *)(*head)->ctx.dapl, false)))
+        if (NULL == ((*api_state)->dapl = H5P_copy_plist((*head)->ctx.dapl, false)))
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy property list");
     }
     else
@@ -1047,7 +1047,7 @@ H5CX_retrieve_state(H5CX_state_t **api_state)
     /* Check for non-default DXPL */
     if (H5P_LST_DATASET_XFER_g != (*head)->ctx.dxpl) {
         /* Copy the DXPL */
-        if (NULL == ((*api_state)->dxpl = H5P_copy_plist((H5P_genplist_t *)(*head)->ctx.dxpl, false)))
+        if (NULL == ((*api_state)->dxpl = H5P_copy_plist((*head)->ctx.dxpl, false)))
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy property list");
     }
     else
@@ -1056,7 +1056,7 @@ H5CX_retrieve_state(H5CX_state_t **api_state)
     /* Check for non-default FAPL */
     if (H5P_LST_FILE_ACCESS_g != (*head)->ctx.fapl) {
         /* Copy the FAPL */
-        if (NULL == ((*api_state)->fapl = H5P_copy_plist((H5P_genplist_t *)(*head)->ctx.fapl, false)))
+        if (NULL == ((*api_state)->fapl = H5P_copy_plist((*head)->ctx.fapl, false)))
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy property list");
     }
     else
@@ -1065,7 +1065,7 @@ H5CX_retrieve_state(H5CX_state_t **api_state)
     /* Check for non-default LAPL */
     if (H5P_LST_LINK_ACCESS_g != (*head)->ctx.lapl) {
         /* Copy the LAPL */
-        if (NULL == ((*api_state)->lapl = H5P_copy_plist((H5P_genplist_t *)(*head)->ctx.lapl, false)))
+        if (NULL == ((*api_state)->lapl = H5P_copy_plist((*head)->ctx.lapl, false)))
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy property list");
     }
     else
@@ -1074,7 +1074,7 @@ H5CX_retrieve_state(H5CX_state_t **api_state)
     /* Check for non-default LCPL */
     if (H5P_LST_LINK_CREATE_g != (*head)->ctx.lcpl) {
         /* Copy the LCPL */
-        if (NULL == ((*api_state)->lcpl = H5P_copy_plist((H5P_genplist_t *)(*head)->ctx.lcpl, false)))
+        if (NULL == ((*api_state)->lcpl = H5P_copy_plist((*head)->ctx.lcpl, false)))
             HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy property list");
     }
     else
@@ -1125,8 +1125,9 @@ herr_t
 H5CX_restore_state(const H5CX_state_t *api_state)
 {
     H5CX_node_t **head = NULL; /* Pointer to head of API context list */
+    herr_t ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_NOAPI_NOINIT_NOERR
+    FUNC_ENTER_NOAPI_NOINIT
 
     /* Sanity check */
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
@@ -1134,28 +1135,124 @@ H5CX_restore_state(const H5CX_state_t *api_state)
     assert(api_state);
 
     /* Restore the ACPL info */
-    (*head)->ctx.acpl = api_state->acpl;
+    if (api_state->acpl != H5P_LST_ATTRIBUTE_CREATE_g) {
+        /* Release any existing copy */
+        if ((*head)->ctx.acpl_is_copy) {
+            if (H5P_dissolve((*head)->ctx.acpl) < 0)
+                HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't close property list");
+            (*head)->ctx.acpl_is_copy = false;
+        }
 
-    /* Restore the OCPL info */
-    (*head)->ctx.ocpl = api_state->ocpl;
-
-    /* Restore the OCPYPL info */
-    (*head)->ctx.ocpypl = api_state->ocpypl;
+        /* Copy the ACPL from the API state */
+        if (NULL == ((*head)->ctx.acpl = H5P_copy_plist(api_state->acpl, false)))
+            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy property list");
+        (*head)->ctx.acpl_is_copy = true;
+    }
 
     /* Restore the DAPL info */
-    (*head)->ctx.dapl = api_state->dapl;
+    if (api_state->dapl != H5P_LST_DATASET_ACCESS_g) {
+        /* Release any existing copy */
+        if ((*head)->ctx.dapl_is_copy) {
+            if (H5P_dissolve((*head)->ctx.dapl) < 0)
+                HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't close property list");
+            (*head)->ctx.dapl_is_copy = false;
+        }
+
+        /* Copy the DAPL from the API state */
+        if (NULL == ((*head)->ctx.dapl = H5P_copy_plist(api_state->dapl, false)))
+            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy property list");
+        (*head)->ctx.dapl_is_copy = true;
+    }
 
     /* Restore the DXPL info */
-    (*head)->ctx.dxpl = api_state->dxpl;
+    if (api_state->dxpl != H5P_LST_DATASET_XFER_g) {
+        /* Release any existing copy */
+        if ((*head)->ctx.dxpl_is_copy) {
+            if (H5P_dissolve((*head)->ctx.dxpl) < 0)
+                HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't close property list");
+            (*head)->ctx.dxpl_is_copy = false;
+        }
+
+        /* Copy the DXPL from the API state */
+        if (NULL == ((*head)->ctx.dxpl = H5P_copy_plist(api_state->dxpl, false)))
+            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy property list");
+        (*head)->ctx.dxpl_is_copy = true;
+    }
 
     /* Restore the FAPL info */
-    (*head)->ctx.fapl = api_state->fapl;
+    if (api_state->fapl != H5P_LST_FILE_ACCESS_g) {
+        /* Release any existing copy */
+        if ((*head)->ctx.fapl_is_copy) {
+            if (H5P_dissolve((*head)->ctx.fapl) < 0)
+                HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't close property list");
+            (*head)->ctx.fapl_is_copy = false;
+        }
+
+        /* Copy the FAPL from the API state */
+        if (NULL == ((*head)->ctx.fapl = H5P_copy_plist(api_state->fapl, false)))
+            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy property list");
+        (*head)->ctx.fapl_is_copy = true;
+    }
 
     /* Restore the LAPL info */
-    (*head)->ctx.lapl = api_state->lapl;
+    if (api_state->lapl != H5P_LST_LINK_ACCESS_g) {
+        /* Release any existing copy */
+        if ((*head)->ctx.lapl_is_copy) {
+            if (H5P_dissolve((*head)->ctx.lapl) < 0)
+                HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't close property list");
+            (*head)->ctx.lapl_is_copy = false;
+        }
+
+        /* Copy the LAPL from the API state */
+        if (NULL == ((*head)->ctx.lapl = H5P_copy_plist(api_state->lapl, false)))
+            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy property list");
+        (*head)->ctx.lapl_is_copy = true;
+    }
 
     /* Restore the LCPL info */
-    (*head)->ctx.lcpl = api_state->lcpl;
+    if (api_state->lcpl != H5P_LST_LINK_CREATE_g) {
+        /* Release any existing copy */
+        if ((*head)->ctx.lcpl_is_copy) {
+            if (H5P_dissolve((*head)->ctx.lcpl) < 0)
+                HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't close property list");
+            (*head)->ctx.lcpl_is_copy = false;
+        }
+
+        /* Copy the LCPL from the API state */
+        if (NULL == ((*head)->ctx.lcpl = H5P_copy_plist(api_state->lcpl, false)))
+            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy property list");
+        (*head)->ctx.lcpl_is_copy = true;
+    }
+
+    /* Restore the OCPL info */
+    if (api_state->ocpl != H5P_LST_OBJECT_CREATE_g) {
+        /* Release any existing copy */
+        if ((*head)->ctx.ocpl_is_copy) {
+            if (H5P_dissolve((*head)->ctx.ocpl) < 0)
+                HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't close property list");
+            (*head)->ctx.ocpl_is_copy = false;
+        }
+
+        /* Copy the OCPL from the API state */
+        if (NULL == ((*head)->ctx.ocpl = H5P_copy_plist(api_state->ocpl, false)))
+            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy property list");
+        (*head)->ctx.ocpl_is_copy = true;
+    }
+
+    /* Restore the OCPYPL info */
+    if (api_state->ocpypl != H5P_LST_OBJECT_COPY_g) {
+        /* Release any existing copy */
+        if ((*head)->ctx.ocpypl_is_copy) {
+            if (H5P_dissolve((*head)->ctx.ocpypl) < 0)
+                HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't close property list");
+            (*head)->ctx.ocpypl_is_copy = false;
+        }
+
+        /* Copy the OCPYPL from the API state */
+        if (NULL == ((*head)->ctx.ocpypl = H5P_copy_plist(api_state->ocpypl, false)))
+            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCOPY, FAIL, "can't copy property list");
+        (*head)->ctx.ocpypl_is_copy = true;
+    }
 
     /* Restore the VOL wrapper context */
     (*head)->ctx.vol_wrap_ctx = api_state->vol_wrap_ctx;
@@ -1167,7 +1264,8 @@ H5CX_restore_state(const H5CX_state_t *api_state)
     (*head)->ctx.coll_metadata_read = api_state->coll_metadata_read;
 #endif /* H5_HAVE_PARALLEL */
 
-    FUNC_LEAVE_NOAPI(SUCCEED)
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5CX_restore_state() */
 
 /*-------------------------------------------------------------------------
@@ -1299,17 +1397,25 @@ H5CX__reset_dxpl(H5CX_node_t *head)
  *
  *-------------------------------------------------------------------------
  */
-void
+herr_t
 H5CX_set_dxpl(H5P_genplist_t *dxpl)
 {
     H5CX_node_t **head = NULL; /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_NOAPI_NOINIT_NOERR
+    FUNC_ENTER_NOAPI(FAIL)
 
     /* Sanity check */
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
     assert(dxpl);
+
+    /* Release any existing copy */
+    if ((*head)->ctx.dxpl_is_copy) {
+        if (H5P_dissolve((*head)->ctx.dxpl) < 0)
+            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't close property list");
+        (*head)->ctx.dxpl_is_copy = false;
+    }
 
     /* Reset the cached data */
     H5CX__reset_dxpl(*head);
@@ -1317,7 +1423,8 @@ H5CX_set_dxpl(H5P_genplist_t *dxpl)
     /* Set the API context's DXPL to a new value */
     (*head)->ctx.dxpl = dxpl;
 
-    FUNC_LEAVE_NOAPI_VOID
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5CX_set_dxpl() */
 
 /*-------------------------------------------------------------------------
@@ -1386,17 +1493,25 @@ H5CX__reset_lcpl(H5CX_node_t *head)
  *
  *-------------------------------------------------------------------------
  */
-void
+herr_t
 H5CX_set_lcpl(H5P_genplist_t *lcpl)
 {
     H5CX_node_t **head = NULL; /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_NOAPI_NOINIT_NOERR
+    FUNC_ENTER_NOAPI(FAIL)
 
     /* Sanity check */
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
     assert(lcpl);
+
+    /* Release any existing copy */
+    if ((*head)->ctx.lcpl_is_copy) {
+        if (H5P_dissolve((*head)->ctx.lcpl) < 0)
+            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't close property list");
+        (*head)->ctx.lcpl_is_copy = false;
+    }
 
     /* Reset the cached data */
     H5CX__reset_lcpl(*head);
@@ -1404,7 +1519,8 @@ H5CX_set_lcpl(H5P_genplist_t *lcpl)
     /* Set the API context's LCPL to a new value */
     (*head)->ctx.lcpl = lcpl;
 
-    FUNC_LEAVE_NOAPI_VOID
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5CX_set_lcpl() */
 
 /*-------------------------------------------------------------------------
@@ -1439,17 +1555,25 @@ H5CX__reset_acpl(H5CX_node_t *head)
  *
  *-------------------------------------------------------------------------
  */
-void
+herr_t
 H5CX_set_acpl(H5P_genplist_t *acpl)
 {
     H5CX_node_t **head = NULL; /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_NOAPI_NOINIT_NOERR
+    FUNC_ENTER_NOAPI(FAIL)
 
     /* Sanity check */
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
     assert(acpl);
+
+    /* Release any existing copy */
+    if ((*head)->ctx.acpl_is_copy) {
+        if (H5P_dissolve((*head)->ctx.acpl) < 0)
+            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't close property list");
+        (*head)->ctx.acpl_is_copy = false;
+    }
 
     /* Reset the cached data */
     H5CX__reset_acpl(*head);
@@ -1457,7 +1581,8 @@ H5CX_set_acpl(H5P_genplist_t *acpl)
     /* Set the API context's ACPL to a new value */
     (*head)->ctx.acpl = acpl;
 
-    FUNC_LEAVE_NOAPI_VOID
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5CX_set_acpl() */
 
 /*-------------------------------------------------------------------------
@@ -1523,6 +1648,13 @@ H5CX_set_cpl(H5P_genplist_t *crtpl)
     }
     assert(is_dcpl || is_fcpl || is_gcpl || is_tcpl || is_ocpl);
 
+    /* Release any existing copy */
+    if ((*head)->ctx.ocpl_is_copy) {
+        if (H5P_dissolve((*head)->ctx.ocpl) < 0)
+            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't close property list");
+        (*head)->ctx.ocpl_is_copy = false;
+    }
+
     /* Reset any cached data */
     H5CX__reset_ocpl(*head);
 
@@ -1587,6 +1719,13 @@ H5CX_set_apl(H5P_genplist_t *acspl,
     else if ((is_lapl = H5P_class_isa(H5P_CLASS(acspl), H5P_CLS_LINK_ACCESS_g)) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for link access class");
     if (is_lapl) {
+        /* Release any existing copy */
+        if ((*head)->ctx.lapl_is_copy) {
+            if (H5P_dissolve((*head)->ctx.lapl) < 0)
+                HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't close property list");
+            (*head)->ctx.lapl_is_copy = false;
+        }
+
         H5CX__reset_lapl(*head);
         (*head)->ctx.lapl = acspl;
     }
@@ -1602,6 +1741,13 @@ H5CX_set_apl(H5P_genplist_t *acspl,
     else if ((is_dapl = H5P_class_isa(H5P_CLASS(acspl), H5P_CLS_DATASET_ACCESS_g)) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for dataset access class");
     if (is_dapl) {
+        /* Release any existing copy */
+        if ((*head)->ctx.dapl_is_copy) {
+            if (H5P_dissolve((*head)->ctx.dapl) < 0)
+                HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't close property list");
+            (*head)->ctx.dapl_is_copy = false;
+        }
+
         H5CX__reset_dapl(*head);
         (*head)->ctx.dapl = acspl;
     }
@@ -1616,6 +1762,13 @@ H5CX_set_apl(H5P_genplist_t *acspl,
     else if ((is_fapl = H5P_class_isa(H5P_CLASS(acspl), H5P_CLS_FILE_ACCESS_g)) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for file access class");
     if (is_fapl) {
+        /* Release any existing copy */
+        if ((*head)->ctx.fapl_is_copy) {
+            if (H5P_dissolve((*head)->ctx.fapl) < 0)
+                HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't close property list");
+            (*head)->ctx.fapl_is_copy = false;
+        }
+
         H5CX__reset_fapl(*head);
         (*head)->ctx.fapl = acspl;
     }
@@ -1710,16 +1863,24 @@ H5CX__reset_fapl(H5CX_node_t *head)
  *
  *-------------------------------------------------------------------------
  */
-void
+herr_t
 H5CX_set_fapl(H5P_genplist_t *fapl)
 {
     H5CX_node_t **head = NULL; /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_NOAPI_NOINIT_NOERR
+    FUNC_ENTER_NOAPI(FAIL)
 
     /* Sanity check */
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
+
+    /* Release any existing copy */
+    if ((*head)->ctx.fapl_is_copy) {
+        if (H5P_dissolve((*head)->ctx.fapl) < 0)
+            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't close property list");
+        (*head)->ctx.fapl_is_copy = false;
+    }
 
     /* Reset the cached data */
     H5CX__reset_fapl(*head);
@@ -1727,7 +1888,8 @@ H5CX_set_fapl(H5P_genplist_t *fapl)
     /* Set the API context's FAPL to a new value */
     (*head)->ctx.fapl = fapl;
 
-    FUNC_LEAVE_NOAPI_VOID
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5CX_set_fapl() */
 
 /*-------------------------------------------------------------------------
@@ -1741,16 +1903,24 @@ H5CX_set_fapl(H5P_genplist_t *fapl)
  *
  *-------------------------------------------------------------------------
  */
-void
+herr_t
 H5CX_set_fcpl(H5P_genplist_t *fcpl)
 {
     H5CX_node_t **head = NULL; /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_NOAPI_NOINIT_NOERR
+    FUNC_ENTER_NOAPI(FAIL)
 
     /* Sanity check */
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
+
+    /* Release any existing copy */
+    if ((*head)->ctx.ocpl_is_copy) {
+        if (H5P_dissolve((*head)->ctx.ocpl) < 0)
+            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't close property list");
+        (*head)->ctx.ocpl_is_copy = false;
+    }
 
     /* Reset the cached data */
     H5CX__reset_ocpl(*head);
@@ -1758,7 +1928,8 @@ H5CX_set_fcpl(H5P_genplist_t *fcpl)
     /* Set the API context's OCPL to a new value */
     (*head)->ctx.ocpl = fcpl;
 
-    FUNC_LEAVE_NOAPI_VOID
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5CX_set_fcpl() */
 
 /*-------------------------------------------------------------------------
@@ -1770,21 +1941,30 @@ H5CX_set_fcpl(H5P_genplist_t *fcpl)
  *
  *-------------------------------------------------------------------------
  */
-void
+herr_t
 H5CX_set_ocpypl(H5P_genplist_t *ocpypl)
 {
     H5CX_node_t **head = NULL; /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_NOAPI_NOINIT_NOERR
+    FUNC_ENTER_NOAPI(FAIL)
 
     /* Sanity check */
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
 
+    /* Release any existing copy */
+    if ((*head)->ctx.ocpypl_is_copy) {
+        if (H5P_dissolve((*head)->ctx.ocpypl) < 0)
+            HGOTO_ERROR(H5E_CONTEXT, H5E_CANTCLOSEOBJ, FAIL, "can't close property list");
+        (*head)->ctx.ocpypl_is_copy = false;
+    }
+
     /* Set the API context's OCPYPL to a new value */
     (*head)->ctx.ocpypl = ocpypl;
 
-    FUNC_LEAVE_NOAPI_VOID
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5CX_set_ocpypl() */
 
 /*-------------------------------------------------------------------------
@@ -6852,7 +7032,6 @@ H5CX_update_dxpl(void)
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
     assert((*head)->ctx.dxpl);
-    //    assert(1 == H5P_PLIST_LOCK_COUNT((*head)->ctx.dxpl));
 
     /* Special case for actual_selection_io_mode: we always want to set it
      * in the property list, even if it was never set by the library.
@@ -6911,16 +7090,40 @@ H5CX_pop(void)
     /* Reset any non-default property lists in the current context that have
      * cached values that need to be reset when the context is popped.
      */
-    if ((*head)->ctx.dapl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.dapl))
+    if ((*head)->ctx.acpl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.acpl))
+        if ((*head)->ctx.acpl_is_copy)
+            H5P_dissolve((*head)->ctx.acpl);
+    if ((*head)->ctx.dapl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.dapl)) {
+        if ((*head)->ctx.dapl_is_copy)
+            H5P_dissolve((*head)->ctx.dapl);
         H5CX__reset_dapl(*head);
-    if ((*head)->ctx.lapl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.lapl))
-        H5CX__reset_lapl(*head);
-    if ((*head)->ctx.lcpl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.lcpl))
-        H5CX__reset_lcpl(*head);
-    if ((*head)->ctx.ocpl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.ocpl))
-        H5CX__reset_ocpl(*head);
-    if ((*head)->ctx.fapl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.fapl))
+    }
+    if ((*head)->ctx.dxpl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.dxpl))
+        if ((*head)->ctx.dxpl_is_copy)
+            H5P_dissolve((*head)->ctx.dxpl);
+    if ((*head)->ctx.fapl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.fapl)) {
+        if ((*head)->ctx.fapl_is_copy)
+            H5P_dissolve((*head)->ctx.fapl);
         H5CX__reset_fapl(*head);
+    }
+    if ((*head)->ctx.lapl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.lapl)) {
+        if ((*head)->ctx.lapl_is_copy)
+            H5P_dissolve((*head)->ctx.lapl);
+        H5CX__reset_lapl(*head);
+    }
+    if ((*head)->ctx.lcpl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.lcpl)) {
+        if ((*head)->ctx.lcpl_is_copy)
+            H5P_dissolve((*head)->ctx.lcpl);
+        H5CX__reset_lcpl(*head);
+    }
+    if ((*head)->ctx.ocpl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.ocpl)) {
+        if ((*head)->ctx.ocpl_is_copy)
+            H5P_dissolve((*head)->ctx.ocpl);
+        H5CX__reset_ocpl(*head);
+    }
+    if ((*head)->ctx.ocpypl && !H5P_PLIST_IS_DEFAULT((*head)->ctx.ocpypl))
+        if ((*head)->ctx.ocpypl_is_copy)
+            H5P_dissolve((*head)->ctx.ocpypl);
 
     /* Pop the top context node from the stack */
     (*head) = (*head)->next;

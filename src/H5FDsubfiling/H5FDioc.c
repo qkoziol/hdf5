@@ -324,7 +324,7 @@ H5Pset_fapl_ioc(hid_t fapl_id, H5FD_ioc_config_t *vfd_config)
 
     FUNC_ENTER_API(FAIL)
 
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
 
     /* Initialize driver, if it's not yet */
@@ -347,7 +347,7 @@ H5Pset_fapl_ioc(hid_t fapl_id, H5FD_ioc_config_t *vfd_config)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -378,7 +378,7 @@ H5Pget_fapl_ioc(hid_t fapl_id, H5FD_ioc_config_t *config_out)
     /* Check arguments */
     if (config_out == NULL)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "config_out is NULL");
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
 
     /* Initialize driver, if it's not yet */
@@ -404,7 +404,7 @@ H5Pget_fapl_ioc(hid_t fapl_id, H5FD_ioc_config_t *config_out)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)

@@ -30,8 +30,8 @@
 /***********/
 #include "H5private.h"   /* Generic Functions			*/
 #include "H5Eprivate.h"  /* Error handling		  	*/
-#include "H5FLprivate.h" /* Free Lists                           */
-#include "H5MMprivate.h" /* Memory management                    */
+#include "H5FLprivate.h" /* Free Lists                          */
+#include "H5MMprivate.h" /* Memory management                   */
 #include "H5Oprivate.h"  /* Object headers		  	*/
 #include "H5Ppkg.h"      /* Property lists		  	*/
 
@@ -617,7 +617,7 @@ H5Pset_copy_object(hid_t ocpyl_id, unsigned cpy_option)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "unknown option specified");
 
     /* Get the property list structure */
-    if (NULL == (ocpypl = H5P_acquire(ocpyl_id, H5P_TYPE_OBJECT_COPY, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (ocpypl = H5P_acquire(ocpyl_id, H5P_TYPE_OBJECT_COPY, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set value */
@@ -626,7 +626,7 @@ H5Pset_copy_object(hid_t ocpyl_id, unsigned cpy_option)
 
 done:
     /* Release resources */
-    if (ocpypl && H5P_release(ocpypl) < 0)
+    if (ocpypl && H5P_release(ocpypl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -651,7 +651,7 @@ H5Pget_copy_object(hid_t ocpyl_id, unsigned *cpy_option /*out*/)
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (ocpypl = H5P_acquire(ocpyl_id, H5P_TYPE_OBJECT_COPY, H5I_LOCK_SHARED, true)))
+    if (NULL == (ocpypl = H5P_acquire(ocpyl_id, H5P_TYPE_OBJECT_COPY, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get values */
@@ -661,7 +661,7 @@ H5Pget_copy_object(hid_t ocpyl_id, unsigned *cpy_option /*out*/)
 
 done:
     /* Release resources */
-    if (ocpypl && H5P_release(ocpypl) < 0)
+    if (ocpypl && H5P_release(ocpypl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -702,7 +702,7 @@ H5Padd_merge_committed_dtype_path(hid_t ocpyl_id, const char *path)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "path is empty string");
 
     /* Get the property list structure */
-    if (NULL == (ocpypl = H5P_acquire(ocpyl_id, H5P_TYPE_OBJECT_COPY, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (ocpypl = H5P_acquire(ocpyl_id, H5P_TYPE_OBJECT_COPY, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get dtype list */
@@ -722,7 +722,7 @@ H5Padd_merge_committed_dtype_path(hid_t ocpyl_id, const char *path)
 
 done:
     /* Release resources */
-    if (ocpypl && H5P_release(ocpypl) < 0)
+    if (ocpypl && H5P_release(ocpypl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     if (ret_value < 0)
@@ -758,7 +758,7 @@ H5Pfree_merge_committed_dtype_paths(hid_t ocpyl_id)
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (ocpypl = H5P_acquire(ocpyl_id, H5P_TYPE_OBJECT_COPY, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (ocpypl = H5P_acquire(ocpyl_id, H5P_TYPE_OBJECT_COPY, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get dtype list */
@@ -774,7 +774,7 @@ H5Pfree_merge_committed_dtype_paths(hid_t ocpyl_id)
 
 done:
     /* Release resources */
-    if (ocpypl && H5P_release(ocpypl) < 0)
+    if (ocpypl && H5P_release(ocpypl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -812,7 +812,7 @@ H5Pset_mcdt_search_cb(hid_t ocpyl_id, H5O_mcdt_search_cb_t func, void *op_data)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "callback is NULL while user data is not");
 
     /* Get the property list structure */
-    if (NULL == (ocpypl = H5P_acquire(ocpyl_id, H5P_TYPE_OBJECT_COPY, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (ocpypl = H5P_acquire(ocpyl_id, H5P_TYPE_OBJECT_COPY, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Populate the callback info struct */
@@ -825,7 +825,7 @@ H5Pset_mcdt_search_cb(hid_t ocpyl_id, H5O_mcdt_search_cb_t func, void *op_data)
 
 done:
     /* Release resources */
-    if (ocpypl && H5P_release(ocpypl) < 0)
+    if (ocpypl && H5P_release(ocpypl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -856,7 +856,7 @@ H5Pget_mcdt_search_cb(hid_t ocpyl_id, H5O_mcdt_search_cb_t *func /*out*/, void *
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (ocpypl = H5P_acquire(ocpyl_id, H5P_TYPE_OBJECT_COPY, H5I_LOCK_SHARED, true)))
+    if (NULL == (ocpypl = H5P_acquire(ocpyl_id, H5P_TYPE_OBJECT_COPY, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get callback info */
@@ -871,7 +871,7 @@ H5Pget_mcdt_search_cb(hid_t ocpyl_id, H5O_mcdt_search_cb_t *func /*out*/, void *
 
 done:
     /* Release resources */
-    if (ocpypl && H5P_release(ocpypl) < 0)
+    if (ocpypl && H5P_release(ocpypl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)

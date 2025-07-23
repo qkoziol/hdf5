@@ -214,16 +214,16 @@ H5Gcreate2(hid_t loc_id, const char *name, hid_t lcpl_id, hid_t gcpl_id, hid_t g
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
-    /* Check link creation property list */
-    if (NULL == (lcpl = H5P_acquire(lcpl_id, H5P_TYPE_LINK_CREATE, H5I_LOCK_SHARED, true)))
-        HGOTO_ERROR(H5E_SYM, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
-
     /* Check group creation property list */
-    if (NULL == (gcpl = H5P_acquire(gcpl_id, H5P_TYPE_GROUP_CREATE, H5I_LOCK_SHARED, true)))
+    if (NULL == (gcpl = H5P_acquire(gcpl_id, H5P_TYPE_GROUP_CREATE, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_SYM, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Check group access property list */
-    if (NULL == (gapl = H5P_acquire(gapl_id, H5P_TYPE_GROUP_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (gapl = H5P_acquire(gapl_id, H5P_TYPE_GROUP_ACCESS, H5P_LOCK_SHARED, true)))
+        HGOTO_ERROR(H5E_SYM, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+
+    /* Check link creation property list */
+    if (NULL == (lcpl = H5P_acquire(lcpl_id, H5P_TYPE_LINK_CREATE, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_SYM, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Set the GCPL for the API context */
@@ -231,7 +231,8 @@ H5Gcreate2(hid_t loc_id, const char *name, hid_t lcpl_id, hid_t gcpl_id, hid_t g
         HGOTO_ERROR(H5E_SYM, H5E_CANTSET, H5I_INVALID_HID, "can't set creation property list info");
 
     /* Set the LCPL for the API context */
-    H5CX_set_lcpl(lcpl);
+    if (H5CX_set_lcpl(lcpl) < 0)
+        HGOTO_ERROR(H5E_SYM, H5E_CANTSET, H5I_INVALID_HID, "can't set link creation property list info");
 
     /* Create the group synchronously */
     if ((ret_value = H5G__create_api_common(loc_id, name, lcpl, gcpl, gapl, NULL, NULL)) < 0)
@@ -239,11 +240,11 @@ H5Gcreate2(hid_t loc_id, const char *name, hid_t lcpl_id, hid_t gcpl_id, hid_t g
 
 done:
     /* Release resources */
-    if (lcpl && H5P_release(lcpl) < 0)
+    if (lcpl && H5P_release(lcpl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_SYM, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
-    if (gcpl && H5P_release(gcpl) < 0)
+    if (gapl && H5P_release(gapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_SYM, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
-    if (gapl && H5P_release(gapl) < 0)
+    if (gcpl && H5P_release(gcpl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_SYM, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -273,27 +274,28 @@ H5Gcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
-    /* Check link creation property list */
-    if (NULL == (lcpl = H5P_acquire(lcpl_id, H5P_TYPE_LINK_CREATE, H5I_LOCK_SHARED, true)))
-        HGOTO_ERROR(H5E_SYM, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
-    lcpl_id = H5P_PLIST_ID(lcpl);
-
     /* Check group creation property list */
-    if (NULL == (gcpl = H5P_acquire(gcpl_id, H5P_TYPE_GROUP_CREATE, H5I_LOCK_SHARED, true)))
+    if (NULL == (gcpl = H5P_acquire(gcpl_id, H5P_TYPE_GROUP_CREATE, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_SYM, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
     gcpl_id = H5P_PLIST_ID(gcpl);
 
     /* Check group access property list */
-    if (NULL == (gapl = H5P_acquire(gapl_id, H5P_TYPE_GROUP_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (gapl = H5P_acquire(gapl_id, H5P_TYPE_GROUP_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_SYM, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
     gapl_id = H5P_PLIST_ID(gapl);
+
+    /* Check link creation property list */
+    if (NULL == (lcpl = H5P_acquire(lcpl_id, H5P_TYPE_LINK_CREATE, H5P_LOCK_SHARED, true)))
+        HGOTO_ERROR(H5E_SYM, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+    lcpl_id = H5P_PLIST_ID(lcpl);
 
     /* Set the GCPL for the API context */
     if (H5CX_set_cpl(gcpl) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTSET, H5I_INVALID_HID, "can't set creation property list info");
 
     /* Set the LCPL for the API context */
-    H5CX_set_lcpl(lcpl);
+    if (H5CX_set_lcpl(lcpl) < 0)
+        HGOTO_ERROR(H5E_SYM, H5E_CANTSET, H5I_INVALID_HID, "can't set link creation property list info");
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -316,11 +318,11 @@ H5Gcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
 
 done:
     /* Release resources */
-    if (lcpl && H5P_release(lcpl) < 0)
+    if (lcpl && H5P_release(lcpl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_SYM, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
-    if (gcpl && H5P_release(gcpl) < 0)
+    if (gapl && H5P_release(gapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_SYM, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
-    if (gapl && H5P_release(gapl) < 0)
+    if (gcpl && H5P_release(gcpl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_SYM, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -371,9 +373,9 @@ H5Gcreate_anon(hid_t loc_id, hid_t gcpl_id, hid_t gapl_id)
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Check group property lists */
-    if (NULL == (gcpl = H5P_acquire(gcpl_id, H5P_TYPE_GROUP_CREATE, H5I_LOCK_SHARED, true)))
+    if (NULL == (gcpl = H5P_acquire(gcpl_id, H5P_TYPE_GROUP_CREATE, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_SYM, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
-    if (NULL == (gapl = H5P_acquire(gapl_id, H5P_TYPE_GROUP_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (gapl = H5P_acquire(gapl_id, H5P_TYPE_GROUP_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_SYM, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
@@ -403,9 +405,9 @@ H5Gcreate_anon(hid_t loc_id, hid_t gcpl_id, hid_t gapl_id)
 
 done:
     /* Release resources */
-    if (gcpl && H5P_release(gcpl) < 0)
+    if (gapl && H5P_release(gapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_SYM, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
-    if (gapl && H5P_release(gapl) < 0)
+    if (gcpl && H5P_release(gcpl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_SYM, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
 
     /* Cleanup on failure */
@@ -488,7 +490,7 @@ H5Gopen2(hid_t loc_id, const char *name, hid_t gapl_id)
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Check group access property list */
-    if (NULL == (gapl = H5P_acquire(gapl_id, H5P_TYPE_GROUP_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (gapl = H5P_acquire(gapl_id, H5P_TYPE_GROUP_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_SYM, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Open the group synchronously */
@@ -497,7 +499,7 @@ H5Gopen2(hid_t loc_id, const char *name, hid_t gapl_id)
 
 done:
     /* Release resources */
-    if (gapl && H5P_release(gapl) < 0)
+    if (gapl && H5P_release(gapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_SYM, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -526,7 +528,7 @@ H5Gopen_async(const char *app_file, const char *app_func, unsigned app_line, hid
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Check group access property list */
-    if (NULL == (gapl = H5P_acquire(gapl_id, H5P_TYPE_GROUP_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (gapl = H5P_acquire(gapl_id, H5P_TYPE_GROUP_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_SYM, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
     gapl_id = H5P_PLIST_ID(gapl);
 
@@ -551,7 +553,7 @@ H5Gopen_async(const char *app_file, const char *app_func, unsigned app_line, hid
 
 done:
     /* Release resources */
-    if (gapl && H5P_release(gapl) < 0)
+    if (gapl && H5P_release(gapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_SYM, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -766,7 +768,7 @@ H5Gget_info_by_name(hid_t loc_id, const char *name, H5G_info_t *group_info /*out
     FUNC_ENTER_API(FAIL)
 
     /* Check the link access property list */
-    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_SYM, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Retrieve group information synchronously */
@@ -775,7 +777,7 @@ H5Gget_info_by_name(hid_t loc_id, const char *name, H5G_info_t *group_info /*out
 
 done:
     /* Release resources */
-    if (lapl && H5P_release(lapl) < 0)
+    if (lapl && H5P_release(lapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_SYM, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -803,7 +805,7 @@ H5Gget_info_by_name_async(const char *app_file, const char *app_func, unsigned a
     FUNC_ENTER_API(FAIL)
 
     /* Check the link access property list */
-    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_SYM, H5E_BADID, FAIL, "can't find object for ID");
     lapl_id = H5P_PLIST_ID(lapl);
 
@@ -825,7 +827,7 @@ H5Gget_info_by_name_async(const char *app_file, const char *app_func, unsigned a
 
 done:
     /* Release resources */
-    if (lapl && H5P_release(lapl) < 0)
+    if (lapl && H5P_release(lapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_SYM, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -893,17 +895,16 @@ H5Gget_info_by_idx(hid_t loc_id, const char *group_name, H5_index_t idx_type, H5
     FUNC_ENTER_API(FAIL)
 
     /* Check the link access property list */
-    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_SYM, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Retrieve group information synchronously */
-    if (H5G__get_info_by_idx_api_common(loc_id, group_name, idx_type, order, n, group_info, lapl, NULL,
-                                        NULL) < 0)
+    if (H5G__get_info_by_idx_api_common(loc_id, group_name, idx_type, order, n, group_info, lapl, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTGET, FAIL, "can't synchronously retrieve group info");
 
 done:
     /* Release resources */
-    if (lapl && H5P_release(lapl) < 0)
+    if (lapl && H5P_release(lapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_SYM, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -932,7 +933,7 @@ H5Gget_info_by_idx_async(const char *app_file, const char *app_func, unsigned ap
     FUNC_ENTER_API(FAIL)
 
     /* Check the link access property list */
-    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_SYM, H5E_BADID, FAIL, "can't find object for ID");
     lapl_id = H5P_PLIST_ID(lapl);
 
@@ -941,8 +942,7 @@ H5Gget_info_by_idx_async(const char *app_file, const char *app_func, unsigned ap
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Retrieve group information asynchronously */
-    if (H5G__get_info_by_idx_api_common(loc_id, group_name, idx_type, order, n, group_info, lapl, token_ptr,
-                                        &vol_obj) < 0)
+    if (H5G__get_info_by_idx_api_common(loc_id, group_name, idx_type, order, n, group_info, lapl, token_ptr, &vol_obj) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTGET, FAIL, "can't asynchronously retrieve group info");
 
     /* If a token was created, add the token to the event set */
@@ -955,7 +955,7 @@ H5Gget_info_by_idx_async(const char *app_file, const char *app_func, unsigned ap
 
 done:
     /* Release resources */
-    if (lapl && H5P_release(lapl) < 0)
+    if (lapl && H5P_release(lapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_SYM, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)

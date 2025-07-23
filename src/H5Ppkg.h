@@ -27,7 +27,8 @@
 
 /* Other private headers needed by this file */
 #include "H5Iprivate.h"  /* ID management */
-#include "H5SLprivate.h" /* Skip lists				*/
+#include "H5SLprivate.h" /* Skip lists	  */
+#include "H5TSprivate.h" /* Threadsafety  */
 
 /**************************/
 /* Package Private Macros */
@@ -55,6 +56,16 @@ typedef enum {
     H5P_MOD_DEC_REF,    /* Decrement the ID reference count*/
     H5P_MOD_MAX         /* Upper limit on class modifications */
 } H5P_class_mod_t;
+
+/* Types of locks that can be acquired (internal) */
+typedef enum H5P_lock_mode_int_t {
+    H5P_LOCK_INT_NONE      = 0,
+    H5P_LOCK_INT_EXCLUSIVE = H5P_LOCK_EXCLUSIVE,
+    H5P_LOCK_INT_SHARED    = H5P_LOCK_SHARED
+} H5P_lock_mode_int_t;
+
+/* Define portable atomic types */
+H5TS_DEF_ATOMIC_TYPE(H5P_lock_mode_int_t)
 
 /* Define structure to hold property information */
 typedef struct H5P_genprop_t {
@@ -116,10 +127,14 @@ struct H5P_genplist_t {
     bool            is_readonly; /* Whether this property list can be modified */
     bool            is_closed;   /* Whether this property list has been closed */
     bool            is_private;  /* Whether this property list is private within the library */
-    unsigned        locked;      /* Whether the property list is locked */
-    H5I_lock_mode_t lock_mode;   /* Lock mode of the property list */
     H5SL_t         *del;         /* Skip list containing names of deleted properties */
     H5SL_t         *props;       /* Skip list containing properties modified from the parent class */
+
+    H5TS_ATOMIC_TYPE(H5P_lock_mode_int_t) mode; /* How this property list is currently locked */
+
+#ifdef H5_HAVE_CONCURRENCY
+    H5TS_dlftt_rwlock_t lock;      /* Guard the ID info struct */
+#endif                             /* H5_HAVE_CONCURRENCY */
 };
 
 /* Property list/class iterator callback function pointer */

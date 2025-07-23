@@ -478,7 +478,7 @@ H5Pset_fapl_subfiling(hid_t fapl_id, const H5FD_subfiling_config_t *vfd_config)
 
     FUNC_ENTER_API(FAIL)
 
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
 
     /* Initialize driver, if it's not yet */
@@ -500,8 +500,7 @@ H5Pset_fapl_subfiling(hid_t fapl_id, const H5FD_subfiling_config_t *vfd_config)
 
         /* Copy fields */
         fa.require_ioc = vfd_config->require_ioc;
-        if (NULL == (fa.ioc_fapl = H5P_acquire(vfd_config->ioc_fapl_id, H5P_TYPE_FILE_ACCESS,
-                                               H5I_LOCK_EXCLUSIVE, false)))
+        if (NULL == (fa.ioc_fapl = H5P_acquire(vfd_config->ioc_fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
             HGOTO_ERROR(H5E_VFL, H5E_BADTYPE, FAIL, "not a file access property list");
 
         /* Check for correct (IOC) driver */
@@ -532,17 +531,16 @@ H5Pset_fapl_subfiling(hid_t fapl_id, const H5FD_subfiling_config_t *vfd_config)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
-        HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
-
     if (NULL == vfd_config) {
         if (fa.ioc_fapl && H5P_dissolve(fa.ioc_fapl) < 0)
             HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "can't close IOC FAPL");
     }
     else {
-        if (fa.ioc_fapl && H5P_release(fa.ioc_fapl) < 0)
+        if (fa.ioc_fapl && H5P_release(fa.ioc_fapl, H5P_LOCK_EXCLUSIVE) < 0)
             HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
     }
+    if (fapl && H5P_release(fapl, H5P_LOCK_EXCLUSIVE) < 0)
+        HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_fapl_subfiling() */
@@ -570,7 +568,7 @@ H5Pget_fapl_subfiling(hid_t fapl_id, H5FD_subfiling_config_t *config_out)
 
     if (config_out == NULL)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "config_out is NULL");
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
 
     /* Initialize driver, if it's not yet */
@@ -599,7 +597,7 @@ H5Pget_fapl_subfiling(hid_t fapl_id, H5FD_subfiling_config_t *config_out)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     if (use_default_config && fa == &default_fa)

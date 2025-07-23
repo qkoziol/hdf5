@@ -310,7 +310,8 @@ H5FD_open_wrap(bool try, H5FD_int_t **_fh, const char *name, unsigned flags, H5P
 done:
     /* Restore previous FAPL in the API context */
     if (old_fapl) {
-        H5CX_set_fapl(old_fapl);
+        if (H5CX_set_fapl(old_fapl) < 0)
+            HDONE_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set file access property list");
         H5CX_set_close_degree(old_fc_degree);
     }
 
@@ -803,8 +804,8 @@ H5FD_get_vfd_handle_wrap(H5FD_int_t *fh, H5P_genplist_t *fapl, void **file_handl
 
 done:
     /* Restore previous FAPL in the API context */
-    if (old_fapl)
-        H5CX_set_fapl(old_fapl);
+    if (old_fapl && H5CX_set_fapl(old_fapl) < 0)
+        HDONE_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set file access property list");
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FD_get_vfd_handle_wrap() */
@@ -1601,9 +1602,8 @@ H5FD_read_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, H5S_t **mem
             if ((mem_space_ids[num_spaces] = H5I_register(H5I_DATASPACE, mem_spaces[num_spaces], true)) < 0)
                 HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "unable to register dataspace ID");
 
-            if ((file_space_ids[num_spaces] = H5I_register(H5I_DATASPACE, file_spaces[num_spaces], true)) <
-                0) {
-                if (NULL == H5I_remove(mem_space_ids[num_spaces]))
+            if ((file_space_ids[num_spaces] = H5I_register(H5I_DATASPACE, file_spaces[num_spaces], true)) < 0) {
+                if (NULL == H5I_remove(mem_space_ids[num_spaces], false))
                     HDONE_ERROR(H5E_VFL, H5E_CANTREMOVE, FAIL, "problem removing id");
                 HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "unable to register dataspace ID");
             }
@@ -1647,9 +1647,9 @@ done:
      * not the underlying dataspaces, which were not created by this function.
      */
     for (i = 0; i < num_spaces; i++) {
-        if (NULL == H5I_remove(mem_space_ids[i]))
+        if (NULL == H5I_remove(mem_space_ids[i], false))
             HDONE_ERROR(H5E_VFL, H5E_CANTREMOVE, FAIL, "problem removing id");
-        if (NULL == H5I_remove(file_space_ids[i]))
+        if (NULL == H5I_remove(file_space_ids[i], false))
             HDONE_ERROR(H5E_VFL, H5E_CANTREMOVE, FAIL, "problem removing id");
     }
     if (mem_space_ids != mem_space_ids_local)
@@ -1788,7 +1788,7 @@ H5FD_write_selection(H5FD_int_t *fh, H5FD_mem_t type, uint32_t count, H5S_t **me
 
             if ((file_space_ids[num_spaces] = H5I_register(H5I_DATASPACE, file_spaces[num_spaces], true)) <
                 0) {
-                if (NULL == H5I_remove(mem_space_ids[num_spaces]))
+                if (NULL == H5I_remove(mem_space_ids[num_spaces], false))
                     HDONE_ERROR(H5E_VFL, H5E_CANTREMOVE, FAIL, "problem removing id");
                 HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "unable to register dataspace ID");
             }
@@ -1833,9 +1833,9 @@ done:
      * not the underlying dataspaces, which were not created by this function.
      */
     for (i = 0; i < num_spaces; i++) {
-        if (NULL == H5I_remove(mem_space_ids[i]))
+        if (NULL == H5I_remove(mem_space_ids[i], false))
             HDONE_ERROR(H5E_VFL, H5E_CANTREMOVE, FAIL, "problem removing id");
-        if (NULL == H5I_remove(file_space_ids[i]))
+        if (NULL == H5I_remove(file_space_ids[i], false))
             HDONE_ERROR(H5E_VFL, H5E_CANTREMOVE, FAIL, "problem removing id");
     }
     if (mem_space_ids != mem_space_ids_local)
@@ -2031,8 +2031,8 @@ H5FD_delete_wrap(const char *filename, H5P_genplist_t *fapl)
 
 done:
     /* Restore previous FAPL in the API context */
-    if (old_fapl)
-        H5CX_set_fapl(old_fapl);
+    if (old_fapl && H5CX_set_fapl(old_fapl) < 0)
+        HDONE_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set file access property list");
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FD_delete_wrap() */

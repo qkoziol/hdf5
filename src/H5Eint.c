@@ -607,7 +607,7 @@ H5E__close_msg_cb(void *obj_ptr, hid_t obj_id, void *udata)
     if (err_msg->cls == cls) {
         if (H5E__close_msg(err_msg, NULL) < 0)
             HGOTO_ERROR(H5E_ERROR, H5E_CANTCLOSEOBJ, H5_ITER_ERROR, "unable to close error message");
-        if (NULL == H5I_remove(obj_id))
+        if (NULL == H5I_remove(obj_id, false))
             HGOTO_ERROR(H5E_ERROR, H5E_CANTREMOVE, H5_ITER_ERROR, "unable to remove error message");
     } /* end if */
 

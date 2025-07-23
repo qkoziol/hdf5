@@ -142,7 +142,7 @@ H5Pset_create_intermediate_group(hid_t lcpl_id, unsigned crt_intmd_group)
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (lcpl = H5P_acquire(lcpl_id, H5P_TYPE_LINK_CREATE, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (lcpl = H5P_acquire(lcpl_id, H5P_TYPE_LINK_CREATE, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set value */
@@ -151,7 +151,7 @@ H5Pset_create_intermediate_group(hid_t lcpl_id, unsigned crt_intmd_group)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set intermediate group creation flag");
 
     /* Release resources */
-    if (lcpl && H5P_release(lcpl) < 0)
+    if (lcpl && H5P_release(lcpl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
 done:
@@ -177,7 +177,7 @@ H5Pget_create_intermediate_group(hid_t lcpl_id, unsigned *crt_intmd_group /*out*
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (lcpl = H5P_acquire(lcpl_id, H5P_TYPE_LINK_CREATE, H5I_LOCK_SHARED, true)))
+    if (NULL == (lcpl = H5P_acquire(lcpl_id, H5P_TYPE_LINK_CREATE, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get values */
@@ -187,7 +187,7 @@ H5Pget_create_intermediate_group(hid_t lcpl_id, unsigned *crt_intmd_group /*out*
 
 done:
     /* Release resources */
-    if (lcpl && H5P_release(lcpl) < 0)
+    if (lcpl && H5P_release(lcpl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)

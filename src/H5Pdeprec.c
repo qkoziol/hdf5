@@ -412,13 +412,12 @@ H5Pinsert1(hid_t plist_id, const char *name, size_t size, void *value, H5P_prp_s
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "properties >0 size must have default");
 
     /* Create the new property list class */
-    if ((ret_value = H5P_insert(plist, name, size, value, prp_set, prp_get, NULL, NULL, prp_delete, prp_copy,
-                                NULL, prp_close)) < 0)
+    if ((ret_value = H5P_insert(plist, name, size, value, prp_set, prp_get, NULL, NULL, prp_delete, prp_copy, NULL, prp_close)) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, FAIL, "unable to register property in plist");
 
 done:
     /* Release resources */
-    if (plist && H5P_release(plist) < 0)
+    if (plist && H5I_release(plist, H5I_GENPROP_LST, H5I_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -454,7 +453,7 @@ H5Pget_version(hid_t fcpl_id, unsigned *super /*out*/, unsigned *freelist /*out*
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (fcpl = H5P_acquire(fcpl_id, H5P_TYPE_FILE_CREATE, H5I_LOCK_SHARED, true)))
+    if (NULL == (fcpl = H5P_acquire(fcpl_id, H5P_TYPE_FILE_CREATE, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get values */
@@ -470,7 +469,7 @@ H5Pget_version(hid_t fcpl_id, unsigned *super /*out*/, unsigned *freelist /*out*
 
 done:
     /* Release resources */
-    if (fcpl && H5P_release(fcpl) < 0)
+    if (fcpl && H5P_release(fcpl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -515,7 +514,7 @@ H5Pencode1(hid_t plist_id, void *buf, size_t *nalloc)
 
 done:
     /* Release resources */
-    if (plist && H5P_release(plist) < 0)
+    if (plist && H5I_release(plist, H5I_GENPROP_LST, H5I_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -548,7 +547,7 @@ H5Pset_file_space(hid_t fcpl_id, H5F_file_space_type_t strategy, hsize_t thresho
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid strategy");
 
     /* Get the property list structure */
-    if (NULL == (fcpl = H5P_acquire(fcpl_id, H5P_TYPE_FILE_CREATE, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fcpl = H5P_acquire(fcpl_id, H5P_TYPE_FILE_CREATE, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
 
     /*
@@ -596,7 +595,7 @@ H5Pset_file_space(hid_t fcpl_id, H5F_file_space_type_t strategy, hsize_t thresho
 
 done:
     /* Release resources */
-    if (fcpl && H5P_release(fcpl) < 0)
+    if (fcpl && H5P_release(fcpl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -676,7 +675,7 @@ H5Pget_file_space(hid_t fcpl_id, H5F_file_space_type_t *strategy /*out*/, hsize_
     FUNC_ENTER_API(FAIL)
 
     /* Get the plist structure */
-    if (NULL == (fcpl = H5P_acquire(fcpl_id, H5P_TYPE_FILE_CREATE, H5I_LOCK_SHARED, true)))
+    if (NULL == (fcpl = H5P_acquire(fcpl_id, H5P_TYPE_FILE_CREATE, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get current file space info */
@@ -685,7 +684,7 @@ H5Pget_file_space(hid_t fcpl_id, H5F_file_space_type_t *strategy /*out*/, hsize_
 
 done:
     /* Release resources */
-    if (fcpl && H5P_release(fcpl) < 0)
+    if (fcpl && H5P_release(fcpl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)

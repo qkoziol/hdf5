@@ -153,11 +153,11 @@ H5Tcommit2(hid_t loc_id, const char *name, hid_t type_id, hid_t lcpl_id, hid_t t
     FUNC_ENTER_API(FAIL)
 
     /* Get correct property lists */
-    if (NULL == (lcpl = H5P_acquire(lcpl_id, H5P_TYPE_LINK_CREATE, H5I_LOCK_SHARED, true)))
+    if (NULL == (tcpl = H5P_acquire(tcpl_id, H5P_TYPE_DATATYPE_CREATE, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
-    if (NULL == (tcpl = H5P_acquire(tcpl_id, H5P_TYPE_DATATYPE_CREATE, H5I_LOCK_SHARED, true)))
+    if (NULL == (tapl = H5P_acquire(tapl_id, H5P_TYPE_DATATYPE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
-    if (NULL == (tapl = H5P_acquire(tapl_id, H5P_TYPE_DATATYPE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (lcpl = H5P_acquire(lcpl_id, H5P_TYPE_LINK_CREATE, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set the TCPL for the API context */
@@ -165,7 +165,8 @@ H5Tcommit2(hid_t loc_id, const char *name, hid_t type_id, hid_t lcpl_id, hid_t t
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set creation property list info");
 
     /* Set the LCPL for the API context */
-    H5CX_set_lcpl(lcpl);
+    if (H5CX_set_lcpl(lcpl) < 0)
+        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set link creation property list info");
 
     /* Commit the dataset synchronously */
     if ((ret_value = H5T__commit_api_common(loc_id, name, type_id, lcpl, tcpl, tapl, NULL, NULL)) < 0)
@@ -173,11 +174,11 @@ H5Tcommit2(hid_t loc_id, const char *name, hid_t type_id, hid_t lcpl_id, hid_t t
 
 done:
     /* Release resources */
-    if (lcpl && H5P_release(lcpl) < 0)
+    if (lcpl && H5P_release(lcpl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_DATATYPE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
-    if (tcpl && H5P_release(tcpl) < 0)
+    if (tapl && H5P_release(tapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_DATATYPE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
-    if (tapl && H5P_release(tapl) < 0)
+    if (tcpl && H5P_release(tcpl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_DATATYPE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -207,30 +208,30 @@ H5Tcommit_async(const char *app_file, const char *app_func, unsigned app_line, h
     FUNC_ENTER_API(FAIL)
 
     /* Get correct property lists */
-    if (NULL == (lcpl = H5P_acquire(lcpl_id, H5P_TYPE_LINK_CREATE, H5I_LOCK_SHARED, true)))
-        HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
-    lcpl_id = H5P_PLIST_ID(lcpl);
-    if (NULL == (tcpl = H5P_acquire(tcpl_id, H5P_TYPE_DATATYPE_CREATE, H5I_LOCK_SHARED, true)))
+    if (NULL == (tcpl = H5P_acquire(tcpl_id, H5P_TYPE_DATATYPE_CREATE, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
     tcpl_id = H5P_PLIST_ID(tcpl);
-    if (NULL == (tapl = H5P_acquire(tapl_id, H5P_TYPE_DATATYPE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (tapl = H5P_acquire(tapl_id, H5P_TYPE_DATATYPE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
     tapl_id = H5P_PLIST_ID(tapl);
+    if (NULL == (lcpl = H5P_acquire(lcpl_id, H5P_TYPE_LINK_CREATE, H5P_LOCK_SHARED, true)))
+        HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
+    lcpl_id = H5P_PLIST_ID(lcpl);
 
     /* Set the TCPL for the API context */
     if (H5CX_set_cpl(tcpl) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set creation property list info");
 
     /* Set the LCPL for the API context */
-    H5CX_set_lcpl(lcpl);
+    if (H5CX_set_lcpl(lcpl) < 0)
+        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTSET, FAIL, "can't set link creation property list info");
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token;
 
     /* Commit the datatype asynchronously */
-    if ((ret_value = H5T__commit_api_common(loc_id, name, type_id, lcpl, tcpl, tapl, token_ptr, &vol_obj)) <
-        0)
+    if ((ret_value = H5T__commit_api_common(loc_id, name, type_id, lcpl, tcpl, tapl, token_ptr, &vol_obj)) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTOPENOBJ, FAIL, "unable to commit datatype asynchronously");
 
     /* If a token was created, add the token to the event set */
@@ -243,11 +244,11 @@ H5Tcommit_async(const char *app_file, const char *app_func, unsigned app_line, h
 
 done:
     /* Release resources */
-    if (lcpl && H5P_release(lcpl) < 0)
+    if (lcpl && H5P_release(lcpl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_DATATYPE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
-    if (tcpl && H5P_release(tcpl) < 0)
+    if (tapl && H5P_release(tapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_DATATYPE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
-    if (tapl && H5P_release(tapl) < 0)
+    if (tcpl && H5P_release(tcpl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_DATATYPE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -363,9 +364,9 @@ H5Tcommit_anon(hid_t loc_id, hid_t type_id, hid_t tcpl_id, hid_t tapl_id)
         HGOTO_ERROR(H5E_ARGS, H5E_CANTSET, FAIL, "datatype is already committed");
 
     /* Get property lists */
-    if (NULL == (tcpl = H5P_acquire(tcpl_id, H5P_TYPE_DATATYPE_CREATE, H5I_LOCK_SHARED, true)))
+    if (NULL == (tcpl = H5P_acquire(tcpl_id, H5P_TYPE_DATATYPE_CREATE, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
-    if (NULL == (tapl = H5P_acquire(tapl_id, H5P_TYPE_DATATYPE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (tapl = H5P_acquire(tapl_id, H5P_TYPE_DATATYPE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
@@ -398,9 +399,9 @@ H5Tcommit_anon(hid_t loc_id, hid_t type_id, hid_t tcpl_id, hid_t tapl_id)
 
 done:
     /* Release resources */
-    if (tcpl && H5P_release(tcpl) < 0)
+    if (tapl && H5P_release(tapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_DATATYPE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
-    if (tapl && H5P_release(tapl) < 0)
+    if (tcpl && H5P_release(tcpl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_DATATYPE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -725,17 +726,16 @@ H5Topen2(hid_t loc_id, const char *name, hid_t tapl_id)
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Check group access property list */
-    if (NULL == (tapl = H5P_acquire(tapl_id, H5P_TYPE_DATATYPE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (tapl = H5P_acquire(tapl_id, H5P_TYPE_DATATYPE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Open the datatype synchronously */
     if ((ret_value = H5T__open_api_common(loc_id, name, tapl, NULL, NULL)) < 0)
-        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTOPENOBJ, H5I_INVALID_HID,
-                    "unable to open named datatype synchronously");
+        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open named datatype synchronously");
 
 done:
     /* Release resources */
-    if (tapl && H5P_release(tapl) < 0)
+    if (tapl && H5P_release(tapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_DATATYPE, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -769,7 +769,7 @@ H5Topen_async(const char *app_file, const char *app_func, unsigned app_line, hid
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Check group access property list */
-    if (NULL == (tapl = H5P_acquire(tapl_id, H5P_TYPE_DATATYPE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (tapl = H5P_acquire(tapl_id, H5P_TYPE_DATATYPE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
     tapl_id = H5P_PLIST_ID(tapl);
 
@@ -792,7 +792,7 @@ H5Topen_async(const char *app_file, const char *app_func, unsigned app_line, hid
 
 done:
     /* Release resources */
-    if (tapl && H5P_release(tapl) < 0)
+    if (tapl && H5P_release(tapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_DATATYPE, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)

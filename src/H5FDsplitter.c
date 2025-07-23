@@ -248,7 +248,7 @@ H5Pset_fapl_splitter(hid_t fapl_id, H5FD_splitter_vfd_config_t *vfd_config)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid configuration (magic number mismatch)");
     if (H5FD_CURR_SPLITTER_VFD_CONFIG_VERSION != vfd_config->version)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid config (version number mismatch)");
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a valid property list");
 
     if (NULL == (fa = H5FL_CALLOC(H5FD_splitter_fapl_t)))
@@ -261,7 +261,7 @@ H5Pset_fapl_splitter(hid_t fapl_id, H5FD_splitter_vfd_config_t *vfd_config)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     if (fa)
@@ -307,7 +307,7 @@ H5Pget_fapl_splitter(hid_t fapl_id, H5FD_splitter_vfd_config_t *config /*out*/)
     config->wo_fapl_id = H5I_INVALID_HID;
 
     /* Check and get the splitter fapl */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
     if (H5FD_SPLITTER_VALUE != H5P_get_driver_value(fapl))
         HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "incorrect VFL driver");
@@ -326,7 +326,7 @@ H5Pget_fapl_splitter(hid_t fapl_id, H5FD_splitter_vfd_config_t *config /*out*/)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -371,8 +371,7 @@ H5FD__splitter_populate_config(H5FD_splitter_vfd_config_t *vfd_config, H5FD_spli
 
     /* Set non-default channel FAPLs in splitter configuration info */
     if (H5P_DEFAULT != vfd_config->rw_fapl_id) {
-        if (NULL ==
-            (rw_fapl = H5P_acquire(vfd_config->rw_fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+        if (NULL == (rw_fapl = H5P_acquire(vfd_config->rw_fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
             HGOTO_ERROR(H5E_VFL, H5E_BADTYPE, FAIL, "not a file access property list");
         if (NULL == (fa_out->rw_fapl = H5P_copy_plist(rw_fapl, false)))
             HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, FAIL, "can't copy property list");
@@ -392,8 +391,7 @@ H5FD__splitter_populate_config(H5FD_splitter_vfd_config_t *vfd_config, H5FD_spli
         H5FD_driver_t *wo_driver;
         unsigned long  wo_driver_flags = 0;
 
-        if (NULL ==
-            (wo_fapl = H5P_acquire(vfd_config->wo_fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+        if (NULL == (wo_fapl = H5P_acquire(vfd_config->wo_fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
             HGOTO_ERROR(H5E_VFL, H5E_BADTYPE, FAIL, "not a file access property list");
 
         /* Make sure that the W/O channel supports write-only capability.
@@ -426,9 +424,9 @@ H5FD__splitter_populate_config(H5FD_splitter_vfd_config_t *vfd_config, H5FD_spli
 
 done:
     /* Release resources */
-    if (rw_fapl && H5P_release(rw_fapl) < 0)
+    if (wo_fapl && H5P_release(wo_fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
-    if (wo_fapl && H5P_release(wo_fapl) < 0)
+    if (rw_fapl && H5P_release(rw_fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_VFL, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     if (free_config && vfd_config)

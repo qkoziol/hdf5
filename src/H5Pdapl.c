@@ -772,7 +772,7 @@ H5Pset_chunk_cache(hid_t dapl_id, size_t rdcc_nslots, size_t rdcc_nbytes, double
             "raw data cache w0 value must be between 0.0 and 1.0 inclusive, or H5D_CHUNK_CACHE_W0_DEFAULT");
 
     /* Get the pointer to the property list */
-    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set sizes */
@@ -785,7 +785,7 @@ H5Pset_chunk_cache(hid_t dapl_id, size_t rdcc_nslots, size_t rdcc_nbytes, double
 
 done:
     /* Release resources */
-    if (dapl && H5P_release(dapl) < 0)
+    if (dapl && H5P_release(dapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -815,7 +815,7 @@ H5Pget_chunk_cache(hid_t dapl_id, size_t *rdcc_nslots /*out*/, size_t *rdcc_nbyt
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list */
-    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get the properties.  If a property is set to the default value, the value
@@ -844,7 +844,7 @@ H5Pget_chunk_cache(hid_t dapl_id, size_t *rdcc_nslots /*out*/, size_t *rdcc_nbyt
 
 done:
     /* Release resources */
-    if (dapl && H5P_release(dapl) < 0)
+    if (dapl && H5P_release(dapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1080,7 +1080,7 @@ H5Pset_virtual_view(hid_t dapl_id, H5D_vds_view_t view)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "not a valid bounds option");
 
     /* Get the pointer to the property list */
-    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Update property list */
@@ -1089,7 +1089,7 @@ H5Pset_virtual_view(hid_t dapl_id, H5D_vds_view_t view)
 
 done:
     /* Release resources */
-    if (dapl && H5P_release(dapl) < 0)
+    if (dapl && H5P_release(dapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1115,7 +1115,7 @@ H5Pget_virtual_view(hid_t dapl_id, H5D_vds_view_t *view /*out*/)
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list */
-    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get value from property list */
@@ -1125,7 +1125,7 @@ H5Pget_virtual_view(hid_t dapl_id, H5D_vds_view_t *view /*out*/)
 
 done:
     /* Release resources */
-    if (dapl && H5P_release(dapl) < 0)
+    if (dapl && H5P_release(dapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1228,7 +1228,7 @@ H5Pset_virtual_printf_gap(hid_t dapl_id, hsize_t gap_size)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "not a valid printf gap size");
 
     /* Get the pointer to the property list */
-    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Update property list */
@@ -1237,7 +1237,7 @@ H5Pset_virtual_printf_gap(hid_t dapl_id, hsize_t gap_size)
 
 done:
     /* Release resources */
-    if (dapl && H5P_release(dapl) < 0)
+    if (dapl && H5P_release(dapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1264,7 +1264,7 @@ H5Pget_virtual_printf_gap(hid_t dapl_id, hsize_t *gap_size /*out*/)
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list */
-    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get value from property list */
@@ -1274,7 +1274,7 @@ H5Pget_virtual_printf_gap(hid_t dapl_id, hsize_t *gap_size /*out*/)
 
 done:
     /* Release resources */
-    if (dapl && H5P_release(dapl) < 0)
+    if (dapl && H5P_release(dapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1319,7 +1319,7 @@ H5Pset_append_flush(hid_t dapl_id, unsigned ndims, const hsize_t *boundary, H5D_
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "callback is NULL while user data is not");
 
     /* Get the pointer to the property list */
-    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set up values */
@@ -1341,7 +1341,7 @@ H5Pset_append_flush(hid_t dapl_id, unsigned ndims, const hsize_t *boundary, H5D_
 
 done:
     /* Release resources */
-    if (dapl && H5P_release(dapl) < 0)
+    if (dapl && H5P_release(dapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1371,7 +1371,7 @@ H5Pget_append_flush(hid_t dapl_id, unsigned ndims, hsize_t boundary[], H5D_appen
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list */
-    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Retrieve info for append flush */
@@ -1392,7 +1392,7 @@ H5Pget_append_flush(hid_t dapl_id, unsigned ndims, hsize_t boundary[], H5D_appen
 
 done:
     /* Release resources */
-    if (dapl && H5P_release(dapl) < 0)
+    if (dapl && H5P_release(dapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1424,7 +1424,7 @@ H5Pset_efile_prefix(hid_t dapl_id, const char *prefix)
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list */
-    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set prefix */
@@ -1433,7 +1433,7 @@ H5Pset_efile_prefix(hid_t dapl_id, const char *prefix)
 
 done:
     /* Release resources */
-    if (dapl && H5P_release(dapl) < 0)
+    if (dapl && H5P_release(dapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1460,7 +1460,7 @@ H5Pget_efile_prefix(hid_t dapl_id, char *prefix /*out*/, size_t size)
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list */
-    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get the current prefix */
@@ -1485,7 +1485,7 @@ H5Pget_efile_prefix(hid_t dapl_id, char *prefix /*out*/, size_t size)
 
 done:
     /* Release resources */
-    if (dapl && H5P_release(dapl) < 0)
+    if (dapl && H5P_release(dapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1518,7 +1518,7 @@ H5Pset_virtual_prefix(hid_t dapl_id, const char *prefix)
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list */
-    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set prefix */
@@ -1527,7 +1527,7 @@ H5Pset_virtual_prefix(hid_t dapl_id, const char *prefix)
 
 done:
     /* Release resources */
-    if (dapl && H5P_release(dapl) < 0)
+    if (dapl && H5P_release(dapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1556,7 +1556,7 @@ H5Pget_virtual_prefix(hid_t dapl_id, char *prefix /*out*/, size_t size)
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list */
-    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get the current prefix */
@@ -1581,7 +1581,7 @@ H5Pget_virtual_prefix(hid_t dapl_id, char *prefix /*out*/, size_t size)
 
 done:
     /* Release resources */
-    if (dapl && H5P_release(dapl) < 0)
+    if (dapl && H5P_release(dapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)

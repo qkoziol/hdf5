@@ -18,7 +18,6 @@
 /* Module Setup */
 /****************/
 
-#define H5TS_FRIEND    /*suppress error about including H5TSpkg      */
 #include "H5Pmodule.h" /* This source code file is part of the H5P module */
 
 /***********/
@@ -31,7 +30,6 @@
 #include "H5MMprivate.h" /* Memory management			*/
 #include "H5Ppkg.h"      /* Property lists		  	*/
 #include "H5SLprivate.h" /* Skip Lists                          */
-#include "H5TSpkg.h"     /* Threadsafety                           */
 
 /****************/
 /* Local Macros */
@@ -95,7 +93,7 @@ typedef herr_t (*H5P_do_pclass_op_t)(H5P_genplist_t *plist, const char *name, H5
 /* Infrastructure routines */
 static herr_t H5P__close_class_cb(void *_pclass, void **request);
 static herr_t H5P__lock_list_cb(void *_plist, H5I_lock_mode_t mode);
-static herr_t H5P__unlock_list_cb(void *_plist);
+static herr_t H5P__unlock_list_cb(void *_plist, H5I_lock_mode_t mode);
 static herr_t H5P__close_list_cb(void *_plist, void **request);
 
 /* General helper routines */
@@ -115,6 +113,8 @@ static H5P_genprop_t *H5P__find_prop_pclass(H5P_genclass_t *pclass, const char *
 static herr_t         H5P__free_prop_cb(void *item, void H5_ATTR_UNUSED *key, void *op_data);
 static herr_t H5P__free_del_name_cb(void *item, void H5_ATTR_UNUSED *key, void H5_ATTR_UNUSED *op_data);
 static herr_t H5P__close(H5P_genplist_t *plist);
+static void H5P__lock(H5P_genplist_t *plist, H5P_lock_mode_t mode);
+static void H5P__unlock(H5P_genplist_t *plist, H5P_lock_mode_t mode);
 
 /*********************/
 /* Package Variables */
@@ -580,16 +580,23 @@ H5P__init_package(void)
 
     FUNC_ENTER_PACKAGE
 
-    /* Sanity check */
+    /* Sanity checks */
     HDcompile_assert(H5P_TYPE_REFERENCE_ACCESS == (H5P_TYPE_MAX_TYPE - 1));
+    HDcompile_assert(H5P_LOCK_INT_NONE != H5P_LOCK_INT_EXCLUSIVE);
+    HDcompile_assert(H5P_LOCK_INT_NONE != H5P_LOCK_INT_SHARED);
+#ifdef H5_HAVE_CONCURRENCY
+    /* Make certain that the H5P lock enum stays in sync w/H5TS lock enum */
+    HDcompile_assert((int)H5P_LOCK_INT_EXCLUSIVE == (int)H5TS_RWLOCK_LOCK_EXCLUSIVE);
+    HDcompile_assert((int)H5P_LOCK_INT_SHARED == (int)H5TS_RWLOCK_LOCK_SHARED);
+#endif /* H5_HAVE_CONCURRENCY */
 
     /*
      * Initialize the Generic Property class & object groups.
      */
     if (H5I_register_type(H5I_GENPROPCLS_CLS, true) < 0)
-        HGOTO_ERROR(H5E_ID, H5E_CANTINIT, FAIL, "unable to initialize ID group");
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, FAIL, "unable to initialize ID group");
     if (H5I_register_type(H5I_GENPROPLST_CLS, true) < 0)
-        HGOTO_ERROR(H5E_ID, H5E_CANTINIT, FAIL, "unable to initialize ID group");
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, FAIL, "unable to initialize ID group");
 
     /* Repeatedly pass over the list of property list classes for the library,
      * initializing each class if its parent class is initialized, until no
@@ -891,7 +898,7 @@ H5P__lock_list_cb(void *_plist, H5I_lock_mode_t mode)
     assert(plist);
 
     /* Lock the property list */
-    H5P_lock(plist, mode);
+    H5P__lock(plist, (H5P_lock_mode_t)mode);
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5P__lock_list_cb() */
@@ -906,7 +913,7 @@ H5P__lock_list_cb(void *_plist, H5I_lock_mode_t mode)
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5P__unlock_list_cb(void *_plist)
+H5P__unlock_list_cb(void *_plist, H5I_lock_mode_t mode)
 {
     H5P_genplist_t *plist = (H5P_genplist_t *)_plist; /* Property list to lock */
 
@@ -916,7 +923,7 @@ H5P__unlock_list_cb(void *_plist)
     assert(plist);
 
     /* Unlock the property list */
-    H5P_unlock(plist);
+    H5P__unlock(plist, (H5P_lock_mode_t)mode);
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5P__unlock_list_cb() */
@@ -941,8 +948,23 @@ H5P__close_list_cb(void *_plist, void H5_ATTR_UNUSED **request)
     /* Sanity check */
     assert(plist);
 
-    /* Close the property list object */
-    if (H5P_close(plist) < 0)
+    /* Don't need to acquire locks on private lists */
+    if (!plist->is_private) {
+        /* Acquire exclusive lock on the list.  This allows all other threads to
+         * finish using the property list before we close it.
+         */
+        H5P__lock(plist, H5P_LOCK_EXCLUSIVE);
+
+        /* Release lock on the property list, which is safe since the H5I package
+         * is holding an exclusive lock on the property list ID 'type' and the ID
+         * info for the property list itself when it calls this routine, preventing
+         * any other thread from reaching this point.
+         */
+        H5P__unlock(plist, H5P_LOCK_EXCLUSIVE);
+    }
+
+    /* Close the property list */
+    if (H5P__close(plist) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CLOSEERROR, FAIL, "unable to close property list");
 
 done:
@@ -1393,7 +1415,7 @@ done:
                     HDONE_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, NULL, "can't free property list");
             }
             else {
-                if (H5P_close(new_plist) < 0)
+                if (H5P__close(new_plist) < 0)
                     HDONE_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, NULL, "can't free property list");
             }
         }
@@ -2300,6 +2322,12 @@ H5P__create(H5P_genclass_t *pclass, bool is_default, bool app_ref)
     /* Mark the property list as private or application visible */
     plist->is_private = !app_ref;
 
+#ifdef H5_HAVE_CONCURRENCY
+    /* Initialize the R/W lock protecting the skip list */
+    if (H5TS_dlftt_rwlock_init(&plist->lock) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, NULL, "can't initialize property list's lock");
+#endif /* H5_HAVE_CONCURRENCY */
+
     /* Set the class initialization flag */
     plist->class_init = true;
 
@@ -2327,7 +2355,7 @@ done:
 
             /* Delete ID, ignore return value */
             if (plist->plist_id > 0)
-                H5I_remove(plist->plist_id);
+                H5I_remove(plist->plist_id, false);
 
             /* Release the property list itself */
             plist = H5FL_FREE(H5P_genplist_t, plist);
@@ -3004,19 +3032,6 @@ H5P_insert(H5P_genplist_t *plist, const char *name, size_t size, void *value, H5
     if (plist->is_readonly)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTMODIFY, FAIL, "can't modify read-only property list");
 
-#ifdef H5_HAVE_CONCURRENCY
-    {
-        unsigned dlftt;
-
-        H5TS__get_dlftt(&dlftt);
-        // fprintf(stderr, "%s:%u - dlftt = %u\n", __func__, __LINE__, dlftt);
-
-        /* Check for public property list being locked */
-        if (1 == dlftt && !plist->is_private && plist->locked && H5I_LOCK_EXCLUSIVE != plist->lock_mode)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTMODIFY, FAIL, "can't modify locked property list");
-    }
-#endif /* H5_HAVE_CONCURRENCY */
-
     /* Check for duplicate named properties */
     if (NULL != H5SL_search(plist->props, name))
         HGOTO_ERROR(H5E_PLIST, H5E_EXISTS, FAIL, "property already exists");
@@ -3315,19 +3330,6 @@ H5P_poke(H5P_genplist_t *plist, const char *name, const void *value)
     if (plist->is_readonly)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTMODIFY, FAIL, "can't modify read-only property list");
 
-#ifdef H5_HAVE_CONCURRENCY
-    {
-        unsigned dlftt;
-
-        H5TS__get_dlftt(&dlftt);
-        // fprintf(stderr, "%s:%u - dlftt = %u\n", __func__, __LINE__, dlftt);
-
-        /* Check for public property list being locked */
-        if (1 == dlftt && !plist->is_private && plist->locked && H5I_LOCK_EXCLUSIVE != plist->lock_mode)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTMODIFY, FAIL, "can't modify locked property list");
-    }
-#endif /* H5_HAVE_CONCURRENCY */
-
     /* Find the property and set the value */
     udata.value = value;
     if (H5P__do_prop(plist, name, H5P__poke_plist_cb, H5P__poke_pclass_cb, &udata) < 0)
@@ -3561,19 +3563,6 @@ H5P_set(H5P_genplist_t *plist, const char *name, const void *value)
     /* Check for property list being read-only */
     if (plist->is_readonly)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTMODIFY, FAIL, "can't modify read-only property list");
-
-#ifdef H5_HAVE_CONCURRENCY
-    {
-        unsigned dlftt;
-
-        H5TS__get_dlftt(&dlftt);
-        // fprintf(stderr, "%s:%u - dlftt = %u\n", __func__, __LINE__, dlftt);
-
-        /* Check for public property list being locked */
-        if (1 == dlftt && !plist->is_private && plist->locked && H5I_LOCK_EXCLUSIVE != plist->lock_mode)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTMODIFY, FAIL, "can't modify locked property list");
-    }
-#endif /* H5_HAVE_CONCURRENCY */
 
     /* Find the property and set the value */
     udata.value = value;
@@ -4523,9 +4512,9 @@ H5P_object_verify(hid_t plist_id, H5P_plist_type_t type, bool allow_default)
             HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, NULL, "property list is a default list");
     }
     else {
-        /* Get the plist structure */
+        /* Get the property list */
         if (NULL == (plist = H5I_object_verify(plist_id, H5I_GENPROP_LST)))
-            HGOTO_ERROR(H5E_ID, H5E_BADID, NULL, "can't find object for ID");
+            HGOTO_ERROR(H5E_PLIST, H5E_BADID, NULL, "can't find object for ID");
 
         /* Compare the property list's class against the other class */
         if (H5P_isa_type(plist, type) != true)
@@ -5303,19 +5292,6 @@ H5P_remove(H5P_genplist_t *plist, const char *name)
     if (plist->is_readonly)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTMODIFY, FAIL, "can't modify read-only property list");
 
-#ifdef H5_HAVE_CONCURRENCY
-    {
-        unsigned dlftt;
-
-        H5TS__get_dlftt(&dlftt);
-        // fprintf(stderr, "%s:%u - dlftt = %u\n", __func__, __LINE__, dlftt);
-
-        /* Check for public property list being locked */
-        if (1 == dlftt && !plist->is_private && plist->locked && H5I_LOCK_EXCLUSIVE != plist->lock_mode)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTMODIFY, FAIL, "can't modify locked property list");
-    }
-#endif /* H5_HAVE_CONCURRENCY */
-
     /* Find the property and get the value */
     if (H5P__do_prop(plist, name, H5P__del_plist_cb, H5P__del_pclass_cb, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTOPERATE, FAIL, "can't operate on plist to remove value");
@@ -5546,59 +5522,13 @@ done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5P__unregister() */
 
-/*-------------------------------------------------------------------------
- * Function:	H5P_close
- *
- * Purpose:	Close a property list
- *
- * Note:        Only actually closes the list if it's unlocked, otherwise
- *              just marks it for closing.
- *
- * Return:      Non-negative on success/Negative on failure
- *
- *-------------------------------------------------------------------------
- */
-herr_t
-H5P_close(H5P_genplist_t *plist)
-{
-    herr_t ret_value = SUCCEED; /* return value */
-
-    FUNC_ENTER_NOAPI_NOINIT
-
-    assert(plist);
-
-#ifdef H5_HAVE_CONCURRENCY
-    /* Check for property list being locked */
-    if (plist->locked) {
-        /* Check for property list already closed */
-        if (plist->is_closed)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, FAIL, "property list already closed");
-
-        /* Defer closing property list */
-        plist->is_closed = true;
-    }
-    else {
-        /* Close property list immediately */
-        if (H5P__close(plist) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, FAIL, "can't close property list");
-    }
-#else  /* H5_HAVE_CONCURRENCY */
-    /* Close property list immediately */
-    if (H5P__close(plist) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, FAIL, "can't close property list");
-#endif /* H5_HAVE_CONCURRENCY */
-
-done:
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* H5P_close() */
-
 /*--------------------------------------------------------------------------
  NAME
     H5P__close
  PURPOSE
     Internal routine to close a property list.
  USAGE
-    herr_t H5P_close(plist)
+    herr_t H5P__close(plist)
         H5P_genplist_t *plist;  IN: Property list to close
  RETURNS
     Returns non-negative on success, negative on failure.
@@ -5633,10 +5563,6 @@ H5P__close(H5P_genplist_t *plist)
     FUNC_ENTER_PACKAGE
 
     assert(plist);
-
-    /* Check for property list being locked */
-    if (plist->locked)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, FAIL, "can't close locked property list");
 
     /* Make call to property list class close callback, if needed
      * (up through chain of parent classes also)
@@ -5810,7 +5736,8 @@ done:
     Returns non-negative on success, negative on failure.
  DESCRIPTION
         Closes a property list, including removing its ID from the ID manager.
-    Basically, a convenience wrapper around H5I_remove + H5P_close.
+    Basically, a convenience wrapper around H5I_remove (which calls the free
+    callback).
 
  GLOBAL VARIABLES
  COMMENTS, BUGS, ASSUMPTIONS
@@ -5820,7 +5747,6 @@ done:
 herr_t
 H5P_dissolve(H5P_genplist_t *plist)
 {
-    hid_t  plist_id;            /* ID of property list to close */
     herr_t ret_value = SUCCEED; /* return value */
 
     FUNC_ENTER_NOAPI(FAIL)
@@ -5829,16 +5755,9 @@ H5P_dissolve(H5P_genplist_t *plist)
     assert(plist);
     assert(!plist->is_default);
 
-    /* Save the property list's ID for later */
-    /* (So it's valid for the property 'close' callbacks */
-    plist_id = plist->plist_id;
-
-    /* Close the property list */
-    if (H5P_close(plist) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, FAIL, "unable to close property list");
-
     /* Remove the property list's ID from the ID manager */
-    if (H5I_remove(plist_id) != plist)
+    /* Close the property list first, removing it's ID from the ID manager */
+    if (H5I_remove(plist->plist_id, true) != plist)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTREMOVE, FAIL, "problem removing property from ID manager");
 
 done:
@@ -6278,128 +6197,84 @@ done:
 } /* end H5P_disallow_write() */
 
 /*-------------------------------------------------------------------------
- * Function:	H5P_lock
+ * Function:	H5P__lock
  *
- * Purpose:	    Lock a property list
+ * Purpose:	Lock a property list
  *
  * Return:      Non-negative on success/Negative on failure
  *
  *-------------------------------------------------------------------------
  */
-void
-H5P_lock(H5P_genplist_t
+static void
+H5P__lock(H5P_genplist_t
 #ifndef H5_HAVE_CONCURRENCY
              H5_ATTR_UNUSED
 #endif /* H5_HAVE_CONCURRENCY */
                  *plist,
-         H5I_lock_mode_t
+         H5P_lock_mode_t
 #ifndef H5_HAVE_CONCURRENCY
              H5_ATTR_UNUSED
 #endif /* H5_HAVE_CONCURRENCY */
                  mode)
 {
-    FUNC_ENTER_NOAPI_NOINIT_NOERR
+    FUNC_ENTER_PACKAGE_NOERR
 
     /* Sanity checks */
     assert(plist);
 
 #ifdef H5_HAVE_CONCURRENCY
-    {
-        unsigned dlftt;
+    /* Don't lock default property lists */
+    if (!H5P_PLIST_IS_DEFAULT(plist)) {
+        /* Private lists don't need to be locked */
+        assert(!plist->is_private);
 
-        H5TS__get_dlftt(&dlftt);
-        // fprintf(stderr, "%s:%u - dlftt = %u\n", __func__, __LINE__, dlftt);
-
-        /* Don't lock default property lists */
-        if (1 == dlftt && !H5P_PLIST_IS_DEFAULT(plist)) {
-            /* Private lists don't need to be locked */
-            assert(!plist->is_private);
-
-            /* Don't allow recursive write locks */
-            assert(H5I_LOCK_EXCLUSIVE != plist->lock_mode);
-
-            /* Increment lock counter on property list */
-            plist->locked++;
-
-            /* Set the lock mode */
-            plist->lock_mode = mode;
-        }
+        /* Acquire lock on the property list */
+        H5TS_dlftt_rwlock_lock(&plist->lock, (H5TS_rwlock_lock_mode_t)mode);
     }
 #endif /* H5_HAVE_CONCURRENCY */
 
     FUNC_LEAVE_NOAPI_VOID
-} /* end H5P_lock() */
+} /* end H5P__lock() */
 
 /*-------------------------------------------------------------------------
- * Function:	H5P_unlock
+ * Function:	H5P__unlock
  *
- * Purpose:	    Unlock a property list
+ * Purpose:	Unlock a property list
  *
  * Return:      None
  *
  *-------------------------------------------------------------------------
  */
-void
-H5P_unlock(H5P_genplist_t
+static void
+H5P__unlock(H5P_genplist_t
 #ifndef H5_HAVE_CONCURRENCY
                H5_ATTR_UNUSED
 #endif /* H5_HAVE_CONCURRENCY */
-                   *plist)
+                   *plist,
+         H5P_lock_mode_t
+#ifndef H5_HAVE_CONCURRENCY
+             H5_ATTR_UNUSED
+#endif /* H5_HAVE_CONCURRENCY */
+                 mode)
 {
-    FUNC_ENTER_NOAPI_NOINIT_NOERR
+    FUNC_ENTER_PACKAGE_NOERR
 
     /* Sanity checks */
     assert(plist);
 
 #ifdef H5_HAVE_CONCURRENCY
-    {
-        unsigned dlftt;
+    /* Default property lists are never locked */
+    if (!H5P_PLIST_IS_DEFAULT(plist)) {
+        /* Private lists don't get locked */
+        assert(!plist->is_private);
 
-        H5TS__get_dlftt(&dlftt);
-        // fprintf(stderr, "%s:%u - dlftt = %u\n", __func__, __LINE__, dlftt);
-
-        /* Default property lists are never locked */
-        if (1 == dlftt && !H5P_PLIST_IS_DEFAULT(plist)) {
-            /* Decrement lock counter on property list */
-            plist->locked--;
-
-            /* Check for last lock on closed property list */
-            if (0 == plist->locked) {
-                /* Reset the lock mode */
-                plist->lock_mode = H5I_LOCK_UNLOCKED;
-
-                /* Check if property list close was deferred by lock */
-                if (plist->is_closed)
-                    H5P__close(plist);
-            }
-        }
+        /* Release lock on the property list */
+        H5TS_dlftt_rwlock_unlock(&plist->lock, (H5TS_rwlock_lock_mode_t)mode);
     }
 #endif /* H5_HAVE_CONCURRENCY */
 
     FUNC_LEAVE_NOAPI_VOID
-} /* end H5P_unlock() */
-
-/*-------------------------------------------------------------------------
- * Function:	H5P_get_lock_count
- *
- * Purpose:	    Quick and dirty routine to retrieve property list lock count from
- *              property list structure.
- *
- * Return:      Success:        Lock counter
- *              Failure:        N/A
- *
- *-------------------------------------------------------------------------
- */
-H5_ATTR_PURE unsigned
-H5P_get_lock_count(const H5P_genplist_t *plist)
-{
-    /* Use FUNC_ENTER_NOAPI_NOINIT_NOERR here to avoid performance issues */
-    FUNC_ENTER_NOAPI_NOINIT_NOERR
-
-    assert(plist);
-
-    FUNC_LEAVE_NOAPI(plist->locked)
-} /* end H5P_get_lock_count() */
+} /* end H5P__unlock() */
 
 /*-------------------------------------------------------------------------
  * Function:	H5P_acquire
@@ -6416,9 +6291,10 @@ H5P_get_lock_count(const H5P_genplist_t *plist)
  *-------------------------------------------------------------------------
  */
 H5P_genplist_t *
-H5P_acquire(hid_t plist_id, H5P_plist_type_t type, H5I_lock_mode_t mode, bool allow_default)
+H5P_acquire(hid_t plist_id, H5P_plist_type_t type, H5P_lock_mode_t mode, bool allow_default)
 {
     H5P_genplist_t *plist     = NULL; /* Property list for ID */
+    bool plist_locked = false;  /* If property list was locked */
     H5P_genplist_t *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_NOAPI(NULL)
@@ -6432,26 +6308,32 @@ H5P_acquire(hid_t plist_id, H5P_plist_type_t type, H5I_lock_mode_t mode, bool al
             HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, NULL, "property list is a default list");
     }
     else {
-        /* Get & lock the property list */
-        if (NULL == (plist = H5I_acquire(plist_id, H5I_GENPROP_LST, mode)))
+        /* Get the property list */
+        if (NULL == (plist = H5I_object_verify(plist_id, H5I_GENPROP_LST)))
             HGOTO_ERROR(H5E_PLIST, H5E_BADID, NULL, "can't find object for ID");
 
-        /* Compare the property list's class against the other class */
+        /* Check the property list's class */
         if (H5P_isa_type(plist, type) != true)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTCOMPARE, NULL, "property list is not a member of the class");
 
-        if (!allow_default && plist->is_default)
+        /* Don't allow default property lists, when requested */
+        if (!allow_default && H5P_PLIST_IS_DEFAULT(plist))
             HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, NULL, "property list is a default list");
+
+        /* Acquire appropriate lock on non-default property lists */
+        if (!H5P_PLIST_IS_DEFAULT(plist)) {
+            H5P__lock(plist, mode);
+            plist_locked = true;
+        }
     }
 
     /* Set the return value */
     ret_value = plist;
 
 done:
-    /* Release an acquired list on error */
-    if (NULL == ret_value && plist)
-        if (H5I_release(plist, H5I_GENPROP_LST) < 0)
-            HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, NULL, "can't release property list object");
+    /* On error, release lock on property list */
+    if (NULL == ret_value && plist_locked)
+        H5P__unlock(plist, mode);
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5P_acquire() */
@@ -6470,7 +6352,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5P_release(H5P_genplist_t *plist)
+H5P_release(H5P_genplist_t *plist, H5P_lock_mode_t mode)
 {
     herr_t ret_value = SUCCEED; /* Return value */
 
@@ -6479,7 +6361,7 @@ H5P_release(H5P_genplist_t *plist)
     /* Default property lists don't get locked */
     if (!H5P_PLIST_IS_DEFAULT(plist))
         /* Unlock the property list */
-        if (H5I_release(plist, H5I_GENPROP_LST) < 0)
+        if (H5I_release(plist, H5I_GENPROP_LST, (H5I_lock_mode_t)mode) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "can't release property list object");
 
 done:

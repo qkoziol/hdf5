@@ -19,15 +19,15 @@
 /***********/
 /* Headers */
 /***********/
-#include "H5private.h"   /* Generic Functions            */
-#include "H5Eprivate.h"  /* Error handling              */
+#include "H5private.h"   /* Generic Functions    */
 #include "H5CXprivate.h" /* API Contexts         */
+#include "H5Eprivate.h"  /* Error handling       */
 #include "H5Fprivate.h"  /* Files                */
-#include "H5FLprivate.h" /* Free lists                           */
-#include "H5Iprivate.h"  /* IDs                      */
-#include "H5MMprivate.h" /* Memory management            */
-#include "H5Oprivate.h"  /* Object headers              */
-#include "H5Spkg.h"      /* Dataspaces                 */
+#include "H5FLprivate.h" /* Free lists           */
+#include "H5Iprivate.h"  /* IDs                  */
+#include "H5MMprivate.h" /* Memory management    */
+#include "H5Oprivate.h"  /* Object headers       */
+#include "H5Spkg.h"      /* Dataspaces           */
 
 /****************/
 /* Local Macros */
@@ -1438,7 +1438,7 @@ H5Sencode2(hid_t obj_id, void *buf, size_t *nalloc, hid_t fapl_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a dataspace");
 
     /* Get the file access property list */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_DATASPACE, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
@@ -1450,7 +1450,7 @@ H5Sencode2(hid_t obj_id, void *buf, size_t *nalloc, hid_t fapl_id)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_DATASPACE, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)

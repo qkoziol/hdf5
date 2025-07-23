@@ -1136,10 +1136,10 @@ H5F_prefix_open_file(bool try, H5F_t **_file, H5F_t *primary_file, H5F_prefix_op
 
 done:
     /* Restore previous FAPL and FCPL in the API contxt */
-    if (old_fapl)
-        H5CX_set_fapl(old_fapl);
-    if (old_fcpl)
-        H5CX_set_fcpl(old_fcpl);
+    if (old_fapl && H5CX_set_fapl(old_fapl) < 0)
+        HDONE_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set file access property list");
+    if (old_fcpl && H5CX_set_fcpl(old_fcpl) < 0)
+        HDONE_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set file creation property list");
 
     if (ret_value < 0)
         if (src_file && H5F_efc_close(primary_file, src_file) < 0)

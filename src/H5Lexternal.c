@@ -133,7 +133,7 @@ H5L__extern_traverse(const char H5_ATTR_UNUSED *link_name, hid_t cur_group, cons
     obj_name  = (const char *)p + fname_len + 1;
 
     /* Get the property list structure */
-    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Get the location for the group holding the external link */
@@ -144,9 +144,12 @@ H5L__extern_traverse(const char H5_ATTR_UNUSED *link_name, hid_t cur_group, cons
     if (H5CX_peek_elink_fapl(&fapl) < 0)
         HGOTO_ERROR(H5E_LINK, H5E_CANTGET, H5I_INVALID_HID, "can't get fapl for links");
     if (NULL == fapl) {
-        if (NULL == (fapl = H5F_get_access_plist(loc.oloc->file, false)))
-            HGOTO_ERROR(H5E_LINK, H5E_CANTGET, H5I_INVALID_HID,
-                        "can't get parent's file access property list");
+        /* This FAPL needs to be a "public" one, since its ID will get passed
+         * in the user callback for the external link.  So, set the 'app_ref'
+         * to true.
+         */
+        if (NULL == (fapl = H5F_get_access_plist(loc.oloc->file, true)))
+            HGOTO_ERROR(H5E_LINK, H5E_CANTGET, H5I_INVALID_HID, "can't get parent's file access property list");
         fapl_copied = true;
     } /* end if */
 
@@ -234,7 +237,7 @@ H5L__extern_traverse(const char H5_ATTR_UNUSED *link_name, hid_t cur_group, cons
 done:
     /* XXX (VOL MERGE): Probably also want to consider closing ext_obj here on failures */
     /* Release resources */
-    if (lapl && H5P_release(lapl) < 0)
+    if (lapl && H5P_release(lapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_LINK, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
     if (fapl_copied && fapl && H5P_dissolve(fapl) < 0)
         HDONE_ERROR(H5E_LINK, H5E_CANTCLOSEOBJ, H5I_INVALID_HID, "unable to close file access property list");

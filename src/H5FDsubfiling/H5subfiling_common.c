@@ -561,8 +561,8 @@ H5FD__subfiling_open_stub_file(const char *name, unsigned flags, MPI_Comm file_c
 
 done:
     /* Restore previous FAPL in the API contxt */
-    if (old_fapl)
-        H5CX_set_fapl(old_fapl);
+    if (old_fapl && H5CX_set_fapl(old_fapl) < 0)
+        HDONE_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set file access property list");
 
     if (ret_value < 0) {
         if (!bcasted_inode && (mpi_size > 1))

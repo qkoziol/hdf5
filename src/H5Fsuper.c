@@ -131,8 +131,8 @@ H5F__super_ext_create(H5F_t *f, H5O_loc_t *ext_ptr)
 
 done:
     /* Restore previous FCPL in the API contxt */
-    if (old_fcpl)
-        H5CX_set_fcpl(old_fcpl);
+    if (old_fcpl && H5CX_set_fcpl(old_fcpl) < 0)
+        HDONE_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "can't set file creation property list");
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5F__super_ext_create() */

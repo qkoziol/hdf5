@@ -602,7 +602,7 @@ H5Rdereference2(hid_t obj_id, hid_t oapl_id, H5R_type_t ref_type, const void *re
 
     /* Check the object access property list */
     /* (the OAPL is treated as a DAPL currently) */
-    if (NULL == (oapl = H5P_acquire(oapl_id, H5P_TYPE_DATASET_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (oapl = H5P_acquire(oapl_id, H5P_TYPE_DATASET_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_REFERENCE, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
@@ -646,7 +646,7 @@ H5Rdereference2(hid_t obj_id, hid_t oapl_id, H5R_type_t ref_type, const void *re
 
 done:
     /* Release resources */
-    if (oapl && H5P_release(oapl) < 0)
+    if (oapl && H5P_release(oapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_REFERENCE, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)

@@ -862,7 +862,7 @@ H5Pset_alignment(hid_t fapl_id, hsize_t threshold, hsize_t alignment)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "alignment must be positive");
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set values */
@@ -873,7 +873,7 @@ H5Pset_alignment(hid_t fapl_id, hsize_t threshold, hsize_t alignment)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -899,7 +899,7 @@ H5Pget_alignment(hid_t fapl_id, hsize_t *threshold /*out*/, hsize_t *alignment /
     FUNC_ENTER_API(FAIL)
 
     /* Get the fapl structure */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get values */
@@ -912,7 +912,7 @@ H5Pget_alignment(hid_t fapl_id, hsize_t *threshold /*out*/, hsize_t *alignment /
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1026,7 +1026,7 @@ H5Pset_driver(hid_t fapl_id, hid_t new_driver_id, const void *new_driver_info)
     FUNC_ENTER_API(FAIL)
 
     /* Check arguments */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
     if (NULL == (driver = H5I_object_verify(new_driver_id, H5I_VFL)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file driver ID");
@@ -1037,7 +1037,7 @@ H5Pset_driver(hid_t fapl_id, hid_t new_driver_id, const void *new_driver_info)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1121,7 +1121,7 @@ H5Pset_driver_by_name(hid_t fapl_id, const char *driver_name, const char *driver
     FUNC_ENTER_API(FAIL)
 
     /* Check arguments */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
     if (!driver_name)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "driver_name parameter cannot be NULL");
@@ -1134,7 +1134,7 @@ H5Pset_driver_by_name(hid_t fapl_id, const char *driver_name, const char *driver
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1218,7 +1218,7 @@ H5Pset_driver_by_value(hid_t fapl_id, H5FD_class_value_t driver_value, const cha
     FUNC_ENTER_API(FAIL)
 
     /* Check arguments */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
     if (driver_value < 0)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "negative VFD value is disallowed");
@@ -1229,7 +1229,7 @@ H5Pset_driver_by_value(hid_t fapl_id, H5FD_class_value_t driver_value, const cha
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1328,7 +1328,7 @@ H5Pget_driver(hid_t fapl_id)
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Get the connector property */
@@ -1344,7 +1344,7 @@ H5Pget_driver(hid_t fapl_id)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1412,7 +1412,7 @@ H5Pget_driver_info(hid_t fapl_id)
     FUNC_ENTER_API(NULL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, NULL, "can't find object for ID");
 
     /* Get the driver info */
@@ -1421,7 +1421,7 @@ H5Pget_driver_info(hid_t fapl_id)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, NULL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1495,7 +1495,7 @@ H5Pget_driver_config_str(hid_t fapl_id, char *config_buf, size_t buf_size)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, (-1), "config_buf cannot be NULL if buf_size is non-zero");
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, (-1), "can't find object for ID");
 
     /* Retrieve configuration string property */
@@ -1515,7 +1515,7 @@ H5Pget_driver_config_str(hid_t fapl_id, char *config_buf, size_t buf_size)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, (-1), "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1546,7 +1546,7 @@ H5Pget_driver_cls_value(hid_t fapl_id)
     FUNC_ENTER_API(H5_VFD_INVALID)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, H5_VFD_INVALID, "can't find object for ID");
 
     /* Get the connector property */
@@ -1558,7 +1558,7 @@ H5Pget_driver_cls_value(hid_t fapl_id)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, H5_VFD_INVALID, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1779,7 +1779,7 @@ H5Pset_multi_type(hid_t fapl_id, H5FD_mem_t type)
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set value */
@@ -1788,7 +1788,7 @@ H5Pset_multi_type(hid_t fapl_id, H5FD_mem_t type)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1814,18 +1814,19 @@ H5Pget_multi_type(hid_t fapl_id, H5FD_mem_t *type /*out*/)
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
+    if (type) {
+        /* Get the pointer to the property list object */
+        if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
+            HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
-    /* Get value */
-    if (type)
+        /* Get value */
         if (H5P_get(fapl, H5F_ACS_MULTI_TYPE_NAME, type) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get type for multi driver");
+    }
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1865,7 +1866,7 @@ H5Pset_cache(hid_t fapl_id, int H5_ATTR_UNUSED mdc_nelmts, size_t rdcc_nslots, s
                     "raw data cache w0 value must be between 0.0 and 1.0 inclusive");
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set sizes */
@@ -1878,7 +1879,7 @@ H5Pset_cache(hid_t fapl_id, int H5_ATTR_UNUSED mdc_nelmts, size_t rdcc_nslots, s
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1907,7 +1908,7 @@ H5Pget_cache(hid_t fapl_id, int *mdc_nelmts, size_t *rdcc_nslots /*out*/, size_t
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get sizes */
@@ -1928,7 +1929,7 @@ H5Pget_cache(hid_t fapl_id, int *mdc_nelmts, size_t *rdcc_nslots /*out*/, size_t
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1938,7 +1939,7 @@ done:
  * Function:    H5Pset_mdc_image_config
  *
  * Purpose:    Set the initial metadata cache image configuration in the
- *        target FAPL.
+ *              target FAPL.
  *
  * Return:    Non-negative on success/Negative on failure
  *
@@ -1953,25 +1954,20 @@ H5Pset_mdc_image_config(hid_t fapl_id, H5AC_cache_image_config_t *config_ptr)
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* validate the new configuration */
     if (H5AC_validate_cache_image_config(config_ptr) < 0)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid metadata cache image configuration");
 
-    /* set the modified metadata cache image config */
-
-    /* If we ever support multiple versions of H5AC_cache_image_config_t, we
-     * will have to test the version and do translation here.
-     */
-
+    /* Set the modified metadata cache image config */
     if (H5P_set(fapl, H5F_ACS_META_CACHE_INIT_IMAGE_CONFIG_NAME, config_ptr) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set metadata cache image initial config");
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1980,14 +1976,10 @@ done:
 /*-------------------------------------------------------------------------
  * Function:    H5Pget_mdc_image_config
  *
- * Purpose:    Retrieve the metadata cache initial image configuration
- *        from the target FAPL.
+ * Purpose:     Retrieve the metadata cache initial image configuration
+ *              from the target FAPL.
  *
- *        Observe that the function will fail if config_ptr is
- *        NULL, or if config_ptr->version specifies an unknown
- *        version of H5AC_cache_image_config_t.
- *
- * Return:    Non-negative on success/Negative on failure
+ * Return:      Non-negative on success/Negative on failure
  *
  *-------------------------------------------------------------------------
  */
@@ -2000,7 +1992,7 @@ H5Pget_mdc_image_config(hid_t fapl_id, H5AC_cache_image_config_t *config /*out*/
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* validate the config ptr */
@@ -2009,18 +2001,13 @@ H5Pget_mdc_image_config(hid_t fapl_id, H5AC_cache_image_config_t *config /*out*/
     if (config->version != H5AC__CURR_CACHE_IMAGE_CONFIG_VERSION)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "Unknown image config version.");
 
-    /* If we ever support multiple versions of H5AC_cache_config_t, we
-     * will have to get the canonical version here, and then translate
-     * to the version of the structure supplied.
-     */
-
     /* Get the current initial metadata cache resize configuration */
     if (H5P_get(fapl, H5F_ACS_META_CACHE_INIT_IMAGE_CONFIG_NAME, config) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get metadata cache initial image config");
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -2029,10 +2016,10 @@ done:
 /*-------------------------------------------------------------------------
  * Function:    H5Pset_mdc_config
  *
- * Purpose:    Set the initial metadata cache resize configuration in the
- *        target FAPL.
+ * Purpose:     Set the initial metadata cache resize configuration in the
+ *              target FAPL.
  *
- * Return:    Non-negative on success/Negative on failure
+ * Return:      Non-negative on success/Negative on failure
  *
  *-------------------------------------------------------------------------
  */
@@ -2045,25 +2032,20 @@ H5Pset_mdc_config(hid_t fapl_id, H5AC_cache_config_t *config_ptr)
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* validate the new configuration */
     if (H5AC_validate_config(config_ptr) < 0)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid metadata cache configuration");
 
-    /* set the modified config */
-
-    /* If we ever support multiple versions of H5AC_cache_config_t, we
-     * will have to test the version and do translation here.
-     */
-
+    /* Set the modified config */
     if (H5P_set(fapl, H5F_ACS_META_CACHE_INIT_CONFIG_NAME, config_ptr) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set metadata cache initial config");
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -2072,14 +2054,10 @@ done:
 /*-------------------------------------------------------------------------
  * Function:    H5Pget_mdc_config
  *
- * Purpose:    Retrieve the metadata cache initial resize configuration
- *        from the target FAPL.
+ * Purpose:     Retrieve the metadata cache initial resize configuration
+ *              from the target FAPL.
  *
- *        Observe that the function will fail if config is
- *        NULL, or if config_ptr->version specifies an unknown
- *        version of H5AC_cache_config_t.
- *
- * Return:    Non-negative on success/Negative on failure
+ * Return:      Non-negative on success/Negative on failure
  *
  *-------------------------------------------------------------------------
  */
@@ -2092,19 +2070,14 @@ H5Pget_mdc_config(hid_t fapl_id, H5AC_cache_config_t *config /*out*/)
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
-    /* validate the config ptr */
+    /* Validate the config ptr */
     if (config == NULL)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "NULL config ptr on entry.");
     if (config->version != H5AC__CURR_CACHE_CONFIG_VERSION)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "Unknown config version.");
-
-    /* If we ever support multiple versions of H5AC_cache_config_t, we
-     * will have to get the canonical version here, and then translate
-     * to the version of the structure supplied.
-     */
 
     /* Get the current initial metadata cache resize configuration */
     if (H5P_get(fapl, H5F_ACS_META_CACHE_INIT_CONFIG_NAME, config) < 0)
@@ -2112,7 +2085,7 @@ H5Pget_mdc_config(hid_t fapl_id, H5AC_cache_config_t *config /*out*/)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -2121,21 +2094,21 @@ done:
 /*-------------------------------------------------------------------------
  * Function:    H5Pset_gc_references
  *
- * Purpose:    Sets the flag for garbage collecting references for the file.
- *        Dataset region references (and other reference types
- *        probably) use space in the file heap.  If garbage collection
- *        is on and the user passes in an uninitialized value in a
- *        reference structure, the heap might get corrupted.  When
- *        garbage collection is off however and the user reuses a
- *        reference, the previous heap block will be orphaned and not
- *        returned to the free heap space.  When garbage collection is
- *        on, the user must initialize the reference structures to 0 or
- *        risk heap corruption.
+ * Purpose:     Sets the flag for garbage collecting references for the file.
+ *              Dataset region references (and other reference types
+ *              probably) use space in the file heap.  If garbage collection
+ *              is on and the user passes in an uninitialized value in a
+ *              reference structure, the heap might get corrupted.  When
+ *              garbage collection is off however and the user reuses a
+ *              reference, the previous heap block will be orphaned and not
+ *              returned to the free heap space.  When garbage collection is
+ *              on, the user must initialize the reference structures to 0 or
+ *              risk heap corruption.
  *
- *        Default value for garbage collecting references is off, just
- *        to be on the safe side.
+ *              Default value for garbage collecting references is off, just
+ *              to be on the safe side.
  *
- * Return:    Non-negative on success/Negative on failure
+ * Return:      Non-negative on success/Negative on failure
  *
  *-------------------------------------------------------------------------
  */
@@ -2148,7 +2121,7 @@ H5Pset_gc_references(hid_t fapl_id, unsigned gc_ref)
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set values */
@@ -2157,7 +2130,7 @@ H5Pset_gc_references(hid_t fapl_id, unsigned gc_ref)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -2166,10 +2139,10 @@ done:
 /*-------------------------------------------------------------------------
  * Function:    H5Pget_gc_references
  *
- * Purpose:    Returns the current setting for the garbage collection
- *        references property from a file access property list.
+ * Purpose:     Returns the current setting for the garbage collection
+ *              references property from a file access property list.
  *
- * Return:    Non-negative on success/Negative on failure
+ * Return:      Non-negative on success/Negative on failure
  *
  *-------------------------------------------------------------------------
  */
@@ -2184,7 +2157,7 @@ H5Pget_gc_references(hid_t fapl_id, unsigned *gc_ref /*out*/)
     /* Get values */
     if (gc_ref) {
         /* Get the pointer to the property list object */
-        if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+        if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
         if (H5P_get(fapl, H5F_ACS_GARBG_COLCT_REF_NAME, gc_ref) < 0)
@@ -2193,7 +2166,7 @@ H5Pget_gc_references(hid_t fapl_id, unsigned *gc_ref /*out*/)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -2217,7 +2190,7 @@ H5Pset_fclose_degree(hid_t fapl_id, H5F_close_degree_t degree)
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set values */
@@ -2226,7 +2199,7 @@ H5Pset_fclose_degree(hid_t fapl_id, H5F_close_degree_t degree)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -2250,7 +2223,7 @@ H5Pget_fclose_degree(hid_t fapl_id, H5F_close_degree_t *degree /*out*/)
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     if (degree && H5P_get(fapl, H5F_ACS_CLOSE_DEGREE_NAME, degree) < 0)
@@ -2258,7 +2231,7 @@ H5Pget_fclose_degree(hid_t fapl_id, H5F_close_degree_t *degree /*out*/)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -2292,7 +2265,7 @@ H5Pset_meta_block_size(hid_t fapl_id, hsize_t size)
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set values */
@@ -2301,7 +2274,7 @@ H5Pset_meta_block_size(hid_t fapl_id, hsize_t size)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -2328,7 +2301,7 @@ H5Pget_meta_block_size(hid_t fapl_id, hsize_t *size /*out*/)
     /* Get values */
     if (size) {
         /* Get the pointer to the property list object */
-        if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+        if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
         if (H5P_get(fapl, H5F_ACS_META_BLOCK_SIZE_NAME, size) < 0)
@@ -2337,7 +2310,7 @@ H5Pget_meta_block_size(hid_t fapl_id, hsize_t *size /*out*/)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -2371,7 +2344,7 @@ H5Pset_sieve_buf_size(hid_t fapl_id, size_t size)
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set values */
@@ -2380,7 +2353,7 @@ H5Pset_sieve_buf_size(hid_t fapl_id, size_t size)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -2405,7 +2378,7 @@ H5Pget_sieve_buf_size(hid_t fapl_id, size_t *size /*out*/)
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get values */
@@ -2415,7 +2388,7 @@ H5Pget_sieve_buf_size(hid_t fapl_id, size_t *size /*out*/)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -2449,7 +2422,7 @@ H5Pset_small_data_block_size(hid_t fapl_id, hsize_t size)
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set values */
@@ -2458,7 +2431,7 @@ H5Pset_small_data_block_size(hid_t fapl_id, hsize_t size)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -2485,7 +2458,7 @@ H5Pget_small_data_block_size(hid_t fapl_id, hsize_t *size /*out*/)
     /* Get values */
     if (size) {
         /* Get the pointer to the property list object */
-        if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+        if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
         if (H5P_get(fapl, H5F_ACS_SDATA_BLOCK_SIZE_NAME, size) < 0)
@@ -2494,7 +2467,7 @@ H5Pget_small_data_block_size(hid_t fapl_id, hsize_t *size /*out*/)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -2624,7 +2597,7 @@ H5Pset_libver_bounds(hid_t fapl_id, H5F_libver_t low, H5F_libver_t high)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "Invalid (low,high) combination of library version bound");
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set values */
@@ -2635,7 +2608,7 @@ H5Pset_libver_bounds(hid_t fapl_id, H5F_libver_t low, H5F_libver_t high)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -2660,7 +2633,7 @@ H5Pget_libver_bounds(hid_t fapl_id, H5F_libver_t *low /*out*/, H5F_libver_t *hig
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get values */
@@ -2674,7 +2647,7 @@ H5Pget_libver_bounds(hid_t fapl_id, H5F_libver_t *low /*out*/, H5F_libver_t *hig
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -2702,7 +2675,7 @@ H5Pset_elink_file_cache_size(hid_t fapl_id, unsigned efc_size)
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set value */
@@ -2711,7 +2684,7 @@ H5Pset_elink_file_cache_size(hid_t fapl_id, unsigned efc_size)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -2739,7 +2712,7 @@ H5Pget_elink_file_cache_size(hid_t fapl_id, unsigned *efc_size /*out*/)
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get value */
@@ -2749,7 +2722,7 @@ H5Pget_elink_file_cache_size(hid_t fapl_id, unsigned *efc_size /*out*/)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -2779,7 +2752,7 @@ H5Pset_file_image(hid_t fapl_id, void *buf_ptr, size_t buf_len)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "inconsistent buf_ptr and buf_len");
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get old image info */
@@ -2849,7 +2822,7 @@ H5Pset_file_image(hid_t fapl_id, void *buf_ptr, size_t buf_len)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -2891,7 +2864,7 @@ H5Pget_file_image(hid_t fapl_id, void **buf /*out*/, size_t *buf_len /*out*/)
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get values */
@@ -2951,7 +2924,7 @@ H5Pget_file_image(hid_t fapl_id, void **buf /*out*/, size_t *buf_len /*out*/)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -2981,7 +2954,7 @@ H5Pset_file_image_callbacks(hid_t fapl_id, H5FD_file_image_callbacks_t *callback
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get old info */
@@ -3045,7 +3018,7 @@ H5Pset_file_image_callbacks(hid_t fapl_id, H5FD_file_image_callbacks_t *callback
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     if (ret_value < 0) {
@@ -3086,7 +3059,7 @@ H5Pget_file_image_callbacks(hid_t fapl_id, H5FD_file_image_callbacks_t *callback
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get old info */
@@ -3119,7 +3092,7 @@ H5Pget_file_image_callbacks(hid_t fapl_id, H5FD_file_image_callbacks_t *callback
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -4284,7 +4257,7 @@ H5Pset_metadata_read_attempts(hid_t fapl_id, unsigned attempts)
                     "number of metadatata read attempts must be greater than 0");
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set values */
@@ -4293,7 +4266,7 @@ H5Pset_metadata_read_attempts(hid_t fapl_id, unsigned attempts)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -4319,7 +4292,7 @@ H5Pget_metadata_read_attempts(hid_t fapl_id, unsigned *attempts /*out*/)
     /* Get values */
     if (attempts) {
         /* Get the pointer to the property list object */
-        if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+        if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
         /* Get the # of read attempts set */
@@ -4333,7 +4306,7 @@ H5Pget_metadata_read_attempts(hid_t fapl_id, unsigned *attempts /*out*/)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -4364,7 +4337,7 @@ H5Pset_object_flush_cb(hid_t fapl_id, H5F_flush_cb_t func, void *udata)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "callback is NULL while user data is not");
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Update property list */
@@ -4377,7 +4350,7 @@ H5Pset_object_flush_cb(hid_t fapl_id, H5F_flush_cb_t func, void *udata)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -4403,7 +4376,7 @@ H5Pget_object_flush_cb(hid_t fapl_id, H5F_flush_cb_t *func /*out*/, void **udata
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Retrieve the callback function and user data */
@@ -4418,7 +4391,7 @@ H5Pget_object_flush_cb(hid_t fapl_id, H5F_flush_cb_t *func /*out*/, void **udata
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -4447,7 +4420,7 @@ H5Pset_mdc_log_options(hid_t fapl_id, hbool_t is_enabled, const char *location, 
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "location cannot be NULL");
 
     /* Get the property list structure */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "fapl_id is not a file access property list");
 
     /* Make a copy of the passed-in location */
@@ -4464,7 +4437,7 @@ H5Pset_mdc_log_options(hid_t fapl_id, hbool_t is_enabled, const char *location, 
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -4490,7 +4463,7 @@ H5Pget_mdc_log_options(hid_t fapl_id, hbool_t *is_enabled /*out*/, char *locatio
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "fapl_id is not a file access property list");
 
     /* Get simple values */
@@ -4520,7 +4493,7 @@ H5Pget_mdc_log_options(hid_t fapl_id, hbool_t *is_enabled /*out*/, char *locatio
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -4751,7 +4724,7 @@ H5Pset_evict_on_close(hid_t fapl_id, hbool_t evict_on_close)
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set value */
@@ -4760,7 +4733,7 @@ H5Pset_evict_on_close(hid_t fapl_id, hbool_t evict_on_close)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -4790,7 +4763,7 @@ H5Pget_evict_on_close(hid_t fapl_id, hbool_t *evict_on_close /*out*/)
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     if (H5P_get(fapl, H5F_ACS_EVICT_ON_CLOSE_FLAG_NAME, evict_on_close) < 0)
@@ -4798,7 +4771,7 @@ H5Pget_evict_on_close(hid_t fapl_id, hbool_t *evict_on_close /*out*/)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -4831,7 +4804,7 @@ H5Pset_file_locking(hid_t fapl_id, hbool_t use_file_locking, hbool_t ignore_when
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set values */
@@ -4842,7 +4815,7 @@ H5Pset_file_locking(hid_t fapl_id, hbool_t use_file_locking, hbool_t ignore_when
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -4869,7 +4842,7 @@ H5Pget_file_locking(hid_t fapl_id, hbool_t *use_file_locking /*out*/, hbool_t *i
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get values */
@@ -4880,7 +4853,7 @@ H5Pget_file_locking(hid_t fapl_id, hbool_t *use_file_locking /*out*/, hbool_t *i
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -5005,7 +4978,7 @@ H5Pset_all_coll_metadata_ops(hid_t apl_id, hbool_t is_collective)
 
 done:
     /* Release resources */
-    if (apl && H5P_release(apl) < 0)
+    if (apl && H5P_release(apl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -5060,7 +5033,7 @@ H5Pget_all_coll_metadata_ops(hid_t apl_id, hbool_t *is_collective /*out*/)
 
 done:
     /* Release resources */
-    if (apl && H5P_release(apl) < 0)
+    if (apl && H5P_release(apl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -5085,7 +5058,7 @@ H5Pset_coll_metadata_write(hid_t fapl_id, hbool_t is_collective)
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set values */
@@ -5094,7 +5067,7 @@ H5Pset_coll_metadata_write(hid_t fapl_id, hbool_t is_collective)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -5118,7 +5091,7 @@ H5Pget_mpi_params(hid_t fapl_id, MPI_Comm *comm /*out*/, MPI_Info *info /*out*/)
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get the properties */
@@ -5129,7 +5102,7 @@ H5Pget_mpi_params(hid_t fapl_id, MPI_Comm *comm /*out*/, MPI_Info *info /*out*/)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -5157,7 +5130,7 @@ H5Pset_mpi_params(hid_t fapl_id, MPI_Comm comm, MPI_Info info)
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "not a valid argument");
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set values */
@@ -5168,7 +5141,7 @@ H5Pset_mpi_params(hid_t fapl_id, MPI_Comm comm, MPI_Info info)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -5560,7 +5533,7 @@ H5Pget_coll_metadata_write(hid_t fapl_id, hbool_t *is_collective /*out*/)
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     if (H5P_get(fapl, H5F_ACS_COLL_MD_WRITE_FLAG_NAME, is_collective) < 0)
@@ -5568,7 +5541,7 @@ H5Pget_coll_metadata_write(hid_t fapl_id, hbool_t *is_collective /*out*/)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -5595,7 +5568,7 @@ H5Pset_page_buffer_size(hid_t fapl_id, size_t buf_size, unsigned min_meta_perc, 
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
     if (min_meta_perc > 100)
@@ -5619,7 +5592,7 @@ H5Pset_page_buffer_size(hid_t fapl_id, size_t buf_size, unsigned min_meta_perc, 
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -5644,11 +5617,10 @@ H5Pget_page_buffer_size(hid_t fapl_id, size_t *buf_size /*out*/, unsigned *min_m
     FUNC_ENTER_API(FAIL)
 
     /* Get the pointer to the property list object */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADID, FAIL, "can't find object for ID");
 
-    /* Get size */
-
+    /* Get size, etc. */
     if (buf_size)
         if (H5P_get(fapl, H5F_ACS_PAGE_BUFFER_SIZE_NAME, buf_size) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get page buffer size");
@@ -5661,7 +5633,7 @@ H5Pget_page_buffer_size(hid_t fapl_id, size_t *buf_size /*out*/, unsigned *min_m
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -5756,7 +5728,7 @@ H5Pset_vol(hid_t fapl_id, hid_t new_vol_id, const void *new_vol_info)
     FUNC_ENTER_API(FAIL)
 
     /* Check arguments */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
     if (NULL == (connector = H5I_object_verify(new_vol_id, H5I_VOL)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file VOL ID");
@@ -5767,7 +5739,7 @@ H5Pset_vol(hid_t fapl_id, hid_t new_vol_id, const void *new_vol_info)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -5793,7 +5765,7 @@ H5Pget_vol_id(hid_t fapl_id, hid_t *vol_id /*out*/)
     FUNC_ENTER_API(FAIL)
 
     /* Get property list for ID */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
 
     /* Get the current VOL ID */
@@ -5811,7 +5783,7 @@ H5Pget_vol_id(hid_t fapl_id, hid_t *vol_id /*out*/)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -5837,7 +5809,7 @@ H5Pget_vol_info(hid_t fapl_id, void **vol_info /*out*/)
     FUNC_ENTER_API(FAIL)
 
     /* Get property list for ID */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
 
     if (vol_info) {
@@ -5861,7 +5833,7 @@ H5Pget_vol_info(hid_t fapl_id, void **vol_info /*out*/)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -5903,7 +5875,7 @@ H5Pget_vol_cap_flags(hid_t fapl_id, uint64_t *cap_flags)
     if (cap_flags) {
         H5VL_connector_prop_t connector_prop; /* Property for VOL connector ID & info */
 
-        if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+        if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
 
         /* Get the connector property */
@@ -5917,7 +5889,7 @@ H5Pget_vol_cap_flags(hid_t fapl_id, uint64_t *cap_flags)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -6142,7 +6114,7 @@ H5Pset_relax_file_integrity_checks(hid_t fapl_id, uint64_t flags)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid flags");
 
     /* Get the property list structure */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_EXCLUSIVE, false)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "fapl_id is not a file access property list");
 
     /* Set value */
@@ -6151,7 +6123,7 @@ H5Pset_relax_file_integrity_checks(hid_t fapl_id, uint64_t flags)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -6175,7 +6147,7 @@ H5Pget_relax_file_integrity_checks(hid_t fapl_id, uint64_t *flags /*out*/)
     FUNC_ENTER_API(FAIL)
 
     /* Get the property list structure */
-    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (fapl = H5P_acquire(fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "fapl_id is not a file access property list");
 
     /* Get value */
@@ -6185,7 +6157,7 @@ H5Pget_relax_file_integrity_checks(hid_t fapl_id, uint64_t *flags /*out*/)
 
 done:
     /* Release resources */
-    if (fapl && H5P_release(fapl) < 0)
+    if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)

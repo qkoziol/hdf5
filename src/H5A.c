@@ -228,25 +228,25 @@ H5Acreate2(hid_t loc_id, const char *attr_name, hid_t type_id, hid_t space_id, h
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Get the pointer to the attribute creation property list */
-    if (NULL == (acpl = H5P_acquire(acpl_id, H5P_TYPE_ATTRIBUTE_CREATE, H5I_LOCK_SHARED, true)))
+    if (NULL == (acpl = H5P_acquire(acpl_id, H5P_TYPE_ATTRIBUTE_CREATE, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Get the pointer to the attribute access property list */
-    if (NULL == (aapl = H5P_acquire(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (aapl = H5P_acquire(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute access property list");
 
     /* Set the ACPL for the API context */
-    H5CX_set_acpl(acpl);
+    if (H5CX_set_acpl(acpl) < 0)
+        HGOTO_ERROR(H5E_ATTR, H5E_CANTSET, H5I_INVALID_HID, "can't set attribute creation property list info");
 
     /* Create the attribute synchronously */
-    if ((ret_value = H5A__create_api_common(loc_id, attr_name, type_id, space_id, acpl, aapl, NULL, NULL)) <
-        0)
+    if ((ret_value = H5A__create_api_common(loc_id, attr_name, type_id, space_id, acpl, aapl, NULL, NULL)) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTCREATE, H5I_INVALID_HID, "unable to synchronously create attribute");
 
 done:
-    if (acpl && H5P_release(acpl) < 0)
+    if (aapl && H5P_release(aapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_ATTR, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
-    if (aapl && H5P_release(aapl) < 0)
+    if (acpl && H5P_release(acpl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_ATTR, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -277,17 +277,18 @@ H5Acreate_async(const char *app_file, const char *app_func, unsigned app_line, h
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Get the pointer to the attribute creation property list */
-    if (NULL == (acpl = H5P_acquire(acpl_id, H5P_TYPE_ATTRIBUTE_CREATE, H5I_LOCK_SHARED, true)))
+    if (NULL == (acpl = H5P_acquire(acpl_id, H5P_TYPE_ATTRIBUTE_CREATE, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
     acpl_id = H5P_PLIST_ID(acpl);
 
     /* Get the pointer to the attribute access property list */
-    if (NULL == (aapl = H5P_acquire(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (aapl = H5P_acquire(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
     aapl_id = H5P_PLIST_ID(aapl);
 
     /* Set the ACPL for the API context */
-    H5CX_set_acpl(acpl);
+    if (H5CX_set_acpl(acpl) < 0)
+        HGOTO_ERROR(H5E_ATTR, H5E_CANTSET, H5I_INVALID_HID, "can't set attribute creation property list info");
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -310,9 +311,9 @@ H5Acreate_async(const char *app_file, const char *app_func, unsigned app_line, h
         } /* end if */
 
 done:
-    if (acpl && H5P_release(acpl) < 0)
+    if (aapl && H5P_release(aapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_ATTR, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
-    if (aapl && H5P_release(aapl) < 0)
+    if (acpl && H5P_release(acpl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_ATTR, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -408,19 +409,21 @@ H5Acreate_by_name(hid_t loc_id, const char *obj_name, const char *attr_name, hid
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
-    /* Check the link access property list */
-    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
+    /* Get the pointer to the attribute creation property list */
+    if (NULL == (acpl = H5P_acquire(acpl_id, H5P_TYPE_ATTRIBUTE_CREATE, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
-    /* Get the pointer to the attribute creation property list */
-    if (NULL == (acpl = H5P_acquire(acpl_id, H5P_TYPE_ATTRIBUTE_CREATE, H5I_LOCK_SHARED, true)))
+    /* Check the link access property list */
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+
     /* Get the pointer to the attribute access property list */
-    if (NULL == (aapl = H5P_acquire(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (aapl = H5P_acquire(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADTYPE, H5I_INVALID_HID, "not an attribute access property list");
 
     /* Set the ACPL for the API context */
-    H5CX_set_acpl(acpl);
+    if (H5CX_set_acpl(acpl) < 0)
+        HGOTO_ERROR(H5E_ATTR, H5E_CANTSET, H5I_INVALID_HID, "can't set attribute creation property list info");
 
     /* Create the attribute synchronously */
     if ((ret_value = H5A__create_by_name_api_common(loc_id, obj_name, attr_name, type_id, space_id, acpl,
@@ -428,11 +431,11 @@ H5Acreate_by_name(hid_t loc_id, const char *obj_name, const char *attr_name, hid
         HGOTO_ERROR(H5E_ATTR, H5E_CANTCREATE, H5I_INVALID_HID, "unable to synchronously create attribute");
 
 done:
-    if (lapl && H5P_release(lapl) < 0)
+    if (aapl && H5P_release(aapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_ATTR, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
-    if (acpl && H5P_release(acpl) < 0)
+    if (lapl && H5P_release(lapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_ATTR, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
-    if (aapl && H5P_release(aapl) < 0)
+    if (acpl && H5P_release(acpl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_ATTR, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -463,23 +466,24 @@ H5Acreate_by_name_async(const char *app_file, const char *app_func, unsigned app
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
-    /* Check the link access property list */
-    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
-    lapl_id = H5P_PLIST_ID(lapl);
-
     /* Get the pointer to the attribute creation property list */
-    if (NULL == (acpl = H5P_acquire(acpl_id, H5P_TYPE_ATTRIBUTE_CREATE, H5I_LOCK_SHARED, true)))
+    if (NULL == (acpl = H5P_acquire(acpl_id, H5P_TYPE_ATTRIBUTE_CREATE, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
     acpl_id = H5P_PLIST_ID(acpl);
 
+    /* Check the link access property list */
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5P_LOCK_SHARED, true)))
+        HGOTO_ERROR(H5E_ATTR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+    lapl_id = H5P_PLIST_ID(lapl);
+
     /* Get the pointer to the attribute access property list */
-    if (NULL == (aapl = H5P_acquire(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (aapl = H5P_acquire(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
     aapl_id = H5P_PLIST_ID(aapl);
 
     /* Set the ACPL for the API context */
-    H5CX_set_acpl(acpl);
+    if (H5CX_set_acpl(acpl) < 0)
+        HGOTO_ERROR(H5E_ATTR, H5E_CANTSET, H5I_INVALID_HID, "can't set attribute creation property list info");
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -502,11 +506,11 @@ H5Acreate_by_name_async(const char *app_file, const char *app_func, unsigned app
         } /* end if */
 
 done:
-    if (lapl && H5P_release(lapl) < 0)
+    if (aapl && H5P_release(aapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_ATTR, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
-    if (acpl && H5P_release(acpl) < 0)
+    if (lapl && H5P_release(lapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_ATTR, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
-    if (aapl && H5P_release(aapl) < 0)
+    if (acpl && H5P_release(acpl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_ATTR, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -622,7 +626,7 @@ H5Aopen(hid_t loc_id, const char *attr_name, hid_t aapl_id)
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Get the pointer to the attribute access property list */
-    if (NULL == (aapl = H5P_acquire(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (aapl = H5P_acquire(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Open the attribute synchronously */
@@ -630,7 +634,7 @@ H5Aopen(hid_t loc_id, const char *attr_name, hid_t aapl_id)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTCREATE, H5I_INVALID_HID, "unable to synchronously open attribute");
 
 done:
-    if (aapl && H5P_release(aapl) < 0)
+    if (aapl && H5P_release(aapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_ATTR, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -659,7 +663,7 @@ H5Aopen_async(const char *app_file, const char *app_func, unsigned app_line, hid
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Get the pointer to the attribute access property list */
-    if (NULL == (aapl = H5P_acquire(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (aapl = H5P_acquire(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
     aapl_id = H5P_PLIST_ID(aapl);
 
@@ -683,7 +687,7 @@ H5Aopen_async(const char *app_file, const char *app_func, unsigned app_line, hid
         } /* end if */
 
 done:
-    if (aapl && H5P_release(aapl) < 0)
+    if (aapl && H5P_release(aapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_ATTR, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -765,12 +769,12 @@ H5Aopen_by_name(hid_t loc_id, const char *obj_name, const char *attr_name, hid_t
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
-    /* Get the pointer to the attribute access property list */
-    if (NULL == (aapl = H5P_acquire(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, H5I_LOCK_SHARED, true)))
+    /* Check the link access property list */
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
-    /* Check the link access property list */
-    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
+    /* Get the pointer to the attribute access property list */
+    if (NULL == (aapl = H5P_acquire(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Open the attribute by name synchronously */
@@ -778,9 +782,9 @@ H5Aopen_by_name(hid_t loc_id, const char *obj_name, const char *attr_name, hid_t
         HGOTO_ERROR(H5E_ATTR, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to synchronously open attribute");
 
 done:
-    if (aapl && H5P_release(aapl) < 0)
+    if (aapl && H5P_release(aapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_ATTR, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
-    if (lapl && H5P_release(lapl) < 0)
+    if (lapl && H5P_release(lapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_ATTR, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -809,15 +813,15 @@ H5Aopen_by_name_async(const char *app_file, const char *app_func, unsigned app_l
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
-    /* Get the pointer to the attribute access property list */
-    if (NULL == (aapl = H5P_acquire(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, H5I_LOCK_SHARED, true)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
-    aapl_id = H5P_PLIST_ID(aapl);
-
     /* Check the link access property list */
-    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
     lapl_id = H5P_PLIST_ID(lapl);
+
+    /* Get the pointer to the attribute access property list */
+    if (NULL == (aapl = H5P_acquire(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, H5P_LOCK_SHARED, true)))
+        HGOTO_ERROR(H5E_ATTR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+    aapl_id = H5P_PLIST_ID(aapl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -840,9 +844,9 @@ H5Aopen_by_name_async(const char *app_file, const char *app_func, unsigned app_l
         } /* end if */
 
 done:
-    if (aapl && H5P_release(aapl) < 0)
+    if (aapl && H5P_release(aapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_ATTR, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
-    if (lapl && H5P_release(lapl) < 0)
+    if (lapl && H5P_release(lapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_ATTR, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -931,23 +935,22 @@ H5Aopen_by_idx(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_iter_
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
-    /* Get the pointer to the attribute access property list */
-    if (NULL == (aapl = H5P_acquire(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, H5I_LOCK_SHARED, true)))
+    /* Check the link access property list */
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
-    /* Check the link access property list */
-    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
+    /* Get the pointer to the attribute access property list */
+    if (NULL == (aapl = H5P_acquire(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Open the attribute by idx synchronously */
-    if ((ret_value =
-             H5A__open_by_idx_api_common(loc_id, obj_name, idx_type, order, n, aapl, lapl, NULL, NULL)) < 0)
+    if ((ret_value = H5A__open_by_idx_api_common(loc_id, obj_name, idx_type, order, n, aapl, lapl, NULL, NULL)) < 0)
         HGOTO_ERROR(H5E_ATTR, H5E_CANTCREATE, H5I_INVALID_HID, "unable to synchronously open attribute");
 
 done:
-    if (aapl && H5P_release(aapl) < 0)
+    if (aapl && H5P_release(aapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_ATTR, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
-    if (lapl && H5P_release(lapl) < 0)
+    if (lapl && H5P_release(lapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_ATTR, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -977,15 +980,15 @@ H5Aopen_by_idx_async(const char *app_file, const char *app_func, unsigned app_li
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
-    /* Get the pointer to the attribute access property list */
-    if (NULL == (aapl = H5P_acquire(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, H5I_LOCK_SHARED, true)))
-        HGOTO_ERROR(H5E_ATTR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
-    aapl_id = H5P_PLIST_ID(aapl);
-
     /* Check the link access property list */
-    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
     lapl_id = H5P_PLIST_ID(lapl);
+
+    /* Get the pointer to the attribute access property list */
+    if (NULL == (aapl = H5P_acquire(aapl_id, H5P_TYPE_ATTRIBUTE_ACCESS, H5P_LOCK_SHARED, true)))
+        HGOTO_ERROR(H5E_ATTR, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+    aapl_id = H5P_PLIST_ID(aapl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
@@ -1008,9 +1011,9 @@ H5Aopen_by_idx_async(const char *app_file, const char *app_func, unsigned app_li
         } /* end if */
 
 done:
-    if (aapl && H5P_release(aapl) < 0)
+    if (aapl && H5P_release(aapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_ATTR, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
-    if (lapl && H5P_release(lapl) < 0)
+    if (lapl && H5P_release(lapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_ATTR, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1474,7 +1477,7 @@ H5Aget_name_by_idx(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_i
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, (-1), "invalid iteration order specified");
 
     /* Get the pointer to the link access property list */
-    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, (-1), "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
@@ -1506,7 +1509,7 @@ H5Aget_name_by_idx(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_i
     ret_value = (ssize_t)attr_name_len;
 
 done:
-    if (lapl && H5P_release(lapl) < 0)
+    if (lapl && H5P_release(lapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_ATTR, H5E_CANTUNLOCK, (-1), "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1627,7 +1630,7 @@ H5Aget_info_by_name(hid_t loc_id, const char *obj_name, const char *attr_name, H
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid info pointer");
 
     /* Get the pointer to the link access property list */
-    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
@@ -1652,7 +1655,7 @@ H5Aget_info_by_name(hid_t loc_id, const char *obj_name, const char *attr_name, H
         HGOTO_ERROR(H5E_ATTR, H5E_CANTGET, FAIL, "unable to get attribute info");
 
 done:
-    if (lapl && H5P_release(lapl) < 0)
+    if (lapl && H5P_release(lapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_ATTR, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1693,7 +1696,7 @@ H5Aget_info_by_idx(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_i
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid info pointer");
 
     /* Get the pointer to the link access property list */
-    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
@@ -1721,7 +1724,7 @@ H5Aget_info_by_idx(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_i
         HGOTO_ERROR(H5E_ATTR, H5E_CANTGET, FAIL, "unable to get attribute info");
 
 done:
-    if (lapl && H5P_release(lapl) < 0)
+    if (lapl && H5P_release(lapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_ATTR, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1942,7 +1945,7 @@ H5Arename_by_name(hid_t loc_id, const char *obj_name, const char *old_attr_name,
     FUNC_ENTER_API(FAIL)
 
     /* Check the link access property list */
-    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Synchronously rename the attribute */
@@ -1950,7 +1953,7 @@ H5Arename_by_name(hid_t loc_id, const char *obj_name, const char *old_attr_name,
         HGOTO_ERROR(H5E_ATTR, H5E_CANTRENAME, FAIL, "can't synchronously rename attribute");
 
 done:
-    if (lapl && H5P_release(lapl) < 0)
+    if (lapl && H5P_release(lapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_ATTR, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1978,7 +1981,7 @@ H5Arename_by_name_async(const char *app_file, const char *app_func, unsigned app
     FUNC_ENTER_API(FAIL)
 
     /* Check the link access property list */
-    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, FAIL, "can't find object for ID");
     lapl_id = H5P_PLIST_ID(lapl);
 
@@ -2000,7 +2003,7 @@ H5Arename_by_name_async(const char *app_file, const char *app_func, unsigned app
             HGOTO_ERROR(H5E_ATTR, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 
 done:
-    if (lapl && H5P_release(lapl) < 0)
+    if (lapl && H5P_release(lapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_ATTR, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -2156,7 +2159,7 @@ H5Aiterate_by_name(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_i
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid iteration order specified");
 
     /* Get the pointer to the link access property list */
-    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
@@ -2186,7 +2189,7 @@ H5Aiterate_by_name(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_i
         HERROR(H5E_ATTR, H5E_BADITER, "attribute iteration failed");
 
 done:
-    if (lapl && H5P_release(lapl) < 0)
+    if (lapl && H5P_release(lapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_ATTR, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -2284,7 +2287,7 @@ H5Adelete_by_name(hid_t loc_id, const char *obj_name, const char *attr_name, hid
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "no attribute name");
 
     /* Get the pointer to the link access property list */
-    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
@@ -2310,7 +2313,7 @@ H5Adelete_by_name(hid_t loc_id, const char *obj_name, const char *attr_name, hid
         HGOTO_ERROR(H5E_ATTR, H5E_CANTDELETE, FAIL, "unable to delete attribute");
 
 done:
-    if (lapl && H5P_release(lapl) < 0)
+    if (lapl && H5P_release(lapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_ATTR, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -2363,7 +2366,7 @@ H5Adelete_by_idx(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_ite
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid iteration order specified");
 
     /* Get the pointer to the link access property list */
-    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_LINK, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
@@ -2391,7 +2394,7 @@ H5Adelete_by_idx(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_ite
         HGOTO_ERROR(H5E_ATTR, H5E_CANTDELETE, FAIL, "unable to delete attribute");
 
 done:
-    if (lapl && H5P_release(lapl) < 0)
+    if (lapl && H5P_release(lapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_ATTR, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -2698,7 +2701,7 @@ H5Aexists_by_name(hid_t loc_id, const char *obj_name, const char *attr_name, hid
     FUNC_ENTER_API(FAIL)
 
     /* Check the link access property list */
-    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Synchronously check if an attribute exists */
@@ -2710,7 +2713,7 @@ H5Aexists_by_name(hid_t loc_id, const char *obj_name, const char *attr_name, hid
     ret_value = (htri_t)exists;
 
 done:
-    if (lapl && H5P_release(lapl) < 0)
+    if (lapl && H5P_release(lapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_ATTR, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -2738,7 +2741,7 @@ H5Aexists_by_name_async(const char *app_file, const char *app_func, unsigned app
     FUNC_ENTER_API(FAIL)
 
     /* Check the link access property list */
-    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_ATTR, H5E_BADID, FAIL, "can't find object for ID");
     lapl_id = H5P_PLIST_ID(lapl);
 
@@ -2761,7 +2764,7 @@ H5Aexists_by_name_async(const char *app_file, const char *app_func, unsigned app
             HGOTO_ERROR(H5E_ATTR, H5E_CANTINSERT, FAIL, "can't insert token into event set");
 
 done:
-    if (lapl && H5P_release(lapl) < 0)
+    if (lapl && H5P_release(lapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_ATTR, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)

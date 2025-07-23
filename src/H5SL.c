@@ -73,38 +73,38 @@
     }
 
 /* Define a code template for comparing scalar keys for the "CMP" in the H5SL_LOCATE macro */
-#define H5SL_LOCATE_SCALAR_CMP(SLIST, TYPE, PNODE, PKEY, HASHVAL) (*(TYPE *)((PNODE)->key) < *(TYPE *)PKEY)
+#define H5SL_LOCATE_SCALAR_CMP(SLIST, TYPE, PNODE, PKEY, HASHVAL) (*(TYPE *)((PNODE)->c_key) < *(TYPE *)PKEY)
 
 /* Define a code template for comparing string keys for the "CMP" in the H5SL_LOCATE macro */
 #define H5SL_LOCATE_STRING_CMP(SLIST, TYPE, PNODE, PKEY, HASHVAL)                                            \
-    (((PNODE)->hashval == HASHVAL) ? (strcmp((const char *)(PNODE)->key, (const char *)PKEY) < 0)            \
+    (((PNODE)->hashval == HASHVAL) ? (strcmp((const char *)(PNODE)->c_key, (const char *)PKEY) < 0)            \
                                    : ((PNODE)->hashval < HASHVAL))
 
 /* Define a code template for comparing H5_obj_t keys for the "CMP" in the H5SL_LOCATE macro */
 #define H5SL_LOCATE_OBJ_CMP(SLIST, TYPE, PNODE, PKEY, HASHVAL)                                               \
-    ((((TYPE *)((PNODE)->key))->fileno == ((TYPE *)PKEY)->fileno)                                            \
-         ? (((TYPE *)((PNODE)->key))->addr < ((TYPE *)PKEY)->addr)                                           \
-         : (((TYPE *)((PNODE)->key))->fileno < ((TYPE *)PKEY)->fileno))
+    ((((TYPE *)((PNODE)->c_key))->fileno == ((TYPE *)PKEY)->fileno)                                            \
+         ? (((TYPE *)((PNODE)->c_key))->addr < ((TYPE *)PKEY)->addr)                                           \
+         : (((TYPE *)((PNODE)->c_key))->fileno < ((TYPE *)PKEY)->fileno))
 
 /* Define a code template for comparing generic keys for the "CMP" in the H5SL_LOCATE macro */
 #define H5SL_LOCATE_GENERIC_CMP(SLIST, TYPE, PNODE, PKEY, HASHVAL)                                           \
-    ((SLIST)->cmp((TYPE *)((PNODE)->key), (TYPE *)PKEY) < 0)
+    ((SLIST)->cmp((TYPE *)((PNODE)->c_key), (TYPE *)PKEY) < 0)
 
 /* Define a code template for comparing scalar keys for the "EQ" in the H5SL_LOCATE macro */
-#define H5SL_LOCATE_SCALAR_EQ(SLIST, TYPE, PNODE, PKEY, HASHVAL) (*(TYPE *)((PNODE)->key) == *(TYPE *)PKEY)
+#define H5SL_LOCATE_SCALAR_EQ(SLIST, TYPE, PNODE, PKEY, HASHVAL) (*(TYPE *)((PNODE)->c_key) == *(TYPE *)PKEY)
 
 /* Define a code template for comparing string keys for the "EQ" in the H5SL_LOCATE macro */
 #define H5SL_LOCATE_STRING_EQ(SLIST, TYPE, PNODE, PKEY, HASHVAL)                                             \
-    (((PNODE)->hashval == HASHVAL) && (strcmp((const char *)(PNODE)->key, (const char *)PKEY) == 0))
+    (((PNODE)->hashval == HASHVAL) && (strcmp((const char *)(PNODE)->c_key, (const char *)PKEY) == 0))
 
 /* Define a code template for comparing H5_obj_t keys for the "EQ" in the H5SL_LOCATE macro */
 #define H5SL_LOCATE_OBJ_EQ(SLIST, TYPE, PNODE, PKEY, HASHVAL)                                                \
-    ((((TYPE *)((PNODE)->key))->fileno == ((TYPE *)PKEY)->fileno) &&                                         \
-     (((TYPE *)((PNODE)->key))->addr == ((TYPE *)PKEY)->addr))
+    ((((TYPE *)((PNODE)->c_key))->fileno == ((TYPE *)PKEY)->fileno) &&                                         \
+     (((TYPE *)((PNODE)->c_key))->addr == ((TYPE *)PKEY)->addr))
 
 /* Define a code template for comparing generic keys for the "EQ" in the H5SL_LOCATE macro */
 #define H5SL_LOCATE_GENERIC_EQ(SLIST, TYPE, PNODE, PKEY, HASHVAL)                                            \
-    ((SLIST)->cmp((TYPE *)((PNODE)->key), (TYPE *)PKEY) == 0)
+    ((SLIST)->cmp((TYPE *)((PNODE)->c_key), (TYPE *)PKEY) == 0)
 
 /* Define a code template for initializing the hash value for scalar keys for the "HASHINIT" in the
  * H5SL_LOCATE macro */
@@ -369,7 +369,7 @@
         (KEY, HASHVAL)                                                                                       \
                                                                                                              \
             /* Find the gap to drop in to at the highest level */                                            \
-            while (X && (!X->key || H5_GLUE3(H5SL_LOCATE_, CMP, _CMP)(SLIST, TYPE, X, KEY, HASHVAL)))        \
+            while (X && (!X->c_key || H5_GLUE3(H5SL_LOCATE_, CMP, _CMP)(SLIST, TYPE, X, KEY, HASHVAL)))        \
         {                                                                                                    \
             _llast = _last;                                                                                  \
             _last  = X;                                                                                      \
@@ -496,7 +496,7 @@
             /* neighbor */                                                                                   \
             if (X->level) {                                                                                  \
                 X              = X->backward;                                                                \
-                _next->key     = X->key;                                                                     \
+                _next->c_key     = X->c_key;                                                                     \
                 _next->item    = X->item;                                                                    \
                 _next->hashval = X->hashval;                                                                 \
             }                                                                                                \
@@ -546,7 +546,10 @@ H5TS_DEF_ATOMIC_TYPE(size_t)
 
 /* Skip list node data structure */
 struct H5SL_node_t {
-    const void *key;        /* Pointer to node's key */
+    union {
+        void *key;          /* Pointer to node's key */
+        const void *c_key;  /* Pointer to node's key */
+    };
     void       *item;       /* Pointer to node's item */
     size_t      level;      /* The level of this node */
     size_t      log_nalloc; /* log2(Number of slots allocated in forward) */
@@ -705,7 +708,7 @@ H5SL_term_package(void)
  PURPOSE
     Create a new skip list node of level 0
  USAGE
-    H5SL_node_t *H5SL__new_node(item,key,hasval)
+    H5SL_node_t *H5SL__new_node(item, key, hasval)
         void *item;             IN: Pointer to item info for node
         void *key;              IN: Pointer to key info for node
         uint32_t hashval;       IN: Hash value for node
@@ -733,7 +736,7 @@ H5SL__new_node(void *item, const void *key, uint32_t hashval)
         HGOTO_ERROR(H5E_SLIST, H5E_NOSPACE, NULL, "memory allocation failed");
 
     /* Initialize non-zero/NULL values */
-    ret_value->key     = key;
+    ret_value->c_key     = key;
     ret_value->item    = item;
     ret_value->hashval = hashval;
     if (NULL == (ret_value->forward = (H5SL_node_t **)H5FL_FAC_MALLOC(H5SL_fac_g[0]))) {
@@ -793,7 +796,7 @@ H5SL__dest_node(H5SL_node_t *node)
  PURPOSE
     Common code for inserting an object into a skip list
  USAGE
-    H5SL_node_t *H5SL__insert_common(slist,item,key)
+    H5SL_node_t *H5SL__insert_common(slist, item, key)
         H5SL_t *slist;          IN/OUT: Pointer to skip list
         void *item;             IN: Item to insert
         void *key;              IN: Key for item to insert
@@ -909,7 +912,7 @@ done:
  PURPOSE
     Release all nodes from a skip list, optionally calling a 'free' operator
  USAGE
-    herr_t H5SL__release_common(slist,op,opdata)
+    herr_t H5SL__release_common(slist, op, opdata)
         H5SL_t *slist;          IN/OUT: Pointer to skip list to release nodes
         bool closing;           IN: Whether the skip list is being freed
         H5SL_operator_t op;     IN: Callback function to free item & key
@@ -1011,7 +1014,7 @@ done:
  PURPOSE
     Close a skip list, deallocating it and potentially freeing all its nodes.
  USAGE
-    herr_t H5SL__close_common(slist,op,opdata)
+    herr_t H5SL__close_common(slist, op, opdata)
         H5SL_t *slist;          IN/OUT: Pointer to skip list to close
         H5SL_operator_t op;     IN: Callback function to free item & key
         void *op_data;          IN/OUT: Pointer to application data for callback
@@ -1096,8 +1099,8 @@ H5SL_create(H5SL_type_t type, H5SL_cmp_t cmp)
     HDcompile_assert(H5SL_LOCK_INT_NONE != H5SL_LOCK_INT_SHARED);
 #ifdef H5_HAVE_CONCURRENCY
     /* Make certain that the H5SL lock enum stays in sync w/H5TS lock enum */
-    HDcompile_assert(H5SL_LOCK_INT_EXCLUSIVE == H5TS_RWLOCK_LOCK_EXCLUSIVE);
-    HDcompile_assert(H5SL_LOCK_INT_SHARED == H5TS_RWLOCK_LOCK_SHARED);
+    HDcompile_assert((int)H5SL_LOCK_INT_EXCLUSIVE == (int)H5TS_RWLOCK_LOCK_EXCLUSIVE);
+    HDcompile_assert((int)H5SL_LOCK_INT_SHARED == (int)H5TS_RWLOCK_LOCK_SHARED);
 #endif /* H5_HAVE_CONCURRENCY */
 
     /* Check args */
@@ -1635,7 +1638,7 @@ done:
  PURPOSE
     Search for object in a skip list
  USAGE
-    void *H5SL_search(slist,key)
+    void *H5SL_search(slist, key)
         H5SL_t *slist;          IN/OUT: Pointer to skip list
         void *key;              IN: Key for item to search for
 
@@ -1744,7 +1747,7 @@ done:
  PURPOSE
     Search for object in a skip list that is less than or equal to 'key'
  USAGE
-    void *H5SL_less(slist,key)
+    void *H5SL_less(slist, key)
         H5SL_t *slist;          IN/OUT: Pointer to skip list
         void *key;              IN: Key for item to search for
 
@@ -2609,7 +2612,7 @@ H5SL_prev(H5SL_node_t *slist_node)
     /* (Pre-condition) */
 
     /* Walk backward, detecting the header node (which has it's key set to NULL) */
-    ret_value = (slist_node->backward->key == NULL) ? NULL : slist_node->backward;
+    ret_value = (slist_node->backward->c_key == NULL) ? NULL : slist_node->backward;
 
     if (ret_value) {
         /* Change the # of times the nodes are checked out */
@@ -2676,7 +2679,7 @@ H5SL_before(H5SL_node_t *slist_node)
     /* (Pre-condition) */
 
     /* Walk backward, detecting the header node (which has it's key set to NULL) */
-    ret_value = (slist_node->backward->key == NULL) ? NULL : slist_node->backward;
+    ret_value = (slist_node->backward->c_key == NULL) ? NULL : slist_node->backward;
 
     if (ret_value) {
         /* Increment the # of times the node is checked out and increment # of checked out nodes */
@@ -2996,7 +2999,7 @@ done:
  PURPOSE
     Release all nodes from a skip list, freeing all nodes
  USAGE
-    herr_t H5SL_free(slist,op,op_data)
+    herr_t H5SL_free(slist, op, op_data)
         H5SL_t *slist;          IN/OUT: Pointer to skip list to release nodes
         H5SL_operator_t op;     IN: Callback function to free item & key
         void *op_data;          IN/OUT: Pointer to application data for callback
@@ -3047,7 +3050,7 @@ done:
  PURPOSE
     Close a skip list, deallocating it and freeing all its nodes.
  USAGE
-    herr_t H5SL_destroy(slist,op,opdata)
+    herr_t H5SL_destroy(slist, op, opdata)
         H5SL_t *slist;          IN/OUT: Pointer to skip list to close
         H5SL_operator_t op;     IN: Callback function to free item & key
         void *op_data;          IN/OUT: Pointer to application data for callback

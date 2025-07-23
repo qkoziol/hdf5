@@ -480,7 +480,7 @@ H5Oget_info_by_name1(hid_t loc_id, const char *name, H5O_info1_t *oinfo /*out*/,
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "oinfo parameter cannot be NULL");
 
     /* Get the link access property list */
-    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
@@ -512,7 +512,7 @@ H5Oget_info_by_name1(hid_t loc_id, const char *name, H5O_info1_t *oinfo /*out*/,
 
 done:
     /* Release resources */
-    if (lapl && H5P_release(lapl) < 0)
+    if (lapl && H5P_release(lapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_OHDR, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -552,7 +552,7 @@ H5Oget_info_by_idx1(hid_t loc_id, const char *group_name, H5_index_t idx_type, H
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "no info struct");
 
     /* Get the link access property list */
-    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
@@ -587,7 +587,7 @@ H5Oget_info_by_idx1(hid_t loc_id, const char *group_name, H5_index_t idx_type, H
 
 done:
     /* Release resources */
-    if (lapl && H5P_release(lapl) < 0)
+    if (lapl && H5P_release(lapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_OHDR, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -678,7 +678,7 @@ H5Oget_info_by_name2(hid_t loc_id, const char *name, H5O_info1_t *oinfo /*out*/,
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid fields");
 
     /* Get the link access property list */
-    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
@@ -709,7 +709,7 @@ H5Oget_info_by_name2(hid_t loc_id, const char *name, H5O_info1_t *oinfo /*out*/,
 
 done:
     /* Release resources */
-    if (lapl && H5P_release(lapl) < 0)
+    if (lapl && H5P_release(lapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_OHDR, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -753,7 +753,7 @@ H5Oget_info_by_idx2(hid_t loc_id, const char *group_name, H5_index_t idx_type, H
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid fields");
 
     /* Get the link access property list */
-    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
@@ -786,7 +786,7 @@ H5Oget_info_by_idx2(hid_t loc_id, const char *group_name, H5_index_t idx_type, H
 
 done:
     /* Release resources */
-    if (lapl && H5P_release(lapl) < 0)
+    if (lapl && H5P_release(lapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_OHDR, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -935,7 +935,7 @@ H5Ovisit_by_name1(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_it
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "no callback operator specified");
 
     /* Get the link access property list */
-    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
@@ -980,7 +980,7 @@ H5Ovisit_by_name1(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_it
 
 done:
     /* Release resources */
-    if (lapl && H5P_release(lapl) < 0)
+    if (lapl && H5P_release(lapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_OHDR, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1138,7 +1138,7 @@ H5Ovisit_by_name2(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_it
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid fields");
 
     /* Get the link access property list */
-    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5I_LOCK_SHARED, true)))
+    if (NULL == (lapl = H5P_acquire(lapl_id, H5P_TYPE_LINK_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_OHDR, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Verify access property list and set up collective metadata if appropriate */
@@ -1181,7 +1181,7 @@ H5Ovisit_by_name2(hid_t loc_id, const char *obj_name, H5_index_t idx_type, H5_it
 
 done:
     /* Release resources */
-    if (lapl && H5P_release(lapl) < 0)
+    if (lapl && H5P_release(lapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_OHDR, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)

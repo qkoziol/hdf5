@@ -528,14 +528,28 @@ typedef struct H5CX_fapl_cache_t {
 H5_GCC_CLANG_DIAG_OFF("c99-c11-compat")
 typedef struct H5CX_t {
     /* Cached pointers to property lists from API calls */
-    H5P_genplist_t *dxpl;   /* Dataset Transfer Property List */
-    H5P_genplist_t *lcpl;   /* Link Creation Property List */
-    H5P_genplist_t *lapl;   /* Link Access Property List */
-    H5P_genplist_t *ocpl;   /* Object Creation Property List */
     H5P_genplist_t *acpl;   /* Attribute Creation Property List */
-    H5P_genplist_t *ocpypl; /* Object Copy Property List */
     H5P_genplist_t *dapl;   /* Dataset Access Property List */
+    H5P_genplist_t *dxpl;   /* Dataset Transfer Property List */
     H5P_genplist_t *fapl;   /* File Access Property List */
+    H5P_genplist_t *lapl;   /* Link Access Property List */
+    H5P_genplist_t *lcpl;   /* Link Creation Property List */
+    H5P_genplist_t *ocpl;   /* Object Creation Property List */
+    H5P_genplist_t *ocpypl; /* Object Copy Property List */
+
+    /* Indicate if property list pointer(s) are a copy and need to be freed
+     * when set or the API context is popped.   They can only be copies when
+     * they are restored from an API state with H5CX_restore_state().
+     */
+    bool acpl_is_copy : 1;
+    bool dapl_is_copy : 1;
+    bool dxpl_is_copy : 1;
+    bool fapl_is_copy : 1;
+    bool lapl_is_copy : 1;
+    bool lcpl_is_copy : 1;
+    bool ocpl_is_copy : 1;
+    bool ocpypl_is_copy : 1;
+
 
     /* Internal: Object tagging info */
     haddr_t tag; /* Current object's tag (ohdr chunk #0 address) */
@@ -638,15 +652,15 @@ H5_DLL herr_t H5CX_restore_state(const H5CX_state_t *api_state);
 H5_DLL herr_t H5CX_free_state(H5CX_state_t *api_state);
 
 /* "Setter" routines for API context info */
-H5_DLL herr_t H5CX_set_cpl(H5P_genplist_t *crtpl);
-H5_DLL void   H5CX_set_dxpl(H5P_genplist_t *dxpl);
-H5_DLL void   H5CX_set_lcpl(H5P_genplist_t *lcpl);
-H5_DLL void   H5CX_set_acpl(H5P_genplist_t *acpl);
-H5_DLL herr_t H5CX_set_libver_bounds(H5F_t *f);
 H5_DLL herr_t H5CX_set_apl(H5P_genplist_t *acspl, hid_t loc_id, bool is_collective);
-H5_DLL void   H5CX_set_fapl(H5P_genplist_t *fapl);
-H5_DLL void   H5CX_set_fcpl(H5P_genplist_t *fcpl);
-H5_DLL void   H5CX_set_ocpypl(H5P_genplist_t *ocpypl);
+H5_DLL herr_t H5CX_set_cpl(H5P_genplist_t *crtpl);
+H5_DLL herr_t H5CX_set_acpl(H5P_genplist_t *acpl);
+H5_DLL herr_t H5CX_set_dxpl(H5P_genplist_t *dxpl);
+H5_DLL herr_t H5CX_set_fapl(H5P_genplist_t *fapl);
+H5_DLL herr_t H5CX_set_fcpl(H5P_genplist_t *fcpl);
+H5_DLL herr_t H5CX_set_lcpl(H5P_genplist_t *lcpl);
+H5_DLL herr_t H5CX_set_ocpypl(H5P_genplist_t *ocpypl);
+H5_DLL herr_t H5CX_set_libver_bounds(H5F_t *f);
 H5_DLL herr_t H5CX_set_loc(hid_t loc_id);
 H5_DLL herr_t H5CX_set_vol_wrap_ctx(void *wrap_ctx);
 

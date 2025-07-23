@@ -1762,7 +1762,7 @@ exercise_reg_opt_oper(hid_t fake_vol_id, hid_t reg_opt_vol_id, H5VL_subclass_t s
         H5T_t *dt;
 
         /* Destroy fake datatype object */
-        if (NULL == (dt = H5I_remove(obj_id)))
+        if (NULL == (dt = H5I_remove(obj_id, false)))
             TEST_ERROR;
         if (H5VL_free_object(dt->vol_obj) < 0)
             TEST_ERROR;
@@ -1772,7 +1772,7 @@ exercise_reg_opt_oper(hid_t fake_vol_id, hid_t reg_opt_vol_id, H5VL_subclass_t s
     } /* end if */
     else {
         /* Destroy fake object */
-        if (NULL == (vol_obj = H5I_remove(obj_id)))
+        if (NULL == (vol_obj = H5I_remove(obj_id, false)))
             TEST_ERROR;
         if (H5VL_free_object(vol_obj) < 0)
             TEST_ERROR;
@@ -1839,7 +1839,7 @@ exercise_reg_opt_oper(hid_t fake_vol_id, hid_t reg_opt_vol_id, H5VL_subclass_t s
         H5T_t *dt;
 
         /* Destroy fake datatype object */
-        if (NULL == (dt = H5I_remove(obj_id)))
+        if (NULL == (dt = H5I_remove(obj_id, false)))
             TEST_ERROR;
         if (H5VL_free_object(dt->vol_obj) < 0)
             TEST_ERROR;
@@ -1849,7 +1849,7 @@ exercise_reg_opt_oper(hid_t fake_vol_id, hid_t reg_opt_vol_id, H5VL_subclass_t s
     } /* end if */
     else {
         /* Destroy fake object */
-        if (NULL == (vol_obj = H5I_remove(obj_id)))
+        if (NULL == (vol_obj = H5I_remove(obj_id, false)))
             TEST_ERROR;
         if (H5VL_free_object(vol_obj) < 0)
             TEST_ERROR;
