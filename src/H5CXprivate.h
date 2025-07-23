@@ -550,7 +550,6 @@ typedef struct H5CX_t {
     bool ocpl_is_copy : 1;
     bool ocpypl_is_copy : 1;
 
-
     /* Internal: Object tagging info */
     haddr_t tag; /* Current object's tag (ohdr chunk #0 address) */
 

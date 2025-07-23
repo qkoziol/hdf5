@@ -371,7 +371,8 @@ H5FD__splitter_populate_config(H5FD_splitter_vfd_config_t *vfd_config, H5FD_spli
 
     /* Set non-default channel FAPLs in splitter configuration info */
     if (H5P_DEFAULT != vfd_config->rw_fapl_id) {
-        if (NULL == (rw_fapl = H5P_acquire(vfd_config->rw_fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
+        if (NULL ==
+            (rw_fapl = H5P_acquire(vfd_config->rw_fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
             HGOTO_ERROR(H5E_VFL, H5E_BADTYPE, FAIL, "not a file access property list");
         if (NULL == (fa_out->rw_fapl = H5P_copy_plist(rw_fapl, false)))
             HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, FAIL, "can't copy property list");
@@ -391,7 +392,8 @@ H5FD__splitter_populate_config(H5FD_splitter_vfd_config_t *vfd_config, H5FD_spli
         H5FD_driver_t *wo_driver;
         unsigned long  wo_driver_flags = 0;
 
-        if (NULL == (wo_fapl = H5P_acquire(vfd_config->wo_fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
+        if (NULL ==
+            (wo_fapl = H5P_acquire(vfd_config->wo_fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
             HGOTO_ERROR(H5E_VFL, H5E_BADTYPE, FAIL, "not a file access property list");
 
         /* Make sure that the W/O channel supports write-only capability.

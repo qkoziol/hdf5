@@ -107,7 +107,8 @@ done:
     if (ret_value < 0)
         /* Decrement refcount on connector */
         if (connector && H5VL_conn_dec_rc(connector) < 0)
-            HDONE_ERROR(H5E_VOL, H5E_CANTDEC, H5I_INVALID_HID, "unable to decrement ref count on VOL connector");
+            HDONE_ERROR(H5E_VOL, H5E_CANTDEC, H5I_INVALID_HID,
+                        "unable to decrement ref count on VOL connector");
 
     FUNC_LEAVE_API(ret_value)
 } /* end H5VLregister_connector() */
@@ -165,7 +166,8 @@ done:
     if (ret_value < 0)
         /* Decrement refcount on connector */
         if (connector && H5VL_conn_dec_rc(connector) < 0)
-            HDONE_ERROR(H5E_VOL, H5E_CANTDEC, H5I_INVALID_HID, "unable to decrement ref count on VOL connector");
+            HDONE_ERROR(H5E_VOL, H5E_CANTDEC, H5I_INVALID_HID,
+                        "unable to decrement ref count on VOL connector");
 
     FUNC_LEAVE_API(ret_value)
 } /* end H5VLregister_connector_by_name() */
@@ -221,7 +223,8 @@ done:
     if (ret_value < 0)
         /* Decrement refcount on connector */
         if (connector && H5VL_conn_dec_rc(connector) < 0)
-            HDONE_ERROR(H5E_VOL, H5E_CANTDEC, H5I_INVALID_HID, "unable to decrement ref count on VOL connector");
+            HDONE_ERROR(H5E_VOL, H5E_CANTDEC, H5I_INVALID_HID,
+                        "unable to decrement ref count on VOL connector");
 
     FUNC_LEAVE_API(ret_value)
 } /* end H5VLregister_connector_by_value() */
@@ -346,7 +349,8 @@ done:
     if (ret_value < 0)
         /* Decrement refcount on connector */
         if (connector && H5VL_conn_dec_rc(connector) < 0)
-            HDONE_ERROR(H5E_VOL, H5E_CANTDEC, H5I_INVALID_HID, "unable to decrement ref count on VOL connector");
+            HDONE_ERROR(H5E_VOL, H5E_CANTDEC, H5I_INVALID_HID,
+                        "unable to decrement ref count on VOL connector");
 
     FUNC_LEAVE_API(ret_value)
 } /* end H5VLget_connector_id_by_name() */
@@ -385,7 +389,8 @@ done:
     if (ret_value < 0)
         /* Decrement refcount on connector */
         if (connector && H5VL_conn_dec_rc(connector) < 0)
-            HDONE_ERROR(H5E_VOL, H5E_CANTDEC, H5I_INVALID_HID, "unable to decrement ref count on VOL connector");
+            HDONE_ERROR(H5E_VOL, H5E_CANTDEC, H5I_INVALID_HID,
+                        "unable to decrement ref count on VOL connector");
 
     FUNC_LEAVE_API(ret_value)
 } /* end H5VLget_connector_id_by_value() */

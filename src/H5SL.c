@@ -77,13 +77,13 @@
 
 /* Define a code template for comparing string keys for the "CMP" in the H5SL_LOCATE macro */
 #define H5SL_LOCATE_STRING_CMP(SLIST, TYPE, PNODE, PKEY, HASHVAL)                                            \
-    (((PNODE)->hashval == HASHVAL) ? (strcmp((const char *)(PNODE)->c_key, (const char *)PKEY) < 0)            \
+    (((PNODE)->hashval == HASHVAL) ? (strcmp((const char *)(PNODE)->c_key, (const char *)PKEY) < 0)          \
                                    : ((PNODE)->hashval < HASHVAL))
 
 /* Define a code template for comparing H5_obj_t keys for the "CMP" in the H5SL_LOCATE macro */
 #define H5SL_LOCATE_OBJ_CMP(SLIST, TYPE, PNODE, PKEY, HASHVAL)                                               \
-    ((((TYPE *)((PNODE)->c_key))->fileno == ((TYPE *)PKEY)->fileno)                                            \
-         ? (((TYPE *)((PNODE)->c_key))->addr < ((TYPE *)PKEY)->addr)                                           \
+    ((((TYPE *)((PNODE)->c_key))->fileno == ((TYPE *)PKEY)->fileno)                                          \
+         ? (((TYPE *)((PNODE)->c_key))->addr < ((TYPE *)PKEY)->addr)                                         \
          : (((TYPE *)((PNODE)->c_key))->fileno < ((TYPE *)PKEY)->fileno))
 
 /* Define a code template for comparing generic keys for the "CMP" in the H5SL_LOCATE macro */
@@ -99,7 +99,7 @@
 
 /* Define a code template for comparing H5_obj_t keys for the "EQ" in the H5SL_LOCATE macro */
 #define H5SL_LOCATE_OBJ_EQ(SLIST, TYPE, PNODE, PKEY, HASHVAL)                                                \
-    ((((TYPE *)((PNODE)->c_key))->fileno == ((TYPE *)PKEY)->fileno) &&                                         \
+    ((((TYPE *)((PNODE)->c_key))->fileno == ((TYPE *)PKEY)->fileno) &&                                       \
      (((TYPE *)((PNODE)->c_key))->addr == ((TYPE *)PKEY)->addr))
 
 /* Define a code template for comparing generic keys for the "EQ" in the H5SL_LOCATE macro */
@@ -369,7 +369,7 @@
         (KEY, HASHVAL)                                                                                       \
                                                                                                              \
             /* Find the gap to drop in to at the highest level */                                            \
-            while (X && (!X->c_key || H5_GLUE3(H5SL_LOCATE_, CMP, _CMP)(SLIST, TYPE, X, KEY, HASHVAL)))        \
+            while (X && (!X->c_key || H5_GLUE3(H5SL_LOCATE_, CMP, _CMP)(SLIST, TYPE, X, KEY, HASHVAL)))      \
         {                                                                                                    \
             _llast = _last;                                                                                  \
             _last  = X;                                                                                      \
@@ -496,7 +496,7 @@
             /* neighbor */                                                                                   \
             if (X->level) {                                                                                  \
                 X              = X->backward;                                                                \
-                _next->c_key     = X->c_key;                                                                     \
+                _next->c_key   = X->c_key;                                                                   \
                 _next->item    = X->item;                                                                    \
                 _next->hashval = X->hashval;                                                                 \
             }                                                                                                \
@@ -547,13 +547,13 @@ H5TS_DEF_ATOMIC_TYPE(size_t)
 /* Skip list node data structure */
 struct H5SL_node_t {
     union {
-        void *key;          /* Pointer to node's key */
-        const void *c_key;  /* Pointer to node's key */
+        void       *key;   /* Pointer to node's key */
+        const void *c_key; /* Pointer to node's key */
     };
-    void       *item;       /* Pointer to node's item */
-    size_t      level;      /* The level of this node */
-    size_t      log_nalloc; /* log2(Number of slots allocated in forward) */
-    uint32_t    hashval;    /* Hash value for key (only for strings, currently) */
+    void    *item;       /* Pointer to node's item */
+    size_t   level;      /* The level of this node */
+    size_t   log_nalloc; /* log2(Number of slots allocated in forward) */
+    uint32_t hashval;    /* Hash value for key (only for strings, currently) */
     H5TS_ATOMIC_TYPE(size_t)
     checked_out;                   /* # of times a node is checked out,
                                     * e.g. with H5SL_find, H5SL_first, etc.
@@ -736,7 +736,7 @@ H5SL__new_node(void *item, const void *key, uint32_t hashval)
         HGOTO_ERROR(H5E_SLIST, H5E_NOSPACE, NULL, "memory allocation failed");
 
     /* Initialize non-zero/NULL values */
-    ret_value->c_key     = key;
+    ret_value->c_key   = key;
     ret_value->item    = item;
     ret_value->hashval = hashval;
     if (NULL == (ret_value->forward = (H5SL_node_t **)H5FL_FAC_MALLOC(H5SL_fac_g[0]))) {

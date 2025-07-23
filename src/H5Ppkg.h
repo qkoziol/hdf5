@@ -133,8 +133,8 @@ struct H5P_genplist_t {
     H5TS_ATOMIC_TYPE(H5P_lock_mode_int_t) mode; /* How this property list is currently locked */
 
 #ifdef H5_HAVE_CONCURRENCY
-    H5TS_dlftt_rwlock_t lock;      /* Guard the ID info struct */
-#endif                             /* H5_HAVE_CONCURRENCY */
+    H5TS_dlftt_rwlock_t lock; /* Guard the ID info struct */
+#endif                        /* H5_HAVE_CONCURRENCY */
 };
 
 /* Property list/class iterator callback function pointer */

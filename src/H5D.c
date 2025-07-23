@@ -190,7 +190,8 @@ H5Dcreate2(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t 
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, H5I_INVALID_HID, "can't set creation property list info");
 
     /* Create the dataset synchronously */
-    if ((ret_value = H5D__create_api_common(loc_id, name, type_id, space_id, lcpl, dcpl, dapl, NULL, NULL)) < 0)
+    if ((ret_value = H5D__create_api_common(loc_id, name, type_id, space_id, lcpl, dcpl, dapl, NULL, NULL)) <
+        0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTCREATE, H5I_INVALID_HID, "unable to synchronously create dataset");
 
 done:
@@ -1119,7 +1120,8 @@ H5Dread(hid_t dset_id, hid_t mem_type_id, hid_t mem_space_id, hid_t file_space_i
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Read the data */
-    if (H5D__read_api_common(1, &dset_id, &mem_type_id, &mem_space_id, &file_space_id, dxpl, &buf, NULL, NULL) < 0)
+    if (H5D__read_api_common(1, &dset_id, &mem_type_id, &mem_space_id, &file_space_id, dxpl, &buf, NULL,
+                             NULL) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_READERROR, FAIL, "can't synchronously read data");
 
 done:
@@ -1216,7 +1218,8 @@ H5Dread_multi(size_t count, hid_t dset_id[], hid_t mem_type_id[], hid_t mem_spac
         HGOTO_DONE(SUCCEED);
 
     /* Read the data */
-    if (H5D__read_api_common(count, dset_id, mem_type_id, mem_space_id, file_space_id, dxpl, buf, NULL, NULL) < 0)
+    if (H5D__read_api_common(count, dset_id, mem_type_id, mem_space_id, file_space_id, dxpl, buf, NULL,
+                             NULL) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_READERROR, FAIL, "can't synchronously read data");
 
 done:
@@ -1483,7 +1486,8 @@ H5Dwrite(hid_t dset_id, hid_t mem_type_id, hid_t mem_space_id, hid_t file_space_
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Write the data */
-    if (H5D__write_api_common(1, &dset_id, &mem_type_id, &mem_space_id, &file_space_id, dxpl, &buf, NULL, NULL) < 0)
+    if (H5D__write_api_common(1, &dset_id, &mem_type_id, &mem_space_id, &file_space_id, dxpl, &buf, NULL,
+                              NULL) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_WRITEERROR, FAIL, "can't synchronously write data");
 
 done:
@@ -1530,7 +1534,8 @@ H5Dwrite_async(const char *app_file, const char *app_func, unsigned app_line, hi
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Write the data */
-    if (H5D__write_api_common(1, &dset_id, &mem_type_id, &mem_space_id, &file_space_id, dxpl, &buf, token_ptr, &vol_obj) < 0)
+    if (H5D__write_api_common(1, &dset_id, &mem_type_id, &mem_space_id, &file_space_id, dxpl, &buf, token_ptr,
+                              &vol_obj) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_WRITEERROR, FAIL, "can't asynchronously write data");
 
     /* If a token was created, add the token to the event set */
@@ -1580,7 +1585,8 @@ H5Dwrite_multi(size_t count, hid_t dset_id[], hid_t mem_type_id[], hid_t mem_spa
         HGOTO_DONE(SUCCEED);
 
     /* Write the data */
-    if (H5D__write_api_common(count, dset_id, mem_type_id, mem_space_id, file_space_id, dxpl, buf, NULL, NULL) < 0)
+    if (H5D__write_api_common(count, dset_id, mem_type_id, mem_space_id, file_space_id, dxpl, buf, NULL,
+                              NULL) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_WRITEERROR, FAIL, "can't synchronously write data");
 
 done:

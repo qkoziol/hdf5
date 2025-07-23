@@ -1124,8 +1124,8 @@ done:
 herr_t
 H5CX_restore_state(const H5CX_state_t *api_state)
 {
-    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
-    herr_t ret_value = SUCCEED; /* Return value */
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI_NOINIT
 
@@ -1400,7 +1400,7 @@ H5CX__reset_dxpl(H5CX_node_t *head)
 herr_t
 H5CX_set_dxpl(H5P_genplist_t *dxpl)
 {
-    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
     herr_t        ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
@@ -1496,7 +1496,7 @@ H5CX__reset_lcpl(H5CX_node_t *head)
 herr_t
 H5CX_set_lcpl(H5P_genplist_t *lcpl)
 {
-    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
     herr_t        ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
@@ -1558,7 +1558,7 @@ H5CX__reset_acpl(H5CX_node_t *head)
 herr_t
 H5CX_set_acpl(H5P_genplist_t *acpl)
 {
-    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
     herr_t        ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
@@ -1866,7 +1866,7 @@ H5CX__reset_fapl(H5CX_node_t *head)
 herr_t
 H5CX_set_fapl(H5P_genplist_t *fapl)
 {
-    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
     herr_t        ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
@@ -1906,7 +1906,7 @@ done:
 herr_t
 H5CX_set_fcpl(H5P_genplist_t *fcpl)
 {
-    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
     herr_t        ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
@@ -1944,7 +1944,7 @@ done:
 herr_t
 H5CX_set_ocpypl(H5P_genplist_t *ocpypl)
 {
-    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
     herr_t        ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)

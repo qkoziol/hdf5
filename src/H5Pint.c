@@ -113,8 +113,8 @@ static H5P_genprop_t *H5P__find_prop_pclass(H5P_genclass_t *pclass, const char *
 static herr_t         H5P__free_prop_cb(void *item, void H5_ATTR_UNUSED *key, void *op_data);
 static herr_t H5P__free_del_name_cb(void *item, void H5_ATTR_UNUSED *key, void H5_ATTR_UNUSED *op_data);
 static herr_t H5P__close(H5P_genplist_t *plist);
-static void H5P__lock(H5P_genplist_t *plist, H5P_lock_mode_t mode);
-static void H5P__unlock(H5P_genplist_t *plist, H5P_lock_mode_t mode);
+static void   H5P__lock(H5P_genplist_t *plist, H5P_lock_mode_t mode);
+static void   H5P__unlock(H5P_genplist_t *plist, H5P_lock_mode_t mode);
 
 /*********************/
 /* Package Variables */
@@ -6208,14 +6208,14 @@ done:
 static void
 H5P__lock(H5P_genplist_t
 #ifndef H5_HAVE_CONCURRENCY
-             H5_ATTR_UNUSED
+              H5_ATTR_UNUSED
 #endif /* H5_HAVE_CONCURRENCY */
-                 *plist,
-         H5P_lock_mode_t
+                  *plist,
+          H5P_lock_mode_t
 #ifndef H5_HAVE_CONCURRENCY
-             H5_ATTR_UNUSED
+              H5_ATTR_UNUSED
 #endif /* H5_HAVE_CONCURRENCY */
-                 mode)
+                  mode)
 {
     FUNC_ENTER_PACKAGE_NOERR
 
@@ -6248,14 +6248,14 @@ H5P__lock(H5P_genplist_t
 static void
 H5P__unlock(H5P_genplist_t
 #ifndef H5_HAVE_CONCURRENCY
-               H5_ATTR_UNUSED
+                H5_ATTR_UNUSED
 #endif /* H5_HAVE_CONCURRENCY */
-                   *plist,
-         H5P_lock_mode_t
+                    *plist,
+            H5P_lock_mode_t
 #ifndef H5_HAVE_CONCURRENCY
-             H5_ATTR_UNUSED
+                H5_ATTR_UNUSED
 #endif /* H5_HAVE_CONCURRENCY */
-                 mode)
+                    mode)
 {
     FUNC_ENTER_PACKAGE_NOERR
 
@@ -6293,9 +6293,9 @@ H5P__unlock(H5P_genplist_t
 H5P_genplist_t *
 H5P_acquire(hid_t plist_id, H5P_plist_type_t type, H5P_lock_mode_t mode, bool allow_default)
 {
-    H5P_genplist_t *plist     = NULL; /* Property list for ID */
-    bool plist_locked = false;  /* If property list was locked */
-    H5P_genplist_t *ret_value = NULL; /* Return value */
+    H5P_genplist_t *plist        = NULL;  /* Property list for ID */
+    bool            plist_locked = false; /* If property list was locked */
+    H5P_genplist_t *ret_value    = NULL;  /* Return value */
 
     FUNC_ENTER_NOAPI(NULL)
 

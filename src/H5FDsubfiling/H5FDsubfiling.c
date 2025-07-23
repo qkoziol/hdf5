@@ -500,7 +500,8 @@ H5Pset_fapl_subfiling(hid_t fapl_id, const H5FD_subfiling_config_t *vfd_config)
 
         /* Copy fields */
         fa.require_ioc = vfd_config->require_ioc;
-        if (NULL == (fa.ioc_fapl = H5P_acquire(vfd_config->ioc_fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_EXCLUSIVE, false)))
+        if (NULL == (fa.ioc_fapl = H5P_acquire(vfd_config->ioc_fapl_id, H5P_TYPE_FILE_ACCESS,
+                                               H5P_LOCK_EXCLUSIVE, false)))
             HGOTO_ERROR(H5E_VFL, H5E_BADTYPE, FAIL, "not a file access property list");
 
         /* Check for correct (IOC) driver */

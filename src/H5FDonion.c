@@ -407,7 +407,8 @@ H5Pset_fapl_onion(hid_t fapl_id, const H5FD_onion_fapl_info_t *info)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid info page size");
 
     /* Get the backing store FAPL */
-    if (NULL == (fa.backing_fapl = H5P_acquire(info->backing_fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
+    if (NULL ==
+        (fa.backing_fapl = H5P_acquire(info->backing_fapl_id, H5P_TYPE_FILE_ACCESS, H5P_LOCK_SHARED, true)))
         HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "invalid backing fapl id");
 
     /* The only backing fapl that is currently supported is sec2 */

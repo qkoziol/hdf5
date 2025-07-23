@@ -149,7 +149,8 @@ H5L__extern_traverse(const char H5_ATTR_UNUSED *link_name, hid_t cur_group, cons
          * to true.
          */
         if (NULL == (fapl = H5F_get_access_plist(loc.oloc->file, true)))
-            HGOTO_ERROR(H5E_LINK, H5E_CANTGET, H5I_INVALID_HID, "can't get parent's file access property list");
+            HGOTO_ERROR(H5E_LINK, H5E_CANTGET, H5I_INVALID_HID,
+                        "can't get parent's file access property list");
         fapl_copied = true;
     } /* end if */
 

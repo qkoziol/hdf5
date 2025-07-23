@@ -1397,11 +1397,11 @@ done:
 static int
 H5I__dec_ref(hid_t id, bool app_ref, void **request)
 {
-    H5I_type_info_t *type_info = NULL;          /* Pointer to the type */
-    H5I_id_info_t *info           = NULL;  /* Pointer to the ID */
-    bool           have_id_lock   = false; /* Whether the ID lock is held */
-    bool           have_type_lock = false; /* Whether the type lock is held */
-    int            ret_value      = 0;     /* Return value */
+    H5I_type_info_t *type_info      = NULL;  /* Pointer to the type */
+    H5I_id_info_t   *info           = NULL;  /* Pointer to the ID */
+    bool             have_id_lock   = false; /* Whether the ID lock is held */
+    bool             have_type_lock = false; /* Whether the type lock is held */
+    int              ret_value      = 0;     /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -1411,7 +1411,7 @@ H5I__dec_ref(hid_t id, bool app_ref, void **request)
     /* Look up the ID & typo info, getting exclusive access to them */
     if (H5I__find_id_with_type(id, &info, H5I_LOCK_EXCLUSIVE, &type_info, H5I_LOCK_EXCLUSIVE) < 0)
         HGOTO_ERROR(H5E_ID, H5E_BADID, (-1), "can't locate ID");
-    have_id_lock = true;
+    have_id_lock   = true;
     have_type_lock = true;
 
     /* If this is the last reference to the object then invoke the type's
@@ -1433,13 +1433,13 @@ H5I__dec_ref(hid_t id, bool app_ref, void **request)
         if (NULL == H5I__remove_common(type_info, info, request, true))
             HGOTO_ERROR(H5E_ID, H5E_CANTDELETE, (-1), "can't remove ID node");
         have_id_lock = false; /* Deleting the ID will unlock & destroy its mutex */
-    } /* end if */
+    }                         /* end if */
     else {
         /* Always decrement actual refcount */
         --(info->count);
 
         /* Check for decrementing app refcount also */
-        if (app_ref)  {
+        if (app_ref) {
             /* Adjust app_ref */
             --(info->app_count);
             assert(info->count >= info->app_count);
@@ -1509,7 +1509,7 @@ done:
 static int
 H5I__dec_app_ref(hid_t id, void **request)
 {
-    int ret_value    = 0;     /* Return value */
+    int ret_value = 0; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -2165,16 +2165,16 @@ static herr_t
 H5I__find_id_with_type(hid_t id, H5I_id_info_t **out_id_info, H5I_lock_mode_t id_lock_mode,
                        H5I_type_info_t **out_type_info, H5I_lock_mode_t type_lock_mode)
 {
-    H5I_type_t       type;                         /* ID's type */
-    H5I_type_info_t *type_info          = NULL;    /* Pointer to the type */
-    H5I_id_info_t   *id_info            = NULL;    /* ID's info */
-    bool             have_id_lock       = false;   /* Whether the ID lock is held */
-    bool             have_type_lock     = false;   /* Whether the type lock is held */
-    bool             possible_future_id = false;   /* Whether it's possible that the ID is a future */
-    bool             type_lock_is_excl  = false;   /* Whether the type lock is an exclusive lock */
-    bool             want_excl_type_lock = false;  /* Whether caller wanted an exclusive lock on the type lock */
-    bool             id_lock_is_excl    = false;   /* Whether the ID lock is an exclusive lock */
-    herr_t           ret_value          = SUCCEED; /* Return value */
+    H5I_type_t       type;                       /* ID's type */
+    H5I_type_info_t *type_info          = NULL;  /* Pointer to the type */
+    H5I_id_info_t   *id_info            = NULL;  /* ID's info */
+    bool             have_id_lock       = false; /* Whether the ID lock is held */
+    bool             have_type_lock     = false; /* Whether the type lock is held */
+    bool             possible_future_id = false; /* Whether it's possible that the ID is a future */
+    bool             type_lock_is_excl  = false; /* Whether the type lock is an exclusive lock */
+    bool   want_excl_type_lock = false;   /* Whether caller wanted an exclusive lock on the type lock */
+    bool   id_lock_is_excl     = false;   /* Whether the ID lock is an exclusive lock */
+    herr_t ret_value           = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -2191,7 +2191,7 @@ H5I__find_id_with_type(hid_t id, H5I_id_info_t **out_id_info, H5I_lock_mode_t id
         /* Acquire exclusive access for the type */
         if (H5I__type_info_wrlock(type) < 0)
             HGOTO_ERROR(H5E_ID, H5E_CANTLOCK, FAIL, "can't acquire lock on type");
-        type_lock_is_excl = true;
+        type_lock_is_excl   = true;
         want_excl_type_lock = true;
     }
     else {
