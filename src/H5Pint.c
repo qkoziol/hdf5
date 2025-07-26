@@ -30,10 +30,14 @@
 #include "H5MMprivate.h" /* Memory management			*/
 #include "H5Ppkg.h"      /* Property lists		  	*/
 #include "H5SLprivate.h" /* Skip Lists                          */
+#include "H5WBprivate.h" /* Wrapped Buffers                     */
 
 /****************/
 /* Local Macros */
 /****************/
+
+/* Size of temporary buffer for property values */
+#define H5P_TMP_PROP_VALUE_SIZE 256
 
 /******************/
 /* Local Typedefs */
@@ -996,7 +1000,9 @@ done:
 static herr_t
 H5P__do_prop_cb1(H5SL_t *slist, H5P_genprop_t *prop, H5P_prp_cb1_t cb)
 {
-    void          *tmp_value = NULL;    /* Temporary value buffer */
+    H5WB_t         *val_wb = NULL;              /* Wrapped buffer for property value */
+    uint8_t         val_buf[H5P_TMP_PROP_VALUE_SIZE];     /* Buffer for property value */
+    void *val_ptr; /* Pointer to value */
     H5P_genprop_t *pcopy     = NULL;    /* Copy of property to insert into skip list */
     herr_t         ret_value = SUCCEED; /* Return value */
 
@@ -1008,16 +1014,22 @@ H5P__do_prop_cb1(H5SL_t *slist, H5P_genprop_t *prop, H5P_prp_cb1_t cb)
     assert(prop->cmp);
     assert(cb);
 
+    /* Wrap the local buffer for the property value */
+    if (NULL == (val_wb = H5WB_wrap(val_buf, sizeof(val_buf))))
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, FAIL, "can't wrap buffer");
+
+    /* Get a pointer to a buffer that's large enough for value */
+    if (NULL == (val_ptr = H5WB_actual(val_wb, prop->size)))
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTALLOC, FAIL, "can't get actual buffer");
+
     /* Allocate space for a temporary copy of the property value */
-    if (NULL == (tmp_value = H5MM_malloc(prop->size)))
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTALLOC, FAIL, "memory allocation failed for temporary property value");
-    H5MM_memcpy(tmp_value, prop->value, prop->size);
+    H5MM_memcpy(val_ptr, prop->value, prop->size);
 
     /* Prepare & restore library for user callback */
     H5_BEFORE_USER_CB(FAIL)
         {
             /* Call "type 1" callback ('create', 'copy' or 'close') */
-            ret_value = cb(prop->name, prop->size, tmp_value);
+            ret_value = cb(prop->name, prop->size, val_ptr);
         }
     H5_AFTER_USER_CB(FAIL)
     if (ret_value < 0)
@@ -1028,7 +1040,7 @@ H5P__do_prop_cb1(H5SL_t *slist, H5P_genprop_t *prop, H5P_prp_cb1_t cb)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTCOPY, FAIL, "Can't copy property");
 
     /* Copy the changed value into the new property */
-    H5MM_memcpy(pcopy->value, tmp_value, prop->size);
+    H5MM_memcpy(pcopy->value, val_ptr, prop->size);
 
     /* Insert the changed property into the property list */
     if (H5P__add_prop(slist, pcopy) < 0)
@@ -1036,8 +1048,8 @@ H5P__do_prop_cb1(H5SL_t *slist, H5P_genprop_t *prop, H5P_prp_cb1_t cb)
 
 done:
     /* Release the temporary value buffer */
-    if (tmp_value)
-        H5MM_xfree(tmp_value);
+    if (val_wb && H5WB_unwrap(val_wb) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CLOSEERROR, FAIL, "can't close wrapped buffer");
 
     /* Cleanup on failure */
     if (ret_value < 0)
@@ -3364,7 +3376,9 @@ static herr_t
 H5P__set_plist_cb(H5P_genplist_t *plist, const char *name, H5P_genprop_t *prop, void *_udata)
 {
     H5P_prop_set_ud_t *udata     = (H5P_prop_set_ud_t *)_udata; /* User data for callback */
-    void              *tmp_value = NULL;                        /* Temporary value for property */
+    H5WB_t         *val_wb = NULL;              /* Wrapped buffer for property value */
+    uint8_t         val_buf[H5P_TMP_PROP_VALUE_SIZE];     /* Buffer for property value */
+    void *val_ptr; /* Pointer to value */
     const void        *prp_value = NULL;                        /* Property value */
     herr_t             ret_value = SUCCEED;                     /* Return value */
 
@@ -3381,23 +3395,29 @@ H5P__set_plist_cb(H5P_genplist_t *plist, const char *name, H5P_genprop_t *prop, 
 
     /* Make a copy of the value and pass to 'set' callback */
     if (NULL != prop->set) {
+        /* Wrap the local buffer for the property value */
+        if (NULL == (val_wb = H5WB_wrap(val_buf, sizeof(val_buf))))
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, FAIL, "can't wrap buffer");
+
+        /* Get a pointer to a buffer that's large enough for value */
+        if (NULL == (val_ptr = H5WB_actual(val_wb, prop->size)))
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTALLOC, FAIL, "can't get actual buffer");
+
         /* Make a copy of the current value, in case the callback fails */
-        if (NULL == (tmp_value = H5MM_malloc(prop->size)))
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTALLOC, FAIL, "memory allocation failed temporary property value");
-        H5MM_memcpy(tmp_value, udata->value, prop->size);
+        H5MM_memcpy(val_ptr, udata->value, prop->size);
 
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
                 /* Call user's callback */
-                ret_value = (*(prop->set))(plist->plist_id, name, prop->size, tmp_value);
+                ret_value = (*(prop->set))(plist->plist_id, name, prop->size, val_ptr);
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, FAIL, "can't set property value");
 
         /* Set the pointer for copying */
-        prp_value = tmp_value;
+        prp_value = val_ptr;
     } /* end if */
     /* No 'set' callback, just copy value */
     else
@@ -3421,8 +3441,8 @@ H5P__set_plist_cb(H5P_genplist_t *plist, const char *name, H5P_genprop_t *prop, 
 
 done:
     /* Free the temporary value buffer */
-    if (tmp_value != NULL)
-        H5MM_xfree(tmp_value);
+    if (val_wb && H5WB_unwrap(val_wb) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CLOSEERROR, FAIL, "can't close wrapped buffer");
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5P__set_plist_cb() */
@@ -3453,7 +3473,9 @@ H5P__set_pclass_cb(H5P_genplist_t *plist, const char *name, H5P_genprop_t *prop,
 {
     H5P_prop_set_ud_t *udata     = (H5P_prop_set_ud_t *)_udata; /* User data for callback */
     H5P_genprop_t     *pcopy     = NULL;    /* Copy of property to insert into skip list */
-    void              *tmp_value = NULL;    /* Temporary value for property */
+    H5WB_t         *val_wb = NULL;              /* Wrapped buffer for property value */
+    uint8_t         val_buf[H5P_TMP_PROP_VALUE_SIZE];     /* Buffer for property value */
+    void *val_ptr; /* Pointer to value */
     const void        *prp_value = NULL;    /* Property value */
     herr_t             ret_value = SUCCEED; /* Return value */
 
@@ -3471,23 +3493,29 @@ H5P__set_pclass_cb(H5P_genplist_t *plist, const char *name, H5P_genprop_t *prop,
 
     /* Make a copy of the value and pass to 'set' callback */
     if (NULL != prop->set) {
+        /* Wrap the local buffer for the property value */
+        if (NULL == (val_wb = H5WB_wrap(val_buf, sizeof(val_buf))))
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, FAIL, "can't wrap buffer");
+
+        /* Get a pointer to a buffer that's large enough for value */
+        if (NULL == (val_ptr = H5WB_actual(val_wb, prop->size)))
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTALLOC, FAIL, "can't get actual buffer");
+
         /* Make a copy of the current value, in case the callback fails */
-        if (NULL == (tmp_value = H5MM_malloc(prop->size)))
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTALLOC, FAIL, "memory allocation failed temporary property value");
-        H5MM_memcpy(tmp_value, udata->value, prop->size);
+        H5MM_memcpy(val_ptr, udata->value, prop->size);
 
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
                 /* Call user's callback */
-                ret_value = (*(prop->set))(plist->plist_id, name, prop->size, tmp_value);
+                ret_value = (*(prop->set))(plist->plist_id, name, prop->size, val_ptr);
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, FAIL, "can't set property value");
 
         /* Set the pointer for copying */
-        prp_value = tmp_value;
+        prp_value = val_ptr;
     } /* end if */
     /* No 'set' callback, just copy value */
     else
@@ -3505,8 +3533,8 @@ H5P__set_pclass_cb(H5P_genplist_t *plist, const char *name, H5P_genprop_t *prop,
 
 done:
     /* Free the temporary value buffer */
-    if (tmp_value != NULL)
-        H5MM_xfree(tmp_value);
+    if (val_wb && H5WB_unwrap(val_wb) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CLOSEERROR, FAIL, "can't close wrapped buffer");
 
     /* Cleanup on failure */
     if (ret_value < 0)
@@ -5003,7 +5031,9 @@ static herr_t
 H5P__get_cb(H5P_genplist_t *plist, const char *name, H5P_genprop_t *prop, void *_udata)
 {
     H5P_prop_get_ud_t *udata     = (H5P_prop_get_ud_t *)_udata; /* User data for callback */
-    void              *tmp_value = NULL;                        /* Temporary value for property */
+    H5WB_t         *val_wb = NULL;              /* Wrapped buffer for property value */
+    uint8_t         val_buf[H5P_TMP_PROP_VALUE_SIZE];     /* Buffer for property value */
+    void *val_ptr; /* Pointer to value */
     herr_t             ret_value = SUCCEED;                     /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -5019,23 +5049,29 @@ H5P__get_cb(H5P_genplist_t *plist, const char *name, H5P_genprop_t *prop, void *
 
     /* Call the 'get' callback, if there is one */
     if (NULL != prop->get) {
+        /* Wrap the local buffer for the property value */
+        if (NULL == (val_wb = H5WB_wrap(val_buf, sizeof(val_buf))))
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, FAIL, "can't wrap buffer");
+
+        /* Get a pointer to a buffer that's large enough for value */
+        if (NULL == (val_ptr = H5WB_actual(val_wb, prop->size)))
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTALLOC, FAIL, "can't get actual buffer");
+
         /* Make a copy of the current value, in case the callback fails */
-        if (NULL == (tmp_value = H5MM_malloc(prop->size)))
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTALLOC, FAIL, "memory allocation failed temporary property value");
-        H5MM_memcpy(tmp_value, prop->value, prop->size);
+        H5MM_memcpy(val_ptr, prop->value, prop->size);
 
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
                 /* Call user's callback */
-                ret_value = (*(prop->get))(plist->plist_id, name, prop->size, tmp_value);
+                ret_value = (*(prop->get))(plist->plist_id, name, prop->size, val_ptr);
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, FAIL, "can't set property value");
 
         /* Copy new [possibly unchanged] value into return value */
-        H5MM_memcpy(udata->value, tmp_value, prop->size);
+        H5MM_memcpy(udata->value, val_ptr, prop->size);
     } /* end if */
     /* No 'get' callback, just copy value */
     else
@@ -5043,8 +5079,8 @@ H5P__get_cb(H5P_genplist_t *plist, const char *name, H5P_genprop_t *prop, void *
 
 done:
     /* Free the temporary value buffer */
-    if (tmp_value)
-        H5MM_xfree(tmp_value);
+    if (val_wb && H5WB_unwrap(val_wb) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CLOSEERROR, FAIL, "can't close wrapped buffer");
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5P__get_cb() */
@@ -5198,7 +5234,9 @@ static herr_t
 H5P__del_pclass_cb(H5P_genplist_t *plist, const char *name, H5P_genprop_t *prop, void H5_ATTR_UNUSED *_udata)
 {
     char  *del_name  = NULL;    /* Pointer to deleted name */
-    void  *tmp_value = NULL;    /* Temporary value for property */
+    H5WB_t         *val_wb = NULL;              /* Wrapped buffer for property value */
+    uint8_t         val_buf[H5P_TMP_PROP_VALUE_SIZE];     /* Buffer for property value */
+    void *val_ptr; /* Pointer to value */
     herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -5210,17 +5248,22 @@ H5P__del_pclass_cb(H5P_genplist_t *plist, const char *name, H5P_genprop_t *prop,
 
     /* Pass value to 'del' callback, if it exists */
     if (NULL != prop->del) {
+        /* Wrap the local buffer for the property value */
+        if (NULL == (val_wb = H5WB_wrap(val_buf, sizeof(val_buf))))
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, FAIL, "can't wrap buffer");
+
+        /* Get a pointer to a buffer that's large enough for value */
+        if (NULL == (val_ptr = H5WB_actual(val_wb, prop->size)))
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTALLOC, FAIL, "can't get actual buffer");
+
         /* Allocate space for a temporary copy of the property value */
-        if (NULL == (tmp_value = H5MM_malloc(prop->size)))
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTALLOC, FAIL,
-                        "memory allocation failed for temporary property value");
-        H5MM_memcpy(tmp_value, prop->value, prop->size);
+        H5MM_memcpy(val_ptr, prop->value, prop->size);
 
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
                 /* Call user's callback */
-                ret_value = (*(prop->del))(plist->plist_id, name, prop->size, tmp_value);
+                ret_value = (*(prop->del))(plist->plist_id, name, prop->size, val_ptr);
             }
         H5_AFTER_USER_CB(FAIL)
         if (ret_value < 0)
@@ -5240,8 +5283,8 @@ H5P__del_pclass_cb(H5P_genplist_t *plist, const char *name, H5P_genprop_t *prop,
 
 done:
     /* Free the temporary value buffer */
-    if (tmp_value)
-        H5MM_xfree(tmp_value);
+    if (val_wb && H5WB_unwrap(val_wb) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CLOSEERROR, FAIL, "can't close wrapped buffer");
 
     /* Error cleanup */
     if (ret_value < 0)
@@ -5557,6 +5600,8 @@ H5P__close(H5P_genplist_t *plist)
     H5SL_node_t    *curr_node;           /* Current node in skip list */
     H5P_genprop_t  *tmp;                 /* Temporary pointer to properties */
     ssize_t         nprops;              /* Number of properties in list */
+    H5WB_t         *val_wb = NULL;              /* Wrapped buffer for property value */
+    uint8_t         val_buf[H5P_TMP_PROP_VALUE_SIZE];     /* Buffer for property value */
     unsigned        make_cb   = 0;       /* Operator data for property free callback */
     herr_t          ret_value = SUCCEED; /* return value */
 
@@ -5656,24 +5701,27 @@ H5P__close(H5P_genplist_t *plist)
 
                         /* Call property close callback, if it exists */
                         if (tmp->close) {
-                            void *tmp_value; /* Temporary value buffer */
+                            void *val_ptr; /* Pointer to value */
+
+                            /* Wrap the local buffer for the property value */
+                            if (NULL == val_wb)
+                                if (NULL == (val_wb = H5WB_wrap(val_buf, sizeof(val_buf))))
+                                    HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, FAIL, "can't wrap buffer");
+
+                            /* Get a pointer to a buffer that's large enough for value */
+                            if (NULL == (val_ptr = H5WB_actual(val_wb, tmp->size)))
+                                HGOTO_ERROR(H5E_PLIST, H5E_CANTALLOC, FAIL, "can't get actual buffer");
 
                             /* Allocate space for a temporary copy of the property value */
-                            if (NULL == (tmp_value = H5MM_malloc(tmp->size)))
-                                HGOTO_ERROR(H5E_PLIST, H5E_CANTALLOC, FAIL,
-                                            "memory allocation failed for temporary property value");
-                            H5MM_memcpy(tmp_value, tmp->value, tmp->size);
+                            H5MM_memcpy(val_ptr, tmp->value, tmp->size);
 
                             /* Prepare & restore library for user callback */
                             H5_BEFORE_USER_CB(FAIL)
                                 {
                                     /* Call user's callback */
-                                    (tmp->close)(tmp->name, tmp->size, tmp_value);
+                                    (tmp->close)(tmp->name, tmp->size, val_ptr);
                                 }
                             H5_AFTER_USER_CB(FAIL)
-
-                            /* Release the temporary value buffer */
-                            H5MM_xfree(tmp_value);
                         } /* end if */
 
                         /* Add property name to "seen" list, if we have other classes to work on */
@@ -5717,6 +5765,10 @@ H5P__close(H5P_genplist_t *plist)
     plist = H5FL_FREE(H5P_genplist_t, plist);
 
 done:
+    /* Free the temporary value buffer */
+    if (val_wb && H5WB_unwrap(val_wb) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CLOSEERROR, FAIL, "can't close wrapped buffer");
+
     /* Release the skip list of 'seen' properties */
     if (seen != NULL)
         H5SL_close(seen);
