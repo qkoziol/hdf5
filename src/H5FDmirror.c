@@ -1330,14 +1330,14 @@ done:
 static H5FD_t *
 H5FD__mirror_open(const char *name, unsigned flags, hid_t H5_ATTR_UNUSED fapl_id, haddr_t maxaddr)
 {
-    int                      live_socket = -1;
-    struct sockaddr_in       target_addr;
-    socklen_t                addr_size;
-    unsigned char           *xmit_buf = NULL;
+    int                       live_socket = -1;
+    struct sockaddr_in        target_addr;
+    socklen_t                 addr_size;
+    unsigned char            *xmit_buf = NULL;
     const H5FD_mirror_fapl_t *fa;
-    H5FD_mirror_t           *file      = NULL;
-    H5FD_mirror_xmit_open_t *open_xmit = NULL;
-    H5FD_t                  *ret_value = NULL;
+    H5FD_mirror_t            *file      = NULL;
+    H5FD_mirror_xmit_open_t  *open_xmit = NULL;
+    H5FD_t                   *ret_value = NULL;
 
     FUNC_ENTER_PACKAGE
 

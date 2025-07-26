@@ -168,7 +168,7 @@ typedef struct H5TS_rwlock_t {
 } H5TS_rwlock_t;
 
 typedef thrd_t H5TS_thread_t;
-typedef int       H5TS_thread_ret_t;
+typedef int    H5TS_thread_ret_t;
 typedef H5TS_thread_ret_t (*H5TS_thread_start_func_t)(void *);
 typedef tss_t     H5TS_key_t;
 typedef mtx_t     H5TS_CAPABILITY("mutex") H5TS_mutex_t;
@@ -187,7 +187,7 @@ typedef INIT_ONCE              H5TS_once_t;
 typedef PINIT_ONCE_FN          H5TS_once_init_func_t;
 #else
 typedef pthread_t H5TS_thread_t;
-typedef void           *H5TS_thread_ret_t;
+typedef void     *H5TS_thread_ret_t;
 typedef H5TS_thread_ret_t (*H5TS_thread_start_func_t)(void *);
 typedef pthread_key_t   H5TS_key_t;
 typedef pthread_mutex_t H5TS_CAPABILITY("mutex") H5TS_mutex_t;
