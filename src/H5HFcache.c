@@ -710,7 +710,7 @@ H5HF__cache_hdr_serialize(const H5F_t *f, void *_image, size_t H5_ATTR_NDEBUG_UN
     /* Set the shared heap header's file context for this operation */
     H5_GCC_DIAG_OFF("discarded-qualifiers")
     H5_CLANG_DIAG_OFF("incompatible-pointer-types-discards-qualifiers")
-    hdr->f = (H5F_t *)f;
+    hdr->f = f;
     H5_GCC_DIAG_ON("discarded-qualifiers")
     H5_CLANG_DIAG_ON("incompatible-pointer-types-discards-qualifiers")
 
@@ -1274,7 +1274,7 @@ H5HF__cache_iblock_serialize(const H5F_t *f, void *_image, size_t H5_ATTR_NDEBUG
     /* Set the shared heap header's file context for this operation */
     H5_GCC_DIAG_OFF("discarded-qualifiers")
     H5_CLANG_DIAG_OFF("incompatible-pointer-types-discards-qualifiers")
-    hdr->f = (H5F_t *)f;
+    hdr->f = f;
     H5_GCC_DIAG_ON("discarded-qualifiers")
     H5_CLANG_DIAG_ON("incompatible-pointer-types-discards-qualifiers")
 
