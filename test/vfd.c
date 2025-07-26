@@ -1486,7 +1486,7 @@ test_multi(void)
     H5FD_mem_t    mt, memb_map[H5FD_MEM_NTYPES];
     hid_t         memb_fapl[H5FD_MEM_NTYPES];
     haddr_t       memb_addr[H5FD_MEM_NTYPES];
-    const char         *memb_name[H5FD_MEM_NTYPES];
+    const char   *memb_name[H5FD_MEM_NTYPES];
     char          sv[H5FD_MEM_NTYPES][32];
     hsize_t       dims[2]  = {MULTI_SIZE, MULTI_SIZE};
     hsize_t       adims[1] = {1};
@@ -1739,15 +1739,15 @@ test_multi_compat(void)
     char  newname[1024];
     char  filename_s[1024], newname_s[1024];
     char  filename_r[1024], newname_r[1024];
-    H5FD_mem_t mt, memb_map[H5FD_MEM_NTYPES];
-    hid_t      memb_fapl[H5FD_MEM_NTYPES];
-    haddr_t    memb_addr[H5FD_MEM_NTYPES];
-    const char      *memb_name[H5FD_MEM_NTYPES];
-    char       sv[H5FD_MEM_NTYPES][32];
-    hsize_t    dims[2] = {MULTI_SIZE, MULTI_SIZE};
-    int        i, j;
-    int      **buf      = NULL;
-    int       *buf_data = NULL;
+    H5FD_mem_t  mt, memb_map[H5FD_MEM_NTYPES];
+    hid_t       memb_fapl[H5FD_MEM_NTYPES];
+    haddr_t     memb_addr[H5FD_MEM_NTYPES];
+    const char *memb_name[H5FD_MEM_NTYPES];
+    char        sv[H5FD_MEM_NTYPES][32];
+    hsize_t     dims[2] = {MULTI_SIZE, MULTI_SIZE};
+    int         i, j;
+    int       **buf      = NULL;
+    int        *buf_data = NULL;
 
     TESTING("MULTI file driver backward compatibility");
 
