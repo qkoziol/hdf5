@@ -845,7 +845,7 @@ H5Pencode2(hid_t plist_id, void *buf, size_t *nalloc, hid_t fapl_id)
     FUNC_ENTER_API(FAIL)
 
     /* Check arguments. */
-    if (NULL == (plist = H5I_acquire(plist_id, H5I_GENPROP_LST, H5I_LOCK_EXCLUSIVE)))
+    if (NULL == (plist = H5I_acquire(plist_id, H5I_GENPROP_LST, H5I_LOCK_SHARED)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
 
     /* Get the file access property list */
@@ -864,7 +864,7 @@ done:
     /* Release resources */
     if (fapl && H5P_release(fapl, H5P_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
-    if (plist && H5I_release(plist, H5I_GENPROP_LST, H5I_LOCK_EXCLUSIVE) < 0)
+    if (plist && H5I_release(plist, H5I_GENPROP_LST, H5I_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
@@ -1268,12 +1268,11 @@ H5Piterate(hid_t id, int *idx, H5P_iterate_t iter_func, void *iter_data)
     udata.iter_data = iter_data;
 
     if (H5I_GENPROP_LST == H5I_get_type(id)) {
-        if (NULL == (plist = H5I_acquire(id, H5I_GENPROP_LST, H5I_LOCK_SHARED)))
+        if (NULL == (plist = H5I_acquire(id, H5I_GENPROP_LST, H5I_LOCK_EXCLUSIVE)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
 
         /* Iterate over a property list */
-        if ((ret_value = H5P__iterate_plist(plist, true, (idx ? idx : &fake_idx), H5P__iterate_cb, &udata)) <
-            0)
+        if ((ret_value = H5P__iterate_plist(plist, true, (idx ? idx : &fake_idx), H5P__iterate_cb, &udata)) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, FAIL, "unable to iterate over list");
     } /* end if */
     else if (H5I_GENPROP_CLS == H5I_get_type(id)) {
@@ -1289,7 +1288,7 @@ H5Piterate(hid_t id, int *idx, H5P_iterate_t iter_func, void *iter_data)
 
 done:
     /* Release resources */
-    if (plist && H5I_release(plist, H5I_GENPROP_LST, H5I_LOCK_SHARED) < 0)
+    if (plist && H5I_release(plist, H5I_GENPROP_LST, H5I_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
 
     FUNC_LEAVE_API(ret_value)
