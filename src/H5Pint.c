@@ -1000,11 +1000,11 @@ done:
 static herr_t
 H5P__do_prop_cb1(H5SL_t *slist, H5P_genprop_t *prop, H5P_prp_cb1_t cb)
 {
-    H5WB_t         *val_wb = NULL;              /* Wrapped buffer for property value */
-    uint8_t         val_buf[H5P_TMP_PROP_VALUE_SIZE];     /* Buffer for property value */
-    void *val_ptr; /* Pointer to value */
-    H5P_genprop_t *pcopy     = NULL;    /* Copy of property to insert into skip list */
-    herr_t         ret_value = SUCCEED; /* Return value */
+    H5WB_t        *val_wb = NULL;                    /* Wrapped buffer for property value */
+    uint8_t        val_buf[H5P_TMP_PROP_VALUE_SIZE]; /* Buffer for property value */
+    void          *val_ptr;                          /* Pointer to value */
+    H5P_genprop_t *pcopy     = NULL;                 /* Copy of property to insert into skip list */
+    herr_t         ret_value = SUCCEED;              /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -3375,12 +3375,12 @@ done:
 static herr_t
 H5P__set_plist_cb(H5P_genplist_t *plist, const char *name, H5P_genprop_t *prop, void *_udata)
 {
-    H5P_prop_set_ud_t *udata     = (H5P_prop_set_ud_t *)_udata; /* User data for callback */
-    H5WB_t         *val_wb = NULL;              /* Wrapped buffer for property value */
-    uint8_t         val_buf[H5P_TMP_PROP_VALUE_SIZE];     /* Buffer for property value */
-    void *val_ptr; /* Pointer to value */
-    const void        *prp_value = NULL;                        /* Property value */
-    herr_t             ret_value = SUCCEED;                     /* Return value */
+    H5P_prop_set_ud_t *udata  = (H5P_prop_set_ud_t *)_udata; /* User data for callback */
+    H5WB_t            *val_wb = NULL;                        /* Wrapped buffer for property value */
+    uint8_t            val_buf[H5P_TMP_PROP_VALUE_SIZE];     /* Buffer for property value */
+    void              *val_ptr;                              /* Pointer to value */
+    const void        *prp_value = NULL;                     /* Property value */
+    herr_t             ret_value = SUCCEED;                  /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -3471,13 +3471,13 @@ done:
 static herr_t
 H5P__set_pclass_cb(H5P_genplist_t *plist, const char *name, H5P_genprop_t *prop, void *_udata)
 {
-    H5P_prop_set_ud_t *udata     = (H5P_prop_set_ud_t *)_udata; /* User data for callback */
-    H5P_genprop_t     *pcopy     = NULL;    /* Copy of property to insert into skip list */
-    H5WB_t         *val_wb = NULL;              /* Wrapped buffer for property value */
-    uint8_t         val_buf[H5P_TMP_PROP_VALUE_SIZE];     /* Buffer for property value */
-    void *val_ptr; /* Pointer to value */
-    const void        *prp_value = NULL;    /* Property value */
-    herr_t             ret_value = SUCCEED; /* Return value */
+    H5P_prop_set_ud_t *udata  = (H5P_prop_set_ud_t *)_udata; /* User data for callback */
+    H5P_genprop_t     *pcopy  = NULL;                        /* Copy of property to insert into skip list */
+    H5WB_t            *val_wb = NULL;                        /* Wrapped buffer for property value */
+    uint8_t            val_buf[H5P_TMP_PROP_VALUE_SIZE];     /* Buffer for property value */
+    void              *val_ptr;                              /* Pointer to value */
+    const void        *prp_value = NULL;                     /* Property value */
+    herr_t             ret_value = SUCCEED;                  /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -5030,11 +5030,11 @@ done:
 static herr_t
 H5P__get_cb(H5P_genplist_t *plist, const char *name, H5P_genprop_t *prop, void *_udata)
 {
-    H5P_prop_get_ud_t *udata     = (H5P_prop_get_ud_t *)_udata; /* User data for callback */
-    H5WB_t         *val_wb = NULL;              /* Wrapped buffer for property value */
-    uint8_t         val_buf[H5P_TMP_PROP_VALUE_SIZE];     /* Buffer for property value */
-    void *val_ptr; /* Pointer to value */
-    herr_t             ret_value = SUCCEED;                     /* Return value */
+    H5P_prop_get_ud_t *udata  = (H5P_prop_get_ud_t *)_udata; /* User data for callback */
+    H5WB_t            *val_wb = NULL;                        /* Wrapped buffer for property value */
+    uint8_t            val_buf[H5P_TMP_PROP_VALUE_SIZE];     /* Buffer for property value */
+    void              *val_ptr;                              /* Pointer to value */
+    herr_t             ret_value = SUCCEED;                  /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -5233,11 +5233,11 @@ done:
 static herr_t
 H5P__del_pclass_cb(H5P_genplist_t *plist, const char *name, H5P_genprop_t *prop, void H5_ATTR_UNUSED *_udata)
 {
-    char  *del_name  = NULL;    /* Pointer to deleted name */
-    H5WB_t         *val_wb = NULL;              /* Wrapped buffer for property value */
-    uint8_t         val_buf[H5P_TMP_PROP_VALUE_SIZE];     /* Buffer for property value */
-    void *val_ptr; /* Pointer to value */
-    herr_t ret_value = SUCCEED; /* Return value */
+    char   *del_name = NULL;                  /* Pointer to deleted name */
+    H5WB_t *val_wb   = NULL;                  /* Wrapped buffer for property value */
+    uint8_t val_buf[H5P_TMP_PROP_VALUE_SIZE]; /* Buffer for property value */
+    void   *val_ptr;                          /* Pointer to value */
+    herr_t  ret_value = SUCCEED;              /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -5592,18 +5592,18 @@ done:
 static herr_t
 H5P__close(H5P_genplist_t *plist)
 {
-    H5P_genclass_t *tclass;              /* Temporary class pointer */
-    H5SL_t         *seen = NULL;         /* Skip list to hold names of properties already seen */
-    size_t          nseen;               /* Number of items 'seen' */
-    ssize_t         sndel;               /* Number of items deleted */
-    size_t          ndel;                /* Number of items deleted */
-    H5SL_node_t    *curr_node;           /* Current node in skip list */
-    H5P_genprop_t  *tmp;                 /* Temporary pointer to properties */
-    ssize_t         nprops;              /* Number of properties in list */
-    H5WB_t         *val_wb = NULL;              /* Wrapped buffer for property value */
-    uint8_t         val_buf[H5P_TMP_PROP_VALUE_SIZE];     /* Buffer for property value */
-    unsigned        make_cb   = 0;       /* Operator data for property free callback */
-    herr_t          ret_value = SUCCEED; /* return value */
+    H5P_genclass_t *tclass;                           /* Temporary class pointer */
+    H5SL_t         *seen = NULL;                      /* Skip list to hold names of properties already seen */
+    size_t          nseen;                            /* Number of items 'seen' */
+    ssize_t         sndel;                            /* Number of items deleted */
+    size_t          ndel;                             /* Number of items deleted */
+    H5SL_node_t    *curr_node;                        /* Current node in skip list */
+    H5P_genprop_t  *tmp;                              /* Temporary pointer to properties */
+    ssize_t         nprops;                           /* Number of properties in list */
+    H5WB_t         *val_wb = NULL;                    /* Wrapped buffer for property value */
+    uint8_t         val_buf[H5P_TMP_PROP_VALUE_SIZE]; /* Buffer for property value */
+    unsigned        make_cb   = 0;                    /* Operator data for property free callback */
+    herr_t          ret_value = SUCCEED;              /* return value */
 
     FUNC_ENTER_PACKAGE
 

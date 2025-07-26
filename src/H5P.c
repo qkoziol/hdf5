@@ -1272,7 +1272,8 @@ H5Piterate(hid_t id, int *idx, H5P_iterate_t iter_func, void *iter_data)
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
 
         /* Iterate over a property list */
-        if ((ret_value = H5P__iterate_plist(plist, true, (idx ? idx : &fake_idx), H5P__iterate_cb, &udata)) < 0)
+        if ((ret_value = H5P__iterate_plist(plist, true, (idx ? idx : &fake_idx), H5P__iterate_cb, &udata)) <
+            0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, FAIL, "unable to iterate over list");
     } /* end if */
     else if (H5I_GENPROP_CLS == H5I_get_type(id)) {
