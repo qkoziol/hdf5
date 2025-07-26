@@ -61,7 +61,7 @@
 /* Thread macros */
 #define H5TS_thread_self()        GetCurrentThread()
 #define H5TS_thread_equal(t1, t2) (GetThreadId(t1) == GetThreadId(t2))
-#define H5TS_THREAD_RETURN_TYPE   H5TS_thread_ret_t WINAPI
+#define H5TS_THREAD_RETURN_TYPE   H5TS_thread_ret_t
 
 /* Mutex macros */
 #define H5TS_MUTEX_TYPE_PLAIN     0

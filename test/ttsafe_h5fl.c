@@ -1404,7 +1404,7 @@ init_h5fl_arr_vector(unsigned vec_size, h5fl_arr_test_vector *vector, unsigned n
             case H5FL_ARR_OP_FILL1:
             case H5FL_ARR_OP_FILL2:
             case H5FL_ARR_OP_FILL3:
-            case H5FL_BLK_OP_FREE: {
+            case H5FL_ARR_OP_FREE: {
                 unsigned token_idx;
 
                 token_idx = get_active_h5fl_arr_token(tokens, tokens_wrapped ? num_tokens : curr_alloc_token);

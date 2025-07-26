@@ -9176,7 +9176,7 @@ external_set_elink_fapl1(hid_t fapl, bool new_format)
     hid_t       memb_fapl[H5FD_MEM_NTYPES];
     char        sv[H5FD_MEM_NTYPES][64];
     H5FD_mem_t  mt, memb_map[H5FD_MEM_NTYPES];
-    const char *memb_name[H5FD_MEM_NTYPES];
+    char *memb_name[H5FD_MEM_NTYPES];
     haddr_t     memb_addr[H5FD_MEM_NTYPES];
 
     if (new_format)

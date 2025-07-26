@@ -1486,7 +1486,7 @@ test_multi(void)
     H5FD_mem_t    mt, memb_map[H5FD_MEM_NTYPES];
     hid_t         memb_fapl[H5FD_MEM_NTYPES];
     haddr_t       memb_addr[H5FD_MEM_NTYPES];
-    const char   *memb_name[H5FD_MEM_NTYPES];
+    char   *memb_name[H5FD_MEM_NTYPES];
     char          sv[H5FD_MEM_NTYPES][32];
     hsize_t       dims[2]  = {MULTI_SIZE, MULTI_SIZE};
     hsize_t       adims[1] = {1};
@@ -1742,7 +1742,7 @@ test_multi_compat(void)
     H5FD_mem_t  mt, memb_map[H5FD_MEM_NTYPES];
     hid_t       memb_fapl[H5FD_MEM_NTYPES];
     haddr_t     memb_addr[H5FD_MEM_NTYPES];
-    const char *memb_name[H5FD_MEM_NTYPES];
+    char *memb_name[H5FD_MEM_NTYPES];
     char        sv[H5FD_MEM_NTYPES][32];
     hsize_t     dims[2] = {MULTI_SIZE, MULTI_SIZE};
     int         i, j;

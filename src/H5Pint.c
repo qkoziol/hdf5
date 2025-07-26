@@ -1396,6 +1396,15 @@ H5P_copy_plist(const H5P_genplist_t *old_plist, bool app_ref)
         tclass = tclass->parent;
     } /* end while */
 
+    /* Mark the property list as private or application visible */
+    new_plist->is_private = !app_ref;
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Initialize the R/W lock protecting the skip list */
+    if (H5TS_dlftt_rwlock_init(&new_plist->lock) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, NULL, "can't initialize property list's lock");
+#endif /* H5_HAVE_CONCURRENCY */
+
     /* Set the class initialization flag */
     new_plist->class_init = true;
 
