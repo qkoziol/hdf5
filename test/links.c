@@ -9171,13 +9171,13 @@ external_set_elink_fapl1(hid_t fapl, bool new_format)
     hid_t oidA = (H5I_INVALID_HID), oidB = (H5I_INVALID_HID);
     char  filename1[NAME_BUF_SIZE], filename2A[NAME_BUF_SIZE], filename2B[NAME_BUF_SIZE],
         tmpname[NAME_BUF_SIZE], cwdpath[NAME_BUF_SIZE];
-    hid_t       fam_fapl = H5I_INVALID_HID, multi_fapl = H5I_INVALID_HID;
-    hid_t       lapl_idA = H5I_INVALID_HID, lapl_idB = H5I_INVALID_HID;
-    hid_t       memb_fapl[H5FD_MEM_NTYPES];
-    char        sv[H5FD_MEM_NTYPES][64];
-    H5FD_mem_t  mt, memb_map[H5FD_MEM_NTYPES];
-    char *memb_name[H5FD_MEM_NTYPES];
-    haddr_t     memb_addr[H5FD_MEM_NTYPES];
+    hid_t      fam_fapl = H5I_INVALID_HID, multi_fapl = H5I_INVALID_HID;
+    hid_t      lapl_idA = H5I_INVALID_HID, lapl_idB = H5I_INVALID_HID;
+    hid_t      memb_fapl[H5FD_MEM_NTYPES];
+    char       sv[H5FD_MEM_NTYPES][64];
+    H5FD_mem_t mt, memb_map[H5FD_MEM_NTYPES];
+    char      *memb_name[H5FD_MEM_NTYPES];
+    haddr_t    memb_addr[H5FD_MEM_NTYPES];
 
     if (new_format)
         TESTING("H5Pset/get_elink_fapl() with different physical layouts (w/new group format)");
