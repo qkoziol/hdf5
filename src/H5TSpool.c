@@ -47,7 +47,7 @@
 /********************/
 /* Local Prototypes */
 /********************/
-static herr_t                  H5TS__pool_free(H5TS_pool_t *pool);
+static herr_t                                        H5TS__pool_free(H5TS_pool_t *pool);
 static H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR H5TS__pool_do(void *_pool);
 
 /*********************/
