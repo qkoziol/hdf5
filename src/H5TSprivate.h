@@ -49,6 +49,7 @@
 #define H5TS_thread_self()        thrd_current()
 #define H5TS_thread_equal(t1, t2) thrd_equal((t1), (t2))
 #define H5TS_THREAD_RETURN_TYPE   H5TS_thread_ret_t
+#define H5TS_THREAD_CALL_ATTR
 
 /* Mutex macros */
 #define H5TS_MUTEX_TYPE_PLAIN     mtx_plain
@@ -62,6 +63,7 @@
 #define H5TS_thread_self()        GetCurrentThread()
 #define H5TS_thread_equal(t1, t2) (GetThreadId(t1) == GetThreadId(t2))
 #define H5TS_THREAD_RETURN_TYPE   H5TS_thread_ret_t
+#define H5TS_THREAD_CALL_ATTR     __stdcall
 
 /* Mutex macros */
 #define H5TS_MUTEX_TYPE_PLAIN     0
@@ -74,6 +76,7 @@
 #define H5TS_thread_self()         pthread_self()
 #define H5TS_thread_equal(t1, t2)  pthread_equal((t1), (t2))
 #define H5TS_THREAD_RETURN_TYPE    H5TS_thread_ret_t
+#define H5TS_THREAD_CALL_ATTR
 #define H5TS_THREAD_CANCEL_DISABLE PTHREAD_CANCEL_DISABLE
 
 /* Mutex macros */
