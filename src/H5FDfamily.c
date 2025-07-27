@@ -537,7 +537,11 @@ H5FD__family_fapl_copy(const void *_old_fa)
         HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "memory allocation failed");
 
     new_fa->memb_size = old_fa->memb_size;
-    if (NULL == (new_fa->memb_fapl = H5P_copy_plist(old_fa->memb_fapl, false)))
+    /* This FAPL needs to be a "public" one, since its ID may get passed
+     * to the user callback for a VFD, which could be an external VFD that
+     * calls public HDF5 API routines.  So, set the 'app_ref' to true.
+     */
+    if (NULL == (new_fa->memb_fapl = H5P_copy_plist(old_fa->memb_fapl, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_CANTCOPY, NULL, "can't copy file access list");
 
     /* Set return value */
@@ -742,7 +746,11 @@ H5FD__family_open(const char *name, unsigned flags, hid_t H5_ATTR_UNUSED fapl_id
         default_config = true;
     }
     else {
-        if (NULL == (file->fa.memb_fapl = H5P_copy_plist(fa->memb_fapl, false)))
+        /* This FAPL needs to be a "public" one, since its ID may get passed
+         * to the user callback for a VFD, which could be an external VFD that
+         * calls public HDF5 API routines.  So, set the 'app_ref' to true.
+         */
+        if (NULL == (file->fa.memb_fapl = H5P_copy_plist(fa->memb_fapl, true)))
             HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, NULL, "unable to copy member FAPL");
         file->fa.memb_size = fa->memb_size; /* Actual member size to be updated later */
     }
