@@ -44,7 +44,7 @@ static H5TS_mutex_t   used_lock;
  * least ID has to be (times * NTHREADS) + 2 and the greatest,
  * (times * NTHREADS) + NTHREADS + 1.
  */
-static H5TS_THREAD_RETURN_TYPE
+static H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR
 thread_main(void H5_ATTR_UNUSED *arg)
 {
     int      min_id, max_id;

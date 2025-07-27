@@ -33,7 +33,7 @@ typedef struct {
     H5TS_barrier_t barrier;
 } atomic_counter_t;
 
-static H5TS_THREAD_RETURN_TYPE
+static H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR
 incr_task(void *_counter)
 {
     atomic_counter_t *counter = (atomic_counter_t *)_counter;
@@ -52,7 +52,7 @@ incr_task(void *_counter)
     return ret_value;
 }
 
-static H5TS_THREAD_RETURN_TYPE
+static H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR
 many_read(void *_counter)
 {
     atomic_counter_t *counter = (atomic_counter_t *)_counter;
@@ -72,7 +72,7 @@ many_read(void *_counter)
     return ret_value;
 }
 
-static H5TS_THREAD_RETURN_TYPE
+static H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR
 count_up_and_down(void *_counter)
 {
     atomic_counter_t *counter = (atomic_counter_t *)_counter;
@@ -117,7 +117,7 @@ count_up_and_down(void *_counter)
     return ret_value;
 }
 
-static H5TS_THREAD_RETURN_TYPE
+static H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR
 verify_counting(void *_counter)
 {
     atomic_counter_t *counter = (atomic_counter_t *)_counter;
@@ -177,7 +177,7 @@ verify_counting(void *_counter)
     return ret_value;
 }
 
-static H5TS_THREAD_RETURN_TYPE
+static H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR
 test_trywrlock(void *_counter)
 {
     atomic_counter_t *counter = (atomic_counter_t *)_counter;
@@ -272,7 +272,7 @@ test_trywrlock(void *_counter)
     return ret_value;
 }
 
-static H5TS_THREAD_RETURN_TYPE
+static H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR
 test_downgrade(void *_counter)
 {
     atomic_counter_t *counter = (atomic_counter_t *)_counter;

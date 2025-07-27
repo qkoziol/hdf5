@@ -30,7 +30,7 @@
 #define FILENAME   "ttsafe_dcreate.h5"
 #define NUM_THREAD 16
 
-H5TS_THREAD_RETURN_TYPE tts_dcreate_creator(void *);
+H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR tts_dcreate_creator(void *);
 
 typedef struct thr_info {
     int         id;
@@ -117,7 +117,7 @@ tts_dcreate(void H5_ATTR_UNUSED *params)
     CHECK(status, FAIL, "H5Fclose");
 } /* end tts_dcreate() */
 
-H5TS_THREAD_RETURN_TYPE
+H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR
 tts_dcreate_creator(void *_thread_data)
 {
     hid_t           dataspace = H5I_INVALID_HID;

@@ -2134,7 +2134,7 @@ run_h5fl_arr_vector(h5fl_arr_test_vector *vector)
     return (0);
 }
 
-static H5TS_THREAD_RETURN_TYPE
+static H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR
 thread_h5fl_reg(void *_vectors)
 {
     h5fl_reg_test_vector   *vectors   = (h5fl_reg_test_vector *)_vectors;
@@ -2241,7 +2241,7 @@ test_h5fl_reg(void)
     }
 }
 
-static H5TS_THREAD_RETURN_TYPE
+static H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR
 thread_h5fl_fac(void *_vectors)
 {
     h5fl_fac_test_vector   *vectors   = (h5fl_fac_test_vector *)_vectors;
@@ -2360,7 +2360,7 @@ test_h5fl_fac(void)
     }
 }
 
-static H5TS_THREAD_RETURN_TYPE
+static H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR
 thread_h5fl_blk(void *_vectors)
 {
     h5fl_blk_test_vector   *vectors   = (h5fl_blk_test_vector *)_vectors;
@@ -2435,7 +2435,7 @@ test_h5fl_blk(void)
     }
 }
 
-static H5TS_THREAD_RETURN_TYPE
+static H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR
 thread_h5fl_arr(void *_vectors)
 {
     h5fl_arr_test_vector   *vectors   = (h5fl_arr_test_vector *)_vectors;

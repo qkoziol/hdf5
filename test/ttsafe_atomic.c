@@ -24,7 +24,7 @@
 
 static H5TS_atomic_int_t counter_g;
 
-static H5TS_THREAD_RETURN_TYPE
+static H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR
 noop_task(void *_counter)
 {
     H5TS_atomic_int_t *counter   = (H5TS_atomic_int_t *)_counter;
@@ -35,7 +35,7 @@ noop_task(void *_counter)
     return ret_value;
 }
 
-static H5TS_THREAD_RETURN_TYPE
+static H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR
 incr_task(void *_counter)
 {
     H5TS_atomic_int_t *counter   = (H5TS_atomic_int_t *)_counter;
@@ -46,7 +46,7 @@ incr_task(void *_counter)
     return ret_value;
 }
 
-static H5TS_THREAD_RETURN_TYPE
+static H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR
 decr_task(void *_counter)
 {
     H5TS_atomic_int_t *counter   = (H5TS_atomic_int_t *)_counter;

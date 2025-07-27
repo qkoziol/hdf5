@@ -20,13 +20,13 @@
 #define ERR_MAJOR_MSG "Okay, Houston, we've had a problem here"
 #define ERR_MINOR_MSG "Oops!"
 
-H5TS_THREAD_RETURN_TYPE generate_hdf5_error(void *arg);
-H5TS_THREAD_RETURN_TYPE generate_user_error(void *arg);
+H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR generate_hdf5_error(void *arg);
+H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR generate_user_error(void *arg);
 
 hid_t err_cls_id = H5I_INVALID_HID;
 
 /* Helper routine to generate an HDF5 library error */
-H5TS_THREAD_RETURN_TYPE
+H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR
 generate_hdf5_error(void H5_ATTR_UNUSED *arg)
 {
     H5TS_thread_ret_t ret_value = 0;
@@ -45,7 +45,7 @@ generate_hdf5_error(void H5_ATTR_UNUSED *arg)
 }
 
 /* Helper routine to generate a user-defined error */
-H5TS_THREAD_RETURN_TYPE
+H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR
 generate_user_error(void H5_ATTR_UNUSED *arg)
 {
     H5TS_thread_ret_t ret_value = 0;

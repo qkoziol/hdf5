@@ -59,7 +59,7 @@ static double sf_queue_delay_time = 0.0;
 #endif
 
 /* Prototypes */
-static H5TS_THREAD_RETURN_TYPE H5FD__ioc_thread_main(void *arg);
+static H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR H5FD__ioc_thread_main(void *arg);
 
 static int H5FD__ioc_file_queue_write_indep(sf_work_request_t *msg, int ioc_idx, int source, MPI_Comm comm,
                                             uint32_t counter);
@@ -276,7 +276,7 @@ H5FD__ioc_finalize_threads(void *_sf_context)
  *
  *-------------------------------------------------------------------------
  */
-static H5TS_THREAD_RETURN_TYPE
+static H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR
 H5FD__ioc_thread_main(void *arg)
 {
     ioc_data_t          *ioc_data = (ioc_data_t *)arg;
@@ -422,7 +422,7 @@ translate_opcode(io_op_t op)
  *
  *-------------------------------------------------------------------------
  */
-static H5TS_THREAD_RETURN_TYPE
+static H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR
 H5FD__ioc_handle_work_request(void *arg)
 {
     ioc_io_queue_entry_t *q_entry_ptr     = (ioc_io_queue_entry_t *)arg;
