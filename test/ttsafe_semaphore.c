@@ -37,7 +37,7 @@ typedef struct {
     bool             shutdown;
 } clientserver_t;
 
-static H5TS_THREAD_RETURN_TYPE
+static H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR
 ping(void *_test_info)
 {
     pingpong_t       *test_info = (pingpong_t *)_test_info;
@@ -57,7 +57,7 @@ ping(void *_test_info)
     return ret_value;
 }
 
-static H5TS_THREAD_RETURN_TYPE
+static H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR
 pong(void *_test_info)
 {
     pingpong_t       *test_info = (pingpong_t *)_test_info;
@@ -123,7 +123,7 @@ tts_semaphore_pingpong(void)
     CHECK_I(result, "H5TS_semaphore_destroy");
 } /* end tts_semaphore_pingpong() */
 
-static H5TS_THREAD_RETURN_TYPE
+static H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR
 client(void *_test_info)
 {
     clientserver_t   *test_info = (clientserver_t *)_test_info;

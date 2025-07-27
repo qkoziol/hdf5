@@ -48,7 +48,7 @@
 #define ATTR_NAME   "root_attr"
 #define NUM_THREADS 32
 
-H5TS_THREAD_RETURN_TYPE tts_attr_vlen_thread(void *);
+H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR tts_attr_vlen_thread(void *);
 
 void
 tts_attr_vlen(void H5_ATTR_UNUSED *params)
@@ -117,7 +117,7 @@ tts_attr_vlen(void H5_ATTR_UNUSED *params)
 } /* end tts_attr_vlen() */
 
 /* Start execution for each thread */
-H5TS_THREAD_RETURN_TYPE
+H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR
 tts_attr_vlen_thread(void H5_ATTR_UNUSED *client_data)
 {
     hid_t       fid  = H5I_INVALID_HID; /* File ID */

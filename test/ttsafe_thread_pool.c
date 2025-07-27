@@ -29,7 +29,7 @@ typedef struct {
 
 static atomic_counter_t counter_g;
 
-static H5TS_THREAD_RETURN_TYPE
+static H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR
 noop_task(void *_counter)
 {
     atomic_counter_t *counter = (atomic_counter_t *)_counter;
@@ -47,7 +47,7 @@ noop_task(void *_counter)
     return ret_value;
 }
 
-static H5TS_THREAD_RETURN_TYPE
+static H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR
 incr_task(void *_counter)
 {
     atomic_counter_t *counter = (atomic_counter_t *)_counter;
@@ -66,7 +66,7 @@ incr_task(void *_counter)
     return ret_value;
 }
 
-static H5TS_THREAD_RETURN_TYPE
+static H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR
 decr_task(void *_counter)
 {
     atomic_counter_t *counter = (atomic_counter_t *)_counter;

@@ -54,9 +54,9 @@ err_num_t    expected_g[EXPECTED_ERROR_DEPTH];
 H5TS_mutex_t error_mutex_g;
 
 /* Prototypes */
-static herr_t                  error_callback(hid_t, void *);
-static herr_t                  walk_error_callback(unsigned, const H5E_error2_t *, void *);
-static H5TS_THREAD_RETURN_TYPE tts_error_thread(void *);
+static herr_t error_callback(hid_t, void *);
+static herr_t walk_error_callback(unsigned, const H5E_error2_t *, void *);
+static H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR tts_error_thread(void *);
 
 void
 tts_error(void H5_ATTR_UNUSED *params)
@@ -164,7 +164,7 @@ tts_error(void H5_ATTR_UNUSED *params)
     CHECK_I(status, "H5TS_mutex_destroy");
 } /* end tts_error() */
 
-static H5TS_THREAD_RETURN_TYPE
+static H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR
 tts_error_thread(void H5_ATTR_UNUSED *arg)
 {
     hid_t       dataspace = H5I_INVALID_HID;

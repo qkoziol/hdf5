@@ -34,7 +34,7 @@ typedef struct {
  *
  **********************************************************************
  */
-static H5TS_THREAD_RETURN_TYPE
+static H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR
 tts_develop_api_thr_1(void *_udata)
 {
     tts_develop_api_udata_t *udata      = (tts_develop_api_udata_t *)_udata;
@@ -69,7 +69,7 @@ tts_develop_api_thr_1(void *_udata)
  *
  **********************************************************************
  */
-static H5TS_THREAD_RETURN_TYPE
+static H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR
 tts_develop_api_thr_2(void *_udata)
 {
     tts_develop_api_udata_t *udata    = (tts_develop_api_udata_t *)_udata;

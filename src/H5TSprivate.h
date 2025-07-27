@@ -49,6 +49,7 @@
 #define H5TS_thread_self()        thrd_current()
 #define H5TS_thread_equal(t1, t2) thrd_equal((t1), (t2))
 #define H5TS_THREAD_RETURN_TYPE   H5TS_thread_ret_t
+#define H5TS_THREAD_CALL_ATTR
 
 /* Mutex macros */
 #define H5TS_MUTEX_TYPE_PLAIN     mtx_plain
@@ -61,19 +62,21 @@
 /* Thread macros */
 #define H5TS_thread_self()        GetCurrentThread()
 #define H5TS_thread_equal(t1, t2) (GetThreadId(t1) == GetThreadId(t2))
-#define H5TS_THREAD_RETURN_TYPE   H5TS_thread_ret_t WINAPI
+#define H5TS_THREAD_RETURN_TYPE   H5TS_thread_ret_t
+#define H5TS_THREAD_CALL_ATTR     __stdcall
 
 /* Mutex macros */
 #define H5TS_MUTEX_TYPE_PLAIN     0
 #define H5TS_MUTEX_TYPE_RECURSIVE 1
 #else
 /* Static initialization values */
-#define H5TS_ONCE_INITIALIZER      PTHREAD_ONCE_INIT
+#define H5TS_ONCE_INITIALIZER     PTHREAD_ONCE_INIT
 
 /* Thread macros */
-#define H5TS_thread_self()         pthread_self()
-#define H5TS_thread_equal(t1, t2)  pthread_equal((t1), (t2))
-#define H5TS_THREAD_RETURN_TYPE    H5TS_thread_ret_t
+#define H5TS_thread_self()        pthread_self()
+#define H5TS_thread_equal(t1, t2) pthread_equal((t1), (t2))
+#define H5TS_THREAD_RETURN_TYPE   H5TS_thread_ret_t
+#define H5TS_THREAD_CALL_ATTR
 #define H5TS_THREAD_CANCEL_DISABLE PTHREAD_CANCEL_DISABLE
 
 /* Mutex macros */
@@ -170,8 +173,8 @@ typedef struct H5TS_rwlock_t {
 } H5TS_rwlock_t;
 
 typedef thrd_t H5TS_thread_t;
-typedef int (*H5TS_thread_start_func_t)(void *);
-typedef int       H5TS_thread_ret_t;
+typedef int    H5TS_thread_ret_t;
+typedef H5TS_thread_ret_t (*H5TS_thread_start_func_t)(void *);
 typedef tss_t     H5TS_key_t;
 typedef mtx_t     H5TS_CAPABILITY("mutex") H5TS_mutex_t;
 typedef cnd_t     H5TS_cond_t;
@@ -180,8 +183,8 @@ typedef void (*H5TS_once_init_func_t)(void);
 #else
 #ifdef H5_HAVE_WIN_THREADS
 typedef HANDLE                 H5TS_thread_t;
-typedef LPTHREAD_START_ROUTINE H5TS_thread_start_func_t;
 typedef DWORD                  H5TS_thread_ret_t;
+typedef LPTHREAD_START_ROUTINE H5TS_thread_start_func_t;
 typedef DWORD                  H5TS_key_t;
 typedef CRITICAL_SECTION       H5TS_CAPABILITY("mutex") H5TS_mutex_t;
 typedef CONDITION_VARIABLE     H5TS_cond_t;
@@ -189,8 +192,8 @@ typedef INIT_ONCE              H5TS_once_t;
 typedef PINIT_ONCE_FN          H5TS_once_init_func_t;
 #else
 typedef pthread_t H5TS_thread_t;
-typedef void *(*H5TS_thread_start_func_t)(void *);
-typedef void           *H5TS_thread_ret_t;
+typedef void     *H5TS_thread_ret_t;
+typedef H5TS_thread_ret_t (*H5TS_thread_start_func_t)(void *);
 typedef pthread_key_t   H5TS_key_t;
 typedef pthread_mutex_t H5TS_CAPABILITY("mutex") H5TS_mutex_t;
 typedef pthread_cond_t  H5TS_cond_t;

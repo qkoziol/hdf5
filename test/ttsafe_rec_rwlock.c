@@ -112,7 +112,7 @@ typedef struct rec_rwlock_test_udata_t {
  *
  **********************************************************************
  */
-static H5TS_THREAD_RETURN_TYPE
+static H5TS_THREAD_RETURN_TYPE H5TS_THREAD_CALL_ATTR
 tts_rec_rwlock_smoke_check_test_thread(void *_udata)
 {
     bool                     read;

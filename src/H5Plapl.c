@@ -256,7 +256,11 @@ H5P__lacc_elink_fapl_set(hid_t H5_ATTR_UNUSED prop_id, const char H5_ATTR_UNUSED
 
     /* Duplicate the FAPL, if it's non-default */
     if (l_fapl)
-        if (NULL == ((*(H5P_genplist_t **)_value) = H5P_copy_plist(l_fapl, false)))
+        /* This FAPL needs to be a "public" one, since its ID may get passed
+         * to the user callback for a VFD, which could be an external VFD that
+         * calls public HDF5 API routines.  So, set the 'app_ref' to true.
+         */
+        if (NULL == ((*(H5P_genplist_t **)_value) = H5P_copy_plist(l_fapl, true)))
             HGOTO_ERROR(H5E_PLIST, H5E_CANTCOPY, FAIL, "unable to copy file access property list");
 
 done:
@@ -287,7 +291,11 @@ H5P__lacc_elink_fapl_get(hid_t H5_ATTR_UNUSED prop_id, const char H5_ATTR_UNUSED
 
     /* Duplicate the FAPL, if it's non-default */
     if (l_fapl)
-        if (NULL == ((*(H5P_genplist_t **)_value) = H5P_copy_plist(l_fapl, false)))
+        /* This FAPL needs to be a "public" one, since its ID may get passed
+         * to the user callback for a VFD, which could be an external VFD that
+         * calls public HDF5 API routines.  So, set the 'app_ref' to true.
+         */
+        if (NULL == ((*(H5P_genplist_t **)_value) = H5P_copy_plist(l_fapl, true)))
             HGOTO_ERROR(H5E_PLIST, H5E_CANTCOPY, FAIL, "unable to copy file access property list");
 
 done:
@@ -465,7 +473,11 @@ H5P__lacc_elink_fapl_copy(const char H5_ATTR_UNUSED *name, size_t H5_ATTR_UNUSED
 
     /* Duplicate the FAPL, if it's non-default */
     if (l_fapl)
-        if (NULL == ((*(H5P_genplist_t **)_value) = H5P_copy_plist(l_fapl, false)))
+        /* This FAPL needs to be a "public" one, since its ID may get passed
+         * to the user callback for a VFD, which could be an external VFD that
+         * calls public HDF5 API routines.  So, set the 'app_ref' to true.
+         */
+        if (NULL == ((*(H5P_genplist_t **)_value) = H5P_copy_plist(l_fapl, true)))
             HGOTO_ERROR(H5E_PLIST, H5E_CANTCOPY, FAIL, "unable to copy file access property list");
 
 done:

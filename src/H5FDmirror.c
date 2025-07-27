@@ -1104,8 +1104,7 @@ H5FD__mirror_verify_reply(H5FD_mirror_t *file)
 
     assert(file && file->sock_fd);
 
-    xmit_buf = H5FL_BLK_MALLOC(xmit, H5FD_MIRROR_XMIT_BUFFER_MAX);
-    if (NULL == xmit_buf)
+    if (NULL == (xmit_buf = H5FL_BLK_MALLOC(xmit, H5FD_MIRROR_XMIT_BUFFER_MAX)))
         HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "unable to allocate xmit buffer");
 
     read_ret = HDread(file->sock_fd, xmit_buf, H5FD_MIRROR_XMIT_REPLY_SIZE);
@@ -1157,11 +1156,10 @@ H5FD__mirror_fapl_get(H5FD_t *_file)
 
     LOG_OP_CALL(__func__);
 
-    fa = (H5FD_mirror_fapl_t *)H5MM_calloc(sizeof(H5FD_mirror_fapl_t));
-    if (NULL == fa)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "calloc failed");
+    if (NULL == (fa = H5MM_malloc(sizeof(H5FD_mirror_fapl_t))))
+        HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "malloc failed");
 
-    H5MM_memcpy(fa, &(file->fa), sizeof(H5FD_mirror_fapl_t));
+    H5MM_memcpy(fa, &file->fa, sizeof(H5FD_mirror_fapl_t));
 
     ret_value = fa;
 
@@ -1193,11 +1191,11 @@ H5FD__mirror_fapl_copy(const void *_old_fa)
 
     LOG_OP_CALL(__func__);
 
-    new_fa = (H5FD_mirror_fapl_t *)H5MM_malloc(sizeof(H5FD_mirror_fapl_t));
-    if (new_fa == NULL)
+    if (NULL == (new_fa = H5MM_malloc(sizeof(H5FD_mirror_fapl_t))))
         HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "memory allocation failed");
 
     H5MM_memcpy(new_fa, old_fa, sizeof(H5FD_mirror_fapl_t));
+
     ret_value = new_fa;
 
 done:
@@ -1330,16 +1328,16 @@ done:
  *-------------------------------------------------------------------------
  */
 static H5FD_t *
-H5FD__mirror_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
+H5FD__mirror_open(const char *name, unsigned flags, hid_t H5_ATTR_UNUSED fapl_id, haddr_t maxaddr)
 {
-    int                      live_socket = -1;
-    struct sockaddr_in       target_addr;
-    socklen_t                addr_size;
-    unsigned char           *xmit_buf = NULL;
-    H5FD_mirror_fapl_t       fa;
-    H5FD_mirror_t           *file      = NULL;
-    H5FD_mirror_xmit_open_t *open_xmit = NULL;
-    H5FD_t                  *ret_value = NULL;
+    int                       live_socket = -1;
+    struct sockaddr_in        target_addr;
+    socklen_t                 addr_size;
+    unsigned char            *xmit_buf = NULL;
+    const H5FD_mirror_fapl_t *fa;
+    H5FD_mirror_t            *file      = NULL;
+    H5FD_mirror_xmit_open_t  *open_xmit = NULL;
+    H5FD_t                   *ret_value = NULL;
 
     FUNC_ENTER_PACKAGE
 
@@ -1358,11 +1356,12 @@ H5FD__mirror_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxad
     if (H5FD_ADDR_OVERFLOW(maxaddr))
         HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, NULL, "bogus maxaddr");
 
-    if (H5Pget_fapl_mirror(fapl_id, &fa) == FAIL)
+    /* Get the driver-specific file access properties */
+    if (NULL == (fa = H5CX_peek_driver_info()))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, NULL, "can't get config info");
-    if (H5FD_MIRROR_FAPL_MAGIC != fa.magic)
+    if (H5FD_MIRROR_FAPL_MAGIC != fa->magic)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, NULL, "invalid fapl magic");
-    if (H5FD_MIRROR_CURR_FAPL_T_VERSION != fa.version)
+    if (H5FD_MIRROR_CURR_FAPL_T_VERSION != fa->version)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, NULL, "invalid fapl version");
 
     /* --------------------- */
@@ -1374,8 +1373,8 @@ H5FD__mirror_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxad
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, NULL, "can't create socket");
 
     target_addr.sin_family      = AF_INET;
-    target_addr.sin_port        = htons((uint16_t)fa.handshake_port);
-    target_addr.sin_addr.s_addr = inet_addr(fa.remote_ip);
+    target_addr.sin_port        = htons((uint16_t)fa->handshake_port);
+    target_addr.sin_addr.s_addr = inet_addr(fa->remote_ip);
     memset(target_addr.sin_zero, '\0', sizeof target_addr.sin_zero);
 
     addr_size = sizeof(target_addr);
@@ -1386,9 +1385,10 @@ H5FD__mirror_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxad
     /* Open the file */
     /* ------------- */
 
-    file = (H5FD_mirror_t *)H5FL_CALLOC(H5FD_mirror_t);
-    if (NULL == file)
+    if (NULL == (file = H5FL_CALLOC(H5FD_mirror_t)))
         HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "unable to allocate file struct");
+
+    H5MM_memcpy(&file->fa, fa, sizeof(H5FD_mirror_fapl_t));
 
     file->sock_fd = live_socket;
     file->xmit_i  = 0;
@@ -1399,8 +1399,7 @@ H5FD__mirror_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxad
     file->xmit.session_token = (uint32_t)(0x01020304 ^ file->sock_fd); /* TODO: hashing? */
     /* int --> uint32_t may truncate on some systems... shouldn't matter? */
 
-    open_xmit = (H5FD_mirror_xmit_open_t *)H5FL_CALLOC(H5FD_mirror_xmit_open_t);
-    if (NULL == open_xmit)
+    if (NULL == (open_xmit = H5FL_CALLOC(H5FD_mirror_xmit_open_t)))
         HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "unable to allocate open_xmit struct");
 
     file->xmit.op          = H5FD_MIRROR_OP_OPEN;
@@ -1410,8 +1409,7 @@ H5FD__mirror_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxad
     open_xmit->size_t_blob = (uint64_t)((size_t)(-1));
     snprintf(open_xmit->filename, H5FD_MIRROR_XMIT_FILEPATH_MAX - 1, "%s", name);
 
-    xmit_buf = H5FL_BLK_MALLOC(xmit, H5FD_MIRROR_XMIT_BUFFER_MAX);
-    if (NULL == xmit_buf)
+    if (NULL == (xmit_buf = H5FL_BLK_MALLOC(xmit, H5FD_MIRROR_XMIT_BUFFER_MAX)))
         HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, NULL, "unable to allocate xmit buffer");
 
     if (H5FD_mirror_xmit_encode_open(xmit_buf, open_xmit) != H5FD_MIRROR_XMIT_OPEN_SIZE)
@@ -1477,8 +1475,7 @@ H5FD__mirror_close(H5FD_t *_file)
     file->xmit.xmit_count = (file->xmit_i)++;
     file->xmit.op         = H5FD_MIRROR_OP_CLOSE;
 
-    xmit_buf = H5FL_BLK_MALLOC(xmit, H5FD_MIRROR_XMIT_BUFFER_MAX);
-    if (NULL == xmit_buf)
+    if (NULL == (xmit_buf = H5FL_BLK_MALLOC(xmit, H5FD_MIRROR_XMIT_BUFFER_MAX)))
         HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "unable to allocate xmit buffer");
 
     if (H5FD_mirror_xmit_encode_header(xmit_buf, &(file->xmit)) != H5FD_MIRROR_XMIT_HEADER_SIZE)
@@ -1616,8 +1613,7 @@ H5FD__mirror_set_eoa(H5FD_t *_file, H5FD_mem_t type, haddr_t addr)
     xmit_eoa.type     = (uint8_t)type;
     xmit_eoa.eoa_addr = (uint64_t)addr;
 
-    xmit_buf = H5FL_BLK_MALLOC(xmit, H5FD_MIRROR_XMIT_BUFFER_MAX);
-    if (NULL == xmit_buf)
+    if (NULL == (xmit_buf = H5FL_BLK_MALLOC(xmit, H5FD_MIRROR_XMIT_BUFFER_MAX)))
         HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "unable to allocate xmit buffer");
 
     if (H5FD_mirror_xmit_encode_set_eoa(xmit_buf, &xmit_eoa) != H5FD_MIRROR_XMIT_EOA_SIZE)
@@ -1725,8 +1721,7 @@ H5FD__mirror_write(H5FD_t *_file, H5FD_mem_t type, hid_t H5_ATTR_UNUSED dxpl_id,
     xmit_write.offset = (uint64_t)addr;
     xmit_write.type   = (uint8_t)type;
 
-    xmit_buf = H5FL_BLK_MALLOC(xmit, H5FD_MIRROR_XMIT_BUFFER_MAX);
-    if (NULL == xmit_buf)
+    if (NULL == (xmit_buf = H5FL_BLK_MALLOC(xmit, H5FD_MIRROR_XMIT_BUFFER_MAX)))
         HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "unable to allocate xmit buffer");
 
     /* Notify Writer of incoming data to write. */
@@ -1780,8 +1775,7 @@ H5FD__mirror_truncate(H5FD_t *_file, hid_t H5_ATTR_UNUSED dxpl_id, bool H5_ATTR_
     file->xmit.xmit_count = (file->xmit_i)++;
     file->xmit.op         = H5FD_MIRROR_OP_TRUNCATE;
 
-    xmit_buf = H5FL_BLK_MALLOC(xmit, H5FD_MIRROR_XMIT_BUFFER_MAX);
-    if (NULL == xmit_buf)
+    if (NULL == (xmit_buf = H5FL_BLK_MALLOC(xmit, H5FD_MIRROR_XMIT_BUFFER_MAX)))
         HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "unable to allocate xmit buffer");
 
     if (H5FD_mirror_xmit_encode_header(xmit_buf, &(file->xmit)) != H5FD_MIRROR_XMIT_HEADER_SIZE)
@@ -1831,8 +1825,7 @@ H5FD__mirror_lock(H5FD_t *_file, bool rw)
     xmit_lock.pub = file->xmit;
     xmit_lock.rw  = (uint64_t)rw;
 
-    xmit_buf = H5FL_BLK_MALLOC(xmit, H5FD_MIRROR_XMIT_BUFFER_MAX);
-    if (NULL == xmit_buf)
+    if (NULL == (xmit_buf = H5FL_BLK_MALLOC(xmit, H5FD_MIRROR_XMIT_BUFFER_MAX)))
         HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "unable to allocate xmit buffer");
 
     if (H5FD_mirror_xmit_encode_lock(xmit_buf, &xmit_lock) != H5FD_MIRROR_XMIT_LOCK_SIZE)
@@ -1875,8 +1868,7 @@ H5FD__mirror_unlock(H5FD_t *_file)
     file->xmit.xmit_count = (file->xmit_i)++;
     file->xmit.op         = H5FD_MIRROR_OP_UNLOCK;
 
-    xmit_buf = H5FL_BLK_MALLOC(xmit, H5FD_MIRROR_XMIT_BUFFER_MAX);
-    if (NULL == xmit_buf)
+    if (NULL == (xmit_buf = H5FL_BLK_MALLOC(xmit, H5FD_MIRROR_XMIT_BUFFER_MAX)))
         HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "unable to allocate xmit buffer");
 
     if (H5FD_mirror_xmit_encode_header(xmit_buf, &(file->xmit)) != H5FD_MIRROR_XMIT_HEADER_SIZE)

@@ -29,7 +29,6 @@
 #include "H5Ipkg.h"      /* IDs                                      */
 #include "H5MMprivate.h" /* Memory management                        */
 #include "H5Pprivate.h"  /* Property lists                           */
-#include "H5TSprivate.h" /* Threadsafety                             */
 
 /****************/
 /* Local Macros */
