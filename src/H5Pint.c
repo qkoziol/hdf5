@@ -39,6 +39,9 @@
 /* Size of temporary buffer for property values */
 #define H5P_TMP_PROP_VALUE_SIZE 256
 
+/* Define portable atomic types */
+H5TS_DEF_ATOMIC_TYPE(unsigned)
+
 /******************/
 /* Local Typedefs */
 /******************/
@@ -423,8 +426,7 @@ H5_DLLVAR const H5P_libclass_t H5P_CLS_STRCRT[1]; /* String create */
 /*******************/
 
 /* Track the revision count of a class, to make comparisons faster */
-static unsigned H5P_next_rev = 0;
-#define H5P_GET_NEXT_REV (H5P_next_rev++)
+static H5TS_ATOMIC_TYPE(unsigned) H5P_next_rev_s;
 
 /* List of all property list classes in the library */
 /* (order here is not important, they will be initialized in the proper
@@ -593,6 +595,9 @@ H5P__init_package(void)
     HDcompile_assert((int)H5P_LOCK_INT_EXCLUSIVE == (int)H5TS_RWLOCK_LOCK_EXCLUSIVE);
     HDcompile_assert((int)H5P_LOCK_INT_SHARED == (int)H5TS_RWLOCK_LOCK_SHARED);
 #endif /* H5_HAVE_CONCURRENCY */
+
+    /* Initialize the global atomic variables */
+    H5TS_ATOMIC_INIT(unsigned, &H5P_next_rev_s, (unsigned)0);
 
     /*
      * Initialize the Generic Property class & object groups.
@@ -844,6 +849,9 @@ H5P_term_package(void)
             /* Destroy the property list and class id groups */
             n += (H5I_dec_type_ref(H5I_GENPROP_LST) > 0);
             n += (H5I_dec_type_ref(H5I_GENPROP_CLS) > 0);
+
+            /* Destroy the global atomic variables */
+            H5TS_ATOMIC_DESTROY(unsigned, &H5P_next_rev_s);
 
             /* Mark closed */
             if (0 == n)
@@ -2131,7 +2139,7 @@ H5P__create_class(H5P_genclass_t *par_class, const char *name, H5P_plist_type_t 
     pclass->classes   = 0;                /* No classes derived from this class yet */
     pclass->ref_count = 1;                /* This is the first reference to the new class */
     pclass->deleted   = false;            /* Not deleted yet... :-) */
-    pclass->revision  = H5P_GET_NEXT_REV; /* Get a revision number for the class */
+    pclass->revision  = H5TS_ATOMIC_GET_NEXT_UINT(&H5P_next_rev_s, UINT_MAX); /* Get a revision number for the class */
 
     /* Create the skip list for properties */
     if (NULL == (pclass->props = H5SL_create(H5SL_TYPE_STR, NULL)))
@@ -2590,7 +2598,7 @@ H5P__register_real(H5P_genclass_t *pclass, const char *name, size_t size, const 
     pclass->nprops++;
 
     /* Update the revision for the class */
-    pclass->revision = H5P_GET_NEXT_REV;
+    pclass->revision  = H5TS_ATOMIC_GET_NEXT_UINT(&H5P_next_rev_s, UINT_MAX);
 
 done:
     if (ret_value < 0)
@@ -5559,7 +5567,7 @@ H5P__unregister(H5P_genclass_t *pclass, const char *name)
     pclass->nprops--;
 
     /* Update the revision for the class */
-    pclass->revision = H5P_GET_NEXT_REV;
+    pclass->revision  = H5TS_ATOMIC_GET_NEXT_UINT(&H5P_next_rev_s, UINT_MAX);
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
