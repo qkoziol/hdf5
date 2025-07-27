@@ -32,6 +32,7 @@
 /****************/
 
 #define H5TS_ATOMIC_GET_NEXT_INT(obj, limit) H5TS_atomic_get_next_int(obj, limit)
+#define H5TS_ATOMIC_GET_NEXT_UINT(obj, limit) H5TS_atomic_get_next_uint(obj, limit)
 
 #ifdef H5_HAVE_CONCURRENCY
 
@@ -224,6 +225,32 @@ H5TS_atomic_get_next_int(H5TS_atomic_int_t *obj, int limit)
 
     return cur_val;
 } /* end H5TS_atomic_get_next_int() */
+
+/*--------------------------------------------------------------------------
+ * Function:    H5TS_atomic_get_next_uint
+ *
+ * Purpose:     Retrieves the next value of an unsigned integer, up to a limit
+ *
+ * Note:        Will never return the limit value
+ *
+ * Return:      0 when over the limit, a value between [1-limit) otherwise
+ *
+ *--------------------------------------------------------------------------
+ */
+static inline unsigned
+H5TS_atomic_get_next_uint(H5TS_atomic_uint_t *obj, unsigned limit)
+{
+    unsigned cur_val, new_val;
+
+    do {
+        cur_val = H5TS_atomic_load_uint(obj);
+        if (cur_val == limit)
+            return 0;
+        new_val = cur_val + 1;
+    } while (!H5TS_atomic_compare_exchange_weak_uint(obj, &cur_val, new_val));
+
+    return cur_val;
+} /* end H5TS_atomic_get_next_uint() */
 #else  /* H5_HAVE_CONCURRENCY */
 /*--------------------------------------------------------------------------
  * Function:    H5TS_atomic_get_next_int
@@ -250,4 +277,30 @@ H5TS_atomic_get_next_int(int *obj, int limit)
 
     return new_val;
 } /* end H5TS_atomic_get_next_int() */
+
+/*--------------------------------------------------------------------------
+ * Function:    H5TS_atomic_get_next_uint
+ *
+ * Purpose:     Retrieves the next value of an unsigned integer, up to a limit
+ *
+ * Note:        Will never return the limit value
+ *
+ * Return:      0 when over the limit, a value between [1-limit) otherwise
+ *
+ *--------------------------------------------------------------------------
+ */
+static inline unsigned
+H5TS_atomic_get_next_uint(unsigned *obj, unsigned limit)
+{
+    unsigned new_val;
+
+    if (*obj < limit) {
+        new_val = *obj;
+        (*obj)++;
+    }
+    else
+        new_val = 0;
+
+    return new_val;
+} /* end H5TS_atomic_get_next_uint() */
 #endif /* H5_HAVE_CONCURRENCY */

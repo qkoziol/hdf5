@@ -315,6 +315,43 @@ H5TS_atomic_fetch_sub_uint(H5TS_atomic_uint_t *obj, unsigned arg)
 } /* end H5TS_atomic_fetch_sub_uint() */
 
 /*--------------------------------------------------------------------------
+ * Function:    H5TS_atomic_compare_exchange_weak_uint
+ *
+ * Purpose:     Atomically compares the contents of 'obj' with 'expected', and
+ *              if those are bitwise equal, replaces the former with 'desired'
+ *              (performs read-modify-write operation). Otherwise, loads the
+ *              actual contents of 'obj' into '*expected' (performs load
+ *              operation).
+ *
+ * Return:      The result of the comparison: true if 'obj' was equal to
+ *              'expected', false otherwise.
+ *
+ *--------------------------------------------------------------------------
+ */
+static inline bool
+H5TS_atomic_compare_exchange_weak_uint(H5TS_atomic_uint_t *obj, unsigned *expected, unsigned desired)
+{
+    bool ret_value;
+
+    /* Lock mutex that protects the "atomic" value */
+    H5TS_mutex_lock(&obj->mutex);
+
+    /* Compare 'obj' w/'expected' */
+    if (obj->value == *expected) {
+        obj->value = desired;
+        ret_value  = true;
+    }
+    else {
+        *expected = obj->value;
+        ret_value = false;
+    }
+    /* Release the object's mutex */
+    H5TS_mutex_unlock(&obj->mutex);
+
+    return ret_value;
+} /* end H5TS_atomic_compare_exchange_weak_uint() */
+
+/*--------------------------------------------------------------------------
  * Function:    H5TS_atomic_exchange_voidp
  *
  * Purpose:     Atomically replaces the value of an atomic 'void *' variable
