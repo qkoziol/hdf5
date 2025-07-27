@@ -154,7 +154,7 @@ H5WB_actual(H5WB_t *wb, size_t need)
         assert(wb->actual_size > wb->wrapped_size);
 
         /* Check if we can reuse existing buffer */
-        if (need <= wb->alloc_size)
+        if (need <= wb->alloc_size && need > wb->wrapped_size)
             HGOTO_DONE(wb->actual_buf);
         /* Can't reuse existing buffer, free it and proceed */
         else
