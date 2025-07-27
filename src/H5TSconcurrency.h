@@ -31,7 +31,7 @@
 /* Local Macros */
 /****************/
 
-#define H5TS_ATOMIC_GET_NEXT_INT(obj, limit) H5TS_atomic_get_next_int(obj, limit)
+#define H5TS_ATOMIC_GET_NEXT_INT(obj, limit)  H5TS_atomic_get_next_int(obj, limit)
 #define H5TS_ATOMIC_GET_NEXT_UINT(obj, limit) H5TS_atomic_get_next_uint(obj, limit)
 
 #ifdef H5_HAVE_CONCURRENCY

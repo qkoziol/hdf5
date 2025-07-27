@@ -103,9 +103,9 @@
 #define H5TS_atomic_store_uint(obj, desired) atomic_store((obj), (desired))
 #define H5TS_atomic_fetch_add_uint(obj, arg) atomic_fetch_add((obj), (arg))
 #define H5TS_atomic_fetch_sub_uint(obj, arg) atomic_fetch_sub((obj), (arg))
-#define H5TS_atomic_compare_exchange_weak_uint(obj, expected, desired)                                        \
+#define H5TS_atomic_compare_exchange_weak_uint(obj, expected, desired)                                       \
     atomic_compare_exchange_weak((obj), (expected), (desired))
-#define H5TS_atomic_destroy_uint(obj)        /* void */
+#define H5TS_atomic_destroy_uint(obj) /* void */
 
 /* atomic_voidp */
 #define H5TS_atomic_init_voidp(obj, desired)     atomic_init((obj), (desired))

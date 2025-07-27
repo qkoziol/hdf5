@@ -2143,12 +2143,13 @@ H5P__create_class(H5P_genclass_t *par_class, const char *name, H5P_plist_type_t 
     if (NULL == (pclass->name = H5MM_xstrdup(name)))
         HGOTO_ERROR(H5E_PLIST, H5E_CANTALLOC, NULL, "property list class name allocation failed");
     pclass->type      = type;
-    pclass->nprops    = 0;                /* Classes are created without properties initially */
-    pclass->plists    = 0;                /* No properties lists of this class yet */
-    pclass->classes   = 0;                /* No classes derived from this class yet */
-    pclass->ref_count = 1;                /* This is the first reference to the new class */
-    pclass->deleted   = false;            /* Not deleted yet... :-) */
-    pclass->revision  = H5TS_ATOMIC_GET_NEXT_UINT(&H5P_next_rev_s, UINT_MAX); /* Get a revision number for the class */
+    pclass->nprops    = 0;     /* Classes are created without properties initially */
+    pclass->plists    = 0;     /* No properties lists of this class yet */
+    pclass->classes   = 0;     /* No classes derived from this class yet */
+    pclass->ref_count = 1;     /* This is the first reference to the new class */
+    pclass->deleted   = false; /* Not deleted yet... :-) */
+    pclass->revision =
+        H5TS_ATOMIC_GET_NEXT_UINT(&H5P_next_rev_s, UINT_MAX); /* Get a revision number for the class */
 
     /* Create the skip list for properties */
     if (NULL == (pclass->props = H5SL_create(H5SL_TYPE_STR, NULL)))
@@ -2607,7 +2608,7 @@ H5P__register_real(H5P_genclass_t *pclass, const char *name, size_t size, const 
     pclass->nprops++;
 
     /* Update the revision for the class */
-    pclass->revision  = H5TS_ATOMIC_GET_NEXT_UINT(&H5P_next_rev_s, UINT_MAX);
+    pclass->revision = H5TS_ATOMIC_GET_NEXT_UINT(&H5P_next_rev_s, UINT_MAX);
 
 done:
     if (ret_value < 0)
@@ -5576,7 +5577,7 @@ H5P__unregister(H5P_genclass_t *pclass, const char *name)
     pclass->nprops--;
 
     /* Update the revision for the class */
-    pclass->revision  = H5TS_ATOMIC_GET_NEXT_UINT(&H5P_next_rev_s, UINT_MAX);
+    pclass->revision = H5TS_ATOMIC_GET_NEXT_UINT(&H5P_next_rev_s, UINT_MAX);
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
