@@ -1090,8 +1090,8 @@ H5Pequal(hid_t id1, hid_t id2)
 {
     H5P_genplist_t *plist1 = NULL, *plist2 = NULL;   /* Property lists to compare */
     H5P_genclass_t *pclass1 = NULL, *pclass2 = NULL; /* Property classes to compare */
-    bool            lock_1_first = false;                    /* Which ID to lock first */
-    htri_t          ret_value = false;               /* return value */
+    bool            lock_1_first = false;            /* Which ID to lock first */
+    htri_t          ret_value    = false;            /* return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -1510,14 +1510,14 @@ done:
 herr_t
 H5Pcopy_prop(hid_t dst_id, hid_t src_id, const char *name)
 {
-    H5P_genplist_t *dst_plist  = NULL;          /* Pointer to destination property list */
-    H5P_genplist_t *src_plist  = NULL;          /* Pointer to source property list */
-    H5P_genclass_t *dst_pclass = NULL;          /* Pointer to destination property class */
-    H5P_genclass_t *src_pclass = NULL;          /* Pointer to source property class */
-    H5I_type_t      src_id_type, dst_id_type;   /* ID types */
-    bool            dst_class_unlocked = false; /* Whether the class was unlocked */
-    bool            lock_dst_first = false;             /* Which ID to lock first */
-    herr_t          ret_value = SUCCEED;        /* return value */
+    H5P_genplist_t *dst_plist  = NULL;            /* Pointer to destination property list */
+    H5P_genplist_t *src_plist  = NULL;            /* Pointer to source property list */
+    H5P_genclass_t *dst_pclass = NULL;            /* Pointer to destination property class */
+    H5P_genclass_t *src_pclass = NULL;            /* Pointer to source property class */
+    H5I_type_t      src_id_type, dst_id_type;     /* ID types */
+    bool            dst_class_unlocked = false;   /* Whether the class was unlocked */
+    bool            lock_dst_first     = false;   /* Which ID to lock first */
+    herr_t          ret_value          = SUCCEED; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
