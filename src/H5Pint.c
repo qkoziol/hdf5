@@ -5722,6 +5722,12 @@ H5P__close(H5P_genplist_t *plist)
     /* Free the properties */
     H5SL_destroy(plist->props, H5P__free_prop_cb, &make_cb);
 
+#ifdef H5_HAVE_CONCURRENCY
+    /* Destroy the R/W lock protecting the property list */
+    if (H5TS_dlftt_rwlock_destroy(&plist->lock) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTRELEASE, FAIL, "can't destroy property list's lock");
+#endif /* H5_HAVE_CONCURRENCY */
+
     /* Destroy property list object */
     plist = H5FL_FREE(H5P_genplist_t, plist);
 
