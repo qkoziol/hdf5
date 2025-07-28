@@ -96,16 +96,17 @@ struct H5P_genclass_t {
     struct H5P_genclass_t *parent; /* Pointer to parent class */
     char                  *name;   /* Name of property list class */
     H5P_plist_type_t       type;   /* Type of property */
+    unsigned        revision;  /* Revision number of a particular class (globally unique) */
+    H5P_genplist_t *def_plist; /* Pointer to a default property list for the class */
+    bool            is_private;  /* Whether this property class is private within the library */
+
     size_t                 nprops; /* Number of properties in class */
-    unsigned
-        plists; /* Number of property lists that have been created since the last modification to the class */
+    H5SL_t         *props;     /* Skip list containing properties */
+
+    unsigned plists; /* Number of property lists that have been created since the last modification to the class */
     unsigned classes; /* Number of classes that have been derived since the last modification to the class */
     unsigned ref_count; /* Number of outstanding ID's open on this class object */
-    bool deleted; /* Whether this class has been deleted and is waiting for dependent classes & proplists to
-                     close */
-    unsigned        revision;  /* Revision number of a particular class (global) */
-    H5SL_t         *props;     /* Skip list containing properties */
-    H5P_genplist_t *def_plist; /* Pointer to a default property list for the class */
+    bool deleted; /* Whether this class has been deleted and is waiting for dependent classes & proplists to close */
 
     /* Callback function pointers & info */
     H5P_cls_create_func_t create_func; /* Function to call when a property list is created */
@@ -114,6 +115,10 @@ struct H5P_genclass_t {
     void                 *copy_data;   /* Pointer to user data to pass along to copy callback */
     H5P_cls_close_func_t  close_func;  /* Function to call when a property list is closed */
     void                 *close_data;  /* Pointer to user data to pass along to close callback */
+
+#ifdef H5_HAVE_CONCURRENCY
+    H5TS_dlftt_rwlock_t lock; /* Guard the ID info struct */
+#endif                        /* H5_HAVE_CONCURRENCY */
 };
 
 /* Define structure to hold property list information */
@@ -127,8 +132,6 @@ struct H5P_genplist_t {
     bool            is_private;  /* Whether this property list is private within the library */
     H5SL_t         *del;         /* Skip list containing names of deleted properties */
     H5SL_t         *props;       /* Skip list containing properties modified from the parent class */
-
-    H5TS_ATOMIC_TYPE(H5P_lock_mode_int_t) mode; /* How this property list is currently locked */
 
 #ifdef H5_HAVE_CONCURRENCY
     H5TS_dlftt_rwlock_t lock; /* Guard the ID info struct */
@@ -186,8 +189,6 @@ H5_DLL herr_t H5P__copy_prop_plist(H5P_genplist_t *dst_plist, H5P_genplist_t *sr
 H5_DLL herr_t H5P__copy_prop_pclass(H5P_genclass_t **dst_pclass, H5P_genclass_t *src_pclass,
                                     const char *name);
 H5_DLL herr_t H5P__unregister(H5P_genclass_t *pclass, const char *name);
-H5_DLL char  *H5P__get_class_path(H5P_genclass_t *pclass);
-H5_DLL H5P_genclass_t *H5P__open_class_path(const char *path);
 H5_DLL H5P_genclass_t *H5P__get_class_parent(const H5P_genclass_t *pclass);
 H5_DLL herr_t          H5P__close_class(H5P_genclass_t *pclass);
 H5_DLL H5P_genprop_t  *H5P__find_prop_plist(const H5P_genplist_t *plist, const char *name);
@@ -221,11 +222,5 @@ H5_DLL herr_t H5P__set_file_space_strategy(H5P_genplist_t *plist, H5F_fspace_str
 /* Private OCPL routines */
 H5_DLL herr_t H5P__get_filter(const struct H5Z_filter_info_t *filter, unsigned int *flags, size_t *cd_nelmts,
                               unsigned cd_values[], size_t namelen, char name[], unsigned *filter_config);
-
-/* Testing functions */
-#ifdef H5P_TESTING
-H5_DLL char *H5P__get_class_path_test(hid_t pclass_id);
-H5_DLL hid_t H5P__open_class_path_test(const char *path);
-#endif /* H5P_TESTING */
 
 #endif /* H5Ppkg_H */

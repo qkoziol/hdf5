@@ -509,7 +509,6 @@ set (H5P_SOURCES
     ${HDF5_SRC_DIR}/H5Pocpl.c
     ${HDF5_SRC_DIR}/H5Pocpypl.c
     ${HDF5_SRC_DIR}/H5Pstrcpl.c
-    ${HDF5_SRC_DIR}/H5Ptest.c
 )
 
 set (H5P_HDRS

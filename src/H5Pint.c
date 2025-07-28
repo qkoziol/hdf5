@@ -98,6 +98,8 @@ typedef herr_t (*H5P_do_pclass_op_t)(H5P_genplist_t *plist, const char *name, H5
 /********************/
 
 /* Infrastructure routines */
+static herr_t H5P__lock_class_cb(void *_pclass, H5I_lock_mode_t mode);
+static herr_t H5P__unlock_class_cb(void *_pclass, H5I_lock_mode_t mode);
 static herr_t H5P__close_class_cb(void *_pclass, void **request);
 static herr_t H5P__lock_list_cb(void *_plist, H5I_lock_mode_t mode);
 static herr_t H5P__unlock_list_cb(void *_plist, H5I_lock_mode_t mode);
@@ -115,13 +117,14 @@ static herr_t         H5P__free_prop(H5P_genprop_t *prop);
 static int            H5P__cmp_prop(const H5P_genprop_t *prop1, const H5P_genprop_t *prop2);
 static herr_t         H5P__do_prop(H5P_genplist_t *plist, const char *name, H5P_do_plist_op_t plist_op,
                                    H5P_do_pclass_op_t pclass_op, void *udata);
-static int            H5P__open_class_path_cb(void *_obj, hid_t H5_ATTR_UNUSED id, void *_key);
 static H5P_genprop_t *H5P__find_prop_pclass(H5P_genclass_t *pclass, const char *name);
 static herr_t         H5P__free_prop_cb(void *item, void H5_ATTR_UNUSED *key, void *op_data);
 static herr_t H5P__free_del_name_cb(void *item, void H5_ATTR_UNUSED *key, void H5_ATTR_UNUSED *op_data);
 static herr_t H5P__close(H5P_genplist_t *plist);
-static void   H5P__lock(H5P_genplist_t *plist, H5P_lock_mode_t mode);
-static void   H5P__unlock(H5P_genplist_t *plist, H5P_lock_mode_t mode);
+static void   H5P__lock_list(H5P_genplist_t *plist, H5P_lock_mode_t mode);
+static void   H5P__unlock_list(H5P_genplist_t *plist, H5P_lock_mode_t mode);
+static void   H5P__lock_class(H5P_genclass_t *pclass, H5P_lock_mode_t mode);
+static void   H5P__unlock_class(H5P_genclass_t *pclass, H5P_lock_mode_t mode);
 
 /*********************/
 /* Package Variables */
@@ -527,8 +530,8 @@ static H5I_class_t H5I_GENPROPCLS_CLS[1] = {{
     H5I_GENPROP_CLS,    /* ID class value */
     0,                  /* Class flags */
     0,                  /* # of reserved IDs for class */
-    NULL,               /* Callback for locking objects of this class */
-    NULL,               /* Callback for unlocking objects of this class */
+    H5P__lock_class_cb,   /* Callback for locking objects of this class */
+    H5P__unlock_class_cb, /* Callback for unlocking objects of this class */
     H5P__close_class_cb /* Callback routine for closing objects of this class */
 }};
 
@@ -863,6 +866,56 @@ H5P_term_package(void)
 } /* end H5P_term_package() */
 
 /*-------------------------------------------------------------------------
+ * Function:    H5P__lock_class_cb
+ *
+ * Purpose:     Called to lock a property class while looking it up from an ID
+ *
+ * Return:      SUCCEED / FAIL
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t
+H5P__lock_class_cb(void *_pclass, H5I_lock_mode_t mode)
+{
+    H5P_genclass_t *pclass = (H5P_genclass_t *)_pclass; /* Property class to lock */
+
+    FUNC_ENTER_PACKAGE_NOERR
+
+    /* Sanity check */
+    assert(pclass);
+
+    /* Lock the property class */
+    H5P__lock_class(pclass, (H5P_lock_mode_t)mode);
+
+    FUNC_LEAVE_NOAPI(SUCCEED)
+} /* end H5P__lock_class_cb() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5P__unlock_class_cb
+ *
+ * Purpose:     Called to unlock a property class from looking it up from an ID
+ *
+ * Return:      SUCCEED / FAIL
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t
+H5P__unlock_class_cb(void *_pclass, H5I_lock_mode_t mode)
+{
+    H5P_genclass_t *pclass = (H5P_genclass_t *)_pclass; /* Property class to lock */
+
+    FUNC_ENTER_PACKAGE_NOERR
+
+    /* Sanity check */
+    assert(pclass);
+
+    /* Unlock the property class */
+    H5P__unlock_class(pclass, (H5P_lock_mode_t)mode);
+
+    FUNC_LEAVE_NOAPI(SUCCEED)
+} /* end H5P__unlock_class_cb() */
+
+/*-------------------------------------------------------------------------
  * Function:    H5P__close_class_cb
  *
  * Purpose:     Called when the ref count reaches zero on a property class's ID
@@ -881,6 +934,21 @@ H5P__close_class_cb(void *_pclass, void H5_ATTR_UNUSED **request)
 
     /* Sanity check */
     assert(pclass);
+
+    /* Don't need to acquire locks on private classes */
+    if (!pclass->is_private) {
+        /* Acquire exclusive lock on the class.  This allows all other threads to
+         * finish using the property class before we close it.
+         */
+        H5P__lock_class(pclass, H5P_LOCK_EXCLUSIVE);
+
+        /* Release lock on the property class, which is safe since the H5I package
+         * is holding an exclusive lock on the property list ID 'type' and the ID
+         * info for the property class itself when it calls this routine, preventing
+         * any other thread from reaching this point.
+         */
+        H5P__unlock_class(pclass, H5P_LOCK_EXCLUSIVE);
+    }
 
     /* Close the property list class object */
     if (H5P__close_class(pclass) < 0)
@@ -910,7 +978,7 @@ H5P__lock_list_cb(void *_plist, H5I_lock_mode_t mode)
     assert(plist);
 
     /* Lock the property list */
-    H5P__lock(plist, (H5P_lock_mode_t)mode);
+    H5P__lock_list(plist, (H5P_lock_mode_t)mode);
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5P__lock_list_cb() */
@@ -935,7 +1003,7 @@ H5P__unlock_list_cb(void *_plist, H5I_lock_mode_t mode)
     assert(plist);
 
     /* Unlock the property list */
-    H5P__unlock(plist, (H5P_lock_mode_t)mode);
+    H5P__unlock_list(plist, (H5P_lock_mode_t)mode);
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5P__unlock_list_cb() */
@@ -965,14 +1033,14 @@ H5P__close_list_cb(void *_plist, void H5_ATTR_UNUSED **request)
         /* Acquire exclusive lock on the list.  This allows all other threads to
          * finish using the property list before we close it.
          */
-        H5P__lock(plist, H5P_LOCK_EXCLUSIVE);
+        H5P__lock_list(plist, H5P_LOCK_EXCLUSIVE);
 
         /* Release lock on the property list, which is safe since the H5I package
          * is holding an exclusive lock on the property list ID 'type' and the ID
          * info for the property list itself when it calls this routine, preventing
          * any other thread from reaching this point.
          */
-        H5P__unlock(plist, H5P_LOCK_EXCLUSIVE);
+        H5P__unlock_list(plist, H5P_LOCK_EXCLUSIVE);
     }
 
     /* Close the property list */
@@ -1073,13 +1141,13 @@ done:
  PURPOSE
     Internal routine to copy a generic property class
  USAGE
-    hid_t H5P__copy_pclass(pclass)
+    HH5P_genclass_t *H5P__copy_pclass(pclass)
         H5P_genclass_t *pclass;      IN: Property class to copy
  RETURNS
-    Success: valid property class ID on success (non-negative)
-    Failure: negative
+    Success: pointer to new property class
+    Failure: NULL
  DESCRIPTION
-    Copy a property class and return the ID.  This routine does not make
+    Copy a property class and return the copy.  This routine does not make
     any callbacks.  (They are only make when operating on property lists).
 
  GLOBAL VARIABLES
@@ -1098,14 +1166,8 @@ H5P__copy_pclass(H5P_genclass_t *pclass)
 
     assert(pclass);
 
-    /*
-     * Create new property class object
-     */
-
     /* Create the new property list class */
-    if (NULL == (new_pclass = H5P__create_class(pclass->parent, pclass->name, pclass->type,
-                                                pclass->create_func, pclass->create_data, pclass->copy_func,
-                                                pclass->copy_data, pclass->close_func, pclass->close_data)))
+    if (NULL == (new_pclass = H5P__create_class(pclass->parent, pclass->name, pclass->type, pclass->create_func, pclass->create_data, pclass->copy_func, pclass->copy_data, pclass->close_func, pclass->close_data)))
         HGOTO_ERROR(H5E_PLIST, H5E_CANTCREATE, NULL, "unable to create property list class");
 
     /* Copy the properties registered for this class */
@@ -1116,7 +1178,7 @@ H5P__copy_pclass(H5P_genclass_t *pclass)
         curr_node = H5SL_first(pclass->props, H5SL_LOCK_SHARED);
         while (curr_node != NULL) {
             /* Make a copy of the class's property */
-            if (NULL == (pcopy = H5P__dup_prop((H5P_genprop_t *)H5SL_item(curr_node), H5P_PROP_WITHIN_CLASS)))
+            if (NULL == (pcopy = H5P__dup_prop(H5SL_item(curr_node), H5P_PROP_WITHIN_CLASS)))
                 HGOTO_ERROR(H5E_PLIST, H5E_CANTCOPY, NULL, "Can't copy property");
 
             /* Insert the initialized property into the property list */
@@ -1130,6 +1192,12 @@ H5P__copy_pclass(H5P_genclass_t *pclass)
             curr_node = H5SL_next(curr_node);
         } /* end while */
     }     /* end if */
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Initialize the R/W lock protecting the property class */
+    if (H5TS_dlftt_rwlock_init(&new_pclass->lock) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, NULL, "can't initialize property class' lock");
+#endif /* H5_HAVE_CONCURRENCY */
 
     /* Set the return value */
     ret_value = new_pclass;
@@ -1181,10 +1249,6 @@ H5P_copy_plist(const H5P_genplist_t *old_plist, bool app_ref)
     FUNC_ENTER_NOAPI(NULL)
 
     assert(old_plist);
-
-    /*
-     * Create new property list object
-     */
 
     /* Allocate room for the property list */
     if (NULL == (new_plist = H5FL_CALLOC(H5P_genplist_t)))
@@ -1420,7 +1484,7 @@ H5P_copy_plist(const H5P_genplist_t *old_plist, bool app_ref)
     new_plist->is_private = !app_ref;
 
 #ifdef H5_HAVE_CONCURRENCY
-    /* Initialize the R/W lock protecting the skip list */
+    /* Initialize the R/W lock protecting the property list */
     if (H5TS_dlftt_rwlock_init(&new_plist->lock) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, NULL, "can't initialize property list's lock");
 #endif /* H5_HAVE_CONCURRENCY */
@@ -1972,7 +2036,9 @@ H5P__free_del_name_cb(void *item, void H5_ATTR_UNUSED *key, void H5_ATTR_UNUSED 
 herr_t
 H5P__access_class(H5P_genclass_t *pclass, H5P_class_mod_t mod)
 {
-    FUNC_ENTER_PACKAGE_NOERR
+    herr_t         ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_PACKAGE
 
     assert(pclass);
     assert(mod > H5P_MOD_ERR && mod < H5P_MOD_MAX);
@@ -2026,64 +2092,27 @@ H5P__access_class(H5P_genclass_t *pclass, H5P_class_mod_t mod)
         if (pclass->props) {
             bool make_cb = false;
 
-            H5SL_destroy(pclass->props, H5P__free_prop_cb, &make_cb);
+            if (H5SL_destroy(pclass->props, H5P__free_prop_cb, &make_cb) < 0)
+                HGOTO_ERROR(H5E_PLIST, H5E_CANTRELEASE, FAIL, "can't destroy skip list");
         } /* end if */
+
+#ifdef H5_HAVE_CONCURRENCY
+        /* Destroy the R/W lock protecting the property list */
+        if (H5TS_dlftt_rwlock_destroy(&pclass->lock) < 0)
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTRELEASE, FAIL, "can't destroy property class' lock");
+#endif /* H5_HAVE_CONCURRENCY */
 
         pclass = H5FL_FREE(H5P_genclass_t, pclass);
 
         /* Reduce the number of dependent classes on parent class also */
         if (par_class != NULL)
-            H5P__access_class(par_class, H5P_MOD_DEC_CLS);
+            if (H5P__access_class(par_class, H5P_MOD_DEC_CLS) < 0)
+                HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, FAIL, "Can't decrement class ref count");
     } /* end if */
 
-    FUNC_LEAVE_NOAPI(SUCCEED)
-} /* H5P__access_class() */
-
-/*--------------------------------------------------------------------------
- NAME
-    H5P__open_class_path_cb
- PURPOSE
-    Internal callback routine to check for duplicated names in parent class.
- USAGE
-    int H5P__open_class_path_cb(obj, id, key)
-        H5P_genclass_t *obj;    IN: Pointer to class
-        hid_t id;               IN: ID of object being looked at
-        const void *key;        IN: Pointer to information used to compare
-                                    classes.
- RETURNS
-    Returns >0 on match, 0 on no match and <0 on failure.
- DESCRIPTION
-    Checks whether a property list class has the same parent and name as a
-    new class being created.  This is a callback routine for H5I_search()
- GLOBAL VARIABLES
- COMMENTS, BUGS, ASSUMPTIONS
- EXAMPLES
- REVISION LOG
---------------------------------------------------------------------------*/
-static int
-H5P__open_class_path_cb(void *_obj, hid_t H5_ATTR_UNUSED id, void *_key)
-{
-    H5P_genclass_t    *obj       = (H5P_genclass_t *)_obj;    /* Pointer to the class for this ID */
-    H5P_check_class_t *key       = (H5P_check_class_t *)_key; /* Pointer to key information for comparison */
-    int                ret_value = 0;                         /* Return value */
-
-    FUNC_ENTER_PACKAGE_NOERR
-
-    assert(obj);
-    assert(H5I_GENPROP_CLS == H5I_get_type(id));
-    assert(key);
-
-    /* Check if the class object has the same parent as the new class */
-    if (obj->parent == key->parent) {
-        /* Check if they have the same name */
-        if (strcmp(obj->name, key->name) == 0) {
-            key->new_class = obj;
-            ret_value      = 1; /* Indicate a match */
-        }                       /* end if */
-    }                           /* end if */
-
+done:
     FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5P__open_class_path_cb() */
+} /* H5P__access_class() */
 
 /*--------------------------------------------------------------------------
  NAME
@@ -2164,10 +2193,14 @@ H5P__create_class(H5P_genclass_t *par_class, const char *name, H5P_plist_type_t 
     pclass->close_data  = close_data;
 
     /* Increment parent class's derived class value */
-    if (par_class != NULL) {
-        if (H5P__access_class(par_class, H5P_MOD_INC_CLS) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, NULL, "Can't increment parent class ref count");
-    } /* end if */
+    if (par_class && H5P__access_class(par_class, H5P_MOD_INC_CLS) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, NULL, "Can't increment parent class ref count");
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Initialize the R/W lock protecting the property class */
+    if (H5TS_dlftt_rwlock_init(&pclass->lock) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, NULL, "can't initialize property class' lock");
+#endif /* H5_HAVE_CONCURRENCY */
 
     /* Set return value */
     ret_value = pclass;
@@ -2353,7 +2386,7 @@ H5P__create(H5P_genclass_t *pclass, bool is_default, bool app_ref)
     plist->is_private = !app_ref;
 
 #ifdef H5_HAVE_CONCURRENCY
-    /* Initialize the R/W lock protecting the skip list */
+    /* Initialize the R/W lock protecting the property list */
     if (H5TS_dlftt_rwlock_init(&plist->lock) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, NULL, "can't initialize property list's lock");
 #endif /* H5_HAVE_CONCURRENCY */
@@ -2822,9 +2855,7 @@ H5P__register(H5P_genclass_t **ppclass, const char *name, size_t size, const voi
      *  been created since the last modification was made to the class.
      */
     if (pclass->plists > 0 || pclass->classes > 0) {
-        if (NULL == (new_class = H5P__create_class(
-                         pclass->parent, pclass->name, pclass->type, pclass->create_func, pclass->create_data,
-                         pclass->copy_func, pclass->copy_data, pclass->close_func, pclass->close_data)))
+        if (NULL == (new_class = H5P__create_class( pclass->parent, pclass->name, pclass->type, pclass->create_func, pclass->create_data, pclass->copy_func, pclass->copy_data, pclass->close_func, pclass->close_data)))
             HGOTO_ERROR(H5E_PLIST, H5E_CANTCOPY, FAIL, "can't copy class");
 
         /* Walk through the skip list of the old class and copy properties */
@@ -2837,8 +2868,7 @@ H5P__register(H5P_genclass_t **ppclass, const char *name, size_t size, const voi
                 H5P_genprop_t *pcopy; /* Property copy */
 
                 /* Make a copy of the class's property */
-                if (NULL ==
-                    (pcopy = H5P__dup_prop((H5P_genprop_t *)H5SL_item(curr_node), H5P_PROP_WITHIN_CLASS)))
+                if (NULL == (pcopy = H5P__dup_prop((H5P_genprop_t *)H5SL_item(curr_node), H5P_PROP_WITHIN_CLASS)))
                     HGOTO_ERROR(H5E_PLIST, H5E_CANTCOPY, FAIL, "Can't copy property");
 
                 /* Insert the initialized property into the property class */
@@ -2858,8 +2888,7 @@ H5P__register(H5P_genclass_t **ppclass, const char *name, size_t size, const voi
     } /* end if */
 
     /* Really register the property in the class */
-    if (H5P__register_real(pclass, name, size, def_value, prp_create, prp_set, prp_get, prp_encode,
-                           prp_decode, prp_delete, prp_copy, prp_cmp, prp_close) < 0)
+    if (H5P__register_real(pclass, name, size, def_value, prp_create, prp_set, prp_get, prp_encode, prp_decode, prp_delete, prp_copy, prp_cmp, prp_close) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTCREATE, FAIL, "can't register property");
 
     /* Update pointer to pointer to class, if a new one was generated */
@@ -5770,14 +5799,23 @@ H5P__close(H5P_genplist_t *plist)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, FAIL, "Can't decrement class ref count");
 
     /* Free the list of 'seen' properties */
-    H5SL_close(seen);
+    if (H5SL_close(seen) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CLOSEERROR, FAIL, "can't close skip list");
     seen = NULL;
 
     /* Free the list of deleted property names */
-    H5SL_destroy(plist->del, H5P__free_del_name_cb, NULL);
+    if (H5SL_destroy(plist->del, H5P__free_del_name_cb, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTRELEASE, FAIL, "can't destroy skip list");
 
     /* Free the properties */
-    H5SL_destroy(plist->props, H5P__free_prop_cb, &make_cb);
+    if (H5SL_destroy(plist->props, H5P__free_prop_cb, &make_cb) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTRELEASE, FAIL, "can't destroy skip list");
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Destroy the R/W lock protecting the property list */
+    if (H5TS_dlftt_rwlock_destroy(&plist->lock) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTRELEASE, FAIL, "can't destroy property list's lock");
+#endif /* H5_HAVE_CONCURRENCY */
 
     /* Destroy property list object */
     plist = H5FL_FREE(H5P_genplist_t, plist);
@@ -5869,153 +5907,6 @@ H5P_get_class_name(H5P_genclass_t *pclass)
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5P_get_class_name() */
-
-/*--------------------------------------------------------------------------
- NAME
-    H5P__get_class_path
- PURPOSE
-    Internal routine to query the full path of a generic property list class
- USAGE
-    char *H5P__get_class_name(pclass)
-        H5P_genclass_t *pclass;    IN: Property list class to check
- RETURNS
-    Success: Pointer to a malloc'ed string containing the full path of class
-    Failure: NULL
- DESCRIPTION
-        This routine retrieves the full path name of a generic property list
-    class, starting with the root of the class hierarchy.
-    The pointer to the name must be free'd by the user for successful calls.
-
- GLOBAL VARIABLES
- COMMENTS, BUGS, ASSUMPTIONS
- EXAMPLES
- REVISION LOG
---------------------------------------------------------------------------*/
-char *
-H5P__get_class_path(H5P_genclass_t *pclass)
-{
-    char *ret_value = NULL; /* Return value */
-
-    FUNC_ENTER_PACKAGE
-
-    assert(pclass);
-
-    /* Recursively build the full path */
-    if (pclass->parent != NULL) {
-        char *par_path; /* Parent class's full path */
-
-        /* Get the parent class's path */
-        par_path = H5P__get_class_path(pclass->parent);
-        if (par_path != NULL) {
-            size_t ret_str_len;
-
-            /* Allocate enough space for the parent class's path, plus the '/'
-             * separator, this class's name and the string terminator
-             */
-            ret_str_len = strlen(par_path) + strlen(pclass->name) + 1 +
-                          3; /* Extra "+3" to quiet GCC warning - 2019/07/05, QAK */
-            if (NULL == (ret_value = (char *)H5MM_malloc(ret_str_len)))
-                HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "memory allocation failed for class name");
-
-            /* Build the full path for this class */
-            snprintf(ret_value, ret_str_len, "%s/%s", par_path, pclass->name);
-
-            /* Free the parent class's path */
-            H5MM_xfree(par_path);
-        } /* end if */
-        else
-            ret_value = H5MM_xstrdup(pclass->name);
-    } /* end if */
-    else
-        ret_value = H5MM_xstrdup(pclass->name);
-
-done:
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* H5P__get_class_path() */
-
-/*--------------------------------------------------------------------------
- NAME
-    H5P__open_class_path
- PURPOSE
-    Internal routine to open [a copy of] a class with its full path name
- USAGE
-    H5P_genclass_t *H5P__open_class_path(path)
-        const char *path;       IN: Full path name of class to open [copy of]
- RETURNS
-    Success: Pointer to a generic property class object
-    Failure: NULL
- DESCRIPTION
-    This routine opens [a copy] of the class indicated by the full path.
-
- GLOBAL VARIABLES
- COMMENTS, BUGS, ASSUMPTIONS
- EXAMPLES
- REVISION LOG
---------------------------------------------------------------------------*/
-H5P_genclass_t *
-H5P__open_class_path(const char *path)
-{
-    char             *tmp_path = NULL;  /* Temporary copy of the path */
-    char             *curr_name;        /* Pointer to current component of path name */
-    char             *delimit;          /* Pointer to path delimiter during traversal */
-    H5P_genclass_t   *curr_class;       /* Pointer to class during path traversal */
-    H5P_check_class_t check_info;       /* Structure to hold the information for checking duplicate names */
-    H5P_genclass_t   *ret_value = NULL; /* Return value */
-
-    FUNC_ENTER_PACKAGE
-
-    assert(path);
-
-    /* Duplicate the path to use */
-    tmp_path = H5MM_xstrdup(path);
-    assert(tmp_path);
-
-    /* Find the generic property class with this full path */
-    curr_name  = tmp_path;
-    curr_class = NULL;
-    while (NULL != (delimit = strchr(curr_name, '/'))) {
-        /* Change the delimiter to terminate the string */
-        *delimit = '\0';
-
-        /* Set up the search structure */
-        check_info.parent    = curr_class;
-        check_info.name      = curr_name;
-        check_info.new_class = NULL;
-
-        /* Find the class with this name & parent by iterating over the open classes */
-        if (H5I_iterate(H5I_GENPROP_CLS, H5P__open_class_path_cb, &check_info, false) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_BADITER, NULL, "can't iterate over classes");
-        else if (NULL == check_info.new_class)
-            HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, NULL, "can't locate class");
-
-        /* Advance the pointer in the path to the start of the next component */
-        curr_class = check_info.new_class;
-        curr_name  = delimit + 1;
-    } /* end while */
-
-    /* Should be pointing to the last component in the path name now... */
-
-    /* Set up the search structure */
-    check_info.parent    = curr_class;
-    check_info.name      = curr_name;
-    check_info.new_class = NULL;
-
-    /* Find the class with this name & parent by iterating over the open classes */
-    if (H5I_iterate(H5I_GENPROP_CLS, H5P__open_class_path_cb, &check_info, false) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_BADITER, NULL, "can't iterate over classes");
-    else if (NULL == check_info.new_class)
-        HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, NULL, "can't locate class");
-
-    /* Copy it */
-    if (NULL == (ret_value = H5P__copy_pclass(check_info.new_class)))
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTCOPY, NULL, "can't copy property class");
-
-done:
-    /* Free the duplicated path */
-    H5MM_xfree(tmp_path);
-
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* H5P__open_class_path() */
 
 /*--------------------------------------------------------------------------
  NAME
@@ -6267,7 +6158,7 @@ done:
 } /* end H5P_disallow_write() */
 
 /*-------------------------------------------------------------------------
- * Function:	H5P__lock
+ * Function:	H5P__lock_list
  *
  * Purpose:	Lock a property list
  *
@@ -6276,7 +6167,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static void
-H5P__lock(H5P_genplist_t
+H5P__lock_list(H5P_genplist_t
 #ifndef H5_HAVE_CONCURRENCY
               H5_ATTR_UNUSED
 #endif /* H5_HAVE_CONCURRENCY */
@@ -6304,10 +6195,10 @@ H5P__lock(H5P_genplist_t
 #endif /* H5_HAVE_CONCURRENCY */
 
     FUNC_LEAVE_NOAPI_VOID
-} /* end H5P__lock() */
+} /* end H5P__lock_list() */
 
 /*-------------------------------------------------------------------------
- * Function:	H5P__unlock
+ * Function:	H5P__unlock_list
  *
  * Purpose:	Unlock a property list
  *
@@ -6316,7 +6207,7 @@ H5P__lock(H5P_genplist_t
  *-------------------------------------------------------------------------
  */
 static void
-H5P__unlock(H5P_genplist_t
+H5P__unlock_list(H5P_genplist_t
 #ifndef H5_HAVE_CONCURRENCY
                 H5_ATTR_UNUSED
 #endif /* H5_HAVE_CONCURRENCY */
@@ -6344,7 +6235,7 @@ H5P__unlock(H5P_genplist_t
 #endif /* H5_HAVE_CONCURRENCY */
 
     FUNC_LEAVE_NOAPI_VOID
-} /* end H5P__unlock() */
+} /* end H5P__unlock_list() */
 
 /*-------------------------------------------------------------------------
  * Function:	H5P_acquire
@@ -6392,7 +6283,7 @@ H5P_acquire(hid_t plist_id, H5P_plist_type_t type, H5P_lock_mode_t mode, bool al
 
         /* Acquire appropriate lock on non-default property lists */
         if (!H5P_PLIST_IS_DEFAULT(plist)) {
-            H5P__lock(plist, mode);
+            H5P__lock_list(plist, mode);
             plist_locked = true;
         }
     }
@@ -6403,7 +6294,7 @@ H5P_acquire(hid_t plist_id, H5P_plist_type_t type, H5P_lock_mode_t mode, bool al
 done:
     /* On error, release lock on property list */
     if (NULL == ret_value && plist_locked)
-        H5P__unlock(plist, mode);
+        H5P__unlock_list(plist, mode);
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5P_acquire() */
@@ -6437,3 +6328,76 @@ H5P_release(H5P_genplist_t *plist, H5P_lock_mode_t mode)
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5P_release() */
+
+/*-------------------------------------------------------------------------
+ * Function:	H5P__lock_class
+ *
+ * Purpose:	Lock a property class
+ *
+ * Return:      Non-negative on success/Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+static void
+H5P__lock_class(H5P_genclass_t
+#ifndef H5_HAVE_CONCURRENCY
+              H5_ATTR_UNUSED
+#endif /* H5_HAVE_CONCURRENCY */
+                  *pclass,
+          H5P_lock_mode_t
+#ifndef H5_HAVE_CONCURRENCY
+              H5_ATTR_UNUSED
+#endif /* H5_HAVE_CONCURRENCY */
+                  mode)
+{
+    FUNC_ENTER_PACKAGE_NOERR
+
+    /* Sanity checks */
+    assert(pclass);
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Don't lock private property classes */
+    if (!pclass->is_private)
+        /* Acquire lock on the property class */
+        H5TS_dlftt_rwlock_lock(&pclass->lock, (H5TS_rwlock_lock_mode_t)mode);
+#endif /* H5_HAVE_CONCURRENCY */
+
+    FUNC_LEAVE_NOAPI_VOID
+} /* end H5P__lock_class() */
+
+/*-------------------------------------------------------------------------
+ * Function:	H5P__unlock_class
+ *
+ * Purpose:	Unlock a property class
+ *
+ * Return:      None
+ *
+ *-------------------------------------------------------------------------
+ */
+static void
+H5P__unlock_class(H5P_genclass_t
+#ifndef H5_HAVE_CONCURRENCY
+                H5_ATTR_UNUSED
+#endif /* H5_HAVE_CONCURRENCY */
+                    *pclass,
+            H5P_lock_mode_t
+#ifndef H5_HAVE_CONCURRENCY
+                H5_ATTR_UNUSED
+#endif /* H5_HAVE_CONCURRENCY */
+                    mode)
+{
+    FUNC_ENTER_PACKAGE_NOERR
+
+    /* Sanity checks */
+    assert(pclass);
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Private property classes are never locked */
+    if (!pclass->is_private)
+        /* Release lock on the property class */
+        H5TS_dlftt_rwlock_unlock(&pclass->lock, (H5TS_rwlock_lock_mode_t)mode);
+#endif /* H5_HAVE_CONCURRENCY */
+
+    FUNC_LEAVE_NOAPI_VOID
+} /* end H5P__unlock_class() */
+

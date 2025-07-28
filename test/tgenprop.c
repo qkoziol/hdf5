@@ -1781,80 +1781,6 @@ test_genprop_equal(void)
 
 /****************************************************************
 **
-**  test_genprop_path(): Test basic generic property list code.
-**      Tests for class paths
-**
-****************************************************************/
-static void
-test_genprop_path(void)
-{
-    hid_t  cid1; /* Generic Property class ID */
-    hid_t  cid2; /* Generic Property class ID */
-    hid_t  cid3; /* Generic Property class ID */
-    char  *path; /* Class path */
-    herr_t ret;  /* Generic return value    */
-
-    /* Output message about test being performed */
-    MESSAGE(5, ("Testing Generic Property List Class Path Functionality\n"));
-
-    /* Create a new generic class, derived from the root of the class hierarchy */
-    cid1 = H5Pcreate_class(H5P_ROOT, CLASS1_NAME, NULL, NULL, NULL, NULL, NULL, NULL);
-    CHECK_I(cid1, "H5Pcreate_class");
-
-    /* Insert first property into class (with no callbacks) */
-    ret =
-        H5Pregister2(cid1, PROP1_NAME, PROP1_SIZE, PROP1_DEF_VALUE, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-    CHECK_I(ret, "H5Pregister2");
-
-    /* Get full path for first class */
-    path = H5P__get_class_path_test(cid1);
-    CHECK_PTR(path, "H5P__get_class_path_test");
-    if (strcmp(path, CLASS1_PATH) != 0)
-        TestErrPrintf("Class names don't match!, path=%s, CLASS1_PATH=%s\n", path, CLASS1_PATH);
-    H5free_memory(path);
-
-    /* Create another new generic class, derived from first class */
-    cid2 = H5Pcreate_class(cid1, CLASS2_NAME, NULL, NULL, NULL, NULL, NULL, NULL);
-    CHECK_I(cid2, "H5Pcreate_class");
-
-    /* Insert second property into class (with no callbacks) */
-    ret =
-        H5Pregister2(cid2, PROP2_NAME, PROP2_SIZE, PROP2_DEF_VALUE, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-    CHECK_I(ret, "H5Pregister2");
-
-    /* Get full path for second class */
-    path = H5P__get_class_path_test(cid2);
-    CHECK_PTR(path, "H5P__get_class_path_test");
-    if (strcmp(path, CLASS2_PATH) != 0)
-        TestErrPrintf("Class names don't match!, path=%s, CLASS2_PATH=%s\n", path, CLASS2_PATH);
-
-    /* Open a copy of the class with the path name */
-    cid3 = H5P__open_class_path_test(path);
-    CHECK_I(cid3, "H5P__open_class_path_test");
-
-    /* Check that the classes are equal */
-    ret = H5Pequal(cid2, cid3);
-    VERIFY(ret, 1, "H5Pequal");
-
-    /* Release the path string */
-    H5free_memory(path);
-
-    /* Close class */
-    ret = H5Pclose_class(cid3);
-    CHECK_I(ret, "H5Pclose_class");
-
-    /* Close class */
-    ret = H5Pclose_class(cid1);
-    CHECK_I(ret, "H5Pclose_class");
-
-    /* Close class */
-    ret = H5Pclose_class(cid2);
-    CHECK_I(ret, "H5Pclose_class");
-
-} /* ent test_genprop_path() */
-
-/****************************************************************
-**
 **  test_genprop_refcount(): Test basic generic property list code.
 **      Tests for correct reference counting
 **
@@ -2244,7 +2170,6 @@ test_genprop(void H5_ATTR_UNUSED *params)
     test_set_default_plist_fail(); /* Test that default property lists cannot be modified */
 
     test_genprop_equal();    /* Tests for more H5Pequal verification */
-    test_genprop_path();     /* Tests for class path verification */
     test_genprop_refcount(); /* Tests for class reference counting */
 
 #ifndef H5_NO_DEPRECATED_SYMBOLS
