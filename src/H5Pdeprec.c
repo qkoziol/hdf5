@@ -77,8 +77,8 @@ static herr_t H5P__get_file_space(H5P_genplist_t *fcpl, H5F_file_space_type_t *s
  PURPOSE
     Routine to register a new property in a property list class.
  USAGE
-    herr_t H5Pregister1(class, name, size, default, prp_create, prp_set, prp_get, prp_close)
-        hid_t class;            IN: Property list class to close
+    herr_t H5Pregister1(pclass_id, name, size, default, prp_create, prp_set, prp_get, prp_close)
+        hid_t pclass_id;        IN: Property list class to close
         const char *name;       IN: Name of property to register
         size_t size;            IN: Size of property in bytes
         void *def_value;        IN: Pointer to buffer containing default value
@@ -211,18 +211,19 @@ static herr_t H5P__get_file_space(H5P_genplist_t *fcpl, H5F_file_space_type_t *s
  REVISION LOG
 --------------------------------------------------------------------------*/
 herr_t
-H5Pregister1(hid_t cls_id, const char *name, size_t size, void *def_value, H5P_prp_create_func_t prp_create,
+H5Pregister1(hid_t pclass_id, const char *name, size_t size, void *def_value, H5P_prp_create_func_t prp_create,
              H5P_prp_set_func_t prp_set, H5P_prp_get_func_t prp_get, H5P_prp_delete_func_t prp_delete,
              H5P_prp_copy_func_t prp_copy, H5P_prp_close_func_t prp_close)
 {
-    H5P_genclass_t *pclass;      /* Property list class to modify */
+    H5P_genclass_t *pclass = NULL;      /* Property list class to modify */
     H5P_genclass_t *orig_pclass; /* Original property class */
+    bool class_unlocked = false;        /* Whether the class was unlocked */
     herr_t          ret_value;   /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Check arguments. */
-    if (NULL == (pclass = (H5P_genclass_t *)H5I_object_verify(cls_id, H5I_GENPROP_CLS)))
+    if (NULL == (pclass = H5I_acquire(pclass_id, H5I_GENPROP_CLS, H5I_LOCK_EXCLUSIVE)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list class");
     if (!name || !*name)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid class name");
@@ -231,8 +232,7 @@ H5Pregister1(hid_t cls_id, const char *name, size_t size, void *def_value, H5P_p
 
     /* Create the new property list class */
     orig_pclass = pclass;
-    if ((ret_value = H5P__register(&pclass, name, size, def_value, prp_create, prp_set, prp_get, NULL, NULL,
-                                   prp_delete, prp_copy, NULL, prp_close)) < 0)
+    if ((ret_value = H5P__register(&pclass, name, size, def_value, prp_create, prp_set, prp_get, NULL, NULL, prp_delete, prp_copy, NULL, prp_close)) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, FAIL, "unable to register property in class");
 
     /* Check if the property class changed and needs to be substituted in the ID */
@@ -240,17 +240,26 @@ H5Pregister1(hid_t cls_id, const char *name, size_t size, void *def_value, H5P_p
         H5P_genclass_t *old_pclass; /* Old property class */
 
         /* Substitute the new property class in the ID */
-        if (NULL == (old_pclass = (H5P_genclass_t *)H5I_subst(cls_id, pclass)))
+        if (NULL == (old_pclass = H5I_subst(pclass_id, pclass)))
             HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "unable to substitute property class in ID");
         assert(old_pclass == orig_pclass);
 
+        /* Release the lock on the old class */
+        if (H5I_release(old_pclass, H5I_GENPROP_CLS, H5I_LOCK_EXCLUSIVE) < 0)
+            HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property class");
+        class_unlocked = true;
+
         /* Close the previous class */
-        if (H5P__close_class(orig_pclass) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, FAIL,
-                        "unable to close original property class after substitution");
+        if (H5P__close_class(old_pclass) < 0)
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, FAIL, "unable to close original property class after substitution");
     } /* end if */
 
 done:
+    /* Release resources */
+    if (!class_unlocked && pclass)
+        if (H5I_release(pclass, H5I_GENPROP_CLS, H5I_LOCK_EXCLUSIVE) < 0)
+            HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property class");
+
     FUNC_LEAVE_API(ret_value)
 } /* H5Pregister1() */
 
@@ -260,8 +269,8 @@ done:
  PURPOSE
     Routine to insert a new property in a property list.
  USAGE
-    herr_t H5Pinsert1(plist, name, size, value, prp_set, prp_get, prp_close)
-        hid_t plist;            IN: Property list to add property to
+    herr_t H5Pinsert1(plist_id, name, size, value, prp_set, prp_get, prp_close)
+        hid_t plist_id;         IN: Property list to add property to
         const char *name;       IN: Name of property to add
         size_t size;            IN: Size of property in bytes
         void *value;            IN: Pointer to the value for the property

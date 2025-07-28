@@ -42,11 +42,9 @@ typedef struct H5P_genplist_t H5P_genplist_t;
 #ifdef H5P_MODULE
 #define H5P_PLIST_ID(P)         ((P)->plist_id)
 #define H5P_PLIST_IS_DEFAULT(P) ((P)->is_default)
-#define H5P_CLASS(P)            ((P)->pclass)
 #else /* H5P_MODULE */
 #define H5P_PLIST_ID(P)         (H5P_get_plist_id(P))
 #define H5P_PLIST_IS_DEFAULT(P) (H5P_is_default_plist(P))
-#define H5P_CLASS(P)            (H5P_get_class(P))
 #endif /* H5P_MODULE */
 
 #define H5_COLL_MD_READ_FLAG_NAME "collective_metadata_read"
@@ -251,7 +249,6 @@ H5_DLL htri_t H5P_isa_type(const H5P_genplist_t *plist, H5P_plist_type_t type);
 /* Query internal fields of the property list struct */
 H5_DLL hid_t           H5P_get_plist_id(const H5P_genplist_t *plist);
 H5_DLL bool            H5P_is_default_plist(const H5P_genplist_t *plist);
-H5_DLL H5P_genclass_t *H5P_get_class(const H5P_genplist_t *plist);
 
 /* Lock/unlock operations */
 H5_DLL H5P_genplist_t *H5P_acquire(hid_t plist_id, H5P_plist_type_t type, H5P_lock_mode_t mode,

@@ -29,6 +29,9 @@
  *           When adding types here, add a section to the 'misc19' test in
  *           test/tmisc.c to verify that the H5I{inc|dec|get}_ref() routines
  *           work correctly with it. \endinternal
+ *
+ *           When multiple IDs of different types are locked in a routine, the
+ *           locks are acquired in this order also, lowest to highest.
  */
 //! <!-- [H5I_type_t_snip] -->
 typedef enum H5I_type_t {

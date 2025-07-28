@@ -124,7 +124,6 @@ static herr_t H5P__close(H5P_genplist_t *plist);
 static void   H5P__lock_list(H5P_genplist_t *plist, H5P_lock_mode_t mode);
 static void   H5P__unlock_list(H5P_genplist_t *plist, H5P_lock_mode_t mode);
 static void   H5P__lock_class(H5P_genclass_t *pclass, H5P_lock_mode_t mode);
-static void   H5P__unlock_class(H5P_genclass_t *pclass, H5P_lock_mode_t mode);
 
 /*********************/
 /* Package Variables */
@@ -935,20 +934,17 @@ H5P__close_class_cb(void *_pclass, void H5_ATTR_UNUSED **request)
     /* Sanity check */
     assert(pclass);
 
-    /* Don't need to acquire locks on private classes */
-    if (!pclass->is_private) {
-        /* Acquire exclusive lock on the class.  This allows all other threads to
-         * finish using the property class before we close it.
-         */
-        H5P__lock_class(pclass, H5P_LOCK_EXCLUSIVE);
+    /* Acquire exclusive lock on the class.  This allows all other threads to
+     * finish using the property class before we close it.
+     */
+    H5P__lock_class(pclass, H5P_LOCK_EXCLUSIVE);
 
-        /* Release lock on the property class, which is safe since the H5I package
-         * is holding an exclusive lock on the property list ID 'type' and the ID
-         * info for the property class itself when it calls this routine, preventing
-         * any other thread from reaching this point.
-         */
-        H5P__unlock_class(pclass, H5P_LOCK_EXCLUSIVE);
-    }
+    /* Release lock on the property class, which is safe since the H5I package
+     * is holding an exclusive lock on the property list ID 'type' and the ID
+     * info for the property class itself when it calls this routine, preventing
+     * any other thread from reaching this point.
+     */
+    H5P__unlock_class(pclass, H5P_LOCK_EXCLUSIVE);
 
     /* Close the property list class object */
     if (H5P__close_class(pclass) < 0)
@@ -2158,9 +2154,8 @@ H5P__create_class(H5P_genclass_t *par_class, const char *name, H5P_plist_type_t 
     FUNC_ENTER_PACKAGE
 
     assert(name);
-    /* Allow internal classes to break some rules */
-    /* (This allows the root of the tree to be created with this routine -QAK) */
-    if (type == H5P_TYPE_USER)
+    /* Allow the root of the tree to be created with this routine */
+    if (type != H5P_TYPE_ROOT)
         assert(par_class);
 
     /* Allocate room for the class */
@@ -2855,7 +2850,7 @@ H5P__register(H5P_genclass_t **ppclass, const char *name, size_t size, const voi
      *  been created since the last modification was made to the class.
      */
     if (pclass->plists > 0 || pclass->classes > 0) {
-        if (NULL == (new_class = H5P__create_class( pclass->parent, pclass->name, pclass->type, pclass->create_func, pclass->create_data, pclass->copy_func, pclass->copy_data, pclass->close_func, pclass->close_data)))
+        if (NULL == (new_class = H5P__create_class(pclass->parent, pclass->name, pclass->type, pclass->create_func, pclass->create_data, pclass->copy_func, pclass->copy_data, pclass->close_func, pclass->close_data)))
             HGOTO_ERROR(H5E_PLIST, H5E_CANTCOPY, FAIL, "can't copy class");
 
         /* Walk through the skip list of the old class and copy properties */
@@ -5936,8 +5931,11 @@ H5P__get_class_parent(const H5P_genclass_t *pclass)
 
     assert(pclass);
 
-    /* Get property size */
+    /* Get parent class */
     ret_value = pclass->parent;
+
+    /* Lock the parent class */
+    H5P__lock_class(ret_value, H5P_LOCK_EXCLUSIVE);
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5P__get_class_parent() */
@@ -6060,7 +6058,7 @@ H5P_is_default_plist(const H5P_genplist_t *plist)
 } /* end H5P_is_default_plist() */
 
 /*-------------------------------------------------------------------------
- * Function:	H5P_get_class
+ * Function:	H5P__get_class
  *
  * Purpose:	Quick and dirty routine to retrieve property list class from
  *		property list structure.
@@ -6071,15 +6069,22 @@ H5P_is_default_plist(const H5P_genplist_t *plist)
  *-------------------------------------------------------------------------
  */
 H5_ATTR_PURE H5P_genclass_t *
-H5P_get_class(const H5P_genplist_t *plist)
+H5P__get_class(const H5P_genplist_t *plist)
 {
-    /* Use FUNC_ENTER_NOAPI_NOINIT_NOERR here to avoid performance issues */
-    FUNC_ENTER_NOAPI_NOINIT_NOERR
+    H5P_genclass_t *ret_value = NULL; /* Return value */
+
+    FUNC_ENTER_PACKAGE_NOERR
 
     assert(plist);
 
-    FUNC_LEAVE_NOAPI(plist->pclass)
-} /* end H5P_get_class() */
+    /* Get parent class */
+    ret_value = plist->pclass;
+
+    /* Lock the parent class */
+    H5P__lock_class(ret_value, H5P_LOCK_EXCLUSIVE);
+
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5P__get_class() */
 
 /*-------------------------------------------------------------------------
  * Function:	H5P_allow_write
@@ -6356,10 +6361,8 @@ H5P__lock_class(H5P_genclass_t
     assert(pclass);
 
 #ifdef H5_HAVE_CONCURRENCY
-    /* Don't lock private property classes */
-    if (!pclass->is_private)
-        /* Acquire lock on the property class */
-        H5TS_dlftt_rwlock_lock(&pclass->lock, (H5TS_rwlock_lock_mode_t)mode);
+    /* Acquire lock on the property class */
+    H5TS_dlftt_rwlock_lock(&pclass->lock, (H5TS_rwlock_lock_mode_t)mode);
 #endif /* H5_HAVE_CONCURRENCY */
 
     FUNC_LEAVE_NOAPI_VOID
@@ -6374,7 +6377,7 @@ H5P__lock_class(H5P_genclass_t
  *
  *-------------------------------------------------------------------------
  */
-static void
+void
 H5P__unlock_class(H5P_genclass_t
 #ifndef H5_HAVE_CONCURRENCY
                 H5_ATTR_UNUSED
@@ -6392,10 +6395,8 @@ H5P__unlock_class(H5P_genclass_t
     assert(pclass);
 
 #ifdef H5_HAVE_CONCURRENCY
-    /* Private property classes are never locked */
-    if (!pclass->is_private)
-        /* Release lock on the property class */
-        H5TS_dlftt_rwlock_unlock(&pclass->lock, (H5TS_rwlock_lock_mode_t)mode);
+    /* Release lock on the property class */
+    H5TS_dlftt_rwlock_unlock(&pclass->lock, (H5TS_rwlock_lock_mode_t)mode);
 #endif /* H5_HAVE_CONCURRENCY */
 
     FUNC_LEAVE_NOAPI_VOID

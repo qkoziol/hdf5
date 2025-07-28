@@ -98,7 +98,6 @@ struct H5P_genclass_t {
     H5P_plist_type_t       type;   /* Type of property */
     unsigned        revision;  /* Revision number of a particular class (globally unique) */
     H5P_genplist_t *def_plist; /* Pointer to a default property list for the class */
-    bool            is_private;  /* Whether this property class is private within the library */
 
     size_t                 nprops; /* Number of properties in class */
     H5SL_t         *props;     /* Skip list containing properties */
@@ -189,9 +188,11 @@ H5_DLL herr_t H5P__copy_prop_plist(H5P_genplist_t *dst_plist, H5P_genplist_t *sr
 H5_DLL herr_t H5P__copy_prop_pclass(H5P_genclass_t **dst_pclass, H5P_genclass_t *src_pclass,
                                     const char *name);
 H5_DLL herr_t H5P__unregister(H5P_genclass_t *pclass, const char *name);
+H5_DLL H5P_genclass_t *H5P__get_class(const H5P_genplist_t *plist);
 H5_DLL H5P_genclass_t *H5P__get_class_parent(const H5P_genclass_t *pclass);
 H5_DLL herr_t          H5P__close_class(H5P_genclass_t *pclass);
 H5_DLL H5P_genprop_t  *H5P__find_prop_plist(const H5P_genplist_t *plist, const char *name);
+H5_DLL void   H5P__unlock_class(H5P_genclass_t *pclass, H5P_lock_mode_t mode);
 
 /* Encode/decode routines */
 H5_DLL herr_t          H5P__encode(const H5P_genplist_t *plist, bool enc_all_prop, void *buf, size_t *nalloc);

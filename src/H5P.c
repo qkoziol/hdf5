@@ -108,7 +108,7 @@ H5Pcopy(hid_t id)
         else if (H5I_GENPROP_CLS == H5I_get_type(id)) {
             H5P_genclass_t *copy_class; /* Copy of class */
 
-            if (NULL == (pclass = H5I_object_verify(id, H5I_GENPROP_CLS)))
+            if (NULL == (pclass = H5I_acquire(id, H5I_GENPROP_CLS, H5I_LOCK_SHARED)))
                 HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, H5I_INVALID_HID, "property object doesn't exist");
 
             /* Copy the class */
@@ -117,18 +117,21 @@ H5Pcopy(hid_t id)
 
             /* Get an ID for the copied class */
             if ((ret_value = H5I_register(H5I_GENPROP_CLS, copy_class, true)) < 0) {
-                H5P__close_class(copy_class);
+                if (H5P__close_class(copy_class) < 0)
+                    HDONE_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, H5I_INVALID_HID, "unable to close property class");
                 HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, H5I_INVALID_HID, "unable to register property list class");
             } /* end if */
-        }     /* end else */
+        } /* end else */
         else
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not property object");
-    }
+    } /* end else */
 
 done:
     /* Release resources */
     if (plist && H5I_release(plist, H5I_GENPROP_LST, H5I_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property list");
+    if (pclass && H5I_release(pclass, H5I_GENPROP_CLS, H5I_LOCK_SHARED) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property class");
 
     FUNC_LEAVE_API(ret_value)
 } /* H5Pcopy() */
@@ -139,9 +142,9 @@ done:
  PURPOSE
     Create a new property list class.
  USAGE
-    hid_t H5Pcreate_class(parent, name, cls_create, create_data,
+    hid_t H5Pcreate_class(par_class_id, name, cls_create, create_data,
                 cls_close, close_data)
-        hid_t parent;       IN: Property list class ID of parent class
+        hid_t par_class_id;    IN: Property list class ID of parent class
         const char *name;   IN: Name of class we are creating
         H5P_cls_create_func_t cls_create;   IN: The callback function to call
                                     when each property list in this class is
@@ -168,7 +171,7 @@ done:
  REVISION LOG
 --------------------------------------------------------------------------*/
 hid_t
-H5Pcreate_class(hid_t parent, const char *name, H5P_cls_create_func_t cls_create, void *create_data,
+H5Pcreate_class(hid_t par_class_id, const char *name, H5P_cls_create_func_t cls_create, void *create_data,
                 H5P_cls_copy_func_t cls_copy, void *copy_data, H5P_cls_close_func_t cls_close,
                 void *close_data)
 {
@@ -179,8 +182,10 @@ H5Pcreate_class(hid_t parent, const char *name, H5P_cls_create_func_t cls_create
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Check arguments. */
-    if (H5P_DEFAULT != parent && (H5I_GENPROP_CLS != H5I_get_type(parent)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a property list class");
+    if (par_class_id == H5P_DEFAULT)
+        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "must specify a parent class");
+    if (H5I_GENPROP_CLS != H5I_get_type(par_class_id))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "parent is not a property list class");
     if (!name || !*name)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, H5I_INVALID_HID, "invalid class name");
     if ((create_data != NULL && cls_create == NULL) || (copy_data != NULL && cls_copy == NULL) ||
@@ -188,9 +193,7 @@ H5Pcreate_class(hid_t parent, const char *name, H5P_cls_create_func_t cls_create
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, H5I_INVALID_HID, "data specified, but no callback provided");
 
     /* Get the pointer to the parent class */
-    if (parent == H5P_DEFAULT)
-        par_class = NULL;
-    else if (NULL == (par_class = H5I_object(parent)))
+    if (NULL == (par_class = H5I_acquire(par_class_id, H5I_GENPROP_CLS, H5I_LOCK_EXCLUSIVE)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "can't retrieve parent class");
 
     /* Create the new property list class */
@@ -202,6 +205,10 @@ H5Pcreate_class(hid_t parent, const char *name, H5P_cls_create_func_t cls_create
         HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, H5I_INVALID_HID, "unable to register property list class");
 
 done:
+    /* Release resources */
+    if (par_class && H5I_release(par_class, H5I_GENPROP_CLS, H5I_LOCK_EXCLUSIVE) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property class");
+
     if (H5I_INVALID_HID == ret_value && pclass)
         if (H5P__close_class(pclass) < 0)
             HDONE_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, FAIL, "unable to close property class");
@@ -215,8 +222,8 @@ done:
  PURPOSE
     Routine to create a new property list of a property list class.
  USAGE
-    hid_t H5Pcreate(cls_id)
-        hid_t cls_id;       IN: Property list class create list from
+    hid_t H5Pcreate(pclass_id)
+        hid_t pclass_id;       IN: Property list class create list from
  RETURNS
     Returns a valid property list ID on success, H5I_INVALID_HID  on failure.
  DESCRIPTION
@@ -232,16 +239,16 @@ done:
  REVISION LOG
 --------------------------------------------------------------------------*/
 hid_t
-H5Pcreate(hid_t cls_id)
+H5Pcreate(hid_t pclass_id)
 {
-    H5P_genclass_t *pclass;                      /* Property list class to modify */
+    H5P_genclass_t *pclass = NULL;               /* Property list class to modify */
     H5P_genplist_t *plist;                       /* Property list created */
     hid_t           ret_value = H5I_INVALID_HID; /* return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Check arguments */
-    if (NULL == (pclass = H5I_object_verify(cls_id, H5I_GENPROP_CLS)))
+    if (NULL == (pclass = H5I_acquire(pclass_id, H5I_GENPROP_CLS, H5I_LOCK_EXCLUSIVE)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a property list class");
 
     /* Create the new property list */
@@ -252,6 +259,10 @@ H5Pcreate(hid_t cls_id)
     ret_value = plist->plist_id;
 
 done:
+    /* Release resources */
+    if (pclass && H5I_release(pclass, H5I_GENPROP_CLS, H5I_LOCK_EXCLUSIVE) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property class");
+
     FUNC_LEAVE_API(ret_value)
 } /* H5Pcreate() */
 
@@ -261,8 +272,8 @@ done:
  PURPOSE
     Routine to register a new property in a property list class.
  USAGE
-    herr_t H5Pregister2(class, name, size, default, prp_create, prp_set, prp_get, prp_close)
-        hid_t class;            IN: Property list class to close
+    herr_t H5Pregister2(pclass_id, name, size, default, prp_create, prp_set, prp_get, prp_close)
+        hid_t pclass_id;        IN: Property list class to close
         const char *name;       IN: Name of property to register
         size_t size;            IN: Size of property in bytes
         void *def_value;        IN: Pointer to buffer containing default value
@@ -410,18 +421,19 @@ done:
  REVISION LOG
 --------------------------------------------------------------------------*/
 herr_t
-H5Pregister2(hid_t cls_id, const char *name, size_t size, void *def_value, H5P_prp_create_func_t prp_create,
+H5Pregister2(hid_t pclass_id, const char *name, size_t size, void *def_value, H5P_prp_create_func_t prp_create,
              H5P_prp_set_func_t prp_set, H5P_prp_get_func_t prp_get, H5P_prp_delete_func_t prp_delete,
              H5P_prp_copy_func_t prp_copy, H5P_prp_compare_func_t prp_cmp, H5P_prp_close_func_t prp_close)
 {
-    H5P_genclass_t *pclass;      /* Property list class to modify */
-    H5P_genclass_t *orig_pclass; /* Original property class */
+    H5P_genclass_t *pclass = NULL;      /* Property list class to modify */
+    H5P_genclass_t *orig_pclass;        /* Original property class */
+    bool class_unlocked = false;        /* Whether the class was unlocked */
     herr_t          ret_value;   /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Check arguments. */
-    if (NULL == (pclass = H5I_object_verify(cls_id, H5I_GENPROP_CLS)))
+    if (NULL == (pclass = H5I_acquire(pclass_id, H5I_GENPROP_CLS, H5I_LOCK_EXCLUSIVE)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list class");
     if (!name || !*name)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid class name");
@@ -438,9 +450,14 @@ H5Pregister2(hid_t cls_id, const char *name, size_t size, void *def_value, H5P_p
         H5P_genclass_t *old_pclass; /* Old property class */
 
         /* Substitute the new property class in the ID */
-        if (NULL == (old_pclass = H5I_subst(cls_id, pclass)))
+        if (NULL == (old_pclass = H5I_subst(pclass_id, pclass)))
             HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "unable to substitute property class in ID");
         assert(old_pclass == orig_pclass);
+
+        /* Release the lock on the old class */
+        if (H5I_release(old_pclass, H5I_GENPROP_CLS, H5I_LOCK_EXCLUSIVE) < 0)
+            HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property class");
+        class_unlocked = true;
 
         /* Close the previous class */
         if (H5P__close_class(old_pclass) < 0)
@@ -448,6 +465,11 @@ H5Pregister2(hid_t cls_id, const char *name, size_t size, void *def_value, H5P_p
     } /* end if */
 
 done:
+    /* Release resources */
+    if (!class_unlocked && pclass)
+        if (H5I_release(pclass, H5I_GENPROP_CLS, H5I_LOCK_EXCLUSIVE) < 0)
+            HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property class");
+
     FUNC_LEAVE_API(ret_value)
 } /* H5Pregister2() */
 
@@ -457,8 +479,8 @@ done:
  PURPOSE
     Routine to insert a new property in a property list.
  USAGE
-    herr_t H5Pinsert2(plist, name, size, value, prp_set, prp_get, prp_close)
-        hid_t plist;            IN: Property list to add property to
+    herr_t H5Pinsert2(plist_id, name, size, value, prp_set, prp_get, prp_close)
+        hid_t plist_id;         IN: Property list to add property to
         const char *name;       IN: Name of property to add
         size_t size;            IN: Size of property in bytes
         void *value;            IN: Pointer to the value for the property
@@ -724,7 +746,7 @@ H5Pexist(hid_t id, const char *name)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, FAIL, "property does not exist in list");
     } /* end if */
     else if (H5I_GENPROP_CLS == H5I_get_type(id)) {
-        if (NULL == (pclass = H5I_object(id)))
+        if (NULL == (pclass = H5I_acquire(id, H5I_GENPROP_CLS, H5I_LOCK_SHARED)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property class");
 
         if ((ret_value = H5P__exist_pclass(pclass, name)) < 0)
@@ -737,6 +759,8 @@ done:
     /* Release resources */
     if (plist && H5I_release(plist, H5I_GENPROP_LST, H5I_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+    if (pclass && H5I_release(pclass, H5I_GENPROP_CLS, H5I_LOCK_SHARED) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property class");
 
     FUNC_LEAVE_API(ret_value)
 } /* H5Pexist() */
@@ -790,7 +814,7 @@ H5Pget_size(hid_t id, const char *name, size_t *size /*out*/)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, FAIL, "unable to query size in plist");
     } /* end if */
     else if (H5I_GENPROP_CLS == H5I_get_type(id)) {
-        if (NULL == (pclass = H5I_object(id)))
+        if (NULL == (pclass = H5I_acquire(id, H5I_GENPROP_CLS, H5I_LOCK_SHARED)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
 
         /* Check the property size */
@@ -804,6 +828,8 @@ done:
     /* Release resources */
     if (plist && H5I_release(plist, H5I_GENPROP_LST, H5I_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+    if (pclass && H5I_release(pclass, H5I_GENPROP_CLS, H5I_LOCK_SHARED) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property class");
 
     FUNC_LEAVE_API(ret_value)
 } /* H5Pget_size() */
@@ -942,8 +968,8 @@ H5Pget_class(hid_t plist_id)
     if (NULL == (plist = H5I_acquire(plist_id, H5I_GENPROP_LST, H5I_LOCK_SHARED)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a property list");
 
-    /* Retrieve the property list class */
-    if ((pclass = H5P_get_class(plist)) == NULL)
+    /* Retrieve the property list class (locked) */
+    if (NULL == (pclass = H5P__get_class(plist)))
         HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, H5I_INVALID_HID, "unable to query class of property list");
 
     /* Increment the outstanding references to the class object */
@@ -958,9 +984,12 @@ done:
     /* Release resources */
     if (plist && H5I_release(plist, H5I_GENPROP_LST, H5I_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+    if (pclass)
+        H5P__unlock_class(pclass, H5P_LOCK_EXCLUSIVE);
 
     if (H5I_INVALID_HID == ret_value && pclass)
-        H5P__close_class(pclass);
+        if (H5P__close_class(pclass) < 0)
+            HDONE_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, FAIL, "unable to close property class");
 
     FUNC_LEAVE_API(ret_value)
 } /* H5Pget_class() */
@@ -1011,7 +1040,7 @@ H5Pget_nprops(hid_t id, size_t *nprops /*out*/)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, FAIL, "unable to query # of properties in plist");
     } /* end if */
     else if (H5I_GENPROP_CLS == H5I_get_type(id)) {
-        if (NULL == (pclass = H5I_object(id)))
+        if (NULL == (pclass = H5I_acquire(id, H5I_GENPROP_CLS, H5I_LOCK_SHARED)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property class");
 
         if (H5P_get_nprops_pclass(pclass, nprops, false) < 0)
@@ -1024,6 +1053,8 @@ done:
     /* Release resources */
     if (plist && H5I_release(plist, H5I_GENPROP_LST, H5I_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+    if (pclass && H5I_release(pclass, H5I_GENPROP_CLS, H5I_LOCK_SHARED) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property class");
 
     FUNC_LEAVE_API(ret_value)
 } /* H5Pget_nprops() */
@@ -1053,6 +1084,7 @@ H5Pequal(hid_t id1, hid_t id2)
 {
     H5P_genplist_t *plist1 = NULL, *plist2 = NULL;   /* Property lists to compare */
     H5P_genclass_t *pclass1 = NULL, *pclass2 = NULL; /* Property classes to compare */
+    bool lock_1_first;          /* Which ID to lock first */
     htri_t          ret_value = false;               /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1064,14 +1096,21 @@ H5Pequal(hid_t id1, hid_t id2)
     if (H5I_get_type(id1) != H5I_get_type(id2))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not the same kind of property objects");
 
+    /* Determine lock ordering */
+    lock_1_first = (id1 < id2);
+
     /* Compare property lists */
     if (H5I_GENPROP_LST == H5I_get_type(id1)) {
         int cmp_ret = 0;
 
+        if (!lock_1_first)
+            if (NULL == (plist2 = H5I_acquire(id2, H5I_GENPROP_LST, H5I_LOCK_SHARED)))
+                HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
         if (NULL == (plist1 = H5I_acquire(id1, H5I_GENPROP_LST, H5I_LOCK_SHARED)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
-        if (NULL == (plist2 = H5I_acquire(id2, H5I_GENPROP_LST, H5I_LOCK_SHARED)))
-            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
+        if (lock_1_first)
+            if (NULL == (plist2 = H5I_acquire(id2, H5I_GENPROP_LST, H5I_LOCK_SHARED)))
+                HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
 
         if (H5P__cmp_plist(plist1, plist2, &cmp_ret) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTCOMPARE, FAIL, "can't compare property lists");
@@ -1081,10 +1120,14 @@ H5Pequal(hid_t id1, hid_t id2)
     } /* end if */
     /* Must be property classes */
     else {
-        if (NULL == (pclass1 = H5I_object(id1)))
+        if (!lock_1_first)
+            if (NULL == (pclass2 = H5I_acquire(id2, H5I_GENPROP_CLS, H5I_LOCK_SHARED)))
+                HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, FAIL, "property object doesn't exist");
+        if (NULL == (pclass1 = H5I_acquire(id1, H5I_GENPROP_CLS, H5I_LOCK_SHARED)))
             HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, FAIL, "property object doesn't exist");
-        if (NULL == (pclass2 = H5I_object(id2)))
-            HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, FAIL, "property object doesn't exist");
+        if (lock_1_first)
+            if (NULL == (pclass2 = H5I_acquire(id2, H5I_GENPROP_CLS, H5I_LOCK_SHARED)))
+                HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, FAIL, "property object doesn't exist");
 
         if (H5P__cmp_class(pclass1, pclass2) == 0)
             ret_value = true;
@@ -1092,10 +1135,26 @@ H5Pequal(hid_t id1, hid_t id2)
 
 done:
     /* Release resources */
-    if (plist2 && H5I_release(plist2, H5I_GENPROP_LST, H5I_LOCK_SHARED) < 0)
-        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
-    if (plist1 && H5I_release(plist1, H5I_GENPROP_LST, H5I_LOCK_SHARED) < 0)
-        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+    if (H5I_GENPROP_LST == H5I_get_type(id1)) {
+        if (lock_1_first)
+            if (plist2 && H5I_release(plist2, H5I_GENPROP_LST, H5I_LOCK_SHARED) < 0)
+                HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+        if (plist1 && H5I_release(plist1, H5I_GENPROP_LST, H5I_LOCK_SHARED) < 0)
+            HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+        if (!lock_1_first)
+            if (plist2 && H5I_release(plist2, H5I_GENPROP_LST, H5I_LOCK_SHARED) < 0)
+                HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+    }
+    else {
+        if (lock_1_first)
+            if (pclass2 && H5I_release(pclass2, H5I_GENPROP_CLS, H5I_LOCK_SHARED) < 0)
+                HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property class");
+        if (pclass1 && H5I_release(pclass1, H5I_GENPROP_CLS, H5I_LOCK_SHARED) < 0)
+            HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property class");
+        if (!lock_1_first)
+            if (pclass2 && H5I_release(pclass2, H5I_GENPROP_CLS, H5I_LOCK_SHARED) < 0)
+                HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property class");
+    }
 
     FUNC_LEAVE_API(ret_value)
 } /* H5Pequal() */
@@ -1133,10 +1192,10 @@ H5Pisa_class(hid_t plist_id, hid_t pclass_id)
     FUNC_ENTER_API(FAIL)
 
     /* Check arguments. */
+    if (NULL == (pclass = H5I_acquire(pclass_id, H5I_GENPROP_CLS, H5I_LOCK_SHARED)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property class");
     if (NULL == (plist = H5I_acquire(plist_id, H5I_GENPROP_LST, H5I_LOCK_SHARED)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
-    if (NULL == (pclass = H5I_object_verify(pclass_id, H5I_GENPROP_CLS)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property class");
 
     /* Compare the property list's class against the other class */
     if ((ret_value = H5P_class_isa(plist->pclass, pclass)) < 0)
@@ -1146,6 +1205,8 @@ done:
     /* Release resources */
     if (plist && H5I_release(plist, H5I_GENPROP_LST, H5I_LOCK_SHARED) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+    if (pclass && H5I_release(pclass, H5I_GENPROP_CLS, H5I_LOCK_SHARED) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property class");
 
     FUNC_LEAVE_API(ret_value)
 } /* H5Pisa_class() */
@@ -1195,7 +1256,7 @@ H5P__iterate_cb(H5P_genprop_t *prop, void *_udata)
  PURPOSE
     Routine to iterate over the properties in a property list or class
  USAGE
-    int H5Piterate(pclass_id, idx, iter_func, iter_data)
+    int H5Piterate(id, idx, iter_func, iter_data)
         hid_t id;                   IN: ID of property object to iterate over
         int *idx;                   IN/OUT: Index of the property to begin with
         H5P_iterate_t iter_func;    IN: Function pointer to function to be
@@ -1274,7 +1335,7 @@ H5Piterate(hid_t id, int *idx, H5P_iterate_t iter_func, void *iter_data)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, FAIL, "unable to iterate over list");
     } /* end if */
     else if (H5I_GENPROP_CLS == H5I_get_type(id)) {
-        if (NULL == (pclass = H5I_object(id)))
+        if (NULL == (pclass = H5I_acquire(id, H5I_GENPROP_CLS, H5I_LOCK_EXCLUSIVE)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property class");
 
         /* Iterate over a property class */
@@ -1288,6 +1349,8 @@ done:
     /* Release resources */
     if (plist && H5I_release(plist, H5I_GENPROP_LST, H5I_LOCK_EXCLUSIVE) < 0)
         HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+    if (pclass && H5I_release(pclass, H5I_GENPROP_CLS, H5I_LOCK_EXCLUSIVE) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property class");
 
     FUNC_LEAVE_API(ret_value)
 } /* H5Piterate() */
@@ -1443,7 +1506,11 @@ H5Pcopy_prop(hid_t dst_id, hid_t src_id, const char *name)
 {
     H5P_genplist_t *dst_plist = NULL;         /* Pointer to destination property list */
     H5P_genplist_t *src_plist = NULL;         /* Pointer to source property list */
+    H5P_genclass_t *dst_pclass = NULL;      /* Pointer to destination property class */
+    H5P_genclass_t *src_pclass = NULL;      /* Pointer to source property class */
     H5I_type_t      src_id_type, dst_id_type; /* ID types */
+    bool dst_class_unlocked = false;        /* Whether the class was unlocked */
+    bool lock_dst_first;          /* Which ID to lock first */
     herr_t          ret_value = SUCCEED;      /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1461,13 +1528,20 @@ H5Pcopy_prop(hid_t dst_id, hid_t src_id, const char *name)
     if (!name || !*name)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "no name given");
 
+    /* Determine lock ordering */
+    lock_dst_first = (dst_id < src_id);
+
     /* Copy between property lists */
     if (H5I_GENPROP_LST == src_id_type) {
         /* Get the objects to operate on */
-        if (NULL == (src_plist = H5I_acquire(src_id, H5I_GENPROP_LST, H5I_LOCK_SHARED)))
-            HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, FAIL, "property object doesn't exist");
+        if (!lock_dst_first)
+            if (NULL == (src_plist = H5I_acquire(src_id, H5I_GENPROP_LST, H5I_LOCK_SHARED)))
+                HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, FAIL, "property object doesn't exist");
         if (NULL == (dst_plist = H5I_acquire(dst_id, H5I_GENPROP_LST, H5I_LOCK_EXCLUSIVE)))
             HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, FAIL, "property object doesn't exist");
+        if (lock_dst_first)
+            if (NULL == (src_plist = H5I_acquire(src_id, H5I_GENPROP_LST, H5I_LOCK_SHARED)))
+                HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, FAIL, "property object doesn't exist");
 
         /* Copy the property */
         if (H5P__copy_prop_plist(dst_plist, src_plist, name) < 0)
@@ -1475,15 +1549,17 @@ H5Pcopy_prop(hid_t dst_id, hid_t src_id, const char *name)
     } /* end if */
     /* Must be property classes */
     else {
-        H5P_genclass_t *dst_pclass;      /* Pointer to destination property class */
         H5P_genclass_t *orig_dst_pclass; /* Original destination property class */
-        H5P_genclass_t *src_pclass;      /* Pointer to source property class */
 
         /* Get property list classes */
-        if (NULL == (src_pclass = H5I_object(src_id)))
-            HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, FAIL, "source property class object doesn't exist");
-        if (NULL == (dst_pclass = H5I_object(dst_id)))
+        if (!lock_dst_first)
+            if (NULL == (src_pclass = H5I_acquire(src_id, H5I_GENPROP_CLS, H5I_LOCK_SHARED)))
+                HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, FAIL, "source property class object doesn't exist");
+        if (NULL == (dst_pclass = H5I_acquire(dst_id, H5I_GENPROP_CLS, H5I_LOCK_EXCLUSIVE)))
             HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, FAIL, "destination property class object doesn't exist");
+        if (lock_dst_first)
+            if (NULL == (src_pclass = H5I_acquire(src_id, H5I_GENPROP_CLS, H5I_LOCK_SHARED)))
+                HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, FAIL, "source property class object doesn't exist");
 
         /* Copy the property */
         orig_dst_pclass = dst_pclass;
@@ -1499,6 +1575,11 @@ H5Pcopy_prop(hid_t dst_id, hid_t src_id, const char *name)
                 HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "unable to substitute property class in ID");
             assert(old_dst_pclass == orig_dst_pclass);
 
+            /* Release the lock on the old class */
+            if (H5I_release(old_dst_pclass, H5I_GENPROP_CLS, H5I_LOCK_EXCLUSIVE) < 0)
+                HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property class");
+            dst_class_unlocked = true;
+
             /* Close the previous class */
             if (H5P__close_class(old_dst_pclass) < 0)
                 HGOTO_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, FAIL, "unable to close original property class after substitution");
@@ -1507,10 +1588,27 @@ H5Pcopy_prop(hid_t dst_id, hid_t src_id, const char *name)
 
 done:
     /* Release resources */
-    if (dst_plist && H5I_release(dst_plist, H5I_GENPROP_LST, H5I_LOCK_EXCLUSIVE) < 0)
-        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
-    if (src_plist && H5I_release(src_plist, H5I_GENPROP_LST, H5I_LOCK_SHARED) < 0)
-        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+    if (H5I_GENPROP_LST == H5I_get_type(src_id)) {
+        if (lock_dst_first)
+            if (src_plist && H5I_release(src_plist, H5I_GENPROP_LST, H5I_LOCK_SHARED) < 0)
+                HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+        if (dst_plist && H5I_release(dst_plist, H5I_GENPROP_LST, H5I_LOCK_EXCLUSIVE) < 0)
+            HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+        if (!lock_dst_first)
+            if (src_plist && H5I_release(src_plist, H5I_GENPROP_LST, H5I_LOCK_SHARED) < 0)
+                HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+    }
+    else {
+        if (lock_dst_first)
+            if (src_pclass && H5I_release(src_pclass, H5I_GENPROP_CLS, H5I_LOCK_SHARED) < 0)
+                HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property class");
+        if (!dst_class_unlocked && dst_pclass)
+            if (H5I_release(dst_pclass, H5I_GENPROP_CLS, H5I_LOCK_EXCLUSIVE) < 0)
+                HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property class");
+        if (!lock_dst_first)
+            if (src_pclass && H5I_release(src_pclass, H5I_GENPROP_CLS, H5I_LOCK_SHARED) < 0)
+                HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property class");
+    }
 
     FUNC_LEAVE_API(ret_value)
 } /* H5Pcopy_prop() */
@@ -1541,13 +1639,13 @@ done:
 herr_t
 H5Punregister(hid_t pclass_id, const char *name)
 {
-    H5P_genclass_t *pclass;    /* Property list class to modify */
+    H5P_genclass_t *pclass = NULL;    /* Property list class to modify */
     herr_t          ret_value; /* return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Check arguments. */
-    if (NULL == (pclass = H5I_object_verify(pclass_id, H5I_GENPROP_CLS)))
+    if (NULL == (pclass = H5I_acquire(pclass_id, H5I_GENPROP_CLS, H5I_LOCK_EXCLUSIVE)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list class");
     if (!name || !*name)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid property name");
@@ -1557,6 +1655,10 @@ H5Punregister(hid_t pclass_id, const char *name)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, FAIL, "unable to remove property from class");
 
 done:
+    /* Release resources */
+    if (pclass && H5I_release(pclass, H5I_GENPROP_CLS, H5I_LOCK_EXCLUSIVE) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, FAIL, "unable to unlock property class");
+
     FUNC_LEAVE_API(ret_value)
 } /* H5Punregister() */
 
@@ -1626,13 +1728,13 @@ done:
 H5_ATTR_MALLOC char *
 H5Pget_class_name(hid_t pclass_id)
 {
-    H5P_genclass_t *pclass;    /* Property class to query */
+    H5P_genclass_t *pclass = NULL;    /* Property class to query */
     char           *ret_value; /* return value */
 
     FUNC_ENTER_API(NULL)
 
     /* Check arguments. */
-    if (NULL == (pclass = H5I_object_verify(pclass_id, H5I_GENPROP_CLS)))
+    if (NULL == (pclass = H5I_acquire(pclass_id, H5I_GENPROP_CLS, H5I_LOCK_SHARED)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a property class");
 
     /* Get the property list class name */
@@ -1640,6 +1742,10 @@ H5Pget_class_name(hid_t pclass_id)
         HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, NULL, "unable to query name of class");
 
 done:
+    /* Release resources */
+    if (pclass && H5I_release(pclass, H5I_GENPROP_CLS, H5I_LOCK_SHARED) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, NULL, "unable to unlock property class");
+
     FUNC_LEAVE_API(ret_value)
 } /* H5Pget_class_name() */
 
@@ -1647,7 +1753,7 @@ done:
  NAME
     H5Pget_class_parent
  PURPOSE
-    routine to query the parent class of a generic property class
+    Routine to query the parent class of a generic property class
  USAGE
     hid_t H5Pget_class_parent(pclass_id)
         hid_t pclass_id;         IN: Property class to query
@@ -1665,17 +1771,17 @@ done:
 hid_t
 H5Pget_class_parent(hid_t pclass_id)
 {
-    H5P_genclass_t *pclass;                      /* Property class to query */
+    H5P_genclass_t *pclass = NULL;                      /* Property class to query */
     H5P_genclass_t *parent    = NULL;            /* Parent's property class */
     hid_t           ret_value = H5I_INVALID_HID; /* return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Check arguments. */
-    if (NULL == (pclass = H5I_object_verify(pclass_id, H5I_GENPROP_CLS)))
+    if (NULL == (pclass = H5I_acquire(pclass_id, H5I_GENPROP_CLS, H5I_LOCK_SHARED)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a property class");
 
-    /* Retrieve the property class's parent */
+    /* Retrieve the property class's parent (locked) */
     if (NULL == (parent = H5P__get_class_parent(pclass)))
         HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, H5I_INVALID_HID, "unable to query class of property list");
 
@@ -1688,8 +1794,15 @@ H5Pget_class_parent(hid_t pclass_id)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, H5I_INVALID_HID, "unable to register property list class");
 
 done:
+    /* Release resources */
+    if (pclass && H5I_release(pclass, H5I_GENPROP_CLS, H5I_LOCK_SHARED) < 0)
+        HDONE_ERROR(H5E_PLIST, H5E_CANTUNLOCK, H5I_INVALID_HID, "unable to unlock property class");
+    if (parent)
+        H5P__unlock_class(parent, H5P_LOCK_EXCLUSIVE);
+
     if (H5I_INVALID_HID == ret_value && parent)
-        H5P__close_class(parent);
+        if (H5P__close_class(parent) < 0)
+            HDONE_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, H5I_INVALID_HID, "unable to close property class");
 
     FUNC_LEAVE_API(ret_value)
 } /* H5Pget_class_parent() */
@@ -1700,8 +1813,8 @@ done:
  PURPOSE
     Close a property list class.
  USAGE
-    herr_t H5Pclose_class(cls_id)
-        hid_t cls_id;       IN: Property list class ID to class
+    herr_t H5Pclose_class(pclass_id)
+        hid_t pclass_id;       IN: Property list class ID to class
 
  RETURNS
     Returns non-negative on success, negative on failure.
@@ -1713,18 +1826,18 @@ done:
  REVISION LOG
 --------------------------------------------------------------------------*/
 herr_t
-H5Pclose_class(hid_t cls_id)
+H5Pclose_class(hid_t pclass_id)
 {
     herr_t ret_value = SUCCEED; /* Return value			*/
 
     FUNC_ENTER_API(FAIL)
 
     /* Check arguments */
-    if (H5I_GENPROP_CLS != H5I_get_type(cls_id))
+    if (H5I_GENPROP_CLS != H5I_get_type(pclass_id))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list class");
 
     /* Close the property list class */
-    if (H5I_dec_app_ref(cls_id) < 0)
+    if (H5I_dec_app_ref(pclass_id) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTFREE, FAIL, "can't close");
 
 done:

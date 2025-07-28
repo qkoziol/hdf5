@@ -1716,7 +1716,7 @@ H5CX_set_apl(H5P_genplist_t *acspl,
 #endif /* H5_HAVE_PARALLEL */
         is_lapl = true;
     }
-    else if ((is_lapl = H5P_class_isa(H5P_CLASS(acspl), H5P_CLS_LINK_ACCESS_g)) < 0)
+    else if ((is_lapl = H5P_isa_type(acspl, H5P_TYPE_LINK_ACCESS)) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for link access class");
     if (is_lapl) {
         /* Release any existing copy */
@@ -1738,7 +1738,7 @@ H5CX_set_apl(H5P_genplist_t *acspl,
 #endif /* H5_HAVE_PARALLEL */
         is_dapl = true;
     }
-    else if ((is_dapl = H5P_class_isa(H5P_CLASS(acspl), H5P_CLS_DATASET_ACCESS_g)) < 0)
+    else if ((is_dapl = H5P_isa_type(acspl, H5P_TYPE_DATASET_ACCESS)) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for dataset access class");
     if (is_dapl) {
         /* Release any existing copy */
@@ -1759,7 +1759,7 @@ H5CX_set_apl(H5P_genplist_t *acspl,
 #endif /* H5_HAVE_PARALLEL */
         is_fapl = true;
     }
-    else if ((is_fapl = H5P_class_isa(H5P_CLASS(acspl), H5P_CLS_FILE_ACCESS_g)) < 0)
+    else if ((is_fapl = H5P_isa_type(acspl, H5P_TYPE_FILE_ACCESS)) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "can't check for file access class");
     if (is_fapl) {
         /* Release any existing copy */
