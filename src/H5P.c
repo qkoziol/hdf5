@@ -118,10 +118,12 @@ H5Pcopy(hid_t id)
             /* Get an ID for the copied class */
             if ((ret_value = H5I_register(H5I_GENPROP_CLS, copy_class, true)) < 0) {
                 if (H5P__close_class(copy_class) < 0)
-                    HDONE_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, H5I_INVALID_HID, "unable to close property class");
-                HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, H5I_INVALID_HID, "unable to register property list class");
+                    HDONE_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, H5I_INVALID_HID,
+                                "unable to close property class");
+                HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, H5I_INVALID_HID,
+                            "unable to register property list class");
             } /* end if */
-        } /* end else */
+        }     /* end else */
         else
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not property object");
     } /* end else */
@@ -197,7 +199,8 @@ H5Pcreate_class(hid_t par_class_id, const char *name, H5P_cls_create_func_t cls_
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "can't retrieve parent class");
 
     /* Create the new property list class */
-    if (NULL == (pclass = H5P__create_class(par_class, name, H5P_TYPE_USER, cls_create, create_data, cls_copy, copy_data, cls_close, close_data)))
+    if (NULL == (pclass = H5P__create_class(par_class, name, H5P_TYPE_USER, cls_create, create_data, cls_copy,
+                                            copy_data, cls_close, close_data)))
         HGOTO_ERROR(H5E_PLIST, H5E_CANTCREATE, H5I_INVALID_HID, "unable to create property list class");
 
     /* Get an ID for the class */
@@ -421,14 +424,15 @@ done:
  REVISION LOG
 --------------------------------------------------------------------------*/
 herr_t
-H5Pregister2(hid_t pclass_id, const char *name, size_t size, void *def_value, H5P_prp_create_func_t prp_create,
-             H5P_prp_set_func_t prp_set, H5P_prp_get_func_t prp_get, H5P_prp_delete_func_t prp_delete,
-             H5P_prp_copy_func_t prp_copy, H5P_prp_compare_func_t prp_cmp, H5P_prp_close_func_t prp_close)
+H5Pregister2(hid_t pclass_id, const char *name, size_t size, void *def_value,
+             H5P_prp_create_func_t prp_create, H5P_prp_set_func_t prp_set, H5P_prp_get_func_t prp_get,
+             H5P_prp_delete_func_t prp_delete, H5P_prp_copy_func_t prp_copy, H5P_prp_compare_func_t prp_cmp,
+             H5P_prp_close_func_t prp_close)
 {
-    H5P_genclass_t *pclass = NULL;      /* Property list class to modify */
-    H5P_genclass_t *orig_pclass;        /* Original property class */
-    bool class_unlocked = false;        /* Whether the class was unlocked */
-    herr_t          ret_value;   /* Return value */
+    H5P_genclass_t *pclass = NULL;          /* Property list class to modify */
+    H5P_genclass_t *orig_pclass;            /* Original property class */
+    bool            class_unlocked = false; /* Whether the class was unlocked */
+    herr_t          ret_value;              /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -442,7 +446,8 @@ H5Pregister2(hid_t pclass_id, const char *name, size_t size, void *def_value, H5
 
     /* Create the new property list class */
     orig_pclass = pclass;
-    if ((ret_value = H5P__register(&pclass, name, size, def_value, prp_create, prp_set, prp_get, NULL, NULL, prp_delete, prp_copy, prp_cmp, prp_close)) < 0)
+    if ((ret_value = H5P__register(&pclass, name, size, def_value, prp_create, prp_set, prp_get, NULL, NULL,
+                                   prp_delete, prp_copy, prp_cmp, prp_close)) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, FAIL, "unable to register property in class");
 
     /* Check if the property class changed and needs to be substituted in the ID */
@@ -461,7 +466,8 @@ H5Pregister2(hid_t pclass_id, const char *name, size_t size, void *def_value, H5
 
         /* Close the previous class */
         if (H5P__close_class(old_pclass) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, FAIL, "unable to close original property class after substitution");
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, FAIL,
+                        "unable to close original property class after substitution");
     } /* end if */
 
 done:
@@ -1084,7 +1090,7 @@ H5Pequal(hid_t id1, hid_t id2)
 {
     H5P_genplist_t *plist1 = NULL, *plist2 = NULL;   /* Property lists to compare */
     H5P_genclass_t *pclass1 = NULL, *pclass2 = NULL; /* Property classes to compare */
-    bool lock_1_first;          /* Which ID to lock first */
+    bool            lock_1_first;                    /* Which ID to lock first */
     htri_t          ret_value = false;               /* return value */
 
     FUNC_ENTER_API(FAIL)
@@ -1504,14 +1510,14 @@ done:
 herr_t
 H5Pcopy_prop(hid_t dst_id, hid_t src_id, const char *name)
 {
-    H5P_genplist_t *dst_plist = NULL;         /* Pointer to destination property list */
-    H5P_genplist_t *src_plist = NULL;         /* Pointer to source property list */
-    H5P_genclass_t *dst_pclass = NULL;      /* Pointer to destination property class */
-    H5P_genclass_t *src_pclass = NULL;      /* Pointer to source property class */
-    H5I_type_t      src_id_type, dst_id_type; /* ID types */
-    bool dst_class_unlocked = false;        /* Whether the class was unlocked */
-    bool lock_dst_first;          /* Which ID to lock first */
-    herr_t          ret_value = SUCCEED;      /* return value */
+    H5P_genplist_t *dst_plist  = NULL;          /* Pointer to destination property list */
+    H5P_genplist_t *src_plist  = NULL;          /* Pointer to source property list */
+    H5P_genclass_t *dst_pclass = NULL;          /* Pointer to destination property class */
+    H5P_genclass_t *src_pclass = NULL;          /* Pointer to source property class */
+    H5I_type_t      src_id_type, dst_id_type;   /* ID types */
+    bool            dst_class_unlocked = false; /* Whether the class was unlocked */
+    bool            lock_dst_first;             /* Which ID to lock first */
+    herr_t          ret_value = SUCCEED;        /* return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -1582,7 +1588,8 @@ H5Pcopy_prop(hid_t dst_id, hid_t src_id, const char *name)
 
             /* Close the previous class */
             if (H5P__close_class(old_dst_pclass) < 0)
-                HGOTO_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, FAIL, "unable to close original property class after substitution");
+                HGOTO_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, FAIL,
+                            "unable to close original property class after substitution");
         } /* end if */
     }     /* end else */
 
@@ -1639,8 +1646,8 @@ done:
 herr_t
 H5Punregister(hid_t pclass_id, const char *name)
 {
-    H5P_genclass_t *pclass = NULL;    /* Property list class to modify */
-    herr_t          ret_value; /* return value */
+    H5P_genclass_t *pclass = NULL; /* Property list class to modify */
+    herr_t          ret_value;     /* return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -1728,8 +1735,8 @@ done:
 H5_ATTR_MALLOC char *
 H5Pget_class_name(hid_t pclass_id)
 {
-    H5P_genclass_t *pclass = NULL;    /* Property class to query */
-    char           *ret_value; /* return value */
+    H5P_genclass_t *pclass = NULL; /* Property class to query */
+    char           *ret_value;     /* return value */
 
     FUNC_ENTER_API(NULL)
 
@@ -1771,7 +1778,7 @@ done:
 hid_t
 H5Pget_class_parent(hid_t pclass_id)
 {
-    H5P_genclass_t *pclass = NULL;                      /* Property class to query */
+    H5P_genclass_t *pclass    = NULL;            /* Property class to query */
     H5P_genclass_t *parent    = NULL;            /* Parent's property class */
     hid_t           ret_value = H5I_INVALID_HID; /* return value */
 

@@ -247,8 +247,8 @@ H5_DLL htri_t H5P_filter_in_pline(H5P_genplist_t *plist, H5Z_filter_t id);
 H5_DLL htri_t H5P_isa_type(const H5P_genplist_t *plist, H5P_plist_type_t type);
 
 /* Query internal fields of the property list struct */
-H5_DLL hid_t           H5P_get_plist_id(const H5P_genplist_t *plist);
-H5_DLL bool            H5P_is_default_plist(const H5P_genplist_t *plist);
+H5_DLL hid_t H5P_get_plist_id(const H5P_genplist_t *plist);
+H5_DLL bool  H5P_is_default_plist(const H5P_genplist_t *plist);
 
 /* Lock/unlock operations */
 H5_DLL H5P_genplist_t *H5P_acquire(hid_t plist_id, H5P_plist_type_t type, H5P_lock_mode_t mode,

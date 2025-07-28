@@ -211,14 +211,14 @@ static herr_t H5P__get_file_space(H5P_genplist_t *fcpl, H5F_file_space_type_t *s
  REVISION LOG
 --------------------------------------------------------------------------*/
 herr_t
-H5Pregister1(hid_t pclass_id, const char *name, size_t size, void *def_value, H5P_prp_create_func_t prp_create,
-             H5P_prp_set_func_t prp_set, H5P_prp_get_func_t prp_get, H5P_prp_delete_func_t prp_delete,
-             H5P_prp_copy_func_t prp_copy, H5P_prp_close_func_t prp_close)
+H5Pregister1(hid_t pclass_id, const char *name, size_t size, void *def_value,
+             H5P_prp_create_func_t prp_create, H5P_prp_set_func_t prp_set, H5P_prp_get_func_t prp_get,
+             H5P_prp_delete_func_t prp_delete, H5P_prp_copy_func_t prp_copy, H5P_prp_close_func_t prp_close)
 {
-    H5P_genclass_t *pclass = NULL;      /* Property list class to modify */
-    H5P_genclass_t *orig_pclass; /* Original property class */
-    bool class_unlocked = false;        /* Whether the class was unlocked */
-    herr_t          ret_value;   /* Return value */
+    H5P_genclass_t *pclass = NULL;          /* Property list class to modify */
+    H5P_genclass_t *orig_pclass;            /* Original property class */
+    bool            class_unlocked = false; /* Whether the class was unlocked */
+    herr_t          ret_value;              /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
@@ -232,7 +232,8 @@ H5Pregister1(hid_t pclass_id, const char *name, size_t size, void *def_value, H5
 
     /* Create the new property list class */
     orig_pclass = pclass;
-    if ((ret_value = H5P__register(&pclass, name, size, def_value, prp_create, prp_set, prp_get, NULL, NULL, prp_delete, prp_copy, NULL, prp_close)) < 0)
+    if ((ret_value = H5P__register(&pclass, name, size, def_value, prp_create, prp_set, prp_get, NULL, NULL,
+                                   prp_delete, prp_copy, NULL, prp_close)) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, FAIL, "unable to register property in class");
 
     /* Check if the property class changed and needs to be substituted in the ID */
@@ -251,7 +252,8 @@ H5Pregister1(hid_t pclass_id, const char *name, size_t size, void *def_value, H5
 
         /* Close the previous class */
         if (H5P__close_class(old_pclass) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, FAIL, "unable to close original property class after substitution");
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, FAIL,
+                        "unable to close original property class after substitution");
     } /* end if */
 
 done:

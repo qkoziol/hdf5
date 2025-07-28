@@ -526,12 +526,12 @@ H5FL_DEFINE_STATIC(H5P_genplist_t);
 
 /* Generic Property Class ID class */
 static H5I_class_t H5I_GENPROPCLS_CLS[1] = {{
-    H5I_GENPROP_CLS,    /* ID class value */
-    0,                  /* Class flags */
-    0,                  /* # of reserved IDs for class */
+    H5I_GENPROP_CLS,      /* ID class value */
+    0,                    /* Class flags */
+    0,                    /* # of reserved IDs for class */
     H5P__lock_class_cb,   /* Callback for locking objects of this class */
     H5P__unlock_class_cb, /* Callback for unlocking objects of this class */
-    H5P__close_class_cb /* Callback routine for closing objects of this class */
+    H5P__close_class_cb   /* Callback routine for closing objects of this class */
 }};
 
 /* Generic Property List ID class */
@@ -1163,7 +1163,9 @@ H5P__copy_pclass(H5P_genclass_t *pclass)
     assert(pclass);
 
     /* Create the new property list class */
-    if (NULL == (new_pclass = H5P__create_class(pclass->parent, pclass->name, pclass->type, pclass->create_func, pclass->create_data, pclass->copy_func, pclass->copy_data, pclass->close_func, pclass->close_data)))
+    if (NULL == (new_pclass = H5P__create_class(pclass->parent, pclass->name, pclass->type,
+                                                pclass->create_func, pclass->create_data, pclass->copy_func,
+                                                pclass->copy_data, pclass->close_func, pclass->close_data)))
         HGOTO_ERROR(H5E_PLIST, H5E_CANTCREATE, NULL, "unable to create property list class");
 
     /* Copy the properties registered for this class */
@@ -2032,7 +2034,7 @@ H5P__free_del_name_cb(void *item, void H5_ATTR_UNUSED *key, void H5_ATTR_UNUSED 
 herr_t
 H5P__access_class(H5P_genclass_t *pclass, H5P_class_mod_t mod)
 {
-    herr_t         ret_value = SUCCEED; /* Return value */
+    herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -2850,7 +2852,9 @@ H5P__register(H5P_genclass_t **ppclass, const char *name, size_t size, const voi
      *  been created since the last modification was made to the class.
      */
     if (pclass->plists > 0 || pclass->classes > 0) {
-        if (NULL == (new_class = H5P__create_class(pclass->parent, pclass->name, pclass->type, pclass->create_func, pclass->create_data, pclass->copy_func, pclass->copy_data, pclass->close_func, pclass->close_data)))
+        if (NULL == (new_class = H5P__create_class(
+                         pclass->parent, pclass->name, pclass->type, pclass->create_func, pclass->create_data,
+                         pclass->copy_func, pclass->copy_data, pclass->close_func, pclass->close_data)))
             HGOTO_ERROR(H5E_PLIST, H5E_CANTCOPY, FAIL, "can't copy class");
 
         /* Walk through the skip list of the old class and copy properties */
@@ -2863,7 +2867,8 @@ H5P__register(H5P_genclass_t **ppclass, const char *name, size_t size, const voi
                 H5P_genprop_t *pcopy; /* Property copy */
 
                 /* Make a copy of the class's property */
-                if (NULL == (pcopy = H5P__dup_prop((H5P_genprop_t *)H5SL_item(curr_node), H5P_PROP_WITHIN_CLASS)))
+                if (NULL ==
+                    (pcopy = H5P__dup_prop((H5P_genprop_t *)H5SL_item(curr_node), H5P_PROP_WITHIN_CLASS)))
                     HGOTO_ERROR(H5E_PLIST, H5E_CANTCOPY, FAIL, "Can't copy property");
 
                 /* Insert the initialized property into the property class */
@@ -2883,7 +2888,8 @@ H5P__register(H5P_genclass_t **ppclass, const char *name, size_t size, const voi
     } /* end if */
 
     /* Really register the property in the class */
-    if (H5P__register_real(pclass, name, size, def_value, prp_create, prp_set, prp_get, prp_encode, prp_decode, prp_delete, prp_copy, prp_cmp, prp_close) < 0)
+    if (H5P__register_real(pclass, name, size, def_value, prp_create, prp_set, prp_get, prp_encode,
+                           prp_decode, prp_delete, prp_copy, prp_cmp, prp_close) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTCREATE, FAIL, "can't register property");
 
     /* Update pointer to pointer to class, if a new one was generated */
@@ -6174,14 +6180,14 @@ done:
 static void
 H5P__lock_list(H5P_genplist_t
 #ifndef H5_HAVE_CONCURRENCY
-              H5_ATTR_UNUSED
+                   H5_ATTR_UNUSED
 #endif /* H5_HAVE_CONCURRENCY */
-                  *plist,
-          H5P_lock_mode_t
+                       *plist,
+               H5P_lock_mode_t
 #ifndef H5_HAVE_CONCURRENCY
-              H5_ATTR_UNUSED
+                   H5_ATTR_UNUSED
 #endif /* H5_HAVE_CONCURRENCY */
-                  mode)
+                       mode)
 {
     FUNC_ENTER_PACKAGE_NOERR
 
@@ -6214,14 +6220,14 @@ H5P__lock_list(H5P_genplist_t
 static void
 H5P__unlock_list(H5P_genplist_t
 #ifndef H5_HAVE_CONCURRENCY
-                H5_ATTR_UNUSED
+                     H5_ATTR_UNUSED
 #endif /* H5_HAVE_CONCURRENCY */
-                    *plist,
-            H5P_lock_mode_t
+                         *plist,
+                 H5P_lock_mode_t
 #ifndef H5_HAVE_CONCURRENCY
-                H5_ATTR_UNUSED
+                     H5_ATTR_UNUSED
 #endif /* H5_HAVE_CONCURRENCY */
-                    mode)
+                         mode)
 {
     FUNC_ENTER_PACKAGE_NOERR
 
@@ -6346,14 +6352,14 @@ done:
 static void
 H5P__lock_class(H5P_genclass_t
 #ifndef H5_HAVE_CONCURRENCY
-              H5_ATTR_UNUSED
+                    H5_ATTR_UNUSED
 #endif /* H5_HAVE_CONCURRENCY */
-                  *pclass,
-          H5P_lock_mode_t
+                        *pclass,
+                H5P_lock_mode_t
 #ifndef H5_HAVE_CONCURRENCY
-              H5_ATTR_UNUSED
+                    H5_ATTR_UNUSED
 #endif /* H5_HAVE_CONCURRENCY */
-                  mode)
+                        mode)
 {
     FUNC_ENTER_PACKAGE_NOERR
 
@@ -6380,14 +6386,14 @@ H5P__lock_class(H5P_genclass_t
 void
 H5P__unlock_class(H5P_genclass_t
 #ifndef H5_HAVE_CONCURRENCY
-                H5_ATTR_UNUSED
+                      H5_ATTR_UNUSED
 #endif /* H5_HAVE_CONCURRENCY */
-                    *pclass,
-            H5P_lock_mode_t
+                          *pclass,
+                  H5P_lock_mode_t
 #ifndef H5_HAVE_CONCURRENCY
-                H5_ATTR_UNUSED
+                      H5_ATTR_UNUSED
 #endif /* H5_HAVE_CONCURRENCY */
-                    mode)
+                          mode)
 {
     FUNC_ENTER_PACKAGE_NOERR
 
@@ -6401,4 +6407,3 @@ H5P__unlock_class(H5P_genclass_t
 
     FUNC_LEAVE_NOAPI_VOID
 } /* end H5P__unlock_class() */
-

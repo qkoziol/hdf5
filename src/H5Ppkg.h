@@ -93,19 +93,21 @@ typedef struct H5P_genprop_t {
 
 /* Define structure to hold class information */
 struct H5P_genclass_t {
-    struct H5P_genclass_t *parent; /* Pointer to parent class */
-    char                  *name;   /* Name of property list class */
-    H5P_plist_type_t       type;   /* Type of property */
-    unsigned        revision;  /* Revision number of a particular class (globally unique) */
-    H5P_genplist_t *def_plist; /* Pointer to a default property list for the class */
+    struct H5P_genclass_t *parent;    /* Pointer to parent class */
+    char                  *name;      /* Name of property list class */
+    H5P_plist_type_t       type;      /* Type of property */
+    unsigned               revision;  /* Revision number of a particular class (globally unique) */
+    H5P_genplist_t        *def_plist; /* Pointer to a default property list for the class */
 
-    size_t                 nprops; /* Number of properties in class */
-    H5SL_t         *props;     /* Skip list containing properties */
+    size_t  nprops; /* Number of properties in class */
+    H5SL_t *props;  /* Skip list containing properties */
 
-    unsigned plists; /* Number of property lists that have been created since the last modification to the class */
+    unsigned
+        plists; /* Number of property lists that have been created since the last modification to the class */
     unsigned classes; /* Number of classes that have been derived since the last modification to the class */
     unsigned ref_count; /* Number of outstanding ID's open on this class object */
-    bool deleted; /* Whether this class has been deleted and is waiting for dependent classes & proplists to close */
+    bool deleted; /* Whether this class has been deleted and is waiting for dependent classes & proplists to
+                     close */
 
     /* Callback function pointers & info */
     H5P_cls_create_func_t create_func; /* Function to call when a property list is created */
@@ -192,7 +194,7 @@ H5_DLL H5P_genclass_t *H5P__get_class(const H5P_genplist_t *plist);
 H5_DLL H5P_genclass_t *H5P__get_class_parent(const H5P_genclass_t *pclass);
 H5_DLL herr_t          H5P__close_class(H5P_genclass_t *pclass);
 H5_DLL H5P_genprop_t  *H5P__find_prop_plist(const H5P_genplist_t *plist, const char *name);
-H5_DLL void   H5P__unlock_class(H5P_genclass_t *pclass, H5P_lock_mode_t mode);
+H5_DLL void            H5P__unlock_class(H5P_genclass_t *pclass, H5P_lock_mode_t mode);
 
 /* Encode/decode routines */
 H5_DLL herr_t          H5P__encode(const H5P_genplist_t *plist, bool enc_all_prop, void *buf, size_t *nalloc);
