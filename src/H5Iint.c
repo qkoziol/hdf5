@@ -987,11 +987,9 @@ H5I_acquire(hid_t id, H5I_type_t type, H5I_lock_mode_t mode)
     /* Retrieve the ID info with the type info */
     if (H5I__find_id_with_type(id, &info, H5I_LOCK_SHARED, &type_info, H5I_LOCK_SHARED) < 0)
         HGOTO_ERROR(H5E_ID, H5E_NOTFOUND, NULL, "can't lookup ID");
+    have_id_lock = true;
     if (type_info)
         have_type_lock = true;
-    if (NULL == info)
-        HGOTO_ERROR(H5E_ID, H5E_NOTFOUND, NULL, "ID not found");
-    have_id_lock = true;
 
     /* Check for a 'lock' function and call it, if it exists */
     if (type_info->cls->lock_func) {
