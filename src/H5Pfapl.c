@@ -4339,7 +4339,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pset_mdc_log_options(hid_t fapl_id, hbool_t is_enabled, const char *location, hbool_t start_on_access)
+H5Pset_mdc_log_options(hid_t fapl_id, bool is_enabled, const char *location, bool start_on_access)
 {
     H5P_genplist_t *fapl;                /* Property list pointer */
     char           *new_location;        /* Working location pointer */
@@ -4383,8 +4383,8 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pget_mdc_log_options(hid_t fapl_id, hbool_t *is_enabled /*out*/, char *location /*out*/,
-                       size_t *location_size /*out*/, hbool_t *start_on_access /*out*/)
+H5Pget_mdc_log_options(hid_t fapl_id, bool *is_enabled /*out*/, char *location /*out*/,
+                       size_t *location_size /*out*/, bool *start_on_access /*out*/)
 {
     H5P_genplist_t *fapl;                   /* Property list pointer */
     char           *location_ptr = NULL;    /* Pointer to location string */
@@ -4642,7 +4642,7 @@ H5P__facc_mdc_log_location_close(const char H5_ATTR_UNUSED *name, size_t H5_ATTR
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pset_evict_on_close(hid_t fapl_id, hbool_t evict_on_close)
+H5Pset_evict_on_close(hid_t fapl_id, bool evict_on_close)
 {
     H5P_genplist_t *fapl;                /* property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
@@ -4677,7 +4677,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pget_evict_on_close(hid_t fapl_id, hbool_t *evict_on_close /*out*/)
+H5Pget_evict_on_close(hid_t fapl_id, bool *evict_on_close /*out*/)
 {
     H5P_genplist_t *fapl;                /* property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
@@ -4716,7 +4716,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pset_file_locking(hid_t fapl_id, hbool_t use_file_locking, hbool_t ignore_when_disabled)
+H5Pset_file_locking(hid_t fapl_id, bool use_file_locking, bool ignore_when_disabled)
 {
     H5P_genplist_t *fapl;                /* property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
@@ -4750,7 +4750,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pget_file_locking(hid_t fapl_id, hbool_t *use_file_locking /*out*/, hbool_t *ignore_when_disabled /*out*/)
+H5Pget_file_locking(hid_t fapl_id, bool *use_file_locking /*out*/, bool *ignore_when_disabled /*out*/)
 {
     H5P_genplist_t *fapl;                /* property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
@@ -4861,7 +4861,7 @@ H5P__decode_coll_md_read_flag_t(const void **_pp, void *_value)
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pset_all_coll_metadata_ops(hid_t fapl_id, hbool_t is_collective)
+H5Pset_all_coll_metadata_ops(hid_t fapl_id, bool is_collective)
 {
     H5P_genplist_t         *fapl;                /* Property list pointer */
     H5P_coll_md_read_flag_t coll_meta_read;      /* Property value */
@@ -4909,7 +4909,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pget_all_coll_metadata_ops(hid_t fapl_id, hbool_t *is_collective /*out*/)
+H5Pget_all_coll_metadata_ops(hid_t fapl_id, bool *is_collective /*out*/)
 {
     H5P_genplist_t *fapl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
@@ -4956,7 +4956,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pset_coll_metadata_write(hid_t fapl_id, hbool_t is_collective)
+H5Pset_coll_metadata_write(hid_t fapl_id, bool is_collective)
 {
     H5P_genplist_t *fapl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */
@@ -5421,7 +5421,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pget_coll_metadata_write(hid_t fapl_id, hbool_t *is_collective /*out*/)
+H5Pget_coll_metadata_write(hid_t fapl_id, bool *is_collective /*out*/)
 {
     H5P_genplist_t *fapl;                /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* return value */

@@ -1621,7 +1621,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5FDflush(H5FD_t *file, hid_t dxpl_id, hbool_t closing)
+H5FDflush(H5FD_t *file, hid_t dxpl_id, bool closing)
 {
     H5FD_int_t    fh;                  /* Temporary internal file handle */
     H5FD_driver_t driver;              /* Temporary VFD driver */
@@ -1664,7 +1664,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5FDtruncate(H5FD_t *file, hid_t dxpl_id, hbool_t closing)
+H5FDtruncate(H5FD_t *file, hid_t dxpl_id, bool closing)
 {
     H5FD_int_t    fh;                  /* Temporary internal file handle */
     H5FD_driver_t driver;              /* Temporary VFD driver */
@@ -1706,7 +1706,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5FDlock(H5FD_t *file, hbool_t rw)
+H5FDlock(H5FD_t *file, bool rw)
 {
     H5FD_int_t    fh;                  /* Temporary internal file handle */
     H5FD_driver_t driver;              /* Temporary VFD driver */
