@@ -372,7 +372,7 @@ H5_GCC_CLANG_DIAG_ON("strict-overflow")
  * Only needed where ssize_t isn't a thing (e.g., Windows)
  */
 #ifndef SSIZE_MAX
-#define SSIZE_MAX ((ssize_t)(((size_t)1 << (8 * sizeof(ssize_t) - 1)) - 1))
+#define SSIZE_MAX SSIZE_T_MAX
 #endif
 
 /*
