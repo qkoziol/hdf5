@@ -637,10 +637,10 @@ tts_rec_rwlock_smoke_check_2(void H5_ATTR_UNUSED *params)
      */
 
     for (i = 0; i < num_threads; i++) {
-if (udata[i].target_rd_lock_cycles != udata[i].real_read_locks_granted) {
-    printf("udata[%d].target_rd_lock_cycles = %d\n", i, udata[i].target_rd_lock_cycles);
-    printf("udata[%d].real_read_locks_granted = %lld\n", i, udata[i].real_read_locks_granted);
-}
+        if (udata[i].target_rd_lock_cycles != udata[i].real_read_locks_granted) {
+            printf("udata[%d].target_rd_lock_cycles = %d\n", i, udata[i].target_rd_lock_cycles);
+            printf("udata[%d].real_read_locks_granted = %lld\n", i, udata[i].real_read_locks_granted);
+        }
         assert(udata[i].target_rd_lock_cycles == udata[i].real_read_locks_granted);
         assert(udata[i].target_rd_lock_cycles == udata[i].real_read_locks_released);
         assert(udata[i].target_wr_lock_cycles == udata[i].real_write_locks_granted);
