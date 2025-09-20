@@ -572,7 +572,7 @@ tts_rec_rwlock_smoke_check_2(void H5_ATTR_UNUSED *params)
 #endif
 
     /* Allocate the udata */
-    udata = malloc(sizeof(*udata) * MAX_NUM_THREADS);
+    udata = calloc(MAX_NUM_THREADS, sizeof(*udata));
     if (NULL == udata) {
         TestErrPrintf("thread udata allocation failed.\n");
 
@@ -601,7 +601,6 @@ tts_rec_rwlock_smoke_check_2(void H5_ATTR_UNUSED *params)
 
     /* 2) Setup the user data to be passed to each reader test thread. */
     for (i = 0; i < MAX_NUM_THREADS; i++) {
-        memset(&udata[i], 0, sizeof(udata[i]));
         udata[i].lock                     = &lock;
         udata[i].target_rd_lock_cycles    = lock_cycles;
         udata[i].max_recursive_lock_depth = 10;
@@ -618,7 +617,7 @@ tts_rec_rwlock_smoke_check_2(void H5_ATTR_UNUSED *params)
     /* 4) Wait for all threads to complete. */
     for (i = 0; i < num_threads; i++)
         if (H5TS_thread_join(threads[i], NULL) < 0)
-            TestErrPrintf("thread %d failed to join", i);
+            TestErrPrintf("%u: thread %d failed to join\n", __LINE__, i);
 #if H5TS_ENABLE_REC_RWLOCK_STATS
     uint64_t end_time  = H5_now_usec();
     uint64_t elap_time = (unsigned long long)(end_time - start_time);
@@ -638,6 +637,10 @@ tts_rec_rwlock_smoke_check_2(void H5_ATTR_UNUSED *params)
      */
 
     for (i = 0; i < num_threads; i++) {
+if (udata[i].target_rd_lock_cycles != udata[i].real_read_locks_granted) {
+    printf("udata[%d].target_rd_lock_cycles = %d\n", i, udata[i].target_rd_lock_cycles);
+    printf("udata[%d].real_read_locks_granted = %lld\n", i, udata[i].real_read_locks_granted);
+}
         assert(udata[i].target_rd_lock_cycles == udata[i].real_read_locks_granted);
         assert(udata[i].target_rd_lock_cycles == udata[i].real_read_locks_released);
         assert(udata[i].target_wr_lock_cycles == udata[i].real_write_locks_granted);
@@ -778,7 +781,7 @@ tts_rec_rwlock_smoke_check_3(void H5_ATTR_UNUSED *params)
 #endif
 
     /* Allocate the udata */
-    udata = malloc(sizeof(*udata) * MAX_NUM_THREADS);
+    udata = calloc(MAX_NUM_THREADS, sizeof(*udata));
     if (udata == NULL) {
         TestErrPrintf("thread udata allocation failed.\n");
 
@@ -807,7 +810,6 @@ tts_rec_rwlock_smoke_check_3(void H5_ATTR_UNUSED *params)
 
     /* 2) Setup the user data to be passed to each writer test thread. */
     for (i = 0; i < MAX_NUM_THREADS; i++) {
-        memset(&udata[i], 0, sizeof(udata[i]));
         udata[i].lock                     = &lock;
         udata[i].target_wr_lock_cycles    = lock_cycles;
         udata[i].max_recursive_lock_depth = 10;
@@ -824,7 +826,7 @@ tts_rec_rwlock_smoke_check_3(void H5_ATTR_UNUSED *params)
     /* 4) Wait for all threads to complete. */
     for (i = 0; i < num_threads; i++)
         if (H5TS_thread_join(threads[i], NULL) < 0)
-            TestErrPrintf("thread %d failed to join", i);
+            TestErrPrintf("%u: thread %d failed to join\n", __LINE__, i);
 #if H5TS_ENABLE_REC_RWLOCK_STATS
     uint64_t end_time  = H5_now_usec();
     uint64_t elap_time = (unsigned long long)(end_time - start_time);
@@ -984,7 +986,7 @@ tts_rec_rwlock_smoke_check_4(void H5_ATTR_UNUSED *params)
 #endif
 
     /* Allocate the udata */
-    udata = malloc(sizeof(*udata) * MAX_NUM_THREADS);
+    udata = calloc(MAX_NUM_THREADS, sizeof(*udata));
     if (udata == NULL) {
         TestErrPrintf("thread udata allocation failed.\n");
 
@@ -1013,7 +1015,6 @@ tts_rec_rwlock_smoke_check_4(void H5_ATTR_UNUSED *params)
 
     /* 2) Setup the user data to be passed to each writer test thread. */
     for (i = 0; i < MAX_NUM_THREADS; i++) {
-        memset(&udata[i], 0, sizeof(udata[i]));
         udata[i].lock                     = &lock;
         udata[i].target_rd_lock_cycles    = lock_cycles;
         udata[i].target_wr_lock_cycles    = lock_cycles;
@@ -1031,7 +1032,7 @@ tts_rec_rwlock_smoke_check_4(void H5_ATTR_UNUSED *params)
     /* 4) Wait for all threads to complete. */
     for (i = 0; i < num_threads; i++)
         if (H5TS_thread_join(threads[i], NULL) < 0)
-            TestErrPrintf("thread %d failed to join", i);
+            TestErrPrintf("%u: thread %d failed to join\n", __LINE__, i);
 #if H5TS_ENABLE_REC_RWLOCK_STATS
     uint64_t end_time  = H5_now_usec();
     uint64_t elap_time = (unsigned long long)(end_time - start_time);
