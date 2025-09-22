@@ -16184,8 +16184,6 @@ test_vds_shared_strings(hid_t fapl)
     H5D_t                 *dset_int                    = NULL;            /* Internal dataset structure */
     char                   file_name[64];
     char                   dset_name[64];
-    int                    shared_file_count = 0;
-    int                    shared_dset_count = 0;
 
     TESTING("VDS sharing of file/dataset names");
 
@@ -16901,11 +16899,9 @@ test_vds_shared_strings(hid_t fapl)
      * - Every 5th mapping uses "/shared_dataset"
      * - Others use unique file/dataset names
      */
-
     for (int i = 0; i < NUM_MAPPINGS_MANY; i++) {
         if (i % 10 == 0) {
             strcpy(file_name, "shared_file.h5");
-            shared_file_count++;
         }
         else {
             snprintf(file_name, sizeof(file_name), "file_%d.h5", i);
@@ -16913,7 +16909,6 @@ test_vds_shared_strings(hid_t fapl)
 
         if (i % 5 == 0) {
             strcpy(dset_name, "/shared_dataset");
-            shared_dset_count++;
         }
         else {
             snprintf(dset_name, sizeof(dset_name), "/dataset_%d", i);
