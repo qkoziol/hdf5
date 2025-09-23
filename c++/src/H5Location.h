@@ -27,7 +27,7 @@ namespace H5 {
     Wrappers for H5A functions stay in H5Object.
 */
 // Inheritance: IdComponent
-class H5_DLLCPP H5Location : public IdComponent {
+class H5CPP_DLL H5Location : public IdComponent {
   public:
     // Checks if a link of a given name exists in a location
     bool nameExists(const char *name, const LinkAccPropList &lapl = LinkAccPropList::DEFAULT) const;
@@ -201,8 +201,8 @@ class H5_DLLCPP H5Location : public IdComponent {
 
     // Returns information about an HDF5 object, given by its name,
     // at this location. - Deprecated
-    void getObjinfo(const char *name, hbool_t follow_link, H5G_stat_t &statbuf) const;
-    void getObjinfo(const H5std_string &name, hbool_t follow_link, H5G_stat_t &statbuf) const;
+    void getObjinfo(const char *name, bool follow_link, H5G_stat_t &statbuf) const;
+    void getObjinfo(const H5std_string &name, bool follow_link, H5G_stat_t &statbuf) const;
     void getObjinfo(const char *name, H5G_stat_t &statbuf) const;
     void getObjinfo(const H5std_string &name, H5G_stat_t &statbuf) const;
 

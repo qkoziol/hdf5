@@ -293,7 +293,7 @@ H5Pset_fapl_split(hid_t fapl, const char *meta_ext, hid_t meta_plist_id, const c
  */
 herr_t
 H5Pset_fapl_multi(hid_t fapl_id, const H5FD_mem_t *memb_map, const hid_t *memb_fapl,
-                  const char *const *memb_name, const haddr_t *memb_addr, hbool_t relax)
+                  const char *const *memb_name, const haddr_t *memb_addr, bool relax)
 {
     H5FD_multi_fapl_t fa;
 
@@ -324,7 +324,7 @@ H5Pset_fapl_multi(hid_t fapl_id, const H5FD_mem_t *memb_map, const hid_t *memb_f
  */
 herr_t
 H5Pget_fapl_multi(hid_t fapl_id, H5FD_mem_t *memb_map /*out*/, hid_t *memb_fapl /*out*/,
-                  char **memb_name /*out*/, haddr_t *memb_addr /*out*/, hbool_t *relax)
+                  char **memb_name /*out*/, haddr_t *memb_addr /*out*/, bool *relax)
 {
     const H5FD_multi_fapl_t *fa;
     H5FD_multi_fapl_t        default_fa;
@@ -1898,13 +1898,6 @@ compute_next(H5FD_multi_t *file)
  *
  *-------------------------------------------------------------------------
  */
-/* Disable warning for "format not a string literal" here
- *
- *      This pragma only needs to surround the snprintf() call with
- *      tmp in the code below, but early (4.4.7, at least) gcc only
- *      allows diagnostic pragmas to be toggled outside of functions.
- */
-H5_GCC_CLANG_DIAG_OFF("format-nonliteral")
 static int
 open_members(H5FD_multi_t *file)
 {
@@ -1920,7 +1913,9 @@ open_members(H5FD_multi_t *file)
             continue; /*already open*/
         assert(file->fa.memb_name[mt]);
 
+        H5_WARN_FORMAT_NONLITERAL_OFF
         nchars = snprintf(tmp, sizeof(tmp), file->fa.memb_name[mt], file->name);
+        H5_WARN_FORMAT_NONLITERAL_ON
         if (nchars < 0 || nchars >= (int)sizeof(tmp))
             H5Epush_ret(__func__, H5E_ERR_CLS, H5E_VFL, H5E_BADVALUE,
                         "filename is too long and would be truncated", -1);
@@ -1941,7 +1936,6 @@ open_members(H5FD_multi_t *file)
 
     return 0;
 }
-H5_GCC_CLANG_DIAG_ON("format-nonliteral")
 
 /*-------------------------------------------------------------------------
  * Function:    H5FD_multi_delete
@@ -1952,7 +1946,6 @@ H5_GCC_CLANG_DIAG_ON("format-nonliteral")
  *
  *-------------------------------------------------------------------------
  */
-H5_GCC_CLANG_DIAG_OFF("format-nonliteral")
 static herr_t
 H5FD_multi_delete(const char *filename, hid_t fapl_id)
 {
@@ -1995,7 +1988,9 @@ H5FD_multi_delete(const char *filename, hid_t fapl_id)
         assert(fa->memb_name[mt]);
         assert(fa->memb_fapl[mt] >= 0);
 
+        H5_WARN_FORMAT_NONLITERAL_OFF
         nchars = snprintf(full_filename, sizeof(full_filename), fa->memb_name[mt], filename);
+        H5_WARN_FORMAT_NONLITERAL_ON
         if (nchars < 0 || nchars >= (int)sizeof(full_filename))
             H5Epush_ret(__func__, H5E_ERR_CLS, H5E_VFL, H5E_BADVALUE,
                         "filename is too long and would be truncated", -1);
@@ -2007,7 +2002,6 @@ H5FD_multi_delete(const char *filename, hid_t fapl_id)
 
     return 0;
 } /* end H5FD_multi_delete() */
-H5_GCC_CLANG_DIAG_ON("format-nonliteral")
 
 /*-------------------------------------------------------------------------
  * Function:    H5FD_multi_ctl
