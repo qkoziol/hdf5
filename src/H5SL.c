@@ -1155,7 +1155,7 @@ done:
  PURPOSE
     Count the number of objects in a skip list
  USAGE
-    size_t H5SL_count(slist)
+    ssize_t H5SL_count(slist)
         H5SL_t *slist;            IN: Pointer to skip list to count
 
  RETURNS
@@ -1176,7 +1176,7 @@ H5SL_count(H5SL_t *slist)
 #ifdef H5_HAVE_CONCURRENCY
     bool have_lock = false; /* Whether we're holding the list's lock */
 #endif
-    ssize_t ret_value = SSIZE_MAX; /* Return value */
+    ssize_t ret_value = FAIL; /* Return value */
 
 #ifdef H5_HAVE_CONCURRENCY
     FUNC_ENTER_NOAPI_NOINIT
@@ -1193,7 +1193,7 @@ H5SL_count(H5SL_t *slist)
 #ifdef H5_HAVE_CONCURRENCY
     /* Acquire a shared lock on the list */
     if (H5TS_dlftt_rwlock_rdlock(&slist->lock) < 0)
-        HGOTO_ERROR(H5E_SLIST, H5E_CANTLOCK, SSIZE_MAX, "can't lock list");
+        HGOTO_ERROR(H5E_SLIST, H5E_CANTLOCK, FAIL, "can't lock list");
     have_lock = true;
 #endif /* H5_HAVE_CONCURRENCY */
 
@@ -1204,7 +1204,7 @@ H5SL_count(H5SL_t *slist)
 done:
     /* Release lock, if owned */
     if (have_lock && H5TS_dlftt_rwlock_rdunlock(&slist->lock) < 0)
-        HDONE_ERROR(H5E_SLIST, H5E_CANTUNLOCK, SSIZE_MAX, "can't unlock list");
+        HDONE_ERROR(H5E_SLIST, H5E_CANTUNLOCK, FAIL, "can't unlock list");
 #endif
 
     FUNC_LEAVE_NOAPI(ret_value)
