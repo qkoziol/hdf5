@@ -43,8 +43,7 @@
 /* Typedef for variables of this type */
 /* (Only needed once per type, in source file or header) */
 /* (Suppress warning about _Atomic from GCC) */
-#define H5TS_DEF_ATOMIC_TYPE(type)                                                                           \
-    typedef _Atomic type H5TS_ATOMIC_TYPE(type);
+#define H5TS_DEF_ATOMIC_TYPE(type) typedef _Atomic type H5TS_ATOMIC_TYPE(type);
 
 /* Operations on the type */
 #define H5TS_ATOMIC_INIT(type, obj, desired)  atomic_init(obj, desired)
