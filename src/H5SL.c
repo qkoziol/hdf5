@@ -1096,8 +1096,8 @@ H5SL_create(H5SL_type_t type, H5SL_cmp_t cmp)
     HDcompile_assert(H5SL_LOCK_INT_NONE != H5SL_LOCK_INT_SHARED);
 #ifdef H5_HAVE_CONCURRENCY
     /* Make certain that the H5SL lock enum stays in sync w/H5TS lock enum */
-    HDcompile_assert(H5SL_LOCK_INT_EXCLUSIVE == H5TS_RWLOCK_LOCK_EXCLUSIVE);
-    HDcompile_assert(H5SL_LOCK_INT_SHARED == H5TS_RWLOCK_LOCK_SHARED);
+    HDcompile_assert(H5SL_LOCK_INT_EXCLUSIVE == (H5SL_lock_mode_int_t)H5TS_RWLOCK_LOCK_EXCLUSIVE);
+    HDcompile_assert(H5SL_LOCK_INT_SHARED == (H5SL_lock_mode_int_t)H5TS_RWLOCK_LOCK_SHARED);
 #endif /* H5_HAVE_CONCURRENCY */
 
     /* Check args */
