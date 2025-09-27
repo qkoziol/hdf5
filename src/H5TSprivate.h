@@ -228,7 +228,7 @@ typedef struct H5TS_rwlock_t {
 #if defined(H5_HAVE_STDATOMIC_H) && !defined(__cplusplus)
 typedef atomic_int  H5TS_atomic_int_t;
 typedef atomic_uint H5TS_atomic_uint_t;
-/* Suppress warning about _Atomic being a C11 extension */
+/* Suppress warning about _Atomic keyword not supported in C99 */
 H5_WARN_C11_EXTENSIONS_OFF
 typedef void *_Atomic H5TS_atomic_voidp_t;
 H5_WARN_C11_EXTENSIONS_ON

@@ -163,7 +163,7 @@
  *      number or an error will be raised. Currently, this field should be set
  *      to #H5FD_CURR_ROS3_FAPL_T_VERSION.
  *
- * \var hbool_t H5FD_ros3_fapl_t::authenticate
+ * \var bool H5FD_ros3_fapl_t::authenticate
  *      A Boolean which specifies if security credentials from this structure
  *      should be used for accessing a S3 bucket.
  *
@@ -215,7 +215,7 @@
  */
 typedef struct H5FD_ros3_fapl_t {
     int32_t version;
-    hbool_t authenticate;
+    bool    authenticate;
     char    aws_region[H5FD_ROS3_MAX_REGION_LEN + 1];
     char    secret_id[H5FD_ROS3_MAX_SECRET_ID_LEN + 1];
     char    secret_key[H5FD_ROS3_MAX_SECRET_KEY_LEN + 1];
@@ -250,6 +250,14 @@ H5_DLL herr_t H5Pget_fapl_ros3(hid_t fapl_id, H5FD_ros3_fapl_t *fa_out);
  * \fapl_id
  * \param[in] fa Pointer to #H5FD_ROS3 driver configuration structure.
  * \returns \herr_t
+ *
+ * \note    As of HDF5 2.0.0, as a side effect of calling this function, if the
+ *          page buffer size has not been set on fapl_id, it is set to 64 MiB.
+ *          To set a different page buffer size, simply call
+ *          H5Pset_page_buffer() with fapl_id and your desired page buffer size.
+ *          To disable the page buffer, call H5Pset_page_buffer() with a size of
+ *          0. Disabling the page buffer with the ROS3 driver may cause severe
+ *          performance degradation.
  */
 H5_DLL herr_t H5Pset_fapl_ros3(hid_t fapl_id, const H5FD_ros3_fapl_t *fa);
 

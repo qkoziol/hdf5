@@ -4,9 +4,13 @@ on:
   workflow_call:
     inputs:
       build_mode:
-        description: "CMake build type (CMAKE_BUILD_TYPE)"
+        description: "Build type (CMAKE_BUILD_TYPE)"
         required: true
         type: string
+      build_aws_c_s3_only:
+        description: "Only build the aws-c-s3 library without performing other actions"
+        required: true
+        type: boolean
       aws_c_s3_build_type:
         description: "Install aws-c-s3 from a package manager ('package') or build from source ('source')"
         required: true
@@ -240,7 +244,7 @@ jobs:
           if-no-files-found: error # 'warn' or 'ignore' are also available, defaults to `warn`
 
   build_from_package_managers:
-    if: ${{ inputs.aws_c_s3_build_type == 'package' }}
+    if: ${{ inputs.aws_c_s3_build_type == 'package' && ! inputs.build_aws_c_s3_only }}
 
     # Ubuntu doesn't have a package for aws-c-s3 yet, so use a
     # built from source version until then
@@ -317,7 +321,7 @@ jobs:
         uses: actions/checkout@v4.1.7
 
       # For Windows, use vcpkg toolchain file to allow find_package() calls to resolve
-      - name: "CMake Configure (vcpkg; ROS3 testing: ${{ matrix.test_ros3 }})"
+      - name: "Configure (vcpkg; ROS3 testing: ${{ matrix.test_ros3 }})"
         if: ${{ matrix.os_name == 'Windows MSVC' }}
         run: |
           mkdir "${{ runner.workspace }}/build"
@@ -343,7 +347,7 @@ jobs:
             $GITHUB_WORKSPACE
         shell: bash
 
-      - name: "CMake Configure (ROS3 testing: ${{ matrix.test_ros3 }})"
+      - name: "Configure (ROS3 testing: ${{ matrix.test_ros3 }})"
         if: ${{ matrix.os_name != 'Windows MSVC' }}
         run: |
           mkdir "${{ runner.workspace }}/build"
@@ -368,11 +372,11 @@ jobs:
             $GITHUB_WORKSPACE
         shell: bash
 
-      - name: CMake Build
+      - name: Build
         run: cmake --build . --parallel 3 --config ${{ inputs.build_mode }}
         working-directory: ${{ runner.workspace }}/build
 
-      - name: CMake Run Tests
+      - name: Run Tests
         if: matrix.test_ros3 == 'ON'
         run: |
           # For now, just run S3 tests
@@ -382,7 +386,7 @@ jobs:
   # Build and test the ROS3 VFD using aws-c-s3 built from source,
   # currently only on Ubuntu.
   build_and_test_vfd:
-    if: ${{ inputs.aws_c_s3_build_type == 'source' }}
+    if: ${{ inputs.aws_c_s3_build_type == 'source' && ! inputs.build_aws_c_s3_only }}
 
     needs: build_aws_c_s3
 
@@ -413,7 +417,7 @@ jobs:
       - name: Get HDF5 sources
         uses: actions/checkout@v4.1.7
 
-      - name: CMake Configure
+      - name: Configure
         run: |
           mkdir "${{ runner.workspace }}/build"
           cd "${{ runner.workspace }}/build"
@@ -437,11 +441,11 @@ jobs:
             $GITHUB_WORKSPACE
         shell: bash
 
-      - name: CMake Build
+      - name: Build
         run: cmake --build . --parallel 3 --config ${{ inputs.build_mode }}
         working-directory: ${{ runner.workspace }}/build
 
-      - name: CMake Run Tests
+      - name: Run Tests
         run: |
           # For now, just run S3 tests
           ctest . -C ${{ inputs.build_mode }} -R "S3TEST" -V

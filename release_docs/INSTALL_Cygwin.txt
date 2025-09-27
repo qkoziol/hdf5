@@ -3,7 +3,7 @@
 ************************************************************************
 
 This document is an instruction on how to build, test and install HDF5 library
-on Cygwin.  See detailed information in hdf5/INSTALL.
+on Cygwin.
 
 NOTE: hdf5 can be built with CMake, see the INSTALL_CMake.txt file for more
 guidance.
@@ -130,7 +130,7 @@ Build, Test and Install HDF5 on Cygwin
 
    "make check" fails when building shared lib files is enabled.  The default
    on Cygwin has been changed to disable shared.  It can be enabled with
-   the --enable-shared configure option but is likely to fail "make check"
+   the BUILD_SHARED_LIBS configure option but is likely to fail "make check"
    with GCC compilers.
 
 -----------------------------------------------------------------------

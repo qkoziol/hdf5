@@ -115,13 +115,21 @@
       }
     },
     {
+      "name": "ci-S3-proxy",
+      "hidden": true,
+      "cacheVariables": {
+        "HDF5_ENABLE_DOCKER_PROXY": "ON",
+        "HDF5_ENABLE_ROS3_VFD": "ON",
+        "HDF5_ENABLE_HDFS": "OFF"
+      }
+    },
+    {
       "name": "ci-StdShar",
       "hidden": true,
       "inherits": ["ci-StdCompression", "ci-StdExamples", "ci-StdPlugins"],
       "cacheVariables": {
         "HDF_PACKAGE_NAMESPACE": {"type": "STRING", "value": "hdf5::"},
         "HDF5_INSTALL_MOD_FORTRAN": "NO",
-        "HDF5_BUILD_GENERATORS": "ON",
         "HDF5_ENABLE_ALL_WARNINGS": "ON",
         "HDF5_MINGW_STATIC_GCC_LIBS": "ON",
         "HDF_TEST_EXPRESS": "2"

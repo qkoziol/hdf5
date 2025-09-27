@@ -9,6 +9,29 @@
 # If you do not have access to either file, you may request a copy from
 # help@hdfgroup.org.
 #
+
+# -----------------------------------------------------------------------------
+# HDF5 CMake Installation and Packaging Configuration
+# -----------------------------------------------------------------------------
+# This CMake module handles installation and packaging for the HDF5 library and
+# its components. It configures install targets, generates CMake config files,
+# sets up packaging with CPack, and manages platform-specific installer options.
+#
+# Key Features:
+# - Installs HDF5 libraries, headers, utilities, documentation, and CMake config files.
+# - Generates hdf5-config.cmake and version files for build and install trees.
+# - Supports Windows (NSIS, WiX), macOS (DMG, Framework), and Linux (DEB, RPM, TGZ) packaging.
+# - Handles installation of example files and release documentation.
+# - Configures CPack variables and component groups for flexible packaging.
+#
+# Usage:
+#   HDF5 includes this file from the main CMakeLists.txt to enable installation and
+#   packaging for HDF5. Adjust options and variables as needed for your platform
+#   and distribution requirements.
+#
+# See comments throughout for details on each section and option.
+# -----------------------------------------------------------------------------
+
 include (CMakePackageConfigHelpers)
 
 #-----------------------------------------------------------------------------
@@ -112,7 +135,7 @@ if (NOT HDF5_EXTERNALLY_CONFIGURED)
 endif ()
 
 #-----------------------------------------------------------------------------
-# Configure the libhdf5.settings file for the lib info
+# Configure the libhdf5.settings file with library info
 #-----------------------------------------------------------------------------
 if (H5_WORDS_BIGENDIAN)
   set (BYTESEX big-endian)
@@ -120,7 +143,7 @@ else ()
   set (BYTESEX little-endian)
 endif ()
 configure_file (
-    ${HDF5_SOURCE_DIR}/src/libhdf5.settings.cmake.in
+    ${HDF5_SOURCE_DIR}/src/libhdf5.settings.in
     ${HDF5_SRC_BINARY_DIR}/libhdf5.settings ESCAPE_QUOTES @ONLY
 )
 install (
@@ -198,7 +221,7 @@ if (NOT HDF5_EXTERNALLY_CONFIGURED)
   if (EXISTS "${HDF5_SOURCE_DIR}/release_docs" AND IS_DIRECTORY "${HDF5_SOURCE_DIR}/release_docs")
     set (release_files
         ${HDF5_SOURCE_DIR}/release_docs/USING_HDF5_CMake.txt
-        ${HDF5_SOURCE_DIR}/release_docs/RELEASE.txt
+        ${HDF5_SOURCE_DIR}/release_docs/CHANGELOG.md
     )
     if (WIN32)
       set (release_files
@@ -256,8 +279,8 @@ if (NOT HDF5_EXTERNALLY_CONFIGURED AND NOT HDF5_NO_PACKAGES)
   set (CPACK_PACKAGE_VERSION_PATCH "")
   set (CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
   if (EXISTS "${HDF5_SOURCE_DIR}/release_docs")
-    set (CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/release_docs/RELEASE.txt")
-    set (CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/release_docs/RELEASE.txt")
+    set (CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/release_docs/CHANGELOG.md")
+    set (CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/release_docs/CHANGELOG.md")
   endif ()
   set (CPACK_PACKAGE_RELOCATABLE TRUE)
   if (OVERRIDE_INSTALL_VERSION)
@@ -272,6 +295,7 @@ if (NOT HDF5_EXTERNALLY_CONFIGURED AND NOT HDF5_NO_PACKAGES)
     set (CPACK_PRE_BUILD_SCRIPTS ${CMAKE_SOURCE_DIR}/config/install/SignPackageFiles.cmake)
   endif ()
 
+  # Add the package types to the list of generators, TGZ is the default on all platforms
   set (CPACK_GENERATOR "TGZ")
   if (WIN32)
     set (CPACK_GENERATOR "ZIP")
@@ -484,6 +508,7 @@ The HDF5 data model, file format, API, library, and tools are open and distribut
 
   include (CPack)
 
+  # The following sets packaging specific categories and descriptions
   cpack_add_install_type(Full DISPLAY_NAME "Everything")
   cpack_add_install_type(Developer)
 

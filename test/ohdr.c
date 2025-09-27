@@ -2127,10 +2127,6 @@ main(void)
     /* Verify bad ohdr message fixes work */
     test_ohdr_badness(fapl);
 
-    /* Verify symbol table messages are cached */
-    if (h5_verify_cached_stabs(FILENAME, fapl) < 0)
-        TEST_ERROR;
-
     if (H5FD__supports_swmr_test(driver_name)) {
         /* A test to exercise the re-read of the object header for SWMR access */
         if (test_ohdr_swmr(true) < 0)
@@ -2140,6 +2136,10 @@ main(void)
     }
     else
         puts("Skipped SWMR tests for SWMR-incompatible VFD");
+
+    /* Verify symbol table messages are cached */
+    if (h5_verify_cached_stabs(FILENAME, fapl) < 0)
+        TEST_ERROR;
 
     /* Pop API context */
     if (api_ctx_pushed && H5CX_pop(false) < 0)

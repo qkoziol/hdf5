@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       build_mode:
-        description: "CMake build type (CMAKE_BUILD_TYPE)"
+        description: "Build type (CMAKE_BUILD_TYPE)"
         required: true
         type: string
 
@@ -41,6 +41,7 @@ jobs:
     uses: ./.github/workflows/vfd-ros3.yml
     with:
       build_mode: "${{ inputs.build_mode }}"
+      build_aws_c_s3_only: false
       aws_c_s3_build_type: "source"
       aws_c_s3_tag: "main"
 

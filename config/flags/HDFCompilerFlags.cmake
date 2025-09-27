@@ -163,7 +163,6 @@ if (HDF5_ENABLE_ALL_WARNINGS)
 endif ()
 
 #-----------------------------------------------------------------------------
-# Option for --enable-asserts
 # By default, CMake adds NDEBUG to CMAKE_${lang}_FLAGS for Release build types
 # This option will force/override the default setting for all configurations
 #-----------------------------------------------------------------------------
@@ -178,7 +177,6 @@ endif ()
 MARK_AS_ADVANCED (HDF5_ENABLE_ASSERTS)
 
 #-----------------------------------------------------------------------------
-# Option for --enable-symbols
 # This option will force/override the default setting for all configurations
 #-----------------------------------------------------------------------------
 #option (HDF5_ENABLE_SYMBOLS "Add debug symbols to the library independent of the build mode and optimization level." OFF)
@@ -187,7 +185,6 @@ set_property (CACHE HDF5_ENABLE_SYMBOLS PROPERTY STRINGS OFF NO YES)
 MARK_AS_ADVANCED (HDF5_ENABLE_SYMBOLS)
 
 #-----------------------------------------------------------------------------
-# Option for --enable-profiling
 # This option will force/override the default setting for all configurations
 #-----------------------------------------------------------------------------
 option (HDF5_ENABLE_PROFILING "Enable profiling flags independently from the build mode." OFF)
@@ -197,7 +194,6 @@ endif ()
 MARK_AS_ADVANCED (HDF5_ENABLE_PROFILING)
 
 #-----------------------------------------------------------------------------
-# Option for --enable-optimization
 # This option will force/override the default setting for all configurations
 #-----------------------------------------------------------------------------
 option (HDF5_ENABLE_OPTIMIZATION "Enable optimization flags/settings independently from the build mode" OFF)
