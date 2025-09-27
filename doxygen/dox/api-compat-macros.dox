@@ -1,5 +1,8 @@
 /** \page api-compat-macros API Compatibility Macros
 
+Navigate back: \ref index "Main" / \ref TN
+<hr>
+
   \section audience Audience
   The target audience for this document has existing applications that use the
   HDF5 library, and is considering moving to the latest HDF5 release to take
@@ -190,7 +193,7 @@
   overrides the behavior specified by the library mapping, and can be overridden
   on a function-by-function basis by the function mappings.
 
-  If the HDF5 library was configured with the \TText{--disable-deprecated-symbols} flag, then
+  If the HDF5 library was configured with the \TText{-DHDF5_ENABLE_DEPRECATED_SYMBOLS:BOOL=OFF} flag, then
   the deprecated functions will not be available, regardless of the application mapping options.
 
   <div align="center">Table 2:  Application Mapping Options
@@ -894,5 +897,8 @@
        \TText{-DH5_NO_DEPRECATED_SYMBOLS}, and address any failures to complete
        the application migration process.</li>
    </ol>
+
+<hr>
+Navigate back: \ref index "Main" / \ref TN
 
  */

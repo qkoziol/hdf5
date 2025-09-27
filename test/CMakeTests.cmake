@@ -176,6 +176,18 @@ endforeach ()
 
 add_custom_target(HDF5_TEST_LIB_files ALL COMMENT "Copying files needed by HDF5_TEST_LIB tests" DEPENDS ${HDF5_TEST_LIB_files_list})
 
+set (HDF5_S3PROXY_TEST_FILES
+    t8.shakespeare.txt
+    Poe_Raven.txt
+    charsets.h5
+)
+
+foreach (h5_file ${HDF5_S3PROXY_TEST_FILES})
+  HDFTEST_COPY_FILE("${PROJECT_SOURCE_DIR}/testfiles/${h5_file}" "${HDF5_TEST_BINARY_DIR}/H5TEST/testfiles/${h5_file}" "HDF5_S3PROXY_files")
+endforeach ()
+
+add_custom_target(HDF5_S3PROXY_files ALL COMMENT "Copying files needed by HDF5_S3PROXY tests" DEPENDS ${HDF5_S3PROXY_files_list})
+
 set (testhdf5_CLEANFILES
     coord.h5
     dtypes10.h5
@@ -665,6 +677,91 @@ if ("H5TEST-tcheck_version-release" MATCHES "${HDF5_DISABLE_TESTS_REGEX}")
   set_tests_properties (H5TEST-tcheck_version-release PROPERTIES DISABLED true)
 endif ()
 
+##############################################################
+##############################################################
+###           S 3   T E S T S                              ###
+##############################################################
+##############################################################
+if (HDF5_ENABLE_ROS3_VFD_DOCKER_PROXY)
+  set (h5test_s3tests_port 9001)
+
+  # Setup environment for tests.
+  # The HDF5_ROS3_TEST_BUCKET_URL environment variable is set
+  # as a requirement of the ros3 and s3comms tests.
+  # The AWS_ENDPOINT_URL environment variable is set to work
+  # around an issue in aws-c-s3 when using localhost URLs
+  # directly.
+  # The HDF5_ROS3_VFD_FORCE_PATH_STYLE environment variable is
+  # set to force the ROS3 VFD to use path-style requests for
+  # compatibility with s3proxy.
+  # AWS_PROFILE is set in order to use the correct testing
+  # credentials created in CMakeTests.cmake
+  set (h5test_s3tests_env
+    "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST"
+    "HDF5_ROS3_TEST_BUCKET_URL=http://localhost:${h5test_s3tests_port}/hdf5ros3"
+    "AWS_ENDPOINT_URL=http://localhost:${h5test_s3tests_port}"
+    "HDF5_ROS3_VFD_FORCE_PATH_STYLE=1"
+    "AWS_PROFILE=ros3_vfd_test"
+  )
+
+  file (MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/H5TEST/buckets")
+  add_test (
+      NAME H5TEST-start-proxy
+      COMMAND "${CMAKE_COMMAND}"
+          -D "TEST_PROGRAM=${DOCKER_EXECUTABLE}"
+          -D "TEST_PRODUCT=andrewgaul/s3proxy"
+          -D "TEST_PORT=${h5test_s3tests_port}"
+          -D "TEST_ARGS:STRING=s3proxy-local-fs"
+          -D "TEST_BUCKET:STRING=hdf5ros3"
+          -D "TEST_FILES:STRING=t8.shakespeare.txt;Poe_Raven.txt;charsets.h5"
+          -D "TEST_ACLS:STRING=skip;anon;anon"
+          -D "TEST_EXPECT=0"
+          -D "TEST_ENV_VAR:STRING=AWS_SHARED_CREDENTIALS_FILE"
+          -D "TEST_ENV_VALUE:STRING=${CMAKE_BINARY_DIR}/credentials"
+          -D "TEST_FOLDER=${HDF5_TEST_BINARY_DIR}/H5TEST"
+          -P "${HDF_RESOURCES_DIR}/runProxy.cmake"
+  )
+  set_tests_properties (H5TEST-start-proxy PROPERTIES FIXTURES_SETUP s3_proxy)
+  add_test (
+      NAME H5TEST-stop-proxy
+      COMMAND "${CMAKE_COMMAND}"
+          -D "TEST_PROGRAM=${DOCKER_EXECUTABLE}"
+          -D "TEST_ARGS:STRING=s3proxy-local-fs"
+          -D "TEST_EXPECT=0"
+          -D "TEST_FOLDER=${HDF5_TEST_BINARY_DIR}/H5TEST"
+          -P "${HDF_RESOURCES_DIR}/stopProxy.cmake"
+  )
+  set_tests_properties (H5TEST-stop-proxy PROPERTIES FIXTURES_CLEANUP s3_proxy)
+
+  foreach (h5_test ${H5_S3TESTS})
+    if (HDF5_ENABLE_USING_MEMCHECKER)
+      add_test (NAME H5TEST_S3TESTS-${h5_test} COMMAND ${CMAKE_CROSSCOMPILING_EMULATOR} $<TARGET_FILE:${h5_test}>)
+    else ()
+      add_test (NAME H5TEST_S3TESTS-${h5_test} COMMAND "${CMAKE_COMMAND}"
+          -D "TEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
+          -D "TEST_PROGRAM=$<TARGET_FILE:${h5_test}>"
+          -D "TEST_ARGS:STRING="
+          -D "TEST_EXPECT=0"
+          -D "TEST_SKIP_COMPARE=TRUE"
+          -D "TEST_OUTPUT=${h5_test}.txt"
+          -D "TEST_ENV_VAR:STRING=AWS_SHARED_CREDENTIALS_FILE"
+          -D "TEST_ENV_VALUE:STRING=${CMAKE_BINARY_DIR}/credentials"
+          #-D "TEST_REFERENCE=${h5_test}.out"
+          -D "TEST_FOLDER=${HDF5_TEST_BINARY_DIR}/H5TEST"
+          -P "${HDF_RESOURCES_DIR}/runTest.cmake"
+     )
+    endif ()
+    set_tests_properties (H5TEST_S3TESTS-${h5_test} PROPERTIES
+        FIXTURES_REQUIRED s3_proxy
+        ENVIRONMENT "${h5test_s3tests_env}"
+        WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
+    )
+    if ("H5TEST_S3TESTS-${h5_test}" MATCHES "${HDF5_DISABLE_TESTS_REGEX}")
+      set_tests_properties (H5TEST_S3TESTS-${h5_test} PROPERTIES DISABLED true)
+    endif ()
+  endforeach ()
+endif ()
+
 ##############################################################################
 ##############################################################################
 ###           A D D I T I O N A L   T E S T S                              ###
@@ -906,7 +1003,7 @@ if (BUILD_SHARED_LIBS)
 
   add_test (NAME H5PLUGIN-filter_plugin COMMAND ${CMAKE_CROSSCOMPILING_EMULATOR} $<TARGET_FILE:filter_plugin>)
   set_tests_properties (H5PLUGIN-filter_plugin PROPERTIES
-      ENVIRONMENT "HDF5_PLUGIN_PATH=${CMAKE_BINARY_DIR}/filter_plugin_dir1${CMAKE_SEP}${CMAKE_BINARY_DIR}/filter_plugin_dir2;srcdir=${HDF5_TEST_BINARY_DIR}"
+      ENVIRONMENT "HDF5_PLUGIN_PATH=${CMAKE_BINARY_DIR}/filter_plugin_dir1${CMAKE_SEP}${CMAKE_BINARY_DIR}/filter_plugin_dir2${CMAKE_SEP};HDF5_VOL_CONNECTOR=;srcdir=${HDF5_TEST_BINARY_DIR}"
       WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}
   )
   if ("H5PLUGIN-filter_plugin" MATCHES "${HDF5_DISABLE_TESTS_REGEX}")
@@ -1005,7 +1102,7 @@ if (BUILD_SHARED_LIBS)
 
   add_test (NAME H5PLUGIN-vol_plugin COMMAND ${CMAKE_CROSSCOMPILING_EMULATOR} $<TARGET_FILE:vol_plugin>)
   set_tests_properties (H5PLUGIN-vol_plugin PROPERTIES
-      ENVIRONMENT "HDF5_PLUGIN_PATH=${CMAKE_BINARY_DIR}/null_vol_plugin_dir;srcdir=${HDF5_TEST_BINARY_DIR}"
+      ENVIRONMENT "HDF5_PLUGIN_PATH=${CMAKE_BINARY_DIR}/null_vol_plugin_dir;srcdir=${HDF5_TEST_BINARY_DIR};HDF5_VOL_CONNECTOR="
       WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}
   )
   if ("H5PLUGIN-vol_plugin" MATCHES "${HDF5_DISABLE_TESTS_REGEX}")
@@ -1023,12 +1120,17 @@ endif ()
 ##############################################################################
 ##############################################################################
 
-if (HDF5_BUILD_GENERATORS AND BUILD_STATIC_LIBS)
+if (HDF5_BUILD_GENERATORS)
   macro (ADD_H5_GENERATOR genfile)
     add_executable (${genfile} ${HDF5_TEST_SOURCE_DIR}/${genfile}.c)
     target_include_directories (${genfile} PRIVATE "${HDF5_SRC_INCLUDE_DIRS};${HDF5_SRC_BINARY_DIR};$<$<BOOL:${HDF5_ENABLE_PARALLEL}>:${MPI_C_INCLUDE_DIRS}>")
-    TARGET_C_PROPERTIES (${genfile} STATIC)
-    target_link_libraries (${genfile} PRIVATE ${HDF5_TEST_LIB_TARGET} ${HDF5_LIB_TARGET})
+    if (NOT BUILD_SHARED_LIBS)
+      TARGET_C_PROPERTIES (${genfile} STATIC)
+      target_link_libraries (${genfile} PRIVATE ${HDF5_TEST_LIB_TARGET} ${HDF5_LIB_TARGET})
+    else ()
+      TARGET_C_PROPERTIES (${genfile} SHARED)
+      target_link_libraries (${genfile} PRIVATE ${HDF5_TEST_LIBSH_TARGET} ${HDF5_LIBSH_TARGET})
+    endif ()
     set_target_properties (${genfile} PROPERTIES FOLDER generator/test)
 
     #-----------------------------------------------------------------------------

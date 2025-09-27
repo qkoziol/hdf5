@@ -968,10 +968,10 @@ H5SL__release_common(H5SL_t *slist, bool closing, H5SL_operator_t op, void *op_d
          * elements. The library code that is making use of the skip list
          * container can do what it likes with the elements.
          */
-        H5_GCC_CLANG_DIAG_OFF("cast-qual")
+        H5_WARN_CAST_AWAY_CONST_OFF
         if (op)
             (void)(op)(node->item, (void *)node->key, op_data);
-        H5_GCC_CLANG_DIAG_ON("cast-qual")
+        H5_WARN_CAST_AWAY_CONST_ON
 
         H5SL__dest_node(node);
         node = next_node;
@@ -2887,10 +2887,10 @@ H5SL_iterate(H5SL_t *slist, H5SL_operator_t op, void *op_data)
          * elements. The library code that is making use of the skip list
          * container can do what it likes with the elements.
          */
-        H5_GCC_CLANG_DIAG_OFF("cast-qual")
+        H5_WARN_CAST_AWAY_CONST_OFF
         if ((ret_value = (op)(node->item, (void *)node->key, op_data)) != 0)
             break;
-        H5_GCC_CLANG_DIAG_ON("cast-qual")
+        H5_WARN_CAST_AWAY_CONST_ON
 
         /* Advance to next node */
         node = next;

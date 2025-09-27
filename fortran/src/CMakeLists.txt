@@ -2,6 +2,12 @@ cmake_minimum_required (VERSION 3.18)
 project (HDF5_F90_SRC C Fortran)
 
 #-----------------------------------------------------------------------------
+if (H5_NO_DEPRECATED_SYMBOLS)
+  set (CMAKE_NO_DEPRECATED_SYMBOLS 1)
+else ()
+  set (CMAKE_NO_DEPRECATED_SYMBOLS 0)
+endif ()
+
 # configure def file for shared libs on windows
 if (WIN32)
   if (BUILD_SHARED_LIBS)
@@ -14,9 +20,7 @@ if (WIN32)
       if (NOT H5_FORTRAN_C_LONG_DOUBLE_IS_UNIQUE)
         set (H5_DBL_NOT_UNIQUE_EXP ";")
       endif ()
-      set (CMAKE_NO_DEPRECATED_SYMBOLS 0)
-      if (NOT H5_NO_DEPRECATED_SYMBOLS)
-        set (CMAKE_NO_DEPRECATED_SYMBOLS 1)
+      if (H5_NO_DEPRECATED_SYMBOLS)
         set (DLL_NO_DEPRECATED_SYMBOLS ";")
       endif ()
       configure_file (${HDF5_F90_SRC_SOURCE_DIR}/hdf5_fortrandll.def.in ${HDF5_F90_SRC_BINARY_DIR}/hdf5_fortrandll.def @ONLY)
@@ -452,7 +456,6 @@ if (BUILD_STATIC_LIBS)
   install (
       FILES
           ${HDF5_F90_BINARY_DIR}/static/H5f90i_gen.h
-          ${HDF5_F90_BINARY_DIR}/static/H5fortran_types.F90
           ${HDF5_F90_BINARY_DIR}/H5config_f.inc
       DESTINATION
           ${HDF5_INSTALL_INCLUDE_DIR}
@@ -463,7 +466,6 @@ else ()
   install (
       FILES
           ${HDF5_F90_BINARY_DIR}/shared/H5f90i_gen.h
-          ${HDF5_F90_BINARY_DIR}/shared/H5fortran_types.F90
           ${HDF5_F90_BINARY_DIR}/H5config_f.inc
       DESTINATION
           ${HDF5_INSTALL_INCLUDE_DIR}
@@ -616,13 +618,9 @@ install (
 )
 
 if (NOT WIN32 AND NOT MINGW)
-  if (HDF5_ENABLE_PARALLEL AND MPI_Fortran_FOUND)
-    set (_PKG_CONFIG_COMPILER ${MPI_Fortran_COMPILER})
-  else ()
-    set (_PKG_CONFIG_COMPILER ${CMAKE_Fortran_COMPILER})
-  endif ()
+  set (_PKG_CONFIG_COMPILER ${HDF5_H5CC_Fortran_COMPILER})
   configure_file (
-      ${HDF_RESOURCES_DIR}/libh5cc.in
+      ${HDF_CONFIG_DIR}/libh5cc.in
       ${HDF5_BINARY_DIR}/CMakeFiles/h5fc
       @ONLY
   )
@@ -634,7 +632,7 @@ if (NOT WIN32 AND NOT MINGW)
   )
   if (HDF5_ENABLE_PARALLEL AND MPI_Fortran_FOUND)
     configure_file (
-        ${HDF_RESOURCES_DIR}/libh5cc.in
+        ${HDF_CONFIG_DIR}/libh5cc.in
         ${HDF5_BINARY_DIR}/CMakeFiles/h5pfc
         @ONLY
     )
