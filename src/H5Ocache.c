@@ -1269,6 +1269,9 @@ H5O__chunk_deserialize(H5O_t *oh, haddr_t addr, size_t chunk_size, const uint8_t
         if (mesg_size != H5O_ALIGN_OH(oh, mesg_size))
             HGOTO_ERROR(H5E_OHDR, H5E_CANTLOAD, FAIL, "message not aligned");
 
+        if (H5_IS_BUFFER_OVERFLOW(chunk_image, mesg_size, p_end))
+            HGOTO_ERROR(H5E_OHDR, H5E_BADVALUE, FAIL, "message size exceeds buffer end");
+
         /* Message flags */
         if (H5_IS_BUFFER_OVERFLOW(chunk_image, 1, p_end))
             HGOTO_ERROR(H5E_OHDR, H5E_OVERFLOW, FAIL, "ran off end of input buffer while decoding");
@@ -1300,12 +1303,6 @@ H5O__chunk_deserialize(H5O_t *oh, haddr_t addr, size_t chunk_size, const uint8_t
                 UINT16DECODE(chunk_image, crt_idx);
             }
         }
-
-        /* Try to detect invalidly formatted object header message that
-         *  extends past end of chunk.
-         */
-        if (chunk_image + mesg_size > eom_ptr)
-            HGOTO_ERROR(H5E_OHDR, H5E_CANTINIT, FAIL, "corrupt object header");
 
         /* Increment count of null messages */
         if (H5O_NULL_ID == id)
