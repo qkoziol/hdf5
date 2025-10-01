@@ -289,7 +289,7 @@ H5FD__s3comms_init(void)
     if (!H5FD_ros3_aws_host_resolver_g)
         HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, FAIL, "couldn't initialize AWS host resolver");
 
-    /* Check if debugging output should be enabled */
+        /* Check if debugging output should be enabled */
 #if S3COMMS_DEBUG > 0
     H5FD_ros3_debug_g = true;
 #else
