@@ -296,6 +296,9 @@ H5FD__ros3_init(void)
 
     FUNC_ENTER_PACKAGE
 
+    /* Sanity check */
+    assert(!H5FD_ros3_init_s);
+
     if (H5FD__s3comms_init() < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, FAIL, "unable to initialize S3 communications interface");
 
@@ -328,10 +331,9 @@ H5FD__ros3_term(void)
 
     FUNC_ENTER_PACKAGE
 
-    if (H5FD_ros3_init_s) {
+    if (H5FD_ros3_init_s)
         if (H5FD__s3comms_term() < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTRELEASE, FAIL, "unable to terminate S3 communications interface");
-    }
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -850,7 +852,7 @@ H5FD__ros3_str_endpoint_delete(hid_t H5_ATTR_UNUSED prop_id, const char H5_ATTR_
 herr_t
 H5Pset_fapl_ros3_endpoint(hid_t fapl_id, const char *endpoint_url)
 {
-    H5P_genplist_t *plist = NULL;
+    H5P_genplist_t *fapl = NULL;
     char           *endpoint_src;
     htri_t          endpoint_exists;
     herr_t          ret_value = SUCCEED;
@@ -858,32 +860,33 @@ H5Pset_fapl_ros3_endpoint(hid_t fapl_id, const char *endpoint_url)
     FUNC_ENTER_API(FAIL)
 
     if (fapl_id == H5P_DEFAULT)
-        HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "can't set values in default property list");
+        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "can't set values in default property list");
     if (!endpoint_url)
-        HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "endpoint URL string was NULL");
-    if (NULL == (plist = H5P_object_verify(fapl_id, H5P_FILE_ACCESS, false)))
-        HGOTO_ERROR(H5E_PLIST, H5E_BADTYPE, FAIL, "not a file access property list");
-    if (H5FD_ROS3 != H5P_peek_driver(plist))
-        HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "incorrect VFL driver");
+        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "endpoint URL string was NULL");
 
-    if ((endpoint_exists = H5P_exist_plist(plist, ROS3_ENDPOINT_PROP_NAME)) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "failed to check if endpoint URL property exists in plist");
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
+        HGOTO_ERROR(H5E_VFL, H5E_BADTYPE, FAIL, "not a file access property list");
+    if (H5FD_ROS3 != H5P_peek_driver(fapl))
+        HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "incorrect VFL driver");
+
+    if ((endpoint_exists = H5P_exist_plist(fapl, ROS3_ENDPOINT_PROP_NAME)) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "failed to check if endpoint URL property exists in plist");
 
     if (NULL == (endpoint_src = strdup(endpoint_url)))
-        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTALLOC, FAIL, "couldn't copy endpoint URL string");
+        HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "couldn't copy endpoint URL string");
 
     if (endpoint_exists) {
-        if (H5P_set(plist, ROS3_ENDPOINT_PROP_NAME, &endpoint_src) < 0) {
+        if (H5P_set(fapl, ROS3_ENDPOINT_PROP_NAME, &endpoint_src) < 0) {
             free(endpoint_src);
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "unable to set endpoint URL value");
+            HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "unable to set endpoint URL value");
         }
     }
     else {
-        if (H5P_insert(plist, ROS3_ENDPOINT_PROP_NAME, sizeof(char *), &endpoint_src, NULL, NULL, NULL, NULL,
+        if (H5P_insert(fapl, ROS3_ENDPOINT_PROP_NAME, sizeof(char *), &endpoint_src, NULL, NULL, NULL, NULL,
                        H5FD__ros3_str_endpoint_delete, H5FD__ros3_str_endpoint_copy,
                        H5FD__ros3_str_endpoint_cmp, H5FD__ros3_str_endpoint_close) < 0) {
             free(endpoint_src);
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, FAIL, "unable to register property in plist");
+            HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "unable to register property in plist");
         }
     }
 
@@ -903,7 +906,7 @@ done:
 herr_t
 H5Pget_fapl_ros3_endpoint(hid_t fapl_id, size_t size, char *endpoint_dst /*out*/)
 {
-    H5P_genplist_t *plist = NULL;
+    H5P_genplist_t *fapl = NULL;
     htri_t          endpoint_exists;
     herr_t          ret_value = SUCCEED;
 
@@ -914,17 +917,17 @@ H5Pget_fapl_ros3_endpoint(hid_t fapl_id, size_t size, char *endpoint_dst /*out*/
     if (endpoint_dst == NULL)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "endpoint_dst is NULL");
 
-    if (NULL == (plist = H5P_object_verify(fapl_id, H5P_FILE_ACCESS, true)))
-        HGOTO_ERROR(H5E_PLIST, H5E_BADTYPE, FAIL, "not a file access property list");
-    if (H5FD_ROS3 != H5P_peek_driver(plist))
-        HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "incorrect VFL driver");
-    if ((endpoint_exists = H5P_exist_plist(plist, ROS3_ENDPOINT_PROP_NAME)) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "failed to check if endpoint URL property exists in plist");
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_FILE_ACCESS, true)))
+        HGOTO_ERROR(H5E_VFL, H5E_BADTYPE, FAIL, "not a file access property list");
+    if (H5FD_ROS3 != H5P_peek_driver(fapl))
+        HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "incorrect VFL driver");
+    if ((endpoint_exists = H5P_exist_plist(fapl, ROS3_ENDPOINT_PROP_NAME)) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "failed to check if endpoint URL property exists in plist");
     if (endpoint_exists) {
         char *endpoint_src;
 
-        if (H5P_get(plist, ROS3_ENDPOINT_PROP_NAME, &endpoint_src) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "unable to get endpoint URL value");
+        if (H5P_get(fapl, ROS3_ENDPOINT_PROP_NAME, &endpoint_src) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "unable to get endpoint URL value");
 
         if (endpoint_src) {
             strncpy(endpoint_dst, endpoint_src, size);
