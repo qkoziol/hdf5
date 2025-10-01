@@ -262,8 +262,8 @@ H5FD__s3comms_init(void)
 
     FUNC_ENTER_PACKAGE
 
-    if (H5FD_ros3_aws_init_g)
-        HGOTO_DONE(SUCCEED);
+    /* Sanity check */
+    assert(!H5FD_ros3_aws_init_g);
 
     /* Initialize aws-c-s3 with default allocator. Refer to allocator.h
      * in the aws-c-common dependency for alternative allocators that
@@ -289,15 +289,14 @@ H5FD__s3comms_init(void)
     if (!H5FD_ros3_aws_host_resolver_g)
         HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, FAIL, "couldn't initialize AWS host resolver");
 
-        /* Check if debugging output should be enabled */
+    /* Check if debugging output should be enabled */
 #if S3COMMS_DEBUG > 0
     H5FD_ros3_debug_g = true;
 #else
     debug = getenv(HDF5_ROS3_VFD_DEBUG);
-    if (debug && (*debug != '\0')) {
+    if (debug && (*debug != '\0'))
         if (0 != HDstrcasecmp(debug, "false") && 0 != HDstrcasecmp(debug, "off") && 0 != strcmp(debug, "0"))
             H5FD_ros3_debug_g = true;
-    }
 #endif
 
     /* Configure aws-c-s3 logging if enabled */
@@ -325,9 +324,8 @@ H5FD__s3comms_init(void)
                 else
                     log_opts.filename = log_file;
             }
-            else {
+            else
                 log_opts.filename = H5FD_ROS3_VFD_DEFAULT_LOG_FILE;
-            }
 
             aws_logger_init_standard(&H5FD_ros3_aws_logger_g, H5FD_ros3_aws_allocator_g, &log_opts);
             aws_logger_set(&H5FD_ros3_aws_logger_g);
@@ -911,14 +909,12 @@ H5FD__s3comms_s3r_read(s3r_t *handle, haddr_t offset, size_t len, void *dest, si
         HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "unable to read past EOF (%zu)", handle->filesize);
 
     if (H5FD_ros3_debug_g) {
-        if (len > 0) {
+        if (len > 0)
             fprintf(stderr, " -- GET: Bytes %" PRIuHADDR " - %" PRIuHADDR ", Request Size: %zu\n", offset,
                     offset + len - 1, len);
-        }
-        else {
+        else
             fprintf(stderr, " -- GET: Bytes %" PRIuHADDR " - %" PRIuHADDR ", Request Size: %zu\n", offset,
                     handle->filesize - 1, handle->filesize - offset);
-        }
 
         fflush(stderr);
     }
@@ -959,10 +955,9 @@ H5FD__s3comms_s3r_read(s3r_t *handle, haddr_t offset, size_t len, void *dest, si
                     int                    ret    = 0;
 
                     ret = aws_http_headers_get_index(request_headers, hdr_idx, &header);
-                    if (AWS_ERROR_INVALID_INDEX != ret) {
+                    if (AWS_ERROR_INVALID_INDEX != ret)
                         fprintf(stderr, PRInSTR ": " PRInSTR "\n", AWS_BYTE_CURSOR_PRI(header.name),
                                 AWS_BYTE_CURSOR_PRI(header.value));
-                    }
                 }
 
                 fflush(stderr);
@@ -1088,10 +1083,9 @@ H5FD__s3comms_s3r_read_cb(struct aws_s3_meta_request H5_ATTR_UNUSED *meta_reques
     memcpy(read_params->read_buf + buf_offset, body->ptr, body->len);
 
 done:
-    if (AWS_OP_SUCCESS != ret_value) {
+    if (AWS_OP_SUCCESS != ret_value)
         if (read_params)
             read_params->request.status = FAIL;
-    }
 
     return ret_value;
 } /* end H5FD__s3comms_s3r_read_cb() */
@@ -1177,10 +1171,9 @@ H5FD__s3comms_s3r_getsize(s3r_t *handle)
                     int                    ret    = 0;
 
                     ret = aws_http_headers_get_index(request_headers, hdr_idx, &header);
-                    if (AWS_ERROR_INVALID_INDEX != ret) {
+                    if (AWS_ERROR_INVALID_INDEX != ret)
                         fprintf(stderr, PRInSTR ": " PRInSTR "\n", AWS_BYTE_CURSOR_PRI(header.name),
                                 AWS_BYTE_CURSOR_PRI(header.value));
-                    }
                 }
 
                 fflush(stderr);
@@ -1329,9 +1322,8 @@ H5FD__s3comms_s3r_getsize_headers_cb(struct aws_s3_meta_request H5_ATTR_UNUSED *
                 params->request.err_msg = aws_error_str(AWS_ERROR_S3_MISSING_CONTENT_LENGTH_HEADER);
                 ret_value               = aws_raise_error(AWS_ERROR_S3_MISSING_CONTENT_LENGTH_HEADER);
             }
-            else {
+            else
                 ret_value = aws_raise_error(AWS_ERROR_S3_CANCELED);
-            }
 
             goto done;
         }
@@ -1346,10 +1338,9 @@ H5FD__s3comms_s3r_getsize_headers_cb(struct aws_s3_meta_request H5_ATTR_UNUSED *
     }
 
 done:
-    if (AWS_OP_SUCCESS != ret_value) {
+    if (AWS_OP_SUCCESS != ret_value)
         if (params)
             params->request.status = FAIL;
-    }
 
     return ret_value;
 } /* end H5FD__s3comms_s3r_getsize_headers_cb() */
@@ -1643,31 +1634,28 @@ H5FD__s3comms_get_aws_region(const H5FD__s3comms_aws_params_t *aws_params, const
     assert(aws_region_out);
 
     /* From FAPL */
-    if (fa && fa->aws_region[0] != '\0') {
+    if (fa && fa->aws_region[0] != '\0')
         if (NULL == (region_copy = HDstrndup(fa->aws_region, H5FD_ROS3_MAX_REGION_LEN + 1)))
             HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "couldn't copy AWS region from FAPL");
-    }
 
     /* From AWS_REGION environment variable */
     if (!region_copy) {
         char *env_region = getenv("AWS_REGION");
 
-        if (env_region && (*env_region != '\0')) {
+        if (env_region && (*env_region != '\0'))
             if (NULL == (region_copy = strdup(env_region)))
                 HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL,
                             "couldn't copy AWS region string from environment variable");
-        }
     }
 
     /* From AWS_DEFAULT_REGION environment variable */
     if (!region_copy) {
         char *env_default_region = getenv("AWS_DEFAULT_REGION");
 
-        if (env_default_region && (*env_default_region != '\0')) {
+        if (env_default_region && (*env_default_region != '\0'))
             if (NULL == (region_copy = strdup(env_default_region)))
                 HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL,
                             "couldn't copy default AWS region string from environment variable");
-        }
     }
 
     /* From AWS configuration file */
@@ -1993,9 +1981,8 @@ H5FD__s3comms_format_http_request_message(const H5FD__s3comms_aws_params_t *aws_
     *message_out = request_http_message;
 
 done:
-    if (ret_value < 0) {
+    if (ret_value < 0)
         aws_http_message_release(request_http_message);
-    }
 
     aws_byte_buf_clean_up(&path_buf);
 
@@ -2133,9 +2120,8 @@ H5FD__s3comms_format_host_header(const H5FD__s3comms_aws_params_t *aws_params,
             host_header.value = aws_byte_cursor_from_buf(&host_buf);
             H5_WARN_AGGREGATE_RETURN_ON
         }
-        else {
+        else
             host_header.value = host_cursor;
-        }
     }
 
     H5_WARN_AGGREGATE_RETURN_OFF
@@ -2178,13 +2164,11 @@ H5FD__s3comms_format_range_header(struct aws_http_message *message, haddr_t offs
     if (offset == 0 && len == 0)
         HGOTO_DONE(SUCCEED);
 
-    if (len > 0) {
+    if (len > 0)
         ret = snprintf(byte_range_str, sizeof(byte_range_str), "bytes=%" PRIuHADDR "-%" PRIuHADDR, offset,
                        offset + len - 1);
-    }
-    else if (offset > 0) {
+    else if (offset > 0)
         ret = snprintf(byte_range_str, sizeof(byte_range_str), "bytes=%" PRIuHADDR "-", offset);
-    }
 
     if (ret < 0)
         HGOTO_ERROR(H5E_VFL, H5E_SYSTEM, FAIL, "snprintf error");
