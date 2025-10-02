@@ -1215,12 +1215,6 @@ main(void)
 
     h5_test_init();
 
-    if (H5FD__s3comms_init() < 0) {
-        fprintf(stderr, "failed to initialize s3 communications interface\n");
-        ret_value = EXIT_FAILURE;
-        goto done;
-    }
-
     if (nerrors == 0) {
         nerrors += test_fapl_config_validation();
         nerrors += test_ros3_fapl_driver_flags();
@@ -1231,12 +1225,6 @@ main(void)
         nerrors += test_noops_and_autofails();
         nerrors += test_cmp();
         nerrors += test_ros3_access_modes();
-    }
-
-    if (H5FD__s3comms_term() < 0) {
-        fprintf(stderr, "failed to terminate s3 communications interface\n");
-        ret_value = EXIT_FAILURE;
-        goto done;
     }
 
     if (nerrors > 0) {
