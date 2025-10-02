@@ -162,11 +162,6 @@ typedef struct H5FD__s3comms_check_cred_provider_params_t {
 /* Local Prototypes */
 /********************/
 
-/* atexit() function to avoid issue when cleaning up aws-c-s3 library
- * from HDF5's default atexit() handler.
- */
-static void H5FD__s3comms_term_func(void);
-
 /* Callbacks for processing general requests */
 static void H5FD__s3comms_s3r_req_finish_cb(struct aws_s3_meta_request              *meta_request,
                                             const struct aws_s3_meta_request_result *meta_request_result,
@@ -220,7 +215,7 @@ static const char *H5FD__s3comms_httpcode_to_str(long httpcode, bool *handled);
 /*******************/
 
 /* Boolean to determine if the AWS library has been initialized */
-static bool H5FD_ros3_aws_init_g = false;
+static bool H5FD_ros3_aws_init_s = false;
 
 /* Pointer to allocator used for AWS operations */
 static struct aws_allocator *H5FD_ros3_aws_allocator_g = NULL;
@@ -236,7 +231,7 @@ static struct aws_logger H5FD_ros3_aws_logger_g   = {0};
 static bool              H5FD_ros3_aws_log_init_g = false;
 
 /* Boolean controlling whether debugging output is enabled */
-static bool H5FD_ros3_debug_g = false;
+static bool H5FD_ros3_aws_debug_s = false;
 
 /*************/
 /* Functions */
@@ -263,7 +258,7 @@ H5FD__s3comms_init(void)
     FUNC_ENTER_PACKAGE
 
     /* Sanity check */
-    assert(!H5FD_ros3_aws_init_g);
+    assert(!H5FD_ros3_aws_init_s);
 
     /* Initialize aws-c-s3 with default allocator. Refer to allocator.h
      * in the aws-c-common dependency for alternative allocators that
@@ -291,12 +286,12 @@ H5FD__s3comms_init(void)
 
         /* Check if debugging output should be enabled */
 #if S3COMMS_DEBUG > 0
-    H5FD_ros3_debug_g = true;
+    H5FD_ros3_aws_debug_s = true;
 #else
     debug = getenv(HDF5_ROS3_VFD_DEBUG);
     if (debug && (*debug != '\0'))
         if (0 != HDstrcasecmp(debug, "false") && 0 != HDstrcasecmp(debug, "off") && 0 != strcmp(debug, "0"))
-            H5FD_ros3_debug_g = true;
+            H5FD_ros3_aws_debug_s = true;
 #endif
 
     /* Configure aws-c-s3 logging if enabled */
@@ -333,52 +328,11 @@ H5FD__s3comms_init(void)
         }
     }
 
-    /* Work around issue where aws-c-s3 library doesn't shut down
-     * cleanly when called from HDF5's default atexit() handler.
-     */
-    if (0 != atexit(H5FD__s3comms_term_func))
-        HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, FAIL,
-                    "couldn't register function for cleaning up aws-c-s3 library");
-
-    H5FD_ros3_aws_init_g = true;
+    H5FD_ros3_aws_init_s = true;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FD__s3comms_init() */
-
-/*----------------------------------------------------------------------------
- * Function:    H5FD__s3comms_term_func
- *
- * Purpose:     atexit() handler function to terminate the S3 communications
- *              interface. This is currently needed to work around ordering
- *              issues that cause a crash when the aws-c-s3 library is cleaned
- *              up from HDF5's default atexit() handler. A better solution
- *              would be to require a call to H5close() to explicitly
- *              terminate access to HDF5 before exiting main(), but this will
- *              suffice for the time being.
- *
- * Return:      Non-negative on success/Negative on failure
- *----------------------------------------------------------------------------
- */
-static void
-H5FD__s3comms_term_func(void)
-{
-    if (H5FD_ros3_aws_init_g) {
-        aws_host_resolver_release(H5FD_ros3_aws_host_resolver_g);
-        aws_event_loop_group_release(H5FD_ros3_aws_event_loop_group_g);
-        aws_s3_library_clean_up();
-
-        /* Clean up logger interface after being sure everything else
-         * has finished cleaning up
-         */
-        if (H5FD_ros3_aws_log_init_g)
-            aws_logger_clean_up(&H5FD_ros3_aws_logger_g);
-
-        H5FD_ros3_debug_g = false;
-
-        H5FD_ros3_aws_init_g = false;
-    }
-} /* end H5FD__s3comms_term_func() */
 
 /*----------------------------------------------------------------------------
  * Function:    H5FD__s3comms_term
@@ -391,15 +345,26 @@ H5FD__s3comms_term_func(void)
 herr_t
 H5FD__s3comms_term(void)
 {
-    herr_t ret_value = SUCCEED;
-
     FUNC_ENTER_PACKAGE_NOERR
 
-    /* Currently handled by atexit() function above to work around cleanup
-     * ordering issues.
-     */
+    /* Sanity check */
+    assert(H5FD_ros3_aws_init_s);
 
-    FUNC_LEAVE_NOAPI(ret_value)
+    aws_host_resolver_release(H5FD_ros3_aws_host_resolver_g);
+    aws_event_loop_group_release(H5FD_ros3_aws_event_loop_group_g);
+    aws_s3_library_clean_up();
+
+    /* Clean up logger interface after being sure everything else
+     * has finished cleaning up
+     */
+    if (H5FD_ros3_aws_log_init_g)
+        aws_logger_clean_up(&H5FD_ros3_aws_logger_g);
+
+    H5FD_ros3_aws_debug_s = false;
+
+    H5FD_ros3_aws_init_s = false;
+
+    FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5FD__s3comms_term() */
 
 /*----------------------------------------------------------------------------
@@ -449,7 +414,7 @@ H5FD__s3comms_s3r_req_finish_cb(struct aws_s3_meta_request H5_ATTR_UNUSED *meta_
         /* If debugging is enabled, print out the error from the AWS library and the
          * HTTP response headers.
          */
-        if (H5FD_ros3_debug_g) {
+        if (H5FD_ros3_aws_debug_s) {
             if (meta_request_result->error_response_operation_name)
                 fprintf(stderr, " -- %s request failed with error: %s\n",
                         aws_string_bytes(meta_request_result->error_response_operation_name),
@@ -493,7 +458,7 @@ H5FD__s3comms_s3r_req_finish_cb(struct aws_s3_meta_request H5_ATTR_UNUSED *meta_
         }
     }
 
-    if (H5FD_ros3_debug_g) {
+    if (H5FD_ros3_aws_debug_s) {
         fprintf(stderr, " -- final HTTP status code: %d\n", meta_request_result->response_status);
         fflush(stderr);
     }
@@ -766,7 +731,7 @@ H5FD__s3comms_s3r_open(const char *url, const H5FD_ros3_fapl_t *fa, const char *
     }
 
     if (alt_endpoint && (*alt_endpoint != '\0')) {
-        if (H5FD_ros3_debug_g)
+        if (H5FD_ros3_aws_debug_s)
             fprintf(stderr, " -- parsing alternative endpoint URL\n");
 
         if (NULL == (handle->alternate_purl =
@@ -908,12 +873,12 @@ H5FD__s3comms_s3r_read(s3r_t *handle, haddr_t offset, size_t len, void *dest, si
     if ((offset >= handle->filesize) || (offset + len > handle->filesize))
         HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "unable to read past EOF (%zu)", handle->filesize);
 
-    if (H5FD_ros3_debug_g) {
+    if (H5FD_ros3_aws_debug_s) {
         if (len > 0)
             fprintf(stderr, " -- GET: Bytes %" PRIuHADDR " - %" PRIuHADDR ", Request Size: %zu\n", offset,
                     offset + len - 1, len);
         else
-            fprintf(stderr, " -- GET: Bytes %" PRIuHADDR " - %" PRIuHADDR ", Request Size: %zu\n", offset,
+            fprintf(stderr, " -- GET: Bytes %" PRIuHADDR " - %zu, Request Size: %" PRIuHADDR "\n", offset,
                     handle->filesize - 1, handle->filesize - offset);
 
         fflush(stderr);
@@ -942,7 +907,7 @@ H5FD__s3comms_s3r_read(s3r_t *handle, haddr_t offset, size_t len, void *dest, si
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "couldn't create HTTP 'Range' header");
 
     /* Print out request headers if debugging is enabled */
-    if (H5FD_ros3_debug_g) {
+    if (H5FD_ros3_aws_debug_s) {
         struct aws_http_headers *request_headers;
 
         if ((request_headers = aws_http_message_get_headers(request_http_message))) {
@@ -1134,7 +1099,7 @@ H5FD__s3comms_s3r_getsize(s3r_t *handle)
 
     assert(handle);
 
-    if (H5FD_ros3_debug_g) {
+    if (H5FD_ros3_aws_debug_s) {
         fprintf(stderr, " -- HEAD: Bucket: %s / Key: %s\n", handle->purl->bucket_name, handle->purl->key);
         fflush(stderr);
     }
@@ -1158,7 +1123,7 @@ H5FD__s3comms_s3r_getsize(s3r_t *handle)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "couldn't create HTTP 'User-Agent' header");
 
     /* Print out request headers if debugging is enabled */
-    if (H5FD_ros3_debug_g) {
+    if (H5FD_ros3_aws_debug_s) {
         struct aws_http_headers *request_headers;
 
         if ((request_headers = aws_http_message_get_headers(request_http_message))) {
@@ -1242,7 +1207,7 @@ H5FD__s3comms_s3r_getsize(s3r_t *handle)
 
     handle->filesize = getsize_params.object_size;
 
-    if (H5FD_ros3_debug_g) {
+    if (H5FD_ros3_aws_debug_s) {
         fprintf(stderr, " -- file size: %zu bytes\n", handle->filesize);
         fflush(stderr);
     }
@@ -1281,7 +1246,7 @@ H5FD__s3comms_s3r_getsize_headers_cb(struct aws_s3_meta_request H5_ATTR_UNUSED *
         goto done;
     }
 
-    if (H5FD_ros3_debug_g) {
+    if (H5FD_ros3_aws_debug_s) {
         fprintf(stderr, " -- response status: %d\n", response_status);
         fflush(stderr);
     }
@@ -1290,7 +1255,7 @@ H5FD__s3comms_s3r_getsize_headers_cb(struct aws_s3_meta_request H5_ATTR_UNUSED *
         /* If debugging is enabled, print the response headers. On error,
          * they will be printed in the request finish callback.
          */
-        if (H5FD_ros3_debug_g) {
+        if (H5FD_ros3_aws_debug_s) {
             size_t num_headers = aws_http_headers_count(headers);
 
             if (num_headers) {
@@ -1551,7 +1516,7 @@ done:
         if (H5FD__s3comms_free_purl(purl) < 0)
             HDONE_ERROR(H5E_VFL, H5E_BADVALUE, NULL, "unable to free parsed url structure");
     }
-    else if (H5FD_ros3_debug_g && purl) {
+    else if (H5FD_ros3_aws_debug_s && purl) {
         fprintf(stderr, " -- parsed URL as:\n");
         fprintf(stderr, "    - Scheme: %s\n", purl->scheme);
         fprintf(stderr, "    - Host: %s\n", purl->host);
