@@ -299,6 +299,15 @@
 #define H5_WARN_AGGREGATE_RETURN_ON
 #endif
 
+/* Suppress warnings about casting away const */
+#if defined(__clang__) || defined(__GNUC__)
+#define H5_WARN_STRICT_OVERFLOW_OFF H5_WARN_OFF("strict-overflow")
+#define H5_WARN_STRICT_OVERFLOW_ON  H5_WARN_ON("strict-overflow")
+#else
+#define H5_WARN_STRICT_OVERFLOW_OFF
+#define H5_WARN_STRICT_OVERFLOW_ON
+#endif
+
 /*********************
  * JAVA JNI WARNINGS *
  *********************/
