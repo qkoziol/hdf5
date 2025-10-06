@@ -999,7 +999,7 @@ static H5FD_t *
 H5FD_multi_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
 {
     H5FD_multi_t            *file          = NULL;
-    hid_t                    close_fapl_id = H5I_INVALID_HID;
+    const H5FD_multi_fapl_t fa_out = {0};
     const H5FD_multi_fapl_t *fa;
     H5FD_mem_t               m;
 
@@ -1028,17 +1028,16 @@ H5FD_multi_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr
     if (!fa || (H5P_FILE_ACCESS_DEFAULT == fapl_id) || (H5_VFD_MULTI != H5Pget_driver_cls_value(fapl_id))) {
         char *env = getenv(HDF5_DRIVER);
 
-        close_fapl_id = fapl_id = H5Pcreate(H5P_FILE_ACCESS);
         if (env && !strcmp(env, "split")) {
-            if (H5Pset_fapl_split(fapl_id, NULL, H5P_DEFAULT, NULL, H5P_DEFAULT) < 0)
+            if (H5FD_split_populate_config(NULL, H5P_DEFAULT, NULL, H5P_DEFAULT, true, &fa_out) < 0)
                 H5Epush_goto(__func__, H5E_ERR_CLS, H5E_FILE, H5E_CANTSET, "can't set property value", error);
         }
         else {
-            if (H5Pset_fapl_multi(fapl_id, NULL, NULL, NULL, NULL, true) < 0)
+            if (H5FD_multi_populate_config(NULL, NULL, NULL, NULL, true, &fa_out) < 0)
                 H5Epush_goto(__func__, H5E_ERR_CLS, H5E_FILE, H5E_CANTSET, "can't set property value", error);
         }
 
-        fa = (const H5FD_multi_fapl_t *)H5Pget_driver_info(fapl_id);
+        fa = &fa_out;
     }
     assert(fa);
     ALL_MEMBERS (mt) {
@@ -1056,10 +1055,6 @@ H5FD_multi_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr
     file->fa.relax = fa->relax;
     file->flags    = flags;
     file->name     = my_strdup(name);
-    if (close_fapl_id >= 0)
-        if (H5Pclose(close_fapl_id) < 0)
-            H5Epush_goto(__func__, H5E_ERR_CLS, H5E_FILE, H5E_CANTCLOSEOBJ, "can't close property list",
-                         error);
 
     /* Compute derived properties and open member files */
     if (compute_next(file) < 0)
