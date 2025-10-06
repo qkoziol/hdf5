@@ -1029,12 +1029,12 @@ H5FD__ros3_open(const char *url, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
     }
 
     /* Does the endpoint exist in the fapl? */
-    if ((endpt_exists = H5P_exist_plist(plist, ROS3_ENDPOINT_PROP_NAME)) < 0)
+    if ((endpt_exists = H5P_exist_plist(fapl, ROS3_ENDPOINT_PROP_NAME)) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "failed check for property endpoint in plist");
 
     /* If so, get it */
     if (endpt_exists)
-        if (H5P_get(plist, ROS3_ENDPOINT_PROP_NAME, &fapl_endpoint) < 0)
+        if (H5P_get(fapl, ROS3_ENDPOINT_PROP_NAME, &fapl_endpoint) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "unable to get endpoint value");
 
     /* Open file; procedure depends on whether or not the fapl instructs to
