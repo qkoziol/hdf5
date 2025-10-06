@@ -588,6 +588,126 @@ done:
 } /* end H5Pget_fapl_subfiling() */
 
 /*-------------------------------------------------------------------------
+ * Function:    H5FDsubfiling_get_file_mapping
+ *
+ * Purpose:     Retrieves the names of all physical subfiles that collectively
+ *              make up a logical HDF5 file using the subfiling Virtual File
+ *              Driver (VFD).  The subfiling VFD distributes file data across
+ *              multiple subfiles to improve parallel I/O performance,
+ *              particularly systems where metadata operations can become a
+ *              bottleneck.
+ *
+ * Return:      Non-negative on success/Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5FDsubfiling_get_file_mapping(hid_t file_id, char ***filenames, size_t *len)
+{
+    H5F_t               *f             = NULL;
+    H5FD_t              *file          = NULL;
+    subfiling_context_t *sf_context    = NULL;
+    char               **filenames_arr = NULL;
+    char                *filepath      = NULL;
+    char                *subfile_dir   = NULL;
+    char                *base          = NULL;
+    herr_t               ret_value     = SUCCEED;
+
+    FUNC_ENTER_API(FAIL)
+
+    /* Check args */
+    if (NULL == (f = H5VL_object(file_id)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid file ID");
+    if (H5FD_SUBFILING != H5F_get_driver_id(f))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "file is not using Subfiling VFD");
+    if (!filenames)
+        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "`filenames` was NULL");
+    if (!len)
+        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "`len` was NULL");
+
+    /* Get subfiling info */
+    if (H5F_shared_get_file_driver(H5F_SHARED(f), &file) < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get driver structure from file ID");
+    if (NULL == (sf_context = H5FD__subfiling_get_object(((H5FD_subfiling_t *)file)->context_id)))
+        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get subfiling context from ID");
+    if (!sf_context->topology)
+        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "application topology hasn't been initialized yet for this file");
+
+    /* Sanity checks */
+    assert(sf_context->h5_file_id != UINT64_MAX);
+    assert(sf_context->h5_filename);
+    assert(sf_context->sf_num_subfiles > 0);
+    assert(sf_context->topology);
+
+    /* Reset 'OUT' params */
+    *filenames = NULL;
+    *len       = 0;
+
+    /* Get the file mapping if the rank is an IO concentrator */
+    if (sf_context->topology->rank_is_ioc) {
+        int num_subfiles  = 0;
+        int num_digits    = 0;
+
+        assert(sf_context->sf_fids);
+        assert(sf_context->sf_num_fids > 0);
+
+        /* Get the basename of the full HDF5 filename */
+        if (H5_basename(sf_context->h5_filename, &base) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "can't get HDF5 file basename");
+
+        /*
+         * Get the directory prefix where subfiles will be placed.
+         * Under normal circumstances, the subfiles are co-located
+         * with the HDF5 file, but users may specify a different
+         * directory name.
+         */
+        if (sf_context->subfile_prefix) {
+            if (NULL == (subfile_dir = strdup(sf_context->subfile_prefix)))
+                HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "couldn't copy subfile prefix");
+        }
+        else
+            if (H5_dirname(sf_context->h5_filename, &subfile_dir) < 0)
+                HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "couldn't get HDF5 file dirname");
+
+        num_subfiles = sf_context->sf_num_subfiles;
+        num_digits   = (int)(log10(num_subfiles) + 1);
+
+        if (NULL == (filenames_arr = calloc((size_t)sf_context->sf_num_fids, sizeof(char *))))
+            HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "couldn't allocate filenames array");
+
+        for (int i = 0; i < sf_context->sf_num_fids; i++) {
+            int subfile_idx;
+
+            if (NULL == (filepath = malloc(PATH_MAX)))
+                HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "couldn't allocate space for subfile filename");
+
+            subfile_idx = (i * sf_context->topology->n_io_concentrators) + sf_context->topology->ioc_idx + 1;
+            snprintf(filepath, PATH_MAX, "%s/" H5FD_SUBFILING_FILENAME_TEMPLATE, subfile_dir, base,
+                     sf_context->h5_file_id, num_digits, subfile_idx, num_subfiles);
+
+            filenames_arr[i] = filepath;
+            filepath         = NULL;
+        }
+
+        *filenames = filenames_arr;
+        *len       = (size_t)sf_context->sf_num_fids;
+    }
+
+done:
+    if (ret_value < 0) {
+        if (filenames_arr)
+            for (int i = 0; i < sf_context->sf_num_fids; i++)
+                free(filenames_arr[i]);
+        free(filenames_arr);
+    }
+
+    free(base);
+    free(subfile_dir);
+
+    FUNC_LEAVE_API(ret_value);
+} /* end H5FDsubfiling_get_file_mapping() */
+
+/*-------------------------------------------------------------------------
  * Function:    H5FD__subfiling_fapl_info_dup
  *
  * Purpose:     Duplicate the file access properties.
