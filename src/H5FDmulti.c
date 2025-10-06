@@ -998,8 +998,8 @@ H5FD_multi_fapl_free(void *_fa)
 static H5FD_t *
 H5FD_multi_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
 {
-    H5FD_multi_t            *file          = NULL;
-    const H5FD_multi_fapl_t fa_out = {0};
+    H5FD_multi_t            *file   = NULL;
+    const H5FD_multi_fapl_t  fa_out = {0};
     const H5FD_multi_fapl_t *fa;
     H5FD_mem_t               m;
 
