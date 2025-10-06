@@ -631,7 +631,8 @@ H5FDsubfiling_get_file_mapping(hid_t file_id, char ***filenames, size_t *len)
     if (NULL == (sf_context = H5FD__subfiling_get_object(((H5FD_subfiling_t *)file)->context_id)))
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get subfiling context from ID");
     if (!sf_context->topology)
-        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "application topology hasn't been initialized yet for this file");
+        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL,
+                    "application topology hasn't been initialized yet for this file");
 
     /* Sanity checks */
     assert(sf_context->h5_file_id != UINT64_MAX);
@@ -645,8 +646,8 @@ H5FDsubfiling_get_file_mapping(hid_t file_id, char ***filenames, size_t *len)
 
     /* Get the file mapping if the rank is an IO concentrator */
     if (sf_context->topology->rank_is_ioc) {
-        int num_subfiles  = 0;
-        int num_digits    = 0;
+        int num_subfiles = 0;
+        int num_digits   = 0;
 
         assert(sf_context->sf_fids);
         assert(sf_context->sf_num_fids > 0);
@@ -665,9 +666,8 @@ H5FDsubfiling_get_file_mapping(hid_t file_id, char ***filenames, size_t *len)
             if (NULL == (subfile_dir = strdup(sf_context->subfile_prefix)))
                 HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "couldn't copy subfile prefix");
         }
-        else
-            if (H5_dirname(sf_context->h5_filename, &subfile_dir) < 0)
-                HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "couldn't get HDF5 file dirname");
+        else if (H5_dirname(sf_context->h5_filename, &subfile_dir) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "couldn't get HDF5 file dirname");
 
         num_subfiles = sf_context->sf_num_subfiles;
         num_digits   = (int)(log10(num_subfiles) + 1);
