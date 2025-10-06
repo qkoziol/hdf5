@@ -679,9 +679,8 @@ H5FDsubfiling_get_file_mapping(hid_t file_id, char ***filenames, size_t *len)
             if (NULL == (subfile_dir = strdup(sf_context->subfile_prefix)))
                 HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "couldn't copy subfile prefix");
         }
-        else
-            if (H5_dirname(sf_context->h5_filename, &subfile_dir) < 0)
-                HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "couldn't get HDF5 file dirname");
+        else if (H5_dirname(sf_context->h5_filename, &subfile_dir) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTALLOC, FAIL, "couldn't get HDF5 file dirname");
 
         num_subfiles = sf_context->sf_num_subfiles;
         num_digits   = (int)(log10(num_subfiles) + 1);
