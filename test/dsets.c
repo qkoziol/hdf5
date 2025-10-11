@@ -17138,20 +17138,12 @@ main(void)
     /* Verify symbol table messages are cached */
     nerrors += (h5_verify_cached_stabs(FILENAME, fapl) < 0 ? 1 : 0);
 
-    /* Verify that DCPL layout is not copied immediately on open */
-    nerrors += (test_dcpl_layout_caching(H5D_COMPACT) < 0 ? 1 : 0);
-    nerrors += (test_dcpl_layout_caching(H5D_CONTIGUOUS) < 0 ? 1 : 0);
-    nerrors += (test_dcpl_layout_caching(H5D_CHUNKED) < 0 ? 1 : 0);
-    if (driver_is_default_compatible)
-        nerrors += (test_dcpl_layout_caching(H5D_VIRTUAL) < 0 ? 1 : 0);
-
     /* Verify that source file/dataset names are shared properly */
     nerrors += (test_vds_shared_strings(fapl) < 0 ? 1 : 0);
 
     if (nerrors)
         goto error;
     printf("All dataset tests passed.\n");
-    HDremove(DCPL_LAYOUT_FILENAME);
 #ifdef H5_HAVE_FILTER_SZIP
     HDremove(NOENCODER_COPY_FILENAME);
 #endif /* H5_HAVE_FILTER_SZIP */

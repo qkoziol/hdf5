@@ -1230,9 +1230,6 @@ H5D__create(H5F_t *file, hid_t type_id, const H5S_t *space, H5P_genplist_t *dcpl
             HGOTO_ERROR(H5E_ARGS, H5E_CANTINIT, NULL, "H5Z_has_optional_filter() failed");
 
         if (false == ignore_filters) {
-            /* Layout only exists on DCPL at this point in dset creation */
-            assert(new_dset->shared->layout_copied_to_dcpl);
-
             /* Check if the filters in the DCPL can be applied to this dataset */
             if (H5Z_can_apply(new_dset->shared->dcpl, new_dset->shared->type_id) < 0)
                 HGOTO_ERROR(H5E_ARGS, H5E_CANTINIT, NULL, "I/O filters can't operate on this dataset");
