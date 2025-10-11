@@ -524,6 +524,9 @@ H5Pset_fapl_subfiling(hid_t fapl_id, const H5FD_subfiling_config_t *vfd_config)
         /* Set Subfiling configuration on IOC FAPL */
         if (H5FD__subfiling_set_config_prop(fa.ioc_fapl, &vfd_config->shared_cfg) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set subfiling configuration on IOC FAPL");
+
+        /* Copy subfiling configuration into driver info also */
+        memcpy(&fa.shared_cfg, &vfd_config->shared_cfg, sizeof(fa.shared_cfg));
     }
 
     if (H5P_set_driver(fapl, H5FD_SUBFILING_driver_g, &fa, NULL) < 0)
