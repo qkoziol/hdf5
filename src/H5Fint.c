@@ -3303,7 +3303,7 @@ H5F__get_file_image(H5F_t *file, void *buf_ptr, size_t buf_len, size_t *image_le
         if (file->shared->sblock->super_vers >= HDF5_SUPERBLOCK_VERSION_2) {
             uint32_t chksum; /* Checksum temporary variable      */
             uint8_t *chksum_image_ptr;
-            size_t chksum_off;
+            size_t   chksum_off;
 
             /* When we add new superblock versions make sure this code still works, then modify this assert
              * appropriately */
