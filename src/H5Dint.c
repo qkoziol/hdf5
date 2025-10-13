@@ -1257,11 +1257,10 @@ H5D__create(H5F_t *file, hid_t type_id, const H5S_t *space, H5P_genplist_t *dcpl
             HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, NULL, "can't retrieve external file list");
         efl_copied = true;
 
-        if (false == ignore_filters) {
+        if (false == ignore_filters)
             /* Check that chunked layout is used if filters are enabled */
             if (pline->nused > 0 && H5D_CHUNKED != layout->type)
                 HGOTO_ERROR(H5E_DATASET, H5E_BADVALUE, NULL, "filters can only be used with chunked layout");
-        }
 
         /* Check if the alloc_time is the default and error out */
         if (fill->alloc_time == H5D_ALLOC_TIME_DEFAULT)
@@ -1284,12 +1283,11 @@ H5D__create(H5F_t *file, hid_t type_id, const H5S_t *space, H5P_genplist_t *dcpl
     if (H5D__layout_set_version(file, &new_dset->shared->layout) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, NULL, "can't set latest version of layout");
 
-    if (new_dset->shared->layout.version >= H5O_LAYOUT_VERSION_4) {
+    if (new_dset->shared->layout.version >= H5O_LAYOUT_VERSION_4)
         /* Use latest indexing type for layout message version >= 4 */
         if (H5D__layout_set_latest_indexing(&new_dset->shared->layout, new_dset->shared->space,
                                             &new_dset->shared->dcpl_cache) < 0)
             HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, NULL, "can't set latest indexing");
-    } /* end if */
 
     /* Check if the file driver would like to force early space allocation */
     if (H5F_has_feature(file, H5FD_FEAT_ALLOCATE_EARLY))

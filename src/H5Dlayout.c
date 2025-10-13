@@ -629,6 +629,10 @@ H5D__layout_oh_read(H5D_t *dataset)
         (dataset->shared->layout.ops->init)(dataset->oloc.file, dataset) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, FAIL, "unable to initialize layout information");
 
+    /* Adjust chunk dimensions to omit datatype size (in last dimension) for creation property */
+    if (H5D_CHUNKED == dataset->shared->layout.type)
+        dataset->shared->layout.u.chunk.ndims--;
+
     /* Copy layout to the DCPL */
     if (H5P_set(dataset->shared->dcpl, H5D_CRT_LAYOUT_NAME, &dataset->shared->layout) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "can't set layout");
