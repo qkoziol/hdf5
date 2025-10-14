@@ -885,7 +885,7 @@ H5Pset_fapl_ros3_endpoint(hid_t fapl_id, const char *endpoint_url)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "can't set values in default property list");
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
         HGOTO_ERROR(H5E_VFL, H5E_BADTYPE, FAIL, "not a file access property list");
-    if (H5FD_ROS3 != H5P_peek_driver(fapl))
+    if (H5FD_ROS3_VALUE != H5P_get_driver_value(fapl))
         HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "incorrect VFL driver");
 
     if (!endpoint_url)
@@ -942,7 +942,7 @@ H5Pget_fapl_ros3_endpoint(hid_t fapl_id, size_t size, char *endpoint_dst /*out*/
     /* Check arguments */
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_VFL, H5E_BADTYPE, FAIL, "not a file access property list");
-    if (H5FD_ROS3 != H5P_peek_driver(fapl))
+    if (H5FD_ROS3_VALUE != H5P_get_driver_value(fapl))
         HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "incorrect VFL driver");
     if (size == 0)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "size cannot be zero.");

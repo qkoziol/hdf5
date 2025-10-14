@@ -621,7 +621,7 @@ herr_t
 H5FDsubfiling_get_file_mapping(hid_t file_id, char ***filenames, size_t *len)
 {
     H5F_t               *f             = NULL;
-    H5FD_t              *file          = NULL;
+    H5FD_int_t          *fh            = NULL;
     subfiling_context_t *sf_context    = NULL;
     char               **filenames_arr = NULL;
     char                *filepath      = NULL;
@@ -634,9 +634,9 @@ H5FDsubfiling_get_file_mapping(hid_t file_id, char ***filenames, size_t *len)
     /* Check args */
     if (NULL == (f = H5VL_object(file_id)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid file ID");
-    if (H5F_shared_get_file_driver(H5F_SHARED(f), &file) < 0)
+    if (H5F_shared_get_file_driver(H5F_SHARED(f), &fh) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get driver structure from file ID");
-    if (H5FD_SUBFILING_VALUE != file->cls->value)
+    if (H5FD_SUBFILING_VALUE != fh->file->cls->value)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "file is not using Subfiling VFD");
     if (!filenames)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "`filenames` was NULL");
@@ -644,7 +644,7 @@ H5FDsubfiling_get_file_mapping(hid_t file_id, char ***filenames, size_t *len)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "`len` was NULL");
 
     /* Get subfiling info */
-    if (NULL == (sf_context = H5FD__subfiling_get_object(((H5FD_subfiling_t *)file)->context_id)))
+    if (NULL == (sf_context = H5FD__subfiling_get_object(((H5FD_subfiling_t *)fh->file)->context_id)))
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get subfiling context from ID");
     if (!sf_context->topology)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL,
