@@ -940,7 +940,7 @@ H5Pget_fapl_ros3_endpoint(hid_t fapl_id, size_t size, char *endpoint_dst /*out*/
     FUNC_ENTER_API(FAIL)
 
     /* Check arguments */
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_FILE_ACCESS, true)))
+    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_VFL, H5E_BADTYPE, FAIL, "not a file access property list");
     if (H5FD_ROS3_VALUE != H5P_get_driver_value(fapl))
         HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "incorrect VFL driver");
