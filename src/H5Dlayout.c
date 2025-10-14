@@ -570,11 +570,11 @@ done:
 herr_t
 H5D__layout_oh_read(H5D_t *dataset)
 {
-    htri_t msg_exists;                      /* Whether a particular type of message exists */
-    bool   pline_copied          = false;   /* Flag to indicate that dcpl_cache.pline's message was copied */
-    bool   layout_copied_to_dset = false;   /* Flag to indicate that layout message was copied */
-    bool   efl_copied            = false;   /* Flag to indicate that the EFL message was copied */
-    herr_t ret_value             = SUCCEED; /* Return value */
+    htri_t msg_exists;              /* Whether a particular type of message exists */
+    bool   pline_copied  = false;   /* Flag to indicate that dcpl_cache.pline's message was copied */
+    bool   layout_copied = false;   /* Flag to indicate that layout message was copied */
+    bool   efl_copied    = false;   /* Flag to indicate that the EFL message was copied */
+    herr_t ret_value     = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -602,7 +602,7 @@ H5D__layout_oh_read(H5D_t *dataset)
      */
     if (NULL == H5O_msg_read(&(dataset->oloc), H5O_LAYOUT_ID, &(dataset->shared->layout)))
         HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, FAIL, "unable to read data layout message");
-    layout_copied_to_dset = true;
+    layout_copied = true;
 
     /* Check for external file list message (which might not exist) */
     if ((msg_exists = H5O_msg_exists(&(dataset->oloc), H5O_EFL_ID)) < 0)
@@ -647,13 +647,14 @@ done:
         if (pline_copied)
             if (H5O_msg_reset(H5O_PLINE_ID, &dataset->shared->dcpl_cache.pline) < 0)
                 HDONE_ERROR(H5E_DATASET, H5E_CANTRESET, FAIL, "unable to reset pipeline info");
-        if (layout_copied_to_dset)
+        if (layout_copied)
             if (H5O_msg_reset(H5O_LAYOUT_ID, &dataset->shared->layout) < 0)
                 HDONE_ERROR(H5E_DATASET, H5E_CANTRESET, FAIL, "unable to reset layout info");
         if (efl_copied)
             if (H5O_msg_reset(H5O_EFL_ID, &dataset->shared->dcpl_cache.efl) < 0)
                 HDONE_ERROR(H5E_DATASET, H5E_CANTRESET, FAIL, "unable to reset efl message");
     }
+
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5D__layout_oh_read() */
 
