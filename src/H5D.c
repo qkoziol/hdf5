@@ -1315,7 +1315,7 @@ done:
 } /* end H5Dread_multi_async() */
 
 /*-------------------------------------------------------------------------
- * Function:    H5Dread_chunk
+ * Function:    H5Dread_chunk2
  *
  * Purpose:     Reads an entire chunk from the file directly.
  *
@@ -1324,7 +1324,8 @@ done:
  *---------------------------------------------------------------------------
  */
 herr_t
-H5Dread_chunk(hid_t dset_id, hid_t dxpl_id, const hsize_t *offset, uint32_t *filters, void *buf /*out*/)
+H5Dread_chunk2(hid_t dset_id, hid_t dxpl_id, const hsize_t *offset, uint32_t *filters /*out*/,
+               void *buf /*out*/, size_t *buf_size)
 {
     H5VL_object_t                      *vol_obj;             /* Dataset for this operation   */
     H5VL_optional_args_t                vol_cb_args;         /* Arguments to VOL callback */
@@ -1337,25 +1338,26 @@ H5Dread_chunk(hid_t dset_id, hid_t dxpl_id, const hsize_t *offset, uint32_t *fil
     /* Check arguments */
     if (NULL == (vol_obj = H5VL_vol_object_verify(dset_id, H5I_DATASET)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "dset_id is not a dataset ID");
-    if (!buf)
-        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "buf cannot be NULL");
     if (!offset)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "offset cannot be NULL");
     if (!filters)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "filters cannot be NULL");
+    if (!buf_size)
+        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "buf_size cannot be NULL");
 
-    /* Get the default dataset transfer property list if the user didn't provide one */
+    /* Get the pointer to the dataset transfer property list */
     if (H5P_DEFAULT == dxpl_id)
         dxpl_id = H5P_DATASET_XFER_DEFAULT;
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set up VOL callback arguments */
-    dset_opt_args.chunk_read.offset  = offset;
-    dset_opt_args.chunk_read.filters = 0;
-    dset_opt_args.chunk_read.buf     = buf;
-    vol_cb_args.op_type              = H5VL_NATIVE_DATASET_CHUNK_READ;
-    vol_cb_args.args                 = &dset_opt_args;
+    dset_opt_args.chunk_read.offset   = offset;
+    dset_opt_args.chunk_read.filters  = 0;
+    dset_opt_args.chunk_read.buf      = buf;
+    dset_opt_args.chunk_read.buf_size = buf_size;
+    vol_cb_args.op_type               = H5VL_NATIVE_DATASET_CHUNK_READ;
+    vol_cb_args.args                  = &dset_opt_args;
 
     /* Read the raw chunk */
     if (H5VL_dataset_optional(vol_obj, &vol_cb_args, dxpl, H5_REQUEST_NULL) < 0)
@@ -1366,7 +1368,7 @@ H5Dread_chunk(hid_t dset_id, hid_t dxpl_id, const hsize_t *offset, uint32_t *fil
 
 done:
     FUNC_LEAVE_API(ret_value)
-} /* end H5Dread_chunk() */
+} /* end H5Dread_chunk2() */
 
 /*-------------------------------------------------------------------------
  * Function:    H5D__write_api_common

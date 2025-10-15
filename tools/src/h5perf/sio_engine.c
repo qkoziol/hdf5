@@ -1269,9 +1269,7 @@ do_cleanupfile(iotype iot, char *filename)
 
                 if (drvr_cls_value == H5_VFD_FAMILY) {
                     for (j = 0; /*void*/; j++) {
-                        H5_GCC_CLANG_DIAG_OFF("format-nonliteral")
                         snprintf(temp, temp_sz, filename, j);
-                        H5_GCC_CLANG_DIAG_ON("format-nonliteral")
 
                         if (HDaccess(temp, F_OK) < 0)
                             break;

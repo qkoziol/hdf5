@@ -2576,7 +2576,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Fget_mdc_logging_status(hid_t file_id, hbool_t *is_enabled /*out*/, hbool_t *is_currently_logging /*out*/)
+H5Fget_mdc_logging_status(hid_t file_id, bool *is_enabled /*out*/, bool *is_currently_logging /*out*/)
 {
     H5VL_object_t                   *vol_obj;             /* File info */
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
@@ -2935,7 +2935,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Fget_dset_no_attrs_hint(hid_t file_id, hbool_t *minimize /*out*/)
+H5Fget_dset_no_attrs_hint(hid_t file_id, bool *minimize /*out*/)
 {
     H5VL_object_t                   *vol_obj;             /* File info */
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
@@ -2979,7 +2979,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Fset_dset_no_attrs_hint(hid_t file_id, hbool_t minimize)
+H5Fset_dset_no_attrs_hint(hid_t file_id, bool minimize)
 {
     H5VL_object_t                   *vol_obj;             /* File info */
     H5VL_optional_args_t             vol_cb_args;         /* Arguments to VOL callback */
