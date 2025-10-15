@@ -38,7 +38,7 @@ jobs:
       - name: Checkout HDF5
         uses: actions/checkout@v4.1.7
 
-      - name: CMake Configure
+      - name: Configure
         run: |
             mkdir "${{ runner.workspace }}/build"
             cd "${{ runner.workspace }}/build"
@@ -52,14 +52,13 @@ jobs:
               -DHDF5_BUILD_DOC=OFF \
               -DLIBAEC_USE_LOCALCONTENT=OFF \
               -DZLIB_USE_LOCALCONTENT=OFF \
-              -DH5_NO_DEPRECATED_SYMBOLS:BOOL=OFF \
               -DBUILD_TESTING:BOOL=OFF \
               -DDEFAULT_API_VERSION:STRING=v16 \
               -DCMAKE_INSTALL_PREFIX:PATH=/usr/local \
               $GITHUB_WORKSPACE
         shell: bash
 
-      - name: CMake Build
+      - name: Build
         run: cmake --build . --parallel 3 --config Release
         working-directory: ${{ runner.workspace }}/build
 

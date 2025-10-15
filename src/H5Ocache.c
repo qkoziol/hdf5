@@ -1269,6 +1269,9 @@ H5O__chunk_deserialize(H5O_t *oh, haddr_t addr, size_t chunk_size, const uint8_t
         if (mesg_size != H5O_ALIGN_OH(oh, mesg_size))
             HGOTO_ERROR(H5E_OHDR, H5E_CANTLOAD, FAIL, "message not aligned");
 
+        if (H5_IS_BUFFER_OVERFLOW(chunk_image, mesg_size, p_end))
+            HGOTO_ERROR(H5E_OHDR, H5E_BADVALUE, FAIL, "message size exceeds buffer end");
+
         /* Message flags */
         if (H5_IS_BUFFER_OVERFLOW(chunk_image, 1, p_end))
             HGOTO_ERROR(H5E_OHDR, H5E_OVERFLOW, FAIL, "ran off end of input buffer while decoding");
@@ -1300,12 +1303,6 @@ H5O__chunk_deserialize(H5O_t *oh, haddr_t addr, size_t chunk_size, const uint8_t
                 UINT16DECODE(chunk_image, crt_idx);
             }
         }
-
-        /* Try to detect invalidly formatted object header message that
-         *  extends past end of chunk.
-         */
-        if (chunk_image + mesg_size > eom_ptr)
-            HGOTO_ERROR(H5E_OHDR, H5E_CANTINIT, FAIL, "corrupt object header");
 
         /* Increment count of null messages */
         if (H5O_NULL_ID == id)
@@ -1343,9 +1340,9 @@ H5O__chunk_deserialize(H5O_t *oh, haddr_t addr, size_t chunk_size, const uint8_t
             mesg->flags   = flags;
             mesg->crt_idx = crt_idx;
             mesg->native  = NULL;
-            H5_GCC_CLANG_DIAG_OFF("cast-qual")
+            H5_WARN_CAST_AWAY_CONST_OFF
             mesg->raw = (uint8_t *)chunk_image;
-            H5_GCC_CLANG_DIAG_ON("cast-qual")
+            H5_WARN_CAST_AWAY_CONST_ON
             mesg->raw_size = mesg_size;
             mesg->chunkno  = chunkno;
 
@@ -1549,10 +1546,10 @@ H5O__chunk_serialize(const H5F_t *f, H5O_t *oh, unsigned chunkno)
     /* Encode any dirty messages in this chunk */
     for (u = 0, curr_msg = &oh->mesg[0]; u < oh->nmesgs; u++, curr_msg++)
         if (curr_msg->dirty && curr_msg->chunkno == chunkno) {
-            H5_GCC_CLANG_DIAG_OFF("cast-qual")
+            H5_WARN_CAST_AWAY_CONST_OFF
             if (H5O_msg_flush((H5F_t *)f, oh, curr_msg) < 0)
                 HGOTO_ERROR(H5E_OHDR, H5E_CANTENCODE, FAIL, "unable to encode object header message");
-            H5_GCC_CLANG_DIAG_ON("cast-qual")
+            H5_WARN_CAST_AWAY_CONST_ON
         }
 
     /* Sanity checks */

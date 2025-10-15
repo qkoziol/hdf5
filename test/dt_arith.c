@@ -2032,6 +2032,195 @@ error:
 }
 
 /*-------------------------------------------------------------------------
+ * Function:    test_bfloat16
+ *
+ * Purpose:     Tests special values for bfloat16 datatypes
+ *
+ * Return:      Success:    0
+ *              Failure:    number of errors
+ *
+ *-------------------------------------------------------------------------
+ */
+static int
+test_bfloat16(void)
+{
+    const unsigned char *buf_ptr;
+    H5T_order_t          native_type_order;
+    uint16_t             bf16_val;
+    uint16_t             bf16_convval;
+    size_t               float_spos;
+    size_t               float_mpos;
+    size_t               float_epos;
+    size_t               float_msize;
+    size_t               float_esize;
+    hid_t                src_bf16_type;
+    float                val_buf;
+
+    TESTING("bfloat16 datatype special values");
+
+    buf_ptr = (const unsigned char *)&val_buf;
+
+    if ((native_type_order = H5Tget_order(H5T_NATIVE_FLOAT)) < 0) {
+        H5_FAILED();
+        printf("Can't check endian-ness of native float type\n");
+        goto error;
+    }
+
+    /* Just test on little- or big-endian systems */
+    if (native_type_order != H5T_ORDER_LE && native_type_order != H5T_ORDER_BE) {
+        SKIPPED();
+        return 0;
+    }
+
+    src_bf16_type = (native_type_order == H5T_ORDER_LE) ? H5T_FLOAT_BFLOAT16LE : H5T_FLOAT_BFLOAT16BE;
+
+    if (H5Tget_fields(H5T_NATIVE_FLOAT, &float_spos, &float_epos, &float_esize, &float_mpos, &float_msize) <
+        0) {
+        H5_FAILED();
+        printf("Can't get floating-point bit field information for native float type\n");
+        goto error;
+    }
+
+    /* Until native support for bfloat16 type is added, use uint16_t
+     * to represent initial value, then check properties after using
+     * H5T to convert to float
+     */
+
+    bf16_val = 0x7F80; /* +Inf */
+    memcpy(&val_buf, &bf16_val, 2);
+    if (H5Tconvert(src_bf16_type, H5T_NATIVE_FLOAT, 1, &val_buf, NULL, H5P_DEFAULT) < 0) {
+        H5_FAILED();
+        printf("Couldn't convert bfloat16 value to float\n");
+        goto error;
+    }
+
+    if (0 == my_isinf((int)native_type_order, buf_ptr, sizeof(float), float_mpos, float_msize, float_epos,
+                      float_esize)) {
+        H5_FAILED();
+        printf("bfloat16 positive infinity value wasn't infinity after conversion\n");
+        goto error;
+    }
+
+    if (1 == my_isnan(FLT_FLOAT, &val_buf)) {
+        H5_FAILED();
+        printf("bfloat16 positive infinity value matched NaN\n");
+        goto error;
+    }
+
+    /* Convert value back and check */
+    if (H5Tconvert(H5T_NATIVE_FLOAT, src_bf16_type, 1, &val_buf, NULL, H5P_DEFAULT) < 0) {
+        H5_FAILED();
+        printf("Couldn't convert float value to bfloat16\n");
+        goto error;
+    }
+
+    memcpy(&bf16_convval, &val_buf, 2);
+    if (0 != memcmp(&bf16_convval, &bf16_val, 2)) {
+        H5_FAILED();
+        printf("bfloat16 value wasn't preserved between conversions\n");
+        goto error;
+    }
+
+    bf16_val = 0xFF80; /* -Inf */
+    memcpy(&val_buf, &bf16_val, 2);
+    if (H5Tconvert(src_bf16_type, H5T_NATIVE_FLOAT, 1, &val_buf, NULL, H5P_DEFAULT) < 0) {
+        H5_FAILED();
+        printf("Couldn't convert bfloat16 value to float\n");
+        goto error;
+    }
+
+    if (0 == my_isinf((int)native_type_order, buf_ptr, sizeof(float), float_mpos, float_msize, float_epos,
+                      float_esize)) {
+        H5_FAILED();
+        printf("bfloat16 negative infinity value wasn't infinity after conversion\n");
+        goto error;
+    }
+
+    if (1 == my_isnan(FLT_FLOAT, &val_buf)) {
+        H5_FAILED();
+        printf("bfloat16 negative infinity value matched NaN\n");
+        goto error;
+    }
+
+    /* Convert value back and check */
+    if (H5Tconvert(H5T_NATIVE_FLOAT, src_bf16_type, 1, &val_buf, NULL, H5P_DEFAULT) < 0) {
+        H5_FAILED();
+        printf("Couldn't convert float value to bfloat16\n");
+        goto error;
+    }
+
+    memcpy(&bf16_convval, &val_buf, 2);
+    if (0 != memcmp(&bf16_convval, &bf16_val, 2)) {
+        H5_FAILED();
+        printf("bfloat16 value wasn't preserved between conversions\n");
+        goto error;
+    }
+
+    /*
+     * For NaN values, don't bother checking the value after converting
+     * back. The library sets all bits in the significand to 1 when a
+     * NaN is encountered, so the values won't match. Note that at least
+     * on x86 and ARM CPUs this should convert the NaNs into quiet NaNs.
+     * However, this may convert the NaNs to signaling NaNs on some CPUs
+     * which could be problematic if the buffer is used in almost any
+     * fashion. The my_isnan() function might attempt to print the value
+     * into a buffer to compare against NaN strings, which could cause
+     * a floating-point exception for some values. So far, this hasn't
+     * been an issue in practice, but may need some exception handling
+     * here if it becomes an issue.
+     */
+
+    bf16_val = 0xffc1; /* One of many qNaN values */
+    memcpy(&val_buf, &bf16_val, 2);
+    if (H5Tconvert(src_bf16_type, H5T_NATIVE_FLOAT, 1, &val_buf, NULL, H5P_DEFAULT) < 0) {
+        H5_FAILED();
+        printf("Couldn't convert bfloat16 value to float\n");
+        goto error;
+    }
+
+    if (1 == my_isinf((int)native_type_order, buf_ptr, sizeof(float), float_mpos, float_msize, float_epos,
+                      float_esize)) {
+        H5_FAILED();
+        printf("bfloat16 qNaN value was an infinity value after conversion\n");
+        goto error;
+    }
+
+    if (0 == my_isnan(FLT_FLOAT, &val_buf)) {
+        H5_FAILED();
+        printf("bfloat16 qNaN value wasn't a NaN value after conversion\n");
+        goto error;
+    }
+
+    bf16_val = 0xff81; /* One of many sNaN values */
+    memcpy(&val_buf, &bf16_val, 2);
+    if (H5Tconvert(src_bf16_type, H5T_NATIVE_FLOAT, 1, &val_buf, NULL, H5P_DEFAULT) < 0) {
+        H5_FAILED();
+        printf("Couldn't convert bfloat16 value to float\n");
+        goto error;
+    }
+
+    if (1 == my_isinf((int)native_type_order, buf_ptr, sizeof(float), float_mpos, float_msize, float_epos,
+                      float_esize)) {
+        H5_FAILED();
+        printf("bfloat16 sNaN value was an infinity value after conversion\n");
+        goto error;
+    }
+
+    if (0 == my_isnan(FLT_FLOAT, &val_buf)) {
+        H5_FAILED();
+        printf("bfloat16 sNaN value wasn't a NaN value after conversion\n");
+        goto error;
+    }
+
+    PASSED();
+
+    return 0;
+
+error:
+    return 1;
+}
+
+/*-------------------------------------------------------------------------
  * Function:    test_conv_int_1
  *
  * Purpose:    Test conversion of integer values from SRC to DST.
@@ -3511,7 +3700,7 @@ test_conv_flt_1_hw_conv_from_flt(void *hw_dst, unsigned char *src_buf, size_t id
         case FLT_FLOAT16:
 #ifdef H5_HAVE__FLOAT16
             /* Suppress warning about non-standard floating-point literal suffix */
-            H5_GCC_CLANG_DIAG_OFF("pedantic")
+            H5_WARN_NONSTD_SUFFIX_OFF
 
             *((H5__Float16 *)hw_dst) = (H5__Float16)aligned;
 
@@ -3521,7 +3710,7 @@ test_conv_flt_1_hw_conv_from_flt(void *hw_dst, unsigned char *src_buf, size_t id
             else if (fabsf(aligned) < (float)FLT16_MIN)
                 ret = CONV_UNDERFLOW;
 
-            H5_GCC_CLANG_DIAG_ON("pedantic")
+            H5_WARN_NONSTD_SUFFIX_ON
             break;
 #else
             H5_FAILED();
@@ -3626,7 +3815,7 @@ test_conv_flt_1_hw_conv_from_double(void *hw_dst, unsigned char *src_buf, size_t
         case FLT_FLOAT16:
 #ifdef H5_HAVE__FLOAT16
             /* Suppress warning about non-standard floating-point literal suffix */
-            H5_GCC_CLANG_DIAG_OFF("pedantic")
+            H5_WARN_NONSTD_SUFFIX_OFF
 
             *((H5__Float16 *)hw_dst) = (H5__Float16)aligned;
 
@@ -3636,7 +3825,7 @@ test_conv_flt_1_hw_conv_from_double(void *hw_dst, unsigned char *src_buf, size_t
             else if (fabs(aligned) < (double)FLT16_MIN)
                 ret = CONV_UNDERFLOW;
 
-            H5_GCC_CLANG_DIAG_ON("pedantic")
+            H5_WARN_NONSTD_SUFFIX_ON
             break;
 #else
             H5_FAILED();
@@ -3752,7 +3941,7 @@ test_conv_flt_1_hw_conv_from_ldouble(void *hw_dst, unsigned char *src_buf, size_
         case FLT_FLOAT16:
 #ifdef H5_HAVE__FLOAT16
             /* Suppress warning about non-standard floating-point literal suffix */
-            H5_GCC_CLANG_DIAG_OFF("pedantic")
+            H5_WARN_NONSTD_SUFFIX_OFF
 
             *((H5__Float16 *)hw_dst) = (H5__Float16)aligned;
 
@@ -3762,7 +3951,7 @@ test_conv_flt_1_hw_conv_from_ldouble(void *hw_dst, unsigned char *src_buf, size_
             else if (fabsl(aligned) < (long double)FLT16_MIN)
                 ret = CONV_UNDERFLOW;
 
-            H5_GCC_CLANG_DIAG_ON("pedantic")
+            H5_WARN_NONSTD_SUFFIX_ON
             break;
 #else
             H5_FAILED();
@@ -3887,7 +4076,7 @@ test_conv_flt_1_hw_conv_from_fcomplex(void *hw_dst, unsigned char *src_buf, size
             float real_val = crealf(aligned);
 
             /* Suppress warning about non-standard floating-point literal suffix */
-            H5_GCC_CLANG_DIAG_OFF("pedantic")
+            H5_WARN_NONSTD_SUFFIX_OFF
 
 #ifdef H5_HAVE_C99_COMPLEX_NUMBERS
             *((H5__Float16 *)hw_dst) = (H5__Float16)aligned;
@@ -3901,7 +4090,7 @@ test_conv_flt_1_hw_conv_from_fcomplex(void *hw_dst, unsigned char *src_buf, size
             else if (fabsf(real_val) < (float)FLT16_MIN)
                 ret = CONV_UNDERFLOW;
 
-            H5_GCC_CLANG_DIAG_ON("pedantic")
+            H5_WARN_NONSTD_SUFFIX_ON
             break;
         }
 #else
@@ -4006,7 +4195,7 @@ test_conv_flt_1_hw_conv_from_dcomplex(void *hw_dst, unsigned char *src_buf, size
         case FLT_FLOAT16:
 #ifdef H5_HAVE__FLOAT16
             /* Suppress warning about non-standard floating-point literal suffix */
-            H5_GCC_CLANG_DIAG_OFF("pedantic")
+            H5_WARN_NONSTD_SUFFIX_OFF
 
 #ifdef H5_HAVE_C99_COMPLEX_NUMBERS
             *((H5__Float16 *)hw_dst) = (H5__Float16)aligned;
@@ -4021,7 +4210,7 @@ test_conv_flt_1_hw_conv_from_dcomplex(void *hw_dst, unsigned char *src_buf, size
             else if (fabs(real_val) < (double)FLT16_MIN)
                 ret = CONV_UNDERFLOW;
 
-            H5_GCC_CLANG_DIAG_ON("pedantic")
+            H5_WARN_NONSTD_SUFFIX_ON
             break;
 #else
             H5_FAILED();
@@ -4173,7 +4362,7 @@ test_conv_flt_1_hw_conv_from_lcomplex(void *hw_dst, unsigned char *src_buf, size
         case FLT_FLOAT16:
 #ifdef H5_HAVE__FLOAT16
             /* Suppress warning about non-standard floating-point literal suffix */
-            H5_GCC_CLANG_DIAG_OFF("pedantic")
+            H5_WARN_NONSTD_SUFFIX_OFF
 
 #ifdef H5_HAVE_C99_COMPLEX_NUMBERS
             *((H5__Float16 *)hw_dst) = (H5__Float16)aligned;
@@ -4188,7 +4377,7 @@ test_conv_flt_1_hw_conv_from_lcomplex(void *hw_dst, unsigned char *src_buf, size
             else if (fabsl(real_val) < (long double)FLT16_MIN)
                 ret = CONV_UNDERFLOW;
 
-            H5_GCC_CLANG_DIAG_ON("pedantic")
+            H5_WARN_NONSTD_SUFFIX_ON
             break;
 #else
             H5_FAILED();
@@ -4575,16 +4764,16 @@ test_conv_flt_1(const char *name, int run_test, hid_t src, hid_t dst)
             else if (src_type == FLT_FLOAT16) {
 #ifdef H5_HAVE__FLOAT16
                 /* Suppress warning about non-standard floating-point literal suffix */
-                H5_GCC_CLANG_DIAG_OFF("pedantic")
+                H5_WARN_NONSTD_SUFFIX_OFF
                 /* Suppress warning about float conversion in macro code path
                  * that sets H5__Float16 multiply = 100000000;, which shouldn't
                  * happen due to the small value of FLT16_MAX_10_EXP.
                  */
-                H5_GCC_CLANG_DIAG_OFF("float-conversion")
+                H5_WARN_FLOAT_CONVERSION_OFF
                 INIT_FP_NORM(H5__Float16, FLT16_MAX, FLT16_MIN, FLT16_MAX_10_EXP, FLT16_MIN_10_EXP, src_size,
                              dst_size, buf, saved, nelmts);
-                H5_GCC_CLANG_DIAG_ON("float-conversion")
-                H5_GCC_CLANG_DIAG_ON("pedantic")
+                H5_WARN_FLOAT_CONVERSION_ON
+                H5_WARN_NONSTD_SUFFIX_ON
 #else
                 assert(0 && "Should not reach this point!");
 #endif
@@ -4979,7 +5168,7 @@ test_conv_flt_1(const char *name, int run_test, hid_t src, hid_t dst)
                 memcpy(&x, &buf[j * dst_size], sizeof(H5__Float16));
 
                 /* Suppress warning about non-standard floating-point literal suffix */
-                H5_GCC_CLANG_DIAG_OFF("pedantic")
+                H5_WARN_NONSTD_SUFFIX_OFF
 #ifdef H5_HAVE_FABSF16
                 if (underflow && fabsf16(x) <= FLT16_MIN && fabsf16(hw_half) <= FLT16_MIN)
                     continue; /* all underflowed, no error */
@@ -4988,7 +5177,7 @@ test_conv_flt_1(const char *name, int run_test, hid_t src, hid_t dst)
                     fabsf((float)hw_half) <= (float)FLT16_MIN)
                     continue; /* all underflowed, no error */
 #endif
-                H5_GCC_CLANG_DIAG_ON("pedantic")
+                H5_WARN_NONSTD_SUFFIX_ON
 
                 if (overflow && my_isinf(dendian, buf + j * sizeof(H5__Float16), dst_size, dst_mpos,
                                          dst_msize, dst_epos, dst_esize))
@@ -7810,16 +7999,16 @@ test_conv_int_fp(const char *name, int run_test, hid_t src, hid_t dst)
 #ifdef H5_HAVE__FLOAT16
         if (run_test == TEST_NORMAL) {
             /* Suppress warning about non-standard floating-point literal suffix */
-            H5_GCC_CLANG_DIAG_OFF("pedantic")
+            H5_WARN_NONSTD_SUFFIX_OFF
             /* Suppress warning about float conversion in macro code path
              * that sets H5__Float16 multiply = 100000000;, which shouldn't
              * happen due to the small value of FLT16_MAX_10_EXP.
              */
-            H5_GCC_CLANG_DIAG_OFF("float-conversion")
+            H5_WARN_FLOAT_CONVERSION_OFF
             INIT_FP_NORM(H5__Float16, FLT16_MAX, FLT16_MIN, FLT16_MAX_10_EXP, FLT16_MIN_10_EXP, src_size,
                          dst_size, buf, saved, nelmts);
-            H5_GCC_CLANG_DIAG_ON("float-conversion")
-            H5_GCC_CLANG_DIAG_ON("pedantic")
+            H5_WARN_FLOAT_CONVERSION_ON
+            H5_WARN_NONSTD_SUFFIX_ON
         }
         else if (run_test == TEST_DENORM) {
             INIT_FP_DENORM(H5__Float16, FLT16_MANT_DIG, src_size, src_nbits, sendian, dst_size, buf, saved,
@@ -9984,6 +10173,9 @@ main(void)
     /* Test user-defined, query functions and software conversion
      * for user-defined complex number types */
     nerrors += (unsigned long)test_derived_complex();
+
+    /* Test bfloat16 special values */
+    nerrors += (unsigned long)test_bfloat16();
 
     /* Test degenerate cases */
     nerrors += (unsigned long)run_fp_tests("noop");
