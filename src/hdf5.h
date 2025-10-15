@@ -52,13 +52,13 @@
 /* Virtual object layer (VOL) connector developer support */
 #include "H5VLconnector.h"          /* VOL connector author routines */
 #include "H5VLconnector_passthru.h" /* Pass-through VOL connector author routines */
-#include "H5VLnative.h"             /* Native VOL connector macros, for VOL connector authors */
 
 /* Predefined file drivers */
 #include "H5FDcore.h"     /* Files stored entirely in memory          */
 #include "H5FDdirect.h"   /* Linux direct I/O                         */
 #include "H5FDfamily.h"   /* File families                            */
 #include "H5FDhdfs.h"     /* Hadoop HDFS                              */
+#include "H5FDioc.h"      /* I/O Concentrator VFD                     */
 #include "H5FDlog.h"      /* sec2 driver with I/O logging (for debugging) */
 #include "H5FDmirror.h"   /* Mirror VFD and IPC definitions           */
 #include "H5FDmpi.h"      /* MPI-based file drivers                   */
@@ -68,11 +68,10 @@
 #include "H5FDsec2.h"     /* POSIX unbuffered file I/O                */
 #include "H5FDsplitter.h" /* Twin-channel (R/W & R/O) I/O passthrough */
 #include "H5FDstdio.h"    /* Standard C buffered I/O                  */
-#ifdef H5_HAVE_WINDOWS
-#include "H5FDwindows.h" /* Win32 I/O                                */
-#endif
 #include "H5FDsubfiling.h" /* Subfiling VFD                            */
-#include "H5FDioc.h"       /* I/O Concentrator VFD                     */
+#ifdef H5_HAVE_WINDOWS
+#include "H5FDwindows.h"  /* Win32 I/O                                */
+#endif
 
 /* Virtual object layer (VOL) connectors */
 #include "H5VLnative.h"   /* Native VOL connector                     */

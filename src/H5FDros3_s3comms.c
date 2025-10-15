@@ -18,6 +18,31 @@
  * Provides functions and structures required for interfacing with Amazon
  * Simple Storage Service (S3).
  *
+ * Purpose:
+ *
+ *     - Provide structures and functions related to communicating with
+ *       Amazon S3 (Simple Storage Service).
+ *     - Abstract away the REST API (HTTP,
+ *       networked communications) behind a series of uniform function calls.
+ *     - Eventually, support more S3 operations, such as creating, writing to,
+ *       and removing Objects remotely.
+ *
+ *     translates:
+ *     `read(some_file, bytes_offset, bytes_length, &dest_buffer);`
+ *     to:
+ *     ```
+ *     GET myfile HTTP/1.1
+ *     Host: somewhere.me
+ *     Range: bytes=4096-5115
+ *     ```
+ *     and places received bytes from HTTP response...
+ *     ```
+ *     HTTP/1.1 206 Partial-Content
+ *     Content-Range: 4096-5115/63239
+ *
+ *     <bytes>
+ *     ```
+ *     ...in destination buffer.
  *****************************************************************************/
 
 /****************/
@@ -28,12 +53,14 @@
 /* Headers */
 /***********/
 
-#include "H5private.h"
-#include "H5Eprivate.h"
-#include "H5FDros3_s3comms.h"
-#include "H5MMprivate.h"
+#include "H5private.h"        /* Generic Functions        */
 
 #ifdef H5_HAVE_ROS3_VFD
+
+/* Private headers */
+#include "H5Eprivate.h"       /* Error handling           */
+#include "H5FDros3_pkg.h"     /* ROS3 VFD                 */
+#include "H5MMprivate.h"      /* Memory management        */
 
 #include <aws/s3/s3.h>
 #include <aws/s3/s3_client.h>

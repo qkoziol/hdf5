@@ -375,15 +375,12 @@ set (H5FD_PRIVATE_HDRS
     ${HDF5_SRC_DIR}/H5FDmirror_private.h
     ${HDF5_SRC_DIR}/H5FDmpio_private.h
     ${HDF5_SRC_DIR}/H5FDmulti_private.h
-    ${HDF5_SRC_DIR}/H5FDonion_header.h
-    ${HDF5_SRC_DIR}/H5FDonion_history.h
-    ${HDF5_SRC_DIR}/H5FDonion_index.h
     ${HDF5_SRC_DIR}/H5FDonion_pkg.h
     ${HDF5_SRC_DIR}/H5FDonion_private.h
     ${HDF5_SRC_DIR}/H5FDpkg.h
     ${HDF5_SRC_DIR}/H5FDprivate.h
+    ${HDF5_SRC_DIR}/H5FDros3_pkg.h
     ${HDF5_SRC_DIR}/H5FDros3_private.h
-    ${HDF5_SRC_DIR}/H5FDros3_s3comms.h
     ${HDF5_SRC_DIR}/H5FDsec2_private.h
     ${HDF5_SRC_DIR}/H5FDsplitter_private.h
     ${HDF5_SRC_DIR}/H5FDstdio_private.h

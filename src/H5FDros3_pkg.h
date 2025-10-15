@@ -10,48 +10,20 @@
  * help@hdfgroup.org.                                                        *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-/*****************************************************************************
- * Read-Only S3 Virtual File Driver (VFD)
- *
- * This is the header for the S3 Communications module
- *
- * ***NOT A FILE DRIVER***
- *
- * Purpose:
- *
- *     - Provide structures and functions related to communicating with
- *       Amazon S3 (Simple Storage Service).
- *     - Abstract away the REST API (HTTP,
- *       networked communications) behind a series of uniform function calls.
- *     - Eventually, support more S3 operations, such as creating, writing to,
- *       and removing Objects remotely.
- *
- *     translates:
- *     `read(some_file, bytes_offset, bytes_length, &dest_buffer);`
- *     to:
- *     ```
- *     GET myfile HTTP/1.1
- *     Host: somewhere.me
- *     Range: bytes=4096-5115
- *     ```
- *     and places received bytes from HTTP response...
- *     ```
- *     HTTP/1.1 206 Partial-Content
- *     Content-Range: 4096-5115/63239
- *
- *     <bytes>
- *     ```
- *     ...in destination buffer.
- *
- *****************************************************************************/
+/*
+ * Package-private definitions for HDF5 ROS3 VFD
+ */
 
-#ifndef H5FDros3_s3comms_H
-#define H5FDros3_s3comms_H
+#ifndef H5FDros3_pkg_H
+#define H5FDros3_pkg_H
 
-#include "H5private.h" /* Generic Functions        */
-#include "H5FDros3.h"  /* ros3 VFD                 */
+/* Private headers */
+#include "H5private.h"          /* Generic Functions                        */
 
 #ifdef H5_HAVE_ROS3_VFD
+
+/* Private headers */
+#include "H5FDros3_private.h"    /* ROS3 VFD                                 */
 
 /**********
  * MACROS *
@@ -222,4 +194,5 @@ H5_DLL herr_t H5FD__s3comms_s3r_read(s3r_t *handle, haddr_t offset, size_t len, 
 
 #endif /* H5_HAVE_ROS3_VFD */
 
-#endif /* H5FDros3_s3comms_H */
+#endif /* H5FDros3_pkg_H */
+

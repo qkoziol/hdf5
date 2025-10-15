@@ -11,17 +11,20 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /*
- * Purpose: Public, shared definitions for Mirror VFD & remote Writer.
+ * Purpose: Private, shared definitions for Mirror VFD & remote Writer.
  */
 
-#ifndef H5FDmirror_priv_H
-#define H5FDmirror_priv_H
+#ifndef H5FDmirror_pkg_H
+#define H5FDmirror_pkg_H
 
+/* Private headers */
+#include "H5private.h"          /* Generic Functions                        */
+
+/* Private headers */
 #ifdef H5_HAVE_MIRROR_VFD
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+/* Private headers */
+#include "H5FDmirror_private.h" /* Mirror VFD                               */
 
 /* = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
  * IPC - Mirror VFD and Remote Worker application.
@@ -267,6 +270,10 @@ typedef struct H5FD_mirror_xmit_write_t {
     uint64_t           size;
 } H5FD_mirror_xmit_write_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Encode/decode routines are required to "pack" the xmit data into a known
  * byte format for transmission over the wire.
  *
@@ -314,4 +321,4 @@ H5_DLL bool H5FD_mirror_xmit_is_xmit(const H5FD_mirror_xmit_t *xmit);
 
 #endif /* H5_HAVE_MIRROR_VFD */
 
-#endif /* H5FDmirror_priv_H */
+#endif /* H5FDmirror_g_H */

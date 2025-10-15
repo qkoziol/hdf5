@@ -18,9 +18,9 @@
 
 #include "h5test.h"
 
-#include "H5FDros3_s3comms.h"
-
 #ifdef H5_HAVE_ROS3_VFD
+
+#include "H5FDros3_pkg.h"
 
 #define S3_TEST_PROFILE_NAME "ros3_vfd_test"
 

@@ -23,11 +23,10 @@
 
 #include "h5test.h"
 
-#include "H5FDprivate.h"      /* Virtual File Driver utilities */
-#include "H5FDros3.h"         /* this file driver's utilities */
-#include "H5FDros3_s3comms.h" /* for loading of credentials */
-
 #ifdef H5_HAVE_ROS3_VFD
+
+#include "H5FDprivate.h"      /* Virtual File Driver */
+#include "H5FDros3_pkg.h"     /* ROS3 file driver    */
 
 #define MAXADDR (((haddr_t)1 << (8 * sizeof(HDoff_t) - 1)) - 1)
 
