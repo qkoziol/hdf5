@@ -18,7 +18,7 @@
 #define H5FDioc_private_H
 
 /* Include driver's public header */
-#include "H5FDioc.h"     /* IOC VFD             */
+#include "H5FDioc.h" /* IOC VFD             */
 
 /* Private headers needed by this file */
 #include "H5FDprivate.h" /* File drivers        */

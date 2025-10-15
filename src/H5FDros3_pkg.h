@@ -18,12 +18,12 @@
 #define H5FDros3_pkg_H
 
 /* Private headers */
-#include "H5private.h"          /* Generic Functions                        */
+#include "H5private.h" /* Generic Functions                        */
 
 #ifdef H5_HAVE_ROS3_VFD
 
 /* Private headers */
-#include "H5FDros3_private.h"    /* ROS3 VFD                                 */
+#include "H5FDros3_private.h" /* ROS3 VFD                                 */
 
 /**********
  * MACROS *
@@ -195,4 +195,3 @@ H5_DLL herr_t H5FD__s3comms_s3r_read(s3r_t *handle, haddr_t offset, size_t len, 
 #endif /* H5_HAVE_ROS3_VFD */
 
 #endif /* H5FDros3_pkg_H */
-

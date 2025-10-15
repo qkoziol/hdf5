@@ -53,14 +53,14 @@
 /* Headers */
 /***********/
 
-#include "H5private.h"        /* Generic Functions        */
+#include "H5private.h" /* Generic Functions        */
 
 #ifdef H5_HAVE_ROS3_VFD
 
 /* Private headers */
-#include "H5Eprivate.h"       /* Error handling           */
-#include "H5FDros3_pkg.h"     /* ROS3 VFD                 */
-#include "H5MMprivate.h"      /* Memory management        */
+#include "H5Eprivate.h"   /* Error handling           */
+#include "H5FDros3_pkg.h" /* ROS3 VFD                 */
+#include "H5MMprivate.h"  /* Memory management        */
 
 #include <aws/s3/s3.h>
 #include <aws/s3/s3_client.h>

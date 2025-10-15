@@ -20,17 +20,17 @@
 #include "H5FDmodule.h" /* This source code file is part of the H5FD module */
 
 /* Private headers */
-#include "H5private.h"        /* Generic Functions        */
+#include "H5private.h" /* Generic Functions        */
 
 #ifdef H5_HAVE_ROS3_VFD
 
 /* Private headers */
-#include "H5Eprivate.h"       /* Error handling           */
-#include "H5FDpkg.h"          /* File drivers             */
-#include "H5FDros3_pkg.h"     /* ROS3 VFD                 */
-#include "H5FLprivate.h"      /* Free Lists               */
-#include "H5Iprivate.h"       /* IDs                      */
-#include "H5MMprivate.h"      /* Memory management        */
+#include "H5Eprivate.h"   /* Error handling           */
+#include "H5FDpkg.h"      /* File drivers             */
+#include "H5FDros3_pkg.h" /* ROS3 VFD                 */
+#include "H5FLprivate.h"  /* Free Lists               */
+#include "H5Iprivate.h"   /* IDs                      */
+#include "H5MMprivate.h"  /* Memory management        */
 
 /* Define to turn on stats collection and reporting */
 /* #define ROS3_STATS */

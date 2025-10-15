@@ -18,7 +18,7 @@
 #define H5FDioc_pkg_H
 
 /* Private headers */
-#include "H5private.h"          /* Generic Functions                        */
+#include "H5private.h" /* Generic Functions                        */
 
 #ifdef H5_HAVE_IOC_VFD
 

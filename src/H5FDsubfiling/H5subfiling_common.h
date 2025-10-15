@@ -18,8 +18,8 @@
 #define H5_SUBFILING_COMMON_H
 
 /* Public headers */
-#include "H5FDioc.h"          /* IOC VFD                      */
-#include "H5FDsubfiling.h"    /* Subfiling VFD                */
+#include "H5FDioc.h"       /* IOC VFD                      */
+#include "H5FDsubfiling.h" /* Subfiling VFD                */
 
 /* Private headers */
 #include "H5private.h"        /* Generic Functions            */

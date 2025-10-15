@@ -18,7 +18,7 @@
 #define H5FDmirror_pkg_H
 
 /* Private headers */
-#include "H5private.h"          /* Generic Functions                        */
+#include "H5private.h" /* Generic Functions                        */
 
 /* Private headers */
 #ifdef H5_HAVE_MIRROR_VFD
