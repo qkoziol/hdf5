@@ -968,10 +968,10 @@ H5SL__release_common(H5SL_t *slist, bool closing, H5SL_operator_t op, void *op_d
          * elements. The library code that is making use of the skip list
          * container can do what it likes with the elements.
          */
-        H5_GCC_CLANG_DIAG_OFF("cast-qual")
+        H5_WARN_CAST_AWAY_CONST_OFF
         if (op)
             (void)(op)(node->item, (void *)node->key, op_data);
-        H5_GCC_CLANG_DIAG_ON("cast-qual")
+        H5_WARN_CAST_AWAY_CONST_ON
 
         H5SL__dest_node(node);
         node = next_node;
@@ -1096,8 +1096,8 @@ H5SL_create(H5SL_type_t type, H5SL_cmp_t cmp)
     HDcompile_assert(H5SL_LOCK_INT_NONE != H5SL_LOCK_INT_SHARED);
 #ifdef H5_HAVE_CONCURRENCY
     /* Make certain that the H5SL lock enum stays in sync w/H5TS lock enum */
-    HDcompile_assert(H5SL_LOCK_INT_EXCLUSIVE == H5TS_RWLOCK_LOCK_EXCLUSIVE);
-    HDcompile_assert(H5SL_LOCK_INT_SHARED == H5TS_RWLOCK_LOCK_SHARED);
+    HDcompile_assert(H5SL_LOCK_INT_EXCLUSIVE == (H5SL_lock_mode_int_t)H5TS_RWLOCK_LOCK_EXCLUSIVE);
+    HDcompile_assert(H5SL_LOCK_INT_SHARED == (H5SL_lock_mode_int_t)H5TS_RWLOCK_LOCK_SHARED);
 #endif /* H5_HAVE_CONCURRENCY */
 
     /* Check args */
@@ -1155,7 +1155,7 @@ done:
  PURPOSE
     Count the number of objects in a skip list
  USAGE
-    size_t H5SL_count(slist)
+    ssize_t H5SL_count(slist)
         H5SL_t *slist;            IN: Pointer to skip list to count
 
  RETURNS
@@ -1176,7 +1176,7 @@ H5SL_count(H5SL_t *slist)
 #ifdef H5_HAVE_CONCURRENCY
     bool have_lock = false; /* Whether we're holding the list's lock */
 #endif
-    ssize_t ret_value = SSIZE_MAX; /* Return value */
+    ssize_t ret_value = FAIL; /* Return value */
 
 #ifdef H5_HAVE_CONCURRENCY
     FUNC_ENTER_NOAPI_NOINIT
@@ -1193,7 +1193,7 @@ H5SL_count(H5SL_t *slist)
 #ifdef H5_HAVE_CONCURRENCY
     /* Acquire a shared lock on the list */
     if (H5TS_dlftt_rwlock_rdlock(&slist->lock) < 0)
-        HGOTO_ERROR(H5E_SLIST, H5E_CANTLOCK, SSIZE_MAX, "can't lock list");
+        HGOTO_ERROR(H5E_SLIST, H5E_CANTLOCK, FAIL, "can't lock list");
     have_lock = true;
 #endif /* H5_HAVE_CONCURRENCY */
 
@@ -1204,7 +1204,7 @@ H5SL_count(H5SL_t *slist)
 done:
     /* Release lock, if owned */
     if (have_lock && H5TS_dlftt_rwlock_rdunlock(&slist->lock) < 0)
-        HDONE_ERROR(H5E_SLIST, H5E_CANTUNLOCK, SSIZE_MAX, "can't unlock list");
+        HDONE_ERROR(H5E_SLIST, H5E_CANTUNLOCK, FAIL, "can't unlock list");
 #endif
 
     FUNC_LEAVE_NOAPI(ret_value)
@@ -2887,10 +2887,10 @@ H5SL_iterate(H5SL_t *slist, H5SL_operator_t op, void *op_data)
          * elements. The library code that is making use of the skip list
          * container can do what it likes with the elements.
          */
-        H5_GCC_CLANG_DIAG_OFF("cast-qual")
+        H5_WARN_CAST_AWAY_CONST_OFF
         if ((ret_value = (op)(node->item, (void *)node->key, op_data)) != 0)
             break;
-        H5_GCC_CLANG_DIAG_ON("cast-qual")
+        H5_WARN_CAST_AWAY_CONST_ON
 
         /* Advance to next node */
         node = next;

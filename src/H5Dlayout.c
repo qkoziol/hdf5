@@ -654,6 +654,7 @@ done:
             if (H5O_msg_reset(H5O_EFL_ID, &dataset->shared->dcpl_cache.efl) < 0)
                 HDONE_ERROR(H5E_DATASET, H5E_CANTRESET, FAIL, "unable to reset efl message");
     }
+
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5D__layout_oh_read() */
 
@@ -682,12 +683,11 @@ H5D__layout_oh_write(const H5D_t *dataset, H5O_t *oh, unsigned update_flags)
     /* Check if the layout message has been added to the dataset's header */
     if ((msg_exists = H5O_msg_exists_oh(oh, H5O_LAYOUT_ID)) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "unable to check if layout message exists");
-    if (msg_exists) {
+    if (msg_exists)
         /* Write the layout message to the dataset's header */
         if (H5O_msg_write_oh(dataset->oloc.file, oh, H5O_LAYOUT_ID, 0, update_flags,
                              &dataset->shared->layout) < 0)
             HGOTO_ERROR(H5E_DATASET, H5E_WRITEERROR, FAIL, "unable to update layout message");
-    } /* end if */
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
