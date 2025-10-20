@@ -2063,21 +2063,6 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
     shared = file->shared;
     fh     = shared->fh;
 
-    /* Set the file locking flags. If the file is already open, the file
-     * requested file locking flag must match that of the open file.
-     */
-    if (shared->nrefs == 1) {
-        file->shared->use_file_locking      = use_file_locking;
-        file->shared->ignore_disabled_locks = ignore_disabled_locks;
-    }
-    else if (shared->nrefs > 1) {
-        if (file->shared->use_file_locking != use_file_locking)
-            HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, FAIL, "file locking flag values don't match");
-        if (file->shared->use_file_locking && (file->shared->ignore_disabled_locks != ignore_disabled_locks))
-            HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, FAIL,
-                        "file locking 'ignore disabled locks' flag values don't match");
-    }
-
     /* Retrieve page buffer size from FAPL and replace "default" value with
      * actual default (H5PB_SIZE_DEFAULT_VALUE) */
     if (H5CX_get_page_buffer_size(&page_buf_size) < 0)
