@@ -14,19 +14,19 @@
  * Private definitions for HDF5 Subfiling VFD
  */
 
-#ifndef H5FDsubfiling_priv_H
-#define H5FDsubfiling_priv_H
+#ifndef H5FDsubfiling_pkg_H
+#define H5FDsubfiling_pkg_H
 
-/**************/
-/* H5 Headers */
-/**************/
+/***********/
+/* Headers */
+/***********/
 
 /* Public header */
-#include "H5FDsubfiling.h" /* Subfiling VFD                            */
 
 /* Private headers */
-#include "H5private.h" /* Generic Functions                        */
-#include "H5subfiling_common.h"
+#include "H5private.h"             /* Generic Functions         */
+#include "H5FDsubfiling_private.h" /* Subfiling VFD             */
+#include "H5subfiling_common.h"    /* Common subfiling/IOC code */
 
 #define DRIVER_INFO_MESSAGE_MAX_INFO   65536
 #define DRIVER_INFO_MESSAGE_MAX_LENGTH 65552 /* MAX_INFO + sizeof(info_header_t) */
@@ -51,4 +51,4 @@ H5_DLL herr_t H5FD__subfiling__get_real_eof(hid_t context_id, int64_t *logical_e
 }
 #endif
 
-#endif /* H5FDsubfiling_priv_H */
+#endif /* H5FDsubfiling_pkg_H */

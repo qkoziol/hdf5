@@ -27,6 +27,7 @@
  * is needed.
  */
 
+#include <stdbool.h>
 #include <stdlib.h>
 
 #include "hdf5.h"
@@ -51,7 +52,7 @@ typedef int EXAMPLE_DSET_C_DATATYPE;
 static void
 cleanup(char *filename, hid_t fapl_id)
 {
-    hbool_t do_cleanup = getenv(HDF5_NOCLEANUP) ? 0 : 1;
+    bool do_cleanup = getenv(HDF5_NOCLEANUP) ? false : true;
 
     if (do_cleanup)
         H5Fdelete(filename, fapl_id);
@@ -314,6 +315,7 @@ subfiling_write_custom(hid_t fapl_id, int mpi_size, int mpi_rank)
 
     cleanup(EXAMPLE_FILE2, subfiling_fapl);
 
+    H5Pclose(subf_config.ioc_fapl_id);
     H5Pclose(subfiling_fapl);
 }
 
@@ -484,6 +486,7 @@ subfiling_write_precreate(hid_t fapl_id, int mpi_size, int mpi_rank)
 
     cleanup(EXAMPLE_FILE3, subfiling_fapl);
 
+    H5Pclose(subf_config.ioc_fapl_id);
     H5Pclose(subfiling_fapl);
 }
 
