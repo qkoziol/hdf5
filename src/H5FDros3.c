@@ -1029,7 +1029,7 @@ H5FD__ros3_open(const char *url, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
 
     /* Get the token, if it exists */
     if (fa->authenticate) {
-        htri_t          token_exists;
+        htri_t token_exists;
 
         /* Does the token exist in the fapl? */
         if ((token_exists = H5P_exist_plist(fapl, ROS3_TOKEN_PROP_NAME)) < 0)
