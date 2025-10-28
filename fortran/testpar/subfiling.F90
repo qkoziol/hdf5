@@ -288,10 +288,10 @@ PROGRAM subfiling_test
 
   nerrors = 0
   CALL h5pset_fapl_subfiling_f(fapl_id, hdferror, vfd_config)
-  CALL check("h5pset_fapl_ioc_f", hdferror, nerrors)
+  CALL check("h5pset_fapl_subfiling_f", hdferror, nerrors)
 
   CALL h5pget_fapl_subfiling_f(fapl_id, vfd_config, hdferror)
-  CALL check("h5pget_fapl_ioc_f", hdferror, nerrors)
+  CALL check("h5pget_fapl_subfiling_f", hdferror, nerrors)
 
   WRITE(hex1,'(z8)') H5FD_SUBFILING_FAPL_MAGIC_F
   WRITE(hex2,'(z8)') vfd_config%magic

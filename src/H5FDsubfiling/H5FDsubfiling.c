@@ -522,8 +522,8 @@ H5Pset_fapl_subfiling(hid_t fapl_id, const H5FD_subfiling_config_t *vfd_config)
             HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set MPI info on fapl");
 
         /* Set Subfiling configuration on IOC FAPL */
-        if (H5FD__subfiling_set_config_prop(fa.ioc_fapl, &vfd_config->shared_cfg) < 0)
-            HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set subfiling configuration on IOC FAPL");
+        if (H5P_set(fa.ioc_fapl, H5F_ACS_SUBFILING_CONFIG_PROP_NAME, &vfd_config->shared_cfg) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set subfiling configuration property on FAPL");
 
         /* Copy subfiling configuration into driver info also */
         memcpy(&fa.shared_cfg, &vfd_config->shared_cfg, sizeof(fa.shared_cfg));
@@ -646,7 +646,7 @@ H5FDsubfiling_get_file_mapping(hid_t file_id, char ***filenames, size_t *len)
                     "application topology hasn't been initialized yet for this file");
 
     /* Sanity checks */
-    assert(sf_context->h5_file_id != UINT64_MAX);
+    assert(sf_context->h5_file_id != H5FD_SUBFILING_BAD_FILE_ID);
     assert(sf_context->h5_filename);
     assert(sf_context->sf_num_subfiles > 0);
     assert(sf_context->topology);
