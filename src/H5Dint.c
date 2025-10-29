@@ -125,11 +125,10 @@ H5FL_EXTERN(H5D_piece_info_t);
 /* Declare extern the free list to manage blocks of type conversion data */
 H5FL_BLK_EXTERN(type_conv);
 
-/* Disable warning for intentional identical branches here -QAK */
-H5_GCC_DIAG_OFF("larger-than=")
 /* Define a static "default" dataset structure to use to initialize new datasets */
+H5_WARN_LARGE_STACK_OBJECTS_OFF
 static H5D_shared_t H5D_def_dset;
-H5_GCC_DIAG_ON("larger-than=")
+H5_WARN_LARGE_STACK_OBJECTS_ON
 
 /* Dataset ID class */
 static H5I_class_t H5I_DATASET_CLS[1] = {{
@@ -1222,12 +1221,11 @@ H5D__create(H5F_t *file, hid_t type_id, const H5S_t *space)
     if (H5D__layout_set_version(file, &new_dset->shared->layout) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, NULL, "can't set latest version of layout");
 
-    if (new_dset->shared->layout.version >= H5O_LAYOUT_VERSION_4) {
+    if (new_dset->shared->layout.version >= H5O_LAYOUT_VERSION_4)
         /* Use latest indexing type for layout message version >= 4 */
         if (H5D__layout_set_latest_indexing(&new_dset->shared->layout, new_dset->shared->space,
                                             &new_dset->shared->dcpl_cache) < 0)
             HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, NULL, "can't set latest indexing");
-    } /* end if */
 
     /* Check if the file driver would like to force early space allocation */
     if (H5F_has_feature(file, H5FD_FEAT_ALLOCATE_EARLY))

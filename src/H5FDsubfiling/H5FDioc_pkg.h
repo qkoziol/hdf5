@@ -14,20 +14,18 @@
  * Private definitions for HDF5 IOC VFD
  */
 
-#ifndef H5FDioc_priv_H
-#define H5FDioc_priv_H
-
-/**************/
-/* H5 Headers */
-/**************/
-
-/* Public header */
-#include "H5FDioc.h" /* IOC VFD                                  */
+#ifndef H5FDioc_pkg_H
+#define H5FDioc_pkg_H
 
 /* Private headers */
-#include "H5private.h"   /* Generic Functions                        */
-#include "H5TSprivate.h" /* Threadsafety                             */
-#include "H5subfiling_common.h"
+#include "H5private.h" /* Generic Functions                        */
+
+#ifdef H5_HAVE_IOC_VFD
+
+/* Private headers */
+#include "H5FDioc_private.h"    /* IOC VFD                                  */
+#include "H5subfiling_common.h" /* Common subfiling/IOC code                */
+#include "H5TSprivate.h"        /* Threadsafety                             */
 
 /*
  * Some definitions for debugging the IOC VFD
@@ -399,4 +397,5 @@ H5_DLL herr_t H5FD__ioc_async_completion(MPI_Request *mpi_reqs, size_t num_reqs)
 }
 #endif
 
-#endif /* H5FDioc_priv_H */
+#endif /* H5_HAVE_MIRROR_VFD */
+#endif /* H5FDioc_pkg_H */
