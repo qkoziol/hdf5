@@ -1,5 +1,8 @@
 /** \page thread-safe-lib Thread Safe Library
 
+Navigate back: \ref index "Main" / \ref TN
+<hr>
+
 \section sec_tsafe_compilation Library header files and conditional compilation
 The following code is placed at the beginning of H5private.h:
 \code
@@ -9,8 +12,7 @@ The following code is placed at the beginning of H5private.h:
 \endcode
 
 <code>H5_HAVE_THREADSAFE</code> is defined when the HDF5 library is
-compiled with the <em>--enable-threadsafe</em> configuration option using autotools or
-<em>HDF5_ENABLE_THREADSAFE=ON</em> using CMake. In general,
+compiled with the <em>HDF5_ENABLE_THREADSAFE=ON</em> using CMake. In general,
 code for the non-threadsafe version of HDF5 library are placed within
 the <code># else</code> part of the conditional compilation. The exception
 to this rule are the changes to the <code>FUNC_ENTER</code> (in
@@ -26,7 +28,7 @@ variable <code>H5_libinit_g</code> is changed to a global structure
 consisting of the variable with its associated lock (locks are explained
 in section \ref subsec_tsafe_impl_locks):
 \code
-    hbool_t  H5_libinit_g = FALSE;
+    bool  H5_libinit_g = FALSE;
 \endcode
 
 becomes
@@ -38,7 +40,7 @@ where <code>H5_api_t</code> is
 \code
     typedef struct H5_api_struct {
       H5_mutex_t init_lock;           // API entrance mutex
-      hbool_t H5_libinit_g;
+      bool       H5_libinit_g;
     } H5_api_t;
 \endcode
 
@@ -58,7 +60,7 @@ no such APIs exist.
 
 It is defined in <code>H5.c</code> as follows:
 \code
-    hbool_t H5_allow_concurrent_g = FALSE;
+    bool H5_allow_concurrent_g = FALSE;
 \endcode
 
 \subsection subsec_tsafe_global_init Global thread initialization variable
@@ -562,5 +564,8 @@ created) or if the wrong values were read back.
       H5_cancel_count_dec();                                  \
     }
 \endcode
+
+<hr>
+Navigate back: \ref index "Main" / \ref TN
 
  */

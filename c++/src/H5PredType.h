@@ -24,7 +24,7 @@ namespace H5 {
     closed by H5Tclose.  They are treated as constants.
 */
 //  Inheritance: AtomType -> DataType -> H5Object -> H5Location -> IdComponent
-class H5_DLLCPP PredType : public AtomType {
+class H5CPP_DLL PredType : public AtomType {
   public:
     ///\brief Returns this class name.
     virtual H5std_string
@@ -91,6 +91,9 @@ class H5_DLLCPP PredType : public AtomType {
     static const PredType &IEEE_F32LE;
     static const PredType &IEEE_F64BE;
     static const PredType &IEEE_F64LE;
+
+    static const PredType &FLOAT_BFLOAT16BE;
+    static const PredType &FLOAT_BFLOAT16LE;
 
     static const PredType &UNIX_D32BE;
     static const PredType &UNIX_D32LE;
@@ -261,6 +264,9 @@ class H5_DLLCPP PredType : public AtomType {
     static PredType *IEEE_F32LE_;
     static PredType *IEEE_F64BE_;
     static PredType *IEEE_F64LE_;
+
+    static PredType *FLOAT_BFLOAT16BE_;
+    static PredType *FLOAT_BFLOAT16LE_;
 
     static PredType *UNIX_D32BE_;
     static PredType *UNIX_D32LE_;
