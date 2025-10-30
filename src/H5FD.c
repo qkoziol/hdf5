@@ -441,11 +441,11 @@ H5FDcmp(const H5FD_t *f1, const H5FD_t *f2)
 
     FUNC_ENTER_API(-1) /* return value is arbitrary */
 
-    H5_GCC_CLANG_DIAG_OFF("cast-qual")
+    H5_WARN_CAST_AWAY_CONST_OFF
     /* Construct temporary internal file handles */
     H5FD__construct_tmp_fh((H5FD_t *)f1, &fh1, &driver1);
     H5FD__construct_tmp_fh((H5FD_t *)f2, &fh2, &driver2);
-    H5_GCC_CLANG_DIAG_ON("cast-qual")
+    H5_WARN_CAST_AWAY_CONST_ON
 
     /* Call private function */
     ret_value = H5FD_cmp(&fh1, &fh2);
@@ -480,10 +480,10 @@ H5FDquery(const H5FD_t *file, unsigned long *flags /*out*/)
     if (!flags)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "flags parameter cannot be NULL");
 
-    H5_GCC_CLANG_DIAG_OFF("cast-qual")
+    H5_WARN_CAST_AWAY_CONST_OFF
     /* Construct temporary internal file handle */
     H5FD__construct_tmp_fh((H5FD_t *)file, &fh, &driver);
-    H5_GCC_CLANG_DIAG_ON("cast-qual")
+    H5_WARN_CAST_AWAY_CONST_ON
 
     /* Call private function */
     if (H5FD__query(&fh, flags) < 0)
@@ -1623,7 +1623,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5FDflush(H5FD_t *file, hid_t dxpl_id, hbool_t closing)
+H5FDflush(H5FD_t *file, hid_t dxpl_id, bool closing)
 {
     H5P_genplist_t *dxpl;                /* Dataset transfer property list */
     H5FD_int_t      fh;                  /* Temporary internal file handle */
@@ -1664,7 +1664,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5FDtruncate(H5FD_t *file, hid_t dxpl_id, hbool_t closing)
+H5FDtruncate(H5FD_t *file, hid_t dxpl_id, bool closing)
 {
     H5P_genplist_t *dxpl;                /* Dataset transfer property list */
     H5FD_int_t      fh;                  /* Temporary internal file handle */
@@ -1705,7 +1705,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5FDlock(H5FD_t *file, hbool_t rw)
+H5FDlock(H5FD_t *file, bool rw)
 {
     H5FD_int_t    fh;                  /* Temporary internal file handle */
     H5FD_driver_t driver;              /* Temporary VFD driver */

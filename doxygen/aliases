@@ -16,8 +16,6 @@ ALIASES += DWNURL="\RELURL/downloads/latest"
 # URL for RFCs
 ALIASES += RFCURL="\DOCURL/rfc"
 ALIASES += AEXURL="\HDFURL/archive/support/ftp/HDF5/examples"
-# doxygen subdir (develop, v1_14)
-ALIASES += DOXURL="hdfgroup.github.io/hdf5/develop"
 #branch name (develop, hdf5_1_14)
 ALIASES += SRCURL="github.com/HDFGroup/hdf5/blob/develop"
 #Other projects that contribute to HDF5
@@ -256,12 +254,13 @@ ALIASES += cpp_c_api_note="\anchor cpp_c_api_note \attention \Bold{C++ Developer
 ALIASES += callback_note="\attention \Bold{Leaving callback functions:}\n The callback function must return normally, even in the case of error.  Returning with H5_ITER_ERROR, instead of leaving by means of exceptions, exit() function, etc... will allow the HDF5 library to manage its resources and maintain a consistent state. See \ref cpp_c_api_note \"C++ Developers using HDF5 C-API functions\" warning for detail."
 ALIASES += par_compr_note="\attention If you are planning to use compression with parallel HDF5, ensure that calls to H5Dwrite() occur in collective mode. In other words, all MPI ranks (in the relevant communicator) call H5Dwrite() and pass a dataset transfer property list with the MPI-IO collective option property set to #H5FD_MPIO_COLLECTIVE_IO.\n Note that data transformations are currently \Bold{not} supported when writing to datasets in parallel and with compression enabled."
 ALIASES += sa_metadata_ops="\sa \li H5Pget_all_coll_metadata_ops() \li H5Pget_coll_metadata_write() \li H5Pset_all_coll_metadata_ops() \li H5Pset_coll_metadata_write() \li \ref maybe_metadata_reads"
+ALIASES += unicode_filename_note="\note On Windows, HDF5 assumes that a file name string is UTF-8 encoded and will attempt to convert it to UTF-16 before calling wide-character Windows API functions. If a file name string cannot be converted to UTF-16, the equivalent non-wide-character Windows API functions will be used, causing a file name string to be interpreted according to the active Windows code page. If an application desires that the active Windows code page be preferred, the environment variable #HDF5_PREFER_WINDOWS_CODE_PAGE can be set to the value '1' or 'TRUE' (case-insensitive)."
 
 ################################################################################
 # Specifications
 ################################################################################
 
-ALIASES += ref_spec_fileformat="\ref FMT3"
+ALIASES += ref_spec_fileformat="\ref FMT4"
 ALIASES += ref_spec_fileformat_btrees_v1="\ref subsubsec_fmt3_infra_btrees_v1"
 
 ################################################################################
@@ -342,6 +341,7 @@ ALIASES += ref_rfc20110614="<a href=\"https://\RFCURL/RFC_h5dump_refactor_v3.doc
 ALIASES += ref_rfc20110329="<a href=\"https://\RFCURL/RFC_Tools_Extlink_Cache_v3_r2.docx.pdf\">Support External Link Open File Cache in HDF5 Tools</a>"
 ALIASES += ref_rfc20110118="<a href=\"https://\RFCURL/RFC%20for%20h5diff%20Attribute%20Comparisons_v7.docx.pdf\"><tt>h5diff</tt> Attribute Comparisons</a>"
 ALIASES += ref_rfc20101122="<a href=\"https://\RFCURL/RFC_swmr_timeouts_v2.docx.pdf\">SWMR Timeouts</a>"
+ALIASES += ref_rfc20101119="<a href=\"https://\RFCURL/2010-11_FUSEPerformanceReport-final.pdf\">FUSE Performance Report</a>"
 ALIASES += ref_rfc20101104="<a href=\"https://\RFCURL/CacheExternalLinkFileOpens.pdf\">Caching Files Opened Through External Links</a>"
 ALIASES += ref_rfc20101018="<a href=\"https://\RFCURL/HDF5-comparisons_v3-RFC-2011-08-03.pdf\">HDF5 File and Object Comparison Specification</a>"
 ALIASES += ref_rfc20100902="<a href=\"https://\RFCURL/H5edit-RFC-Draft-v5.pdf\"><tt>h5edit</tt> – An HDF5 File Editing Tool</a>"

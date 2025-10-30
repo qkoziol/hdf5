@@ -2111,11 +2111,16 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
     shared = file->shared;
     fh     = shared->fh;
 
-    /* Check if page buffering is enabled */
+    /* Retrieve page buffer size from FAPL and replace "default" value with
+     * actual default (H5PB_SIZE_DEFAULT_VALUE) */
     if (H5CX_get_page_buffer_size(&page_buf_size) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get page buffer size");
-    /* Query for other page buffer cache properties */
+    if (page_buf_size == H5F_PAGE_BUFFER_SIZE_DEFAULT)
+        page_buf_size = H5PB_SIZE_DEFAULT_VALUE;
+
+    /* Check if page buffering is enabled */
     if (page_buf_size)
+        /* Query for other page buffer cache properties */
         if (H5CX_get_page_buffer_percs(&page_buf_min_meta_perc, &page_buf_min_raw_perc) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get page buffer percentages");
 
@@ -3404,11 +3409,12 @@ H5F__get_file_image(H5F_t *file, void *buf_ptr, size_t buf_len, size_t *image_le
 
     /* Test to see if a buffer was provided */
     if (buf_ptr) {
-        unsigned status_off, status_size;
+        size_t status_off, status_size;
 
         /* Check for buffer too small */
         if ((haddr_t)buf_len < eoa)
             HGOTO_ERROR(H5E_FILE, H5E_BADVALUE, FAIL, "supplied buffer too small");
+        assert(buf_len >= (size_t)H5F_SUPERBLOCK_SIZE(file->shared->sblock));
 
         /* Read in the file image */
         /* (Note compensation for base address addition in internal routine) */
@@ -3423,7 +3429,28 @@ H5F__get_file_image(H5F_t *file, void *buf_ptr, size_t buf_len, size_t *image_le
 
         /* Clear "status_flags" */
         memset((uint8_t *)buf_ptr + status_off, 0, status_size);
-    } /* end if */
+
+        /* Check if the version is 2 or greater, if so we need to recalculate the checksum */
+        if (file->shared->sblock->super_vers >= HDF5_SUPERBLOCK_VERSION_2) {
+            uint32_t chksum; /* Checksum temporary variable      */
+            uint8_t *chksum_image_ptr;
+            size_t   chksum_off;
+
+            /* When we add new superblock versions make sure this code still works, then modify this assert
+             * appropriately */
+            assert(file->shared->sblock->super_vers <= HDF5_SUPERBLOCK_VERSION_3);
+
+            /* Offset to checksum */
+            chksum_off = (size_t)H5F_SUPERBLOCK_SIZE(file->shared->sblock) - H5F_SIZEOF_CHKSUM;
+
+            /* Recompute superblock checksum */
+            chksum = H5_checksum_metadata(buf_ptr, chksum_off, 0);
+
+            /* Encode checksum into image */
+            chksum_image_ptr = (uint8_t *)buf_ptr + chksum_off;
+            UINT32ENCODE(chksum_image_ptr, chksum);
+        }
+    }
 
     /* Set *image_len = to EOA */
     *image_len = (size_t)eoa;

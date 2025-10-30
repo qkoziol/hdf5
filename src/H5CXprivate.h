@@ -525,7 +525,7 @@ typedef struct H5CX_fapl_cache_t {
  *      If a field has been set on the context but never read internally, <foo>_valid will be false
  *      despite the context containing a meaningful cached value.
  */
-H5_GCC_CLANG_DIAG_OFF("c99-c11-compat")
+H5_WARN_C11_EXTENSIONS_OFF
 typedef struct H5CX_t {
     /* Cached pointers to property lists from API calls */
     H5P_genplist_t *dxpl;   /* Dataset Transfer Property List */
@@ -604,7 +604,7 @@ typedef struct H5CX_t {
     /* Flags for cached VOL settings */
     bool vol_wrap_ctx_valid : 1; /* Whether VOL connector's "wrap context" for creating IDs is valid */
 } H5CX_t;
-H5_GCC_CLANG_DIAG_ON("c99-c11-compat")
+H5_WARN_C11_EXTENSIONS_ON
 
 /* Typedef for nodes on the API context stack */
 /* Each entry into the library through an API routine invokes H5CX_push()
