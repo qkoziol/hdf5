@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.18)
+cmake_minimum_required (VERSION 3.26)
 project (HDF5Examples_C_HL C)
 
 #-----------------------------------------------------------------------------
@@ -106,7 +106,7 @@ endforeach ()
 #  endforeach ()
 #endif ()
 
-if (HDF5_BUILD_TOOLS)
+if (HDF5_PROVIDES_TOOLS)
   add_custom_command (
       TARGET     ${EXAMPLE_VARNAME}_h5ex_image2
       POST_BUILD
@@ -121,12 +121,21 @@ if (HDF5_BUILD_TOOLS)
   )
   foreach (example_name ${common_examples})
     if (NOT ${example_name} STREQUAL "h5ex_lite1" AND NOT ${example_name} STREQUAL "h5ex_lite2")
-      add_custom_command (
-          TARGET     ${EXAMPLE_VARNAME}_${example_name}
-          POST_BUILD
-          COMMAND    ${CMAKE_COMMAND}
-          ARGS       -E copy_if_different ${PROJECT_SOURCE_DIR}/tfiles/${example_name}.ddl ${PROJECT_BINARY_DIR}/${example_name}.ddl
-      )
+      if (H5EX_WORDS_BIGENDIAN)
+        add_custom_command (
+            TARGET     ${EXAMPLE_VARNAME}_${example_name}
+            POST_BUILD
+            COMMAND    ${CMAKE_COMMAND}
+            ARGS       -E copy_if_different ${PROJECT_SOURCE_DIR}/tfiles/${example_name}BE.ddl ${PROJECT_BINARY_DIR}/${example_name}.ddl
+        )
+      else ()
+        add_custom_command (
+            TARGET     ${EXAMPLE_VARNAME}_${example_name}
+            POST_BUILD
+            COMMAND    ${CMAKE_COMMAND}
+            ARGS       -E copy_if_different ${PROJECT_SOURCE_DIR}/tfiles/${example_name}.ddl ${PROJECT_BINARY_DIR}/${example_name}.ddl
+        )
+      endif ()
     endif ()
   endforeach ()
 
@@ -208,7 +217,7 @@ if (H5EX_BUILD_TESTING)
               -P "${H5EX_RESOURCES_DIR}/runTest.cmake"
       )
       set_tests_properties (${EXAMPLE_VARNAME}_${testname} PROPERTIES DEPENDS ${EXAMPLE_VARNAME}_${testname}-clearall)
-      if (HDF5_BUILD_TOOLS)
+      if (HDF5_PROVIDES_TOOLS)
         add_test (
             NAME ${EXAMPLE_VARNAME}_H5DUMP-${testname}
             COMMAND "${CMAKE_COMMAND}"
@@ -252,7 +261,7 @@ if (H5EX_BUILD_TESTING)
               -P "${H5EX_RESOURCES_DIR}/runTest.cmake"
       )
       set_tests_properties (${EXAMPLE_VARNAME}_${testname} PROPERTIES DEPENDS ${EXAMPLE_VARNAME}_${testname}-clearall)
-      if (HDF5_BUILD_TOOLS)
+      if (HDF5_PROVIDES_TOOLS)
         add_test (
             NAME ${EXAMPLE_VARNAME}_H5DUMP-${testname}
             COMMAND "${CMAKE_COMMAND}"

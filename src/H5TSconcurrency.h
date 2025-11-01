@@ -43,10 +43,7 @@
 /* Typedef for variables of this type */
 /* (Only needed once per type, in source file or header) */
 /* (Suppress warning about _Atomic from GCC) */
-#define H5TS_DEF_ATOMIC_TYPE(type)                                                                           \
-    H5_GCC_DIAG_OFF("c99-c11-compat")                                                                        \
-    typedef _Atomic type H5TS_ATOMIC_TYPE(type);                                                             \
-    H5_GCC_DIAG_ON("c99-c11-compat")
+#define H5TS_DEF_ATOMIC_TYPE(type) typedef _Atomic type H5TS_ATOMIC_TYPE(type);
 
 /* Operations on the type */
 #define H5TS_ATOMIC_INIT(type, obj, desired)  atomic_init(obj, desired)

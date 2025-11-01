@@ -15,7 +15,7 @@ package hdf.hdf5lib;
 import hdf.hdf5lib.structs.H5O_token_t;
 
 /**
- * @page HDF5CONST Constants and Enumerated Types
+ * \page HDF5CONST Constants and Enumerated Types
  * This class contains C constants and enumerated types of HDF5 library. The
  * values of these constants are obtained from the library by calling
  * the JNI function jconstant, where jconstant is used for any of the private constants
@@ -1120,6 +1120,10 @@ public class HDF5Constants {
     public static final long H5T_IEEE_F64BE = H5T_IEEE_F64BE();
     /** */
     public static final long H5T_IEEE_F64LE = H5T_IEEE_F64LE();
+    /** */
+    public static final long H5T_FLOAT_BFLOAT16BE = H5T_FLOAT_BFLOAT16BE();
+    /** */
+    public static final long H5T_FLOAT_BFLOAT16LE = H5T_FLOAT_BFLOAT16LE();
     /** */
     public static final int H5T_INTEGER = H5T_INTEGER();
     /** */
@@ -2631,6 +2635,10 @@ public class HDF5Constants {
     private static native final long H5T_IEEE_F64BE();
 
     private static native final long H5T_IEEE_F64LE();
+
+    private static native final long H5T_FLOAT_BFLOAT16BE();
+
+    private static native final long H5T_FLOAT_BFLOAT16LE();
 
     private static native final int H5T_INTEGER();
 
