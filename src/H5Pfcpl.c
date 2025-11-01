@@ -1231,7 +1231,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5P__set_file_space_strategy(H5P_genplist_t *fcpl, H5F_fspace_strategy_t strategy, hbool_t persist,
+H5P__set_file_space_strategy(H5P_genplist_t *fcpl, H5F_fspace_strategy_t strategy, bool persist,
                              hsize_t threshold)
 {
     herr_t ret_value = SUCCEED; /* Return value */
@@ -1269,7 +1269,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pset_file_space_strategy(hid_t fcpl_id, H5F_fspace_strategy_t strategy, hbool_t persist, hsize_t threshold)
+H5Pset_file_space_strategy(hid_t fcpl_id, H5F_fspace_strategy_t strategy, bool persist, hsize_t threshold)
 {
     H5P_genplist_t *fcpl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
@@ -1308,7 +1308,7 @@ done:
  */
 herr_t
 H5P__get_file_space_strategy(H5P_genplist_t *fcpl, H5F_fspace_strategy_t *strategy /*out*/,
-                             hbool_t *persist /*out*/, hsize_t *threshold /*out*/)
+                             bool *persist /*out*/, hsize_t *threshold /*out*/)
 {
     herr_t ret_value = SUCCEED; /* Return value */
 
@@ -1340,7 +1340,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pget_file_space_strategy(hid_t fcpl_id, H5F_fspace_strategy_t *strategy /*out*/, hbool_t *persist /*out*/,
+H5Pget_file_space_strategy(hid_t fcpl_id, H5F_fspace_strategy_t *strategy /*out*/, bool *persist /*out*/,
                            hsize_t *threshold /*out*/)
 {
     H5P_genplist_t *fcpl      = NULL;    /* Property list pointer */

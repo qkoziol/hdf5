@@ -1175,7 +1175,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pset_preserve(hid_t dxpl_id, hbool_t status)
+H5Pset_preserve(hid_t dxpl_id, bool status)
 {
     H5P_genplist_t *dxpl = NULL;         /* Property list pointer */
     H5T_bkg_t       need_bkg;            /* Value for background buffer type */
@@ -2190,10 +2190,10 @@ H5P__dxfr_dset_io_hyp_sel_cmp(const void *_space1, const void *_space2, size_t H
          * to match the cmp prototype. Since we need to compare them,
          * we quiet the const warning.
          */
-        H5_GCC_CLANG_DIAG_OFF("cast-qual")
+        H5_WARN_CAST_AWAY_CONST_OFF
         if (true != H5S_select_shape_same((H5S_t *)*space1, (H5S_t *)*space2))
             HGOTO_DONE(-1);
-        H5_GCC_CLANG_DIAG_ON("cast-qual")
+        H5_WARN_CAST_AWAY_CONST_ON
     } /* end if */
 
 done:
@@ -2644,7 +2644,7 @@ H5P__dxfr_modify_write_buf_dec(const void **_pp, void *_value /*out*/)
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pset_modify_write_buf(hid_t dxpl_id, hbool_t modify_write_buf)
+H5Pset_modify_write_buf(hid_t dxpl_id, bool modify_write_buf)
 {
     H5P_genplist_t *dxpl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
@@ -2678,7 +2678,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5Pget_modify_write_buf(hid_t dxpl_id, hbool_t *modify_write_buf /*out*/)
+H5Pget_modify_write_buf(hid_t dxpl_id, bool *modify_write_buf /*out*/)
 {
     H5P_genplist_t *dxpl      = NULL;    /* Property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */

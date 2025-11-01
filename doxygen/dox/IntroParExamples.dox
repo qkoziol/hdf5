@@ -1,4 +1,4 @@
-/** @page IntroParContHyperslab Writing by Contiguous Hyperslab
+/** \page IntroParContHyperslab Writing by Contiguous Hyperslab
 
 Navigate back: \ref index "Main" / \ref GettingStarted / \ref IntroParHDF5
 <hr>
@@ -51,7 +51,7 @@ The number of processes that you could use would be 1, 2, 4, or 8. The number of
 <table>
 <tr>
 <th><strong>Processes</strong></th>
-<th><strong>Size of count[0](\# of rows) </strong></th>
+<th><strong>Size of count[0](&#35; of rows) </strong></th>
 </tr><tr>
 <td>1</td><td>8</td>
 </tr><tr>
@@ -163,7 +163,7 @@ columns that could be written by each slab is as follows:
 <table>
 <tr>
 <th><strong>Processes</strong></th>
-<th><strong>Size of count (2)(\# of columns) </strong></th>
+<th><strong>Size of count (2)(&#35; of columns) </strong></th>
 </tr><tr>
 <td>1</td><td>8</td>
 </tr><tr>
@@ -217,7 +217,7 @@ displayed in columns if it was printed using Fortran 90 code.
 <hr>
 Navigate back: \ref index "Main" / \ref GettingStarted / \ref IntroParHDF5
 
-@page IntroParRegularSpaced Writing by Regularly Spaced Data
+\page IntroParRegularSpaced Writing by Regularly Spaced Data
 
 Navigate back: \ref index "Main" / \ref GettingStarted / \ref IntroParHDF5
 <hr>
@@ -357,7 +357,7 @@ because \ref sec_cltools_h5dump is written in C. The data would be displayed in 
 <hr>
 Navigate back: \ref index "Main" / \ref GettingStarted / \ref IntroParHDF5
 
-@page IntroParPattern Writing by Pattern
+\page IntroParPattern Writing by Pattern
 
 Navigate back: \ref index "Main" / \ref GettingStarted / \ref IntroParHDF5
 <hr>
@@ -468,7 +468,7 @@ The \ref sec_cltools_h5dump utility is written in C so the output is in C order.
 <hr>
 Navigate back: \ref index "Main" / \ref GettingStarted / \ref IntroParHDF5
 
-@page IntroParChunk Writing by Chunk
+\page IntroParChunk Writing by Chunk
 
 Navigate back: \ref index "Main" / \ref GettingStarted / \ref IntroParHDF5
 <hr>

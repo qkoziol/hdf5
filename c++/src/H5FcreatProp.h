@@ -21,7 +21,7 @@ namespace H5 {
     wrappers for the HDF5 file create property list.
 */
 //  Inheritance: PropList -> IdComponent
-class H5_DLLCPP FileCreatPropList : public PropList {
+class H5CPP_DLL FileCreatPropList : public PropList {
   public:
     ///\brief Default file creation property list.
     static const FileCreatPropList &DEFAULT;
@@ -63,10 +63,10 @@ class H5_DLLCPP FileCreatPropList : public PropList {
 
     // Sets the strategy and the threshold value that the library will
     // will employ in managing file space.
-    void setFileSpaceStrategy(H5F_fspace_strategy_t strategy, hbool_t persist, hsize_t threshold) const;
+    void setFileSpaceStrategy(H5F_fspace_strategy_t strategy, bool persist, hsize_t threshold) const;
 
     // Returns the strategy that the library uses in managing file space.
-    void getFileSpaceStrategy(H5F_fspace_strategy_t &strategy, hbool_t &persist, hsize_t &threshold) const;
+    void getFileSpaceStrategy(H5F_fspace_strategy_t &strategy, bool &persist, hsize_t &threshold) const;
 
     // Sets the file space page size for paged aggregation.
     void setFileSpacePagesize(hsize_t fsp_psize) const;

@@ -427,9 +427,9 @@ H5FD__free_cls(const H5FD_class_t *cls)
                         cls->name);
     }
 
-    H5_GCC_CLANG_DIAG_OFF("cast-qual")
+    H5_WARN_CAST_AWAY_CONST_OFF
     H5FL_FREE(H5FD_class_t, (H5FD_class_t *)cls);
-    H5_GCC_CLANG_DIAG_ON("cast-qual")
+    H5_WARN_CAST_AWAY_CONST_ON
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
