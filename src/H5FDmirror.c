@@ -23,7 +23,6 @@
 
 #include "H5Eprivate.h"     /* Error handling           */
 #include "H5Fprivate.h"     /* File access              */
-#include "H5FDmirror.h"     /* "Mirror" definitions     */
 #include "H5FDmirror_pkg.h" /* Private header for the mirror VFD */
 #include "H5FDpkg.h"        /* File drivers             */
 #include "H5FLprivate.h"    /* Free Lists               */

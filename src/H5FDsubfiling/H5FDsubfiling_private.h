@@ -18,7 +18,7 @@
 #define H5FDsubfiling_private_H
 
 /* Include driver's public header */
-#include "H5FDsubfiling.h" /* subfiling VFD driver     */
+#include "H5FDsubfiling.h" /* Subfiling VFD driver     */
 
 /* Private headers needed by this file */
 #include "H5FDprivate.h" /* File drivers        */

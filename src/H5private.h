@@ -337,10 +337,10 @@
  * datatypes may cause warnings due to the comparison against
  * PTRDIFF_MAX and comparison of < 0 after conversion to ptrdiff_t.
  * For the time being, these can be suppressed with
- * H5_GCC_CLANG_DIAG_OFF("type-limits")/H5_GCC_CLANG_DIAG_ON("type-limits")
+ * H5_WARN_USELESS_COMPARISON_(OFF|ON).
  */
 /* clang-format off */
-H5_GCC_CLANG_DIAG_OFF("strict-overflow")
+H5_WARN_STRICT_OVERFLOW_OFF
 #define H5_IS_BUFFER_OVERFLOW(ptr, size, buffer_end)                                                         \
     (                                                                                                        \
       /* Trivial case */                                                                                     \
@@ -354,7 +354,7 @@ H5_GCC_CLANG_DIAG_OFF("strict-overflow")
         ((size_t)(size) > (size_t)((((const uint8_t *)buffer_end) - ((const uint8_t *)ptr)) + 1))            \
       )                                                                                                      \
     )
-H5_GCC_CLANG_DIAG_ON("strict-overflow")
+H5_WARN_STRICT_OVERFLOW_ON
 /* clang-format on */
 
 /* Variant of H5_IS_BUFFER_OVERFLOW, used with functions such as H5Tdecode()
@@ -372,7 +372,7 @@ H5_GCC_CLANG_DIAG_ON("strict-overflow")
  * Only needed where ssize_t isn't a thing (e.g., Windows)
  */
 #ifndef SSIZE_MAX
-#define SSIZE_MAX ((ssize_t)(((size_t)1 << (8 * sizeof(ssize_t) - 1)) - 1))
+#define SSIZE_MAX SSIZE_T_MAX
 #endif
 
 /*
@@ -901,12 +901,13 @@ H5_DLL int HDvasprintf(char **bufp, const char *fmt, va_list _ap);
 #if defined(H5_HAVE_WINDOW_PATH)
 
 /* directory delimiter for Windows: slash and backslash are acceptable on Windows */
-#define H5_DIR_SLASH_SEPC        '/'
-#define H5_DIR_SEPC              '\\'
-#define H5_DIR_SEPS              "\\"
-#define H5_CHECK_DELIMITER(SS)   ((SS == H5_DIR_SEPC) || (SS == H5_DIR_SLASH_SEPC))
-#define H5_CHECK_ABSOLUTE(NAME)  ((isalpha(NAME[0])) && (NAME[1] == ':') && (H5_CHECK_DELIMITER(NAME[2])))
-#define H5_CHECK_ABS_DRIVE(NAME) ((isalpha(NAME[0])) && (NAME[1] == ':'))
+#define H5_DIR_SLASH_SEPC      '/'
+#define H5_DIR_SEPC            '\\'
+#define H5_DIR_SEPS            "\\"
+#define H5_CHECK_DELIMITER(SS) ((SS == H5_DIR_SEPC) || (SS == H5_DIR_SLASH_SEPC))
+#define H5_CHECK_ABSOLUTE(NAME)                                                                              \
+    ((isalpha((unsigned char)NAME[0])) && (NAME[1] == ':') && (H5_CHECK_DELIMITER(NAME[2])))
+#define H5_CHECK_ABS_DRIVE(NAME) ((isalpha((unsigned char)NAME[0])) && (NAME[1] == ':'))
 #define H5_CHECK_ABS_PATH(NAME)  (H5_CHECK_DELIMITER(NAME[0]))
 
 #define H5_GET_LAST_DELIMITER(NAME, ptr)                                                                     \
