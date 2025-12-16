@@ -656,8 +656,10 @@ H5_DLL H5_ATTR_CONST int Nflock(int fd, int operation);
 #ifndef HDfstat
 #define HDfstat(F, B) fstat(F, B)
 #endif
+#ifdef H5_HAVE_UNISTD_H
 #ifndef HDfsync
 #define HDfsync(F) fsync(F)
+#endif
 #endif
 #ifndef HDftell
 #define HDftell(F) ftello(F)

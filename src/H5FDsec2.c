@@ -108,7 +108,9 @@ static herr_t  H5FD__sec2_read(H5FD_t *_file, H5FD_mem_t type, hid_t dxpl_id, ha
                                void *buf);
 static herr_t  H5FD__sec2_write(H5FD_t *_file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, size_t size,
                                 const void *buf);
+#ifdef H5_HAVE_UNISTD_H
 static herr_t  H5FD__sec2_flush(H5FD_t *_file, hid_t dxpl_id, hbool_t closing);
+#endif
 static herr_t  H5FD__sec2_truncate(H5FD_t *_file, hid_t dxpl_id, bool closing);
 static herr_t  H5FD__sec2_lock(H5FD_t *_file, bool rw);
 static herr_t  H5FD__sec2_unlock(H5FD_t *_file);
@@ -150,7 +152,11 @@ static const H5FD_class_t H5FD_sec2_g = {
     NULL,                  /* write_vector         */
     NULL,                  /* read_selection       */
     NULL,                  /* write_selection      */
+#ifdef H5_HAVE_UNISTD_H
     H5FD__sec2_flush,      /* flush                */
+#else
+    NULL,                  /* flush                */
+#endif
     H5FD__sec2_truncate,   /* truncate             */
     H5FD__sec2_lock,       /* lock                 */
     H5FD__sec2_unlock,     /* unlock               */
@@ -816,6 +822,7 @@ done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FD__sec2_write() */
 
+#ifdef H5_HAVE_UNISTD_H
 /*-------------------------------------------------------------------------
  * Function:    H5FD__sec2_flush
  *
@@ -841,6 +848,7 @@ H5FD__sec2_flush(H5FD_t *_file, hid_t H5_ATTR_UNUSED dxpl_id, hbool_t H5_ATTR_UN
 done:
     FUNC_LEAVE_NOAPI(ret_value);
 } /* end H5FD__sec2_flush() */
+#endif
 
 /*-------------------------------------------------------------------------
  * Function:    H5FD__sec2_truncate
