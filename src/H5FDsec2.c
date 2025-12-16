@@ -828,8 +828,8 @@ done:
 static herr_t
 H5FD__sec2_flush(H5FD_t *_file, hid_t H5_ATTR_UNUSED dxpl_id, hbool_t H5_ATTR_UNUSED closing)
 {
-    H5FD_sec2_t *file     = (H5FD_sec2_t *)_file;
-    herr_t      ret_value = SUCCEED;             /* Return value */
+    H5FD_sec2_t *file      = (H5FD_sec2_t *)_file;
+    herr_t       ret_value = SUCCEED; /* Return value */
 
     assert(file);
 
