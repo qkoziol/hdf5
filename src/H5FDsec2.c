@@ -153,7 +153,8 @@ static const H5FD_class_t H5FD_sec2_g = {
     NULL,                  /* read_selection       */
     NULL,                  /* write_selection      */
 #ifdef H5_HAVE_UNISTD_H
-    H5FD__sec2_flush, /* flush                */
+    // H5FD__sec2_flush, /* flush                */
+    NULL, /* flush                */
 #else
     NULL, /* flush                */
 #endif
