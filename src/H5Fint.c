@@ -1444,9 +1444,9 @@ H5F__dest(H5F_t *f, bool flush, bool free_on_failure)
          *
          * Verify this.
          */
-printf("%s:%u - Before\n", __func__, __LINE__);
+        printf("%s:%u - Before\n", __func__, __LINE__);
         assert(H5AC_cache_is_clean(f, H5AC_RING_MDFSM));
-printf("%s:%u - Before\n", __func__, __LINE__);
+        printf("%s:%u - Before\n", __func__, __LINE__);
 
         /* Release the external file cache */
         if (f->shared->efc) {
