@@ -1051,7 +1051,7 @@ H5C_cache_is_clean(const H5C_t *cache_ptr, H5C_ring_t inner_ring)
     bool       ret_value = true; /* Return value */
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
-printf("%s:%u - Entering\n", __func__, __LINE__);
+    printf("%s:%u - Entering\n", __func__, __LINE__);
 
     /* Sanity checks */
     assert(cache_ptr);
@@ -1059,7 +1059,8 @@ printf("%s:%u - Entering\n", __func__, __LINE__);
     assert(inner_ring <= H5C_RING_SB);
 
     while (ring <= inner_ring) {
-printf("%s:%u - cache_ptr->dirty_index_ring_size[%u] = %u\n", __func__, __LINE__, (unsigned)ring, (unsigned)cache_ptr->dirty_index_ring_size[ring]);
+        printf("%s:%u - cache_ptr->dirty_index_ring_size[%u] = %u\n", __func__, __LINE__, (unsigned)ring,
+               (unsigned)cache_ptr->dirty_index_ring_size[ring]);
         if (cache_ptr->dirty_index_ring_size[ring] > 0)
             HGOTO_DONE(false);
 
@@ -1067,7 +1068,7 @@ printf("%s:%u - cache_ptr->dirty_index_ring_size[%u] = %u\n", __func__, __LINE__
     } /* end while */
 
 done:
-printf("%s:%u - Leaving, ret_value = %u\n", __func__, __LINE__, (unsigned)ret_value);
+    printf("%s:%u - Leaving, ret_value = %u\n", __func__, __LINE__, (unsigned)ret_value);
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5C_cache_is_clean() */
 #endif /* NDEBUG */
