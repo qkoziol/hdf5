@@ -82,6 +82,7 @@ H5VL__native_file_create(const char *name, unsigned flags, hid_t fcpl_id, hid_t 
     void           *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE
+    fprintf(stderr, "%s:%u - Entering\n", __func__, __LINE__);
 
     /* Adjust bit flags by turning on the creation bit and making sure that
      * the EXCL or TRUNC bit is set.  All newly-created files are opened for
@@ -130,6 +131,7 @@ H5VL__native_file_open(const char *name, unsigned flags, hid_t fapl_id, hid_t H5
     void           *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE
+    fprintf(stderr, "%s:%u - Entering\n", __func__, __LINE__);
 
     /* Open the file */
     if (NULL == (fcpl = H5I_object(H5P_FILE_CREATE_DEFAULT)))
