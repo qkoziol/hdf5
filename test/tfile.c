@@ -232,6 +232,7 @@ test_file_create(void)
 
     /* Output message about test being performed */
     MESSAGE(5, ("Testing Low-Level File Creation I/O\n"));
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
 
     if (!(vol_cap_flags_g & H5VL_CAP_FLAG_FILE_BASIC)) {
         MESSAGE(5, (" -- SKIPPED --\n"));
@@ -525,6 +526,7 @@ test_file_create(void)
     /* Close first file */
     ret = H5Fclose(fid1);
     CHECK(ret, FAIL, "H5Fclose");
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
 } /* test_file_create() */
 
 /****************************************************************
@@ -8359,6 +8361,7 @@ test_file(void H5_ATTR_UNUSED *params)
 
     /* Output message about test being performed */
     MESSAGE(5, ("Testing Low-Level File I/O\n"));
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
 
     /* Get the VFD to use */
     driver_name = h5_get_test_driver_name();
@@ -8366,14 +8369,19 @@ test_file(void H5_ATTR_UNUSED *params)
     /* Improved version of VFD-dependent checks */
     fapl_id = h5_fileaccess();
     CHECK(fapl_id, H5I_INVALID_HID, "h5_fileaccess");
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
 
     ret = h5_driver_is_default_vfd_compatible(fapl_id, &driver_is_default_compatible);
     CHECK(ret, FAIL, "h5_driver_is_default_vfd_compatible");
     driver_uses_mult_files = h5_driver_uses_multiple_files(NULL, 0);
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
 
     test_file_create();                   /* Test file creation(also creation templates)*/
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
     test_file_open(driver_name);          /* Test file opening */
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
     test_file_reopen();                   /* Test file reopening */
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
     test_file_close();                    /* Test file close behavior */
     test_get_file_id();                   /* Test H5Iget_file_id */
     test_get_obj_ids();                   /* Test H5Fget_obj_ids for Jira Issue 8528 */
