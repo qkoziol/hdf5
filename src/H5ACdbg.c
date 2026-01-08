@@ -329,7 +329,7 @@ H5AC_cache_is_clean(const H5F_t *f, H5AC_ring_t inner_ring)
     cache_ptr = f->shared->cache;
 
     ret_value = H5C_cache_is_clean(cache_ptr, inner_ring);
-    printf("%s:%u - Leaving, ret_value = %u\n", __func__, __LINE__, (unsigned)ret_value);
+    fprintf(stderr, "%s:%u - Leaving, ret_value = %u\n", __func__, __LINE__, (unsigned)ret_value);
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5AC_cache_is_clean() */

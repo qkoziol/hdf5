@@ -1444,13 +1444,13 @@ H5F__dest(H5F_t *f, bool flush, bool free_on_failure)
          *
          * Verify this.
          */
-        printf("%s:%u - Before\n", __func__, __LINE__);
+        fprintf(stderr, "%s:%u - Before\n", __func__, __LINE__);
         bool qqq = H5AC_cache_is_clean(f, H5AC_RING_MDFSM);
-        printf("%s:%u - qqq = %u\n", __func__, __LINE__, (unsigned)qqq);
+        fprintf(stderr, "%s:%u - qqq = %u\n", __func__, __LINE__, (unsigned)qqq);
         assert(qqq);
-        printf("%s:%u - Between\n", __func__, __LINE__);
+        fprintf(stderr, "%s:%u - Between\n", __func__, __LINE__);
         assert(H5AC_cache_is_clean(f, H5AC_RING_MDFSM));
-        printf("%s:%u - After\n", __func__, __LINE__);
+        fprintf(stderr, "%s:%u - After\n", __func__, __LINE__);
 
         /* Release the external file cache */
         if (f->shared->efc) {
