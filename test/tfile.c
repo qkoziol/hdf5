@@ -8074,6 +8074,7 @@ test_unseekable_file(void)
 {
     /* Output message about test being performed */
     MESSAGE(5, ("Testing creating/opening an unseekable file\n"));
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
 
     /* Flush message in case this test segfaults */
     fflush(stdout);
@@ -8084,6 +8085,7 @@ test_unseekable_file(void)
 #else
     H5Fcreate("/dev/null", H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
 #endif
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
 
     /* Should fail without segfault */
     /* TODO - Does not properly fail on all systems */
@@ -8095,6 +8097,7 @@ test_unseekable_file(void)
 #else
     H5Fopen("/dev/null", H5F_ACC_RDWR, H5P_DEFAULT);
 #endif
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
 
     /* TODO - Does not properly fail on all systems */
     /* VERIFY(file_id, H5I_INVALID_HID, "H5Fopen"); */
