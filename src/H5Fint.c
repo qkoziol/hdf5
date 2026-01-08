@@ -1429,6 +1429,9 @@ H5F__dest(H5F_t *f, bool flush, bool free_on_failure)
             /* Push error, but keep going */
             HDONE_ERROR(H5E_FILE, H5E_CANTFLUSH, FAIL, "metadata cache prep for close failed");
 
+        bool qqq = H5AC_cache_is_clean(f, H5AC_RING_MDFSM);
+        fprintf(stderr, "%s:%u - qqq = %u\n", __func__, __LINE__, (unsigned)qqq);
+
         /* Flush at this point since the file will be closed (phase 2).
          * Only try to flush the file if it was opened with write access, and if
          * the caller requested a flush.
@@ -2388,6 +2391,7 @@ H5F__flush_phase2(H5F_t *f, bool closing)
         /* Push error, but keep going*/
         HDONE_ERROR(H5E_IO, H5E_CANTFLUSH, FAIL, "low level flush failed");
 
+    fprintf(stderr, "%s:%u - Leaving, ret_value = %d\n", __func__, __LINE__, ret_value);
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5F__flush_phase2() */
 
