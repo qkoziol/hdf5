@@ -8433,15 +8433,23 @@ test_file(void H5_ATTR_UNUSED *params)
 
     fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
     test_libver_bounds(); /* Test compatibility for file space management */
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
     test_libver_bounds_low_high(driver_name);
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
     test_libver_macros();  /* Test the macros for library version comparison */
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
     test_libver_macros2(); /* Test the macros for library version comparison */
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
     test_incr_filesize();  /* Test H5Fincrement_filesize() and H5Fget_eoa() */
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
     test_min_dset_ohdr();  /* Test dataset object header minimization */
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
     if (!driver_uses_mult_files)
         test_unseekable_file(); /* Test attempting to open/create an unseekable file */
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
 #ifndef H5_NO_DEPRECATED_SYMBOLS
     test_file_ishdf5(driver_name); /* Test detecting HDF5 files correctly */
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
     test_deprec(driver_name);      /* Test deprecated routines */
 #endif                             /* H5_NO_DEPRECATED_SYMBOLS */
     fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
