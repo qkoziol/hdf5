@@ -841,11 +841,13 @@ H5FD__sec2_flush(H5FD_t *_file, hid_t H5_ATTR_UNUSED dxpl_id, hbool_t H5_ATTR_UN
     assert(file);
 
     FUNC_ENTER_PACKAGE
+    fprintf(stderr, "%s:%u - Entering\n", __func__, __LINE__);
 
     if (HDfsync(file->fd) < 0)
         HSYS_GOTO_ERROR(H5E_VFL, H5E_CANTFLUSH, FAIL, "unable perform fsync on file descriptor");
 
 done:
+    fprintf(stderr, "%s:%u - Leaving, ret_value = %d\n", __func__, __LINE__, ret_value);
     FUNC_LEAVE_NOAPI(ret_value);
 } /* end H5FD__sec2_flush() */
 #endif
