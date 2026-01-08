@@ -8376,11 +8376,11 @@ test_file(void H5_ATTR_UNUSED *params)
     driver_uses_mult_files = h5_driver_uses_multiple_files(NULL, 0);
     fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
 
-    test_file_create();                   /* Test file creation(also creation templates)*/
+    test_file_create(); /* Test file creation(also creation templates)*/
     fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
-    test_file_open(driver_name);          /* Test file opening */
+    test_file_open(driver_name); /* Test file opening */
     fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
-    test_file_reopen();                   /* Test file reopening */
+    test_file_reopen(); /* Test file reopening */
     fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
     test_file_close();                    /* Test file close behavior */
     test_get_file_id();                   /* Test H5Iget_file_id */
