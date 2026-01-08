@@ -1431,7 +1431,7 @@ H5F__dest(H5F_t *f, bool flush, bool free_on_failure)
             HDONE_ERROR(H5E_FILE, H5E_CANTFLUSH, FAIL, "metadata cache prep for close failed");
 
         bool qqq1 = H5AC_cache_is_clean(f, H5AC_RING_MDFSM);
-        fprintf(stderr, "%s:%u - qqq1 = %u\n", __func__, __LINE__, (unsigned)qqq1);
+        fprintf(stderr, "%s:%u - qqq1  = %u\n", __func__, __LINE__, (unsigned)qqq1);
 
         /* Flush at this point since the file will be closed (phase 2).
          * Only try to flush the file if it was opened with write access, and if
