@@ -1401,6 +1401,7 @@ H5F__dest(H5F_t *f, bool flush, bool free_on_failure)
     herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
+    fprintf(stderr, "%s:%u - flush = %u\n", __func__, __LINE__, (unsigned)flush);
 
     /* Sanity check */
     assert(f);
