@@ -8405,6 +8405,7 @@ test_file(void H5_ATTR_UNUSED *params)
     if (driver_is_default_compatible)
         test_rw_noupdate(); /* Test to ensure that RW permissions don't write the file unless dirtied */
 
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
     test_userblock_alignment(
         driver_name); /* Tests that files created with a userblock and alignment interact properly */
     test_userblock_alignment_paged(driver_name); /* Tests files created with a userblock and alignment (via
@@ -8430,6 +8431,7 @@ test_file(void H5_ATTR_UNUSED *params)
                                              */
     }
 
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
     test_libver_bounds(); /* Test compatibility for file space management */
     test_libver_bounds_low_high(driver_name);
     test_libver_macros();  /* Test the macros for library version comparison */
@@ -8442,10 +8444,12 @@ test_file(void H5_ATTR_UNUSED *params)
     test_file_ishdf5(driver_name); /* Test detecting HDF5 files correctly */
     test_deprec(driver_name);      /* Test deprecated routines */
 #endif                             /* H5_NO_DEPRECATED_SYMBOLS */
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
 
     ret = H5Pclose(fapl_id);
     CHECK(ret, FAIL, "H5Pclose");
 
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
 } /* test_file() */
 
 /*-------------------------------------------------------------------------
