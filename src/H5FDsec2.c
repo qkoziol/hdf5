@@ -848,8 +848,8 @@ H5FD__sec2_flush(H5FD_t *_file, hid_t H5_ATTR_UNUSED dxpl_id, hbool_t H5_ATTR_UN
 
 done:
     fprintf(stderr, "%s:%u - Leaving, ret_value = %d\n", __func__, __LINE__, ret_value);
-if(ret_value <0)
-    H5Eprint2(H5E_DEFAULT, stderr);
+    if (ret_value < 0)
+        H5Eprint2(H5E_DEFAULT, stderr);
     FUNC_LEAVE_NOAPI(ret_value);
 } /* end H5FD__sec2_flush() */
 #endif
