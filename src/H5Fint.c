@@ -1868,6 +1868,7 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
     if (H5F__check_if_using_file_locks(fapl, &use_file_locking, &ignore_disabled_locks) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to get file locking flags");
 
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
     /*
      * Opening a file is a two step process. First we try to open the
      * file in a way which doesn't affect its state (like not truncating
@@ -1914,6 +1915,7 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
     else
         tent_flags = flags;
 
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
     /*
      * If a tentative attempt to open the file wasn't necessary, attempt
      * to open the file now. Otherwise, if the tentative open failed, clear
@@ -1931,8 +1933,10 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
         }
     }
 
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
     /* Is the file already open? */
     if ((shared = H5F__sfile_search(fh)) != NULL) {
+        fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
         /*
          * The file is already open, so use that one instead of the one we
          * just opened. We only one one H5FD_t* per file so one doesn't
@@ -1966,8 +1970,10 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
             HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, FAIL, "unable to create new file object");
     } /* end if */
     else {
+        fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
         /* Check if tentative open was good enough */
         if (flags != tent_flags) {
+            fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
             /*
              * This file is not yet open by the library and the flags we used to
              * open it are different than the desired flags. Close the tentative
@@ -1982,6 +1988,7 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
             assert(fh);
         } /* end if */
 
+        fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
         /* Place an advisory lock on the file */
         if (use_file_locking)
             if (H5FD_lock(fh, (bool)((flags & H5F_ACC_RDWR) ? true : false)) < 0) {
@@ -1991,6 +1998,7 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
                 HGOTO_ERROR(H5E_FILE, H5E_CANTLOCKFILE, FAIL, "unable to lock the file");
             } /* end if */
 
+        fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
         /* Create the 'top' file structure */
         if (NULL == (file = H5F__new(NULL, flags, fcpl, fapl, fh))) {
             /* If this is the only time the file has been opened and the struct
@@ -2002,11 +2010,13 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
             HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, FAIL, "unable to initialize file structure");
         } /* end if */
 
+        fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
         /* Need to set status_flags in the superblock if the driver has a 'lock' method */
         if (H5FD_DRVR_HAS_LOCK(drvr))
             set_status_flags = true;
     } /* end else */
 
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
     /* Check to see if both SWMR and cache image are requested.  Fail if so */
     if (H5C_cache_image_status(file, &ci_load, &ci_write) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get MDC cache image status");
@@ -2020,6 +2030,7 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
     shared = file->shared;
     fh     = shared->fh;
 
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
     /* Set the file locking flags. If the file is already open, the file
      * requested file locking flag must match that of the open file.
      */
@@ -2051,6 +2062,7 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
             HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get minimum raw data fraction of page buffer");
     } /* end if */
 
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
     /* Get the evict on close setting */
     if (H5P_get(fapl, H5F_ACS_EVICT_ON_CLOSE_FLAG_NAME, &evict_on_close) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get evict on close value");
@@ -2084,12 +2096,14 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
     }
 #endif
 
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
     /*
      * Read or write the file superblock, depending on whether the file is
      * empty or not.
      */
     if (0 == (MAX(H5FD_get_eof(fh, H5FD_MEM_SUPER), H5FD_get_eoa(fh, H5FD_MEM_SUPER))) &&
         (flags & H5F_ACC_RDWR)) {
+        fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
         /*
          * We've just opened a fresh new file (or truncated one). We need
          * to create & write the superblock.
@@ -2113,6 +2127,7 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
             HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, FAIL, "unable to create/open root group");
     } /* end if */
     else if (1 == shared->nrefs) {
+        fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
         /* Read the superblock if it hasn't been read before. */
         if (H5F__super_read(file, fapl, true) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_READERROR, FAIL, "unable to read superblock");
@@ -2141,6 +2156,7 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
             HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, FAIL, "unable to read root group");
     } /* end if */
 
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
     /*
      * Decide the file close degree.  If it's the first time to open the
      * file, set the degree to access property list value; if it's the
@@ -2162,6 +2178,7 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
             HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, FAIL, "file close degree doesn't match");
     } /* end if */
 
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
     /* This is a private property to clear the status_flags in the super block */
     /* Use by h5clear and a routine in test/flush2.c to clear the test file's status_flags */
     if (H5P_exist_plist(fapl, H5F_ACS_CLEAR_STATUS_FLAGS_NAME) > 0) {
@@ -2171,6 +2188,7 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
             file->shared->sblock->status_flags = 0;
     } /* end if */
 
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
     /* Record the evict-on-close MDC behavior.  If it's the first time opening
      * the file, set it to access property list value; if it's the second time
      * or later, verify that the access property list value matches the value
@@ -2192,7 +2210,9 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
     if (H5F__build_actual_name(file, fapl, name, &file->actual_name) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, FAIL, "unable to build actual name");
 
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
     if (set_status_flags) {
+        fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
         if (H5F_INTENT(file) & H5F_ACC_RDWR) { /* Set and check consistency of status_flags */
             /* Skip check of status_flags for file with < superblock version 3 */
             if (file->shared->sblock->super_vers >= HDF5_SUPERBLOCK_VERSION_3) {
@@ -2241,6 +2261,7 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
         }     /* end else */
     }         /* end if set_status_flags */
 
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
     /* Set 'out' parameter */
     *_file = file;
 
