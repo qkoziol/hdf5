@@ -2217,6 +2217,7 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
             fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
             /* Skip check of status_flags for file with < superblock version 3 */
             if (file->shared->sblock->super_vers >= HDF5_SUPERBLOCK_VERSION_3) {
+                fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
 
                 if (file->shared->sblock->status_flags & H5F_SUPER_WRITE_ACCESS ||
                     file->shared->sblock->status_flags & H5F_SUPER_SWMR_WRITE_ACCESS)
@@ -2225,18 +2226,23 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
                                 "file consistency flags)");
             } /* version 3 superblock */
 
+            fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
             file->shared->sblock->status_flags |= H5F_SUPER_WRITE_ACCESS;
             if (H5F_INTENT(file) & H5F_ACC_SWMR_WRITE)
                 file->shared->sblock->status_flags |= H5F_SUPER_SWMR_WRITE_ACCESS;
 
+            fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
             /* Flush the superblock & superblock extension */
             if (H5F_super_dirty(file) < 0)
                 HGOTO_ERROR(H5E_FILE, H5E_CANTMARKDIRTY, FAIL, "unable to mark superblock as dirty");
+            fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
             if (H5F_flush_tagged_metadata(file, H5AC__SUPERBLOCK_TAG) < 0)
                 HGOTO_ERROR(H5E_FILE, H5E_CANTFLUSH, FAIL, "unable to flush superblock");
+            fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
             if (H5F_flush_tagged_metadata(file, file->shared->sblock->ext_addr) < 0)
                 HGOTO_ERROR(H5E_FILE, H5E_CANTFLUSH, FAIL, "unable to flush superblock extension");
 
+            fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
             /* Remove the file lock for SWMR_WRITE */
             if (use_file_locking && (H5F_INTENT(file) & H5F_ACC_SWMR_WRITE))
                 if (H5FD_unlock(file->shared->fh) < 0)
@@ -2270,8 +2276,11 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
 done:
     fprintf(stderr, "%s:%u - Leaving, ret_value = %d, file = %p\n", __func__, __LINE__, ret_value, file);
     if (ret_value < 0 && file)
+{
+H5Eprint2(H5E_DEFAULT, stderr);
         if (H5F__dest(file, false, true) < 0)
             HDONE_ERROR(H5E_FILE, H5E_CANTCLOSEFILE, FAIL, "problems closing file");
+}
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5F_open() */
