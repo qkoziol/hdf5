@@ -2210,7 +2210,7 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
     if (H5F__build_actual_name(file, fapl, name, &file->actual_name) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, FAIL, "unable to build actual name");
 
-    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
+    fprintf(stderr, "%s:%u - check, file = %p\n", __func__, __LINE__, file);
     if (set_status_flags) {
         fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
         if (H5F_INTENT(file) & H5F_ACC_RDWR) { /* Set and check consistency of status_flags */

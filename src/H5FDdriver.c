@@ -1799,6 +1799,7 @@ H5FD_flush(H5FD_int_t *fh, bool closing)
     herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
+    fprintf(stderr, "%s:%u - check, fh = %p\n", __func__, __LINE__, fh);
 
     /* Sanity checks */
     assert(fh);

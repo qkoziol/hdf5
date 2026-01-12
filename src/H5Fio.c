@@ -427,20 +427,24 @@ H5F_flush_tagged_metadata(H5F_t *f, haddr_t tag)
     herr_t ret_value = SUCCEED;
 
     FUNC_ENTER_NOAPI(FAIL)
+    fprintf(stderr, "%s:%u - check, f = %p\n", __func__, __LINE__, f);
 
     /* Use tag to search for and flush associated metadata */
     if (H5AC_flush_tagged_metadata(f, tag) < 0)
         HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL, "unable to flush tagged metadata");
 
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
     /* Flush and reset the accumulator */
     if (H5F__accum_reset(f->shared, true, false) < 0)
         HGOTO_ERROR(H5E_IO, H5E_CANTRESET, FAIL, "can't reset accumulator");
 
+    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
     /* Flush file buffers to disk. */
     if (H5FD_flush(f->shared->fh, false) < 0)
         HGOTO_ERROR(H5E_IO, H5E_WRITEERROR, FAIL, "low level flush failed");
 
 done:
+    fprintf(stderr, "%s:%u - Leaving, ret_value = %d\n", __func__, __LINE__, ret_value);
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5F_flush_tagged_metadata */
 
