@@ -2261,7 +2261,7 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
         }     /* end else */
     }         /* end if set_status_flags */
 
-    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
+    fprintf(stderr, "%s:%u - check \n", __func__, __LINE__);
     /* Set 'out' parameter */
     *_file = file;
 
