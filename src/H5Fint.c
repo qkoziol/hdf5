@@ -2275,12 +2275,11 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
 
 done:
     fprintf(stderr, "%s:%u - Leaving, ret_value = %d, file = %p\n", __func__, __LINE__, ret_value, file);
-    if (ret_value < 0 && file)
-{
-H5Eprint2(H5E_DEFAULT, stderr);
+    if (ret_value < 0 && file) {
+        H5Eprint2(H5E_DEFAULT, stderr);
         if (H5F__dest(file, false, true) < 0)
             HDONE_ERROR(H5E_FILE, H5E_CANTCLOSEFILE, FAIL, "problems closing file");
-}
+    }
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5F_open() */
