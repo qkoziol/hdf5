@@ -2214,6 +2214,7 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
     if (set_status_flags) {
         fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
         if (H5F_INTENT(file) & H5F_ACC_RDWR) { /* Set and check consistency of status_flags */
+            fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
             /* Skip check of status_flags for file with < superblock version 3 */
             if (file->shared->sblock->super_vers >= HDF5_SUPERBLOCK_VERSION_3) {
 
@@ -2242,6 +2243,7 @@ H5F_open(bool try, H5F_t **_file, const char *name, unsigned flags, H5P_genplist
                     HGOTO_ERROR(H5E_FILE, H5E_CANTUNLOCKFILE, FAIL, "unable to unlock the file");
         }      /* end if */
         else { /* H5F_ACC_RDONLY: check consistency of status_flags */
+            fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
             /* Skip check of status_flags for file with < superblock version 3 */
             if (file->shared->sblock->super_vers >= HDF5_SUPERBLOCK_VERSION_3) {
                 if (H5F_INTENT(file) & H5F_ACC_SWMR_READ) {
