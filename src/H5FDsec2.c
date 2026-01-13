@@ -843,7 +843,7 @@ H5FD__sec2_flush(H5FD_t *_file, hid_t H5_ATTR_UNUSED dxpl_id, hbool_t H5_ATTR_UN
     assert(file);
 
     FUNC_ENTER_PACKAGE
-    fprintf(stderr, "%s:%u - Entering, file = %p\n", __func__, __LINE__, file);
+    fprintf(stderr, "%s:%u - Entering,  file = %p\n", __func__, __LINE__, file);
 
     if (HDfsync(file->fd) < 0)
         HSYS_GOTO_ERROR(H5E_VFL, H5E_CANTFLUSH, FAIL, "unable perform fsync on file descriptor");
