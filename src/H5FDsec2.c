@@ -404,15 +404,18 @@ H5FD__sec2_close(H5FD_t *_file)
 
     /* Sanity check */
     assert(file);
+    fprintf(stderr, "%s:%u - Entering,  file = %p, file->fd = %d\n", __func__, __LINE__, file, file->fd);
 
     /* Close the underlying file */
     if (HDclose(file->fd) < 0)
         HSYS_GOTO_ERROR(H5E_IO, H5E_CANTCLOSEFILE, FAIL, "unable to close file");
+    file->fd = -1;
 
     /* Release the file info */
     file = H5FL_FREE(H5FD_sec2_t, file);
 
 done:
+    fprintf(stderr, "%s:%u - Leaving, ret_value = %d\n", __func__, __LINE__, ret_value);
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FD__sec2_close() */
 
@@ -843,7 +846,7 @@ H5FD__sec2_flush(H5FD_t *_file, hid_t H5_ATTR_UNUSED dxpl_id, hbool_t H5_ATTR_UN
     assert(file);
 
     FUNC_ENTER_PACKAGE
-    fprintf(stderr, "%s:%u - Entering,  file = %p\n", __func__, __LINE__, file);
+    fprintf(stderr, "%s:%u - Entering,  file = %p, file->fd = %d\n", __func__, __LINE__, file, file->fd);
 
     if (HDfsync(file->fd) < 0)
         HSYS_GOTO_ERROR(H5E_VFL, H5E_CANTFLUSH, FAIL, "unable perform fsync on file descriptor");
