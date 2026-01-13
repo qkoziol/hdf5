@@ -138,7 +138,6 @@ H5F__efc_open_file(bool try, H5F_t **_file, const char *name, unsigned flags, H5
     herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
-    fprintf(stderr, "%s:%u - Entering\n", __func__, __LINE__);
 
     /* Reset 'out' parameter */
     *_file = NULL;

@@ -367,7 +367,6 @@ H5FD__sec2_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr
             if (H5P_get(fapl, H5F_ACS_FAMILY_TO_SINGLE_NAME, &file->fam_to_single) < 0)
                 HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get property of changing family to single");
     } /* end if */
-    fprintf(stderr, "%s:%u - file->fd = %d\n", __func__, __LINE__, file->fd);
 
     /* Set return value */
     ret_value = (H5FD_t *)file;
@@ -380,7 +379,6 @@ done:
             file = H5FL_FREE(H5FD_sec2_t, file);
     } /* end if */
 
-    fprintf(stderr, "%s:%u - ret_value = %p\n", __func__, __LINE__, ret_value);
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FD__sec2_open() */
 
@@ -404,18 +402,15 @@ H5FD__sec2_close(H5FD_t *_file)
 
     /* Sanity check */
     assert(file);
-    fprintf(stderr, "%s:%u - Entering,  file = %p, file->fd = %d\n", __func__, __LINE__, file, file->fd);
 
     /* Close the underlying file */
     if (HDclose(file->fd) < 0)
         HSYS_GOTO_ERROR(H5E_IO, H5E_CANTCLOSEFILE, FAIL, "unable to close file");
-    file->fd = -1;
 
     /* Release the file info */
     file = H5FL_FREE(H5FD_sec2_t, file);
 
 done:
-    fprintf(stderr, "%s:%u - Leaving, ret_value = %d\n", __func__, __LINE__, ret_value);
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FD__sec2_close() */
 
@@ -846,15 +841,11 @@ H5FD__sec2_flush(H5FD_t *_file, hid_t H5_ATTR_UNUSED dxpl_id, hbool_t H5_ATTR_UN
     assert(file);
 
     FUNC_ENTER_PACKAGE
-    fprintf(stderr, "%s:%u - Entering,  file = %p, file->fd = %d\n", __func__, __LINE__, file, file->fd);
 
     if (HDfsync(file->fd) < 0)
         HSYS_GOTO_ERROR(H5E_VFL, H5E_CANTFLUSH, FAIL, "unable perform fsync on file descriptor");
 
 done:
-    fprintf(stderr, "%s:%u - Leaving, ret_value = %d\n", __func__, __LINE__, ret_value);
-    if (ret_value < 0)
-        H5Eprint2(H5E_DEFAULT, stderr);
     FUNC_LEAVE_NOAPI(ret_value);
 } /* end H5FD__sec2_flush() */
 #endif

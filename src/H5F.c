@@ -644,7 +644,6 @@ H5Fcreate(const char *filename, unsigned flags, hid_t fcpl_id, hid_t fapl_id)
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
-    fprintf(stderr, "%s:%u - Entering\n", __func__, __LINE__);
 
     /* Get the pointer to the file create property list */
     if (H5P_DEFAULT == fcpl_id)
@@ -845,7 +844,6 @@ H5Fopen(const char *filename, unsigned flags, hid_t fapl_id)
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
-    fprintf(stderr, "%s:%u - Entering\n", __func__, __LINE__);
 
     /* Open the file synchronously */
     if (H5P_DEFAULT == fapl_id)

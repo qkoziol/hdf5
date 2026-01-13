@@ -232,7 +232,6 @@ test_file_create(void)
 
     /* Output message about test being performed */
     MESSAGE(5, ("Testing Low-Level File Creation I/O\n"));
-    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
 
     if (!(vol_cap_flags_g & H5VL_CAP_FLAG_FILE_BASIC)) {
         MESSAGE(5, (" -- SKIPPED --\n"));
@@ -526,7 +525,6 @@ test_file_create(void)
     /* Close first file */
     ret = H5Fclose(fid1);
     CHECK(ret, FAIL, "H5Fclose");
-    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
 } /* test_file_create() */
 
 /****************************************************************
@@ -8074,7 +8072,6 @@ test_unseekable_file(void)
 {
     /* Output message about test being performed */
     MESSAGE(5, ("Testing creating/opening an unseekable file\n"));
-    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
 
     /* Flush message in case this test segfaults */
     fflush(stdout);
@@ -8085,7 +8082,6 @@ test_unseekable_file(void)
 #else
     H5Fcreate("/dev/null", H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
 #endif
-    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
 
     /* Should fail without segfault */
     /* TODO - Does not properly fail on all systems */
@@ -8097,7 +8093,6 @@ test_unseekable_file(void)
 #else
     H5Fopen("/dev/null", H5F_ACC_RDWR, H5P_DEFAULT);
 #endif
-    fprintf(stderr, "%s:%u - check ()\n", __func__, __LINE__);
 
     /* TODO - Does not properly fail on all systems */
     /* VERIFY(file_id, H5I_INVALID_HID, "H5Fopen"); */
@@ -8364,7 +8359,6 @@ test_file(void H5_ATTR_UNUSED *params)
 
     /* Output message about test being performed */
     MESSAGE(5, ("Testing Low-Level File I/O\n"));
-    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
 
     /* Get the VFD to use */
     driver_name = h5_get_test_driver_name();
@@ -8372,19 +8366,14 @@ test_file(void H5_ATTR_UNUSED *params)
     /* Improved version of VFD-dependent checks */
     fapl_id = h5_fileaccess();
     CHECK(fapl_id, H5I_INVALID_HID, "h5_fileaccess");
-    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
 
     ret = h5_driver_is_default_vfd_compatible(fapl_id, &driver_is_default_compatible);
     CHECK(ret, FAIL, "h5_driver_is_default_vfd_compatible");
     driver_uses_mult_files = h5_driver_uses_multiple_files(NULL, 0);
-    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
 
-    test_file_create(); /* Test file creation(also creation templates)*/
-    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
-    test_file_open(driver_name); /* Test file opening */
-    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
-    test_file_reopen(); /* Test file reopening */
-    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
+    test_file_create();                   /* Test file creation(also creation templates)*/
+    test_file_open(driver_name);          /* Test file opening */
+    test_file_reopen();                   /* Test file reopening */
     test_file_close();                    /* Test file close behavior */
     test_get_file_id();                   /* Test H5Iget_file_id */
     test_get_obj_ids();                   /* Test H5Fget_obj_ids for Jira Issue 8528 */
@@ -8408,7 +8397,6 @@ test_file(void H5_ATTR_UNUSED *params)
     if (driver_is_default_compatible)
         test_rw_noupdate(); /* Test to ensure that RW permissions don't write the file unless dirtied */
 
-    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
     test_userblock_alignment(
         driver_name); /* Tests that files created with a userblock and alignment interact properly */
     test_userblock_alignment_paged(driver_name); /* Tests files created with a userblock and alignment (via
@@ -8434,33 +8422,22 @@ test_file(void H5_ATTR_UNUSED *params)
                                              */
     }
 
-    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
     test_libver_bounds(); /* Test compatibility for file space management */
-    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
     test_libver_bounds_low_high(driver_name);
-    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
-    test_libver_macros(); /* Test the macros for library version comparison */
-    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
+    test_libver_macros();  /* Test the macros for library version comparison */
     test_libver_macros2(); /* Test the macros for library version comparison */
-    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
-    test_incr_filesize(); /* Test H5Fincrement_filesize() and H5Fget_eoa() */
-    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
-    test_min_dset_ohdr(); /* Test dataset object header minimization */
-    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
+    test_incr_filesize();  /* Test H5Fincrement_filesize() and H5Fget_eoa() */
+    test_min_dset_ohdr();  /* Test dataset object header minimization */
     if (!driver_uses_mult_files)
         test_unseekable_file(); /* Test attempting to open/create an unseekable file */
-    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
 #ifndef H5_NO_DEPRECATED_SYMBOLS
     test_file_ishdf5(driver_name); /* Test detecting HDF5 files correctly */
-    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
-    test_deprec(driver_name); /* Test deprecated routines */
-#endif                        /* H5_NO_DEPRECATED_SYMBOLS */
-    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
+    test_deprec(driver_name);      /* Test deprecated routines */
+#endif                             /* H5_NO_DEPRECATED_SYMBOLS */
 
     ret = H5Pclose(fapl_id);
     CHECK(ret, FAIL, "H5Pclose");
 
-    fprintf(stderr, "%s:%u - check\n", __func__, __LINE__);
 } /* test_file() */
 
 /*-------------------------------------------------------------------------
