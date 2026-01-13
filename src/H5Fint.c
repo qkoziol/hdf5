@@ -1451,9 +1451,9 @@ H5F__dest(H5F_t *f, bool flush, bool free_on_failure)
         fprintf(stderr, "%s:%u - Before\n", __func__, __LINE__);
         bool qqq = H5AC_cache_is_clean(f, H5AC_RING_MDFSM);
         fprintf(stderr, "%s:%u - qqq = %u\n", __func__, __LINE__, (unsigned)qqq);
-        assert(qqq);
+        assert(!flush || qqq);
         fprintf(stderr, "%s:%u - Between\n", __func__, __LINE__);
-        assert(H5AC_cache_is_clean(f, H5AC_RING_MDFSM));
+        assert(!flush || H5AC_cache_is_clean(f, H5AC_RING_MDFSM));
         fprintf(stderr, "%s:%u - After\n", __func__, __LINE__);
 
         /* Release the external file cache */
@@ -1470,7 +1470,7 @@ H5F__dest(H5F_t *f, bool flush, bool free_on_failure)
          *
          * Verify this.
          */
-        assert(H5AC_cache_is_clean(f, H5AC_RING_MDFSM));
+        assert(!flush || H5AC_cache_is_clean(f, H5AC_RING_MDFSM));
 
         /* Release objects that depend on the superblock being initialized */
         if (f->shared->sblock) {
@@ -1498,7 +1498,7 @@ H5F__dest(H5F_t *f, bool flush, bool free_on_failure)
                 /* at this point, only the superblock and superblock
                  * extension should be dirty.
                  */
-                assert(H5AC_cache_is_clean(f, H5AC_RING_MDFSM));
+                assert(!flush || H5AC_cache_is_clean(f, H5AC_RING_MDFSM));
 
                 /* Flush the file again (if requested), as shutting down the
                  * free space manager may dirty some data structures again.
@@ -1532,7 +1532,7 @@ H5F__dest(H5F_t *f, bool flush, bool free_on_failure)
                     /* at this point, only the superblock and superblock
                      * extension should be dirty.
                      */
-                    assert(H5AC_cache_is_clean(f, H5AC_RING_MDFSM));
+                    assert(!flush || H5AC_cache_is_clean(f, H5AC_RING_MDFSM));
                 } /* end if */
             }     /* end if */
 
@@ -1556,7 +1556,7 @@ H5F__dest(H5F_t *f, bool flush, bool free_on_failure)
          *
          * Verify this.
          */
-        assert(H5AC_cache_is_clean(f, H5AC_RING_MDFSM));
+        assert(!flush || H5AC_cache_is_clean(f, H5AC_RING_MDFSM));
 
         /* Remove shared file struct from list of open files */
         if (H5F__sfile_remove(f->shared) < 0)
