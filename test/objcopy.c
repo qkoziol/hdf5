@@ -37,7 +37,7 @@
  * This file needs to access private information from the H5P package.
  * This file also needs to access the property list testing code.
  */
-#define H5P_FRIEND /*suppress error about including H5Ppkg      */
+#define H5P_FRIEND  /*suppress error about including H5Ppkg      */
 #include "H5Ppkg.h" /* Property Lists             */
 
 /*

@@ -79,7 +79,8 @@ static herr_t H5VL__native_dataset_io_cleanup(size_t count, hid_t mem_space_ids[
  */
 static herr_t
 H5VL__native_dataset_io_setup(size_t count, void *objs[], hid_t mem_type_ids[], hid_t mem_space_ids[],
-                              hid_t file_space_ids[], H5_flexible_const_ptr_t bufs[], H5D_dset_io_info_t *dinfo)
+                              hid_t file_space_ids[], H5_flexible_const_ptr_t bufs[],
+                              H5D_dset_io_info_t *dinfo)
 {
     H5F_shared_t *f_sh;
     size_t        i;
@@ -102,7 +103,8 @@ H5VL__native_dataset_io_setup(size_t count, void *objs[], hid_t mem_type_ids[], 
 
         /* Check dataset's file pointer is valid */
         if (f_sh != H5F_SHARED(dinfo[i].dset->oloc.file))
-            HGOTO_ERROR(H5E_ARGS, H5E_UNSUPPORTED, FAIL, "different files detected in multi dataset I/O request");
+            HGOTO_ERROR(H5E_ARGS, H5E_UNSUPPORTED, FAIL,
+                        "different files detected in multi dataset I/O request");
 
         /* Set up memory type */
         if (NULL == (dinfo[i].mem_type = H5I_object_verify(mem_type_ids[i], H5I_DATATYPE)))
@@ -155,9 +157,9 @@ H5VL__native_dataset_io_setup(size_t count, void *objs[], hid_t mem_type_ids[], 
                 if (NULL == (dinfo[i].mem_space = H5S_create(H5S_NULL)))
                     HGOTO_ERROR(H5E_DATASET, H5E_CANTCREATE, FAIL, "unable to create NULL memory dataspace");
 
-                 /* Set 'none' selection also */
-                 if (H5S_select_none(dinfo[i].mem_space) < 0)
-                     HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "unable to set 'none' selection");
+                /* Set 'none' selection also */
+                if (H5S_select_none(dinfo[i].mem_space) < 0)
+                    HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "unable to set 'none' selection");
             } /* end else */
         }     /* end if */
         else if (H5S_PLIST == mem_space_ids[i])

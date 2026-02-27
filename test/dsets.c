@@ -14901,8 +14901,8 @@ error:
  *
  *-------------------------------------------------------------------------
  */
-#define SRC_DSET   "src_dset"
-#define V_DSET     "v_dset"
+#define SRC_DSET "src_dset"
+#define V_DSET   "v_dset"
 static herr_t
 test_versionbounds(void)
 {

@@ -51,12 +51,12 @@ static hid_t  H5D__create_api_common(hid_t loc_id, const char *name, hid_t type_
 static hid_t  H5D__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *dapl, void **token_ptr,
                                    H5VL_object_t **_vol_obj_ptr);
 static hid_t  H5D__get_space_api_common(hid_t dset_id, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
-static herr_t H5D__read_api_common(size_t count, hid_t dset_ids[], hid_t mem_type_ids[], hid_t mem_space_ids[],
-                                   hid_t file_space_ids[], H5P_genplist_t *dxpl, void *bufs[], void **token_ptr,
-                                   H5VL_object_t **_vol_obj_ptr);
-static herr_t H5D__write_api_common(size_t count, hid_t dset_ids[], hid_t mem_type_ids[], hid_t mem_space_ids[],
-                                    hid_t file_space_ids[], H5P_genplist_t *dxpl, const void *bufs[],
-                                    void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static herr_t H5D__read_api_common(size_t count, hid_t dset_ids[], hid_t mem_type_ids[],
+                                   hid_t mem_space_ids[], hid_t file_space_ids[], H5P_genplist_t *dxpl,
+                                   void *bufs[], void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+static herr_t H5D__write_api_common(size_t count, hid_t dset_ids[], hid_t mem_type_ids[],
+                                    hid_t mem_space_ids[], hid_t file_space_ids[], H5P_genplist_t *dxpl,
+                                    const void *bufs[], void **token_ptr, H5VL_object_t **_vol_obj_ptr);
 static herr_t H5D__set_extent_api_common(hid_t dset_id, const hsize_t size[], void **token_ptr,
                                          H5VL_object_t **_vol_obj_ptr);
 
