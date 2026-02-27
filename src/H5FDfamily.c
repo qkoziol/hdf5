@@ -1431,14 +1431,14 @@ done:
 static herr_t
 H5FD__family_delete(const char *filename, hid_t fapl_id)
 {
-    H5FD_family_fapl_t default_fa;
-    bool               default_config = false;
+    H5FD_family_fapl_t        default_fa;
+    bool                      default_config = false;
     const H5FD_family_fapl_t *fa;
-    H5P_genplist_t    *memb_fapl      = NULL;
-    unsigned           current_member;
-    char              *member_name = NULL;
-    char              *temp        = NULL;
-    herr_t             ret_value   = SUCCEED;
+    H5P_genplist_t           *memb_fapl = NULL;
+    unsigned                  current_member;
+    char                     *member_name = NULL;
+    char                     *temp        = NULL;
+    herr_t                    ret_value   = SUCCEED;
 
     FUNC_ENTER_PACKAGE
 
