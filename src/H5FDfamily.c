@@ -1433,6 +1433,7 @@ H5FD__family_delete(const char *filename, hid_t fapl_id)
 {
     H5FD_family_fapl_t default_fa;
     bool               default_config = false;
+    const H5FD_family_fapl_t *fa;
     H5P_genplist_t    *memb_fapl      = NULL;
     unsigned           current_member;
     char              *member_name = NULL;
@@ -1444,27 +1445,15 @@ H5FD__family_delete(const char *filename, hid_t fapl_id)
     if (!filename)
         HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "invalid filename pointer");
 
-    /* Get the driver info (for the member fapl)
-     * The family_open call accepts H5P_DEFAULT, so we'll accept that here, too.
-     */
-    if (H5P_DEFAULT == fapl_id || H5P_FILE_ACCESS_DEFAULT == fapl_id) {
+    /* Get the driver info (so we can retrieve the member fapl) */
+    if (NULL == (fa = H5CX_peek_driver_info())) {
         if (H5FD__family_get_default_config(&default_fa) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get default family VFD configuration");
         memb_fapl      = default_fa.memb_fapl;
         default_config = true;
     }
-    else {
-        const H5FD_family_fapl_t *fa;
-
-        if (NULL == (fa = (const H5FD_family_fapl_t *)H5CX_peek_driver_info())) {
-            if (H5FD__family_get_default_config(&default_fa) < 0)
-                HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get default family VFD configuration");
-            memb_fapl      = default_fa.memb_fapl;
-            default_config = true;
-        }
-        else
-            memb_fapl = fa->memb_fapl;
-    }
+    else
+        memb_fapl = fa->memb_fapl;
 
     /* Allocate space for the string buffers */
     if (NULL == (member_name = (char *)H5MM_malloc(H5FD_FAM_MEMB_NAME_BUF_SIZE)))
