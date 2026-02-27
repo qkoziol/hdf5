@@ -79,9 +79,10 @@ static const char *FILENAME[] = {"dataset",             /* 0 */
                                  "h5s_block",           /* 27 */
                                  "h5s_plist",           /* 28 */
                                  "vds_strings",         /* 29 */
+                                 "ohdr_min_a",          /* 30 */
+                                 "virtual_file1",       /* 31 */
+                                 "source_file",         /* 32 */
                                  NULL};
-
-#define OHMIN_FILENAME_A "ohdr_min_a"
 
 #define FILENAME_BUF_SIZE 1024
 #define KB                1024
@@ -14900,9 +14901,6 @@ error:
  *
  *-------------------------------------------------------------------------
  */
-#define VDS_FNAME1 "virtual_file1"
-#define VDS_FNAME2 "virtual_file2"
-#define SRC_FNAME  "source_file"
 #define SRC_DSET   "src_dset"
 #define V_DSET     "v_dset"
 static herr_t
@@ -14919,7 +14917,6 @@ test_versionbounds(void)
     hsize_t      dims[1]  = {3};             /* Data space current size */
     char         srcfilename[FILENAME_BUF_SIZE];
     char         vfilename1[FILENAME_BUF_SIZE];
-    char         vfilename2[FILENAME_BUF_SIZE];
     H5F_libver_t low, high; /* File format bounds */
     herr_t       ret;       /* Generic return value */
 
@@ -14929,9 +14926,8 @@ test_versionbounds(void)
     if ((fapl = H5Pcreate(H5P_FILE_ACCESS)) < 0)
         TEST_ERROR;
 
-    h5_fixname(VDS_FNAME1, fapl, vfilename1, sizeof vfilename1);
-    h5_fixname(VDS_FNAME2, fapl, vfilename2, sizeof vfilename2);
-    h5_fixname(SRC_FNAME, fapl, srcfilename, sizeof srcfilename);
+    h5_fixname(FILENAME[31], fapl, vfilename1, sizeof vfilename1);
+    h5_fixname(FILENAME[32], fapl, srcfilename, sizeof srcfilename);
 
     /* Create DCPL */
     if ((dcpl = H5Pcreate(H5P_DATASET_CREATE)) < 0)
@@ -14996,22 +14992,22 @@ test_versionbounds(void)
 
                 if (H5Dclose(vdset) < 0)
                     TEST_ERROR;
-                vdset = -1;
+                vdset = H5I_INVALID_HID;
             }
 
             /* Close virtual file */
             if (H5Fclose(vfile) < 0)
                 TEST_ERROR;
-            vfile = -1;
+            vfile = H5I_INVALID_HID;
 
             /* Close srcdset and srcfile */
             if (H5Dclose(srcdset) < 0)
                 TEST_ERROR;
-            srcdset = -1;
+            srcdset = H5I_INVALID_HID;
 
             if (H5Fclose(srcfile) < 0)
                 TEST_ERROR;
-            srcfile = -1;
+            srcfile = H5I_INVALID_HID;
 
         } /* for high */
     }     /* for low */
@@ -15019,16 +15015,16 @@ test_versionbounds(void)
     /* Close dataspaces and properties */
     if (H5Sclose(srcspace) < 0)
         TEST_ERROR;
-    srcspace = -1;
+    srcspace = H5I_INVALID_HID;
     if (H5Sclose(vspace) < 0)
         TEST_ERROR;
-    vspace = -1;
+    vspace = H5I_INVALID_HID;
     if (H5Pclose(fapl) < 0)
         TEST_ERROR;
-    fapl = -1;
+    fapl = H5I_INVALID_HID;
     if (H5Pclose(dcpl) < 0)
         TEST_ERROR;
-    dcpl = -1;
+    dcpl = H5I_INVALID_HID;
     PASSED();
     return SUCCEED;
 
@@ -15074,7 +15070,7 @@ test_object_header_minimization_dcpl(void)
     /* SETUP */
     /*********/
 
-    if (NULL == h5_fixname(OHMIN_FILENAME_A, H5P_DEFAULT, filename, sizeof(filename)))
+    if (NULL == h5_fixname(FILENAME[30], H5P_DEFAULT, filename, sizeof(filename)))
         TEST_ERROR;
 
     file_id = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);

@@ -51,11 +51,11 @@ static hid_t  H5D__create_api_common(hid_t loc_id, const char *name, hid_t type_
 static hid_t  H5D__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *dapl, void **token_ptr,
                                    H5VL_object_t **_vol_obj_ptr);
 static hid_t  H5D__get_space_api_common(hid_t dset_id, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
-static herr_t H5D__read_api_common(size_t count, hid_t dset_id[], hid_t mem_type_id[], hid_t mem_space_id[],
-                                   hid_t file_space_id[], H5P_genplist_t *dxpl, void *buf[], void **token_ptr,
+static herr_t H5D__read_api_common(size_t count, hid_t dset_ids[], hid_t mem_type_ids[], hid_t mem_space_ids[],
+                                   hid_t file_space_ids[], H5P_genplist_t *dxpl, void *bufs[], void **token_ptr,
                                    H5VL_object_t **_vol_obj_ptr);
-static herr_t H5D__write_api_common(size_t count, hid_t dset_id[], hid_t mem_type_id[], hid_t mem_space_id[],
-                                    hid_t file_space_id[], H5P_genplist_t *dxpl, const void *buf[],
+static herr_t H5D__write_api_common(size_t count, hid_t dset_ids[], hid_t mem_type_ids[], hid_t mem_space_ids[],
+                                    hid_t file_space_ids[], H5P_genplist_t *dxpl, const void *bufs[],
                                     void **token_ptr, H5VL_object_t **_vol_obj_ptr);
 static herr_t H5D__set_extent_api_common(hid_t dset_id, const hsize_t size[], void **token_ptr,
                                          H5VL_object_t **_vol_obj_ptr);
@@ -996,15 +996,15 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5D__read_api_common(size_t count, hid_t dset_id[], hid_t mem_type_id[], hid_t mem_space_id[],
-                     hid_t file_space_id[], H5P_genplist_t *dxpl, void *buf[], void **token_ptr,
+H5D__read_api_common(size_t count, hid_t dset_ids[], hid_t mem_type_ids[], hid_t mem_space_ids[],
+                     hid_t file_space_ids[], H5P_genplist_t *dxpl, void *bufs[], void **token_ptr,
                      H5VL_object_t **_vol_obj_ptr)
 {
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
         (_vol_obj_ptr ? _vol_obj_ptr : &tmp_vol_obj); /* Ptr to object ptr for loc_id */
     void             *obj_local;                      /* Local buffer for obj */
-    void            **obj = &obj_local;               /* Array of object pointers */
+    void            **objs = &obj_local;              /* Array of object pointers */
     H5VL_connector_t *connector;                      /* VOL connector pointer */
     size_t            i;                              /* Local index variable */
     herr_t            ret_value = SUCCEED;            /* Return value */
@@ -1014,15 +1014,15 @@ H5D__read_api_common(size_t count, hid_t dset_id[], hid_t mem_type_id[], hid_t m
     /* Check arguments */
     if (count == 0)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "count must be greater than 0");
-    if (!dset_id)
+    if (!dset_ids)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "dset_id array not provided");
-    if (!mem_type_id)
+    if (!mem_type_ids)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "mem_type_id array not provided");
-    if (!mem_space_id)
+    if (!mem_space_ids)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "mem_space_id array not provided");
-    if (!file_space_id)
+    if (!file_space_ids)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "file_space_id array not provided");
-    if (!buf)
+    if (!bufs)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "buf array not provided");
 
     /* Set the DXPL for the API context */
@@ -1031,11 +1031,11 @@ H5D__read_api_common(size_t count, hid_t dset_id[], hid_t mem_type_id[], hid_t m
 
     /* Allocate obj array if necessary */
     if (count > 1)
-        if (NULL == (obj = (void **)H5MM_malloc(count * sizeof(void *))))
+        if (NULL == (objs = (void **)H5MM_malloc(count * sizeof(void *))))
             HGOTO_ERROR(H5E_DATASET, H5E_CANTALLOC, FAIL, "can't allocate space for object array");
 
     /* Get vol_obj_ptr (return just the first dataset to caller if requested) */
-    if (NULL == (*vol_obj_ptr = H5VL_vol_object_verify(dset_id[0], H5I_DATASET)))
+    if (NULL == (*vol_obj_ptr = H5VL_vol_object_verify(dset_ids[0], H5I_DATASET)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "dset_id is not a dataset ID");
 
     /* Save the connector of the first dataset.  Unpack the connector and call
@@ -1044,14 +1044,14 @@ H5D__read_api_common(size_t count, hid_t dset_id[], hid_t mem_type_id[], hid_t m
     connector = H5VL_OBJ_CONNECTOR(*vol_obj_ptr);
 
     /* Build obj array */
-    obj[0] = H5VL_OBJ_DATA(*vol_obj_ptr);
+    objs[0] = H5VL_OBJ_DATA(*vol_obj_ptr);
     for (i = 1; i < count; i++) {
         htri_t cls_cmp;
 
         /* Get the object */
-        if (NULL == (tmp_vol_obj = H5VL_vol_object_verify(dset_id[i], H5I_DATASET)))
+        if (NULL == (tmp_vol_obj = H5VL_vol_object_verify(dset_ids[i], H5I_DATASET)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "dset_id is not a dataset ID");
-        obj[i] = H5VL_OBJ_DATA(tmp_vol_obj);
+        objs[i] = H5VL_OBJ_DATA(tmp_vol_obj);
 
         /* Make sure the class matches */
         if ((cls_cmp = H5VL_conn_same_class(H5VL_OBJ_CONNECTOR(tmp_vol_obj), connector)) < 0)
@@ -1063,14 +1063,14 @@ H5D__read_api_common(size_t count, hid_t dset_id[], hid_t mem_type_id[], hid_t m
     }
 
     /* Read the data */
-    if (H5VL_dataset_read(count, obj, connector, mem_type_id, mem_space_id, file_space_id, dxpl, buf,
+    if (H5VL_dataset_read(count, objs, connector, mem_type_ids, mem_space_ids, file_space_ids, dxpl, bufs,
                           token_ptr) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_READERROR, FAIL, "can't read data");
 
 done:
     /* Free memory */
-    if (obj != &obj_local)
-        H5MM_free(obj);
+    if (objs != &obj_local)
+        H5MM_free(objs);
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5D__read_api_common() */
@@ -1363,15 +1363,15 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5D__write_api_common(size_t count, hid_t dset_id[], hid_t mem_type_id[], hid_t mem_space_id[],
-                      hid_t file_space_id[], H5P_genplist_t *dxpl, const void *buf[], void **token_ptr,
+H5D__write_api_common(size_t count, hid_t dset_ids[], hid_t mem_type_ids[], hid_t mem_space_ids[],
+                      hid_t file_space_ids[], H5P_genplist_t *dxpl, const void *bufs[], void **token_ptr,
                       H5VL_object_t **_vol_obj_ptr)
 {
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
     H5VL_object_t **vol_obj_ptr =
         (_vol_obj_ptr ? _vol_obj_ptr : &tmp_vol_obj); /* Ptr to object ptr for loc_id */
     void             *obj_local;                      /* Local buffer for obj */
-    void            **obj = &obj_local;               /* Array of object pointers */
+    void            **objs = &obj_local;              /* Array of object pointers */
     H5VL_connector_t *connector;                      /* VOL connector pointer */
     size_t            i;                              /* Local index variable */
     herr_t            ret_value = SUCCEED;            /* Return value */
@@ -1381,15 +1381,15 @@ H5D__write_api_common(size_t count, hid_t dset_id[], hid_t mem_type_id[], hid_t 
     /* Check arguments */
     if (count == 0)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "count must be greater than 0");
-    if (!dset_id)
+    if (!dset_ids)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "dset_id array not provided");
-    if (!mem_type_id)
+    if (!mem_type_ids)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "mem_type_id array not provided");
-    if (!mem_space_id)
+    if (!mem_space_ids)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "mem_space_id array not provided");
-    if (!file_space_id)
+    if (!file_space_ids)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "file_space_id array not provided");
-    if (!buf)
+    if (!bufs)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "buf array not provided");
 
     /* Set the DXPL for the API context */
@@ -1398,11 +1398,11 @@ H5D__write_api_common(size_t count, hid_t dset_id[], hid_t mem_type_id[], hid_t 
 
     /* Allocate obj array if necessary */
     if (count > 1)
-        if (NULL == (obj = (void **)H5MM_malloc(count * sizeof(void *))))
+        if (NULL == (objs = (void **)H5MM_malloc(count * sizeof(void *))))
             HGOTO_ERROR(H5E_DATASET, H5E_CANTALLOC, FAIL, "can't allocate space for object array");
 
     /* Get vol_obj_ptr (return just the first dataset to caller if requested) */
-    if (NULL == (*vol_obj_ptr = (H5VL_object_t *)H5I_object_verify(dset_id[0], H5I_DATASET)))
+    if (NULL == (*vol_obj_ptr = (H5VL_object_t *)H5I_object_verify(dset_ids[0], H5I_DATASET)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "dset_id is not a dataset ID");
 
     /* Save the connector of the first dataset.  Unpack the connector and call
@@ -1411,14 +1411,14 @@ H5D__write_api_common(size_t count, hid_t dset_id[], hid_t mem_type_id[], hid_t 
     connector = H5VL_OBJ_CONNECTOR(*vol_obj_ptr);
 
     /* Build obj array */
-    obj[0] = H5VL_OBJ_DATA(*vol_obj_ptr);
+    objs[0] = H5VL_OBJ_DATA(*vol_obj_ptr);
     for (i = 1; i < count; i++) {
         htri_t cls_cmp;
 
         /* Get the object */
-        if (NULL == (tmp_vol_obj = (H5VL_object_t *)H5I_object_verify(dset_id[i], H5I_DATASET)))
+        if (NULL == (tmp_vol_obj = (H5VL_object_t *)H5I_object_verify(dset_ids[i], H5I_DATASET)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "dset_id is not a dataset ID");
-        obj[i] = H5VL_OBJ_DATA(tmp_vol_obj);
+        objs[i] = H5VL_OBJ_DATA(tmp_vol_obj);
 
         /* Make sure the class matches */
         if ((cls_cmp = H5VL_conn_same_class(H5VL_OBJ_CONNECTOR(tmp_vol_obj), connector)) < 0)
@@ -1430,14 +1430,14 @@ H5D__write_api_common(size_t count, hid_t dset_id[], hid_t mem_type_id[], hid_t 
     }
 
     /* Write the data */
-    if (H5VL_dataset_write(count, obj, connector, mem_type_id, mem_space_id, file_space_id, dxpl, buf,
+    if (H5VL_dataset_write(count, objs, connector, mem_type_ids, mem_space_ids, file_space_ids, dxpl, bufs,
                            token_ptr) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_WRITEERROR, FAIL, "can't write data");
 
 done:
     /* Free memory */
-    if (obj != &obj_local)
-        H5MM_free(obj);
+    if (objs != &obj_local)
+        H5MM_free(objs);
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5D__write_api_common() */

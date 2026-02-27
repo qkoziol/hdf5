@@ -20,9 +20,6 @@
 
 #define H5P_FRIEND /*suppress error about including H5Ppkg      */
 
-/* Define this macro to indicate that the testing APIs should be available */
-#define H5P_TESTING
-
 #include "testhdf5.h"
 
 #include "H5Dprivate.h" /* For Dataset creation property list names */
@@ -32,10 +29,8 @@
 
 /* Property definitions */
 #define CLASS1_NAME "Class 1"
-#define CLASS1_PATH "root/Class 1"
 
 #define CLASS2_NAME "Class 2"
-#define CLASS2_PATH "root/Class 1/Class 2"
 
 /* Property definitions */
 #define PROP1_NAME "Property 1"
