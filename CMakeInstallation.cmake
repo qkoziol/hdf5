@@ -52,6 +52,24 @@ endif ()
 #-----------------------------------------------------------------------------
 if (NOT HDF5_EXTERNALLY_CONFIGURED)
   if (HDF5_EXPORTED_TARGETS)
+    if (HDF5_ENABLE_JNI)
+      install (
+          EXPORT ${HDF5_EXPORTED_TARGETS}_java
+          DESTINATION ${HDF5_INSTALL_CMAKE_DIR}
+          FILE ${HDF5_PACKAGE}${HDF_PACKAGE_EXT}_java-targets.cmake
+          NAMESPACE ${HDF_PACKAGE_NAMESPACE}
+          COMPONENT configinstall
+      )
+    endif ()
+    if (BUILD_STATIC_LIBS AND BUILD_SHARED_LIBS)
+      install (
+          EXPORT ${HDF5_EXPORTED_TARGETS}_static
+          DESTINATION ${HDF5_INSTALL_CMAKE_DIR}
+          FILE ${HDF5_PACKAGE}${HDF_PACKAGE_EXT}_static-targets.cmake
+          NAMESPACE ${HDF_PACKAGE_NAMESPACE}
+          COMPONENT configinstall
+      )
+    endif ()
     install (
         EXPORT ${HDF5_EXPORTED_TARGETS}
         DESTINATION ${HDF5_INSTALL_CMAKE_DIR}
@@ -61,15 +79,16 @@ if (NOT HDF5_EXTERNALLY_CONFIGURED)
     )
   endif ()
 
-  #-----------------------------------------------------------------------------
-  # Export all exported targets to the build tree for use by parent project
-  #-----------------------------------------------------------------------------
-  export (
-      TARGETS ${HDF5_LIBRARIES_TO_EXPORT} ${HDF5_LIB_DEPENDENCIES} ${HDF5_UTILS_TO_EXPORT}
-      FILE ${HDF5_PACKAGE}${HDF_PACKAGE_EXT}-targets.cmake
-      NAMESPACE ${HDF_PACKAGE_NAMESPACE}
-  )
 endif ()
+
+#-----------------------------------------------------------------------------
+# Export all exported targets to the build tree for use by parent project
+#-----------------------------------------------------------------------------
+export (
+    TARGETS ${HDF5_LIBRARIES_TO_EXPORT} ${HDF5_LIB_DEPENDENCIES} ${HDF5_UTILS_TO_EXPORT}
+    FILE ${HDF5_PACKAGE}${HDF_PACKAGE_EXT}-targets.cmake
+    NAMESPACE ${HDF_PACKAGE_NAMESPACE}
+)
 
 #-----------------------------------------------------------------------------
 # Set includes needed for build
@@ -78,6 +97,22 @@ set (HDF5_INCLUDES_BUILD_TIME
     ${HDF5_SRC_INCLUDE_DIRS} ${HDF5_CPP_SRC_DIR} ${HDF5_HL_SRC_DIR}
     ${HDF5_TOOLS_SRC_DIR} ${HDF5_SRC_BINARY_DIR}
 )
+
+#-----------------------------------------------------------------------------
+# Set Java JAR names for config file (with Maven SNAPSHOT suffix if enabled)
+#-----------------------------------------------------------------------------
+if (HDF5_BUILD_JAVA)
+  if (HDF5_ENABLE_MAVEN_DEPLOY AND HDF5_MAVEN_SNAPSHOT)
+    set (HDF5_JARHDF5_JAR_NAME "jarhdf5-${HDF5_PACKAGE_VERSION}-SNAPSHOT.jar")
+    set (HDF5_JAVAHDF5_JAR_NAME "javahdf5-${HDF5_PACKAGE_VERSION}-SNAPSHOT.jar")
+  else ()
+    set (HDF5_JARHDF5_JAR_NAME "jarhdf5-${HDF5_PACKAGE_VERSION}.jar")
+    set (HDF5_JAVAHDF5_JAR_NAME "javahdf5-${HDF5_PACKAGE_VERSION}.jar")
+  endif ()
+  # slf4j JAR names (these are dependencies, version shouldn't change with SNAPSHOT)
+  set (HDF5_SLF4J_API_JAR_NAME "slf4j-api-2.0.16.jar")
+  set (HDF5_SLF4J_NOP_JAR_NAME "slf4j-nop-2.0.16.jar")
+endif ()
 
 #-----------------------------------------------------------------------------
 # Configure the hdf5-config.cmake file for the build directory
@@ -133,6 +168,15 @@ if (NOT HDF5_EXTERNALLY_CONFIGURED)
       COMPONENT configinstall
   )
 endif ()
+
+#-----------------------------------------------------------------------------
+# Add CMake Find modules to installation
+#-----------------------------------------------------------------------------
+install (
+    FILES ${CMAKE_SOURCE_DIR}/config/cmake/Findlibaec.cmake
+    DESTINATION ${HDF5_INSTALL_CMAKE_DIR}/Modules
+    COMPONENT configinstall
+)
 
 #-----------------------------------------------------------------------------
 # Configure the libhdf5.settings file with library info
@@ -251,7 +295,7 @@ if (NOT HDF5_EXTERNALLY_CONFIGURED)
       if (HDF5_ENABLE_PARALLEL)
         set (release_files
             ${release_files}
-            ${HDF5_SOURCE_DIR}/release_docs/INSTALL_parallel
+            ${HDF5_SOURCE_DIR}/release_docs/README_HPC.md
         )
       endif ()
     endif ()
@@ -273,6 +317,9 @@ if (NOT HDF5_EXTERNALLY_CONFIGURED AND NOT HDF5_NO_PACKAGES)
     set (CPACK_PACKAGE_VERSION "${HDF5_PACKAGE_VERSION_STRING}")
   else ()
     set (CPACK_PACKAGE_VERSION "${HDF5_PACKAGE_VERSION}")
+  endif ()
+  if (CMAKE_C_COMPILER_ARCHITECTURE_ID MATCHES "ARM64")
+    set (CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-winarm64")
   endif ()
   set (CPACK_PACKAGE_VERSION_MAJOR "${HDF5_PACKAGE_VERSION_MAJOR}")
   set (CPACK_PACKAGE_VERSION_MINOR "${HDF5_PACKAGE_VERSION_MINOR}")
@@ -430,7 +477,7 @@ if (NOT HDF5_EXTERNALLY_CONFIGURED AND NOT HDF5_NO_PACKAGES)
     endif ()
 
     find_program (RPMBUILD_EXE rpmbuild)
-    if (RPMBUILD_EXE AND NOT HDF_ENABLE_PARALLEL)
+    if (RPMBUILD_EXE AND NOT HDF5_ENABLE_PARALLEL)
       list (APPEND CPACK_GENERATOR "RPM")
       set (CPACK_RPM_PACKAGE_RELEASE "1")
       set (CPACK_RPM_PACKAGE_RELEASE_DIST ON)
