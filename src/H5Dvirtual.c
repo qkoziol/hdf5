@@ -139,9 +139,10 @@ static herr_t H5D__virtual_write_one_src(H5D_dset_io_info_t            *dset_inf
 /* R-tree helper functions */
 static herr_t H5D__virtual_build_tree(H5O_storage_virtual_t *virt, int rank);
 static herr_t H5D__virtual_mappings_to_leaves(H5O_storage_virtual_ent_t *mappings, size_t num_mappings,
-                                      H5RT_leaf_t **leaves_out, H5O_storage_virtual_ent_t ***not_in_tree_out,
-                                      size_t *leaf_count, size_t *not_in_tree_count,
-                                      size_t *not_in_tree_nalloc);
+                                              H5RT_leaf_t                **leaves_out,
+                                              H5O_storage_virtual_ent_t ***not_in_tree_out,
+                                              size_t *leaf_count, size_t *not_in_tree_count,
+                                              size_t *not_in_tree_nalloc);
 static bool H5D__virtual_should_build_tree(const H5O_storage_virtual_t *storage);
 static herr_t H5D__virtual_not_in_tree_grow(H5O_storage_virtual_ent_t ***list, size_t *nalloc);
 static herr_t H5D__virtual_not_in_tree_add(H5O_storage_virtual_ent_t ***list, size_t *nused, size_t *nalloc,
@@ -952,7 +953,7 @@ done:
 herr_t
 H5D__virtual_copy_layout(H5O_layout_t *layout)
 {
-    H5O_storage_virtual_ent_t *orig_list = NULL;
+    H5O_storage_virtual_ent_t  *orig_list             = NULL;
     H5O_storage_virtual_ent_t **orig_not_in_tree_list = NULL;
     H5O_storage_virtual_t     *virt      = &layout->storage.u.virt;
     H5P_genplist_t            *orig_source_fapl;
@@ -1102,8 +1103,10 @@ H5D__virtual_copy_layout(H5O_layout_t *layout)
             assert(orig_not_in_tree_list);
 
             /* Allocate new pointer array */
-            if (NULL == (virt->not_in_tree_list = H5MM_calloc(virt->not_in_tree_nused * sizeof(H5O_storage_virtual_ent_t *))))
-                HGOTO_ERROR(H5E_DATASET, H5E_CANTALLOC, FAIL, "unable to allocate not_in_tree_list pointer array");
+            if (NULL == (virt->not_in_tree_list =
+                             H5MM_calloc(virt->not_in_tree_nused * sizeof(H5O_storage_virtual_ent_t *))))
+                HGOTO_ERROR(H5E_DATASET, H5E_CANTALLOC, FAIL,
+                            "unable to allocate not_in_tree_list pointer array");
 
             virt->not_in_tree_nalloc = virt->not_in_tree_nused;
 
@@ -1112,9 +1115,9 @@ H5D__virtual_copy_layout(H5O_layout_t *layout)
                 ptrdiff_t offset = orig_not_in_tree_list[i] - orig_list;  /* Calculate original offset */
                 assert(offset >= 0 && (size_t)offset < virt->list_nused); /* Validate offset */
                 virt->not_in_tree_list[i] = &virt->list[offset];          /* Point to new list entry */
-            } /* end for */
-        } /* end if */
-    } /* end if */
+            }                                                             /* end for */
+        }                                                                 /* end if */
+    }                                                                     /* end if */
     else {
         virt->tree               = NULL;
         virt->not_in_tree_list   = NULL;
@@ -3900,20 +3903,20 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5D__virtual_mappings_to_leaves(H5O_storage_virtual_ent_t *mappings, size_t num_mappings, H5RT_leaf_t **leaves_out,
-                        H5O_storage_virtual_ent_t ***not_in_tree_out, size_t *leaf_count,
-                        size_t *not_in_tree_count, size_t *not_in_tree_nalloc)
+H5D__virtual_mappings_to_leaves(H5O_storage_virtual_ent_t *mappings, size_t num_mappings,
+                                H5RT_leaf_t **leaves_out, H5O_storage_virtual_ent_t ***not_in_tree_out,
+                                size_t *leaf_count, size_t *not_in_tree_count, size_t *not_in_tree_nalloc)
 {
-    H5RT_leaf_t                *leaves_temp = NULL;
-    H5O_storage_virtual_ent_t **not_in_tree = NULL;
-    H5O_storage_virtual_ent_t *curr_mapping         = NULL;
-    H5RT_leaf_t               *curr_leaf            = NULL;
-    size_t                     curr_leaf_count      = 0;
-    size_t                     curr_not_tree_count  = 0;
-    size_t                     not_in_tree_capacity = 0;
-    H5S_t                     *curr_space           = NULL;
-    int rank = 0;
-    herr_t ret_value = SUCCEED;
+    H5RT_leaf_t                *leaves_temp          = NULL;
+    H5O_storage_virtual_ent_t **not_in_tree          = NULL;
+    H5O_storage_virtual_ent_t  *curr_mapping         = NULL;
+    H5RT_leaf_t                *curr_leaf            = NULL;
+    size_t                      curr_leaf_count      = 0;
+    size_t                      curr_not_tree_count  = 0;
+    size_t                      not_in_tree_capacity = 0;
+    H5S_t                      *curr_space           = NULL;
+    int                         rank                 = 0;
+    herr_t                      ret_value            = SUCCEED;
 
     FUNC_ENTER_PACKAGE
 
@@ -4021,8 +4024,8 @@ done:
 static herr_t
 H5D__virtual_build_tree(H5O_storage_virtual_t *virt, int rank)
 {
-    H5O_storage_virtual_ent_t *mappings     = virt->list;
-    size_t                     num_mappings = virt->list_nused;
+    H5O_storage_virtual_ent_t  *mappings             = virt->list;
+    size_t                      num_mappings         = virt->list_nused;
     H5RT_leaf_t                *leaves               = NULL;
     size_t                      num_leaves           = 0;
     H5O_storage_virtual_ent_t **not_in_tree_mappings = NULL;
@@ -4036,7 +4039,7 @@ H5D__virtual_build_tree(H5O_storage_virtual_t *virt, int rank)
     assert(virt);
 
     if (H5D__virtual_mappings_to_leaves(mappings, num_mappings, &leaves, &not_in_tree_mappings, &num_leaves,
-                                &not_in_tree_count, &not_in_tree_nalloc) < 0)
+                                        &not_in_tree_count, &not_in_tree_nalloc) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, FAIL, "unable to get leaves from mappings");
 
     if (num_leaves == 0) {
