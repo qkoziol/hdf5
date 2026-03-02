@@ -17,6 +17,7 @@ import static org.junit.Assert.assertTrue;
 import hdf.hdf5lib.H5;
 import hdf.hdf5lib.exceptions.HDF5FunctionArgumentException;
 import hdf.hdf5lib.exceptions.HDF5LibraryException;
+import hdf.hdf5lib.exceptions.HDF5IdException;
 
 import org.junit.After;
 import org.junit.Before;
@@ -131,7 +132,7 @@ public class TestH5Dparams {
         H5.H5Dvlen_get_buf_size(-1, -1, -1);
     }
 
-    @Test(expected = HDF5FunctionArgumentException.class)
+    @Test(expected = HDF5IdException.class)
     public void testH5Dget_storage_size_invalid() throws Throwable
     {
         H5.H5Dget_storage_size(-1);
