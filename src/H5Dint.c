@@ -1265,7 +1265,7 @@ H5D__create(H5F_t *file, hid_t type_id, const H5S_t *space, hid_t dcpl_id, hid_t
         H5O_efl_t    *efl;                    /* Dataset's external file list info */
         htri_t        ignore_filters = false; /* Ignore optional filters or not */
 
-        if ((ignore_filters = H5Z_ignore_filters(new_dset->shared->dcpl_id, dt, space)) < 0)
+        if ((ignore_filters = H5Z_ignore_filters(new_dset->shared->dcpl_id, space)) < 0)
             HGOTO_ERROR(H5E_ARGS, H5E_CANTINIT, NULL, "H5Z_has_optional_filter() failed");
 
         if (false == ignore_filters) {
@@ -1326,17 +1326,6 @@ H5D__create(H5F_t *file, hid_t type_id, const H5S_t *space, hid_t dcpl_id, hid_t
     if (H5O_fill_set_version(file, &new_dset->shared->dcpl_cache.fill) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, NULL, "can't set latest version of fill value");
 
-    /* Set the latest version for the layout message */
-    if (H5D__layout_set_version(file, &new_dset->shared->layout) < 0)
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, NULL, "can't set latest version of layout");
-
-    if (new_dset->shared->layout.version >= H5O_LAYOUT_VERSION_4) {
-        /* Use latest indexing type for layout message version >= 4 */
-        if (H5D__layout_set_latest_indexing(&new_dset->shared->layout, new_dset->shared->space,
-                                            &new_dset->shared->dcpl_cache) < 0)
-            HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, NULL, "can't set latest indexing");
-    } /* end if */
-
     /* Check if the file driver would like to force early space allocation */
     if (H5F_HAS_FEATURE(file, H5FD_FEAT_ALLOCATE_EARLY))
         new_dset->shared->dcpl_cache.fill.alloc_time = H5D_ALLOC_TIME_EARLY;
@@ -1358,6 +1347,10 @@ H5D__create(H5F_t *file, hid_t type_id, const H5S_t *space, hid_t dcpl_id, hid_t
     if (new_dset->shared->layout.ops->construct &&
         (new_dset->shared->layout.ops->construct)(file, new_dset) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, NULL, "unable to construct layout information");
+
+    /* Check if the layout version is above the high bound for the file */
+    if (new_dset->shared->layout.version > H5O_layout_ver_bounds[H5F_HIGH_BOUND(file)])
+        HGOTO_ERROR(H5E_DATASET, H5E_BADRANGE, NULL, "layout version out of bounds");
 
     /* Update the dataset's object header info. */
     if (H5D__update_oh_info(file, new_dset, new_dset->shared->dapl_id) < 0)
@@ -1969,13 +1962,15 @@ H5D_close(H5D_t *dataset)
          */
         dataset->shared->closing = true;
 
+        /* Free the data sieve buffer, if it's been allocated */
+        if (dataset->shared->cache.sieve.sieve_buf)
+            dataset->shared->cache.sieve.sieve_buf =
+                (unsigned char *)H5FL_BLK_FREE(sieve_buf, dataset->shared->cache.sieve.sieve_buf);
+
         /* Free cached information for each kind of dataset */
         switch (dataset->shared->layout.type) {
             case H5D_CONTIGUOUS:
-                /* Free the data sieve buffer, if it's been allocated */
-                if (dataset->shared->cache.contig.sieve_buf)
-                    dataset->shared->cache.contig.sieve_buf =
-                        (unsigned char *)H5FL_BLK_FREE(sieve_buf, dataset->shared->cache.contig.sieve_buf);
+                /* Nothing special to do */
                 break;
 
             case H5D_CHUNKED:
@@ -1998,6 +1993,7 @@ H5D_close(H5D_t *dataset)
                         H5FL_FREE(H5D_piece_info_t, dataset->shared->cache.chunk.single_piece_info);
                     dataset->shared->cache.chunk.single_piece_info = NULL;
                 } /* end if */
+
                 break;
 
             case H5D_COMPACT:
@@ -2163,15 +2159,13 @@ H5D_mult_refresh_close(hid_t dset_id)
     assert(dataset->shared->fo_count > 0);
 
     if (dataset->shared->fo_count > 1) {
+        /* Free the data sieve buffer, if it's been allocated */
+        if (dataset->shared->cache.sieve.sieve_buf)
+            dataset->shared->cache.sieve.sieve_buf =
+                (unsigned char *)H5FL_BLK_FREE(sieve_buf, dataset->shared->cache.sieve.sieve_buf);
+
         /* Free cached information for each kind of dataset */
         switch (dataset->shared->layout.type) {
-            case H5D_CONTIGUOUS:
-                /* Free the data sieve buffer, if it's been allocated */
-                if (dataset->shared->cache.contig.sieve_buf)
-                    dataset->shared->cache.contig.sieve_buf =
-                        (unsigned char *)H5FL_BLK_FREE(sieve_buf, dataset->shared->cache.contig.sieve_buf);
-                break;
-
             case H5D_CHUNKED:
                 /* Check for skip list for iterating over chunks during I/O to close */
                 if (dataset->shared->cache.chunk.sel_chunks) {
@@ -2194,6 +2188,7 @@ H5D_mult_refresh_close(hid_t dset_id)
                 } /* end if */
                 break;
 
+            case H5D_CONTIGUOUS:
             case H5D_COMPACT:
             case H5D_VIRTUAL:
                 /* Nothing special to do (info freed in the layout destroy) */
@@ -3257,18 +3252,18 @@ H5D__flush_sieve_buf(H5D_t *dataset)
     assert(dataset);
 
     /* Flush the raw data buffer, if we have a dirty one */
-    if (dataset->shared->cache.contig.sieve_buf && dataset->shared->cache.contig.sieve_dirty) {
+    if (dataset->shared->cache.sieve.sieve_buf && dataset->shared->cache.sieve.sieve_dirty) {
         assert(dataset->shared->layout.type !=
                H5D_COMPACT); /* We should never have a sieve buffer for compact storage */
 
         /* Write dirty data sieve buffer to file */
         if (H5F_shared_block_write(
-                H5F_SHARED(dataset->oloc.file), H5FD_MEM_DRAW, dataset->shared->cache.contig.sieve_loc,
-                dataset->shared->cache.contig.sieve_size, dataset->shared->cache.contig.sieve_buf) < 0)
+                H5F_SHARED(dataset->oloc.file), H5FD_MEM_DRAW, dataset->shared->cache.sieve.sieve_loc,
+                dataset->shared->cache.sieve.sieve_size, dataset->shared->cache.sieve.sieve_buf) < 0)
             HGOTO_ERROR(H5E_IO, H5E_WRITEERROR, FAIL, "block write failed");
 
         /* Reset sieve buffer dirty flag */
-        dataset->shared->cache.contig.sieve_dirty = false;
+        dataset->shared->cache.sieve.sieve_dirty = false;
     } /* end if */
 
 done:
@@ -3376,10 +3371,9 @@ H5D__format_convert(H5D_t *dataset)
                 HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, FAIL, "unable to allocate buffer");
 
             /* Set up the current index info */
-            idx_info.f       = dataset->oloc.file;
-            idx_info.pline   = &dataset->shared->dcpl_cache.pline;
-            idx_info.layout  = &dataset->shared->layout.u.chunk;
-            idx_info.storage = &dataset->shared->layout.storage.u.chunk;
+            idx_info.f      = dataset->oloc.file;
+            idx_info.pline  = &dataset->shared->dcpl_cache.pline;
+            idx_info.layout = &dataset->shared->layout;
 
             /* Copy the current layout info to the new layout */
             H5MM_memcpy(newlayout, &dataset->shared->layout, sizeof(H5O_layout_t));
@@ -3392,23 +3386,22 @@ H5D__format_convert(H5D_t *dataset)
             newlayout->storage.u.chunk.u.btree.shared = NULL;
 
             /* Set up the index info to version 1 B-tree */
-            new_idx_info.f       = dataset->oloc.file;
-            new_idx_info.pline   = &dataset->shared->dcpl_cache.pline;
-            new_idx_info.layout  = &(newlayout->u).chunk;
-            new_idx_info.storage = &(newlayout->storage).u.chunk;
+            new_idx_info.f      = dataset->oloc.file;
+            new_idx_info.pline  = &dataset->shared->dcpl_cache.pline;
+            new_idx_info.layout = newlayout;
 
             /* Initialize version 1 B-tree */
-            if (new_idx_info.storage->ops->init &&
-                (new_idx_info.storage->ops->init)(&new_idx_info, dataset->shared->space, dataset->oloc.addr) <
-                    0)
+            if (new_idx_info.layout->storage.u.chunk.ops->init &&
+                (new_idx_info.layout->storage.u.chunk.ops->init)(&new_idx_info, dataset->shared->space,
+                                                                 dataset->oloc.addr) < 0)
                 HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, FAIL, "can't initialize indexing information");
             init_new_index = true;
 
             /* If the current chunk index exists */
-            if (H5_addr_defined(idx_info.storage->idx_addr)) {
+            if (H5_addr_defined(idx_info.layout->storage.u.chunk.idx_addr)) {
 
                 /* Create v1 B-tree chunk index */
-                if ((new_idx_info.storage->ops->create)(&new_idx_info) < 0)
+                if ((new_idx_info.layout->storage.u.chunk.ops->create)(&new_idx_info) < 0)
                     HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, FAIL, "can't create chunk index");
 
                 /* Iterate over the chunks in the current index and insert the chunk addresses
@@ -3431,7 +3424,8 @@ H5D__format_convert(H5D_t *dataset)
             add_new_layout = true;
 
             /* Release the old (current) chunk index */
-            if (idx_info.storage->ops->dest && (idx_info.storage->ops->dest)(&idx_info) < 0)
+            if (idx_info.layout->storage.u.chunk.ops->dest &&
+                (idx_info.layout->storage.u.chunk.ops->dest)(&idx_info) < 0)
                 HGOTO_ERROR(H5E_DATASET, H5E_CANTFREE, FAIL, "unable to release chunk index info");
 
             /* Copy the new layout to the dataset's layout */
@@ -3474,7 +3468,7 @@ done:
 
         /* Clean up v1 b-tree chunk index */
         if (init_new_index) {
-            if (H5_addr_defined(new_idx_info.storage->idx_addr)) {
+            if (H5_addr_defined(new_idx_info.layout->storage.u.chunk.idx_addr)) {
                 /* Check for valid address i.e. tag */
                 if (!H5_addr_defined(dataset->oloc.addr))
                     HDONE_ERROR(H5E_DATASET, H5E_BADVALUE, FAIL, "address undefined");
@@ -3486,7 +3480,8 @@ done:
             } /* end if */
 
             /* Delete v1 B-tree chunk index */
-            if (new_idx_info.storage->ops->dest && (new_idx_info.storage->ops->dest)(&new_idx_info) < 0)
+            if (new_idx_info.layout->storage.u.chunk.ops->dest &&
+                (new_idx_info.layout->storage.u.chunk.ops->dest)(&new_idx_info) < 0)
                 HDONE_ERROR(H5E_DATASET, H5E_CANTFREE, FAIL, "unable to release chunk index info");
         } /* end if */
     }     /* end if */
