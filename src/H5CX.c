@@ -5668,9 +5668,8 @@ H5CX_get_vds_use_tree(bool *vds_use_tree)
     assert(vds_use_tree);
     head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
     assert(head && *head);
-    assert(H5P_DEFAULT != (*head)->ctx.dapl_id);
 
-    H5CX_RETRIEVE_PROP_VALID(dapl, H5P_DATASET_ACCESS_DEFAULT, H5D_ACS_USE_TREE_NAME, vds_use_tree)
+    H5CX_RETRIEVE_PROP_VALID(dapl, H5D_ACS_USE_TREE_NAME, vds_use_tree)
 
     /* Get the value */
     *vds_use_tree = (*head)->ctx.dapl_props.vds_use_tree;
