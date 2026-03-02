@@ -116,7 +116,7 @@ H5ES__list_count(const H5ES_event_list_t *el)
     /* Sanity check */
     assert(el);
 
-    FUNC_LEAVE_NOAPI(el->count)
+    FUNC_LEAVE_NOAPI(el->count);
 } /* end H5ES__list_count() */
 
 /*-------------------------------------------------------------------------
@@ -147,8 +147,10 @@ H5ES__list_iterate(H5ES_event_list_t *el, H5_iter_order_t order, H5ES_list_iter_
     assert(el);
     assert(cb);
 
-    /* Iterate over events in list */
+    /* Retrieve event to start with */
     ev = (order == H5_ITER_DEC) ? el->tail : el->head;
+
+    /* Iterate over events in list */
     while (ev) {
         H5ES_event_t *tmp; /* Temporary event */
 
@@ -203,3 +205,4 @@ H5ES__list_remove(H5ES_event_list_t *el, const H5ES_event_t *ev)
 
     FUNC_LEAVE_NOAPI_VOID
 } /* end H5ES__list_remove() */
+

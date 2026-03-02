@@ -92,7 +92,6 @@ static herr_t H5ES__close_cb(void *es, void **request_token);
 static herr_t H5ES__insert(H5ES_t *es, H5VL_connector_t *connector, void *request_token, const char *app_file,
                            const char *app_func, unsigned app_line, const char *caller, const char *api_args);
 static int    H5ES__get_requests_cb(H5ES_event_t *ev, void *_ctx);
-static herr_t H5ES__handle_fail(H5ES_t *es, H5ES_event_t *ev);
 static herr_t H5ES__op_complete(H5ES_t *es, H5ES_event_t *ev, H5VL_request_status_t ev_status);
 static int    H5ES__wait_cb(H5ES_event_t *ev, void *_ctx);
 static int    H5ES__cancel_cb(H5ES_event_t *ev, void *_ctx);
@@ -233,11 +232,25 @@ H5ES__create(void)
     if (NULL == (es = H5FL_CALLOC(H5ES_t)))
         HGOTO_ERROR(H5E_EVENTSET, H5E_CANTALLOC, NULL, "can't allocate event set object");
 
+    /* Init atomic variables */
+    H5TS_ATOMIC_INIT(uint64_p, &es->op_counter, 0);
+    H5TS_ATOMIC_INIT(bool, &es->err_occurred, false);
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Initialize the R/W lock protecting the callback fields */
+    if (H5TS_dlftt_rwlock_init(&es->cb_lock) < 0)
+        HGOTO_ERROR(H5E_EVENTSET, H5E_CANTINIT, NULL, "can't initialize event set's callback lock");
+
+    /* Initialize the R/W lock protecting the list fields */
+    if (H5TS_dlftt_rwlock_init(&es->list_lock) < 0)
+        HGOTO_ERROR(H5E_EVENTSET, H5E_CANTINIT, NULL, "can't initialize event set's list lock");
+#endif /* H5_HAVE_CONCURRENCY */
+
     /* Set the return value */
     ret_value = es;
 
 done:
-    if (!ret_value)
+    if (H5_UNLIKELY(!ret_value))
         if (es && H5ES__close(es) < 0)
             HDONE_ERROR(H5E_EVENTSET, H5E_CANTRELEASE, NULL, "unable to free event set");
 
@@ -259,6 +272,8 @@ H5ES__insert(H5ES_t *es, H5VL_connector_t *connector, void *request_token, const
 {
     H5ES_event_t *ev          = NULL;    /* Event for request */
     bool          ev_inserted = false;   /* Flag to indicate that event is in active list */
+    H5ES_event_insert_func_t tmp_ins_func = NULL; /* Callback to invoke for operation inserts */
+    void *tmp_ins_ctx = NULL;     /* Context for callback to invoke for operation inserts */
     herr_t        ret_value   = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -279,7 +294,7 @@ H5ES__insert(H5ES_t *es, H5VL_connector_t *connector, void *request_token, const
     ev->op_info.app_line_num  = app_line;
 
     /* Set the event's operation counter */
-    ev->op_info.op_ins_count = es->op_counter++;
+    ev->op_info.op_ins_count = H5TS_ATOMIC_FETCH_ADD(uint64_t, &es->op_counter, 1);
 
     /* Set the event's timestamp & execution time */
     ev->op_info.op_ins_ts    = H5_now_usec();
@@ -295,18 +310,40 @@ H5ES__insert(H5ES_t *es, H5VL_connector_t *connector, void *request_token, const
     if (api_args && NULL == (ev->op_info.api_args = H5MM_xstrdup(api_args)))
         HGOTO_ERROR(H5E_EVENTSET, H5E_CANTALLOC, FAIL, "can't copy API routine arguments");
 
+#ifdef H5_HAVE_CONCURRENCY
+    /* Acquire exclusive lock on the list fields */
+    H5TS_dlftt_rwlock_lock(&es->list_lock, H5TS_RWLOCK_LOCK_EXCLUSIVE);
+#endif /* H5_HAVE_CONCURRENCY */
     /* Append fully initialized event onto the event set's 'active' list */
     H5ES__list_append(&es->active, ev);
     ev_inserted = true;
+#ifdef H5_HAVE_CONCURRENCY
+    /* Release lock on the list fields */
+    H5TS_dlftt_rwlock_unlock(&es->list_lock, H5TS_RWLOCK_LOCK_EXCLUSIVE);
+#endif /* H5_HAVE_CONCURRENCY */
+
+    /* Retrieve the event set's 'insert' callback, if present */
+#ifdef H5_HAVE_CONCURRENCY
+    /* Acquire shared lock on the callback fields */
+    H5TS_dlftt_rwlock_lock(&es->cb_lock, H5TS_RWLOCK_LOCK_SHARED);
+#endif /* H5_HAVE_CONCURRENCY */
+    if (es->ins_func) {
+        tmp_ins_func = es->ins_func;
+        tmp_ins_ctx = es->ins_ctx;
+    }
+#ifdef H5_HAVE_CONCURRENCY
+    /* Release lock on the callback fields */
+    H5TS_dlftt_rwlock_unlock(&es->cb_lock, H5TS_RWLOCK_LOCK_SHARED);
+#endif /* H5_HAVE_CONCURRENCY */
 
     /* Invoke the event set's 'insert' callback, if present */
-    if (es->ins_func) {
+    if (tmp_ins_func) {
         int status = -1;
 
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
-                status = (es->ins_func)(&ev->op_info, es->ins_ctx);
+                status = (tmp_ins_func)(&ev->op_info, tmp_ins_ctx);
             }
         H5_AFTER_USER_CB(FAIL)
         if (status < 0)
@@ -315,10 +352,19 @@ H5ES__insert(H5ES_t *es, H5VL_connector_t *connector, void *request_token, const
 
 done:
     /* Release resources on error */
-    if (ret_value < 0)
+    if (H5_UNLIKELY(ret_value < 0))
         if (ev) {
-            if (ev_inserted)
+            if (ev_inserted) {
+#ifdef H5_HAVE_CONCURRENCY
+                /* Acquire exclusive lock on the list fields */
+                H5TS_dlftt_rwlock_lock(&es->list_lock, H5TS_RWLOCK_LOCK_EXCLUSIVE);
+#endif /* H5_HAVE_CONCURRENCY */
                 H5ES__list_remove(&es->active, ev);
+#ifdef H5_HAVE_CONCURRENCY
+                /* Release lock on the list fields */
+                H5TS_dlftt_rwlock_unlock(&es->list_lock, H5TS_RWLOCK_LOCK_SHARED);
+#endif /* H5_HAVE_CONCURRENCY */
+            }
             if (H5ES__event_free(ev) < 0)
                 HDONE_ERROR(H5E_EVENTSET, H5E_CANTRELEASE, FAIL, "unable to release event");
         }
@@ -362,7 +408,7 @@ H5ES_insert(hid_t es_id, H5VL_connector_t *connector, void *token, const char *c
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not an event set");
 
     /* Check for errors in event set */
-    if (es->err_occurred)
+    if (H5TS_ATOMIC_LOAD(bool, &es->err_occurred))
         HGOTO_ERROR(H5E_EVENTSET, H5E_CANTINSERT, FAIL, "event set has failed operations");
 
     /* Start working on the API routines arguments */
@@ -485,6 +531,9 @@ herr_t
 H5ES__get_requests(H5ES_t *es, H5_iter_order_t order, hid_t *connector_ids, void **requests, size_t array_len)
 {
     H5ES_get_requests_ctx_t ctx;                 /* Callback context */
+#ifdef H5_HAVE_CONCURRENCY
+    bool have_list_lock = false;                /* Whether the list_lock is held */
+#endif /* H5_HAVE_CONCURRENCY */
     herr_t                  ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -500,49 +549,32 @@ H5ES__get_requests(H5ES_t *es, H5_iter_order_t order, hid_t *connector_ids, void
     ctx.array_len     = array_len;
     ctx.i             = 0;
 
+#ifdef H5_HAVE_CONCURRENCY
+    /* Acquire shared lock on the list fields */
+    H5TS_dlftt_rwlock_lock(&es->list_lock, H5TS_RWLOCK_LOCK_SHARED);
+    have_list_lock = true;
+#endif /* H5_HAVE_CONCURRENCY */
+
     /* Iterate over the events in the set */
     if (H5ES__list_iterate(&es->active, order, H5ES__get_requests_cb, &ctx) < 0)
         HGOTO_ERROR(H5E_EVENTSET, H5E_BADITER, FAIL, "iteration failed");
 
 done:
+#ifdef H5_HAVE_CONCURRENCY
+    /* Release shared lock on the list fields */
+    if (H5_LIKELY(have_list_lock))
+        H5TS_dlftt_rwlock_unlock(&es->list_lock, H5TS_RWLOCK_LOCK_SHARED);
+#endif /* H5_HAVE_CONCURRENCY */
+
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5ES__get_requests() */
-
-/*-------------------------------------------------------------------------
- * Function:    H5ES__handle_fail
- *
- * Purpose:     Handle a failed event
- *
- * Return:      SUCCEED / FAIL
- *
- *-------------------------------------------------------------------------
- */
-static herr_t
-H5ES__handle_fail(H5ES_t *es, H5ES_event_t *ev)
-{
-    FUNC_ENTER_PACKAGE_NOERR
-
-    /* Sanity check */
-    assert(es);
-    assert(es->active.head);
-    assert(ev);
-
-    /* Set error flag for event set */
-    es->err_occurred = true;
-
-    /* Remove event from normal list */
-    H5ES__list_remove(&es->active, ev);
-
-    /* Append event onto the event set's error list */
-    H5ES__list_append(&es->failed, ev);
-
-    FUNC_LEAVE_NOAPI(SUCCEED)
-} /* end H5ES__handle_fail() */
 
 /*-------------------------------------------------------------------------
  * Function:    H5ES__op_complete
  *
  * Purpose:     Handle an operation completing
+ *
+ * Note:        The event set's list_lock must be held in exclusive mode.
  *
  * Return:      SUCCEED / FAIL
  *
@@ -553,6 +585,8 @@ H5ES__op_complete(H5ES_t *es, H5ES_event_t *ev, H5VL_request_status_t ev_status)
 {
     H5VL_request_specific_args_t vol_cb_args;                    /* Arguments to VOL callback */
     hid_t                        err_stack_id = H5I_INVALID_HID; /* Error stack for failed operation */
+    H5ES_event_complete_func_t tmp_comp_func = NULL; /* Callback to invoke for operation completions */
+    void *tmp_comp_ctx = NULL;    /* Context for callback to invoke for operation inserts */
     herr_t                       ret_value    = SUCCEED;         /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -563,10 +597,23 @@ H5ES__op_complete(H5ES_t *es, H5ES_event_t *ev, H5VL_request_status_t ev_status)
     assert(H5VL_REQUEST_STATUS_SUCCEED == ev_status || H5VL_REQUEST_STATUS_FAIL == ev_status ||
            H5VL_REQUEST_STATUS_CANCELED == ev_status);
 
+#ifdef H5_HAVE_CONCURRENCY
+    /* Acquire shared lock on the callback fields */
+    H5TS_dlftt_rwlock_lock(&es->cb_lock, H5TS_RWLOCK_LOCK_SHARED);
+#endif /* H5_HAVE_CONCURRENCY */
+    if (es->comp_func) {
+        tmp_comp_func = es->comp_func;
+        tmp_comp_ctx = es->comp_ctx;
+    }
+#ifdef H5_HAVE_CONCURRENCY
+    /* Release lock on the callback fields */
+    H5TS_dlftt_rwlock_unlock(&es->cb_lock, H5TS_RWLOCK_LOCK_SHARED);
+#endif /* H5_HAVE_CONCURRENCY */
+
     /* Handle each form of event completion */
     if (H5VL_REQUEST_STATUS_SUCCEED == ev_status || H5VL_REQUEST_STATUS_CANCELED == ev_status) {
         /* Invoke the event set's 'complete' callback, if present */
-        if (es->comp_func) {
+        if (tmp_comp_func) {
             H5ES_status_t op_status; /* Status for complete callback */
             int           status = -1;
 
@@ -582,8 +629,7 @@ H5ES__op_complete(H5ES_t *es, H5ES_event_t *ev, H5VL_request_status_t ev_status)
 
                 /* Retrieve the execution time info */
                 if (H5VL_request_specific(ev->request, &vol_cb_args) < 0)
-                    HGOTO_ERROR(H5E_EVENTSET, H5E_CANTGET, FAIL,
-                                "unable to retrieve execution time info for operation");
+                    HGOTO_ERROR(H5E_EVENTSET, H5E_CANTGET, FAIL, "unable to retrieve execution time info for operation");
             }
             else
                 /* Translate status */
@@ -592,7 +638,7 @@ H5ES__op_complete(H5ES_t *es, H5ES_event_t *ev, H5VL_request_status_t ev_status)
             /* Prepare & restore library for user callback */
             H5_BEFORE_USER_CB(FAIL)
                 {
-                    status = (es->comp_func)(&ev->op_info, op_status, H5I_INVALID_HID, es->comp_ctx);
+                    status = (tmp_comp_func)(&ev->op_info, op_status, H5I_INVALID_HID, tmp_comp_ctx);
                 }
             H5_AFTER_USER_CB(FAIL)
             if (status < 0)
@@ -600,12 +646,17 @@ H5ES__op_complete(H5ES_t *es, H5ES_event_t *ev, H5VL_request_status_t ev_status)
         } /* end if */
 
         /* Event success or cancellation */
-        if (H5ES__event_completed(ev, &es->active) < 0)
-            HGOTO_ERROR(H5E_EVENTSET, H5E_CANTRELEASE, FAIL, "unable to release completed event");
+
+        /* Remove the event from the event list */
+        H5ES__list_remove(&es->active, ev);
+
+        /* Free the event */
+        if (H5ES__event_free(ev) < 0)
+            HGOTO_ERROR(H5E_EVENTSET, H5E_CANTFREE, FAIL, "unable to free event");
     } /* end if */
     else if (H5VL_REQUEST_STATUS_FAIL == ev_status) {
         /* Invoke the event set's 'complete' callback, if present */
-        if (es->comp_func) {
+        if (tmp_comp_func) {
             /* Set up VOL callback arguments */
             vol_cb_args.op_type                         = H5VL_REQUEST_GET_ERR_STACK;
             vol_cb_args.args.get_err_stack.err_stack_id = H5I_INVALID_HID;
@@ -621,7 +672,7 @@ H5ES__op_complete(H5ES_t *es, H5ES_event_t *ev, H5VL_request_status_t ev_status)
             /* Prepare & restore library for user callback */
             H5_BEFORE_USER_CB(FAIL)
                 {
-                    status = (es->comp_func)(&ev->op_info, H5ES_STATUS_FAIL, err_stack_id, es->comp_ctx);
+                    status = (tmp_comp_func)(&ev->op_info, H5ES_STATUS_FAIL, err_stack_id, tmp_comp_ctx);
                 }
             H5_AFTER_USER_CB(FAIL)
             if (status < 0)
@@ -629,8 +680,13 @@ H5ES__op_complete(H5ES_t *es, H5ES_event_t *ev, H5VL_request_status_t ev_status)
         } /* end if */
 
         /* Handle failure */
-        if (H5ES__handle_fail(es, ev) < 0)
-            HGOTO_ERROR(H5E_EVENTSET, H5E_CANTSET, FAIL, "unable to handle failed event");
+
+        /* Set error flag for the event set */
+        H5TS_ATOMIC_STORE(bool, &es->err_occurred, true);
+
+        /* Move event from active list to failed list*/
+        H5ES__list_remove(&es->active, ev);
+        H5ES__list_append(&es->failed, ev);
     } /* end else-if */
     else
         HGOTO_ERROR(H5E_EVENTSET, H5E_BADVALUE, FAIL, "unknown event status?!?");
@@ -649,6 +705,8 @@ done:
  * Function:    H5ES__wait_cb
  *
  * Purpose:     Common routine for testing / waiting on an operation
+ *
+ * Note:        The event set's list_lock must be held in exclusive mode.
  *
  * Return:      SUCCEED / FAIL
  *
@@ -733,6 +791,9 @@ herr_t
 H5ES__wait(H5ES_t *es, uint64_t timeout, size_t *num_in_progress, bool *op_failed)
 {
     H5ES_wait_ctx_t ctx;                 /* Iterator callback context info */
+#ifdef H5_HAVE_CONCURRENCY
+    bool have_list_lock = false;                /* Whether the list_lock is held */
+#endif /* H5_HAVE_CONCURRENCY */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -752,11 +813,23 @@ H5ES__wait(H5ES_t *es, uint64_t timeout, size_t *num_in_progress, bool *op_faile
     ctx.num_in_progress = num_in_progress;
     ctx.op_failed       = op_failed;
 
+#ifdef H5_HAVE_CONCURRENCY
+    /* Acquire exclusive lock on the list fields */
+    H5TS_dlftt_rwlock_lock(&es->list_lock, H5TS_RWLOCK_LOCK_EXCLUSIVE);
+    have_list_lock = true;
+#endif /* H5_HAVE_CONCURRENCY */
+
     /* Iterate over the events in the set, waiting for them to complete */
     if (H5ES__list_iterate(&es->active, H5_ITER_NATIVE, H5ES__wait_cb, &ctx) < 0)
         HGOTO_ERROR(H5E_EVENTSET, H5E_BADITER, FAIL, "iteration failed");
 
 done:
+#ifdef H5_HAVE_CONCURRENCY
+    /* Release exclusive lock on the list fields */
+    if (H5_LIKELY(have_list_lock))
+        H5TS_dlftt_rwlock_unlock(&es->list_lock, H5TS_RWLOCK_LOCK_EXCLUSIVE);
+#endif /* H5_HAVE_CONCURRENCY */
+
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5ES__wait() */
 
@@ -764,6 +837,8 @@ done:
  * Function:    H5ES__cancel_cb
  *
  * Purpose:     Callback for canceling operations
+ *
+ * Note:        The event set's list_lock must be held in exclusive mode.
  *
  * Return:      SUCCEED / FAIL
  *
@@ -836,6 +911,9 @@ herr_t
 H5ES__cancel(H5ES_t *es, size_t *num_not_canceled, bool *op_failed)
 {
     H5ES_cancel_ctx_t ctx;                 /* Iterator callback context info */
+#ifdef H5_HAVE_CONCURRENCY
+    bool have_list_lock = false;                /* Whether the list_lock is held */
+#endif /* H5_HAVE_CONCURRENCY */
     herr_t            ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -854,11 +932,23 @@ H5ES__cancel(H5ES_t *es, size_t *num_not_canceled, bool *op_failed)
     ctx.num_not_canceled = num_not_canceled;
     ctx.op_failed        = op_failed;
 
+#ifdef H5_HAVE_CONCURRENCY
+    /* Acquire exclusive lock on the list fields */
+    H5TS_dlftt_rwlock_lock(&es->list_lock, H5TS_RWLOCK_LOCK_EXCLUSIVE);
+    have_list_lock = true;
+#endif /* H5_HAVE_CONCURRENCY */
+
     /* Iterate over the events in the set, attempting to cancel them */
     if (H5ES__list_iterate(&es->active, H5_ITER_NATIVE, H5ES__cancel_cb, &ctx) < 0)
         HGOTO_ERROR(H5E_EVENTSET, H5E_BADITER, FAIL, "iteration failed");
 
 done:
+#ifdef H5_HAVE_CONCURRENCY
+    /* Release exclusive lock on the list fields */
+    if (H5_LIKELY(have_list_lock))
+        H5TS_dlftt_rwlock_unlock(&es->list_lock, H5TS_RWLOCK_LOCK_EXCLUSIVE);
+#endif /* H5_HAVE_CONCURRENCY */
+
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5ES__cancel() */
 
@@ -946,6 +1036,9 @@ herr_t
 H5ES__get_err_info(H5ES_t *es, size_t num_err_info, H5ES_err_info_t err_info[], size_t *num_cleared)
 {
     H5ES_gei_ctx_t ctx;                 /* Iterator callback context info */
+#ifdef H5_HAVE_CONCURRENCY
+    bool have_list_lock = false;                /* Whether the list_lock is held */
+#endif /* H5_HAVE_CONCURRENCY */
     herr_t         ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -962,6 +1055,12 @@ H5ES__get_err_info(H5ES_t *es, size_t num_err_info, H5ES_err_info_t err_info[], 
     ctx.curr_err      = 0;
     ctx.curr_err_info = &err_info[0];
 
+#ifdef H5_HAVE_CONCURRENCY
+    /* Acquire exclusive lock on the list fields */
+    H5TS_dlftt_rwlock_lock(&es->list_lock, H5TS_RWLOCK_LOCK_EXCLUSIVE);
+    have_list_lock = true;
+#endif /* H5_HAVE_CONCURRENCY */
+
     /* Iterate over the failed events in the set, copying their error info */
     if (H5ES__list_iterate(&es->failed, H5_ITER_NATIVE, H5ES__get_err_info_cb, &ctx) < 0)
         HGOTO_ERROR(H5E_EVENTSET, H5E_BADITER, FAIL, "iteration failed");
@@ -970,6 +1069,12 @@ H5ES__get_err_info(H5ES_t *es, size_t num_err_info, H5ES_err_info_t err_info[], 
     *num_cleared = ctx.curr_err;
 
 done:
+#ifdef H5_HAVE_CONCURRENCY
+    /* Release exclusive lock on the list fields */
+    if (H5_LIKELY(have_list_lock))
+        H5TS_dlftt_rwlock_unlock(&es->list_lock, H5TS_RWLOCK_LOCK_EXCLUSIVE);
+#endif /* H5_HAVE_CONCURRENCY */
+
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5ES__get_err_info() */
 
@@ -1017,6 +1122,9 @@ done:
 herr_t
 H5ES__close(H5ES_t *es)
 {
+#ifdef H5_HAVE_CONCURRENCY
+    bool have_list_lock = false;                /* Whether the list_lock is held */
+#endif /* H5_HAVE_CONCURRENCY */
     herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -1024,19 +1132,49 @@ H5ES__close(H5ES_t *es)
     /* Sanity check */
     assert(es);
 
+#ifdef H5_HAVE_CONCURRENCY
+    /* Acquire exclusive lock on the list fields */
+    H5TS_dlftt_rwlock_lock(&es->list_lock, H5TS_RWLOCK_LOCK_EXCLUSIVE);
+    have_list_lock = true;
+#endif /* H5_HAVE_CONCURRENCY */
+
     /* Fail if active operations still present */
     if (H5ES__list_count(&es->active) > 0)
-        HGOTO_ERROR(
-            H5E_EVENTSET, H5E_CANTCLOSEOBJ, FAIL,
-            "can't close event set while unfinished operations are present (i.e. wait on event set first)");
+        HGOTO_ERROR(H5E_EVENTSET, H5E_CANTCLOSEOBJ, FAIL, "can't close event set while unfinished operations are present (i.e. wait on event set first)");
 
     /* Iterate over the failed events in the set, releasing them */
     if (H5ES__list_iterate(&es->failed, H5_ITER_NATIVE, H5ES__close_failed_cb, (void *)es) < 0)
         HGOTO_ERROR(H5E_EVENTSET, H5E_BADITER, FAIL, "iteration failed");
 
+#ifdef H5_HAVE_CONCURRENCY
+    /* Release exclusive lock on the list fields */
+    H5TS_dlftt_rwlock_unlock(&es->list_lock, H5TS_RWLOCK_LOCK_EXCLUSIVE);
+    have_list_lock = false;
+#endif /* H5_HAVE_CONCURRENCY */
+
+    /* Destroy atomic variables */
+    H5TS_ATOMIC_DESTROY(uint64_p, &es->op_counter);
+    H5TS_ATOMIC_DESTROY(bool, &es->err_occurred);
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Destroy the R/W lock protecting the callback fields */
+    if (H5TS_dlftt_rwlock_destroy(&es->cb_lock) < 0)
+        HGOTO_ERROR(H5E_EVENTSET, H5E_CANTRELEASE, FAIL, "can't destroy event set's callback lock");
+
+    /* Destroy the R/W lock protecting the list fields */
+    if (H5TS_dlftt_rwlock_destroy(&es->list_lock) < 0)
+        HGOTO_ERROR(H5E_EVENTSET, H5E_CANTRELEASE, FAIL, "can't destroy event set's list lock");
+#endif /* H5_HAVE_CONCURRENCY */
+
     /* Release the event set */
     es = H5FL_FREE(H5ES_t, es);
 
 done:
+#ifdef H5_HAVE_CONCURRENCY
+    /* Release exclusive lock on the list fields */
+    if (have_list_lock)
+        H5TS_dlftt_rwlock_unlock(&es->list_lock, H5TS_RWLOCK_LOCK_EXCLUSIVE);
+#endif /* H5_HAVE_CONCURRENCY */
+
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5ES__close() */

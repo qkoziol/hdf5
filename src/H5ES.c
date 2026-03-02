@@ -201,7 +201,7 @@ H5ESget_op_counter(hid_t es_id, uint64_t *op_counter /*out*/)
 
         /* Retrieve the operation counter, if non-NULL */
         if (op_counter)
-            *op_counter = es->op_counter;
+            *op_counter = H5TS_ATOMIC_LOAD(uint64_t, &es->op_counter);
     } /* end if */
 
 done:
@@ -379,7 +379,7 @@ H5ESget_err_status(hid_t es_id, bool *err_status /*out*/)
 
         /* Retrieve the error flag, if non-NULL */
         if (err_status)
-            *err_status = es->err_occurred;
+            *err_status = H5TS_ATOMIC_LOAD(bool, &es->err_occurred);
     } /* end if */
 
 done:
@@ -417,7 +417,7 @@ H5ESget_err_count(hid_t es_id, size_t *num_errs /*out*/)
 
         /* Retrieve the error flag, if non-NULL */
         if (num_errs) {
-            if (es->err_occurred)
+            if (H5TS_ATOMIC_LOAD(bool, &es->err_occurred))
                 *num_errs = H5ES__list_count(&es->failed);
             else
                 *num_errs = 0;
@@ -542,9 +542,19 @@ H5ESregister_insert_func(hid_t es_id, H5ES_event_insert_func_t func, void *ctx)
         if (NULL == func)
             HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "NULL function callback pointer");
 
+#ifdef H5_HAVE_CONCURRENCY
+        /* Acquire exclusive lock on the callback fields */
+        H5TS_dlftt_rwlock_lock(&es->cb_lock, H5TS_RWLOCK_LOCK_EXCLUSIVE);
+#endif /* H5_HAVE_CONCURRENCY */
+
         /* Set the event set's insert callback */
         es->ins_func = func;
         es->ins_ctx  = ctx;
+
+#ifdef H5_HAVE_CONCURRENCY
+        /* Release lock on the callback fields */
+        H5TS_dlftt_rwlock_unlock(&es->cb_lock, H5TS_RWLOCK_LOCK_EXCLUSIVE);
+#endif /* H5_HAVE_CONCURRENCY */
     } /* end if */
 
 done:
@@ -583,9 +593,19 @@ H5ESregister_complete_func(hid_t es_id, H5ES_event_complete_func_t func, void *c
         if (NULL == func)
             HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "NULL function callback pointer");
 
+#ifdef H5_HAVE_CONCURRENCY
+        /* Acquire exclusive lock on the callback fields */
+        H5TS_dlftt_rwlock_lock(&es->cb_lock, H5TS_RWLOCK_LOCK_EXCLUSIVE);
+#endif /* H5_HAVE_CONCURRENCY */
+
         /* Set the event set's completion callback */
         es->comp_func = func;
         es->comp_ctx  = ctx;
+
+#ifdef H5_HAVE_CONCURRENCY
+        /* Release lock on the callback fields */
+        H5TS_dlftt_rwlock_unlock(&es->cb_lock, H5TS_RWLOCK_LOCK_EXCLUSIVE);
+#endif /* H5_HAVE_CONCURRENCY */
     } /* end if */
 
 done:

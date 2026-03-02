@@ -134,11 +134,8 @@ H5ES__event_free(H5ES_event_t *ev)
     /* The 'app_func_name', 'app_file_name', and 'api_name' strings are statically allocated (by the compiler)
      * and are not allocated, so there's no need to free them.
      */
-    ev->op_info.api_name = NULL;
     if (ev->op_info.api_args)
         H5MM_xfree_const(ev->op_info.api_args);
-    ev->op_info.app_file_name = NULL;
-    ev->op_info.app_func_name = NULL;
     if (ev->request) {
         /* Free the request */
         if (H5VL_request_free(ev->request) < 0)
@@ -155,32 +152,3 @@ done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5ES__event_free() */
 
-/*-------------------------------------------------------------------------
- * Function:    H5ES__event_completed
- *
- * Purpose:     Handle a completed event
- *
- * Return:      SUCCEED / FAIL
- *
- *-------------------------------------------------------------------------
- */
-herr_t
-H5ES__event_completed(H5ES_event_t *ev, H5ES_event_list_t *el)
-{
-    herr_t ret_value = SUCCEED; /* Return value */
-
-    FUNC_ENTER_PACKAGE
-
-    /* Sanity check */
-    assert(ev);
-
-    /* Remove the event from the event list */
-    H5ES__list_remove(el, ev);
-
-    /* Free the event */
-    if (H5ES__event_free(ev) < 0)
-        HGOTO_ERROR(H5E_EVENTSET, H5E_CANTFREE, FAIL, "unable to free event");
-
-done:
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5ES__event_completed() */

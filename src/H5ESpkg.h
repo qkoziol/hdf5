@@ -26,6 +26,7 @@
 #include "H5ESprivate.h"
 
 /* Other private headers needed by this file */
+#include "H5TSprivate.h" /* Threadsafety                         */
 
 /**************************/
 /* Package Private Macros */
@@ -35,7 +36,16 @@
 /* Package Private Typedefs */
 /****************************/
 
+/* Define portable atomic types */
+H5TS_DEF_ATOMIC_TYPE(uint64_t)
+H5TS_DEF_ATOMIC_TYPE(size_t)
+H5TS_DEF_ATOMIC_TYPE(bool)
+
 /* Typedef for event nodes */
+/* NOTE: From a concurrency standpoint, these are only safe when the 'list_lock'
+ *      lock in the event set is held appropriately (shared or exclusive).
+ *      There is no locking on the structure itself.
+ */
 typedef struct H5ES_event_t {
     H5VL_object_t       *request;     /* Request token for event */
     struct H5ES_event_t *prev, *next; /* Previous and next event nodes */
@@ -44,25 +54,45 @@ typedef struct H5ES_event_t {
 } H5ES_event_t;
 
 /* Typedef for lists of event set operations */
+/* NOTE: From a concurrency standpoint, these are only safe when the 'list_lock'
+ *      lock in the event set is held appropriately (shared or exclusive).
+ *      There is no locking on the structure itself.
+ */
 typedef struct H5ES_event_list_t {
-    size_t        count;       /* # of events in list */
+    size_t count;              /* # of events in list */
     H5ES_event_t *head, *tail; /* Head & tail of events in list */
 } H5ES_event_list_t;
 
 /* Typedef for event set objects */
+/* NOTE: From a concurrency standpoint, the '*_func' and '*_ctx' fields in
+ *      H5ES_t's may be modified or read after they are created.  The
+ *      'op_counter' field only increments and is read.  The 'err_occurred'
+ *      field is only set when an error occurs and is read.  The 'active' and
+ *      'failed' fields are H5ES_event_list_t's, which are both read and
+ *      modified.  So, the '*_func' and '*_ctx' fields are managed with
+ *      a R/W lock ('cb_lock'), the 'active' and 'failed' lists are managed
+ *      with another R/W lock ('list_lock'), and 'op_counter' and 'err_occurred'
+ *      are atomics.  Therefore no locking on the structure itself is required.
+ */
 struct H5ES_t {
-    uint64_t                   op_counter; /* Count of operations inserted into this set */
-    H5ES_event_insert_func_t   ins_func;   /* Callback to invoke for operation inserts */
-    void                      *ins_ctx;    /* Context for callback to invoke for operation inserts */
-    H5ES_event_complete_func_t comp_func;  /* Callback to invoke for operation completions */
-    void                      *comp_ctx;   /* Context for callback to invoke for operation inserts */
+    H5TS_ATOMIC_TYPE(uint64_t) op_counter; /* Count of operations inserted into this set */
+    H5TS_ATOMIC_TYPE(bool) err_occurred; /* Flag for error from an operation */
 
-    /* Active events */
-    H5ES_event_list_t active; /* List of active events in set */
+    /* Callbacks for inserting and removing events in event set */
+#ifdef H5_HAVE_CONCURRENCY
+    H5TS_dlftt_rwlock_t cb_lock;      /* Lock on callback fields */
+#endif /* H5_HAVE_CONCURRENCY */
+    H5ES_event_insert_func_t ins_func; /* Callback to invoke for operation inserts */
+    void *ins_ctx;     /* Context for callback to invoke for operation inserts */
+    H5ES_event_complete_func_t comp_func; /* Callback to invoke for operation completions */
+    void *comp_ctx;    /* Context for callback to invoke for operation inserts */
 
-    /* Failed events */
-    bool              err_occurred; /* Flag for error from an operation */
-    H5ES_event_list_t failed;       /* List of failed events in set */
+    /* Lists of events */
+#ifdef H5_HAVE_CONCURRENCY
+    H5TS_dlftt_rwlock_t list_lock; /* Lock on list fields */
+#endif /* H5_HAVE_CONCURRENCY */
+    H5ES_event_list_t active;      /* List of active events in set */
+    H5ES_event_list_t failed;      /* List of failed events in set */
 };
 
 /* Event list iterator callback function */
@@ -94,6 +124,5 @@ H5_DLL void   H5ES__list_remove(H5ES_event_list_t *el, const H5ES_event_t *ev);
 /* Event operations */
 H5_DLL H5ES_event_t *H5ES__event_new(H5VL_connector_t *connector, void *token);
 H5_DLL herr_t        H5ES__event_free(H5ES_event_t *ev);
-H5_DLL herr_t        H5ES__event_completed(H5ES_event_t *ev, H5ES_event_list_t *el);
 
 #endif /* H5ESpkg_H */
