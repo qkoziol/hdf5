@@ -12,27 +12,30 @@ on:
 permissions:
   contents: read
 
+env:
+  CTEST_OUTPUT_ON_FAILURE: 1
+
 jobs:
   intel_oneapi_linux:
     name: "linux-oneapi ${{ inputs.build_mode }}"
     runs-on: ubuntu-latest
     steps:
       - name: Get Sources (Linux)
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Install Dependencies (Linux)
         shell: bash
         run: |
            sudo apt-get update
-           sudo apt-get install ninja-build doxygen graphviz
+           sudo apt-get install ninja-build graphviz
            sudo apt install libssl3 libssl-dev libcurl4 libcurl4-openssl-dev
 
       - name: Install oneAPI (Linux)
-        uses: fortran-lang/setup-fortran@v1
+        uses: fortran-lang/setup-fortran@47809fdb6e637da656ce9ada436527b240c1287f # v1
         id: setup-fortran
         with:
           compiler: intel
-          version: '2025.0'
+          version: '2025.2'
 
       - name: Configure (Linux)
         shell: bash
@@ -63,7 +66,7 @@ jobs:
           FC: ${{ steps.setup-fortran.outputs.fc }}
           CC: ${{ steps.setup-fortran.outputs.cc }}
         run: |
-          ctest . --parallel 2 -C ${{ inputs.build_mode }} -V
+          ctest . --parallel 2 -C ${{ inputs.build_mode }}
         working-directory: ${{ runner.workspace }}/build
 
   Intel_oneapi_windows:
@@ -71,17 +74,17 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Get Sources (Windows)
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Install Dependencies (Windows)
         run: choco install ninja
 
       - name: install oneAPI (Windows)
-        uses: fortran-lang/setup-fortran@v1
+        uses: fortran-lang/setup-fortran@47809fdb6e637da656ce9ada436527b240c1287f # v1
         id: setup-fortran
         with:
           compiler: intel
-          version: '2025.0'
+          version: '2025.2'
 
       - name: Configure (Windows)
         shell: pwsh
@@ -108,5 +111,5 @@ jobs:
           FC: ${{ steps.setup-fortran.outputs.fc }}
           CC: ${{ steps.setup-fortran.outputs.cc }}
         run: |
-          ctest . --parallel 2 -C ${{ inputs.build_mode }} -V -E tfloatsattrs
+          ctest . --parallel 2 -C ${{ inputs.build_mode }} -E tfloatsattrs
         working-directory: ${{ runner.workspace }}/build
