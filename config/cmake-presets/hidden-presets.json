@@ -95,7 +95,10 @@
     },
     {
       "name": "ci-Intel",
-      "hidden": true
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "config/toolchain/intel.cmake"
+      }
     },
     {
       "name": "ci-Fortran",
@@ -126,9 +129,20 @@
     },
     {
       "name": "ci-Java",
+      "description": "Java JNI Configuration - Works with Java 11 or later",
       "hidden": true,
       "cacheVariables": {
-        "HDF5_BUILD_JAVA": "ON"
+        "HDF5_BUILD_JAVA": "ON",
+        "HDF5_ENABLE_JNI": "ON"
+      }
+    },
+    {
+      "name": "ci-Java-FFM",
+      "description": "Java FFM Configuration - REQUIRES Java 25 or later. Build will fail with Java < 25. Use ci-Java for older Java versions.",
+      "hidden": true,
+      "cacheVariables": {
+        "HDF5_BUILD_JAVA": "ON",
+        "HDF5_ENABLE_JNI": "OFF"
       }
     },
     {
@@ -149,6 +163,28 @@
       "inherits": [
         "ci-base",
         "ci-x64",
+        "ci-Release",
+        "ci-MSVC"
+      ]
+    },
+    {
+      "name": "ci-arm64-Debug-MSVC",
+      "description": "MSVC for ARM64 (Debug)",
+      "hidden": true,
+      "inherits": [
+        "ci-base",
+        "ci-arm64",
+        "ci-Debug",
+        "ci-MSVC"
+      ]
+    },
+    {
+      "name": "ci-arm64-Release-MSVC",
+      "description": "MSVC for ARM64 (Release)",
+      "hidden": true,
+      "inherits": [
+        "ci-base",
+        "ci-arm64",
         "ci-Release",
         "ci-MSVC"
       ]
@@ -337,6 +373,24 @@
       "configuration": "RelWithDebInfo"
     },
     {
+      "name": "ci-arm64-Debug-MSVC",
+      "configurePreset": "ci-arm64-Debug-MSVC",
+      "hidden": true,
+      "inherits": [
+        "ci-base"
+      ],
+      "configuration": "Debug"
+    },
+    {
+      "name": "ci-arm64-Release-MSVC",
+      "configurePreset": "ci-arm64-Release-MSVC",
+      "hidden": true,
+      "inherits": [
+        "ci-base"
+      ],
+      "configuration": "RelWithDebInfo"
+    },
+    {
       "name": "ci-x64-Debug-Clang",
       "configurePreset": "ci-x64-Debug-Clang",
       "hidden": true,
@@ -494,6 +548,24 @@
       "configuration": "RelWithDebInfo"
     },
     {
+      "name": "ci-arm64-Debug-MSVC",
+      "configurePreset": "ci-arm64-Debug-MSVC",
+      "hidden": true,
+      "inherits": [
+        "ci-base"
+      ],
+      "configuration": "Debug"
+    },
+    {
+      "name": "ci-arm64-Release-MSVC",
+      "configurePreset": "ci-arm64-Release-MSVC",
+      "hidden": true,
+      "inherits": [
+        "ci-base"
+      ],
+      "configuration": "RelWithDebInfo"
+    },
+    {
       "name": "ci-x64-Debug-Clang",
       "configurePreset": "ci-x64-Debug-Clang",
       "hidden": true,
@@ -624,6 +696,13 @@
     {
       "name": "ci-x64-Release-MSVC",
       "configurePreset": "ci-x64-Release-MSVC",
+      "hidden": true,
+      "inherits": "ci-base",
+      "configurations": ["RelWithDebInfo"]
+    },
+    {
+      "name": "ci-arm64-Release-MSVC",
+      "configurePreset": "ci-arm64-Release-MSVC",
       "hidden": true,
       "inherits": "ci-base",
       "configurations": ["RelWithDebInfo"]

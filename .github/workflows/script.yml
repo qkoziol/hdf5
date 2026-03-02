@@ -26,6 +26,9 @@ on:
 permissions:
   contents: read
 
+env:
+  CTEST_OUTPUT_ON_FAILURE: 1
+
 jobs:
   build_and_test_win:
   # Windows w/ MSVC
@@ -33,19 +36,19 @@ jobs:
     name: "Windows MSVC CTest"
     runs-on: windows-latest
     steps:
+      - name: Get Actions
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          sparse-checkout: .github/actions
+
       - name: Install Dependencies (Windows)
         run: choco install ninja
 
-      - name: Install Dependencies
-        uses: ssciwr/doxygen-install@v1
-        with:
-          version: "1.13.2"
-
       - name: Enable Developer Command Prompt
-        uses: ilammy/msvc-dev-cmd@v1.13.0
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
 
       - name: Install CMake
-        uses: lukka/get-cmake@latest
+        uses: lukka/get-cmake@f176ccd3f28bda569c43aae4894f06b2435a3375 # latest
         with:
             cmakeVersion: ${{ inputs.cmake_version }}
             ninjaVersion: latest
@@ -72,7 +75,7 @@ jobs:
 
       # Get files created by release script
       - name: Get zip-tarball (Windows)
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
               name: zip-tarball
               path: ${{ github.workspace }}
@@ -92,11 +95,10 @@ jobs:
         run: 7z x ${{ steps.set-file-base.outputs.FILE_BASE }}.zip
         shell: bash
 
-      - name: Copy script files for the space (Windows)
-        run: |
-          Copy-Item -Path ${{ runner.workspace }}/hdf5/${{ steps.set-file-base.outputs.SOURCE_BASE }}/config/cmake/scripts/CTestScript.cmake -Destination ${{ runner.workspace }}/hdf5/
-          Copy-Item -Path ${{ runner.workspace }}/hdf5/${{ steps.set-file-base.outputs.SOURCE_BASE }}/config/cmake/scripts/HDF5config.cmake -Destination ${{ runner.workspace }}/hdf5/
-        shell: pwsh
+      - name: Symlink script files for the space (Windows)
+        uses: ./.github/actions/symlink-ctest-scripts
+        with:
+          source-base: ${{ steps.set-file-base.outputs.SOURCE_BASE }}
 
       - name: List files for the hdf5 (Windows)
         run: |
@@ -104,7 +106,7 @@ jobs:
         shell: pwsh
 
       - name: Create options file (Windows)
-        uses: "DamianReeves/write-file-action@master"
+        uses: "DamianReeves/write-file-action@1d019960841941be46b139298996df6f139cc7a4" # master
         with:
             path: ${{ runner.workspace }}/hdf5/HDF5options.cmake
             write-mode: overwrite
@@ -130,13 +132,13 @@ jobs:
       - name: Run CTest script (Windows)
         run: |
           cd "${{ runner.workspace }}/hdf5"
-          ctest -S HDF5config.cmake,CTEST_SITE_EXT=GH-${{ github.event.repository.full_name }},LOCAL_SUBMIT=ON,NINJA=TRUE,BUILD_GENERATOR=VS202264,CTEST_SOURCE_NAME=${{ steps.set-file-base.outputs.SOURCE_BASE }} -C Release -VV -O hdf5.log
+          ctest -S HDF5config.cmake,CTEST_SITE_EXT=GH-${{ github.event.repository.full_name }},LOCAL_SUBMIT=ON,NINJA=TRUE,BUILD_GENERATOR=VS202264,CTEST_SOURCE_NAME=${{ steps.set-file-base.outputs.SOURCE_BASE }} -C Release -O hdf5.log
         shell: bash
         continue-on-error: true
 
       # Save log files created by CTest script
       - name: Save log (Windows_intel)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v5
         with:
           name: cl-win-log
           path: ${{ runner.workspace }}/hdf5/hdf5.log
@@ -148,18 +150,18 @@ jobs:
     name: "Ubuntu gcc"
     runs-on: ubuntu-latest
     steps:
+      - name: Get Actions
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          sparse-checkout: .github/actions
+
       - name: Install Dependencies (Linux)
         run: |
           sudo apt-get update
           sudo apt-get install ninja-build graphviz curl
 
-      - name: Install Dependencies
-        uses: ssciwr/doxygen-install@v1
-        with:
-          version: "1.13.2"
-
       - name: Install CMake
-        uses: lukka/get-cmake@latest
+        uses: lukka/get-cmake@f176ccd3f28bda569c43aae4894f06b2435a3375 # latest
         with:
             cmakeVersion: ${{ inputs.cmake_version }}
             ninjaVersion: latest
@@ -179,7 +181,7 @@ jobs:
 
       # Get files created by release script
       - name: Get tgz-tarball (Linux)
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
               name: tgz-tarball
               path: ${{ github.workspace }}
@@ -192,17 +194,17 @@ jobs:
       - name: Uncompress source (Linux)
         run: tar -zxvf ${{ github.workspace }}/${{ steps.set-file-base.outputs.FILE_BASE }}.tar.gz
 
-      - name: Copy script files for the space (Linux)
-        run: |
-          cp ${{ github.workspace }}/${{ steps.set-file-base.outputs.SOURCE_BASE }}/config/cmake/scripts/CTestScript.cmake ${{ runner.workspace }}/hdf5
-          cp ${{ github.workspace }}/${{ steps.set-file-base.outputs.SOURCE_BASE }}/config/cmake/scripts/HDF5config.cmake ${{ runner.workspace }}/hdf5
+      - name: Symlink script files for the space (Linux)
+        uses: ./.github/actions/symlink-ctest-scripts
+        with:
+          source-base: ${{ steps.set-file-base.outputs.SOURCE_BASE }}
 
       - name: List files for the hdf5 (Linux)
         run: |
             ls ${{ runner.workspace }}/hdf5
 
       - name: Create options file (Linux)
-        uses: "DamianReeves/write-file-action@master"
+        uses: "DamianReeves/write-file-action@1d019960841941be46b139298996df6f139cc7a4" # master
         with:
           path: ${{ runner.workspace }}/hdf5/HDF5options.cmake
           write-mode: overwrite
@@ -228,13 +230,13 @@ jobs:
       - name: Run CTest (Linux)
         run: |
           cd "${{ runner.workspace }}/hdf5"
-          ctest -S HDF5config.cmake,CTEST_SITE_EXT=GH-${{ github.event.repository.full_name }}-GCC,LOCAL_SUBMIT=ON,NINJA=TRUE,BUILD_GENERATOR=Unix,CTEST_SOURCE_NAME=${{ steps.set-file-base.outputs.SOURCE_BASE }} -C Release -VV -O hdf5.log
+          ctest -S HDF5config.cmake,CTEST_SITE_EXT=GH-${{ github.event.repository.full_name }}-GCC,LOCAL_SUBMIT=ON,NINJA=TRUE,BUILD_GENERATOR=Unix,CTEST_SOURCE_NAME=${{ steps.set-file-base.outputs.SOURCE_BASE }} -C Release -O hdf5.log
         shell: bash
         continue-on-error: true
 
       # Save log files created by CTest script
       - name: Save log (Linux)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v5
         with:
             name: gcc-ubuntu-log
             path: ${{ runner.workspace }}/hdf5/hdf5.log
@@ -246,13 +248,13 @@ jobs:
     name: "MacOS Clang"
     runs-on: macos-latest
     steps:
+      - name: Get Actions
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          sparse-checkout: .github/actions
+
       - name: Install Dependencies (MacOS_latest)
         run: brew install ninja curl
-
-      - name: Install Dependencies
-        uses: ssciwr/doxygen-install@v1
-        with:
-          version: "1.13.2"
 
       - name: check clang version
         shell: bash
@@ -261,7 +263,7 @@ jobs:
           clang -v
 
       - name: Install CMake
-        uses: lukka/get-cmake@latest
+        uses: lukka/get-cmake@f176ccd3f28bda569c43aae4894f06b2435a3375 # latest
         with:
             cmakeVersion: ${{ inputs.cmake_version }}
             ninjaVersion: latest
@@ -273,7 +275,7 @@ jobs:
           cmake --version
 
       - name: Set up JDK 19
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5
         with:
           java-version: '21'
           distribution: 'temurin'
@@ -293,7 +295,7 @@ jobs:
 
       # Get files created by release script
       - name: Get tgz-tarball (MacOS_latest)
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
               name: tgz-tarball
               path: ${{ github.workspace }}
@@ -306,14 +308,14 @@ jobs:
       - name: Uncompress source (MacOS_latest)
         run: tar -zxvf ${{ github.workspace }}/${{ steps.set-file-base.outputs.FILE_BASE }}.tar.gz
 
-      - name: Copy script files for the space (MacOS_latest)
-        run: |
-          cp ${{ github.workspace }}/${{ steps.set-file-base.outputs.SOURCE_BASE }}/config/cmake/scripts/CTestScript.cmake ${{ runner.workspace }}/hdf5
-          cp ${{ github.workspace }}/${{ steps.set-file-base.outputs.SOURCE_BASE }}/config/cmake/scripts/HDF5config.cmake ${{ runner.workspace }}/hdf5
+      - name: Symlink script files for the space (MacOS_latest)
+        uses: ./.github/actions/symlink-ctest-scripts
+        with:
+          source-base: ${{ steps.set-file-base.outputs.SOURCE_BASE }}
 
       # symlinks the compiler executables to a common location 
       - name: Setup GNU Fortran
-        uses: fortran-lang/setup-fortran@v1
+        uses: fortran-lang/setup-fortran@47809fdb6e637da656ce9ada436527b240c1287f # v1
         id: setup-fortran
         with:
           compiler: gcc
@@ -324,7 +326,7 @@ jobs:
               ls ${{ runner.workspace }}/hdf5
 
       - name: Create options file (MacOS_latest)
-        uses: "DamianReeves/write-file-action@master"
+        uses: "DamianReeves/write-file-action@1d019960841941be46b139298996df6f139cc7a4" # master
         with:
           path: ${{ runner.workspace }}/hdf5/HDF5options.cmake
           write-mode: overwrite
@@ -351,13 +353,13 @@ jobs:
         id: run-ctest
         run: |
           cd "${{ runner.workspace }}/hdf5"
-          ctest -S HDF5config.cmake,CTEST_SITE_EXT=GH-${{ github.event.repository.full_name }}-Clang,LOCAL_SUBMIT=ON,NINJA=TRUE,BUILD_GENERATOR=Unix,CTEST_SOURCE_NAME=${{ steps.set-file-base.outputs.SOURCE_BASE }} -C Release -VV -O hdf5.log
+          ctest -S HDF5config.cmake,CTEST_SITE_EXT=GH-${{ github.event.repository.full_name }}-Clang,LOCAL_SUBMIT=ON,NINJA=TRUE,BUILD_GENERATOR=Unix,CTEST_SOURCE_NAME=${{ steps.set-file-base.outputs.SOURCE_BASE }} -C Release -O hdf5.log
         shell: bash
         continue-on-error: true
 
       # Save log files created by CTest script
       - name: Save log (MacOS_latest)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v5
         with:
           name: macos-log
           path: ${{ runner.workspace }}/hdf5/hdf5.log
@@ -369,19 +371,24 @@ jobs:
     name: "Ubuntu gcc S3"
     runs-on: ubuntu-latest
     steps:
+      - name: Get Actions
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          sparse-checkout: .github/actions
+
       - name: Install Dependencies (Linux S3)
         run: |
           sudo apt-get update
-          sudo apt-get install ninja-build doxygen
+          sudo apt-get install ninja-build
 
       - name: Install CMake
-        uses: lukka/get-cmake@latest
+        uses: lukka/get-cmake@f176ccd3f28bda569c43aae4894f06b2435a3375 # latest
         with:
             cmakeVersion: ${{ inputs.cmake_version }}
             ninjaVersion: latest
 
       - name: Install aws-c-s3 (Cached installation)
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: libaws-c-s3-Release
 
@@ -414,7 +421,7 @@ jobs:
 
       # Get files created by release script
       - name: Get tgz-tarball (Linux S3)
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
               name: tgz-tarball
               path: ${{ github.workspace }}
@@ -427,17 +434,17 @@ jobs:
       - name: Uncompress source (Linux S3)
         run: tar -zxvf ${{ github.workspace }}/${{ steps.set-file-base.outputs.FILE_BASE }}.tar.gz
 
-      - name: Copy script files for the space (Linux S3)
-        run: |
-          cp ${{ github.workspace }}/${{ steps.set-file-base.outputs.SOURCE_BASE }}/config/cmake/scripts/CTestScript.cmake ${{ runner.workspace }}/hdf5
-          cp ${{ github.workspace }}/${{ steps.set-file-base.outputs.SOURCE_BASE }}/config/cmake/scripts/HDF5config.cmake ${{ runner.workspace }}/hdf5
+      - name: Symlink script files for the space (Linux S3)
+        uses: ./.github/actions/symlink-ctest-scripts
+        with:
+          source-base: ${{ steps.set-file-base.outputs.SOURCE_BASE }}
 
       - name: List files for the hdf5 (Linux S3)
         run: |
               ls ${{ runner.workspace }}/hdf5
 
       - name: Create options file (Linux S3)
-        uses: "DamianReeves/write-file-action@master"
+        uses: "DamianReeves/write-file-action@1d019960841941be46b139298996df6f139cc7a4" # master
         with:
           path: ${{ runner.workspace }}/hdf5/HDF5options.cmake
           write-mode: overwrite
@@ -463,13 +470,13 @@ jobs:
       - name: Run CTest (Linux S3)
         run: |
           cd "${{ runner.workspace }}/hdf5"
-          ctest -S HDF5config.cmake,CTEST_SITE_EXT=GH-${{ github.event.repository.full_name }}-S3,LOCAL_SUBMIT=ON,NINJA=TRUE,BUILD_GENERATOR=Unix,CTEST_SOURCE_NAME=${{ steps.set-file-base.outputs.SOURCE_BASE }} -C Release -VV -O hdf5.log
+          ctest -S HDF5config.cmake,CTEST_SITE_EXT=GH-${{ github.event.repository.full_name }}-S3,LOCAL_SUBMIT=ON,NINJA=TRUE,BUILD_GENERATOR=Unix,CTEST_SOURCE_NAME=${{ steps.set-file-base.outputs.SOURCE_BASE }} -C Release -O hdf5.log
         shell: bash
         continue-on-error: true
 
       # Save log files created by CTest script
       - name: Save log (Linux S3)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v5
         with:
           name: s3-ubuntu-log
           path: ${{ runner.workspace }}/hdf5/hdf5.log
@@ -482,18 +489,23 @@ jobs:
     name: "Windows Intel CTest"
     runs-on: windows-latest
     steps:
+      - name: Get Actions
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          sparse-checkout: .github/actions
+
       - name: Install Dependencies (Windows_intel)
         run: choco install ninja
 
       - name: add oneAPI to env
-        uses: fortran-lang/setup-fortran@v1
+        uses: fortran-lang/setup-fortran@47809fdb6e637da656ce9ada436527b240c1287f # v1
         id: setup-fortran
         with:
           compiler: intel
           version: '2025.0'
 
       - name: Install CMake
-        uses: lukka/get-cmake@latest
+        uses: lukka/get-cmake@f176ccd3f28bda569c43aae4894f06b2435a3375 # latest
         with:
             cmakeVersion: ${{ inputs.cmake_version }}
             ninjaVersion: latest
@@ -514,7 +526,7 @@ jobs:
 
       # Get files created by release script
       - name: Get zip-tarball (Windows_intel)
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
               name: zip-tarball
               path: ${{ github.workspace }}
@@ -534,11 +546,10 @@ jobs:
         run: 7z x ${{ steps.set-file-base.outputs.FILE_BASE }}.zip
         shell: bash
 
-      - name: Copy script files for the space (Windows_intel)
-        run: |
-          Copy-Item -Path ${{ runner.workspace }}/hdf5/${{ steps.set-file-base.outputs.SOURCE_BASE }}/config/cmake/scripts/CTestScript.cmake -Destination ${{ runner.workspace }}/hdf5/
-          Copy-Item -Path ${{ runner.workspace }}/hdf5/${{ steps.set-file-base.outputs.SOURCE_BASE }}/config/cmake/scripts/HDF5config.cmake -Destination ${{ runner.workspace }}/hdf5/
-        shell: pwsh
+      - name: Symlink script files for the space (Windows_intel)
+        uses: ./.github/actions/symlink-ctest-scripts
+        with:
+          source-base: ${{ steps.set-file-base.outputs.SOURCE_BASE }}
 
       - name: List files for the hdf5 (Windows_intel)
         run: |
@@ -546,7 +557,7 @@ jobs:
         shell: pwsh
 
       - name: Create options file (Windows_intel)
-        uses: "DamianReeves/write-file-action@master"
+        uses: "DamianReeves/write-file-action@1d019960841941be46b139298996df6f139cc7a4" # master
         with:
           path: ${{ runner.workspace }}/hdf5/HDF5options.cmake
           write-mode: overwrite
@@ -577,13 +588,13 @@ jobs:
           CC: ${{ steps.setup-fortran.outputs.cc }}
         run: |
           cd "${{ runner.workspace }}/hdf5"
-          ctest -S HDF5config.cmake,CTEST_SITE_EXT=GH-${{ github.event.repository.full_name }}-Intel,LOCAL_SUBMIT=ON,NINJA=TRUE,BUILD_GENERATOR=VS202264,CTEST_SOURCE_NAME=${{ steps.set-file-base.outputs.SOURCE_BASE }} -C Release -VV -O hdf5.log
+          ctest -S HDF5config.cmake,CTEST_SITE_EXT=GH-${{ github.event.repository.full_name }}-Intel,LOCAL_SUBMIT=ON,NINJA=TRUE,BUILD_GENERATOR=VS202264,CTEST_SOURCE_NAME=${{ steps.set-file-base.outputs.SOURCE_BASE }} -C Release -O hdf5.log
         shell: pwsh
         continue-on-error: true
 
       # Save log files created by CTest script
       - name: Save log (Windows_intel)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v5
         with:
           name: intel-win-log
           path: ${{ runner.workspace }}/hdf5/hdf5.log
@@ -595,20 +606,25 @@ jobs:
     name: "Ubuntu Intel"
     runs-on: ubuntu-latest
     steps:
+      - name: Get Actions
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          sparse-checkout: .github/actions
+
       - name: Install Dependencies (Linux_intel)
         run: |
           sudo apt-get update
-          sudo apt-get install ninja-build doxygen graphviz curl
+          sudo apt-get install ninja-build graphviz curl
 
       - name: add oneAPI to env
-        uses: fortran-lang/setup-fortran@v1
+        uses: fortran-lang/setup-fortran@47809fdb6e637da656ce9ada436527b240c1287f # v1
         id: setup-fortran
         with:
           compiler: intel
           version: '2025.0'
 
       - name: Install CMake
-        uses: lukka/get-cmake@latest
+        uses: lukka/get-cmake@f176ccd3f28bda569c43aae4894f06b2435a3375 # latest
         with:
             cmakeVersion: ${{ inputs.cmake_version }}
             ninjaVersion: latest
@@ -628,7 +644,7 @@ jobs:
 
       # Get files created by release script
       - name: Get tgz-tarball (Linux_intel)
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
               name: tgz-tarball
               path: ${{ github.workspace }}
@@ -641,17 +657,17 @@ jobs:
       - name: Uncompress source (Linux_intel)
         run: tar -zxvf ${{ github.workspace }}/${{ steps.set-file-base.outputs.FILE_BASE }}.tar.gz
 
-      - name: Copy script files for the space (Linux_intel)
-        run: |
-          cp ${{ github.workspace }}/${{ steps.set-file-base.outputs.SOURCE_BASE }}/config/cmake/scripts/CTestScript.cmake ${{ runner.workspace }}/hdf5
-          cp ${{ github.workspace }}/${{ steps.set-file-base.outputs.SOURCE_BASE }}/config/cmake/scripts/HDF5config.cmake ${{ runner.workspace }}/hdf5
+      - name: Symlink script files for the space (Linux_intel)
+        uses: ./.github/actions/symlink-ctest-scripts
+        with:
+          source-base: ${{ steps.set-file-base.outputs.SOURCE_BASE }}
 
       - name: List files for the hdf5 (Linux_Linux)
         run: |
           ls ${{ runner.workspace }}/hdf5
 
       - name: Create options file (Linux_intel)
-        uses: "DamianReeves/write-file-action@master"
+        uses: "DamianReeves/write-file-action@1d019960841941be46b139298996df6f139cc7a4" # master
         with:
           path: ${{ runner.workspace }}/hdf5/HDF5options.cmake
           write-mode: overwrite
@@ -680,13 +696,13 @@ jobs:
           CC: ${{ steps.setup-fortran.outputs.cc }}
         run: |
           cd "${{ runner.workspace }}/hdf5"
-          ctest -S HDF5config.cmake,CTEST_SITE_EXT=GH-${{ github.event.repository.full_name }}-Intel,LOCAL_SUBMIT=ON,NINJA=TRUE,BUILD_GENERATOR=Unix,CTEST_SOURCE_NAME=${{ steps.set-file-base.outputs.SOURCE_BASE }} -C Release -VV -O hdf5.log
+          ctest -S HDF5config.cmake,CTEST_SITE_EXT=GH-${{ github.event.repository.full_name }}-Intel,LOCAL_SUBMIT=ON,NINJA=TRUE,BUILD_GENERATOR=Unix,CTEST_SOURCE_NAME=${{ steps.set-file-base.outputs.SOURCE_BASE }} -C Release -O hdf5.log
         shell: bash
         continue-on-error: true
 
       # Save log files created by CTest script
       - name: Save log (Linux_intel)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v5
         with:
           name: intel-ubuntu-log
           path: ${{ runner.workspace }}/hdf5/hdf5.log
@@ -697,19 +713,17 @@ jobs:
   # Linux (Ubuntu) w/ clang
   #
     name: "Ubuntu Clang"
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
+      - name: Get Actions
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          sparse-checkout: .github/actions
+
       - name: Install Dependencies (Linux_clang)
         run: |
           sudo apt-get update
-          sudo apt-get install ninja-build doxygen graphviz curl libtinfo5
-
-      - name: add clang to env
-        uses: KyleMayes/install-llvm-action@v2.0.7
-        id: setup-clang
-        with:
-          env: true
-          version: '18.1'
+          sudo apt-get install ninja-build graphviz curl
 
       - name: check clang version
         shell: bash
@@ -718,7 +732,7 @@ jobs:
           clang -v
 
       - name: Install CMake
-        uses: lukka/get-cmake@latest
+        uses: lukka/get-cmake@f176ccd3f28bda569c43aae4894f06b2435a3375 # latest
         with:
             cmakeVersion: ${{ inputs.cmake_version }}
             ninjaVersion: latest
@@ -744,7 +758,7 @@ jobs:
 
       # Get files created by release script
       - name: Get tgz-tarball (Linux_clang)
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: tgz-tarball
           path: ${{ github.workspace }}
@@ -757,17 +771,17 @@ jobs:
       - name: Uncompress source (Linux_clang)
         run: tar -zxvf ${{ github.workspace }}/${{ steps.set-file-base.outputs.FILE_BASE }}.tar.gz
 
-      - name: Copy script files for the space (Linux_clang)
-        run: |
-          cp ${{ github.workspace }}/${{ steps.set-file-base.outputs.SOURCE_BASE }}/config/cmake/scripts/CTestScript.cmake ${{ runner.workspace }}/hdf5
-          cp ${{ github.workspace }}/${{ steps.set-file-base.outputs.SOURCE_BASE }}/config/cmake/scripts/HDF5config.cmake ${{ runner.workspace }}/hdf5
+      - name: Symlink script files for the space (Linux_clang)
+        uses: ./.github/actions/symlink-ctest-scripts
+        with:
+          source-base: ${{ steps.set-file-base.outputs.SOURCE_BASE }}
 
       - name: List files for the hdf5 (Linux_clang)
         run: |
           ls ${{ runner.workspace }}/hdf5
 
       - name: Create options file (Linux_clang)
-        uses: "DamianReeves/write-file-action@master"
+        uses: "DamianReeves/write-file-action@1d019960841941be46b139298996df6f139cc7a4" # master
         with:
           path: ${{ runner.workspace }}/hdf5/HDF5options.cmake
           write-mode: overwrite
@@ -791,17 +805,19 @@ jobs:
               set (ADD_BUILD_OPTIONS "${ADD_BUILD_OPTIONS} -DLIBAEC_USE_LOCALCONTENT:BOOL=OFF")
               set (ADD_BUILD_OPTIONS "${ADD_BUILD_OPTIONS} -DZLIB_USE_LOCALCONTENT:BOOL=OFF")
               set (ADD_BUILD_OPTIONS "${ADD_BUILD_OPTIONS} -DPLUGIN_USE_LOCALCONTENT:BOOL=OFF")
+              set (ADD_BUILD_OPTIONS "${ADD_BUILD_OPTIONS} -DCMAKE_C_COMPILER:STRING=clang")
+              set (ADD_BUILD_OPTIONS "${ADD_BUILD_OPTIONS} -DCMAKE_CXX_COMPILER:STRING=clang++")
 
       - name: Run CTest (Linux_clang)
         run: |
           cd "${{ runner.workspace }}/hdf5"
-          ctest -S HDF5config.cmake,CTEST_SITE_EXT=GH-${{ github.event.repository.full_name }}-Clang,LOCAL_SUBMIT=ON,NINJA=TRUE,BUILD_GENERATOR=Unix,CTEST_SOURCE_NAME=${{ steps.set-file-base.outputs.SOURCE_BASE }} -C Release -VV -O hdf5.log
+          ctest -S HDF5config.cmake,CTEST_SITE_EXT=GH-${{ github.event.repository.full_name }}-Clang,LOCAL_SUBMIT=ON,NINJA=TRUE,BUILD_GENERATOR=Unix,CTEST_SOURCE_NAME=${{ steps.set-file-base.outputs.SOURCE_BASE }} -C Release -O hdf5.log
         shell: bash
         continue-on-error: true
 
       # Save log files created by CTest script
       - name: Save log (Linux_clang)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v5
         with:
           name: clang-ubuntu-log
           path: ${{ runner.workspace }}/hdf5/hdf5.log

@@ -32,20 +32,16 @@
         <u>All processes:</u>
         <br/>
         same datatype &amp; dataspace 
-      </th>
       </th><th>
         <u>All processes:</u>
         <br/>
         same access properties
-      </th>
       </th><th>
         <u>All processes:</u>
         <br/>
         same creation properties
-      </th>
       </th><th>
         Available in releases since
-      </th>
       </th><th>
         Additional notes
       </th>
@@ -659,20 +655,16 @@
         <u>All processes:</u>
         <br/>
         same datatype &amp; dataspace 
-      </th>
       </th><th>
         <u>All processes:</u>
         <br/>
         same access properties
-      </th>
       </th><th>
         <u>All processes:</u>
         <br/>
         same creation properties
-      </th>
       </th><th>
         Available in releases since
-      </th>
       </th><th>
         Additional notes
       </th>
@@ -938,7 +930,6 @@
         #H5Topen1 at Release 1.8.0.
       </td>
       </tr>
-    </td></tr>
     </table>
  *
  * \section sec_collective_calls_props Properties
