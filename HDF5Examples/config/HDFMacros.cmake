@@ -90,8 +90,8 @@ macro (HDFTEST_COPY_FILE src dest target)
 endmacro ()
 
 macro (HDF_DIR_PATHS package_prefix)
-  option (H5EX_USE_GNU_DIRS "ON to use GNU Coding Standard install directory variables, OFF to use historical settings" OFF)
-  if (H5EX_USE_GNU_DIRS)
+  option (H5EXAMPLE_USE_GNU_DIRS "ON to use GNU Coding Standard install directory variables, OFF to use historical settings" OFF)
+  if (H5EXAMPLE_USE_GNU_DIRS)
     include(GNUInstallDirs)
     if (NOT ${package_prefix}_INSTALL_BIN_DIR)
       set (${package_prefix}_INSTALL_BIN_DIR ${CMAKE_INSTALL_BINDIR})
@@ -171,15 +171,6 @@ macro (HDF_DIR_PATHS package_prefix)
 
   if (DEFINED ADDITIONAL_CMAKE_PREFIX_PATH AND EXISTS "${ADDITIONAL_CMAKE_PREFIX_PATH}")
     set (CMAKE_PREFIX_PATH ${ADDITIONAL_CMAKE_PREFIX_PATH} ${CMAKE_PREFIX_PATH})
-  endif ()
-
-  #set the default debug suffix for all library targets
-  if(NOT CMAKE_DEBUG_POSTFIX)
-    if (WIN32)
-      set (CMAKE_DEBUG_POSTFIX "_D")
-    else ()
-      set (CMAKE_DEBUG_POSTFIX "_debug")
-    endif ()
   endif ()
 
   SET_HDF_BUILD_TYPE()

@@ -307,6 +307,15 @@ H5O__dtype_decode_helper(unsigned *ioflags /*in,out*/, const uint8_t **pp, H5T_t
                 HGOTO_ERROR(H5E_OHDR, H5E_OVERFLOW, FAIL, "ran off end of input buffer while decoding");
             UINT16DECODE(*pp, dt->shared->u.atomic.offset);
             UINT16DECODE(*pp, dt->shared->u.atomic.prec);
+
+            /* Sanity checks */
+            if (dt->shared->u.atomic.offset >= (dt->shared->size * 8))
+                HGOTO_ERROR(H5E_DATATYPE, H5E_BADRANGE, FAIL, "bitfield offset out of bounds");
+            if (0 == dt->shared->u.atomic.prec)
+                HGOTO_ERROR(H5E_DATATYPE, H5E_BADVALUE, FAIL, "bitfield precision is zero");
+            if (((dt->shared->u.atomic.offset + dt->shared->u.atomic.prec) - 1) >= (dt->shared->size * 8))
+                HGOTO_ERROR(H5E_DATATYPE, H5E_BADRANGE, FAIL, "bitfield offset+precision out of bounds");
+
             break;
 
         case H5T_OPAQUE: {
@@ -774,7 +783,8 @@ H5O__dtype_decode_helper(unsigned *ioflags /*in,out*/, const uint8_t **pp, H5T_t
                 HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINIT, FAIL, "invalid datatype location");
             break;
 
-        case H5T_ARRAY:
+        case H5T_ARRAY: {
+            size_t expected_size; /* for validating array datatype size consistency */
             /*
              * Array datatypes...
              */
@@ -816,6 +826,22 @@ H5O__dtype_decode_helper(unsigned *ioflags /*in,out*/, const uint8_t **pp, H5T_t
             if (H5O__dtype_decode_helper(ioflags, pp, dt->shared->parent, skip, p_end) < 0)
                 HGOTO_ERROR(H5E_DATATYPE, H5E_CANTDECODE, FAIL, "unable to decode array parent type");
 
+            /* Check for multiplication overflow */
+            if (dt->shared->parent->shared->size > 0 &&
+                dt->shared->u.array.nelem > SIZE_MAX / dt->shared->parent->shared->size)
+                HGOTO_ERROR(H5E_DATATYPE, H5E_BADVALUE, FAIL,
+                            "array datatype size calculation would overflow");
+
+            expected_size = dt->shared->parent->shared->size * dt->shared->u.array.nelem;
+
+            /* Verify the stored size matches the calculated size */
+            if (dt->shared->size != expected_size)
+                HGOTO_ERROR(
+                    H5E_DATATYPE, H5E_BADVALUE, FAIL,
+                    "array datatype size mismatch: expected %zu (element_size=%zu * nelem=%zu), got %zu",
+                    expected_size, dt->shared->parent->shared->size, dt->shared->u.array.nelem,
+                    dt->shared->size);
+
             /* Check if the parent of this array has a version greater than the
              * array itself. */
             H5O_DTYPE_CHECK_VERSION(dt, version, dt->shared->parent->shared->version, ioflags, "array", FAIL)
@@ -829,6 +855,7 @@ H5O__dtype_decode_helper(unsigned *ioflags /*in,out*/, const uint8_t **pp, H5T_t
             if (dt->shared->parent->shared->force_conv == true)
                 dt->shared->force_conv = true;
             break;
+        }
 
         case H5T_COMPLEX: {
             bool homogeneous;
