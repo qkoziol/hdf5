@@ -19,6 +19,7 @@ import hdf.hdf5lib.H5;
 import hdf.hdf5lib.HDF5Constants;
 import hdf.hdf5lib.exceptions.HDF5DataspaceInterfaceException;
 import hdf.hdf5lib.exceptions.HDF5FunctionArgumentException;
+import hdf.hdf5lib.exceptions.HDF5IdException;
 import hdf.hdf5lib.exceptions.HDF5LibraryException;
 
 import org.junit.After;
@@ -55,7 +56,7 @@ public class TestH5Sbasic {
         H5.H5Screate(-1);
     }
 
-    @Test(expected = HDF5FunctionArgumentException.class)
+    @Test(expected = HDF5IdException.class)
     public void testH5Sget_simple_extent_type_invalid() throws Throwable
     {
         H5.H5Sget_simple_extent_type(-1);
@@ -278,7 +279,7 @@ public class TestH5Sbasic {
         }
     }
 
-    @Test(expected = HDF5FunctionArgumentException.class)
+    @Test(expected = HDF5IdException.class)
     public void testH5Sencode_invalid() throws Throwable
     {
         H5.H5Sencode(-1);
@@ -290,7 +291,7 @@ public class TestH5Sbasic {
         H5.H5Sdecode(null);
     }
 
-    @Test(expected = HDF5FunctionArgumentException.class)
+    @Test(expected = HDF5IdException.class)
     public void testH5Sget_regular_hyperslab_invalid() throws Throwable
     {
         long q_start[]  = new long[2];
@@ -301,19 +302,19 @@ public class TestH5Sbasic {
         H5.H5Sget_regular_hyperslab(-1, q_start, q_stride, q_count, q_block);
     }
 
-    @Test(expected = hdf.hdf5lib.exceptions.HDF5IdException.class)
+    @Test(expected = HDF5IdException.class)
     public void testH5Sselect_copy_invalid() throws Throwable
     {
         H5.H5Sselect_copy(-1, -1);
     }
 
-    @Test(expected = hdf.hdf5lib.exceptions.HDF5IdException.class)
+    @Test(expected = HDF5IdException.class)
     public void testH5Sselect_shape_same_invalid() throws Throwable
     {
         H5.H5Sselect_shape_same(-1, -1);
     }
 
-    @Test(expected = HDF5FunctionArgumentException.class)
+    @Test(expected = HDF5IdException.class)
     public void testH5Sselect_adjust_invalid() throws Throwable
     {
         long offset[][] = {{0, 1}, {2, 4}, {5, 6}};
@@ -340,7 +341,7 @@ public class TestH5Sbasic {
         }
     }
 
-    @Test(expected = HDF5DataspaceInterfaceException.class)
+    @Test(expected = HDF5IdException.class)
     public void testH5Sselect_intersect_block_invalid() throws Throwable
     {
         long start[] = new long[2];
@@ -390,13 +391,13 @@ public class TestH5Sbasic {
         }
     }
 
-    @Test(expected = hdf.hdf5lib.exceptions.HDF5IdException.class)
+    @Test(expected = HDF5IdException.class)
     public void testH5Sselect_project_intersection_invalid() throws Throwable
     {
         H5.H5Sselect_project_intersection(-1, -1, -1);
     }
 
-    @Test(expected = hdf.hdf5lib.exceptions.HDF5IdException.class)
+    @Test(expected = HDF5IdException.class)
     public void testH5Scombine_hyperslab_invalid() throws Throwable
     {
         long start[] = new long[2];
@@ -450,13 +451,13 @@ public class TestH5Sbasic {
         }
     }
 
-    @Test(expected = hdf.hdf5lib.exceptions.HDF5IdException.class)
+    @Test(expected = HDF5IdException.class)
     public void testH5Smodify_select_invalid() throws Throwable
     {
         H5.H5Smodify_select(-1, 0, -1);
     }
 
-    @Test(expected = hdf.hdf5lib.exceptions.HDF5IdException.class)
+    @Test(expected = HDF5IdException.class)
     public void testH5Scombine_select_invalid() throws Throwable
     {
         H5.H5Scombine_select(-1, 0, -1);
