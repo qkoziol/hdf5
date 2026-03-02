@@ -16,7 +16,7 @@
 ##############################################################################
 ##############################################################################
 # included from CMakeTests.cmake
-H5_CREATE_VFD_DIR()
+H5_CREATE_VFD_DIR ()
 
 # create more test folders for each VFD
 foreach (vfdtest ${VFD_LIST})
@@ -26,30 +26,30 @@ endforeach ()
 
 foreach (vfdtest ${VFD_LIST})
   foreach (h5_tfile ${HDF5_TEST_FILES})
-    HDFTEST_COPY_FILE("${PROJECT_SOURCE_DIR}/testfiles/${h5_tfile}" "${PROJECT_BINARY_DIR}/${vfdtest}/testfiles/${h5_tfile}" "HDF5_VFDTEST_LIB_files")
+    HDFTEST_COPY_FILE ("${PROJECT_SOURCE_DIR}/testfiles/${h5_tfile}" "${PROJECT_BINARY_DIR}/${vfdtest}/testfiles/${h5_tfile}" "HDF5_VFDTEST_LIB_files")
   endforeach ()
 endforeach ()
 
 foreach (vfdtest ${VFD_LIST})
   foreach (ref_file ${HDF5_REFERENCE_FILES})
-    HDFTEST_COPY_FILE("${PROJECT_SOURCE_DIR}/testfiles/${ref_file}" "${PROJECT_BINARY_DIR}/${vfdtest}/testfiles/${ref_file}" "HDF5_VFDTEST_LIB_files")
+    HDFTEST_COPY_FILE ("${PROJECT_SOURCE_DIR}/testfiles/${ref_file}" "${PROJECT_BINARY_DIR}/${vfdtest}/testfiles/${ref_file}" "HDF5_VFDTEST_LIB_files")
   endforeach ()
 endforeach ()
 
 foreach (vfdtest ${VFD_LIST})
   foreach (h5_file ${HDF5_REFERENCE_TEST_FILES})
-    HDFTEST_COPY_FILE("${PROJECT_SOURCE_DIR}/testfiles/${h5_file}" "${HDF5_TEST_BINARY_DIR}/${vfdtest}/testfiles/${h5_file}" "HDF5_VFDTEST_LIB_files")
+    HDFTEST_COPY_FILE ("${PROJECT_SOURCE_DIR}/testfiles/${h5_file}" "${HDF5_TEST_BINARY_DIR}/${vfdtest}/testfiles/${h5_file}" "HDF5_VFDTEST_LIB_files")
   endforeach ()
 endforeach ()
 
 foreach (vfdtest ${VFD_LIST})
   foreach (plistfile ${HDF5_REFERENCE_PLIST_FILES})
-    HDFTEST_COPY_FILE("${PROJECT_SOURCE_DIR}/testfiles/plist_files/${plistfile}" "${PROJECT_BINARY_DIR}/${vfdtest}/testfiles/plist_files/${plistfile}" "HDF5_VFDTEST_LIB_files")
-    HDFTEST_COPY_FILE("${PROJECT_SOURCE_DIR}/testfiles/plist_files/def_${plistfile}" "${PROJECT_BINARY_DIR}/${vfdtest}/testfiles/plist_files/def_${plistfile}" "HDF5_VFDTEST_LIB_files")
+    HDFTEST_COPY_FILE ("${PROJECT_SOURCE_DIR}/testfiles/plist_files/${plistfile}" "${PROJECT_BINARY_DIR}/${vfdtest}/testfiles/plist_files/${plistfile}" "HDF5_VFDTEST_LIB_files")
+    HDFTEST_COPY_FILE ("${PROJECT_SOURCE_DIR}/testfiles/plist_files/def_${plistfile}" "${PROJECT_BINARY_DIR}/${vfdtest}/testfiles/plist_files/def_${plistfile}" "HDF5_VFDTEST_LIB_files")
   endforeach ()
 endforeach ()
 
-add_custom_target(HDF5_VFDTEST_LIB_files ALL COMMENT "Copying files needed by HDF5_VFDTEST_LIB tests" DEPENDS ${HDF5_VFDTEST_LIB_files_list})
+add_custom_target (HDF5_VFDTEST_LIB_files ALL COMMENT "Copying files needed by HDF5_VFDTEST_LIB tests" DEPENDS ${HDF5_VFDTEST_LIB_files_list})
 
 ##############################################################################
 ##############################################################################
@@ -79,29 +79,29 @@ add_custom_target(HDF5_VFDTEST_LIB_files ALL COMMENT "Copying files needed by HD
   # Skip several tests with subfiling VFD, mostly due
   # to no support for collective I/O
   set (H5_VFD_subfiling_SKIP_TESTS
-    cache_api
-    chunk_info
-    cmpd_dset
-    cork
-    dangle
-    direct_chunk
-    dsets
-    dt_arith
-    dtransform
-    extend
-    fillval
-    filter_fail
-    istore
-    links
-    mf
-    objcopy
-    objcopy_ref
-    ohdr
-    set_extent
-    testhdf5
-    unlink
-    unregister
-    vol
+      cache_api
+      chunk_info
+      cmpd_dset
+      cork
+      dangle
+      direct_chunk
+      dsets
+      dt_arith
+      dtransform
+      extend
+      fillval
+      filter_fail
+      istore
+      links
+      mf
+      objcopy
+      objcopy_ref
+      ohdr
+      set_extent
+      testhdf5
+      unlink
+      unregister
+      vol
   )
 
   if (NOT CYGWIN)
@@ -115,7 +115,6 @@ add_custom_target(HDF5_VFDTEST_LIB_files ALL COMMENT "Copying files needed by HD
         if (NOT BUILD_SHARED_LIBS AND NOT HDF_CFG_NAME MATCHES "Debug")
           add_test (NAME VFD-${vfdname}-${vfdtest}
               COMMAND "${CMAKE_COMMAND}"
-                  -D "TEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
                   -D "TEST_PROGRAM=$<TARGET_FILE:${vfdtest}>"
                   -D "TEST_ARGS:STRING="
                   -D "TEST_VFD:STRING=${vfdname}"
@@ -140,7 +139,6 @@ add_custom_target(HDF5_VFDTEST_LIB_files ALL COMMENT "Copying files needed by HD
       else ()
         add_test (NAME VFD-${vfdname}-${vfdtest}
             COMMAND "${CMAKE_COMMAND}"
-                -D "TEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
                 -D "TEST_PROGRAM=$<TARGET_FILE:${vfdtest}>"
                 -D "TEST_ARGS:STRING="
                 -D "TEST_VFD:STRING=${vfdname}"
@@ -160,7 +158,6 @@ add_custom_target(HDF5_VFDTEST_LIB_files ALL COMMENT "Copying files needed by HD
     else ()
       add_test (NAME VFD-${vfdname}-${vfdtest}
           COMMAND "${CMAKE_COMMAND}"
-              -D "TEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
               -D "TEST_PROGRAM=$<TARGET_FILE:${vfdtest}>"
               -D "TEST_ARGS:STRING="
               -D "TEST_VFD:STRING=${vfdname}"
@@ -183,7 +180,6 @@ add_custom_target(HDF5_VFDTEST_LIB_files ALL COMMENT "Copying files needed by HD
     if (NOT "${vfdtest}" IN_LIST H5_VFD_${vfdname}_SKIP_TESTS)
       add_test (NAME VFD-${vfdname}-${vfdtest}
           COMMAND "${CMAKE_COMMAND}"
-              -D "TEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
               -D "TEST_PROGRAM=$<TARGET_FILE:${vfdtest}>"
               -D "TEST_ARGS:STRING="
               -D "TEST_VFD:STRING=${vfdname}"
@@ -239,7 +235,6 @@ add_custom_target(HDF5_VFDTEST_LIB_files ALL COMMENT "Copying files needed by HD
     if (HDF5_TEST_FHEAP_VFD)
       add_test (NAME VFD-${vfdname}-fheap
           COMMAND "${CMAKE_COMMAND}"
-              -D "TEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
               -D "TEST_PROGRAM=$<TARGET_FILE:fheap>"
               -D "TEST_ARGS:STRING="
               -D "TEST_VFD:STRING=${vfdname}"
@@ -276,7 +271,7 @@ add_custom_target(HDF5_VFDTEST_LIB_files ALL COMMENT "Copying files needed by HD
       set (BIN_REL_PATH "../")
     endif ()
 
-    add_test (NAME H5PLUGIN-vfd_plugin COMMAND ${CMAKE_CROSSCOMPILING_EMULATOR} $<TARGET_FILE:vfd_plugin>)
+    add_test (NAME H5PLUGIN-vfd_plugin COMMAND $<TARGET_FILE:vfd_plugin>)
     set_tests_properties (H5PLUGIN-vfd_plugin PROPERTIES
         ENVIRONMENT "HDF5_PLUGIN_PATH=${CMAKE_BINARY_DIR}/null_vfd_plugin_dir;srcdir=${HDF5_TEST_BINARY_DIR}"
         WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}
