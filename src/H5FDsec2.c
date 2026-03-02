@@ -108,12 +108,15 @@ static herr_t  H5FD__sec2_read(H5FD_t *_file, H5FD_mem_t type, hid_t dxpl_id, ha
                                void *buf);
 static herr_t  H5FD__sec2_write(H5FD_t *_file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, size_t size,
                                 const void *buf);
-static herr_t  H5FD__sec2_truncate(H5FD_t *_file, hid_t dxpl_id, bool closing);
-static herr_t  H5FD__sec2_lock(H5FD_t *_file, bool rw);
-static herr_t  H5FD__sec2_unlock(H5FD_t *_file);
-static herr_t  H5FD__sec2_delete(const char *filename, hid_t fapl_id);
-static herr_t  H5FD__sec2_ctl(H5FD_t *_file, uint64_t op_code, uint64_t flags, const void *input,
-                              void **output);
+#ifdef H5_HAVE_UNISTD_H
+static herr_t H5FD__sec2_flush(H5FD_t *_file, hid_t dxpl_id, hbool_t closing);
+#endif
+static herr_t H5FD__sec2_truncate(H5FD_t *_file, hid_t dxpl_id, bool closing);
+static herr_t H5FD__sec2_lock(H5FD_t *_file, bool rw);
+static herr_t H5FD__sec2_unlock(H5FD_t *_file);
+static herr_t H5FD__sec2_delete(const char *filename, hid_t fapl_id);
+static herr_t H5FD__sec2_ctl(H5FD_t *_file, uint64_t op_code, uint64_t flags, const void *input,
+                             void **output);
 
 static const H5FD_class_t H5FD_sec2_g = {
     H5FD_CLASS_VERSION,    /* struct version       */
@@ -149,13 +152,17 @@ static const H5FD_class_t H5FD_sec2_g = {
     NULL,                  /* write_vector         */
     NULL,                  /* read_selection       */
     NULL,                  /* write_selection      */
-    NULL,                  /* flush                */
-    H5FD__sec2_truncate,   /* truncate             */
-    H5FD__sec2_lock,       /* lock                 */
-    H5FD__sec2_unlock,     /* unlock               */
-    H5FD__sec2_delete,     /* del                  */
-    H5FD__sec2_ctl,        /* ctl                  */
-    H5FD_FLMAP_DICHOTOMY   /* fl_map               */
+#ifdef H5_HAVE_UNISTD_H
+    H5FD__sec2_flush, /* flush                */
+#else
+    NULL, /* flush                */
+#endif
+    H5FD__sec2_truncate, /* truncate             */
+    H5FD__sec2_lock,     /* lock                 */
+    H5FD__sec2_unlock,   /* unlock               */
+    H5FD__sec2_delete,   /* del                  */
+    H5FD__sec2_ctl,      /* ctl                  */
+    H5FD_FLMAP_DICHOTOMY /* fl_map               */
 };
 
 /* Declare a free list to manage the H5FD_sec2_t struct */
@@ -814,6 +821,34 @@ done:
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5FD__sec2_write() */
+
+#ifdef H5_HAVE_UNISTD_H
+/*-------------------------------------------------------------------------
+ * Function:    H5FD__sec2_flush
+ *
+ * Purpose:     Flush makes use of fsync to flush data to persistent storage.
+ *
+ * Return:      SUCCEED/FAIL
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t
+H5FD__sec2_flush(H5FD_t *_file, hid_t H5_ATTR_UNUSED dxpl_id, hbool_t H5_ATTR_UNUSED closing)
+{
+    H5FD_sec2_t *file      = (H5FD_sec2_t *)_file;
+    herr_t       ret_value = SUCCEED; /* Return value */
+
+    assert(file);
+
+    FUNC_ENTER_PACKAGE
+
+    if (HDfsync(file->fd) < 0)
+        HSYS_GOTO_ERROR(H5E_VFL, H5E_CANTFLUSH, FAIL, "unable perform fsync on file descriptor");
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value);
+} /* end H5FD__sec2_flush() */
+#endif
 
 /*-------------------------------------------------------------------------
  * Function:    H5FD__sec2_truncate

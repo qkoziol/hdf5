@@ -84,7 +84,7 @@ if (HDF5_ENABLE_FORMATTERS)
   endforeach()
 endif ()
 
-#add_test (NAME h5gentest COMMAND ${CMAKE_CROSSCOMPILING_EMULATOR} $<TARGET_FILE:h5gentest>)
+#add_test (NAME H5GEN-h5gentest COMMAND $<TARGET_FILE:h5gentest>)
 
 #-- Add the h5diff tests
 add_subdirectory (h5diff)
