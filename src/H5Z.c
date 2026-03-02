@@ -1065,9 +1065,9 @@ done:
 htri_t
 H5Z_ignore_filters(H5P_genplist_t *dcpl, const H5S_t *space)
 {
-    H5O_pline_t pline;                   /* Object's I/O pipeline information */
-    H5S_class_t space_class;             /* To check class of space */
-    htri_t      ret_value       = false; /* true for ignoring filters */
+    H5O_pline_t pline;             /* Object's I/O pipeline information */
+    H5S_class_t space_class;       /* To check class of space */
+    htri_t      ret_value = false; /* true for ignoring filters */
 
     FUNC_ENTER_NOAPI(FAIL)
 
