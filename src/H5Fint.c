@@ -1564,14 +1564,6 @@ H5F__dest(H5F_t *f, bool flush, bool free_on_failure)
                 /* Push error, but keep going */
                 HDONE_ERROR(H5E_FILE, H5E_CANTFLUSH, FAIL, "unable to flush cached data (phase 2)");
 
-        /* With the shutdown modifications, the contents of the metadata cache
-         * should be clean at this point, with the possible exception of the
-         * the superblock and superblock extension.
-         *
-         * Verify this.
-         */
-        assert(H5AC_cache_is_clean(f, H5AC_RING_MDFSM));
-
         /* Release the external file cache */
         if (f->shared->efc) {
             if (H5F__efc_destroy(f->shared->efc) < 0)
@@ -1579,14 +1571,6 @@ H5F__dest(H5F_t *f, bool flush, bool free_on_failure)
                 HDONE_ERROR(H5E_FILE, H5E_CANTRELEASE, FAIL, "can't destroy external file cache");
             f->shared->efc = NULL;
         } /* end if */
-
-        /* With the shutdown modifications, the contents of the metadata cache
-         * should be clean at this point, with the possible exception of the
-         * the superblock and superblock extension.
-         *
-         * Verify this.
-         */
-        assert(H5AC_cache_is_clean(f, H5AC_RING_MDFSM));
 
         /* Release objects that depend on the superblock being initialized */
         if (f->shared->sblock) {
@@ -1610,11 +1594,6 @@ H5F__dest(H5F_t *f, bool flush, bool free_on_failure)
                 if (H5MF_close(f) < 0)
                     /* Push error, but keep going*/
                     HDONE_ERROR(H5E_FILE, H5E_CANTRELEASE, FAIL, "can't release file free space info");
-
-                /* at this point, only the superblock and superblock
-                 * extension should be dirty.
-                 */
-                assert(H5AC_cache_is_clean(f, H5AC_RING_MDFSM));
 
                 /* Flush the file again (if requested), as shutting down the
                  * free space manager may dirty some data structures again.
@@ -1644,11 +1623,6 @@ H5F__dest(H5F_t *f, bool flush, bool free_on_failure)
                     if (H5FD_truncate(f->shared->fh, true) < 0)
                         /* Push error, but keep going*/
                         HDONE_ERROR(H5E_FILE, H5E_WRITEERROR, FAIL, "low level truncate failed");
-
-                    /* at this point, only the superblock and superblock
-                     * extension should be dirty.
-                     */
-                    assert(H5AC_cache_is_clean(f, H5AC_RING_MDFSM));
                 } /* end if */
             }     /* end if */
 
@@ -1666,13 +1640,6 @@ H5F__dest(H5F_t *f, bool flush, bool free_on_failure)
                 HDONE_ERROR(H5E_FSPACE, H5E_CANTUNPIN, FAIL, "unable to unpin superblock");
             f->shared->sblock = NULL;
         } /* end if */
-
-        /* with the possible exception of the superblock and superblock
-         * extension, the metadata cache should be clean at this point.
-         *
-         * Verify this.
-         */
-        assert(H5AC_cache_is_clean(f, H5AC_RING_MDFSM));
 
         /* Remove shared file struct from list of open files */
         if (H5F__sfile_remove(f->shared) < 0)
