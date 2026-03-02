@@ -11,6 +11,9 @@ on:
 permissions:
   contents: read
 
+env:
+  CTEST_OUTPUT_ON_FAILURE: 1
+
 jobs:
   #
   # The GitHub runners are inadequate for running parallel HDF5 tests,
@@ -23,12 +26,12 @@ jobs:
     name: "Parallel GCC-${{ inputs.build_mode }}"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.1.7
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Install Linux Dependencies
         run: |
            sudo apt-get update
-           sudo apt-get install ninja-build doxygen graphviz
+           sudo apt-get install ninja-build graphviz
            sudo apt install libssl3 libssl-dev libcurl4 libcurl4-openssl-dev
            sudo apt install gcc-12 g++-12 gfortran-12
            sudo apt install libaec0 libaec-dev
@@ -68,11 +71,11 @@ jobs:
 
       # RUN TESTS
       - name: Run Tests
-        run: ctest . -E MPI_TEST --parallel 2 -C ${{ inputs.build_mode }} -V
+        run: ctest . -E MPI_TEST --parallel 2 -C ${{ inputs.build_mode }}
         working-directory: ${{ runner.workspace }}/build
         if: ${{ inputs.thread_safety != 'TS' }}
 
       - name: Run Parallel Tests
-        run: ctest . -R MPI_TEST -C ${{ inputs.build_mode }} -V
+        run: ctest . -R MPI_TEST -C ${{ inputs.build_mode }}
         working-directory: ${{ runner.workspace }}/build
         if: ${{ matrix.run_tests && (inputs.thread_safety != 'TS') }}
