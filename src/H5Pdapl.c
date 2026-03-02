@@ -1581,7 +1581,7 @@ done:
 herr_t
 H5Pget_virtual_spatial_tree(hid_t dapl_id, bool *use_tree)
 {
-    H5P_genplist_t    *dapl; /* property list pointer */
+    H5P_genplist_t *dapl; /* property list pointer */
     herr_t          ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
