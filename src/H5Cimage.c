@@ -2477,7 +2477,6 @@ H5C__reconstruct_cache_contents(H5F_t *f, H5C_t *cache_ptr)
     assert(cache_ptr->num_entries_in_image > 0);
 
     /* Reconstruct entries in image */
-    image_len = cache_ptr->image_len;
     for (u = 0; u < cache_ptr->num_entries_in_image; u++) {
 
         /* Create the prefetched entry described by the ith
