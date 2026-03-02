@@ -33,12 +33,10 @@
 #define H5VL_OBJ_RC(VOL_OBJ)         ((VOL_OBJ)->rc)
 #define H5VL_OBJ_CONNECTOR(VOL_OBJ)  ((VOL_OBJ)->connector)
 #define H5VL_OBJ_DATA(VOL_OBJ)       ((VOL_OBJ)->data)
-#define H5VL_OBJ_DATA_RESET(VOL_OBJ) ((VOL_OBJ)->data = NULL)
 #else /* H5VL_MODULE */
 #define H5VL_OBJ_RC(VOL_OBJ)         (H5VL_obj_get_rc(VOL_OBJ))
 #define H5VL_OBJ_CONNECTOR(VOL_OBJ)  (H5VL_obj_get_connector(VOL_OBJ))
 #define H5VL_OBJ_DATA(VOL_OBJ)       (H5VL_obj_get_data(VOL_OBJ))
-#define H5VL_OBJ_DATA_RESET(VOL_OBJ) (H5VL_obj_reset_data(VOL_OBJ))
 #endif /* H5VL_MODULE */
 
 /****************************/
@@ -132,7 +130,6 @@ H5_DLL herr_t H5VL_reset_vol_wrapper(void);
 H5_DLL size_t            H5VL_obj_get_rc(const H5VL_object_t *vol_obj);
 H5_DLL H5VL_connector_t *H5VL_obj_get_connector(const H5VL_object_t *vol_obj);
 H5_DLL void             *H5VL_obj_get_data(const H5VL_object_t *vol_obj);
-H5_DLL void              H5VL_obj_reset_data(H5VL_object_t *vol_obj);
 
 /* Library state functions */
 H5_DLL herr_t H5VL_retrieve_lib_state(void **state);

@@ -343,13 +343,14 @@ H5D__close_cb(H5VL_object_t *dset_vol_obj, void **request)
 
     /* Close the dataset */
     if (H5VL_dataset_close(dset_vol_obj, request) < 0)
-        HGOTO_ERROR(H5E_DATASET, H5E_CLOSEERROR, FAIL, "unable to close dataset");
+        /* Push error, but keep going */
+        HDONE_ERROR(H5E_DATASET, H5E_CLOSEERROR, FAIL, "unable to close dataset");
 
-done:
     /* Free the VOL object */
     if (H5VL_free_object(dset_vol_obj) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTDEC, FAIL, "unable to free VOL object");
 
+done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5D__close_cb() */
 

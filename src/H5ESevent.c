@@ -139,7 +139,8 @@ H5ES__event_free(H5ES_event_t *ev)
     if (ev->request) {
         /* Free the request */
         if (H5VL_request_free(ev->request) < 0)
-            HGOTO_ERROR(H5E_EVENTSET, H5E_CANTFREE, FAIL, "unable to free request");
+            /* Push error, but keep going */
+            HDONE_ERROR(H5E_EVENTSET, H5E_CANTFREE, FAIL, "unable to free request");
 
         /* Free the VOL object for the request */
         if (H5VL_free_object(ev->request) < 0)

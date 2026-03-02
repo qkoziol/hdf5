@@ -1212,13 +1212,15 @@ H5VL_close_object(H5VL_object_t *vol_obj, H5I_type_t type)
         case H5I_GROUP:
             /* Close the group */
             if (H5VL_group_close(vol_obj, H5_REQUEST_NULL) < 0)
-                HGOTO_ERROR(H5E_VOL, H5E_CLOSEERROR, FAIL, "unable to close group");
+                /* Push error, but keep going */
+                HDONE_ERROR(H5E_VOL, H5E_CLOSEERROR, FAIL, "unable to close group");
             break;
 
         case H5I_DATASET:
             /* Close the dataset */
             if (H5VL_dataset_close(vol_obj, H5_REQUEST_NULL) < 0)
-                HGOTO_ERROR(H5E_VOL, H5E_CLOSEERROR, FAIL, "unable to close dataset");
+                /* Push error, but keep going */
+                HDONE_ERROR(H5E_VOL, H5E_CLOSEERROR, FAIL, "unable to close dataset");
             break;
 
         case H5I_MAP: {
@@ -1230,7 +1232,8 @@ H5VL_close_object(H5VL_object_t *vol_obj, H5I_type_t type)
 
             /* Close the map */
             if (H5VL_optional(vol_obj, &vol_cb_args, H5P_LST_DATASET_XFER_g, H5_REQUEST_NULL) < 0)
-                HGOTO_ERROR(H5E_VOL, H5E_CLOSEERROR, FAIL, "unable to close map");
+                /* Push error, but keep going */
+                HDONE_ERROR(H5E_VOL, H5E_CLOSEERROR, FAIL, "unable to close map");
 
             break;
         }
@@ -1238,7 +1241,8 @@ H5VL_close_object(H5VL_object_t *vol_obj, H5I_type_t type)
         case H5I_DATATYPE:
             /* Close the connector-managed datatype data */
             if (H5VL_datatype_close(vol_obj, H5_REQUEST_NULL) < 0)
-                HGOTO_ERROR(H5E_VOL, H5E_CLOSEERROR, FAIL, "unable to close datatype");
+                /* Push error, but keep going */
+                HDONE_ERROR(H5E_VOL, H5E_CLOSEERROR, FAIL, "unable to close datatype");
             break;
 
         case H5I_UNINIT:
@@ -2665,7 +2669,7 @@ H5VL_setup_loc_args(hid_t loc_id, H5VL_object_t **vol_obj, H5VL_loc_params_t *lo
     if (NULL == (*vol_obj = (H5VL_object_t *)H5VL_vol_object(loc_id)))
         HGOTO_ERROR(H5E_VOL, H5E_BADTYPE, FAIL, "not the correct type of ID");
 
-    /* Set up collective metadata (if appropriate */
+    /* Set up collective metadata (if appropriate) */
     if (H5CX_set_loc(loc_id) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTSET, FAIL, "can't set collective metadata read");
 

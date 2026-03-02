@@ -1277,7 +1277,8 @@ H5A__close_cb(H5VL_object_t *attr_vol_obj, void **request)
 
     /* Close the attribute */
     if (H5VL_attr_close(attr_vol_obj, request) < 0)
-        HGOTO_ERROR(H5E_ATTR, H5E_CLOSEERROR, FAIL, "problem closing attribute");
+        /* Push error, but keep going */
+        HDONE_ERROR(H5E_ATTR, H5E_CLOSEERROR, FAIL, "problem closing attribute");
 
     /* Free the VOL object */
     if (H5VL_free_object(attr_vol_obj) < 0)

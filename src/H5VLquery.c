@@ -124,26 +124,3 @@ H5VL_obj_get_data(const H5VL_object_t *vol_obj)
     FUNC_LEAVE_NOAPI(vol_obj->data)
 } /* end H5VL_obj_get_data() */
 
-/*-------------------------------------------------------------------------
- * Function:    Resetthe data for a VOL object
- *
- * Purpose:     Quick and dirty routine to reset the VOL object's data.
- *              (Mainly added to stop non-file routines from poking about in the
- *              H5VL_object_t data structure)
- *
- * Return:      none
- *
- *-------------------------------------------------------------------------
- */
-void
-H5VL_obj_reset_data(H5VL_object_t *vol_obj)
-{
-    /* Use FUNC_ENTER_NOAPI_NOINIT_NOERR here to avoid performance issues */
-    FUNC_ENTER_NOAPI_NOINIT_NOERR
-
-    assert(vol_obj);
-
-    vol_obj->data = NULL;
-
-    FUNC_LEAVE_NOAPI_VOID
-} /* end H5VL_obj_reset_data() */

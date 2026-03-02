@@ -269,7 +269,8 @@ H5G__close_cb(H5VL_object_t *grp_vol_obj, void **request)
 
     /* Close the group */
     if (H5VL_group_close(grp_vol_obj, request) < 0)
-        HGOTO_ERROR(H5E_SYM, H5E_CLOSEERROR, FAIL, "unable to close group");
+        /* Push error, but keep going */
+        HDONE_ERROR(H5E_SYM, H5E_CLOSEERROR, FAIL, "unable to close group");
 
     /* Free the VOL object */
     if (H5VL_free_object(grp_vol_obj) < 0)

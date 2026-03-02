@@ -250,8 +250,7 @@ H5F__close_cb(H5VL_object_t *file_vol_obj, void **request)
     if (H5VL_file_close(file_vol_obj, request) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTCLOSEFILE, FAIL, "unable to close file");
 
-    /* Free the VOL object; it is unnecessary to unwrap the VOL
-     * object before freeing it, as the object was not wrapped */
+    /* Free the VOL object */
     if (H5VL_free_object(file_vol_obj) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTDEC, FAIL, "unable to free VOL object");
 

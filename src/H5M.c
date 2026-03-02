@@ -227,7 +227,8 @@ H5M__close_cb(H5VL_object_t *map_vol_obj, void **request)
 
     /* Close the map */
     if (H5VL_optional(map_vol_obj, &vol_cb_args, H5P_LST_DATASET_XFER_g, request) < 0)
-        HGOTO_ERROR(H5E_MAP, H5E_CLOSEERROR, FAIL, "unable to close map");
+        /* Push error, but keep going */
+        HDONE_ERROR(H5E_MAP, H5E_CLOSEERROR, FAIL, "unable to close map");
 
     /* Free the VOL object */
     if (H5VL_free_object(map_vol_obj) < 0)

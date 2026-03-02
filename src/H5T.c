@@ -2483,7 +2483,8 @@ H5T__close_cb(H5T_t *dt, void **request)
     if (NULL != dt->vol_obj) {
         /* Close the connector-managed datatype data */
         if (H5VL_datatype_close(dt->vol_obj, request) < 0)
-            HGOTO_ERROR(H5E_DATATYPE, H5E_CLOSEERROR, FAIL, "unable to close datatype");
+            /* Push error, but keep going */
+            HDONE_ERROR(H5E_DATATYPE, H5E_CLOSEERROR, FAIL, "unable to close datatype");
 
         /* Free the VOL object */
         if (H5VL_free_object(dt->vol_obj) < 0)
@@ -6771,7 +6772,8 @@ H5T_convert_committed_datatype(H5T_t *dt, H5F_t *f)
 
             /* Close the datatype through the VOL*/
             if (H5VL_datatype_close(vol_obj, H5_REQUEST_NULL) < 0)
-                HGOTO_ERROR(H5E_DATATYPE, H5E_CLOSEERROR, FAIL, "unable to close datatype");
+                /* Push error, but keep going */
+                HDONE_ERROR(H5E_DATATYPE, H5E_CLOSEERROR, FAIL, "unable to close datatype");
 
             /* Free the datatype and set the VOL object pointer to NULL */
             if (H5VL_free_object(vol_obj) < 0)
