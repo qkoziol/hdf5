@@ -11,6 +11,9 @@ on:
 permissions:
   contents: read
 
+env:
+  CTEST_OUTPUT_ON_FAILURE: 1
+
 jobs:
   linux_build_and_test:
     name: "Linux Developer Mode Express Test Workflows"
@@ -26,10 +29,18 @@ jobs:
            FILE_NAME_BASE=$(echo "${{ inputs.file_base }}")
            echo "FILE_BASE=$FILE_NAME_BASE" >> $GITHUB_OUTPUT
 
+      - name: Get Actions
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          sparse-checkout: .github/actions
+
+      - name: Setup Doxygen
+        uses: ./.github/actions/setup-doxygen
+
       - name: Install Linux Dependencies
         run: |
            sudo apt-get update
-           sudo apt-get install ninja-build doxygen graphviz
+           sudo apt-get install ninja-build graphviz
            sudo apt install libssl3 libssl-dev libcurl4 libcurl4-openssl-dev
            sudo apt install libaec0 libaec-dev
            sudo apt install gcc-12 g++-12 gfortran-12
@@ -39,7 +50,7 @@ jobs:
 
       # Get files created by release script
       - name: Get tgz-tarball (Linux)
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
               name: tgz-tarball
               path: ${{ github.workspace }}
@@ -86,7 +97,7 @@ jobs:
       - name: Run Tests
         env:
           HDF5TestExpress: 0
-        run: ctest . --parallel 2 -C Developer -V -R H5TESTXPR -E fheap
+        run: ctest . --parallel 2 -C Developer -R H5TESTXPR -E fheap
         working-directory: ${{ runner.workspace }}/build
 
   win_build_and_test:
@@ -97,16 +108,19 @@ jobs:
 
     runs-on: windows-latest
     steps:
+      - name: Get Actions
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          sparse-checkout: .github/actions
+
+      - name: Setup Doxygen
+        uses: ./.github/actions/setup-doxygen
+
       - name: Install Dependencies (Windows)
         run: choco install ninja
 
-      - name: Install Dependencies
-        uses: ssciwr/doxygen-install@v1
-        with:
-          version: "1.13.2"
-
       - name: Enable Developer Command Prompt
-        uses: ilammy/msvc-dev-cmd@v1.13.0
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
 
       - name: Check CMake Version
         shell: bash
@@ -130,7 +144,7 @@ jobs:
 
       # Get files created by release script
       - name: Get zip-tarball (Windows)
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
               name: zip-tarball
               path: ${{ github.workspace }}
@@ -164,7 +178,7 @@ jobs:
       - name: Run Tests
         env:
           HDF5TestExpress: 0
-        run: ctest . --parallel 2 -C Developer -V -R H5TESTXPR -E fheap
+        run: ctest . --parallel 2 -C Developer -R H5TESTXPR -E fheap
         working-directory: ${{ runner.workspace }}/build
 
   build_and_test_mac_latest:
@@ -173,13 +187,16 @@ jobs:
     name: "MacOS Clang"
     runs-on: macos-latest
     steps:
+      - name: Get Actions
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          sparse-checkout: .github/actions
+
+      - name: Setup Doxygen
+        uses: ./.github/actions/setup-doxygen
+
       - name: Install Dependencies (MacOS_latest)
         run: brew install ninja
-
-      - name: Install Dependencies
-        uses: ssciwr/doxygen-install@v1
-        with:
-          version: "1.13.2"
 
       - name: Check Clang Version
         shell: bash
@@ -208,7 +225,7 @@ jobs:
 
       # Get files created by release script
       - name: Get tgz-tarball (MacOS_latest)
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
               name: tgz-tarball
               path: ${{ github.workspace }}
@@ -250,7 +267,7 @@ jobs:
       - name: Run Tests
         env:
           HDF5TestExpress: 0
-        run: ctest . --parallel 2 -C Developer -V -R H5TESTXPR -E fheap
+        run: ctest . --parallel 2 -C Developer -R H5TESTXPR -E fheap
         working-directory: ${{ runner.workspace }}/build
 
   ####### clang builds
@@ -258,19 +275,20 @@ jobs:
     # Linux (Ubuntu) w/ clang
     #
     name: "Ubuntu Clang"
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
+      - name: Get Actions
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          sparse-checkout: .github/actions
+
+      - name: Setup Doxygen
+        uses: ./.github/actions/setup-doxygen
+
       - name: Install Dependencies (Linux_clang)
         run: |
           sudo apt-get update
-          sudo apt-get install ninja-build doxygen graphviz curl libtinfo5
-
-      - name: add clang to env
-        uses: KyleMayes/install-llvm-action@v2.0.7
-        id: setup-clang
-        with:
-          env: true
-          version: '18.1'
+          sudo apt-get install ninja-build graphviz curl
 
       - name: Check Clang Version
         shell: bash
@@ -299,7 +317,7 @@ jobs:
 
       # Get files created by release script
       - name: Get tgz-tarball (Linux_clang)
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: tgz-tarball
           path: ${{ github.workspace }}
@@ -331,6 +349,8 @@ jobs:
                -DHDF5_BUILD_DOC=OFF \
                -DLIBAEC_USE_LOCALCONTENT=OFF \
                -DZLIB_USE_LOCALCONTENT=OFF \
+               -DCMAKE_C_COMPILER:STRING=clang \
+               -DCMAKE_CXX_COMPILER:STRING=clang++ \
                -DHDF_TEST_EXPRESS=0 \
                ${{ github.workspace }}/hdfsrc
 
@@ -341,6 +361,6 @@ jobs:
       - name: Run Tests
         env:
           HDF5TestExpress: 0
-        run: ctest . --parallel 2 -C Developer -V -R H5TESTXPR -E fheap
+        run: ctest . --parallel 2 -C Developer -R H5TESTXPR -E fheap
         working-directory: ${{ runner.workspace }}/build
 
