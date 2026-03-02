@@ -97,6 +97,12 @@
 #define H5D_ACS_EFILE_PREFIX_CMP   H5P__dapl_efile_pref_cmp
 #define H5D_ACS_EFILE_PREFIX_CLOSE H5P__dapl_efile_pref_close
 
+/* Definitions for use of VDS mapping spatial tree */
+#define H5D_ACS_USE_TREE_SIZE sizeof(bool)
+#define H5D_ACS_USE_TREE_DEF  true
+#define H5D_ACS_USE_TREE_ENC  H5P__encode_bool
+#define H5D_ACS_USE_TREE_DEC  H5P__decode_bool
+
 /******************/
 /* Local Typedefs */
 /******************/
@@ -175,6 +181,7 @@ static const H5D_append_flush_t H5D_def_append_flush_g =
 static const char *H5D_def_efile_prefix_g =
     H5D_ACS_EFILE_PREFIX_DEF;                                     /* Default external file prefix string */
 static const char *H5D_def_vds_prefix_g = H5D_ACS_VDS_PREFIX_DEF; /* Default vds prefix string */
+static const bool  H5D_def_tree_g = H5D_ACS_USE_TREE_DEF; /* Default use of spatial tree for VDS mappings */
 
 /*-------------------------------------------------------------------------
  * Function:    H5P__dacc_reg_prop
@@ -245,6 +252,11 @@ H5P__dacc_reg_prop(H5P_genclass_t *pclass)
                            H5D_ACS_EFILE_PREFIX_ENC, H5D_ACS_EFILE_PREFIX_DEC, H5D_ACS_EFILE_PREFIX_DEL,
                            H5D_ACS_EFILE_PREFIX_COPY, H5D_ACS_EFILE_PREFIX_CMP,
                            H5D_ACS_EFILE_PREFIX_CLOSE) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class");
+
+    /* Register the spatial tree use property */
+    if (H5P__register_real(pclass, H5D_ACS_USE_TREE_NAME, H5D_ACS_USE_TREE_SIZE, &H5D_def_tree_g, NULL, NULL,
+                           NULL, H5D_ACS_USE_TREE_ENC, H5D_ACS_USE_TREE_DEC, NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class");
 
 done:
@@ -772,7 +784,7 @@ H5Pset_chunk_cache(hid_t dapl_id, size_t rdcc_nslots, size_t rdcc_nbytes, double
 
     /* Get the pointer to the property list */
     if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, false)))
-        HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
+        HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set sizes */
     if (H5P_set(dapl, H5D_ACS_DATA_CACHE_NUM_SLOTS_NAME, &rdcc_nslots) < 0)
@@ -812,11 +824,11 @@ H5Pget_chunk_cache(hid_t dapl_id, size_t *rdcc_nslots /*out*/, size_t *rdcc_nbyt
 
     /* Get the pointer to the property list */
     if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, true)))
-        HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
+        HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get default file access property list */
     if (NULL == (def_fapl = (H5P_genplist_t *)H5I_object(H5P_FILE_ACCESS_DEFAULT)))
-        HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for default fapl ID");
+        HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for default fapl ID");
 
     /* Get the properties.  If a property is set to the default value, the value
      * from the default fapl is used. */
@@ -1077,7 +1089,7 @@ H5Pset_virtual_view(hid_t dapl_id, H5D_vds_view_t view)
 
     /* Get the pointer to the property list */
     if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, false)))
-        HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
+        HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Update property list */
     if (H5P_set(dapl, H5D_ACS_VDS_VIEW_NAME, &view) < 0)
@@ -1108,7 +1120,7 @@ H5Pget_virtual_view(hid_t dapl_id, H5D_vds_view_t *view /*out*/)
 
     /* Get the pointer to the property list */
     if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, true)))
-        HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
+        HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get value from property list */
     if (view)
@@ -1217,7 +1229,7 @@ H5Pset_virtual_printf_gap(hid_t dapl_id, hsize_t gap_size)
 
     /* Get the pointer to the property list */
     if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, false)))
-        HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
+        HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Update property list */
     if (H5P_set(dapl, H5D_ACS_VDS_PRINTF_GAP_NAME, &gap_size) < 0)
@@ -1249,7 +1261,7 @@ H5Pget_virtual_printf_gap(hid_t dapl_id, hsize_t *gap_size /*out*/)
 
     /* Get the pointer to the property list */
     if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, true)))
-        HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
+        HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get value from property list */
     if (gap_size)
@@ -1300,7 +1312,7 @@ H5Pset_append_flush(hid_t dapl_id, unsigned ndims, const hsize_t *boundary, H5D_
 
     /* Get the pointer to the property list */
     if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, false)))
-        HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
+        HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set up values */
     info.ndims = ndims;
@@ -1348,7 +1360,7 @@ H5Pget_append_flush(hid_t dapl_id, unsigned ndims, hsize_t boundary[], H5D_appen
 
     /* Get the pointer to the property list */
     if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, true)))
-        HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
+        HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Retrieve info for append flush */
     if (H5P_get(dapl, H5D_ACS_APPEND_FLUSH_NAME, &info) < 0)
@@ -1397,7 +1409,7 @@ H5Pset_efile_prefix(hid_t dapl_id, const char *prefix)
 
     /* Get the pointer to the property list */
     if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, false)))
-        HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
+        HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set prefix */
     if (H5P_set(dapl, H5D_ACS_EFILE_PREFIX_NAME, &prefix) < 0)
@@ -1429,7 +1441,7 @@ H5Pget_efile_prefix(hid_t dapl_id, char *prefix /*out*/, size_t size)
 
     /* Get the pointer to the property list */
     if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, true)))
-        HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
+        HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get the current prefix */
     if (H5P_peek(dapl, H5D_ACS_EFILE_PREFIX_NAME, &my_prefix) < 0)
@@ -1483,7 +1495,7 @@ H5Pset_virtual_prefix(hid_t dapl_id, const char *prefix)
 
     /* Get the pointer to the property list */
     if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, false)))
-        HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
+        HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Set prefix */
     if (H5P_set(dapl, H5D_ACS_VDS_PREFIX_NAME, &prefix) < 0)
@@ -1517,7 +1529,7 @@ H5Pget_virtual_prefix(hid_t dapl_id, char *prefix /*out*/, size_t size)
 
     /* Get the pointer to the property list */
     if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, true)))
-        HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
+        HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
 
     /* Get the current prefix */
     if (H5P_peek(dapl, H5D_ACS_VDS_PREFIX_NAME, &my_prefix) < 0)
@@ -1542,3 +1554,89 @@ H5Pget_virtual_prefix(hid_t dapl_id, char *prefix /*out*/, size_t size)
 done:
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_virtual_prefix() */
+
+/*-----------------------------------------------------------------------------
+ * Function:       H5Pget_virtual_spatial_tree
+ *
+ * Purpose:        Access the flag for whether or not datasets created by the
+ *                 given DAPL construct a spatial tree and use it when
+ *                 searching over VDS mappings.
+ *
+ *                 Use of a spatial tree will accelerate the process of
+ *                 searching through mappings to determine which contain
+ *                 intersections with the user's selection region.  With the
+ *                 tree disabled, all mappings will simply be iterated through
+ *                 and checked directly.
+ *
+ *                 Certain workflows may find that tree creation overhead
+ *                 outweighs the time saved on reads.  In this case, disabling
+ *                 this property will lead to a performance improvement, though
+ *                 it is expected that almost all cases will benefit from the
+ *                 tree.
+ *
+ * Return:         Success:     Non-negative
+ *                 Failure:     Negative
+ *-----------------------------------------------------------------------------
+ */
+herr_t
+H5Pget_virtual_spatial_tree(hid_t dapl_id, bool *use_tree)
+{
+    H5P_genplist_t    *dapl; /* property list pointer */
+    herr_t          ret_value = SUCCEED;
+
+    FUNC_ENTER_API(FAIL)
+
+    /* Get the pointer to the property list */
+    if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, true)))
+        HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
+
+    /* Get value from property list */
+    if (use_tree)
+        if (H5P_get(dapl, H5D_ACS_USE_TREE_NAME, use_tree) < 0)
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get dset use spatial tree flag value");
+
+done:
+    FUNC_LEAVE_API(ret_value)
+} /* H5Pget_virtual_spatial_tree() */
+
+/*-----------------------------------------------------------------------------
+ * Function:       H5Pset_virtual_spatial_tree
+ *
+ * Purpose:        Set the DAPL to construct a spatial tree and use it when
+ *                 searching over VDS mappings.
+ *
+ *                 Use of a spatial tree will accelerate the process of
+ *                 searching through mappings to determine which contain
+ *                 intersections with the user's selection region.  With the
+ *                 tree disabled, all mappings will simply be iterated through
+ *                 and checked directly.
+ *
+ *                 Certain workflows may find that tree creation overhead
+ *                 outweighs the time saved on reads. In this case, disabling
+ *                 this property will lead to a performance improvement, though
+ *                 it is expected that almost all cases will benefit from the
+ *                 tree.
+ *
+ * Return:         Success:     Non-negative
+ *                 Failure:     Negative
+ *-----------------------------------------------------------------------------
+ */
+herr_t
+H5Pset_virtual_spatial_tree(hid_t dapl_id, bool use_tree)
+{
+    H5P_genplist_t *dapl;                /* Property list pointer */
+    herr_t          ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_API(FAIL)
+
+    /* Get the pointer to the property list */
+    if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, false)))
+        HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
+
+    /* Update property list */
+    if (H5P_set(dapl, H5D_ACS_USE_TREE_NAME, &use_tree) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set dset use spatial tree flag value");
+
+done:
+    FUNC_LEAVE_API(ret_value)
+} /* H5Pset_virtual_spatial_tree() */
