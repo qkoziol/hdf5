@@ -30,6 +30,9 @@ on:
 permissions:
   contents: read
 
+env:
+  CTEST_OUTPUT_ON_FAILURE: 1
+
 jobs:
   Build_openmpi_source:
     name: Build OpenMPI from source
@@ -48,6 +51,11 @@ jobs:
     name: "Parallel OpenMPI GCC-${{ inputs.build_mode }}"
     runs-on: ubuntu-latest
     steps:
+      - name: Get Actions
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          sparse-checkout: .github/actions
+
       - name: Install Linux Dependencies (OpenMPI)
         run: |
           sudo apt-get update
@@ -55,7 +63,7 @@ jobs:
           sudo apt install libaec0 libaec-dev
 
       - name: Get MPI installation (OpenMPI)
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: openmpi
 
@@ -71,13 +79,8 @@ jobs:
           echo "CC=${{ runner.workspace }}/openmpi/bin/mpicc" >> $GITHUB_ENV
           echo "FC=${{ runner.workspace }}/openmpi/bin/mpif90" >> $GITHUB_ENV
 
-      - name: Install Doxygen
-        uses: ssciwr/doxygen-install@v1
-        with:
-          version: "1.13.2"
-
       - name: Install CMake
-        uses: lukka/get-cmake@latest
+        uses: lukka/get-cmake@f176ccd3f28bda569c43aae4894f06b2435a3375 # latest
         with:
             cmakeVersion: ${{ inputs.cmake_version }}
             ninjaVersion: latest
@@ -97,7 +100,7 @@ jobs:
 
       # Get files created by release script
       - name: Get tgz-tarball (OpenMPI)
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
               name: tgz-tarball
               path: ${{ github.workspace }}
@@ -110,17 +113,17 @@ jobs:
       - name: Uncompress source (OpenMPI)
         run: tar -zxvf ${{ github.workspace }}/${{ steps.set-file-base.outputs.FILE_BASE }}.tar.gz
 
-      - name: Copy script files for the space (OpenMPI)
-        run: |
-          cp ${{ github.workspace }}/${{ steps.set-file-base.outputs.SOURCE_BASE }}/config/cmake/scripts/CTestScript.cmake ${{ runner.workspace }}/hdf5
-          cp ${{ github.workspace }}/${{ steps.set-file-base.outputs.SOURCE_BASE }}/config/cmake/scripts/HDF5config.cmake ${{ runner.workspace }}/hdf5
+      - name: Symlink script files for the space (OpenMPI)
+        uses: ./.github/actions/symlink-ctest-scripts
+        with:
+          source-base: ${{ steps.set-file-base.outputs.SOURCE_BASE }}
 
       - name: List files for the hdf5 (OpenMPI)
         run: |
             ls ${{ runner.workspace }}/hdf5
 
       - name: Create options file (OpenMPI)
-        uses: "DamianReeves/write-file-action@master"
+        uses: "DamianReeves/write-file-action@1d019960841941be46b139298996df6f139cc7a4" # master
         with:
           path: ${{ runner.workspace }}/hdf5/HDF5options.cmake
           write-mode: overwrite
@@ -151,13 +154,13 @@ jobs:
       - name: Run CTest script (OpenMPI)
         run: |
           cd "${{ runner.workspace }}/hdf5"
-          ctest -S HDF5config.cmake,CTEST_SITE_EXT=GH-${{ github.event.repository.full_name }}-OpenMPI-source,LOCAL_SUBMIT=ON,NINJA=TRUE,BUILD_GENERATOR=Unix,CTEST_SOURCE_NAME=${{ steps.set-file-base.outputs.SOURCE_BASE }} -C ${{ inputs.build_mode }} -VV -O hdf5.log
+          ctest -S HDF5config.cmake,CTEST_SITE_EXT=GH-${{ github.event.repository.full_name }}-OpenMPI-source,LOCAL_SUBMIT=ON,NINJA=TRUE,BUILD_GENERATOR=Unix,CTEST_SOURCE_NAME=${{ steps.set-file-base.outputs.SOURCE_BASE }} -C ${{ inputs.build_mode }} -O hdf5.log
         shell: bash
         continue-on-error: true
 
       # Save log files created by CTest script
       - name: Save log (OpenMPI)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v5
         with:
           name: openmpi-log
           path: ${{ runner.workspace }}/hdf5/hdf5.log
@@ -168,7 +171,7 @@ jobs:
     name: "Parallel Mpich GCC-${{ inputs.build_mode }}"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.1.7
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Install Linux Dependencies (MPICH)
         run: |
@@ -177,7 +180,7 @@ jobs:
           sudo apt install libaec0 libaec-dev
 
       - name: Get MPI installation (MPICH)
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: mpich
 
@@ -193,13 +196,8 @@ jobs:
           echo "CC=${{ runner.workspace }}/mpich/bin/mpicc" >> $GITHUB_ENV
           echo "FC=${{ runner.workspace }}/mpich/bin/mpif90" >> $GITHUB_ENV
 
-      - name: Install Doxygen
-        uses: ssciwr/doxygen-install@v1
-        with:
-          version: "1.13.2"
-
       - name: Install CMake
-        uses: lukka/get-cmake@latest
+        uses: lukka/get-cmake@f176ccd3f28bda569c43aae4894f06b2435a3375 # latest
         with:
             cmakeVersion: ${{ inputs.cmake_version }}
             ninjaVersion: latest
@@ -219,7 +217,7 @@ jobs:
 
       # Get files created by release script
       - name: Get tgz-tarball (MPICH)
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
               name: tgz-tarball
               path: ${{ github.workspace }}
@@ -232,17 +230,17 @@ jobs:
       - name: Uncompress source (MPICH)
         run: tar -zxvf ${{ github.workspace }}/${{ steps.set-file-base.outputs.FILE_BASE }}.tar.gz
 
-      - name: Copy script files for the space (MPICH)
-        run: |
-          cp ${{ github.workspace }}/${{ steps.set-file-base.outputs.SOURCE_BASE }}/config/cmake/scripts/CTestScript.cmake ${{ runner.workspace }}/hdf5
-          cp ${{ github.workspace }}/${{ steps.set-file-base.outputs.SOURCE_BASE }}/config/cmake/scripts/HDF5config.cmake ${{ runner.workspace }}/hdf5
+      - name: Symlink script files for the space (MPICH)
+        uses: ./.github/actions/symlink-ctest-scripts
+        with:
+          source-base: ${{ steps.set-file-base.outputs.SOURCE_BASE }}
 
       - name: List files for the hdf5 (MPICH)
         run: |
             ls ${{ runner.workspace }}/hdf5
 
       - name: Create options file (MPICH)
-        uses: "DamianReeves/write-file-action@master"
+        uses: "DamianReeves/write-file-action@1d019960841941be46b139298996df6f139cc7a4" # master
         with:
           path: ${{ runner.workspace }}/hdf5/HDF5options.cmake
           write-mode: overwrite
@@ -273,13 +271,13 @@ jobs:
       - name: Run CTest script (MPICH)
         run: |
           cd "${{ runner.workspace }}/hdf5"
-          ctest -S HDF5config.cmake,CTEST_SITE_EXT=GH-${{ github.event.repository.full_name }}-MPICH-source,LOCAL_SUBMIT=ON,NINJA=TRUE,BUILD_GENERATOR=Unix,CTEST_SOURCE_NAME=${{ steps.set-file-base.outputs.SOURCE_BASE }} -C ${{ inputs.build_mode }} -VV -O hdf5.log
+          ctest -S HDF5config.cmake,CTEST_SITE_EXT=GH-${{ github.event.repository.full_name }}-MPICH-source,LOCAL_SUBMIT=ON,NINJA=TRUE,BUILD_GENERATOR=Unix,CTEST_SOURCE_NAME=${{ steps.set-file-base.outputs.SOURCE_BASE }} -C ${{ inputs.build_mode }} -O hdf5.log
         shell: bash
         continue-on-error: true
 
       # Save log files created by CTest script
       - name: Save log (MPICH)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v5
         with:
           name: mpich-log
           path: ${{ runner.workspace }}/hdf5/hdf5.log

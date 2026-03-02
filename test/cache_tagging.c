@@ -427,6 +427,10 @@ check_file_creation_tags(hid_t fcpl_id, int type)
     if ((fapl = h5_fileaccess_flags(H5_FILEACCESS_LIBVER)) < 0)
         TEST_ERROR;
 
+    /* Set earliest file format */
+    if (H5Pset_libver_bounds(fapl, H5F_LIBVER_EARLIEST, H5F_LIBVER_LATEST) < 0)
+        TEST_ERROR;
+
     /* Create a test file with provided fcpl_t */
     if ((fid = H5Fcreate(FILENAME, H5F_ACC_TRUNC, fcpl_id, fapl)) < 0)
         TEST_ERROR;
@@ -530,6 +534,10 @@ check_file_open_tags(hid_t fcpl, int type)
 
     /* Create Fapl */
     if ((fapl = h5_fileaccess_flags(H5_FILEACCESS_LIBVER)) < 0)
+        TEST_ERROR;
+
+    /* Set earliest file format */
+    if (H5Pset_libver_bounds(fapl, H5F_LIBVER_EARLIEST, H5F_LIBVER_LATEST) < 0)
         TEST_ERROR;
 
     /* Create a test file with provided fcpl_t */
@@ -659,11 +667,12 @@ check_group_creation_tags(void)
     if ((fapl = h5_fileaccess_flags(H5_FILEACCESS_LIBVER)) < 0)
         TEST_ERROR;
 
-    /* Create a test file with provided fcpl_t */
-    if ((fid = H5Fcreate(FILENAME, H5F_ACC_TRUNC, H5P_DEFAULT, fapl)) < 0)
+    /* Set earliest file format */
+    if (H5Pset_libver_bounds(fapl, H5F_LIBVER_EARLIEST, H5F_LIBVER_LATEST) < 0)
         TEST_ERROR;
 
-    if (H5Pclose(fapl) < 0)
+    /* Create a test file with provided fcpl_t */
+    if ((fid = H5Fcreate(FILENAME, H5F_ACC_TRUNC, H5P_DEFAULT, fapl)) < 0)
         TEST_ERROR;
 
     /* determine tag value of root group's object header */
@@ -673,7 +682,7 @@ check_group_creation_tags(void)
     /* Close and Reopen the file */
     if (H5Fclose(fid) < 0)
         TEST_ERROR;
-    if ((fid = H5Fopen(FILENAME, H5F_ACC_RDWR, H5P_DEFAULT)) < 0)
+    if ((fid = H5Fopen(FILENAME, H5F_ACC_RDWR, fapl)) < 0)
         TEST_ERROR;
 
     /* Evict as much as we can from the cache so we can track full tag path */
@@ -732,6 +741,8 @@ check_group_creation_tags(void)
     if (H5Gclose(gid) < 0)
         TEST_ERROR;
     if (H5Fclose(fid) < 0)
+        TEST_ERROR;
+    if (H5Pclose(fapl) < 0)
         TEST_ERROR;
 
     /* ========================================== */
@@ -925,6 +936,10 @@ check_link_iteration_tags(void)
 
     /* Create Fapl */
     if ((fapl = h5_fileaccess_flags(H5_FILEACCESS_LIBVER)) < 0)
+        TEST_ERROR;
+
+    /* Set earliest file format */
+    if (H5Pset_libver_bounds(fapl, H5F_LIBVER_EARLIEST, H5F_LIBVER_LATEST) < 0)
         TEST_ERROR;
 
     /* =========== */
@@ -1294,6 +1309,10 @@ check_group_open_tags(void)
     if ((fapl = h5_fileaccess_flags(H5_FILEACCESS_LIBVER)) < 0)
         TEST_ERROR;
 
+    /* Set earliest file format */
+    if (H5Pset_libver_bounds(fapl, H5F_LIBVER_EARLIEST, H5F_LIBVER_LATEST) < 0)
+        TEST_ERROR;
+
     /* Create a test file with provided fcpl_t */
     if ((fid = H5Fcreate(FILENAME, H5F_ACC_TRUNC, H5P_DEFAULT, fapl)) < 0)
         TEST_ERROR;
@@ -1422,6 +1441,10 @@ check_attribute_creation_tags(hid_t fcpl, int type)
 
     /* Create Fapl */
     if ((fapl = h5_fileaccess_flags(H5_FILEACCESS_LIBVER)) < 0)
+        TEST_ERROR;
+
+    /* Set earliest file format */
+    if (H5Pset_libver_bounds(fapl, H5F_LIBVER_EARLIEST, H5F_LIBVER_LATEST) < 0)
         TEST_ERROR;
 
     /* Create a test file with provided fcpl_t */
@@ -1584,6 +1607,10 @@ check_attribute_open_tags(hid_t fcpl, int type)
 
     /* Create Fapl */
     if ((fapl = h5_fileaccess_flags(H5_FILEACCESS_LIBVER)) < 0)
+        TEST_ERROR;
+
+    /* Set earliest file format */
+    if (H5Pset_libver_bounds(fapl, H5F_LIBVER_EARLIEST, H5F_LIBVER_LATEST) < 0)
         TEST_ERROR;
 
     /* Create a test file with provided fcpl_t */
@@ -1761,11 +1788,12 @@ check_attribute_rename_tags(hid_t fcpl, int type)
     if ((fapl = h5_fileaccess_flags(H5_FILEACCESS_LIBVER)) < 0)
         TEST_ERROR;
 
-    /* Create a test file with provided fcpl_t */
-    if ((fid = H5Fcreate(FILENAME, H5F_ACC_TRUNC, fcpl, fapl)) < 0)
+    /* Set earliest file format */
+    if (H5Pset_libver_bounds(fapl, H5F_LIBVER_EARLIEST, H5F_LIBVER_LATEST) < 0)
         TEST_ERROR;
 
-    if (H5Pclose(fapl) < 0)
+    /* Create a test file with provided fcpl_t */
+    if ((fid = H5Fcreate(FILENAME, H5F_ACC_TRUNC, fcpl, fapl)) < 0)
         TEST_ERROR;
 
     /* determine tag value of root group's object header */
@@ -1807,7 +1835,7 @@ check_attribute_rename_tags(hid_t fcpl, int type)
     if (H5Fclose(fid) < 0)
         TEST_ERROR;
 
-    if ((fid = H5Fopen(FILENAME, H5F_ACC_RDWR, H5P_DEFAULT)) < 0)
+    if ((fid = H5Fopen(FILENAME, H5F_ACC_RDWR, fapl)) < 0)
         TEST_ERROR;
     if ((gid = H5Gopen2(fid, GROUPNAME, H5P_DEFAULT)) < 0)
         TEST_ERROR;
@@ -1905,6 +1933,8 @@ check_attribute_rename_tags(hid_t fcpl, int type)
     if (H5Gclose(gid) < 0)
         TEST_ERROR;
     if (H5Fclose(fid) < 0)
+        TEST_ERROR;
+    if (H5Pclose(fapl) < 0)
         TEST_ERROR;
 
     /* ========================================== */
@@ -2151,6 +2181,10 @@ check_dataset_creation_tags(hid_t fcpl, int type)
     if ((fapl = h5_fileaccess_flags(H5_FILEACCESS_LIBVER)) < 0)
         TEST_ERROR;
 
+    /* Set earliest file format */
+    if (H5Pset_libver_bounds(fapl, H5F_LIBVER_EARLIEST, H5F_LIBVER_LATEST) < 0)
+        TEST_ERROR;
+
     if ((fid = H5Fcreate(FILENAME, H5F_ACC_TRUNC, fcpl, fapl)) < 0)
         TEST_ERROR;
 
@@ -2307,6 +2341,10 @@ check_dataset_creation_earlyalloc_tags(hid_t fcpl, int type)
 
     /* Create Fapl */
     if ((fapl = h5_fileaccess_flags(H5_FILEACCESS_LIBVER)) < 0)
+        TEST_ERROR;
+
+    /* Set earliest file format */
+    if (H5Pset_libver_bounds(fapl, H5F_LIBVER_EARLIEST, H5F_LIBVER_LATEST) < 0)
         TEST_ERROR;
 
     if ((fid = H5Fcreate(FILENAME, H5F_ACC_TRUNC, fcpl, fapl)) < 0)
@@ -2469,6 +2507,10 @@ check_dataset_open_tags(void)
 
     /* Create Fapl */
     if ((fapl = h5_fileaccess_flags(H5_FILEACCESS_LIBVER)) < 0)
+        TEST_ERROR;
+
+    /* Set earliest file format */
+    if (H5Pset_libver_bounds(fapl, H5F_LIBVER_EARLIEST, H5F_LIBVER_LATEST) < 0)
         TEST_ERROR;
 
     /* Create file */
@@ -2692,6 +2734,10 @@ check_dataset_write_tags(void)
     if ((H5Dwrite(did, H5T_NATIVE_INT, sid, sid, H5P_DEFAULT, data)) < 0)
         TEST_ERROR;
 
+    /* Flush dataset so all index nodes are created */
+    if (H5Dflush(did) < 0)
+        TEST_ERROR;
+
         /* =================================== */
         /* Verification of Metadata Tag Values */
         /* =================================== */
@@ -2702,8 +2748,8 @@ check_dataset_write_tags(void)
         dump_cache(fid);
 #endif /* NDEBUG */ /* end debugging functions */
 
-    /* Verify 10 b-tree nodes belonging to dataset  */
-    for (i = 0; i < 10; i++)
+    /* Verify 19 b-tree nodes belonging to dataset  */
+    for (i = 0; i < 19; i++)
         if (verify_tag(fid, H5AC_BT_ID, d_tag) < 0)
             TEST_ERROR;
 
@@ -2785,6 +2831,10 @@ check_attribute_write_tags(hid_t fcpl, int type)
 
     /* Create Fapl */
     if ((fapl = h5_fileaccess_flags(H5_FILEACCESS_LIBVER)) < 0)
+        TEST_ERROR;
+
+    /* Set earliest file format */
+    if (H5Pset_libver_bounds(fapl, H5F_LIBVER_EARLIEST, H5F_LIBVER_LATEST) < 0)
         TEST_ERROR;
 
     /* Create a test file with provided fcpl_t */
@@ -3442,6 +3492,10 @@ check_object_info_tags(void)
     if ((fapl = h5_fileaccess_flags(H5_FILEACCESS_LIBVER)) < 0)
         TEST_ERROR;
 
+    /* Set earliest file format */
+    if (H5Pset_libver_bounds(fapl, H5F_LIBVER_EARLIEST, H5F_LIBVER_LATEST) < 0)
+        TEST_ERROR;
+
     /* Create a test file */
     if ((fid = H5Fcreate(FILENAME, H5F_ACC_TRUNC, H5P_DEFAULT, fapl)) < 0)
         TEST_ERROR;
@@ -3572,6 +3626,10 @@ check_object_copy_tags(void)
 
     /* Create Fapl */
     if ((fapl = h5_fileaccess_flags(H5_FILEACCESS_LIBVER)) < 0)
+        TEST_ERROR;
+
+    /* Set earliest file format */
+    if (H5Pset_libver_bounds(fapl, H5F_LIBVER_EARLIEST, H5F_LIBVER_LATEST) < 0)
         TEST_ERROR;
 
     /* Create a test file */
@@ -3730,6 +3788,10 @@ check_link_removal_tags(hid_t fcpl, int type)
 
     /* Create Fapl */
     if ((fapl = h5_fileaccess_flags(H5_FILEACCESS_LIBVER)) < 0)
+        TEST_ERROR;
+
+    /* Set earliest file format */
+    if (H5Pset_libver_bounds(fapl, H5F_LIBVER_EARLIEST, H5F_LIBVER_LATEST) < 0)
         TEST_ERROR;
 
     /* Create file */
@@ -3918,6 +3980,10 @@ check_link_getname_tags(void)
     if ((fapl = h5_fileaccess_flags(H5_FILEACCESS_LIBVER)) < 0)
         TEST_ERROR;
 
+    /* Set earliest file format */
+    if (H5Pset_libver_bounds(fapl, H5F_LIBVER_EARLIEST, H5F_LIBVER_LATEST) < 0)
+        TEST_ERROR;
+
     /* Create file */
     if ((fid = H5Fcreate(FILENAME, H5F_ACC_TRUNC, H5P_DEFAULT, fapl)) < 0)
         TEST_ERROR;
@@ -4079,6 +4145,10 @@ check_external_link_creation_tags(void)
     if ((fapl = h5_fileaccess_flags(H5_FILEACCESS_LIBVER)) < 0)
         TEST_ERROR;
 
+    /* Set earliest file format */
+    if (H5Pset_libver_bounds(fapl, H5F_LIBVER_EARLIEST, H5F_LIBVER_LATEST) < 0)
+        TEST_ERROR;
+
     /* Create a test file */
     if ((fid = H5Fcreate(FILENAME, H5F_ACC_TRUNC, H5P_DEFAULT, fapl)) < 0)
         TEST_ERROR;
@@ -4203,6 +4273,10 @@ check_external_link_open_tags(void)
 
     /* Create Fapl */
     if ((fapl = h5_fileaccess_flags(H5_FILEACCESS_LIBVER)) < 0)
+        TEST_ERROR;
+
+    /* Set earliest file format */
+    if (H5Pset_libver_bounds(fapl, H5F_LIBVER_EARLIEST, H5F_LIBVER_LATEST) < 0)
         TEST_ERROR;
 
     /* Create a test file */

@@ -26,6 +26,7 @@ set (HDF5_BUILD_CPP_LIB ON CACHE BOOL "Build C++ support" FORCE)
 set (HDF5_BUILD_FORTRAN ON CACHE BOOL "Build FORTRAN support" FORCE)
 
 set (HDF5_BUILD_JAVA ON CACHE BOOL "Build JAVA support" FORCE)
+set (HDF5_ENABLE_JNI ON CACHE BOOL "Build JNI support" FORCE)
 
 set (HDF5_INSTALL_MOD_FORTRAN "NO" CACHE STRING "Copy FORTRAN mod files to include directory (NO SHARED STATIC)" FORCE)
 set_property (CACHE HDF5_INSTALL_MOD_FORTRAN PROPERTY STRINGS NO SHARED STATIC)
@@ -39,11 +40,11 @@ set (HDF_TEST_EXPRESS "2" CACHE STRING "Control testing framework (0-3)" FORCE)
 set (HDF5_MINGW_STATIC_GCC_LIBS ON CACHE BOOL "Statically link libgcc/libstdc++" FORCE)
 
 #set the default debug suffix for all library targets
-if (NOT CMAKE_DEBUG_POSTFIX)
+if (NOT DEFINED CMAKE_DEBUG_POSTFIX)
   if (WIN32)
-    set (CMAKE_DEBUG_POSTFIX "_D")
+    set (CMAKE_DEBUG_POSTFIX "_D" CACHE STRING "Debug library postfix")
   else ()
-    set (CMAKE_DEBUG_POSTFIX "_debug")
+    set (CMAKE_DEBUG_POSTFIX "_debug" CACHE STRING "Debug library postfix")
   endif ()
 endif ()
 
@@ -53,6 +54,9 @@ set_property (CACHE HDF5_ALLOW_EXTERNAL_SUPPORT PROPERTY STRINGS NO GIT TGZ)
 ########################
 # compression options
 ########################
+set (ZLIB_USE_EXTERNAL ON CACHE BOOL "Use External Library Building for ZLIB" FORCE)
+set (SZIP_USE_EXTERNAL ON CACHE BOOL "Use External Library Building for SZIP" FORCE)
+
 set (HDF5_USE_ZLIB_STATIC ON CACHE BOOL "Use static zlib library" FORCE)
 set (HDF5_USE_LIBAEC_STATIC ON CACHE BOOL "Use static AEC library" FORCE)
 
