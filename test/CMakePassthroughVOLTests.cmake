@@ -37,30 +37,30 @@ endforeach ()
 
 foreach (voltest ${VOL_LIST})
   foreach (h5_tfile ${HDF5_TEST_FILES})
-    HDFTEST_COPY_FILE("${PROJECT_SOURCE_DIR}/testfiles/${h5_tfile}" "${PROJECT_BINARY_DIR}/${voltest}/testfiles/${h5_tfile}" "HDF5_VOLTEST_LIB_files")
+    HDFTEST_COPY_FILE ("${PROJECT_SOURCE_DIR}/testfiles/${h5_tfile}" "${PROJECT_BINARY_DIR}/${voltest}/testfiles/${h5_tfile}" "HDF5_VOLTEST_LIB_files")
   endforeach ()
 endforeach ()
 
 foreach (voltest ${VOL_LIST})
   foreach (ref_file ${HDF5_REFERENCE_FILES})
-    HDFTEST_COPY_FILE("${PROJECT_SOURCE_DIR}/testfiles/${ref_file}" "${PROJECT_BINARY_DIR}/${voltest}/testfiles/${ref_file}" "HDF5_VOLTEST_LIB_files")
+    HDFTEST_COPY_FILE ("${PROJECT_SOURCE_DIR}/testfiles/${ref_file}" "${PROJECT_BINARY_DIR}/${voltest}/testfiles/${ref_file}" "HDF5_VOLTEST_LIB_files")
   endforeach ()
 endforeach ()
 
 foreach (voltest ${VOL_LIST})
   foreach (h5_file ${HDF5_REFERENCE_TEST_FILES})
-    HDFTEST_COPY_FILE("${PROJECT_SOURCE_DIR}/testfiles/${h5_file}" "${PROJECT_BINARY_DIR}/${voltest}/testfiles/${h5_file}" "HDF5_VOLTEST_LIB_files")
+    HDFTEST_COPY_FILE ("${PROJECT_SOURCE_DIR}/testfiles/${h5_file}" "${PROJECT_BINARY_DIR}/${voltest}/testfiles/${h5_file}" "HDF5_VOLTEST_LIB_files")
   endforeach ()
 endforeach ()
 
 foreach (voltest ${VOL_LIST})
   foreach (plistfile ${HDF5_REFERENCE_PLIST_FILES})
-    HDFTEST_COPY_FILE("${PROJECT_SOURCE_DIR}/testfiles/plist_files/${plistfile}" "${PROJECT_BINARY_DIR}/${voltest}/testfiles/plist_files/${plistfile}" "HDF5_VOLTEST_LIB_files")
-    HDFTEST_COPY_FILE("${PROJECT_SOURCE_DIR}/testfiles/plist_files/def_${plistfile}" "${PROJECT_BINARY_DIR}/${voltest}/testfiles/plist_files/def_${plistfile}" "HDF5_VOLTEST_LIB_files")
+    HDFTEST_COPY_FILE ("${PROJECT_SOURCE_DIR}/testfiles/plist_files/${plistfile}" "${PROJECT_BINARY_DIR}/${voltest}/testfiles/plist_files/${plistfile}" "HDF5_VOLTEST_LIB_files")
+    HDFTEST_COPY_FILE ("${PROJECT_SOURCE_DIR}/testfiles/plist_files/def_${plistfile}" "${PROJECT_BINARY_DIR}/${voltest}/testfiles/plist_files/def_${plistfile}" "HDF5_VOLTEST_LIB_files")
   endforeach ()
 endforeach ()
 
-add_custom_target(HDF5_VOLTEST_LIB_files ALL COMMENT "Copying files needed by HDF5_VOLTEST_LIB tests" DEPENDS ${HDF5_VOLTEST_LIB_files_list})
+add_custom_target (HDF5_VOLTEST_LIB_files ALL COMMENT "Copying files needed by HDF5_VOLTEST_LIB tests" DEPENDS ${HDF5_VOLTEST_LIB_files_list})
 
 ##############################################################################
 ##############################################################################
@@ -94,7 +94,6 @@ add_custom_target(HDF5_VOLTEST_LIB_files ALL COMMENT "Copying files needed by HD
         if (NOT BUILD_SHARED_LIBS AND NOT ${HDF_CFG_NAME} MATCHES "Debug")
           add_test (NAME VOL-${volname}-${voltest}
               COMMAND "${CMAKE_COMMAND}"
-                  -D "TEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
                   -D "TEST_PROGRAM=$<TARGET_FILE:${voltest}>"
                   -D "TEST_ARGS:STRING="
                   -D "TEST_VOL:STRING=${volinfo}"
@@ -119,7 +118,6 @@ add_custom_target(HDF5_VOLTEST_LIB_files ALL COMMENT "Copying files needed by HD
       else ()
         add_test (NAME VOL-${volname}-${voltest}
             COMMAND "${CMAKE_COMMAND}"
-                -D "TEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
                 -D "TEST_PROGRAM=$<TARGET_FILE:${voltest}>"
                 -D "TEST_ARGS:STRING="
                 -D "TEST_VOL:STRING=${volinfo}"
@@ -139,7 +137,6 @@ add_custom_target(HDF5_VOLTEST_LIB_files ALL COMMENT "Copying files needed by HD
     else ()
       add_test (NAME VOL-${volname}-${voltest}
           COMMAND "${CMAKE_COMMAND}"
-              -D "TEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
               -D "TEST_PROGRAM=$<TARGET_FILE:${voltest}>"
               -D "TEST_ARGS:STRING="
               -D "TEST_VOL:STRING=${volinfo}"
@@ -162,7 +159,6 @@ add_custom_target(HDF5_VOLTEST_LIB_files ALL COMMENT "Copying files needed by HD
       #message(STATUS "${voltest}-${volname} with ${volinfo}")
       add_test (NAME VOL-${volname}-${voltest}
           COMMAND "${CMAKE_COMMAND}"
-              -D "TEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
               -D "TEST_PROGRAM=$<TARGET_FILE:${voltest}>"
               -D "TEST_ARGS:STRING="
               -D "TEST_VOL:STRING=${volinfo}"
@@ -210,7 +206,6 @@ add_custom_target(HDF5_VOLTEST_LIB_files ALL COMMENT "Copying files needed by HD
     if (HDF5_TEST_FHEAP_PASSTHROUGH_VOL)
       add_test (NAME VOL-${volname}-fheap
           COMMAND "${CMAKE_COMMAND}"
-              -D "TEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
               -D "TEST_PROGRAM=$<TARGET_FILE:fheap>"
               -D "TEST_ARGS:STRING="
               -D "TEST_VOL:STRING=${volinfo}"
