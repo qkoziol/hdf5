@@ -206,6 +206,7 @@ typedef struct H5CX_cached_dapl_flags_t {
     bool dapl_rdcc_w0_valid : 1;     /* Whether the raw data cache preemption factor property is valid */
     bool vds_printf_gap_valid : 1;   /* Whether the VDS printf gap property is valid */
     bool vds_view_valid : 1;         /* Whether the VDS view property is valid */
+    bool vds_use_tree_valid : 1;     /* Whether the VDS 'use spatial tree' property is valid */
 } H5CX_cached_dapl_flags_t;
 
 /* 'valid' & 'set' flags for cached FAPL properties */
@@ -408,11 +409,12 @@ typedef struct H5CX_dapl_cache_t {
     const char        *extfile_prefix;   /* Prefix for external file (H5D_ACS_EFILE_PREFIX_NAME) */
     const char        *vds_prefix;       /* Prefix for VDS (H5D_ACS_VDS_PREFIX_NAME) */
     H5D_append_flush_t append_flush;     /* Append flush property (H5D_ACS_APPEND_FLUSH_NAME) */
-    size_t             dapl_rdcc_nbytes; /* Property for size of the raw data cache */
-    size_t             dapl_rdcc_nslots; /* Property for number of slots in the raw data cache */
-    double             dapl_rdcc_w0;     /* Property for chunk cache preemption factor */
-    hsize_t            vds_printf_gap;   /* Property for VDS printf gap */
-    H5D_vds_view_t     vds_view;         /* Property for VDS view */
+    size_t             dapl_rdcc_nbytes; /* Property for size of the raw data cache (H5D_ACS_DATA_CACHE_BYTE_SIZE_NAME) */
+    size_t             dapl_rdcc_nslots; /* Property for number of slots in the raw data cache (H5D_ACS_DATA_CACHE_NUM_SLOTS_NAME) */
+    double             dapl_rdcc_w0;     /* Property for chunk cache preemption factor (H5D_ACS_PREEMPT_READ_CHUNKS_NAME) */
+    hsize_t            vds_printf_gap;   /* Property for VDS printf gap (H5D_ACS_VDS_PRINTF_GAP_NAME) */
+    H5D_vds_view_t     vds_view;         /* Property for VDS view (H5D_ACS_VDS_VIEW_NAME) */
+    bool               vds_use_tree;     /* Property for VDS 'use spatial tree' (H5D_ACS_USE_TREE_NAME) */
 } H5CX_dapl_cache_t;
 
 /* Typedef for cached file access property list (FAPL) information */
@@ -772,6 +774,7 @@ H5_DLL herr_t H5CX_get_rdcc_nslots(size_t *rdcc_nslots);
 H5_DLL herr_t H5CX_get_rdcc_w0(double *rdcc_w0);
 H5_DLL herr_t H5CX_get_vds_printf_gap(hsize_t *vds_printf_gap);
 H5_DLL herr_t H5CX_get_vds_view(H5D_vds_view_t *vds_view);
+H5_DLL herr_t H5CX_get_vds_use_tree(bool *vds_use_tree);
 
 /* "Getter" routines for FAPL properties cached in API context */
 #ifdef H5_HAVE_PARALLEL
