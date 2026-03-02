@@ -492,37 +492,39 @@ typedef enum H5D_mpio_no_collective_cause_t {
 /**
  * Causes for H5Pget_no_selection_io_cause() property
  */
-#define H5D_SEL_IO_DISABLE_BY_API                                                                            \
-    (0x0001u) /**< Selection I/O was not performed because                                                   \
-                 the feature was disabled by the API */
-#define H5D_SEL_IO_NOT_CONTIGUOUS_OR_CHUNKED_DATASET                                                         \
-    (0x0002u) /**< Selection I/O was not performed because the                                               \
-                 dataset was neither contiguous nor chunked */
-#define H5D_SEL_IO_CONTIGUOUS_SIEVE_BUFFER                                                                   \
-    (0x0004u) /**< Selection I/O was not performed because of                                                \
-                 sieve buffer for contiguous dataset */
-#define H5D_SEL_IO_NO_VECTOR_OR_SELECTION_IO_CB                                                              \
-    (0x0008u) /**< Selection I/O was not performed because the VFD                                           \
-                 does not have vector or selection I/O callback */
-#define H5D_SEL_IO_PAGE_BUFFER                                                                               \
-    (0x0010u) /**< Selection I/O was not performed because of                                                \
-                 page buffer */
-#define H5D_SEL_IO_DATASET_FILTER                                                                            \
-    (0x0020u) /**< Selection I/O was not performed because of                                                \
-                 dataset filters */
-#define H5D_SEL_IO_CHUNK_CACHE                                                                               \
-    (0x0040u) /**< Selection I/O was not performed because of                                                \
-                 chunk cache */
-#define H5D_SEL_IO_TCONV_BUF_TOO_SMALL                                                                       \
-    (0x0080u) /**< Selection I/O was not performed because the                                               \
-                 type conversion buffer is too small */
-#define H5D_SEL_IO_BKG_BUF_TOO_SMALL                                                                         \
-    (0x0100u) /**< Selection I/O was not performed because the                                               \
-                 type conversion background buffer is too small */
-#define H5D_SEL_IO_DEFAULT_OFF                                                                               \
-    (0x0200u) /**< Selection I/O was not performed because the                                               \
-                   selection I/O mode is DEFAULT and the library                                             \
-                   chose it to be off for this case */
+
+/** Selection I/O was not performed because the feature was disabled by the API */
+#define H5D_SEL_IO_DISABLE_BY_API (0x0001u)
+
+/** Selection I/O was not performed because the dataset was neither contiguous nor chunked */
+#define H5D_SEL_IO_NOT_CONTIGUOUS_OR_CHUNKED_DATASET (0x0002u)
+
+/** Selection I/O was not performed because of sieve buffer for contiguous dataset */
+#define H5D_SEL_IO_CONTIGUOUS_SIEVE_BUFFER (0x0004u)
+
+/** Selection I/O was not performed because the VFD does not have vector or selection I/O callback */
+#define H5D_SEL_IO_NO_VECTOR_OR_SELECTION_IO_CB (0x0008u)
+
+/** Selection I/O was not performed because of page buffer */
+#define H5D_SEL_IO_PAGE_BUFFER (0x0010u)
+
+/** Selection I/O was not performed because of dataset filters */
+#define H5D_SEL_IO_DATASET_FILTER (0x0020u)
+
+/** Selection I/O was not performed because of chunk cache */
+#define H5D_SEL_IO_CHUNK_CACHE (0x0040u)
+
+/** Selection I/O was not performed because the type conversion buffer is too small */
+#define H5D_SEL_IO_TCONV_BUF_TOO_SMALL (0x0080u)
+
+/** Selection I/O was not performed because the type conversion background buffer is too small */
+#define H5D_SEL_IO_BKG_BUF_TOO_SMALL (0x0100u)
+
+/**
+ * Selection I/O was not performed because the selection I/O mode is DEFAULT
+ * and the library chose it to be off for this case
+ */
+#define H5D_SEL_IO_DEFAULT_OFF (0x0200u)
 
 /* Causes for H5D_MPIO_NO_SELECTION_IO */
 #define H5D_MPIO_NO_SELECTION_IO_CAUSES                                                                      \
@@ -928,9 +930,9 @@ H5_DLL hid_t H5Pdecode(const void *buf);
  *          control the encoding via the \a libver_bounds property
  *          (see H5Pset_libver_bounds()). If the \a libver_bounds
  *          property is missing, H5Pencode2() proceeds as if the \a
- *          libver_bounds property were set to (#H5F_LIBVER_EARLIEST,
+ *          libver_bounds property were set to (#H5F_LIBVER_V18,
  *          #H5F_LIBVER_LATEST). (Functionally, H5Pencode1() is identical to
- *          H5Pencode2() with \a libver_bounds set to (#H5F_LIBVER_EARLIEST,
+ *          H5Pencode2() with \a libver_bounds set to (#H5F_LIBVER_V18,
  *          #H5F_LIBVER_LATEST).)
  *          Properties that do not have encode callbacks will be skipped.
  *          There is currently no mechanism to register an encode callback for
@@ -4249,7 +4251,7 @@ H5_DLL herr_t H5Pset_alignment(hid_t fapl_id, hsize_t threshold, hsize_t alignme
  *                        that can fit in \p rdcc_nbytes bytes. For
  *                        maximum performance, this value should be set
  *                        approximately 100 times that number of chunks.
- *                        The default value is 521.
+ *                        The default value is 8191.
  * \param[in] rdcc_nbytes Total size of the raw data chunk cache in bytes.
  *                        The default size is 8 MiB per dataset.
  * \param[in] rdcc_w0     The chunk preemption policy for all datasets.
@@ -4776,7 +4778,7 @@ H5_DLL herr_t H5Pset_file_image(hid_t fapl_id, void *buf_ptr, size_t buf_len);
  *          The callbacks and their parameters, along with a struct and
  *          an \c ENUM required for their use, are described below.
  *
- *          <b>Callback struct and \c ENUM:</b>
+ *          <b>Callback struct and \TText{ENUM:}</b>
  *
  *          The callback functions set up by H5Pset_file_image_callbacks() use
  *          a struct and an \c ENUM that are defined as follows
@@ -5124,12 +5126,16 @@ H5_DLL herr_t H5Pset_gc_references(hid_t fapl_id, unsigned gc_ref);
  *           </tr>
  *          </table>
  *
+ *          The default settings are \p low=#H5F_LIBVER_V18, \p high=#H5F_LIBVER_LATEST.
+ *
  * \note *H5F_LIBVER_LATEST*:<br />
  *                 Since 2.0.x is also #H5F_LIBVER_LATEST, there is no upper
  *                 limit on the format versions to use.  That is, if a
  *                 newer format version is required to support a feature
  *                 in 2.0.x series, this setting will allow the object to be
  *                 created.
+ *
+ * \version 2.0.0  Default setting for \p low changed to #H5F_LIBVER_V18
  *
  * \version 1.10.2 #H5F_LIBVER_V18 added to the enumerated defines in
  *                 #H5F_libver_t.
@@ -5407,8 +5413,8 @@ H5_DLL herr_t H5Pset_object_flush_cb(hid_t plist_id, H5F_flush_cb_t func, void *
  *          the dataset being read in for hyperslab selections boosts
  *          performance by quite a bit.
  *
- *          The default value is set to 64KB, indicating that file I/O for raw
- *          data reads and writes will occur in at least 64KB blocks. Setting
+ *          The default value is set to 64KiB, indicating that file I/O for raw
+ *          data reads and writes will occur in at least 64KiB blocks. Setting
  *          the value to zero (\TText{0}) with this API function will turn off
  *          the data sieving, even if the VFL driver attempts to use that
  *          strategy.
@@ -6021,6 +6027,40 @@ H5_DLL herr_t H5Pget_dset_no_attrs_hint(hid_t dcpl_id, bool *minimize);
 /**
  * \ingroup DCPL
  *
+ * \brief Retrieves the setting for whether or not to use a spatial tree
+ *        for VDS mappings
+ *
+ * \dcpl_id
+ * \param[out] use_tree  Flag indicating whether the dataset will or
+ *                       will not use a spatial tree
+ *
+ * \return \herr_t
+ *
+ * \details H5Pget_virtual_spatial_tree() retrieves the
+ *          <i>use spatial tree</i> flag setting for the dataset
+ *          creation property list \p dcpl_id. This setting determines
+ *          whether a dataset created with the dataset creation
+ *          property list \p dcpl_id will construct a spatial tree
+ *          and use it in an attempt to optimize certain operations.
+ *          The setting value is returned in the boolean pointer
+ *          \p use_tree.
+ *
+ *          Use of a spatial tree will accelerate the process of searching through mappings
+ *          to determine which contain intersections with the user's selection region.
+ *          With the tree disabled, all mappings will simply be iterated through and
+ *          checked directly.
+ *
+ *          Certain workflows may find that tree creation overhead outweighs the time saved
+ *          on reads. In this case, disabling this property will lead to a performance improvement,
+ *          though it is expected that almost all cases will benefit from the tree on net.
+ *
+ * \since 2.0.0
+ *
+ */
+H5_DLL herr_t H5Pget_virtual_spatial_tree(hid_t dcpl_id, bool *use_tree);
+/**
+ * \ingroup DCPL
+ *
  * \brief Returns information about an external file
  *
  * \dcpl_id{plist_id}
@@ -6419,14 +6459,21 @@ H5_DLL herr_t H5Pset_alloc_time(hid_t plist_id, H5D_alloc_time_t alloc_time);
  *
  * \note Chunk size cannot exceed the size of a fixed-size dataset. For
  *       example, a dataset consisting of a 5x4 fixed-size array cannot be
- *       defined with 10x10 chunks. Chunk maximums:
- *       - The maximum number of elements in a chunk is 2<sup>32</sup>-1 which
- *         is equal to 4,294,967,295. If the number of elements in a chunk is
- *         set via H5Pset_chunk() to a value greater than 2<sup>32</sup>-1,
- *         then H5Pset_chunk() will fail.
- *       - The maximum size for any chunk is 4GB. If a chunk that is larger
- *         than 4GB attempts to be written with H5Dwrite(), then H5Dwrite()
- *         will fail.
+ *       defined with 10x10 chunks.
+ *
+ * \note With HDF5 version 2.0.0, creation of datasets with chunks larger than
+ *       4 GiB is now supported. However, doing so will upgrade the file format
+ *       and prevent earlier versions of the library from being able to open the
+ *       dataset. Users must also be aware that some operations will require the
+ *       entire chunk be brought into memory, such as when there is a fill value
+ *       or data filter set. These operations will not work on 32 bit systems
+ *       when using chunks with size >= 4 GiB. The file format will be upgraded
+ *       when the size of an unfiltered chunk is greater than 2<sup>32</sup>-1
+ *       which is equal to 4,294,967,295. If a filter grows a chunk from below
+ *       this value to above it, the write may fail since the file format was
+ *       not automatically upgraded. To fix this, users can call
+ *       H5Pset_libver_bounds() with #H5F_LIBVER_V200 as the low bound. With the
+ *       new file format, chunk sizes are now limited to 2<sup>64</sup>-1.
  *
  * \see H5Pset_layout(), H5Dwrite()
  *
@@ -6501,6 +6548,37 @@ H5_DLL herr_t H5Pset_chunk_opts(hid_t plist_id, unsigned opts);
  *
  */
 H5_DLL herr_t H5Pset_dset_no_attrs_hint(hid_t dcpl_id, bool minimize);
+/**
+ * \ingroup DCPL
+ *
+ * \brief Sets the flag to use a spatial tree for mappings
+ *
+ * \dcpl_id
+ * \param[in] use_tree Flag for indicating whether or not a dataset
+ *                     should use a spatial tree for mappings
+ *
+ * \return \herr_t
+ *
+ * \details H5Pset_virtual_spatial_tree() sets the use-tree flag
+ *          for the dataset creation property list \p dcpl_id.
+ *          Datasets created with the dataset creation property
+ *          list \p dcpl_id will construct a spatial tree and use
+ *          it in an attempt to optimize intersection-check
+ *          operations on mappings when \p use_tree is set to true.
+ *
+ *          Use of a spatial tree will accelerate the process of searching through mappings
+ *          to determine which contain intersections with the user's selection region.
+ *          With the tree disabled, all mappings will simply be iterated through and
+ *          checked directly.
+ *
+ *          Certain workflows may find that tree creation overhead outweighs the time saved
+ *          on reads. In this case, disabling this property will lead to a performance improvement,
+ *          though it is expected that almost all cases will benefit from the tree on net.
+ *
+ * \since 2.0.0
+ *
+ */
+H5_DLL herr_t H5Pset_virtual_spatial_tree(hid_t dcpl_id, bool use_tree);
 /**
  * \ingroup DCPL
  *
@@ -7224,10 +7302,10 @@ H5_DLL herr_t H5Pset_virtual(hid_t dcpl_id, hid_t vspace_id, const char *src_fil
  *        the dataset access property list
  *
  * \dapl_id
- * \param[in] dims     The number of elements for \p boundary
- * \param[in] boundary The dimension sizes used to determine the boundary
- * \param[in] func     The user-defined callback function
- * \param[in] udata    The user-defined input data
+ * \param[in] dims      The number of elements for \p boundary
+ * \param[out] boundary The dimension sizes used to determine the boundary
+ * \param[out] func     The user-defined callback function
+ * \param[out] udata    The user-defined input data
  *
  * \return \herr_t
  *
@@ -7495,7 +7573,7 @@ H5_DLL herr_t H5Pset_append_flush(hid_t dapl_id, unsigned ndims, const hsize_t b
  *                        that can fit in \p rdcc_nbytes bytes. For maximum
  *                        performance, this value should be set
  *                        approximately 100 times that number of chunks.
- *                        The default value is 521. If the value passed is
+ *                        The default value is 8191. If the value passed is
  *                        #H5D_CHUNK_CACHE_NSLOTS_DEFAULT, then the
  *                        property will not be set on \p dapl_id and the
  *                        parameter will come from the file access
