@@ -1630,14 +1630,15 @@ H5Pget_virtual_spatial_tree(hid_t dapl_id, bool *use_tree)
 
     FUNC_ENTER_API(FAIL)
 
-    /* Get the pointer to the property list */
-    if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5P_LOCK_SHARED, true)))
-        HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
+    if (use_tree) {
+        /* Get the pointer to the property list */
+        if (NULL == (dapl = H5P_acquire(dapl_id, H5P_TYPE_DATASET_ACCESS, H5P_LOCK_SHARED, true)))
+            HGOTO_ERROR(H5E_PLIST, H5E_BADID, FAIL, "can't find object for ID");
 
-    /* Get value from property list */
-    if (use_tree)
+        /* Get value from property list */
         if (H5P_get(dapl, H5D_ACS_USE_TREE_NAME, use_tree) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get dset use spatial tree flag value");
+    } /* end if */
 
 done:
     /* Release resources */
