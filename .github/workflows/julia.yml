@@ -17,13 +17,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get HDF5 source
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Install Dependencies
         shell: bash
         run: |
           sudo apt-get update
-          sudo apt-get install ninja-build doxygen graphviz
+          sudo apt-get install ninja-build graphviz
           sudo apt install libssl3 libssl-dev libcurl4 libcurl4-openssl-dev
           sudo apt install -y libaec-dev zlib1g-dev wget curl bzip2 flex bison cmake libzip-dev openssl build-essential
 
@@ -58,13 +58,13 @@ jobs:
         working-directory: ${{ runner.workspace }}/build
 
       - name: Install julia
-        uses: julia-actions/setup-julia@latest
+        uses: julia-actions/setup-julia@5c9647d97b78a5debe5164e9eec09d653d29bd71 # latest
         with:
           version: '1.6'
           arch: 'x64'
 
       - name: Get julia hdf5 source
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           repository: JuliaIO/HDF5.jl
           path: .
@@ -75,9 +75,9 @@ jobs:
           echo 'libhdf5 = "/tmp/lib/libhdf5.so"' >> LocalPreferences.toml
           echo 'libhdf5_hl = "/tmp/lib/libhdf5_hl.so"' >> LocalPreferences.toml
 
-      - uses: julia-actions/julia-buildpkg@latest
+      - uses: julia-actions/julia-buildpkg@e3eb439fad4f9aba7da2667e7510e4a46ebc46e1 # latest
 
       - name: Julia Run Tests
-        uses: julia-actions/julia-runtest@latest
+        uses: julia-actions/julia-runtest@d60b785c6f2bdf4ebfb18b2b6f7d93b7dfb0efe3 # latest
         env:
           JULIA_DEBUG: Main

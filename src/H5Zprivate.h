@@ -85,7 +85,7 @@ H5_DLL herr_t H5Z_set_local(const struct H5O_layout_t *layout, const struct H5O_
                             hid_t type_id);
 H5_DLL herr_t H5Z_can_apply_direct(const struct H5O_pline_t *pline);
 H5_DLL herr_t H5Z_set_local_direct(const struct H5O_pline_t *pline);
-H5_DLL htri_t H5Z_ignore_filters(const struct H5O_pline_t *pline, const H5T_t *type, const H5S_t *space);
+H5_DLL htri_t H5Z_ignore_filters(const struct H5O_pline_t *pline, const H5S_t *space);
 H5_DLL H5Z_filter_info_t *H5Z_filter_info(const struct H5O_pline_t *pline, H5Z_filter_t filter);
 H5_DLL htri_t             H5Z_filter_in_pline(const struct H5O_pline_t *pline, H5Z_filter_t filter);
 H5_DLL htri_t             H5Z_all_filters_avail(const struct H5O_pline_t *pline);
