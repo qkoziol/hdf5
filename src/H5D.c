@@ -1576,7 +1576,6 @@ H5Dwrite_chunk(hid_t dset_id, hid_t dxpl_id, uint32_t filters, const hsize_t *of
     H5VL_object_t                      *vol_obj;       /* Dataset for this operation   */
     H5VL_optional_args_t                vol_cb_args;   /* Arguments to VOL callback */
     H5VL_native_dataset_optional_args_t dset_opt_args; /* Arguments for optional operation */
-    uint32_t                            data_size_32;  /* Chunk data size (limited to 32-bits currently) */
     H5P_genplist_t                     *dxpl;          /* Dataset transfer property list pointer */
     herr_t                              ret_value = SUCCEED; /* Return value */
 
@@ -1592,11 +1591,6 @@ H5Dwrite_chunk(hid_t dset_id, hid_t dxpl_id, uint32_t filters, const hsize_t *of
     if (0 == data_size)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "data_size cannot be zero");
 
-    /* Make sure data size is less than 4 GiB */
-    data_size_32 = (uint32_t)data_size;
-    if (data_size != (size_t)data_size_32)
-        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid data_size - chunks cannot be > 4 GiB");
-
     /* Get the pointer to the dataset transfer property list */
     if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
@@ -1607,7 +1601,7 @@ H5Dwrite_chunk(hid_t dset_id, hid_t dxpl_id, uint32_t filters, const hsize_t *of
     /* Set up VOL callback arguments */
     dset_opt_args.chunk_write.offset  = offset;
     dset_opt_args.chunk_write.filters = filters;
-    dset_opt_args.chunk_write.size    = data_size_32;
+    dset_opt_args.chunk_write.size    = data_size;
     dset_opt_args.chunk_write.buf     = buf;
     vol_cb_args.op_type               = H5VL_NATIVE_DATASET_CHUNK_WRITE;
     vol_cb_args.args                  = &dset_opt_args;

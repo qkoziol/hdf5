@@ -1411,3 +1411,96 @@ H5_strcasestr(const char *haystack, const char *needle)
     } while (*haystack++);
     return 0;
 } /* end H5_strcasestr() */
+
+/*
+ * HDqsort_context - Reentrant qsort with context parameter
+ *
+ * Provides a uniform interface to platform-specific reentrant qsort functions.
+ * All library code should use the GNU/Linux signature for comparator functions:
+ *
+ *   int comparator(const void *a, const void *b, void *context)
+ *
+ * The macro handles platform differences internally, allowing the same
+ * comparator signature to work on Windows (qsort_s), macOS (BSD qsort_r),
+ * FreeBSD (use BSD qsort_r < 14.0, but GNU qsort_r >= 14.0), and Linux (GNU qsort_r).
+ *
+ * Usage:
+ *   HDqsort_context(base, count, elem_size, compare_func, context);
+ */
+#if defined(H5_HAVE_WIN32_API) || defined(H5_HAVE_DARWIN) || (defined(__FreeBSD__) && __FreeBSD__ < 14)
+/* Need wrapper for Windows, macOS, and FreeBSD < 14 which expect context-first comparators */
+typedef struct HDqsort_context_wrapper_t {
+    int (*gnu_compar)(const void *, const void *, void *);
+    void *gnu_arg;
+} HDqsort_context_wrapper_t;
+
+static int
+HDqsort_context_wrapper_func(void *wrapper_arg, const void *a, const void *b)
+{
+    HDqsort_context_wrapper_t *w = (HDqsort_context_wrapper_t *)wrapper_arg;
+    return w->gnu_compar(a, b, w->gnu_arg);
+}
+
+herr_t
+HDqsort_context(void *base, size_t nel, size_t size, int (*compar)(const void *, const void *, void *),
+                void *arg)
+{
+    HDqsort_context_wrapper_t wrapper;
+    wrapper.gnu_compar = compar;
+    wrapper.gnu_arg    = arg;
+#if defined(H5_HAVE_WIN32_API)
+    qsort_s(base, nel, size, HDqsort_context_wrapper_func, &wrapper);
+#elif defined(H5_HAVE_DARWIN) || (defined(__FreeBSD__) && __FreeBSD__ < 14)
+    /* Old BSD-style: context parameter comes before comparator function */
+    qsort_r(base, nel, size, &wrapper, HDqsort_context_wrapper_func);
+#endif
+    return SUCCEED;
+}
+#endif
+
+/*
+ * HDqsort_fallback - Fallback qsort implementation for platforms without qsort_r/qsort_s
+ *
+ * This implementation is not threadsafe, since it uses a global variable to store the
+ * comparator context, then uses standard qsort(). A beta branch of a threadsafe implementation
+ * of these routines may be found in the 'qsort_r_threadsafe' branch of the HDF5 GitHub repository.
+ *
+ */
+#ifndef H5_HAVE_QSORT_REENTRANT
+
+typedef struct HDqsort_fallback_context_t {
+    int (*gnu_compar)(const void *, const void *, void *);
+    void *gnu_arg;
+} HDqsort_fallback_context_t;
+
+/* Non-threadsafe: use global variable */
+static HDqsort_fallback_context_t *HDqsort_fallback_global_ctx = NULL;
+
+static int
+HDqsort_fallback_wrapper(const void *a, const void *b)
+{
+    /* Call the original GNU-style comparator with context from global */
+    return HDqsort_fallback_global_ctx->gnu_compar(a, b, HDqsort_fallback_global_ctx->gnu_arg);
+}
+
+herr_t
+HDqsort_fallback(void *base, size_t nel, size_t size, int (*compar)(const void *, const void *, void *),
+                 void *arg)
+{
+    HDqsort_fallback_context_t ctx;
+
+    ctx.gnu_compar = compar;
+    ctx.gnu_arg    = arg;
+
+    /* Store context in global variable */
+    HDqsort_fallback_global_ctx = &ctx;
+
+    qsort(base, nel, size, HDqsort_fallback_wrapper);
+
+    /* Clear the global pointer */
+    HDqsort_fallback_global_ctx = NULL;
+
+    return SUCCEED;
+}
+
+#endif /* !H5_HAVE_QSORT_REENTRANT */
