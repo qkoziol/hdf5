@@ -847,6 +847,21 @@ test_file_info()
     H5F_fspace_strategy_t out_strategy = H5F_FSPACE_STRATEGY_FSM_AGGR;
 
     try {
+        // Create a file using the earliest format.
+        FileAccPropList fapl;
+        fapl.setLibverBounds(H5F_LIBVER_EARLIEST, H5F_LIBVER_LATEST);
+        H5File tempfile(FILE7, H5F_ACC_TRUNC, FileCreatPropList::DEFAULT, fapl);
+
+        // Get the file's version information.
+        H5F_info2_t finfo;
+        tempfile.getFileInfo(finfo);
+        verify_val(static_cast<long>(finfo.super.version), 0, "H5File::getFileInfo", __LINE__, __FILE__);
+        verify_val(static_cast<long>(finfo.free.version), 0, "H5File::getFileInfo", __LINE__, __FILE__);
+        verify_val(static_cast<long>(finfo.sohm.version), 0, "H5File::getFileInfo", __LINE__, __FILE__);
+
+        // Close the file.
+        tempfile.close();
+
         // Create file creation property list.
         FileCreatPropList fcpl;
 
