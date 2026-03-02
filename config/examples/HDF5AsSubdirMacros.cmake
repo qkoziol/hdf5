@@ -17,9 +17,27 @@
 # and build it.  The HDF5 options should be set after the FetchContent_Declare command and before
 # the add_subdirectory command..
 macro (EXTERNAL_HDF5_LIBRARY compress_type)
-  set (HDF5_VERSION "2.0.0")
-  set (HDF5_VERSEXT "-2")
-  set (HDF5_VERSION_MAJOR "2.0")
+  #-----------------------------------------------------------------------------
+  # Version is extracted from H5public.h
+  # If not set in parent scope, read it from H5public.h now
+  #-----------------------------------------------------------------------------
+  if (NOT DEFINED H5_VERS_MAJOR)
+    # Use shared version parsing module
+    include(${CMAKE_CURRENT_LIST_DIR}/../cmake/HDF5VersionParsing.cmake)
+    parse_hdf5_version("${CMAKE_CURRENT_LIST_DIR}/../../src/H5public.h"
+                       MAJOR_VAR H5_VERS_MAJOR
+                       MINOR_VAR H5_VERS_MINOR
+                       RELEASE_VAR H5_VERS_RELEASE
+                       SUBRELEASE_VAR H5_VERS_SUBRELEASE)
+  endif ()
+
+  set (HDF5_VERSION "${H5_VERS_MAJOR}.${H5_VERS_MINOR}.${H5_VERS_RELEASE}")
+  if (H5_VERS_SUBRELEASE)
+    set (HDF5_VERSEXT "-${H5_VERS_SUBRELEASE}")
+  else ()
+    set (HDF5_VERSEXT "")
+  endif ()
+  set (HDF5_VERSION_MAJOR "${H5_VERS_MAJOR}.${H5_VERS_MINOR}")
   set (HDF5LIB_TGZ_NAME "hdf5.tar.gz" CACHE STRING "Use HDF5LIB from compressed file" FORCE)
   set (HDF5LIB_TGZ_ORIGPATH "https://github.com/HDFGroup/hdf5/releases/download/snapshot" CACHE STRING "Use HDF5LIB from original location" FORCE)
   set (HDF5LIB_USE_LOCALCONTENT ON CACHE BOOL "Use local file for HDF5LIB FetchContent" FORCE)
@@ -182,12 +200,17 @@ macro (HDF5_SUPPORT EXTNAME) #EXTNAME is the extension name used in the parent p
               endif ()
             endif ()
           endif ()
-          if (HDF_BUILD_JAVA AND HDF5_Java_FOUND)
+          if (HDF_BUILD_JAVA)
             if (${HDF5_PROVIDES_JAVA})
               set (CMAKE_JAVA_INCLUDE_PATH "${CMAKE_JAVA_INCLUDE_PATH};${HDF5_JAVA_INCLUDE_DIRS}")
-              set (H5${EXTNAME}_JAVA_LIBRARY ${HDF5_JAVA_LIBRARY})
-              set (H5${EXTNAME}_JAVA_LIBRARIES ${HDF5_JAVA_LIBRARY})
-              message (STATUS "HDF5 lib:${H5${EXTNAME}_JAVA_LIBRARY} jars:${HDF5_JAVA_INCLUDE_DIRS}}")
+              if (HDF5_PROVIDES_JNI AND HDF5_Java_FOUND)
+                set (H5${EXTNAME}_JAVA_LIBRARY ${HDF5_JAVA_LIBRARY})
+                set (H5${EXTNAME}_JAVA_LIBRARIES ${HDF5_JAVA_LIBRARY})
+                message (STATUS "HDF5 lib:${H5${EXTNAME}_JAVA_LIBRARY} jars:${HDF5_JAVA_INCLUDE_DIRS}}")
+              else ()
+                set (H5${EXTNAME}_JAVA_LIBRARY "${HDF5_JAVA_LIBRARY};${HDF5_JAVA_HDF5_LIBRARY}")
+                set (H5${EXTNAME}_JAVA_LIBRARIES ${H5${EXTNAME}_JAVA_LIBRARY})
+              endif ()
             else ()
               set (HDF_BUILD_JAVA OFF CACHE BOOL "Build Java support" FORCE)
               message (STATUS "HDF5 Java libs not found - disable build of Java examples")

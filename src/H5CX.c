@@ -596,6 +596,10 @@ H5CX__init_package(void)
     if (H5P_get(dapl, H5D_ACS_VDS_VIEW_NAME, &H5CX_def_dapl_cache.vds_view) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve VDS view property");
 
+    /* Get the VDS 'use spatial tree' flag */
+    if (H5P_get(dapl, H5D_ACS_USE_TREE_NAME, &H5CX_def_dapl_cache.vds_use_tree) < 0)
+        HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve VDS 'use spatial tree' property");
+
     /* Reset the "default FAPL cache" information */
     memset(&H5CX_def_fapl_cache, 0, sizeof(H5CX_fapl_cache_t));
 
@@ -5816,6 +5820,38 @@ H5CX_get_vds_view(H5D_vds_view_t *vds_view)
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5CX_get_vds_view() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_get_vds_use_tree
+ *
+ * Purpose:     Retrieves the VDS 'use spatial tree' for the current API call
+ *              context.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5CX_get_vds_use_tree(bool *vds_use_tree)
+{
+    H5CX_node_t **head      = NULL;    /* Pointer to head of API context list */
+    herr_t        ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Sanity check */
+    assert(vds_use_tree);
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+
+    H5CX_RETRIEVE_PROP_VALID(dapl, H5D_ACS_USE_TREE_NAME, vds_use_tree)
+
+    /* Get the value */
+    *vds_use_tree = (*head)->ctx.dapl_props.vds_use_tree;
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5CX_get_vds_use_tree() */
 
 /*-------------------------------------------------------------------------
  * Function:    H5CX__reset_dapl
