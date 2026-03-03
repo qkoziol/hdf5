@@ -406,15 +406,16 @@ typedef struct H5CX_fcpl_cache_t {
 
 /* Typedef for cached dataset access property list (DAPL) information */
 typedef struct H5CX_dapl_cache_t {
-    const char        *extfile_prefix;   /* Prefix for external file (H5D_ACS_EFILE_PREFIX_NAME) */
-    const char        *vds_prefix;       /* Prefix for VDS (H5D_ACS_VDS_PREFIX_NAME) */
-    H5D_append_flush_t append_flush;     /* Append flush property (H5D_ACS_APPEND_FLUSH_NAME) */
-    size_t             dapl_rdcc_nbytes; /* Property for size of the raw data cache (H5D_ACS_DATA_CACHE_BYTE_SIZE_NAME) */
-    size_t             dapl_rdcc_nslots; /* Property for number of slots in the raw data cache (H5D_ACS_DATA_CACHE_NUM_SLOTS_NAME) */
-    double             dapl_rdcc_w0;     /* Property for chunk cache preemption factor (H5D_ACS_PREEMPT_READ_CHUNKS_NAME) */
-    hsize_t            vds_printf_gap;   /* Property for VDS printf gap (H5D_ACS_VDS_PRINTF_GAP_NAME) */
-    H5D_vds_view_t     vds_view;         /* Property for VDS view (H5D_ACS_VDS_VIEW_NAME) */
-    bool               vds_use_tree;     /* Property for VDS 'use spatial tree' (H5D_ACS_USE_TREE_NAME) */
+    const char        *extfile_prefix; /* Prefix for external file (H5D_ACS_EFILE_PREFIX_NAME) */
+    const char        *vds_prefix;     /* Prefix for VDS (H5D_ACS_VDS_PREFIX_NAME) */
+    H5D_append_flush_t append_flush;   /* Append flush property (H5D_ACS_APPEND_FLUSH_NAME) */
+    size_t dapl_rdcc_nbytes; /* Property for size of the raw data cache (H5D_ACS_DATA_CACHE_BYTE_SIZE_NAME) */
+    size_t dapl_rdcc_nslots; /* Property for number of slots in the raw data cache
+                                (H5D_ACS_DATA_CACHE_NUM_SLOTS_NAME) */
+    double  dapl_rdcc_w0; /* Property for chunk cache preemption factor (H5D_ACS_PREEMPT_READ_CHUNKS_NAME) */
+    hsize_t vds_printf_gap;      /* Property for VDS printf gap (H5D_ACS_VDS_PRINTF_GAP_NAME) */
+    H5D_vds_view_t vds_view;     /* Property for VDS view (H5D_ACS_VDS_VIEW_NAME) */
+    bool           vds_use_tree; /* Property for VDS 'use spatial tree' (H5D_ACS_USE_TREE_NAME) */
 } H5CX_dapl_cache_t;
 
 /* Typedef for cached file access property list (FAPL) information */
