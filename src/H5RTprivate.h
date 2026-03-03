@@ -17,7 +17,7 @@
 #define H5RTprivate_H
 
 /* Private headers needed by this file */
-#include "H5private.h"   /* Generic Functions                   */
+#include "H5private.h" /* Generic Functions                   */
 
 /**************************/
 /* Library Private Macros */
