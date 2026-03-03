@@ -825,9 +825,6 @@ H5D__chunk_set_sizes(H5D_t *dset)
     assert(dset);
     assert(dset->shared->layout.u.chunk.ndims > 0);
 
-    /* Increment # of chunk dimensions, to account for datatype size as last element */
-    dset->shared->layout.u.chunk.ndims++;
-
     /* In this function, some of these sizes may have already been set since they are sometimes stored in the
      * file. If this is the case, verify the calculated sizes match the stored sizes. */
     /* Set the last dimension of the chunk size to the size of the datatype */
@@ -915,6 +912,9 @@ H5D__chunk_construct(H5F_t *f, H5D_t *dset)
         HGOTO_ERROR(H5E_DATASET, H5E_BADVALUE, FAIL, "no chunk information set?");
     if (layout->u.chunk.ndims != dset->shared->ndims)
         HGOTO_ERROR(H5E_DATASET, H5E_BADVALUE, FAIL, "dimensionality of chunks doesn't match the dataspace");
+
+    /* Increment # of chunk dimensions, to account for datatype size as last element */
+    layout->u.chunk.ndims++;
 
     /* Set chunk sizes */
     if (H5D__chunk_set_sizes(dset) < 0)
