@@ -59,7 +59,7 @@ typedef struct H5ES_event_t {
  *      There is no locking on the structure itself.
  */
 typedef struct H5ES_event_list_t {
-    size_t count;              /* # of events in list */
+    size_t        count;       /* # of events in list */
     H5ES_event_t *head, *tail; /* Head & tail of events in list */
 } H5ES_event_list_t;
 
@@ -76,21 +76,21 @@ typedef struct H5ES_event_list_t {
  */
 struct H5ES_t {
     H5TS_ATOMIC_TYPE(uint64_t) op_counter; /* Count of operations inserted into this set */
-    H5TS_ATOMIC_TYPE(bool) err_occurred; /* Flag for error from an operation */
+    H5TS_ATOMIC_TYPE(bool) err_occurred;   /* Flag for error from an operation */
 
     /* Callbacks for inserting and removing events in event set */
 #ifdef H5_HAVE_CONCURRENCY
-    H5TS_dlftt_rwlock_t cb_lock;      /* Lock on callback fields */
-#endif /* H5_HAVE_CONCURRENCY */
-    H5ES_event_insert_func_t ins_func; /* Callback to invoke for operation inserts */
-    void *ins_ctx;     /* Context for callback to invoke for operation inserts */
+    H5TS_dlftt_rwlock_t cb_lock;          /* Lock on callback fields */
+#endif                                    /* H5_HAVE_CONCURRENCY */
+    H5ES_event_insert_func_t   ins_func;  /* Callback to invoke for operation inserts */
+    void                      *ins_ctx;   /* Context for callback to invoke for operation inserts */
     H5ES_event_complete_func_t comp_func; /* Callback to invoke for operation completions */
-    void *comp_ctx;    /* Context for callback to invoke for operation inserts */
+    void                      *comp_ctx;  /* Context for callback to invoke for operation inserts */
 
     /* Lists of events */
 #ifdef H5_HAVE_CONCURRENCY
     H5TS_dlftt_rwlock_t list_lock; /* Lock on list fields */
-#endif /* H5_HAVE_CONCURRENCY */
+#endif                             /* H5_HAVE_CONCURRENCY */
     H5ES_event_list_t active;      /* List of active events in set */
     H5ES_event_list_t failed;      /* List of failed events in set */
 };

@@ -3714,7 +3714,8 @@ H5D_get_access_plist(const H5D_t *dset)
     if (dset->shared->layout.type == H5D_VIRTUAL) {
         if (H5P_set(new_dapl, H5D_ACS_VDS_VIEW_NAME, &dset->shared->layout.storage.u.virt.view) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, NULL, "can't set VDS view");
-        if (H5P_set(new_dapl, H5D_ACS_VDS_PRINTF_GAP_NAME, &dset->shared->layout.storage.u.virt.printf_gap) < 0)
+        if (H5P_set(new_dapl, H5D_ACS_VDS_PRINTF_GAP_NAME, &dset->shared->layout.storage.u.virt.printf_gap) <
+            0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, NULL, "can't set VDS printf gap");
         if (H5P_set(new_dapl, H5D_ACS_VDS_PREFIX_NAME, &dset->shared->vds_prefix) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, NULL, "can't set vds prefix");

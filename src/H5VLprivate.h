@@ -30,13 +30,13 @@
 
 /* If the module using this macro is allowed access to the private variables, access them directly */
 #ifdef H5VL_MODULE
-#define H5VL_OBJ_RC(VOL_OBJ)         ((VOL_OBJ)->rc)
-#define H5VL_OBJ_CONNECTOR(VOL_OBJ)  ((VOL_OBJ)->connector)
-#define H5VL_OBJ_DATA(VOL_OBJ)       ((VOL_OBJ)->data)
+#define H5VL_OBJ_RC(VOL_OBJ)        ((VOL_OBJ)->rc)
+#define H5VL_OBJ_CONNECTOR(VOL_OBJ) ((VOL_OBJ)->connector)
+#define H5VL_OBJ_DATA(VOL_OBJ)      ((VOL_OBJ)->data)
 #else /* H5VL_MODULE */
-#define H5VL_OBJ_RC(VOL_OBJ)         (H5VL_obj_get_rc(VOL_OBJ))
-#define H5VL_OBJ_CONNECTOR(VOL_OBJ)  (H5VL_obj_get_connector(VOL_OBJ))
-#define H5VL_OBJ_DATA(VOL_OBJ)       (H5VL_obj_get_data(VOL_OBJ))
+#define H5VL_OBJ_RC(VOL_OBJ)        (H5VL_obj_get_rc(VOL_OBJ))
+#define H5VL_OBJ_CONNECTOR(VOL_OBJ) (H5VL_obj_get_connector(VOL_OBJ))
+#define H5VL_OBJ_DATA(VOL_OBJ)      (H5VL_obj_get_data(VOL_OBJ))
 #endif /* H5VL_MODULE */
 
 /****************************/

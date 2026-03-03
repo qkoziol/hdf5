@@ -270,11 +270,11 @@ static herr_t
 H5ES__insert(H5ES_t *es, H5VL_connector_t *connector, void *request_token, const char *app_file,
              const char *app_func, unsigned app_line, const char *caller, const char *api_args)
 {
-    H5ES_event_t *ev          = NULL;    /* Event for request */
-    bool          ev_inserted = false;   /* Flag to indicate that event is in active list */
-    H5ES_event_insert_func_t tmp_ins_func = NULL; /* Callback to invoke for operation inserts */
-    void *tmp_ins_ctx = NULL;     /* Context for callback to invoke for operation inserts */
-    herr_t        ret_value   = SUCCEED; /* Return value */
+    H5ES_event_t            *ev           = NULL;  /* Event for request */
+    bool                     ev_inserted  = false; /* Flag to indicate that event is in active list */
+    H5ES_event_insert_func_t tmp_ins_func = NULL;  /* Callback to invoke for operation inserts */
+    void                    *tmp_ins_ctx  = NULL;  /* Context for callback to invoke for operation inserts */
+    herr_t                   ret_value    = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -329,7 +329,7 @@ H5ES__insert(H5ES_t *es, H5VL_connector_t *connector, void *request_token, const
 #endif /* H5_HAVE_CONCURRENCY */
     if (es->ins_func) {
         tmp_ins_func = es->ins_func;
-        tmp_ins_ctx = es->ins_ctx;
+        tmp_ins_ctx  = es->ins_ctx;
     }
 #ifdef H5_HAVE_CONCURRENCY
     /* Release lock on the callback fields */
@@ -530,11 +530,11 @@ done:
 herr_t
 H5ES__get_requests(H5ES_t *es, H5_iter_order_t order, hid_t *connector_ids, void **requests, size_t array_len)
 {
-    H5ES_get_requests_ctx_t ctx;                 /* Callback context */
+    H5ES_get_requests_ctx_t ctx; /* Callback context */
 #ifdef H5_HAVE_CONCURRENCY
-    bool have_list_lock = false;                /* Whether the list_lock is held */
-#endif /* H5_HAVE_CONCURRENCY */
-    herr_t                  ret_value = SUCCEED; /* Return value */
+    bool have_list_lock = false; /* Whether the list_lock is held */
+#endif                           /* H5_HAVE_CONCURRENCY */
+    herr_t ret_value = SUCCEED;  /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -583,11 +583,11 @@ done:
 static herr_t
 H5ES__op_complete(H5ES_t *es, H5ES_event_t *ev, H5VL_request_status_t ev_status)
 {
-    H5VL_request_specific_args_t vol_cb_args;                    /* Arguments to VOL callback */
-    hid_t                        err_stack_id = H5I_INVALID_HID; /* Error stack for failed operation */
-    H5ES_event_complete_func_t tmp_comp_func = NULL; /* Callback to invoke for operation completions */
-    void *tmp_comp_ctx = NULL;    /* Context for callback to invoke for operation inserts */
-    herr_t                       ret_value    = SUCCEED;         /* Return value */
+    H5VL_request_specific_args_t vol_cb_args;                     /* Arguments to VOL callback */
+    hid_t                        err_stack_id  = H5I_INVALID_HID; /* Error stack for failed operation */
+    H5ES_event_complete_func_t   tmp_comp_func = NULL; /* Callback to invoke for operation completions */
+    void  *tmp_comp_ctx = NULL;    /* Context for callback to invoke for operation inserts */
+    herr_t ret_value    = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -603,7 +603,7 @@ H5ES__op_complete(H5ES_t *es, H5ES_event_t *ev, H5VL_request_status_t ev_status)
 #endif /* H5_HAVE_CONCURRENCY */
     if (es->comp_func) {
         tmp_comp_func = es->comp_func;
-        tmp_comp_ctx = es->comp_ctx;
+        tmp_comp_ctx  = es->comp_ctx;
     }
 #ifdef H5_HAVE_CONCURRENCY
     /* Release lock on the callback fields */
@@ -629,7 +629,8 @@ H5ES__op_complete(H5ES_t *es, H5ES_event_t *ev, H5VL_request_status_t ev_status)
 
                 /* Retrieve the execution time info */
                 if (H5VL_request_specific(ev->request, &vol_cb_args) < 0)
-                    HGOTO_ERROR(H5E_EVENTSET, H5E_CANTGET, FAIL, "unable to retrieve execution time info for operation");
+                    HGOTO_ERROR(H5E_EVENTSET, H5E_CANTGET, FAIL,
+                                "unable to retrieve execution time info for operation");
             }
             else
                 /* Translate status */
@@ -790,11 +791,11 @@ done:
 herr_t
 H5ES__wait(H5ES_t *es, uint64_t timeout, size_t *num_in_progress, bool *op_failed)
 {
-    H5ES_wait_ctx_t ctx;                 /* Iterator callback context info */
+    H5ES_wait_ctx_t ctx; /* Iterator callback context info */
 #ifdef H5_HAVE_CONCURRENCY
-    bool have_list_lock = false;                /* Whether the list_lock is held */
-#endif /* H5_HAVE_CONCURRENCY */
-    herr_t          ret_value = SUCCEED; /* Return value */
+    bool have_list_lock = false; /* Whether the list_lock is held */
+#endif                           /* H5_HAVE_CONCURRENCY */
+    herr_t ret_value = SUCCEED;  /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -910,11 +911,11 @@ done:
 herr_t
 H5ES__cancel(H5ES_t *es, size_t *num_not_canceled, bool *op_failed)
 {
-    H5ES_cancel_ctx_t ctx;                 /* Iterator callback context info */
+    H5ES_cancel_ctx_t ctx; /* Iterator callback context info */
 #ifdef H5_HAVE_CONCURRENCY
-    bool have_list_lock = false;                /* Whether the list_lock is held */
-#endif /* H5_HAVE_CONCURRENCY */
-    herr_t            ret_value = SUCCEED; /* Return value */
+    bool have_list_lock = false; /* Whether the list_lock is held */
+#endif                           /* H5_HAVE_CONCURRENCY */
+    herr_t ret_value = SUCCEED;  /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -1035,11 +1036,11 @@ done:
 herr_t
 H5ES__get_err_info(H5ES_t *es, size_t num_err_info, H5ES_err_info_t err_info[], size_t *num_cleared)
 {
-    H5ES_gei_ctx_t ctx;                 /* Iterator callback context info */
+    H5ES_gei_ctx_t ctx; /* Iterator callback context info */
 #ifdef H5_HAVE_CONCURRENCY
-    bool have_list_lock = false;                /* Whether the list_lock is held */
-#endif /* H5_HAVE_CONCURRENCY */
-    herr_t         ret_value = SUCCEED; /* Return value */
+    bool have_list_lock = false; /* Whether the list_lock is held */
+#endif                           /* H5_HAVE_CONCURRENCY */
+    herr_t ret_value = SUCCEED;  /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -1123,9 +1124,9 @@ herr_t
 H5ES__close(H5ES_t *es)
 {
 #ifdef H5_HAVE_CONCURRENCY
-    bool have_list_lock = false;                /* Whether the list_lock is held */
-#endif /* H5_HAVE_CONCURRENCY */
-    herr_t ret_value = SUCCEED; /* Return value */
+    bool have_list_lock = false; /* Whether the list_lock is held */
+#endif                           /* H5_HAVE_CONCURRENCY */
+    herr_t ret_value = SUCCEED;  /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -1140,7 +1141,9 @@ H5ES__close(H5ES_t *es)
 
     /* Fail if active operations still present */
     if (H5ES__list_count(&es->active) > 0)
-        HGOTO_ERROR(H5E_EVENTSET, H5E_CANTCLOSEOBJ, FAIL, "can't close event set while unfinished operations are present (i.e. wait on event set first)");
+        HGOTO_ERROR(
+            H5E_EVENTSET, H5E_CANTCLOSEOBJ, FAIL,
+            "can't close event set while unfinished operations are present (i.e. wait on event set first)");
 
     /* Iterate over the failed events in the set, releasing them */
     if (H5ES__list_iterate(&es->failed, H5_ITER_NATIVE, H5ES__close_failed_cb, (void *)es) < 0)

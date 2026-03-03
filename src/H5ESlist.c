@@ -205,4 +205,3 @@ H5ES__list_remove(H5ES_event_list_t *el, const H5ES_event_t *ev)
 
     FUNC_LEAVE_NOAPI_VOID
 } /* end H5ES__list_remove() */
-

@@ -123,4 +123,3 @@ H5VL_obj_get_data(const H5VL_object_t *vol_obj)
 
     FUNC_LEAVE_NOAPI(vol_obj->data)
 } /* end H5VL_obj_get_data() */
-

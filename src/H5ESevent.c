@@ -152,4 +152,3 @@ H5ES__event_free(H5ES_event_t *ev)
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5ES__event_free() */
-
