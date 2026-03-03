@@ -956,11 +956,11 @@ H5D__virtual_copy_layout(H5O_layout_t *layout)
 {
     H5O_storage_virtual_ent_t  *orig_list             = NULL;
     H5O_storage_virtual_ent_t **orig_not_in_tree_list = NULL;
-    H5O_storage_virtual_t     *virt      = &layout->storage.u.virt;
-    H5P_genplist_t            *orig_source_fapl;
-    H5P_genplist_t            *orig_source_dapl;
-    size_t                     i;
-    herr_t                     ret_value = SUCCEED;
+    H5O_storage_virtual_t      *virt                  = &layout->storage.u.virt;
+    H5P_genplist_t             *orig_source_fapl;
+    H5P_genplist_t             *orig_source_dapl;
+    size_t                      i;
+    herr_t                      ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
 
@@ -975,12 +975,12 @@ H5D__virtual_copy_layout(H5O_layout_t *layout)
 
     /* Save original entry list and top-level property lists and reset in layout
      * so the originals aren't closed on error */
-    orig_source_fapl  = virt->source_fapl;
-    virt->source_fapl = NULL;
-    orig_source_dapl  = virt->source_dapl;
-    virt->source_dapl = NULL;
-    orig_list         = virt->list;
-    virt->list        = NULL;
+    orig_source_fapl       = virt->source_fapl;
+    virt->source_fapl      = NULL;
+    orig_source_dapl       = virt->source_dapl;
+    virt->source_dapl      = NULL;
+    orig_list              = virt->list;
+    virt->list             = NULL;
     orig_not_in_tree_list  = virt->not_in_tree_list;
     virt->not_in_tree_list = NULL;
 
