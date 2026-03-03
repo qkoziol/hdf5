@@ -555,7 +555,7 @@ H5ESregister_insert_func(hid_t es_id, H5ES_event_insert_func_t func, void *ctx)
         /* Release lock on the callback fields */
         H5TS_dlftt_rwlock_unlock(&es->cb_lock, H5TS_RWLOCK_LOCK_EXCLUSIVE);
 #endif /* H5_HAVE_CONCURRENCY */
-    } /* end if */
+    }  /* end if */
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -606,7 +606,7 @@ H5ESregister_complete_func(hid_t es_id, H5ES_event_complete_func_t func, void *c
         /* Release lock on the callback fields */
         H5TS_dlftt_rwlock_unlock(&es->cb_lock, H5TS_RWLOCK_LOCK_EXCLUSIVE);
 #endif /* H5_HAVE_CONCURRENCY */
-    } /* end if */
+    }  /* end if */
 
 done:
     FUNC_LEAVE_API(ret_value)
