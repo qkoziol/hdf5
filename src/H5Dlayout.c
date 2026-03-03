@@ -483,6 +483,10 @@ H5D__layout_oh_read(H5D_t *dataset)
     if (H5P_set(dataset->shared->dcpl, H5D_CRT_LAYOUT_NAME, &dataset->shared->layout) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "can't set layout");
 
+    /* Restore chunk dimensions */
+    if (H5D_CHUNKED == dataset->shared->layout.type)
+        dataset->shared->layout.u.chunk.ndims++;
+
 done:
     if (ret_value < 0) {
         if (pline_copied)
