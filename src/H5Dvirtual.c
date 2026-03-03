@@ -143,7 +143,7 @@ static herr_t H5D__virtual_mappings_to_leaves(H5O_storage_virtual_ent_t *mapping
                                               H5O_storage_virtual_ent_t ***not_in_tree_out,
                                               size_t *leaf_count, size_t *not_in_tree_count,
                                               size_t *not_in_tree_nalloc);
-static bool H5D__virtual_should_build_tree(const H5O_storage_virtual_t *storage);
+static bool   H5D__virtual_should_build_tree(const H5O_storage_virtual_t *storage);
 static herr_t H5D__virtual_not_in_tree_grow(H5O_storage_virtual_ent_t ***list, size_t *nalloc);
 static herr_t H5D__virtual_not_in_tree_add(H5O_storage_virtual_ent_t ***list, size_t *nused, size_t *nalloc,
                                            H5O_storage_virtual_ent_t *mapping);
@@ -955,10 +955,10 @@ H5D__virtual_copy_layout(H5O_layout_t *layout)
 {
     H5O_storage_virtual_ent_t  *orig_list             = NULL;
     H5O_storage_virtual_ent_t **orig_not_in_tree_list = NULL;
-    H5O_storage_virtual_t     *virt      = &layout->storage.u.virt;
-    H5P_genplist_t            *orig_source_fapl;
-    size_t                     i;
-    herr_t                     ret_value = SUCCEED;
+    H5O_storage_virtual_t      *virt                  = &layout->storage.u.virt;
+    H5P_genplist_t             *orig_source_fapl;
+    size_t                      i;
+    herr_t                      ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
 
@@ -973,10 +973,10 @@ H5D__virtual_copy_layout(H5O_layout_t *layout)
 
     /* Save original entry list and top-level property lists and reset in layout
      * so the originals aren't closed on error */
-    orig_source_fapl  = virt->source_fapl;
-    virt->source_fapl = NULL;
-    orig_list         = virt->list;
-    virt->list        = NULL;
+    orig_source_fapl       = virt->source_fapl;
+    virt->source_fapl      = NULL;
+    orig_list              = virt->list;
+    virt->list             = NULL;
     orig_not_in_tree_list  = virt->not_in_tree_list;
     virt->not_in_tree_list = NULL;
 
@@ -4185,7 +4185,7 @@ done:
 static bool
 H5D__virtual_should_build_tree(const H5O_storage_virtual_t *storage)
 {
-    bool          ret_value         = false;
+    bool ret_value = false;
 
     FUNC_ENTER_PACKAGE_NOERR
 

@@ -1676,7 +1676,7 @@ H5Dwrite_chunk(hid_t dset_id, hid_t dxpl_id, uint32_t filters, const hsize_t *of
     H5VL_object_t                      *vol_obj;             /* Dataset for this operation   */
     H5VL_optional_args_t                vol_cb_args;         /* Arguments to VOL callback */
     H5VL_native_dataset_optional_args_t dset_opt_args;       /* Arguments for optional operation */
-    H5P_genplist_t                     *dxpl = NULL;         /* Dataset transfer property list pointer */
+    H5P_genplist_t                     *dxpl      = NULL;    /* Dataset transfer property list pointer */
     herr_t                              ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
