@@ -1592,7 +1592,7 @@ H5Pget_virtual_spatial_tree(hid_t dcpl_id, bool *use_tree)
     if (NULL == use_tree)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "receiving pointer cannot be NULL");
 
-    plist = H5P_object_verify(dcpl_id, H5P_DATASET_ACCESS, true);
+    plist = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_ACCESS, true);
     if (NULL == plist)
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
@@ -1638,7 +1638,7 @@ H5Pset_virtual_spatial_tree(hid_t dapl_id, bool use_tree)
 
     FUNC_ENTER_API(FAIL)
 
-    plist = H5P_object_verify(dapl_id, H5P_DATASET_ACCESS, false);
+    plist = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, false);
     if (NULL == plist)
         HGOTO_ERROR(H5E_ID, H5E_BADID, FAIL, "can't find object for ID");
 
