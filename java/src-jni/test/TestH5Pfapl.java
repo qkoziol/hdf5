@@ -1322,7 +1322,8 @@ public class TestH5Pfapl {
         try {
             H5.H5Pset_fapl_windows(fapl_id);
             long driver_type = H5.H5Pget_driver(fapl_id);
-            // assertTrue("H5Pget_driver: windows = " + driver_type, HDF5Constants.H5FD_WINDOWS == driver_type);
+            // assertTrue("H5Pget_driver: windows = " + driver_type, HDF5Constants.H5FD_WINDOWS ==
+            // driver_type);
         }
         catch (Throwable err) {
             err.printStackTrace();
