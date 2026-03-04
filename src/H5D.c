@@ -264,7 +264,7 @@ H5Dcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
 
     /* If a token was created, add the token to the event set */
     if (NULL != token) {
-        H5ES_t *es;     /* Event set for operation */
+        H5ES_t *es; /* Event set for operation */
 
         /* Get event set */
         if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
@@ -278,7 +278,7 @@ H5Dcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
                 HDONE_ERROR(H5E_DATASET, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on dataset ID");
             HGOTO_ERROR(H5E_DATASET, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
         } /* end if */
-    } /* end if */
+    }     /* end if */
 
 done:
     /* Release resources */
@@ -509,7 +509,7 @@ H5Dopen_async(const char *app_file, const char *app_func, unsigned app_line, hid
 
     /* If a token was created, add the token to the event set */
     if (NULL != token) {
-        H5ES_t *es;     /* Event set for operation */
+        H5ES_t *es; /* Event set for operation */
 
         /* Get event set */
         if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
@@ -523,7 +523,7 @@ H5Dopen_async(const char *app_file, const char *app_func, unsigned app_line, hid
                 HDONE_ERROR(H5E_DATASET, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on dataset ID");
             HGOTO_ERROR(H5E_DATASET, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
         } /* end if */
-    } /* end if */
+    }     /* end if */
 
 done:
     /* Release resources */
@@ -612,7 +612,7 @@ H5Dclose_async(const char *app_file, const char *app_func, unsigned app_line, hi
 
     /* If a token was created, add the token to the event set */
     if (NULL != token) {
-        H5ES_t *es;     /* Event set for operation */
+        H5ES_t *es; /* Event set for operation */
 
         /* Get event set */
         if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
@@ -733,7 +733,7 @@ H5Dget_space_async(const char *app_file, const char *app_func, unsigned app_line
 
     /* If a token was created, add the token to the event set */
     if (NULL != token) {
-        H5ES_t *es;     /* Event set for operation */
+        H5ES_t *es; /* Event set for operation */
 
         /* Get event set */
         if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
@@ -748,7 +748,7 @@ H5Dget_space_async(const char *app_file, const char *app_func, unsigned app_line
                             "can't decrement count on dataspace ID");
             HGOTO_ERROR(H5E_DATASET, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
         } /* end if */
-    } /* end if */
+    }     /* end if */
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -1201,7 +1201,7 @@ H5Dread_async(const char *app_file, const char *app_func, unsigned app_line, hid
 
     /* If a token was created, add the token to the event set */
     if (NULL != token) {
-        H5ES_t *es;     /* Event set for operation */
+        H5ES_t *es; /* Event set for operation */
 
         /* Get event set */
         if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
@@ -1308,7 +1308,7 @@ H5Dread_multi_async(const char *app_file, const char *app_func, unsigned app_lin
 
     /* If a token was created, add the token to the event set */
     if (NULL != token) {
-        H5ES_t *es;     /* Event set for operation */
+        H5ES_t *es; /* Event set for operation */
 
         /* Get event set */
         if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
@@ -1584,7 +1584,7 @@ H5Dwrite_async(const char *app_file, const char *app_func, unsigned app_line, hi
 
     /* If a token was created, add the token to the event set */
     if (NULL != token) {
-        H5ES_t *es;     /* Event set for operation */
+        H5ES_t *es; /* Event set for operation */
 
         /* Get event set */
         if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
@@ -1691,7 +1691,7 @@ H5Dwrite_multi_async(const char *app_file, const char *app_func, unsigned app_li
 
     /* If a token was created, add the token to the event set */
     if (NULL != token) {
-        H5ES_t *es;     /* Event set for operation */
+        H5ES_t *es; /* Event set for operation */
 
         /* Get event set */
         if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
@@ -2277,7 +2277,7 @@ H5Dset_extent_async(const char *app_file, const char *app_func, unsigned app_lin
 
     /* If a token was created, add the token to the event set */
     if (NULL != token) {
-        H5ES_t *es;     /* Event set for operation */
+        H5ES_t *es; /* Event set for operation */
 
         /* Get event set */
         if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))

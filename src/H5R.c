@@ -668,7 +668,7 @@ H5Ropen_object_async(const char *app_file, const char *app_func, unsigned app_li
 
     /* If a token was created, add the token to the event set */
     if (NULL != token) {
-        H5ES_t *es;     /* Event set for operation */
+        H5ES_t *es; /* Event set for operation */
 
         /* Get event set */
         if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
@@ -683,7 +683,7 @@ H5Ropen_object_async(const char *app_file, const char *app_func, unsigned app_li
                             "can't decrement count on object ID");
             HGOTO_ERROR(H5E_REFERENCE, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
         } /* end if */
-    } /* end if */
+    }     /* end if */
 
 done:
     /* Release resources */
@@ -881,7 +881,7 @@ H5Ropen_region_async(const char *app_file, const char *app_func, unsigned app_li
 
     /* If a token was created, add the token to the event set */
     if (NULL != token) {
-        H5ES_t *es;     /* Event set for operation */
+        H5ES_t *es; /* Event set for operation */
 
         /* Get event set */
         if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
@@ -896,7 +896,7 @@ H5Ropen_region_async(const char *app_file, const char *app_func, unsigned app_li
                             "can't decrement count on region ID");
             HGOTO_ERROR(H5E_REFERENCE, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
         } /* end if */
-    } /* end if */
+    }     /* end if */
 
 done:
     /* Release resources */
@@ -1085,7 +1085,7 @@ H5Ropen_attr_async(const char *app_file, const char *app_func, unsigned app_line
 
     /* If a token was created, add the token to the event set */
     if (NULL != token) {
-        H5ES_t *es;     /* Event set for operation */
+        H5ES_t *es; /* Event set for operation */
 
         /* Get event set */
         if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
@@ -1100,7 +1100,7 @@ H5Ropen_attr_async(const char *app_file, const char *app_func, unsigned app_line
                             "can't decrement count on attribute ID");
             HGOTO_ERROR(H5E_REFERENCE, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
         } /* end if */
-    } /* end if */
+    }     /* end if */
 
 done:
     /* Release resources */

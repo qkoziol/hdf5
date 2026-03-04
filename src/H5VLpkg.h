@@ -55,8 +55,8 @@ H5TS_DEF_ATOMIC_TYPE(int64_t)
 struct H5VL_connector_t {
     /* Pointer to connector class struct   */
     union {
-        H5VL_class_t *non_c_cls; /* Write-only, during struct init */
-        H5VL_class_t *const cls; /* Read-only, at all other times */
+        H5VL_class_t       *non_c_cls; /* Write-only, during struct init */
+        H5VL_class_t *const cls;       /* Read-only, at all other times */
     };
     H5TS_ATOMIC_TYPE(int64_t) nrefs;      /* Number of references to this struct */
     struct H5VL_connector_t *next, *prev; /* Pointers to the next & previous */
@@ -74,15 +74,15 @@ struct H5VL_connector_t {
 struct H5VL_object_t {
     /* Pointer to connector-managed data for this object */
     union {
-        void *non_c_data; /* Write-only, during struct init */
-        void *const data; /* Read-only, at all other times */
+        void       *non_c_data; /* Write-only, during struct init */
+        void *const data;       /* Read-only, at all other times */
     };
     /* Pointer to VOL connector used by this object */
     union {
-        H5VL_connector_t *non_c_connector; /* Write-only, during struct init */
-        H5VL_connector_t *const connector; /* Read-only, at all other times */
+        H5VL_connector_t       *non_c_connector; /* Write-only, during struct init */
+        H5VL_connector_t *const connector;       /* Read-only, at all other times */
     };
-    H5TS_ATOMIC_TYPE(size_t) rc;       /* Reference count */
+    H5TS_ATOMIC_TYPE(size_t) rc; /* Reference count */
 };
 
 /*****************************/

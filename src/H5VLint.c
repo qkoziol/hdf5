@@ -196,7 +196,7 @@ H5VL__init_package(void)
     /* Initialize the ID group for the VL IDs */
     if (H5I_register_type(H5I_VOL_CLS, true) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTINIT, FAIL, "unable to initialize H5VL interface");
-/* Init R/W lock */
+        /* Init R/W lock */
 
 #ifdef H5_HAVE_CONCURRENCY
     /* Initialize the R/W lock protecting the list of connectors */
@@ -554,7 +554,7 @@ H5VL_new_vol_obj(H5I_type_t type, void *object, H5VL_connector_t *connector, boo
 {
     H5VL_object_t *new_vol_obj  = NULL;  /* Pointer to new VOL object                    */
     bool           conn_rc_incr = false; /* Whether the VOL connector refcount has been incremented */
-    bool           rc_init = false; /* Whether the refcount has been initialized */
+    bool           rc_init      = false; /* Whether the refcount has been initialized */
     H5VL_object_t *ret_value    = NULL;  /* Return value                                 */
 
     FUNC_ENTER_NOAPI(NULL)
@@ -862,8 +862,8 @@ H5VL_create_object(void *object, H5VL_connector_t *vol_connector)
     /* (Does not wrap object, since it's from a VOL callback) */
     if (NULL == (ret_value = H5FL_CALLOC(H5VL_object_t)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTALLOC, NULL, "can't allocate memory for VOL object");
-    ret_value->non_c_connector  = vol_connector;
-    ret_value->non_c_data = object;
+    ret_value->non_c_connector = vol_connector;
+    ret_value->non_c_data      = object;
     H5TS_ATOMIC_INIT(size_t, &ret_value->rc, 1);
 
     /* Bump the reference count on the VOL connector */
@@ -1197,7 +1197,7 @@ done:
 hsize_t
 H5VL_object_inc_rc(H5VL_object_t *vol_obj)
 {
-    size_t rc = 0;  /* Refcount for object */
+    size_t rc = 0; /* Refcount for object */
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
