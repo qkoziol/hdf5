@@ -735,15 +735,22 @@ H5Fcreate_async(const char *app_file, const char *app_func, unsigned app_line, c
         HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, H5I_INVALID_HID, "invalid object identifier");
 
     /* If a token was created, add the token to the event set */
-    if (NULL != token)
+    if (NULL != token) {
+        H5ES_t *es;     /* Event set for operation */
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, H5I_INVALID_HID, "not an event set");
+
         /* clang-format off */
-        if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
+        if (H5ES_insert(es, H5VL_OBJ_CONNECTOR(vol_obj), token,
                         H5ARG_TRACE8(__func__, "*s*sIu*sIuiii", app_file, app_func, app_line, filename, flags, fcpl_id, fapl_id, es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref(ret_value) < 0)
                 HDONE_ERROR(H5E_FILE, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on file ID");
             HGOTO_ERROR(H5E_FILE, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
         } /* end if */
+    } /* end if */
 
     /* Reset token for 'post open' operation */
     /* (Unnecessary if create operation didn't change it, but not worth checking -QAK) */
@@ -754,12 +761,22 @@ H5Fcreate_async(const char *app_file, const char *app_func, unsigned app_line, c
         HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, H5I_INVALID_HID, "'post open' operation failed");
 
     /* If a token was created, add the token to the event set */
-    if (NULL != token)
+    if (NULL != token) {
+        H5ES_t *es;     /* Event set for operation */
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, H5I_INVALID_HID, "not an event set");
+
         /* clang-format off */
-        if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE8(__func__, "*s*sIu*sIuiii", app_file, app_func, app_line, filename, flags, fcpl_id, fapl_id, es_id)) < 0)
+        if (H5ES_insert(es, H5VL_OBJ_CONNECTOR(vol_obj), token,
+                        H5ARG_TRACE8(__func__, "*s*sIu*sIuiii", app_file, app_func, app_line, filename, flags, fcpl_id, fapl_id, es_id)) < 0) {
             /* clang-format on */
+            if (H5I_dec_app_ref(ret_value) < 0)
+                HDONE_ERROR(H5E_FILE, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on file ID");
             HGOTO_ERROR(H5E_FILE, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
+        } /* end if */
+    } /* end if */
 
 done:
     /* Release resources */
@@ -923,15 +940,22 @@ H5Fopen_async(const char *app_file, const char *app_func, unsigned app_line, con
         HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, H5I_INVALID_HID, "invalid object identifier");
 
     /* If a token was created, add the token to the event set */
-    if (NULL != token)
+    if (NULL != token) {
+        H5ES_t *es;     /* Event set for operation */
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, H5I_INVALID_HID, "not an event set");
+
         /* clang-format off */
-        if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
+        if (H5ES_insert(es, H5VL_OBJ_CONNECTOR(vol_obj), token,
                         H5ARG_TRACE7(__func__, "*s*sIu*sIuii", app_file, app_func, app_line, filename, flags, fapl_id, es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref(ret_value) < 0)
                 HDONE_ERROR(H5E_FILE, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on file ID");
             HGOTO_ERROR(H5E_FILE, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
         } /* end if */
+    } /* end if */
 
     /* Reset token for 'post open' operation */
     /* (Unnecessary if create operation didn't change it, but not worth checking -QAK) */
@@ -942,12 +966,22 @@ H5Fopen_async(const char *app_file, const char *app_func, unsigned app_line, con
         HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, H5I_INVALID_HID, "'post open' operation failed");
 
     /* If a token was created, add the token to the event set */
-    if (NULL != token)
+    if (NULL != token) {
+        H5ES_t *es;     /* Event set for operation */
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, H5I_INVALID_HID, "not an event set");
+
         /* clang-format off */
-        if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE7(__func__, "*s*sIu*sIuii", app_file, app_func, app_line, filename, flags, fapl_id, es_id)) < 0)
+        if (H5ES_insert(es, H5VL_OBJ_CONNECTOR(vol_obj), token,
+                        H5ARG_TRACE7(__func__, "*s*sIu*sIuii", app_file, app_func, app_line, filename, flags, fapl_id, es_id)) < 0) {
             /* clang-format on */
+            if (H5I_dec_app_ref(ret_value) < 0)
+                HDONE_ERROR(H5E_FILE, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on file ID");
             HGOTO_ERROR(H5E_FILE, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
+        } /* end if */
+    } /* end if */
 
 done:
     /* Release resources */
@@ -1057,12 +1091,19 @@ H5Fflush_async(const char *app_file, const char *app_func, unsigned app_line, hi
         HGOTO_ERROR(H5E_FILE, H5E_CANTFLUSH, FAIL, "unable to asynchronously flush file");
 
     /* If a token was created, add the token to the event set */
-    if (NULL != token)
+    if (NULL != token) {
+        H5ES_t *es;     /* Event set for operation */
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not an event set");
+
         /* clang-format off */
-        if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
+        if (H5ES_insert(es, H5VL_OBJ_CONNECTOR(vol_obj), token,
                 H5ARG_TRACE6(__func__, "*s*sIuiFsi", app_file, app_func, app_line, object_id, scope, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_FILE, H5E_CANTINSERT, FAIL, "can't insert token into event set");
+    } /* end if */
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -1149,12 +1190,19 @@ H5Fclose_async(const char *app_file, const char *app_func, unsigned app_line, hi
         HGOTO_ERROR(H5E_FILE, H5E_CANTCLOSEFILE, FAIL, "decrementing file ID failed");
 
     /* If a token was created, add the token to the event set */
-    if (NULL != token)
+    if (NULL != token) {
+        H5ES_t *es;     /* Event set for operation */
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not an event set");
+
         /* clang-format off */
-        if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
+        if (H5ES_insert(es, H5VL_OBJ_CONNECTOR(vol_obj), token,
                         H5ARG_TRACE5(__func__, "*s*sIuii", app_file, app_func, app_line, file_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_FILE, H5E_CANTINSERT, FAIL, "can't insert token into event set");
+    } /* end if */
 
 done:
     if (connector && H5VL_conn_dec_rc(connector) < 0)
@@ -1553,15 +1601,22 @@ H5Freopen_async(const char *app_file, const char *app_func, unsigned app_line, h
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, H5I_INVALID_HID, "can't get handle for re-opened file");
 
     /* If a token was created, add the token to the event set */
-    if (NULL != token)
+    if (NULL != token) {
+        H5ES_t *es;     /* Event set for operation */
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "not an event set");
+
         /* clang-format off */
-        if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
+        if (H5ES_insert(es, H5VL_OBJ_CONNECTOR(vol_obj), token,
                         H5ARG_TRACE5(__func__, "*s*sIuii", app_file, app_func, app_line, file_id, es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref(ret_value) < 0)
                 HDONE_ERROR(H5E_FILE, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on file ID");
             HGOTO_ERROR(H5E_FILE, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
         } /* end if */
+    } /* end if */
 
     /* Reset token for 'post open' operation */
     /* (Unnecessary if create operation didn't change it, but not worth checking -QAK) */
@@ -1572,12 +1627,22 @@ H5Freopen_async(const char *app_file, const char *app_func, unsigned app_line, h
         HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, H5I_INVALID_HID, "'post open' operation failed");
 
     /* If a token was created, add the token to the event set */
-    if (NULL != token)
+    if (NULL != token) {
+        H5ES_t *es;     /* Event set for operation */
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, H5I_INVALID_HID, "not an event set");
+
         /* clang-format off */
-        if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
-                        H5ARG_TRACE5(__func__, "*s*sIuii", app_file, app_func, app_line, file_id, es_id)) < 0)
+        if (H5ES_insert(es, H5VL_OBJ_CONNECTOR(vol_obj), token,
+                        H5ARG_TRACE5(__func__, "*s*sIuii", app_file, app_func, app_line, file_id, es_id)) < 0) {
             /* clang-format on */
+            if (H5I_dec_app_ref(ret_value) < 0)
+                HDONE_ERROR(H5E_FILE, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on file ID");
             HGOTO_ERROR(H5E_FILE, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
+        } /* end if */
+    } /* end if */
 
 done:
     FUNC_LEAVE_API(ret_value)

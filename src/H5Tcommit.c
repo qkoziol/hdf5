@@ -236,12 +236,19 @@ H5Tcommit_async(const char *app_file, const char *app_func, unsigned app_line, h
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTOPENOBJ, FAIL, "unable to commit datatype asynchronously");
 
     /* If a token was created, add the token to the event set */
-    if (NULL != token)
+    if (NULL != token) {
+        H5ES_t *es;     /* Event set for operation */
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_DATATYPE, H5E_BADTYPE, FAIL, "not an event set");
+
         /* clang-format off */
-        if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
+        if (H5ES_insert(es, H5VL_OBJ_CONNECTOR(vol_obj), token,
                         H5ARG_TRACE10(__func__, "*s*sIui*siiiii", app_file, app_func, app_line, loc_id, name, type_id, lcpl_id, tcpl_id, tapl_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINSERT, FAIL, "can't insert token into event set");
+    } /* end if */
 
 done:
     /* Release resources */
@@ -781,9 +788,15 @@ H5Topen_async(const char *app_file, const char *app_func, unsigned app_line, hid
                     "unable to open named datatype asynchronously");
 
     /* If a token was created, add the token to the event set */
-    if (NULL != token)
+    if (NULL != token) {
+        H5ES_t *es;     /* Event set for operation */
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_DATATYPE, H5E_BADTYPE, FAIL, "not an event set");
+
         /* clang-format off */
-        if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
+        if (H5ES_insert(es, H5VL_OBJ_CONNECTOR(vol_obj), token,
                         H5ARG_TRACE7(__func__, "*s*sIui*sii", app_file, app_func, app_line, loc_id, name, tapl_id, es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref_always_close(ret_value) < 0)
@@ -791,6 +804,7 @@ H5Topen_async(const char *app_file, const char *app_func, unsigned app_line, hid
                             "can't decrement count on datatype ID");
             HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
         } /* end if */
+    } /* end if */
 
 done:
     /* Release resources */

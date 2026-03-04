@@ -205,15 +205,22 @@ H5Oopen_async(const char *app_file, const char *app_func, unsigned app_line, hid
         HGOTO_ERROR(H5E_OHDR, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to asynchronously open object");
 
     /* If a token was created, add the token to the event set */
-    if (NULL != token)
+    if (NULL != token) {
+        H5ES_t *es;     /* Event set for operation */
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_OHDR, H5E_BADTYPE, H5I_INVALID_HID, "not an event set");
+
         /* clang-format off */
-        if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
+        if (H5ES_insert(es, H5VL_OBJ_CONNECTOR(vol_obj), token,
                         H5ARG_TRACE7(__func__, "*s*sIui*sii", app_file, app_func, app_line, loc_id, name, lapl_id, es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref_always_close(ret_value) < 0)
                 HDONE_ERROR(H5E_OHDR, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on object ID");
             HGOTO_ERROR(H5E_OHDR, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
-        }
+        } /* end if */
+    } /* end if */
 
 done:
     /* Release resources */
@@ -350,15 +357,22 @@ H5Oopen_by_idx_async(const char *app_file, const char *app_func, unsigned app_li
         HGOTO_ERROR(H5E_OHDR, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to asynchronously open object");
 
     /* If a token was created, add the token to the event set */
-    if (NULL != token)
+    if (NULL != token) {
+        H5ES_t *es;     /* Event set for operation */
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_OHDR, H5E_BADTYPE, H5I_INVALID_HID, "not an event set");
+
         /* clang-format off */
-        if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
+        if (H5ES_insert(es, H5VL_OBJ_CONNECTOR(vol_obj), token,
                         H5ARG_TRACE10(__func__, "*s*sIui*sIiIohii", app_file, app_func, app_line, loc_id, group_name, idx_type, order, n, lapl_id, es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref_always_close(ret_value) < 0)
                 HDONE_ERROR(H5E_OHDR, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on object ID");
             HGOTO_ERROR(H5E_OHDR, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
-        }
+        } /* end if */
+    } /* end if */
 
 done:
     /* Release resources */
@@ -628,12 +642,19 @@ H5Ocopy_async(const char *app_file, const char *app_func, unsigned app_line, hid
         HGOTO_ERROR(H5E_OHDR, H5E_CANTCOPY, FAIL, "unable to asynchronously copy object");
 
     /* If a token was created, add the token to the event set */
-    if (NULL != token)
+    if (NULL != token) {
+        H5ES_t *es;     /* Event set for operation */
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_OHDR, H5E_BADTYPE, FAIL, "not an event set");
+
         /* clang-format off */
-        if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
+        if (H5ES_insert(es, H5VL_OBJ_CONNECTOR(vol_obj), token,
                         H5ARG_TRACE10(__func__, "*s*sIui*si*siii", app_file, app_func, app_line, src_loc_id, src_name, dst_loc_id, dst_name, ocpypl_id, lcpl_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_OHDR, H5E_CANTINSERT, FAIL, "can't insert token into event set");
+    } /* end if */
 
 done:
     /* Release resources */
@@ -734,12 +755,19 @@ H5Oflush_async(const char *app_file, const char *app_func, unsigned app_line, hi
         HGOTO_ERROR(H5E_OHDR, H5E_CANTFLUSH, FAIL, "unable to asynchronously flush object");
 
     /* If a token was created, add the token to the event set */
-    if (NULL != token)
+    if (NULL != token) {
+        H5ES_t *es;     /* Event set for operation */
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_OHDR, H5E_BADTYPE, FAIL, "not an event set");
+
         /* clang-format off */
-        if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
+        if (H5ES_insert(es, H5VL_OBJ_CONNECTOR(vol_obj), token,
                         H5ARG_TRACE5(__func__, "*s*sIuii", app_file, app_func, app_line, obj_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_OHDR, H5E_CANTINSERT, FAIL, "can't insert token into event set");
+    } /* end if */
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -834,12 +862,19 @@ H5Orefresh_async(const char *app_file, const char *app_func, unsigned app_line, 
         HGOTO_ERROR(H5E_OHDR, H5E_CANTLOAD, FAIL, "unable to asynchronously refresh object");
 
     /* If a token was created, add the token to the event set */
-    if (NULL != token)
+    if (NULL != token) {
+        H5ES_t *es;     /* Event set for operation */
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_OHDR, H5E_BADTYPE, FAIL, "not an event set");
+
         /* clang-format off */
-        if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
+        if (H5ES_insert(es, H5VL_OBJ_CONNECTOR(vol_obj), token,
                         H5ARG_TRACE5(__func__, "*s*sIuii", app_file, app_func, app_line, oid, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_OHDR, H5E_CANTINSERT, FAIL, "can't insert token into event set");
+    } /* end if */
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -1279,12 +1314,19 @@ H5Oget_info_by_name_async(const char *app_file, const char *app_func, unsigned a
         HGOTO_ERROR(H5E_OHDR, H5E_CANTGET, FAIL, "can't asynchronously retrieve object info");
 
     /* If a token was created, add the token to the event set */
-    if (NULL != token)
+    if (NULL != token) {
+        H5ES_t *es;     /* Event set for operation */
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_OHDR, H5E_BADTYPE, FAIL, "not an event set");
+
         /* clang-format off */
-        if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
+        if (H5ES_insert(es, H5VL_OBJ_CONNECTOR(vol_obj), token,
                         H5ARG_TRACE9(__func__, "*s*sIui*s*!Iuii", app_file, app_func, app_line, loc_id, name, oinfo, fields, lapl_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_OHDR, H5E_CANTINSERT, FAIL, "can't insert token into event set");
+    } /* end if */
 
 done:
     /* Release resources */
@@ -2096,12 +2138,19 @@ H5Oclose_async(const char *app_file, const char *app_func, unsigned app_line, hi
         HGOTO_ERROR(H5E_OHDR, H5E_CANTCLOSEFILE, FAIL, "decrementing object ID failed");
 
     /* If a token was created, add the token to the event set */
-    if (NULL != token)
+    if (NULL != token) {
+        H5ES_t *es;     /* Event set for operation */
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_OHDR, H5E_BADTYPE, FAIL, "not an event set");
+
         /* clang-format off */
-        if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
+        if (H5ES_insert(es, H5VL_OBJ_CONNECTOR(vol_obj), token,
                         H5ARG_TRACE5(__func__, "*s*sIuii", app_file, app_func, app_line, object_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_OHDR, H5E_CANTINSERT, FAIL, "can't insert token into event set");
+    } /* end if */
 
 done:
     if (connector && H5VL_conn_dec_rc(connector) < 0)

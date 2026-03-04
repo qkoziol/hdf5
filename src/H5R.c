@@ -667,9 +667,15 @@ H5Ropen_object_async(const char *app_file, const char *app_func, unsigned app_li
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open object asynchronously");
 
     /* If a token was created, add the token to the event set */
-    if (NULL != token)
+    if (NULL != token) {
+        H5ES_t *es;     /* Event set for operation */
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_REFERENCE, H5E_BADTYPE, H5I_INVALID_HID, "not an event set");
+
         /* clang-format off */
-        if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
+        if (H5ES_insert(es, H5VL_OBJ_CONNECTOR(vol_obj), token,
                         H5ARG_TRACE7(__func__, "*s*sIu*Rriii", app_file, app_func, app_line, ref_ptr, rapl_id, oapl_id, es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref_always_close(ret_value) < 0)
@@ -677,6 +683,7 @@ H5Ropen_object_async(const char *app_file, const char *app_func, unsigned app_li
                             "can't decrement count on object ID");
             HGOTO_ERROR(H5E_REFERENCE, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
         } /* end if */
+    } /* end if */
 
 done:
     /* Release resources */
@@ -873,9 +880,15 @@ H5Ropen_region_async(const char *app_file, const char *app_func, unsigned app_li
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENOBJ, H5I_INVALID_HID, "unable to open region asynchronously");
 
     /* If a token was created, add the token to the event set */
-    if (NULL != token)
+    if (NULL != token) {
+        H5ES_t *es;     /* Event set for operation */
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_REFERENCE, H5E_BADTYPE, H5I_INVALID_HID, "not an event set");
+
         /* clang-format off */
-        if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
+        if (H5ES_insert(es, H5VL_OBJ_CONNECTOR(vol_obj), token,
                         H5ARG_TRACE7(__func__, "*s*sIu*Rriii", app_file, app_func, app_line, ref_ptr, rapl_id, oapl_id, es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref_always_close(ret_value) < 0)
@@ -883,6 +896,7 @@ H5Ropen_region_async(const char *app_file, const char *app_func, unsigned app_li
                             "can't decrement count on region ID");
             HGOTO_ERROR(H5E_REFERENCE, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
         } /* end if */
+    } /* end if */
 
 done:
     /* Release resources */
@@ -1070,9 +1084,15 @@ H5Ropen_attr_async(const char *app_file, const char *app_func, unsigned app_line
         HGOTO_ERROR(H5E_REFERENCE, H5E_OPENERROR, H5I_INVALID_HID, "unable to open attribute asynchronously");
 
     /* If a token was created, add the token to the event set */
-    if (NULL != token)
+    if (NULL != token) {
+        H5ES_t *es;     /* Event set for operation */
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_REFERENCE, H5E_BADTYPE, H5I_INVALID_HID, "not an event set");
+
         /* clang-format off */
-        if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
+        if (H5ES_insert(es, H5VL_OBJ_CONNECTOR(vol_obj), token,
                         H5ARG_TRACE7(__func__, "*s*sIu*Rriii", app_file, app_func, app_line, ref_ptr, rapl_id, aapl_id, es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref_always_close(ret_value) < 0)
@@ -1080,6 +1100,7 @@ H5Ropen_attr_async(const char *app_file, const char *app_func, unsigned app_line
                             "can't decrement count on attribute ID");
             HGOTO_ERROR(H5E_REFERENCE, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
         } /* end if */
+    } /* end if */
 
 done:
     /* Release resources */
