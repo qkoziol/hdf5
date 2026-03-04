@@ -143,6 +143,11 @@ static bool H5VL_top_package_initialize_s = false;
 /* List of currently active VOL connectors */
 static H5VL_connector_t *H5VL_conn_list_head_g = NULL;
 
+/* Guard the list of VOL connectors */
+#ifdef H5_HAVE_CONCURRENCY
+static H5TS_dlftt_rwlock_t H5VL_conn_list_lock_g;
+#endif /* H5_HAVE_CONCURRENCY */
+
 /*-------------------------------------------------------------------------
  * Function:    H5VL_init_phase1
  *
@@ -191,6 +196,13 @@ H5VL__init_package(void)
     /* Initialize the ID group for the VL IDs */
     if (H5I_register_type(H5I_VOL_CLS, true) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTINIT, FAIL, "unable to initialize H5VL interface");
+/* Init R/W lock */
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Initialize the R/W lock protecting the list of connectors */
+    if (H5TS_dlftt_rwlock_init(&H5VL_conn_list_lock_g) < 0)
+        HGOTO_ERROR(H5E_VOL, H5E_CANTINIT, FAIL, "can't initialize connector list's lock");
+#endif /* H5_HAVE_CONCURRENCY */
 
     /* Register internal VOL connectors */
     if (H5VL__native_register() < 0)
@@ -303,6 +315,11 @@ H5VL_term_package(void)
         if (H5I_nmembers(H5I_VOL) > 0) {
             /* Unregister all VOL connectors */
             (void)H5I_clear_type(H5I_VOL, true, false);
+
+#ifdef H5_HAVE_CONCURRENCY
+            /* Destroy the R/W lock protecting the list of connectors */
+            (void)H5TS_dlftt_rwlock_destroy(&H5VL_conn_list_lock_g);
+#endif /* H5_HAVE_CONCURRENCY */
 
             /* Reset internal VOL connectors' global vars */
             (void)H5VL__native_unregister();
@@ -537,6 +554,7 @@ H5VL_new_vol_obj(H5I_type_t type, void *object, H5VL_connector_t *connector, boo
 {
     H5VL_object_t *new_vol_obj  = NULL;  /* Pointer to new VOL object                    */
     bool           conn_rc_incr = false; /* Whether the VOL connector refcount has been incremented */
+    bool           rc_init = false; /* Whether the refcount has been initialized */
     H5VL_object_t *ret_value    = NULL;  /* Return value                                 */
 
     FUNC_ENTER_NOAPI(NULL)
@@ -553,14 +571,15 @@ H5VL_new_vol_obj(H5I_type_t type, void *object, H5VL_connector_t *connector, boo
     /* Create the new VOL object */
     if (NULL == (new_vol_obj = H5FL_CALLOC(H5VL_object_t)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTALLOC, NULL, "can't allocate memory for VOL object");
-    new_vol_obj->connector = connector;
+    new_vol_obj->non_c_connector = connector;
     if (wrap_obj) {
-        if (NULL == (new_vol_obj->data = H5VL__wrap_obj(object, type)))
+        if (NULL == (new_vol_obj->non_c_data = H5VL__wrap_obj(object, type)))
             HGOTO_ERROR(H5E_VOL, H5E_CANTCREATE, NULL, "can't wrap library object");
     } /* end if */
     else
-        new_vol_obj->data = object;
-    new_vol_obj->rc = 1;
+        new_vol_obj->non_c_data = object;
+    H5TS_ATOMIC_INIT(size_t, &new_vol_obj->rc, 1);
+    rc_init = true;
 
     /* Bump the reference count on the VOL connector */
     H5VL_conn_inc_rc(connector);
@@ -583,6 +602,8 @@ done:
         if (new_vol_obj) {
             if (wrap_obj && new_vol_obj->data)
                 (void)H5VL_object_unwrap(new_vol_obj);
+            if (rc_init)
+                H5TS_ATOMIC_DESTROY(size_t, &new_vol_obj->rc);
             (void)H5FL_FREE(H5VL_object_t, new_vol_obj);
         }
     } /* end if */
@@ -841,9 +862,9 @@ H5VL_create_object(void *object, H5VL_connector_t *vol_connector)
     /* (Does not wrap object, since it's from a VOL callback) */
     if (NULL == (ret_value = H5FL_CALLOC(H5VL_object_t)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTALLOC, NULL, "can't allocate memory for VOL object");
-    ret_value->connector = vol_connector;
-    ret_value->data      = object;
-    ret_value->rc        = 1;
+    ret_value->non_c_connector  = vol_connector;
+    ret_value->non_c_data = object;
+    H5TS_ATOMIC_INIT(size_t, &ret_value->rc, 1);
 
     /* Bump the reference count on the VOL connector */
     H5VL_conn_inc_rc(vol_connector);
@@ -876,7 +897,15 @@ H5VL__conn_create(H5VL_class_t *cls)
     /* Setup VOL info struct */
     if (NULL == (connector = H5FL_CALLOC(H5VL_connector_t)))
         HGOTO_ERROR(H5E_VOL, H5E_CANTALLOC, NULL, "can't allocate VOL connector struct");
-    connector->cls = cls;
+    connector->non_c_cls = cls;
+
+    /* Initialize the atomic variable for the refcount */
+    H5TS_ATOMIC_INIT(int64_t, &connector->nrefs, 0);
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Acquire exclusive lock on the list of connectors */
+    H5TS_dlftt_rwlock_lock(&H5VL_conn_list_lock_g, H5TS_RWLOCK_LOCK_EXCLUSIVE);
+#endif /* H5_HAVE_CONCURRENCY */
 
     /* Add connector to list of active VOL connectors */
     if (H5VL_conn_list_head_g) {
@@ -884,6 +913,11 @@ H5VL__conn_create(H5VL_class_t *cls)
         H5VL_conn_list_head_g->prev = connector;
     }
     H5VL_conn_list_head_g = connector;
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Release lock on the list of connectors */
+    H5TS_dlftt_rwlock_unlock(&H5VL_conn_list_lock_g, H5TS_RWLOCK_LOCK_EXCLUSIVE);
+#endif /* H5_HAVE_CONCURRENCY */
 
     /* Set return value */
     ret_value = connector;
@@ -943,6 +977,11 @@ H5VL__conn_find(H5PL_vol_key_t *key, H5VL_connector_t **connector)
     assert(key);
     assert(connector);
 
+#ifdef H5_HAVE_CONCURRENCY
+    /* Acquire shared lock on the list of connectors */
+    H5TS_dlftt_rwlock_lock(&H5VL_conn_list_lock_g, H5TS_RWLOCK_LOCK_SHARED);
+#endif /* H5_HAVE_CONCURRENCY */
+
     /* Iterate over linked list of active connectors */
     node = H5VL_conn_list_head_g;
     while (node) {
@@ -964,6 +1003,11 @@ H5VL__conn_find(H5PL_vol_key_t *key, H5VL_connector_t **connector)
         node = node->next;
     }
 
+#ifdef H5_HAVE_CONCURRENCY
+    /* Release shared lock on the list of connectors */
+    H5TS_dlftt_rwlock_unlock(&H5VL_conn_list_lock_g, H5TS_RWLOCK_LOCK_SHARED);
+#endif /* H5_HAVE_CONCURRENCY */
+
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5VL__conn_find() */
 
@@ -981,19 +1025,15 @@ H5VL_conn_inc_rc(H5VL_connector_t *connector)
 {
     int64_t ret_value = -1;
 
-    FUNC_ENTER_NOAPI(-1)
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
 
     /* Check arguments */
     assert(connector);
 
-    /* Increment refcount for connector */
-    connector->nrefs++;
+    /* Get old value & increment refcount for connector */
+    ret_value = H5TS_ATOMIC_FETCH_ADD(int64_t, &connector->nrefs, 1);
 
-    /* Set return value */
-    ret_value = connector->nrefs;
-
-done:
-    FUNC_LEAVE_NOAPI(ret_value)
+    FUNC_LEAVE_NOAPI(ret_value + 1)
 } /* end H5VL_conn_inc_rc() */
 
 /*-------------------------------------------------------------------------
@@ -1015,19 +1055,16 @@ H5VL_conn_dec_rc(H5VL_connector_t *connector)
     /* Check arguments */
     assert(connector);
 
-    /* Decrement refcount for connector */
-    connector->nrefs--;
-
-    /* Set return value */
-    ret_value = connector->nrefs;
+    /* Get old value & decrement refcount for connector */
+    ret_value = H5TS_ATOMIC_FETCH_SUB(int64_t, &connector->nrefs, 1);
 
     /* Check for last reference */
-    if (0 == connector->nrefs)
+    if (1 == ret_value)
         if (H5VL__conn_free(connector) < 0)
             HGOTO_ERROR(H5E_VOL, H5E_CANTRELEASE, FAIL, "unable to free VOL connector");
 
 done:
-    FUNC_LEAVE_NOAPI(ret_value)
+    FUNC_LEAVE_NOAPI(ret_value - 1)
 } /* end H5VL_conn_dec_rc() */
 
 /*-------------------------------------------------------------------------
@@ -1084,7 +1121,12 @@ H5VL__conn_free(H5VL_connector_t *connector)
 
     /* Check arguments */
     assert(connector);
-    assert(0 == connector->nrefs);
+    assert(0 == H5TS_ATOMIC_LOAD(int64_t, &connector->nrefs));
+
+#ifdef H5_HAVE_CONCURRENCY
+    /* Acquire exclusive lock on the list of connectors */
+    H5TS_dlftt_rwlock_lock(&H5VL_conn_list_lock_g, H5TS_RWLOCK_LOCK_EXCLUSIVE);
+#endif /* H5_HAVE_CONCURRENCY */
 
     /* Remove connector from list of active VOL connectors */
     if (H5VL_conn_list_head_g == connector) {
@@ -1099,8 +1141,16 @@ H5VL__conn_free(H5VL_connector_t *connector)
             connector->next->prev = connector->prev;
     }
 
+#ifdef H5_HAVE_CONCURRENCY
+    /* Release lock on the list of connectors */
+    H5TS_dlftt_rwlock_unlock(&H5VL_conn_list_lock_g, H5TS_RWLOCK_LOCK_EXCLUSIVE);
+#endif /* H5_HAVE_CONCURRENCY */
+
     if (H5VL__free_cls(connector->cls) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTRELEASE, FAIL, "can't free VOL class");
+
+    /* Destroy the atomic variable for the refcount */
+    H5TS_ATOMIC_DESTROY(int64_t, &connector->nrefs);
 
     H5FL_FREE(H5VL_connector_t, connector);
 
@@ -1147,13 +1197,18 @@ done:
 hsize_t
 H5VL_object_inc_rc(H5VL_object_t *vol_obj)
 {
+    size_t rc = 0;  /* Refcount for object */
+
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
     /* Check arguments */
     assert(vol_obj);
 
-    /* Increment refcount for object and return */
-    FUNC_LEAVE_NOAPI(++vol_obj->rc)
+    /* Increment refcount for object */
+    rc = H5TS_ATOMIC_FETCH_ADD(size_t, &vol_obj->rc, 1);
+
+    /* Return new refcount */
+    FUNC_LEAVE_NOAPI(rc + 1)
 } /* end H5VL_object_inc_rc() */
 
 /*-------------------------------------------------------------------------
@@ -1169,6 +1224,7 @@ H5VL_object_inc_rc(H5VL_object_t *vol_obj)
 herr_t
 H5VL_free_object(H5VL_object_t *vol_obj)
 {
+    size_t rc;                  /* Refcount for object */
     herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
@@ -1176,10 +1232,17 @@ H5VL_free_object(H5VL_object_t *vol_obj)
     /* Check arguments */
     assert(vol_obj);
 
-    if (--vol_obj->rc == 0) {
+    /* Decrement refcount for object */
+    rc = H5TS_ATOMIC_FETCH_SUB(size_t, &vol_obj->rc, 1);
+
+    /* Check for last reference */
+    if (1 == rc) {
         /* Decrement refcount on connector */
         if (H5VL_conn_dec_rc(vol_obj->connector) < 0)
             HGOTO_ERROR(H5E_VOL, H5E_CANTDEC, FAIL, "unable to decrement ref count on VOL connector");
+
+        /* Destroy the atomic variable for the refcount */
+        H5TS_ATOMIC_DESTROY(size_t, &new_vol_obj->rc);
 
         vol_obj = H5FL_FREE(H5VL_object_t, vol_obj);
     } /* end if */

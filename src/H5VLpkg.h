@@ -28,6 +28,7 @@
 #include "H5VLprivate.h" /* Generic Functions                    */
 
 /* Other private headers needed by this file */
+#include "H5TSprivate.h" /* Threadsafety                         */
 
 /**************************/
 /* Package Private Macros */
@@ -37,19 +38,51 @@
 /* Package Private Typedefs */
 /****************************/
 
+/* Define portable atomic types */
+H5TS_DEF_ATOMIC_TYPE(size_t)
+H5TS_DEF_ATOMIC_TYPE(int64_t)
+
 /* Internal struct to track VOL connectors */
+/* NOTE: From a concurrency standpoint, the cls field in H5VL_connector_t is
+ *      constant from the point they are created.  The refcount field changes
+ *      as an atomic counter, which ultimately controls when the struct is
+ *      destroyed.  So, the cls field is '<foo> * const' (i.e. immutable after
+ *      initialization) and the refcount is atomic.  The next & prev fields
+ *      are part of the connector list and are guarded by the lock on that
+ *      list (H5VL_conn_list_lock_g, in src/H5VLint.c).  Therefore no locking
+ *      on the H5VL_connector_t struct itself is required.
+ */
 struct H5VL_connector_t {
-    H5VL_class_t            *cls;         /* Pointer to connector class struct   */
-    int64_t                  nrefs;       /* Number of references to this struct */
+    /* Pointer to connector class struct   */
+    union {
+        H5VL_class_t *non_c_cls; /* Write-only, during struct init */
+        H5VL_class_t *const cls; /* Read-only, at all other times */
+    };
+    H5TS_ATOMIC_TYPE(int64_t) nrefs;      /* Number of references to this struct */
     struct H5VL_connector_t *next, *prev; /* Pointers to the next & previous */
                                           /* connectors in global list of active connectors */
 };
 
-/* Internal vol object structure returned to the API */
+/* Internal VOL object structure returned to the API */
+/* NOTE: From a concurrency standpoint, H5VL_object_t's are constant from the
+ *      point they are created.  The only field that changes is the refcount,
+ *      which ultimately controls only when it is destroyed.  So, the pointer
+ *      fields are '<foo> * const' (i.e. immutable after initialization) and
+ *      the refcount is atomic.  Therefore no locking on the structure itself
+ *      is required.
+ */
 struct H5VL_object_t {
-    void             *data;      /* Pointer to connector-managed data for this object    */
-    H5VL_connector_t *connector; /* Pointer to VOL connector used by this object         */
-    size_t            rc;        /* Reference count                                      */
+    /* Pointer to connector-managed data for this object */
+    union {
+        void *non_c_data; /* Write-only, during struct init */
+        void *const data; /* Read-only, at all other times */
+    };
+    /* Pointer to VOL connector used by this object */
+    union {
+        H5VL_connector_t *non_c_connector; /* Write-only, during struct init */
+        H5VL_connector_t *const connector; /* Read-only, at all other times */
+    };
+    H5TS_ATOMIC_TYPE(size_t) rc;       /* Reference count */
 };
 
 /*****************************/

@@ -2301,9 +2301,9 @@ H5VL_dataset_read(size_t count, void *obj[], H5VL_connector_t *connector, hid_t 
     assert(connector);
 
     /* Set wrapper info in API context */
-    tmp_vol_obj.data      = obj[0];
-    tmp_vol_obj.connector = connector;
-    tmp_vol_obj.rc        = 1;
+    tmp_vol_obj.non_c_data = obj[0];
+    tmp_vol_obj.non_c_connector  = connector;
+    tmp_vol_obj.rc         = 1;
     if (H5VL_set_vol_wrapper(&tmp_vol_obj) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTSET, FAIL, "can't set VOL wrapper info");
     vol_wrapper_set = true;
@@ -2439,9 +2439,9 @@ H5VL_dataset_write(size_t count, void *obj[], H5VL_connector_t *connector, hid_t
     assert(connector);
 
     /* Set wrapper info in API context */
-    tmp_vol_obj.data      = obj[0];
-    tmp_vol_obj.connector = connector;
-    tmp_vol_obj.rc        = 1;
+    tmp_vol_obj.non_c_data = obj[0];
+    tmp_vol_obj.non_c_connector  = connector;
+    tmp_vol_obj.rc         = 1;
     if (H5VL_set_vol_wrapper(&tmp_vol_obj) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTSET, FAIL, "can't set VOL wrapper info");
     vol_wrapper_set = true;
@@ -5409,11 +5409,11 @@ H5VL_link_create(H5VL_link_create_args_t *args, const H5VL_object_t *vol_obj,
     /* Special case for hard links */
     if (H5VL_LINK_CREATE_HARD == args->op_type && NULL == vol_obj->data)
         /* Get the VOL data pointer from the arguments */
-        tmp_vol_obj.data = args->args.hard.curr_obj;
+        tmp_vol_obj.non_c_data = args->args.hard.curr_obj;
     else
         /* Use the VOL object passed in */
-        tmp_vol_obj.data = vol_obj->data;
-    tmp_vol_obj.connector = vol_obj->connector;
+        tmp_vol_obj.non_c_data = vol_obj->data;
+    tmp_vol_obj.non_c_connector = vol_obj->connector;
 
     /* Set wrapper info in API context */
     if (H5VL_set_vol_wrapper(&tmp_vol_obj) < 0)
