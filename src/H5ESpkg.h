@@ -38,7 +38,6 @@
 
 /* Define portable atomic types */
 H5TS_DEF_ATOMIC_TYPE(uint64_t)
-H5TS_DEF_ATOMIC_TYPE(size_t)
 H5TS_DEF_ATOMIC_TYPE(bool)
 
 /* Typedef for event nodes */

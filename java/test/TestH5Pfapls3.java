@@ -122,7 +122,6 @@ public class TestH5Pfapls3 {
         assertEquals("Default fapl has unexpected contents", new H5FD_ros3_fapl_t("", "", ""), config);
 
         H5.H5Pset_fapl_ros3(fapl_id, config);
-
         long driver_id = H5.H5Pget_driver(fapl_id);
         assertTrue("H5.H5FDcmp_driver_cls(H5FD_ROS3, driver_id)",
                    H5.H5FDcmp_driver_cls(HDF5Constants.H5FD_ROS3, driver_id));
