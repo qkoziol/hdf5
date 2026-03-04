@@ -233,7 +233,7 @@ H5ES__create(void)
         HGOTO_ERROR(H5E_EVENTSET, H5E_CANTALLOC, NULL, "can't allocate event set object");
 
     /* Init atomic variables */
-    H5TS_ATOMIC_INIT(uint64_p, &es->op_counter, 0);
+    H5TS_ATOMIC_INIT(uint64_t, &es->op_counter, 0);
     H5TS_ATOMIC_INIT(bool, &es->err_occurred, false);
 
 #ifdef H5_HAVE_CONCURRENCY
@@ -1152,7 +1152,7 @@ H5ES__close(H5ES_t *es)
 #endif /* H5_HAVE_CONCURRENCY */
 
     /* Destroy atomic variables */
-    H5TS_ATOMIC_DESTROY(uint64_p, &es->op_counter);
+    H5TS_ATOMIC_DESTROY(uint64_t, &es->op_counter);
     H5TS_ATOMIC_DESTROY(bool, &es->err_occurred);
 
 #ifdef H5_HAVE_CONCURRENCY
