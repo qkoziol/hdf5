@@ -468,7 +468,8 @@ public class TestH5Pfapl {
         try {
             ret_val_id = H5.H5Pget_elink_fapl(plapl_id);
             assertTrue("H5Pget_elink_fapl", ret_val_id >= 0);
-            assertEquals(HDF5Constants.H5P_DEFAULT, ret_val_id);
+            assertTrue("H5Pget_elink_fapl: elink_fapl ",
+                       H5.H5P_equal(ret_val_id, HDF5Constants.H5P_FILE_ACCESS_DEFAULT));
         }
         catch (Throwable err) {
             err.printStackTrace();
