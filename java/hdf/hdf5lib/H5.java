@@ -7606,6 +7606,24 @@ public class H5 implements java.io.Serializable {
     // //
     // ////////////////////////////////////////////////////////////
 
+    /**
+     * @ingroup JH5FD
+     *
+     * H5FDcmp_driver_cls Determines whether two driver identifiers refer to the same driver.
+     *
+     * @param drvr_id1
+     *            IN: Identifier of driver to compare.
+     * @param drvr_id2
+     *            IN: Identifier of driver to compare.
+     *
+     * @return true if the driver identifiers refer to the same driver, else false.
+     *
+     * @exception HDF5LibraryException
+     *            Error from the HDF5 Library.
+     **/
+    public synchronized static native boolean H5FDcmp_driver_cls(long drvr_id1, long drvr_id2)
+        throws HDF5LibraryException;
+
     // /////// unimplemented ////////
     //  hid_t H5FDregister(const H5FD_class_t *cls);
     //  herr_t H5FDunregister(hid_t driver_id);
