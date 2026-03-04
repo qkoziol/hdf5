@@ -468,10 +468,6 @@ H5D__layout_oh_read(H5D_t *dataset)
         (dataset->shared->layout.ops->init)(dataset->oloc.file, dataset, true) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, FAIL, "unable to initialize layout information");
 
-    /* Adjust chunk dimensions to omit datatype size (in last dimension) for creation property */
-    if (H5D_CHUNKED == dataset->shared->layout.type)
-        dataset->shared->layout.u.chunk.ndims--;
-
 done:
     if (ret_value < 0) {
         if (pline_copied)
