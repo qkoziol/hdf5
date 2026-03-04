@@ -382,8 +382,8 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5ES_insert(H5ES_t *es, H5VL_connector_t *connector, void *token, const char *caller,
-            const char *caller_args, ...)
+H5ES_insert(H5ES_t *es, H5VL_connector_t *connector, void *token, const char *caller, const char *caller_args,
+            ...)
 {
     const char *app_file;              /* Application source file name */
     const char *app_func;              /* Application source function name */
