@@ -416,15 +416,22 @@ H5Mcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
         HGOTO_ERROR(H5E_MAP, H5E_CANTCREATE, H5I_INVALID_HID, "unable to create map asynchronously");
 
     /* If a token was created, add the token to the event set */
-    if (NULL != token)
+    if (NULL != token) {
+        H5ES_t *es;     /* Event set for operation */
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_MAP, H5E_BADTYPE, H5I_INVALID_HID, "not an event set");
+
         /* clang-format off */
-        if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
+        if (H5ES_insert(es, H5VL_OBJ_CONNECTOR(vol_obj), token,
                         H5ARG_TRACE11(__func__, "*s*sIui*siiiiii", app_file, app_func, app_line, loc_id, name, key_type_id, val_type_id, lcpl_id, mcpl_id, mapl_id, es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref_always_close(ret_value) < 0)
                 HDONE_ERROR(H5E_MAP, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on map ID");
             HGOTO_ERROR(H5E_MAP, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
         } /* end if */
+    } /* end if */
 
 done:
     /* Release resources */
@@ -671,15 +678,22 @@ H5Mopen_async(const char *app_file, const char *app_func, unsigned app_line, hid
         HGOTO_ERROR(H5E_MAP, H5E_CANTCREATE, H5I_INVALID_HID, "unable to open map asynchronously");
 
     /* If a token was created, add the token to the event set */
-    if (NULL != token)
+    if (NULL != token) {
+        H5ES_t *es;     /* Event set for operation */
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_MAP, H5E_BADTYPE, H5I_INVALID_HID, "not an event set");
+
         /* clang-format off */
-        if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
+        if (H5ES_insert(es, H5VL_OBJ_CONNECTOR(vol_obj), token,
                         H5ARG_TRACE7(__func__, "*s*sIui*sii", app_file, app_func, app_line, loc_id, name, mapl_id, es_id)) < 0) {
             /* clang-format on */
             if (H5I_dec_app_ref_always_close(ret_value) < 0)
                 HDONE_ERROR(H5E_MAP, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on map ID");
             HGOTO_ERROR(H5E_MAP, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
         } /* end if */
+    } /* end if */
 
 done:
     /* Release resources */
@@ -767,12 +781,19 @@ H5Mclose_async(const char *app_file, const char *app_func, unsigned app_line, hi
         HGOTO_ERROR(H5E_MAP, H5E_CANTDEC, FAIL, "can't decrement count on dataset ID");
 
     /* If a token was created, add the token to the event set */
-    if (NULL != token)
+    if (NULL != token) {
+        H5ES_t *es;     /* Event set for operation */
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_MAP, H5E_BADTYPE, FAIL, "not an event set");
+
         /* clang-format off */
-        if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
+        if (H5ES_insert(es, H5VL_OBJ_CONNECTOR(vol_obj), token,
                         H5ARG_TRACE5(__func__, "*s*sIuii", app_file, app_func, app_line, map_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_MAP, H5E_CANTINSERT, FAIL, "can't insert token into event set");
+    } /* end if */
 
 done:
     if (connector && H5VL_conn_dec_rc(connector) < 0)
@@ -1138,12 +1159,19 @@ H5Mput_async(const char *app_file, const char *app_func, unsigned app_line, hid_
         HGOTO_ERROR(H5E_MAP, H5E_CANTPUT, FAIL, "unable to put value to map asynchronously");
 
     /* If a token was created, add the token to the event set */
-    if (NULL != token)
+    if (NULL != token) {
+        H5ES_t *es;     /* Event set for operation */
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_MAP, H5E_BADTYPE, FAIL, "not an event set");
+
         /* clang-format off */
-        if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
+        if (H5ES_insert(es, H5VL_OBJ_CONNECTOR(vol_obj), token,
                         H5ARG_TRACE10(__func__, "*s*sIuii*xi*xii", app_file, app_func, app_line, map_id, key_mem_type_id, key, val_mem_type_id, value, dxpl_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_MAP, H5E_CANTINSERT, FAIL, "can't insert token into event set");
+    } /* end if */
 
 done:
     /* Release resources */
@@ -1282,12 +1310,19 @@ H5Mget_async(const char *app_file, const char *app_func, unsigned app_line, hid_
         HGOTO_ERROR(H5E_MAP, H5E_CANTGET, FAIL, "unable to get value from map asynchronously");
 
     /* If a token was created, add the token to the event set */
-    if (NULL != token)
+    if (NULL != token) {
+        H5ES_t *es;     /* Event set for operation */
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_MAP, H5E_BADTYPE, FAIL, "not an event set");
+
         /* clang-format off */
-        if (H5ES_insert(es_id, H5VL_OBJ_CONNECTOR(vol_obj), token,
+        if (H5ES_insert(es, H5VL_OBJ_CONNECTOR(vol_obj), token,
                         H5ARG_TRACE10(__func__, "*s*sIuii*xi*xii", app_file, app_func, app_line, map_id, key_mem_type_id, key, val_mem_type_id, value, dxpl_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_MAP, H5E_CANTINSERT, FAIL, "can't insert token into event set");
+    } /* end if */
 
 done:
     /* Release resources */

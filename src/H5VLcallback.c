@@ -1870,12 +1870,19 @@ H5VLattr_optional_op(const char *app_file, const char *app_func, unsigned app_li
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "unable to execute attribute optional callback");
 
     /* If a token was created, add the token to the event set */
-    if (NULL != token)
+    if (NULL != token) {
+        H5ES_t *es;     /* Event set for operation */
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_VOL, H5E_BADTYPE, FAIL, "not an event set");
+
         /* clang-format off */
-        if (H5ES_insert(es_id, vol_obj->connector, token,
+        if (H5ES_insert(es, vol_obj->connector, token,
                         H5ARG_TRACE7(__func__, "*s*sIui*!ii", app_file, app_func, app_line, attr_id, args, dxpl_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_VOL, H5E_CANTINSERT, FAIL, "can't insert token into event set");
+    } /* end if */
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -2868,12 +2875,19 @@ H5VLdataset_optional_op(const char *app_file, const char *app_func, unsigned app
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "unable to execute dataset optional callback");
 
     /* If a token was created, add the token to the event set */
-    if (NULL != token)
+    if (NULL != token) {
+        H5ES_t *es;     /* Event set for operation */
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_VOL, H5E_BADTYPE, FAIL, "not an event set");
+
         /* clang-format off */
-        if (H5ES_insert(es_id, vol_obj->connector, token,
+        if (H5ES_insert(es, vol_obj->connector, token,
                         H5ARG_TRACE7(__func__, "*s*sIui*!ii", app_file, app_func, app_line, dset_id, args, dxpl_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_VOL, H5E_CANTINSERT, FAIL, "can't insert token into event set");
+    } /* end if */
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -3613,12 +3627,19 @@ H5VLdatatype_optional_op(const char *app_file, const char *app_func, unsigned ap
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "unable to invoke datatype optional callback");
 
     /* If a token was created, add the token to the event set */
-    if (NULL != token)
+    if (NULL != token) {
+        H5ES_t *es;     /* Event set for operation */
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_VOL, H5E_BADTYPE, FAIL, "not an event set");
+
         /* clang-format off */
-        if (H5ES_insert(es_id, vol_obj->connector, token,
+        if (H5ES_insert(es, vol_obj->connector, token,
                         H5ARG_TRACE7(__func__, "*s*sIui*!ii", app_file, app_func, app_line, type_id, args, dxpl_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_VOL, H5E_CANTINSERT, FAIL, "can't insert token into event set");
+    } /* end if */
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -4464,12 +4485,19 @@ H5VLfile_optional_op(const char *app_file, const char *app_func, unsigned app_li
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "unable to execute file optional callback");
 
     /* If a token was created, add the token to the event set */
-    if (NULL != token)
+    if (NULL != token) {
+        H5ES_t *es;     /* Event set for operation */
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_VOL, H5E_BADTYPE, FAIL, "not an event set");
+
         /* clang-format off */
-        if (H5ES_insert(es_id, vol_obj->connector, token,
+        if (H5ES_insert(es, vol_obj->connector, token,
                         H5ARG_TRACE7(__func__, "*s*sIui*!ii", app_file, app_func, app_line, file_id, args, dxpl_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_VOL, H5E_CANTINSERT, FAIL, "can't insert token into event set");
+    } /* end if */
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -5189,12 +5217,19 @@ H5VLgroup_optional_op(const char *app_file, const char *app_func, unsigned app_l
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "unable to execute group optional callback");
 
     /* If a token was created, add the token to the event set */
-    if (NULL != token)
+    if (NULL != token) {
+        H5ES_t *es;     /* Event set for operation */
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_VOL, H5E_BADTYPE, FAIL, "not an event set");
+
         /* clang-format off */
-        if (H5ES_insert(es_id, vol_obj->connector, token,
+        if (H5ES_insert(es, vol_obj->connector, token,
                         H5ARG_TRACE7(__func__, "*s*sIui*!ii", app_file, app_func, app_line, group_id, args, dxpl_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_VOL, H5E_CANTINSERT, FAIL, "can't insert token into event set");
+    } /* end if */
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -6035,12 +6070,19 @@ H5VLlink_optional_op(const char *app_file, const char *app_func, unsigned app_li
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "unable to execute link optional callback");
 
     /* If a token was created, add the token to the event set */
-    if (NULL != token)
+    if (NULL != token) {
+        H5ES_t *es;     /* Event set for operation */
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_VOL, H5E_BADTYPE, FAIL, "not an event set");
+
         /* clang-format off */
-        if (H5ES_insert(es_id, vol_obj->connector, token,
+        if (H5ES_insert(es, vol_obj->connector, token,
                         H5ARG_TRACE9(__func__, "*s*sIui*si*!ii", app_file, app_func, app_line, loc_id, name, lapl_id, args, dxpl_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_VOL, H5E_CANTINSERT, FAIL, "can't insert token into event set");
+    } /* end if */
 
 done:
     /* Reset object wrapping info in API context */
@@ -6670,12 +6712,19 @@ H5VLobject_optional_op(const char *app_file, const char *app_func, unsigned app_
         HGOTO_ERROR(H5E_VOL, H5E_CANTOPERATE, FAIL, "unable to execute object optional callback");
 
     /* If a token was created, add the token to the event set */
-    if (NULL != token)
+    if (NULL != token) {
+        H5ES_t *es;     /* Event set for operation */
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_VOL, H5E_BADTYPE, FAIL, "not an event set");
+
         /* clang-format off */
-        if (H5ES_insert(es_id, vol_obj->connector, token,
+        if (H5ES_insert(es, vol_obj->connector, token,
                         H5ARG_TRACE9(__func__, "*s*sIui*si*!ii", app_file, app_func, app_line, loc_id, name, lapl_id, args, dxpl_id, es_id)) < 0)
             /* clang-format on */
             HGOTO_ERROR(H5E_VOL, H5E_CANTINSERT, FAIL, "can't insert token into event set");
+    } /* end if */
 
 done:
     /* Reset object wrapping info in API context */

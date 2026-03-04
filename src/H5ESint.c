@@ -382,10 +382,9 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5ES_insert(hid_t es_id, H5VL_connector_t *connector, void *token, const char *caller,
+H5ES_insert(H5ES_t *es, H5VL_connector_t *connector, void *token, const char *caller,
             const char *caller_args, ...)
 {
-    H5ES_t     *es = NULL;             /* Event set for the operation */
     const char *app_file;              /* Application source file name */
     const char *app_func;              /* Application source function name */
     unsigned    app_line;              /* Application source line number */
@@ -398,14 +397,11 @@ H5ES_insert(hid_t es_id, H5VL_connector_t *connector, void *token, const char *c
     FUNC_ENTER_NOAPI(FAIL)
 
     /* Sanity check */
+    assert(es);
     assert(connector);
     assert(token);
     assert(caller);
     assert(caller_args);
-
-    /* Get event set */
-    if (NULL == (es = (H5ES_t *)H5I_object_verify(es_id, H5I_EVENTSET)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not an event set");
 
     /* Check for errors in event set */
     if (H5TS_ATOMIC_LOAD(bool, &es->err_occurred))

@@ -153,15 +153,24 @@ H5ESget_count(hid_t es_id, size_t *count /*out*/)
 
     /* Passing H5ES_NONE is valid, but a no-op */
     if (H5ES_NONE != es_id) {
-        H5ES_t *es; /* Event set */
-
-        /* Check arguments */
-        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
-            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid event set identifier");
-
         /* Retrieve the count, if non-NULL */
-        if (count)
+        if (count) {
+            H5ES_t *es; /* Event set */
+
+            /* Get event set */
+            if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+                HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid event set identifier");
+
+#ifdef H5_HAVE_CONCURRENCY
+            /* Acquire shared lock on the list fields */
+            H5TS_dlftt_rwlock_lock(&es->list_lock, H5TS_RWLOCK_LOCK_SHARED);
+#endif /* H5_HAVE_CONCURRENCY */
             *count = H5ES__list_count(&es->active);
+#ifdef H5_HAVE_CONCURRENCY
+            /* Release shared lock on the list fields */
+            H5TS_dlftt_rwlock_unlock(&es->list_lock, H5TS_RWLOCK_LOCK_SHARED);
+#endif /* H5_HAVE_CONCURRENCY */
+        } /* end if */
     } /* end if */
 
 done:
@@ -193,15 +202,16 @@ H5ESget_op_counter(hid_t es_id, uint64_t *op_counter /*out*/)
 
     /* Passing H5ES_NONE is valid, but a no-op */
     if (H5ES_NONE != es_id) {
-        H5ES_t *es; /* Event set */
-
-        /* Check arguments */
-        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
-            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid event set identifier");
-
         /* Retrieve the operation counter, if non-NULL */
-        if (op_counter)
+        if (op_counter) {
+            H5ES_t *es; /* Event set */
+
+            /* Get event set */
+            if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+                HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid event set identifier");
+
             *op_counter = H5TS_ATOMIC_LOAD(uint64_t, &es->op_counter);
+        } /* end if */
     } /* end if */
 
 done:
@@ -235,25 +245,40 @@ herr_t
 H5ESget_requests(hid_t es_id, H5_iter_order_t order, hid_t *connector_ids, void **requests, size_t array_len,
                  size_t *count /*out*/)
 {
-    H5ES_t *es;                  /* Event set */
     herr_t  ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Check arguments */
-    if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid event set identifier");
-    if (order <= H5_ITER_UNKNOWN || order >= H5_ITER_N)
-        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid iteration order specified");
+    /* Passing H5ES_NONE is valid, but a no-op */
+    if (H5ES_NONE != es_id) {
+        H5ES_t *es;                  /* Event set */
 
-    /* Call internal routine */
-    if (array_len > 0 && (requests || connector_ids))
-        if (H5ES__get_requests(es, order, connector_ids, requests, array_len) < 0)
-            HGOTO_ERROR(H5E_EVENTSET, H5E_CANTGET, FAIL, "can't get requests");
+        /* Check arguments */
+        if (order <= H5_ITER_UNKNOWN || order >= H5_ITER_N)
+            HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "invalid iteration order specified");
 
-    /* Retrieve the count, if non-NULL */
-    if (count)
-        *count = H5ES__list_count(&es->active);
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid event set identifier");
+
+        /* Call internal routine */
+        if (array_len > 0 && (requests || connector_ids))
+            if (H5ES__get_requests(es, order, connector_ids, requests, array_len) < 0)
+                HGOTO_ERROR(H5E_EVENTSET, H5E_CANTGET, FAIL, "can't get requests");
+
+        /* Retrieve the count, if non-NULL */
+        if (count) {
+#ifdef H5_HAVE_CONCURRENCY
+            /* Acquire shared lock on the list fields */
+            H5TS_dlftt_rwlock_lock(&es->list_lock, H5TS_RWLOCK_LOCK_SHARED);
+#endif /* H5_HAVE_CONCURRENCY */
+            *count = H5ES__list_count(&es->active);
+#ifdef H5_HAVE_CONCURRENCY
+            /* Release shared lock on the list fields */
+            H5TS_dlftt_rwlock_unlock(&es->list_lock, H5TS_RWLOCK_LOCK_SHARED);
+#endif /* H5_HAVE_CONCURRENCY */
+        } /* end if */
+    } /* end if */
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -296,12 +321,14 @@ H5ESwait(hid_t es_id, uint64_t timeout, size_t *num_in_progress /*out*/, bool *o
         H5ES_t *es; /* Event set */
 
         /* Check arguments */
-        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
-            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid event set identifier");
         if (NULL == num_in_progress)
             HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "NULL num_in_progress pointer");
         if (NULL == op_failed)
             HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "NULL op_failed pointer");
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid event set identifier");
 
         /* Wait for operations */
         if (H5ES__wait(es, timeout, num_in_progress, op_failed) < 0)
@@ -335,12 +362,14 @@ H5EScancel(hid_t es_id, size_t *num_not_canceled /*out*/, bool *op_failed /*out*
         H5ES_t *es; /* Event set */
 
         /* Check arguments */
-        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
-            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid event set identifier");
         if (NULL == num_not_canceled)
             HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "NULL num_not_canceled pointer");
         if (NULL == op_failed)
             HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "NULL op_failed pointer");
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid event set identifier");
 
         /* Cancel operations */
         if (H5ES__cancel(es, num_not_canceled, op_failed) < 0)
@@ -371,15 +400,16 @@ H5ESget_err_status(hid_t es_id, bool *err_status /*out*/)
 
     /* Passing H5ES_NONE is valid, but a no-op */
     if (H5ES_NONE != es_id) {
-        H5ES_t *es; /* Event set */
-
-        /* Check arguments */
-        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
-            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid event set identifier");
-
         /* Retrieve the error flag, if non-NULL */
-        if (err_status)
+        if (err_status) {
+            H5ES_t *es; /* Event set */
+
+            /* Get event set */
+            if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+                HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid event set identifier");
+
             *err_status = H5TS_ATOMIC_LOAD(bool, &es->err_occurred);
+        } /* end if */
     } /* end if */
 
 done:
@@ -409,16 +439,25 @@ H5ESget_err_count(hid_t es_id, size_t *num_errs /*out*/)
 
     /* Passing H5ES_NONE is valid, but a no-op */
     if (H5ES_NONE != es_id) {
-        H5ES_t *es; /* Event set */
-
-        /* Check arguments */
-        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
-            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid event set identifier");
-
         /* Retrieve the error flag, if non-NULL */
         if (num_errs) {
-            if (H5TS_ATOMIC_LOAD(bool, &es->err_occurred))
+            H5ES_t *es; /* Event set */
+
+            /* Get event set */
+            if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+                HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid event set identifier");
+
+            if (H5TS_ATOMIC_LOAD(bool, &es->err_occurred)) {
+#ifdef H5_HAVE_CONCURRENCY
+                /* Acquire shared lock on the list fields */
+                H5TS_dlftt_rwlock_lock(&es->list_lock, H5TS_RWLOCK_LOCK_SHARED);
+#endif /* H5_HAVE_CONCURRENCY */
                 *num_errs = H5ES__list_count(&es->failed);
+#ifdef H5_HAVE_CONCURRENCY
+                /* Release shared lock on the list fields */
+                H5TS_dlftt_rwlock_unlock(&es->list_lock, H5TS_RWLOCK_LOCK_SHARED);
+#endif /* H5_HAVE_CONCURRENCY */
+            }
             else
                 *num_errs = 0;
         } /* end if */
@@ -455,14 +494,16 @@ H5ESget_err_info(hid_t es_id, size_t num_err_info, H5ES_err_info_t err_info[] /*
         H5ES_t *es; /* Event set */
 
         /* Check arguments */
-        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
-            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid event set identifier");
         if (0 == num_err_info)
             HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "err_info array size is 0");
         if (NULL == err_info)
             HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "NULL err_info array pointer");
         if (NULL == num_cleared)
             HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "NULL errors cleared pointer");
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid event set identifier");
 
         /* Retrieve the error information */
         if (H5ES__get_err_info(es, num_err_info, err_info, num_cleared) < 0)
@@ -537,10 +578,12 @@ H5ESregister_insert_func(hid_t es_id, H5ES_event_insert_func_t func, void *ctx)
         H5ES_t *es; /* Event set */
 
         /* Check arguments */
-        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
-            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid event set identifier");
         if (NULL == func)
             HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "NULL function callback pointer");
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid event set identifier");
 
 #ifdef H5_HAVE_CONCURRENCY
         /* Acquire exclusive lock on the callback fields */
@@ -588,10 +631,12 @@ H5ESregister_complete_func(hid_t es_id, H5ES_event_complete_func_t func, void *c
         H5ES_t *es; /* Event set */
 
         /* Check arguments */
-        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
-            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid event set identifier");
         if (NULL == func)
             HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "NULL function callback pointer");
+
+        /* Get event set */
+        if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
+            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid event set identifier");
 
 #ifdef H5_HAVE_CONCURRENCY
         /* Acquire exclusive lock on the callback fields */
