@@ -2291,10 +2291,10 @@ herr_t
 H5VL_dataset_read(size_t count, void *obj[], H5VL_connector_t *connector, hid_t mem_type_id[],
                   hid_t mem_space_id[], hid_t file_space_id[], H5P_genplist_t *dxpl, void *buf[], void **req)
 {
-    H5VL_object_t tmp_vol_obj;             /* Temporary VOL object for setting VOL wrapper */
-    bool          rc_init = false;         /* Whether the temp. VOL object refcount was initialized */
-    bool          vol_wrapper_set = false; /* Whether the VOL object wrapping context was set up */
-    herr_t        ret_value = SUCCEED;     /* Return value */
+    H5VL_object_t tmp_vol_obj;               /* Temporary VOL object for setting VOL wrapper */
+    bool          rc_init         = false;   /* Whether the temp. VOL object refcount was initialized */
+    bool          vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
+    herr_t        ret_value       = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
@@ -2435,10 +2435,10 @@ H5VL_dataset_write(size_t count, void *obj[], H5VL_connector_t *connector, hid_t
                    hid_t mem_space_id[], hid_t file_space_id[], H5P_genplist_t *dxpl, const void *buf[],
                    void **req)
 {
-    H5VL_object_t tmp_vol_obj;             /* Temporary VOL object for setting VOL wrapper */
-    bool          rc_init = false;         /* Whether the temp. VOL object refcount was initialized */
-    bool          vol_wrapper_set = false; /* Whether the VOL object wrapping context was set up */
-    herr_t        ret_value = SUCCEED;     /* Return value */
+    H5VL_object_t tmp_vol_obj;               /* Temporary VOL object for setting VOL wrapper */
+    bool          rc_init         = false;   /* Whether the temp. VOL object refcount was initialized */
+    bool          vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
+    herr_t        ret_value       = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
@@ -5413,7 +5413,7 @@ H5VL_link_create(H5VL_link_create_args_t *args, const H5VL_object_t *vol_obj,
                  const H5VL_loc_params_t *loc_params, H5P_genplist_t *lcpl, H5P_genplist_t *lapl, void **req)
 {
     H5VL_object_t tmp_vol_obj;               /* Temporary VOL object */
-    bool          rc_init = false;         /* Whether the temp. VOL object refcount was initialized */
+    bool          rc_init         = false;   /* Whether the temp. VOL object refcount was initialized */
     bool          vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
     herr_t        ret_value       = SUCCEED; /* Return value */
 
