@@ -736,7 +736,7 @@ H5Fcreate_async(const char *app_file, const char *app_func, unsigned app_line, c
 
     /* If a token was created, add the token to the event set */
     if (NULL != token) {
-        H5ES_t *es;     /* Event set for operation */
+        H5ES_t *es; /* Event set for operation */
 
         /* Get event set */
         if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
@@ -750,7 +750,7 @@ H5Fcreate_async(const char *app_file, const char *app_func, unsigned app_line, c
                 HDONE_ERROR(H5E_FILE, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on file ID");
             HGOTO_ERROR(H5E_FILE, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
         } /* end if */
-    } /* end if */
+    }     /* end if */
 
     /* Reset token for 'post open' operation */
     /* (Unnecessary if create operation didn't change it, but not worth checking -QAK) */
@@ -762,7 +762,7 @@ H5Fcreate_async(const char *app_file, const char *app_func, unsigned app_line, c
 
     /* If a token was created, add the token to the event set */
     if (NULL != token) {
-        H5ES_t *es;     /* Event set for operation */
+        H5ES_t *es; /* Event set for operation */
 
         /* Get event set */
         if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
@@ -776,7 +776,7 @@ H5Fcreate_async(const char *app_file, const char *app_func, unsigned app_line, c
                 HDONE_ERROR(H5E_FILE, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on file ID");
             HGOTO_ERROR(H5E_FILE, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
         } /* end if */
-    } /* end if */
+    }     /* end if */
 
 done:
     /* Release resources */
@@ -941,7 +941,7 @@ H5Fopen_async(const char *app_file, const char *app_func, unsigned app_line, con
 
     /* If a token was created, add the token to the event set */
     if (NULL != token) {
-        H5ES_t *es;     /* Event set for operation */
+        H5ES_t *es; /* Event set for operation */
 
         /* Get event set */
         if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
@@ -955,7 +955,7 @@ H5Fopen_async(const char *app_file, const char *app_func, unsigned app_line, con
                 HDONE_ERROR(H5E_FILE, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on file ID");
             HGOTO_ERROR(H5E_FILE, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
         } /* end if */
-    } /* end if */
+    }     /* end if */
 
     /* Reset token for 'post open' operation */
     /* (Unnecessary if create operation didn't change it, but not worth checking -QAK) */
@@ -967,7 +967,7 @@ H5Fopen_async(const char *app_file, const char *app_func, unsigned app_line, con
 
     /* If a token was created, add the token to the event set */
     if (NULL != token) {
-        H5ES_t *es;     /* Event set for operation */
+        H5ES_t *es; /* Event set for operation */
 
         /* Get event set */
         if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
@@ -981,7 +981,7 @@ H5Fopen_async(const char *app_file, const char *app_func, unsigned app_line, con
                 HDONE_ERROR(H5E_FILE, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on file ID");
             HGOTO_ERROR(H5E_FILE, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
         } /* end if */
-    } /* end if */
+    }     /* end if */
 
 done:
     /* Release resources */
@@ -1092,7 +1092,7 @@ H5Fflush_async(const char *app_file, const char *app_func, unsigned app_line, hi
 
     /* If a token was created, add the token to the event set */
     if (NULL != token) {
-        H5ES_t *es;     /* Event set for operation */
+        H5ES_t *es; /* Event set for operation */
 
         /* Get event set */
         if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
@@ -1191,7 +1191,7 @@ H5Fclose_async(const char *app_file, const char *app_func, unsigned app_line, hi
 
     /* If a token was created, add the token to the event set */
     if (NULL != token) {
-        H5ES_t *es;     /* Event set for operation */
+        H5ES_t *es; /* Event set for operation */
 
         /* Get event set */
         if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
@@ -1602,7 +1602,7 @@ H5Freopen_async(const char *app_file, const char *app_func, unsigned app_line, h
 
     /* If a token was created, add the token to the event set */
     if (NULL != token) {
-        H5ES_t *es;     /* Event set for operation */
+        H5ES_t *es; /* Event set for operation */
 
         /* Get event set */
         if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
@@ -1616,7 +1616,7 @@ H5Freopen_async(const char *app_file, const char *app_func, unsigned app_line, h
                 HDONE_ERROR(H5E_FILE, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on file ID");
             HGOTO_ERROR(H5E_FILE, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
         } /* end if */
-    } /* end if */
+    }     /* end if */
 
     /* Reset token for 'post open' operation */
     /* (Unnecessary if create operation didn't change it, but not worth checking -QAK) */
@@ -1628,7 +1628,7 @@ H5Freopen_async(const char *app_file, const char *app_func, unsigned app_line, h
 
     /* If a token was created, add the token to the event set */
     if (NULL != token) {
-        H5ES_t *es;     /* Event set for operation */
+        H5ES_t *es; /* Event set for operation */
 
         /* Get event set */
         if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
@@ -1642,7 +1642,7 @@ H5Freopen_async(const char *app_file, const char *app_func, unsigned app_line, h
                 HDONE_ERROR(H5E_FILE, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on file ID");
             HGOTO_ERROR(H5E_FILE, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
         } /* end if */
-    } /* end if */
+    }     /* end if */
 
 done:
     FUNC_LEAVE_API(ret_value)

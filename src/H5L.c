@@ -444,7 +444,7 @@ H5Lcreate_soft_async(const char *app_file, const char *app_func, unsigned app_li
 
     /* If a token was created, add the token to the event set */
     if (NULL != token) {
-        H5ES_t *es;     /* Event set for operation */
+        H5ES_t *es; /* Event set for operation */
 
         /* Get event set */
         if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
@@ -658,7 +658,7 @@ H5Lcreate_hard_async(const char *app_file, const char *app_func, unsigned app_li
 
     /* If a token was created, add the token to the event set */
     if (NULL != token) {
-        H5ES_t *es;     /* Event set for operation */
+        H5ES_t *es; /* Event set for operation */
 
         /* Get event set */
         if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
@@ -992,7 +992,7 @@ H5Ldelete_async(const char *app_file, const char *app_func, unsigned app_line, h
 
     /* If a token was created, add the token to the event set */
     if (NULL != token) {
-        H5ES_t *es;     /* Event set for operation */
+        H5ES_t *es; /* Event set for operation */
 
         /* Get event set */
         if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
@@ -1138,7 +1138,7 @@ H5Ldelete_by_idx_async(const char *app_file, const char *app_func, unsigned app_
 
     /* If a token was created, add the token to the event set */
     if (NULL != token) {
-        H5ES_t *es;     /* Event set for operation */
+        H5ES_t *es; /* Event set for operation */
 
         /* Get event set */
         if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
@@ -1414,7 +1414,7 @@ H5Lexists_async(const char *app_file, const char *app_func, unsigned app_line, h
 
     /* If a token was created, add the token to the event set */
     if (NULL != token) {
-        H5ES_t *es;     /* Event set for operation */
+        H5ES_t *es; /* Event set for operation */
 
         /* Get event set */
         if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
@@ -1894,7 +1894,7 @@ H5Literate_async(const char *app_file, const char *app_func, unsigned app_line, 
 
     /* If a token was created, add the token to the event set */
     if (NULL != token) {
-        H5ES_t *es;     /* Event set for operation */
+        H5ES_t *es; /* Event set for operation */
 
         /* Get event set */
         if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))

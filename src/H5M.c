@@ -416,7 +416,7 @@ H5Mcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
 
     /* If a token was created, add the token to the event set */
     if (NULL != token) {
-        H5ES_t *es;     /* Event set for operation */
+        H5ES_t *es; /* Event set for operation */
 
         /* Get event set */
         if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
@@ -430,7 +430,7 @@ H5Mcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
                 HDONE_ERROR(H5E_MAP, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on map ID");
             HGOTO_ERROR(H5E_MAP, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
         } /* end if */
-    } /* end if */
+    }     /* end if */
 
 done:
     /* Release resources */
@@ -678,7 +678,7 @@ H5Mopen_async(const char *app_file, const char *app_func, unsigned app_line, hid
 
     /* If a token was created, add the token to the event set */
     if (NULL != token) {
-        H5ES_t *es;     /* Event set for operation */
+        H5ES_t *es; /* Event set for operation */
 
         /* Get event set */
         if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
@@ -692,7 +692,7 @@ H5Mopen_async(const char *app_file, const char *app_func, unsigned app_line, hid
                 HDONE_ERROR(H5E_MAP, H5E_CANTDEC, H5I_INVALID_HID, "can't decrement count on map ID");
             HGOTO_ERROR(H5E_MAP, H5E_CANTINSERT, H5I_INVALID_HID, "can't insert token into event set");
         } /* end if */
-    } /* end if */
+    }     /* end if */
 
 done:
     /* Release resources */
@@ -781,7 +781,7 @@ H5Mclose_async(const char *app_file, const char *app_func, unsigned app_line, hi
 
     /* If a token was created, add the token to the event set */
     if (NULL != token) {
-        H5ES_t *es;     /* Event set for operation */
+        H5ES_t *es; /* Event set for operation */
 
         /* Get event set */
         if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
@@ -1159,7 +1159,7 @@ H5Mput_async(const char *app_file, const char *app_func, unsigned app_line, hid_
 
     /* If a token was created, add the token to the event set */
     if (NULL != token) {
-        H5ES_t *es;     /* Event set for operation */
+        H5ES_t *es; /* Event set for operation */
 
         /* Get event set */
         if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))
@@ -1310,7 +1310,7 @@ H5Mget_async(const char *app_file, const char *app_func, unsigned app_line, hid_
 
     /* If a token was created, add the token to the event set */
     if (NULL != token) {
-        H5ES_t *es;     /* Event set for operation */
+        H5ES_t *es; /* Event set for operation */
 
         /* Get event set */
         if (NULL == (es = H5I_object_verify(es_id, H5I_EVENTSET)))

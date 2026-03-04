@@ -169,9 +169,9 @@ H5ESget_count(hid_t es_id, size_t *count /*out*/)
 #ifdef H5_HAVE_CONCURRENCY
             /* Release shared lock on the list fields */
             H5TS_dlftt_rwlock_unlock(&es->list_lock, H5TS_RWLOCK_LOCK_SHARED);
-#endif /* H5_HAVE_CONCURRENCY */
+#endif    /* H5_HAVE_CONCURRENCY */
         } /* end if */
-    } /* end if */
+    }     /* end if */
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -212,7 +212,7 @@ H5ESget_op_counter(hid_t es_id, uint64_t *op_counter /*out*/)
 
             *op_counter = H5TS_ATOMIC_LOAD(uint64_t, &es->op_counter);
         } /* end if */
-    } /* end if */
+    }     /* end if */
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -245,13 +245,13 @@ herr_t
 H5ESget_requests(hid_t es_id, H5_iter_order_t order, hid_t *connector_ids, void **requests, size_t array_len,
                  size_t *count /*out*/)
 {
-    herr_t  ret_value = SUCCEED; /* Return value */
+    herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
     /* Passing H5ES_NONE is valid, but a no-op */
     if (H5ES_NONE != es_id) {
-        H5ES_t *es;                  /* Event set */
+        H5ES_t *es; /* Event set */
 
         /* Check arguments */
         if (order <= H5_ITER_UNKNOWN || order >= H5_ITER_N)
@@ -276,9 +276,9 @@ H5ESget_requests(hid_t es_id, H5_iter_order_t order, hid_t *connector_ids, void 
 #ifdef H5_HAVE_CONCURRENCY
             /* Release shared lock on the list fields */
             H5TS_dlftt_rwlock_unlock(&es->list_lock, H5TS_RWLOCK_LOCK_SHARED);
-#endif /* H5_HAVE_CONCURRENCY */
+#endif    /* H5_HAVE_CONCURRENCY */
         } /* end if */
-    } /* end if */
+    }     /* end if */
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -410,7 +410,7 @@ H5ESget_err_status(hid_t es_id, bool *err_status /*out*/)
 
             *err_status = H5TS_ATOMIC_LOAD(bool, &es->err_occurred);
         } /* end if */
-    } /* end if */
+    }     /* end if */
 
 done:
     FUNC_LEAVE_API(ret_value)
