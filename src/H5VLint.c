@@ -1242,7 +1242,7 @@ H5VL_free_object(H5VL_object_t *vol_obj)
             HGOTO_ERROR(H5E_VOL, H5E_CANTDEC, FAIL, "unable to decrement ref count on VOL connector");
 
         /* Destroy the atomic variable for the refcount */
-        H5TS_ATOMIC_DESTROY(size_t, &new_vol_obj->rc);
+        H5TS_ATOMIC_DESTROY(size_t, &vol_obj->rc);
 
         vol_obj = H5FL_FREE(H5VL_object_t, vol_obj);
     } /* end if */

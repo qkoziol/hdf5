@@ -2291,8 +2291,9 @@ herr_t
 H5VL_dataset_read(size_t count, void *obj[], H5VL_connector_t *connector, hid_t mem_type_id[],
                   hid_t mem_space_id[], hid_t file_space_id[], H5P_genplist_t *dxpl, void *buf[], void **req)
 {
-    bool          vol_wrapper_set = false; /* Whether the VOL object wrapping context was set up */
     H5VL_object_t tmp_vol_obj;             /* Temporary VOL object for setting VOL wrapper */
+    bool          rc_init = false;         /* Whether the temp. VOL object refcount was initialized */
+    bool          vol_wrapper_set = false; /* Whether the VOL object wrapping context was set up */
     herr_t        ret_value = SUCCEED;     /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
@@ -2303,7 +2304,8 @@ H5VL_dataset_read(size_t count, void *obj[], H5VL_connector_t *connector, hid_t 
     /* Set wrapper info in API context */
     tmp_vol_obj.non_c_data      = obj[0];
     tmp_vol_obj.non_c_connector = connector;
-    tmp_vol_obj.rc              = 1;
+    H5TS_ATOMIC_INIT(size_t, &tmp_vol_obj.rc, 1);
+    rc_init = true;
     if (H5VL_set_vol_wrapper(&tmp_vol_obj) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTSET, FAIL, "can't set VOL wrapper info");
     vol_wrapper_set = true;
@@ -2317,6 +2319,10 @@ done:
     /* Reset object wrapping info in API context */
     if (vol_wrapper_set && H5VL_reset_vol_wrapper() < 0)
         HDONE_ERROR(H5E_VOL, H5E_CANTRESET, FAIL, "can't reset VOL wrapper info");
+
+    /* Clean up temp. VOL object's atomic refcount */
+    if (rc_init)
+        H5TS_ATOMIC_DESTROY(size_t, &tmp_vol_obj.rc);
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5VL_dataset_read() */
@@ -2429,8 +2435,9 @@ H5VL_dataset_write(size_t count, void *obj[], H5VL_connector_t *connector, hid_t
                    hid_t mem_space_id[], hid_t file_space_id[], H5P_genplist_t *dxpl, const void *buf[],
                    void **req)
 {
-    bool          vol_wrapper_set = false; /* Whether the VOL object wrapping context was set up */
     H5VL_object_t tmp_vol_obj;             /* Temporary VOL object for setting VOL wrapper */
+    bool          rc_init = false;         /* Whether the temp. VOL object refcount was initialized */
+    bool          vol_wrapper_set = false; /* Whether the VOL object wrapping context was set up */
     herr_t        ret_value = SUCCEED;     /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
@@ -2441,7 +2448,8 @@ H5VL_dataset_write(size_t count, void *obj[], H5VL_connector_t *connector, hid_t
     /* Set wrapper info in API context */
     tmp_vol_obj.non_c_data      = obj[0];
     tmp_vol_obj.non_c_connector = connector;
-    tmp_vol_obj.rc              = 1;
+    H5TS_ATOMIC_INIT(size_t, &tmp_vol_obj.rc, 1);
+    rc_init = true;
     if (H5VL_set_vol_wrapper(&tmp_vol_obj) < 0)
         HGOTO_ERROR(H5E_VOL, H5E_CANTSET, FAIL, "can't set VOL wrapper info");
     vol_wrapper_set = true;
@@ -2455,6 +2463,10 @@ done:
     /* Reset object wrapping info in API context */
     if (vol_wrapper_set && H5VL_reset_vol_wrapper() < 0)
         HDONE_ERROR(H5E_VOL, H5E_CANTRESET, FAIL, "can't reset VOL wrapper info");
+
+    /* Clean up temp. VOL object's atomic refcount */
+    if (rc_init)
+        H5TS_ATOMIC_DESTROY(size_t, &tmp_vol_obj.rc);
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5VL_dataset_write() */
@@ -5401,6 +5413,7 @@ H5VL_link_create(H5VL_link_create_args_t *args, const H5VL_object_t *vol_obj,
                  const H5VL_loc_params_t *loc_params, H5P_genplist_t *lcpl, H5P_genplist_t *lapl, void **req)
 {
     H5VL_object_t tmp_vol_obj;               /* Temporary VOL object */
+    bool          rc_init = false;         /* Whether the temp. VOL object refcount was initialized */
     bool          vol_wrapper_set = false;   /* Whether the VOL object wrapping context was set up */
     herr_t        ret_value       = SUCCEED; /* Return value */
 
@@ -5414,6 +5427,8 @@ H5VL_link_create(H5VL_link_create_args_t *args, const H5VL_object_t *vol_obj,
         /* Use the VOL object passed in */
         tmp_vol_obj.non_c_data = vol_obj->data;
     tmp_vol_obj.non_c_connector = vol_obj->connector;
+    H5TS_ATOMIC_INIT(size_t, &tmp_vol_obj.rc, 1);
+    rc_init = true;
 
     /* Set wrapper info in API context */
     if (H5VL_set_vol_wrapper(&tmp_vol_obj) < 0)
@@ -5429,6 +5444,10 @@ done:
     /* Reset object wrapping info in API context */
     if (vol_wrapper_set && H5VL_reset_vol_wrapper() < 0)
         HDONE_ERROR(H5E_VOL, H5E_CANTRESET, FAIL, "can't reset VOL wrapper info");
+
+    /* Clean up temp. VOL object's atomic refcount */
+    if (rc_init)
+        H5TS_ATOMIC_DESTROY(size_t, &tmp_vol_obj.rc);
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5VL_link_create() */
