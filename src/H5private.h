@@ -1356,6 +1356,7 @@ extern char H5_lib_vers_info_g[];
     H5CANCEL_DECL /* thread cancellation */                 \
     H5DLFTT_DECL  /* user callback protection */
 
+#ifdef H5_HAVE_THREADSAFE_API
 /* Macro to call the threadsafety 'once' routine */
 #define H5_API_SETUP_TS_ONCE(err)                                                                       \
     do {                                                                                                     \
@@ -1364,6 +1365,11 @@ extern char H5_lib_vers_info_g[];
                 HGOTO_ERROR(H5E_FUNC, H5E_CANTINIT, err, "threadsafe 'once' initialization failed");                   \
         }                                                                                                    \
     } while (0)
+#else                 /* H5_HAVE_THREADSAFE_API */
+/* Macro to call the threadsafety 'once' routine */
+#define H5_API_SETUP_TS_ONCE(err)                                                                       \
+    do { } while (0) /* no-op */
+#endif /* H5_HAVE_THREADSAFE_API */
 
 /* Macro to initialize the library, if some other package hasn't already done that */
 #define H5_API_SETUP_INIT_LIBRARY(err)                                                                       \
