@@ -1141,7 +1141,7 @@ H5Dread(hid_t dset_id, hid_t mem_type_id, hid_t mem_space_id, hid_t file_space_i
     H5P_genplist_t *dxpl      = NULL;    /* Dataset transfer property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API(FAIL)
+    FUNC_ENTER_API_TS(FAIL)
 
     /* Get the pointer to the dataset transfer property list */
     if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5P_LOCK_EXCLUSIVE, true)))
@@ -1159,9 +1159,9 @@ done:
             HDONE_ERROR(H5E_DATASET, H5E_CANTUPDATE, FAIL, "unable to update DXPL");
         if (H5P_release(dxpl, H5P_LOCK_EXCLUSIVE) < 0)
             HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
-    }
+    } /* end if */
 
-    FUNC_LEAVE_API(ret_value)
+    FUNC_LEAVE_API_TS(ret_value)
 } /* end H5Dread() */
 
 /*-------------------------------------------------------------------------
@@ -1183,7 +1183,7 @@ H5Dread_async(const char *app_file, const char *app_func, unsigned app_line, hid
     H5P_genplist_t *dxpl      = NULL;            /* Dataset transfer property list pointer */
     herr_t          ret_value = SUCCEED;         /* Return value */
 
-    FUNC_ENTER_API(FAIL)
+    FUNC_ENTER_API_TS(FAIL)
 
     /* Get the pointer to the dataset transfer property list */
     if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5P_LOCK_EXCLUSIVE, true)))
@@ -1221,9 +1221,9 @@ done:
             HDONE_ERROR(H5E_DATASET, H5E_CANTUPDATE, FAIL, "unable to update DXPL");
         if (H5P_release(dxpl, H5P_LOCK_EXCLUSIVE) < 0)
             HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
-    }
+    } /* end if */
 
-    FUNC_LEAVE_API(ret_value)
+    FUNC_LEAVE_API_TS(ret_value)
 } /* end H5Dread_async() */
 
 /*-------------------------------------------------------------------------
@@ -1243,7 +1243,7 @@ H5Dread_multi(size_t count, hid_t dset_id[], hid_t mem_type_id[], hid_t mem_spac
     H5P_genplist_t *dxpl      = NULL;    /* Dataset transfer property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API(FAIL)
+    FUNC_ENTER_API_TS(FAIL)
 
     /* Get the pointer to the dataset transfer property list */
     if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5P_LOCK_EXCLUSIVE, true)))
@@ -1264,9 +1264,9 @@ done:
             HDONE_ERROR(H5E_DATASET, H5E_CANTUPDATE, FAIL, "unable to update DXPL");
         if (H5P_release(dxpl, H5P_LOCK_EXCLUSIVE) < 0)
             HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
-    }
+    } /* end if */
 
-    FUNC_LEAVE_API(ret_value)
+    FUNC_LEAVE_API_TS(ret_value)
 } /* end H5Dread_multi() */
 
 /*-------------------------------------------------------------------------
@@ -1290,7 +1290,7 @@ H5Dread_multi_async(const char *app_file, const char *app_func, unsigned app_lin
     H5P_genplist_t *dxpl      = NULL;            /* Dataset transfer property list pointer */
     herr_t          ret_value = SUCCEED;         /* Return value */
 
-    FUNC_ENTER_API(FAIL)
+    FUNC_ENTER_API_TS(FAIL)
 
     /* Get the pointer to the dataset transfer property list */
     if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5P_LOCK_EXCLUSIVE, true)))
@@ -1328,9 +1328,9 @@ done:
             HDONE_ERROR(H5E_DATASET, H5E_CANTUPDATE, FAIL, "unable to update DXPL");
         if (H5P_release(dxpl, H5P_LOCK_EXCLUSIVE) < 0)
             HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
-    }
+    } /* end if */
 
-    FUNC_LEAVE_API(ret_value)
+    FUNC_LEAVE_API_TS(ret_value)
 } /* end H5Dread_multi_async() */
 
 /*-------------------------------------------------------------------------

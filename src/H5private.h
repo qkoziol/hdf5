@@ -1423,6 +1423,28 @@ extern char H5_lib_vers_info_g[];
             {
 
 /*
+ * Use this macro for all "normal" public API functions that have been 
+ * converted to be threadsafe.
+ */
+#define FUNC_ENTER_API_TS(err)                                                                                  \
+    {                                                                                                        \
+        {                                                                                                    \
+            H5CX_node_t api_ctx        = {{0}, NULL};                                                        \
+            bool        api_ctx_pushed = false;                                                              \
+                                                                                                             \
+            H5_CHECK_FUNCTION_NAME(H5_IS_PUBLIC(__func__));                                                  \
+                                                                                                             \
+            H5_API_SETUP_PUBLIC_API_VARS                                                                     \
+            H5_API_SETUP_ERROR_HANDLING                                                                      \
+            H5_API_SETUP_TS_ONCE(err);                                                                       \
+            H5_API_SETUP_INIT_LIBRARY(err);                                                                  \
+            H5_API_SETUP_PUSH_CONTEXT(err);                                                                  \
+                                                                                                             \
+            /* Clear thread error stack entering public functions */                                         \
+            H5E_clear_stack();                                                                               \
+            {
+
+/*
  * Use this macro for public API functions that shouldn't clear the error stack
  * like H5Eprint and H5Ewalk.
  */
@@ -1651,6 +1673,20 @@ extern char H5_lib_vers_info_g[];
     if (H5_UNLIKELY(err_occurred))                                                                           \
         (void)H5E_dump_api_stack();                                                                          \
     H5_API_UNLOCK                                                                                            \
+    return (ret_value);                                                                                      \
+    }                                                                                                        \
+    } /* end scope from beginning of FUNC_ENTER */
+
+/* Use this macro to match the FUNC_ENTER_API_TS macro */
+#define FUNC_LEAVE_API_TS(ret_value)                                                                            \
+    ;                                                                                                        \
+    } /* end scope from end of FUNC_ENTER */                                                                 \
+    if (H5_LIKELY(api_ctx_pushed)) {                                                                         \
+        H5CX_pop();                                                                                \
+        api_ctx_pushed = false;                                                                              \
+    }                                                                                                        \
+    if (H5_UNLIKELY(err_occurred))                                                                           \
+        (void)H5E_dump_api_stack();                                                                          \
     return (ret_value);                                                                                      \
     }                                                                                                        \
     } /* end scope from beginning of FUNC_ENTER */
