@@ -77,7 +77,7 @@ H5VL_obj_get_rc(const H5VL_object_t *vol_obj)
 
     assert(vol_obj);
 
-    FUNC_LEAVE_NOAPI(vol_obj->rc)
+    FUNC_LEAVE_NOAPI(H5TS_ATOMIC_LOAD(size_t, &vol_obj->rc));
 } /* end H5VL_obj_get_rc() */
 
 /*-------------------------------------------------------------------------
