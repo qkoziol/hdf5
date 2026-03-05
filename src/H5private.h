@@ -1176,88 +1176,88 @@ extern char H5_lib_vers_info_g[];
 #define H5DLFTT_DECL /* */
 
 /* Macros for entering & leaving an API routine in a threadsafe manner */
-#define H5_API_WRLOCK_NOERR                                                                                         \
+#define H5_API_WRLOCK_NOERR                                                                                  \
     /* Acquire the API lock */                                                                               \
-    H5TS_api_lock();                                                                                        \
+    H5TS_api_lock();                                                                                         \
                                                                                                              \
     /* Set thread cancellation state to 'disable', and remember previous state */                            \
     H5TS_DISABLE_CANCEL;
-#define H5_API_WRLOCK(err)                                                                                          \
+#define H5_API_WRLOCK(err)                                                                                   \
     /* Acquire the API lock */                                                                               \
-    if (H5_UNLIKELY(H5TS_api_lock() < 0))                                                                                         \
-        HGOTO_ERROR(H5E_FUNC, H5E_CANTLOCK, err, "can't acquire API lock");                   \
+    if (H5_UNLIKELY(H5TS_api_lock() < 0))                                                                    \
+        HGOTO_ERROR(H5E_FUNC, H5E_CANTLOCK, err, "can't acquire API lock");                                  \
                                                                                                              \
     /* Set thread cancellation state to 'disable', and remember previous state */                            \
     H5TS_DISABLE_CANCEL;
 /* Only have exclusive locks for "regular" API threadsafety */
-#define H5_API_RDLOCK  H5_API_WRLOCK
-#define H5_API_WRUNLOCK                                                                                        \
+#define H5_API_RDLOCK H5_API_WRLOCK
+#define H5_API_WRUNLOCK                                                                                      \
     /* Release the API lock */                                                                               \
     H5TS_api_unlock();                                                                                       \
                                                                                                              \
     /* Restore previous thread cancellation state */                                                         \
     H5TS_RESTORE_CANCEL;
 /* Only have exclusive locks for "regular" API threadsafety */
-#define H5_API_RDUNLOCK  H5_API_WRUNLOCK
+#define H5_API_RDUNLOCK H5_API_WRUNLOCK
 #else /* H5_HAVE_CONCURRENCY */
 /* Local variable for 'disable locking for this thread' (DLFTT) state */
 #define H5DLFTT_DECL unsigned dlftt = 0;
 
 /* Macros for entering & leaving an API routine in a threadsafe manner */
-#define H5_API_WRLOCK_NOERR                                                                                          \
-    /* Acquire exclusive ownership of the API lock */                                                                               \
-    H5TS_api_wrlock(&dlftt);                                                                                  \
+#define H5_API_WRLOCK_NOERR                                                                                  \
+    /* Acquire exclusive ownership of the API lock */                                                        \
+    H5TS_api_wrlock(&dlftt);                                                                                 \
                                                                                                              \
     /* Set thread cancellation state to 'disable', and remember previous state */                            \
     if (0 == dlftt)                                                                                          \
         H5TS_DISABLE_CANCEL;
-#define H5_API_WRLOCK(err)                                                                                          \
-    /* Acquire exclusive ownership of the API lock */                                                                               \
-    if (H5_UNLIKELY(H5TS_api_wrlock(&dlftt) < 0))                                                                                   \
-        HGOTO_ERROR(H5E_FUNC, H5E_CANTLOCK, err, "can't acquire exclusive API lock");                   \
+#define H5_API_WRLOCK(err)                                                                                   \
+    /* Acquire exclusive ownership of the API lock */                                                        \
+    if (H5_UNLIKELY(H5TS_api_wrlock(&dlftt) < 0))                                                            \
+        HGOTO_ERROR(H5E_FUNC, H5E_CANTLOCK, err, "can't acquire exclusive API lock");                        \
                                                                                                              \
     /* Set thread cancellation state to 'disable', and remember previous state */                            \
     if (0 == dlftt)                                                                                          \
         H5TS_DISABLE_CANCEL;
-#define H5_API_RDLOCK(err)                                                                                          \
-    /* Acquire shared ownership of the API lock */                                                                               \
-    if (H5_UNLIKELY(H5TS_api_rdlock(&dlftt) < 0))                                                                                   \
-        HGOTO_ERROR(H5E_FUNC, H5E_CANTLOCK, err, "can't acquire exclusive API lock");                   \
+#define H5_API_RDLOCK(err)                                                                                   \
+    /* Acquire shared ownership of the API lock */                                                           \
+    if (H5_UNLIKELY(H5TS_api_rdlock(&dlftt) < 0))                                                            \
+        HGOTO_ERROR(H5E_FUNC, H5E_CANTLOCK, err, "can't acquire exclusive API lock");                        \
                                                                                                              \
     /* Set thread cancellation state to 'disable', and remember previous state */                            \
     if (0 == dlftt)                                                                                          \
         H5TS_DISABLE_CANCEL;
-#define H5_API_WRUNLOCK                                                                                        \
+#define H5_API_WRUNLOCK                                                                                      \
     if (0 == dlftt) {                                                                                        \
-        /* Release the exclusive API lock */                                                                           \
-        H5TS_api_wrunlock();                                                                                   \
+        /* Release the exclusive API lock */                                                                 \
+        H5TS_api_wrunlock();                                                                                 \
                                                                                                              \
         /* Restore previous thread cancellation state */                                                     \
         H5TS_RESTORE_CANCEL;                                                                                 \
     }
-#define H5_API_RDUNLOCK                                                                                        \
+#define H5_API_RDUNLOCK                                                                                      \
     if (0 == dlftt) {                                                                                        \
-        /* Release the shared API lock */                                                                           \
-        H5TS_api_rdunlock();                                                                                   \
+        /* Release the shared API lock */                                                                    \
+        H5TS_api_rdunlock();                                                                                 \
                                                                                                              \
         /* Restore previous thread cancellation state */                                                     \
         H5TS_RESTORE_CANCEL;                                                                                 \
     }
 #endif
-#else                 /* H5_HAVE_THREADSAFE_API */
+#else                       /* H5_HAVE_THREADSAFE_API */
 
 /* Local variable for saving cancellation state */
-#define H5CANCEL_DECL /* */
+#define H5CANCEL_DECL       /* */
 
 /* Local variable for 'disable locking for this thread' (DLFTT) state */
-#define H5DLFTT_DECL  /* */
+#define H5DLFTT_DECL        /* */
 
 /* No locks (non-threadsafe builds) */
-#define H5_API_WRLOCK_NOERR   /* no-op */
-#define H5_API_WRLOCK(err)   /* no-op */
-#define H5_API_RDLOCK(err)   /* no-op */
-#define H5_API_WRUNLOCK /* no-op */
-#define H5_API_RDUNLOCK /* no-op */
+#define H5_API_WRLOCK_NOERR /* no-op */
+#define H5_API_WRLOCK(err)  /* no-op */
+#define H5_API_RDLOCK(err)  /* no-op */
+#define H5_API_WRUNLOCK     /* no-op */
+#define H5_API_RDUNLOCK     /* no-op */
 
 #endif /* H5_HAVE_THREADSAFE_API */
 
