@@ -323,7 +323,7 @@ H5_term_library(void)
 
     /* Acquire the API lock */
     H5_API_SETUP_PUBLIC_API_VARS
-    H5_API_LOCK
+    H5_API_WRLOCK_NOERR
 
     /* Don't do anything if the library is already closed */
     if (!H5_INIT_GLOBAL)
@@ -510,7 +510,7 @@ H5_term_library(void)
 
 done:
     /* Release API lock */
-    H5_API_UNLOCK
+    H5_API_WRUNLOCK
 
     return;
 } /* end H5_term_library() */
@@ -1216,7 +1216,9 @@ H5resize_memory(void *mem, size_t size)
 
     ret_value = H5MM_realloc(mem, size);
 
+#ifdef H5_HAVE_THREADSAFE_API
 done:
+#endif /* H5_HAVE_THREADSAFE_API */
     FUNC_LEAVE_API_NOINIT(ret_value)
 } /* end H5resize_memory() */
 
@@ -1242,7 +1244,9 @@ H5free_memory(void *mem)
     /* At this time, it is impossible for this to fail. */
     H5MM_xfree(mem);
 
+#ifdef H5_HAVE_THREADSAFE_API
 done:
+#endif /* H5_HAVE_THREADSAFE_API */
     FUNC_LEAVE_API_NOINIT(ret_value)
 } /* end H5free_memory() */
 

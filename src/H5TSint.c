@@ -355,7 +355,7 @@ done:
 #else
 #ifdef H5_HAVE_CONCURRENCY
 herr_t
-H5TS_api_lock(unsigned *dlftt)
+H5TS_api_wrlock(unsigned *dlftt)
 {
     herr_t ret_value = SUCCEED;
 
@@ -370,13 +370,37 @@ H5TS_api_lock(unsigned *dlftt)
 
     /* Don't acquire the API lock if locking is disabled */
     if (0 == *dlftt)
-        /* Acquire the library's API lock */
+        /* Acquire an exclusive lock on library's API lock */
         if (H5_UNLIKELY(H5TS_rwlock_wrlock(&H5TS_api_info_p.api_lock) < 0))
             HGOTO_DONE(FAIL);
 
 done:
     FUNC_LEAVE_NOAPI_NAMECHECK_ONLY(ret_value)
-} /* end H5TS_api_lock() */
+} /* end H5TS_api_wrlock() */
+
+herr_t
+H5TS_api_rdlock(unsigned *dlftt)
+{
+    herr_t ret_value = SUCCEED;
+
+    FUNC_ENTER_NOAPI_NAMECHECK_ONLY
+
+    /* Increment the attempt lock count */
+    H5TS_atomic_fetch_add_uint(&H5TS_api_info_p.attempt_lock_count, 1);
+
+    /* Query the DLFTT value */
+    if (H5_UNLIKELY(H5TS__get_dlftt(dlftt) < 0))
+        HGOTO_DONE(FAIL);
+
+    /* Don't acquire the API lock if locking is disabled */
+    if (0 == *dlftt)
+        /* Acquire a shared lock on library's API lock */
+        if (H5_UNLIKELY(H5TS_rwlock_rdlock(&H5TS_api_info_p.api_lock) < 0))
+            HGOTO_DONE(FAIL);
+
+done:
+    FUNC_LEAVE_NOAPI_NAMECHECK_ONLY(ret_value)
+} /* end H5TS_api_rdlock() */
 #else
 #error "Unknown multithreading mode"
 #endif
@@ -440,6 +464,7 @@ done:
  *
  *--------------------------------------------------------------------------
  */
+#ifdef H5_HAVE_THREADSAFE
 herr_t
 H5TS_api_unlock(void)
 {
@@ -447,22 +472,47 @@ H5TS_api_unlock(void)
 
     FUNC_ENTER_NOAPI_NAMECHECK_ONLY
 
-#ifdef H5_HAVE_THREADSAFE
     /* Decrement the lock count for this thread */
     H5TS_api_info_p.lock_count--;
 
     /* Release the library's API lock */
     if (H5_UNLIKELY(H5TS_mutex_unlock(&H5TS_api_info_p.api_mutex) < 0))
         HGOTO_DONE(FAIL);
-#else /* H5_HAVE_CONCURRENCY */
-    /* Release the library's API lock */
-    if (H5_UNLIKELY(H5TS_rwlock_wrunlock(&H5TS_api_info_p.api_lock) < 0))
-        HGOTO_DONE(FAIL);
-#endif
 
 done:
     FUNC_LEAVE_NOAPI_NAMECHECK_ONLY(ret_value)
-} /* H5TS_api_unlock */
+} /* H5TS_api_unlock() */
+#else /* H5_HAVE_CONCURRENCY */
+herr_t
+H5TS_api_wrunlock(void)
+{
+    herr_t ret_value = SUCCEED;
+
+    FUNC_ENTER_NOAPI_NAMECHECK_ONLY
+
+    /* Release an exclusive lock on library's API lock */
+    if (H5_UNLIKELY(H5TS_rwlock_wrunlock(&H5TS_api_info_p.api_lock) < 0))
+        HGOTO_DONE(FAIL);
+
+done:
+    FUNC_LEAVE_NOAPI_NAMECHECK_ONLY(ret_value)
+} /* H5TS_api_wrunlock() */
+
+herr_t
+H5TS_api_rdunlock(void)
+{
+    herr_t ret_value = SUCCEED;
+
+    FUNC_ENTER_NOAPI_NAMECHECK_ONLY
+
+    /* Release a shared lock on library's API lock */
+    if (H5_UNLIKELY(H5TS_rwlock_rdunlock(&H5TS_api_info_p.api_lock) < 0))
+        HGOTO_DONE(FAIL);
+
+done:
+    FUNC_LEAVE_NOAPI_NAMECHECK_ONLY(ret_value)
+} /* H5TS_api_rdunlock() */
+#endif
 
 /*--------------------------------------------------------------------------
  * Function:    H5TS__tinfo_init

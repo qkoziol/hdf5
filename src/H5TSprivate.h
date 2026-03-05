@@ -342,10 +342,13 @@ H5_DLL herr_t H5TS_user_cb_restore(void);
 H5_DLL herr_t H5TS_api_once(void);
 #ifdef H5_HAVE_THREADSAFE
 H5_DLL herr_t H5TS_api_lock(void);
-#else /* H5_HAVE_CONCURRENCY */
-H5_DLL herr_t H5TS_api_lock(unsigned *dlftt);
-#endif
 H5_DLL herr_t H5TS_api_unlock(void);
+#else /* H5_HAVE_CONCURRENCY */
+H5_DLL herr_t H5TS_api_wrlock(unsigned *dlftt);
+H5_DLL herr_t H5TS_api_rdlock(unsigned *dlftt);
+H5_DLL herr_t H5TS_api_wrunlock(void);
+H5_DLL herr_t H5TS_api_rdunlock(void);
+#endif
 
 /* Retrieve per-thread info */
 H5_DLL herr_t               H5TS_thread_id(uint64_t *id);
