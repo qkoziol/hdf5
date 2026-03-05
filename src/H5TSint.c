@@ -293,6 +293,30 @@ done:
 } /* end H5TS__api_mutex_acquire() */
 
 /*--------------------------------------------------------------------------
+ * Function:    H5TS_api_once
+ *
+ * Purpose:     Perform the 'once' initialization of the threadsafety code.
+ *
+ * Return:      Non-negative on success / Negative on failure
+ *
+ *--------------------------------------------------------------------------
+ */
+herr_t
+H5TS_api_once(void)
+{
+    herr_t ret_value = SUCCEED;
+
+    FUNC_ENTER_NOAPI_NAMECHECK_ONLY
+
+    /* Initialize the thread-safety code, once */
+    if (H5_UNLIKELY(H5TS_once(&H5TS_first_init_s, H5TS_ONCE_INIT_FUNC) < 0))
+        HGOTO_DONE(FAIL);
+
+done:
+    FUNC_LEAVE_NOAPI_NAMECHECK_ONLY(ret_value)
+} /* end H5TS_api_once() */
+
+/*--------------------------------------------------------------------------
  * Function:    H5TS_api_lock
  *
  * Purpose:     Increment the global "API" lock counter for accessing the HDF5
@@ -315,11 +339,6 @@ H5TS_api_lock(void)
 
     FUNC_ENTER_NOAPI_NAMECHECK_ONLY
 
-    /* Initialize the thread-safety code, once */
-    if (H5_UNLIKELY(!H5_INIT_GLOBAL))
-        if (H5_UNLIKELY(H5TS_once(&H5TS_first_init_s, H5TS_ONCE_INIT_FUNC) < 0))
-            HGOTO_DONE(FAIL);
-
     /* Increment the attempt lock count */
     H5TS_atomic_fetch_add_uint(&H5TS_api_info_p.attempt_lock_count, 1);
 
@@ -341,11 +360,6 @@ H5TS_api_lock(unsigned *dlftt)
     herr_t ret_value = SUCCEED;
 
     FUNC_ENTER_NOAPI_NAMECHECK_ONLY
-
-    /* Initialize the thread-safety code, once */
-    if (H5_UNLIKELY(!H5_INIT_GLOBAL))
-        if (H5_UNLIKELY(H5TS_once(&H5TS_first_init_s, H5TS_ONCE_INIT_FUNC) < 0))
-            HGOTO_DONE(FAIL);
 
     /* Increment the attempt lock count */
     H5TS_atomic_fetch_add_uint(&H5TS_api_info_p.attempt_lock_count, 1);

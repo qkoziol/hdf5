@@ -1178,13 +1178,13 @@ extern char H5_lib_vers_info_g[];
 /* Macros for entering & leaving an API routine in a threadsafe manner */
 #define H5_API_LOCK                                                                                          \
     /* Acquire the API lock */                                                                               \
-    H5TS_api_lock();                                                                                         \
+    H5TS_api_lock();                                                          \
                                                                                                              \
     /* Set thread cancellation state to 'disable', and remember previous state */                            \
     H5TS_DISABLE_CANCEL;
 #define H5_API_UNLOCK                                                                                        \
     /* Release the API lock */                                                                               \
-    H5TS_api_unlock();                                                                                       \
+    H5TS_api_unlock();                                                          \
                                                                                                              \
     /* Restore previous thread cancellation state */                                                         \
     H5TS_RESTORE_CANCEL;
@@ -1195,7 +1195,7 @@ extern char H5_lib_vers_info_g[];
 /* Macros for entering & leaving an API routine in a threadsafe manner */
 #define H5_API_LOCK                                                                                          \
     /* Acquire the API lock */                                                                               \
-    H5TS_api_lock(&dlftt);                                                                                   \
+    H5TS_api_lock(&dlftt);                                                        \
                                                                                                              \
     /* Set thread cancellation state to 'disable', and remember previous state */                            \
     if (0 == dlftt)                                                                                          \
@@ -1203,7 +1203,7 @@ extern char H5_lib_vers_info_g[];
 #define H5_API_UNLOCK                                                                                        \
     if (0 == dlftt) {                                                                                        \
         /* Release the API lock */                                                                           \
-        H5TS_api_unlock();                                                                                   \
+        H5TS_api_unlock();                                                          \
                                                                                                              \
         /* Restore previous thread cancellation state */                                                     \
         H5TS_RESTORE_CANCEL;                                                                                 \
@@ -1341,7 +1341,7 @@ extern char H5_lib_vers_info_g[];
 #endif
 
 /* ----------------------------------------------------------------------------
- * Macros that things up upon entering an HDF5 API call
+ * Macros that set things up upon entering an HDF5 API call
  *
  * These are all of the form `H5_API_SETUP_<thing>`
  * ----------------------------------------------------------------------------
@@ -1355,6 +1355,15 @@ extern char H5_lib_vers_info_g[];
 #define H5_API_SETUP_PUBLIC_API_VARS                                                                         \
     H5CANCEL_DECL /* thread cancellation */                 \
     H5DLFTT_DECL  /* user callback protection */
+
+/* Macro to call the threadsafety 'once' routine */
+#define H5_API_SETUP_TS_ONCE(err)                                                                       \
+    do {                                                                                                     \
+        if (H5_UNLIKELY(!H5_INIT_GLOBAL)) {                                               \
+            if (H5_UNLIKELY(H5TS_api_once() < 0))                                                          \
+                HGOTO_ERROR(H5E_FUNC, H5E_CANTINIT, err, "threadsafe 'once' initialization failed");                   \
+        }                                                                                                    \
+    } while (0)
 
 /* Macro to initialize the library, if some other package hasn't already done that */
 #define H5_API_SETUP_INIT_LIBRARY(err)                                                                       \
@@ -1398,6 +1407,7 @@ extern char H5_lib_vers_info_g[];
                                                                                                              \
             H5_API_SETUP_PUBLIC_API_VARS                                                                     \
             H5_API_SETUP_ERROR_HANDLING                                                                      \
+            H5_API_SETUP_TS_ONCE(err);                                                                       \
             H5_API_LOCK                                                                                      \
             H5_API_SETUP_INIT_LIBRARY(err);                                                                  \
             H5_API_SETUP_PUSH_CONTEXT(err);                                                                  \
@@ -1420,6 +1430,7 @@ extern char H5_lib_vers_info_g[];
                                                                                                              \
             H5_API_SETUP_PUBLIC_API_VARS                                                                     \
             H5_API_SETUP_ERROR_HANDLING                                                                      \
+            H5_API_SETUP_TS_ONCE(err);                                                                       \
             H5_API_LOCK                                                                                      \
             H5_API_SETUP_INIT_LIBRARY(err);                                                                  \
             H5_API_SETUP_PUSH_CONTEXT(err);                                                                  \
@@ -1430,7 +1441,7 @@ extern char H5_lib_vers_info_g[];
  * initialization of the library or an interface, just perform tracing, etc.
  * Examples are: H5is_library_threadsafe, H5VLretrieve_lib_state, etc.
  */
-#define FUNC_ENTER_API_NOINIT                                                                                \
+#define FUNC_ENTER_API_NOINIT(err)                                                                                \
     {                                                                                                        \
         {                                                                                                    \
             {                                                                                                \
@@ -1438,25 +1449,9 @@ extern char H5_lib_vers_info_g[];
                                                                                                              \
                 H5_API_SETUP_PUBLIC_API_VARS                                                                 \
                 H5_API_SETUP_ERROR_HANDLING                                                                  \
-                H5_API_LOCK                                                                                  \
+                H5_API_SETUP_TS_ONCE(err);                                                                       \
+                H5_API_LOCK                                                                                      \
                 {
-
-/*
- * Use this macro for public API functions that shouldn't perform _any_
- * initialization of the library or an interface or push themselves on the
- * function stack, just perform tracing, etc. Examples are: H5dont_atexit,
- * H5check_version, etc.
- */
-#define FUNC_ENTER_API_NOINIT_NOERR                                                                          \
-    {                                                                                                        \
-        {                                                                                                    \
-            {                                                                                                \
-                {                                                                                            \
-                    H5_CHECK_FUNCTION_NAME(H5_IS_PUBLIC(__func__));                                          \
-                                                                                                             \
-                    H5_API_SETUP_PUBLIC_API_VARS                                                             \
-                    H5_API_LOCK                                                                              \
-                    {
 
 /*
  * Use this macro for public API functions that should only perform
@@ -1473,7 +1468,8 @@ extern char H5_lib_vers_info_g[];
                                                                                                              \
                         H5_API_SETUP_PUBLIC_API_VARS                                                         \
                         H5_API_SETUP_ERROR_HANDLING                                                          \
-                        H5_API_LOCK                                                                          \
+                        H5_API_SETUP_TS_ONCE(err);                                                                       \
+                        H5_API_LOCK                                                                                      \
                         H5_API_SETUP_INIT_LIBRARY(err);                                                      \
                         {
 
@@ -1481,7 +1477,8 @@ extern char H5_lib_vers_info_g[];
  * Use this macro for public API functions that shouldn't perform _any_
  * initialization of the library or an interface, or push themselves on the
  * function stack, or perform tracing, etc.  This macro _only_ sanity checks
- * the API name itself. Examples are: H5TSmutex_acquire
+ * the API name itself. Examples are: H5TSmutex_acquire, H5dont_atexit,
+ * H5check_version, etc.
  */
 #define FUNC_ENTER_API_NAMECHECK_ONLY                                                                        \
     {                                                                                                        \
@@ -1660,17 +1657,6 @@ extern char H5_lib_vers_info_g[];
         (void)H5E_dump_api_stack();                                                                          \
     H5_API_UNLOCK                                                                                            \
     return (ret_value);                                                                                      \
-    }                                                                                                        \
-    }                                                                                                        \
-    } /* end scope from beginning of FUNC_ENTER */
-
-/* Use this macro to match the FUNC_ENTER_API_NOINIT_NOERR macro */
-#define FUNC_LEAVE_API_NOERR(ret_value)                                                                      \
-    ;                                                                                                        \
-    } /* end scope from end of FUNC_ENTER */                                                                 \
-    H5_API_UNLOCK                                                                                            \
-    return (ret_value);                                                                                      \
-    }                                                                                                        \
     }                                                                                                        \
     }                                                                                                        \
     } /* end scope from beginning of FUNC_ENTER */

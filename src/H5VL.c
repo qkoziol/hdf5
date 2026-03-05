@@ -567,7 +567,7 @@ H5VLwrap_register(void *obj, H5I_type_t type)
     hid_t ret_value; /* Return value */
 
     /* Use FUNC_ENTER_API_NOINIT here, so the API context doesn't get reset */
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(H5I_INVALID_HID)
 
     /* Check args */
     /* Use a switch here for (hopefully) better performance than a series of
@@ -767,7 +767,7 @@ H5VLretrieve_lib_state(void **state /*out*/)
     herr_t ret_value = SUCCEED; /* Return value */
 
     /* Must use this, to avoid modifying the API context stack in FUNC_ENTER */
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args */
     if (NULL == state)
@@ -806,7 +806,7 @@ H5VLopen_lib_context(void **context)
     herr_t ret_value = SUCCEED; /* Return value */
 
     /* Must use this, to avoid modifying the API context stack in FUNC_ENTER */
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args */
     if (NULL == context)
@@ -839,7 +839,7 @@ H5VLrestore_lib_state(const void *state)
     herr_t ret_value = SUCCEED; /* Return value */
 
     /* Must use this, to avoid modifying the API context stack in FUNC_ENTER */
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args */
     if (NULL == state)
@@ -874,7 +874,7 @@ H5VLclose_lib_context(void *context)
     herr_t ret_value = SUCCEED; /* Return value */
 
     /* Must use this, to avoid modifying the API context stack in FUNC_ENTER */
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args */
     if (NULL == context)

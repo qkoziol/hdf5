@@ -232,7 +232,7 @@ H5VLinitialize(hid_t connector_id, hid_t vipl_id)
     H5VL_connector_t *connector;           /* VOL connector */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args */
     if (NULL == (connector = H5I_object_verify(connector_id, H5I_VOL)))
@@ -270,7 +270,7 @@ H5VLterminate(hid_t connector_id)
     H5VL_connector_t *connector;           /* VOL connector */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args */
     if (NULL == (connector = H5I_object_verify(connector_id, H5I_VOL)))
@@ -308,7 +308,7 @@ H5VLget_cap_flags(hid_t connector_id, uint64_t *cap_flags /*out*/)
     H5VL_connector_t *connector;           /* VOL connector */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args */
     if (NULL == (connector = H5I_object_verify(connector_id, H5I_VOL)))
@@ -338,7 +338,7 @@ H5VLget_value(hid_t connector_id, H5VL_class_value_t *value /*out*/)
     H5VL_connector_t *connector;           /* VOL connector */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args */
     if (NULL == (connector = H5I_object_verify(connector_id, H5I_VOL)))
@@ -468,7 +468,7 @@ H5VLcopy_connector_info(hid_t connector_id, void **dst_vol_info, void *src_vol_i
     H5VL_connector_t *connector;           /* VOL connector */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get VOL connector */
     if (NULL == (connector = H5I_object_verify(connector_id, H5I_VOL)))
@@ -637,7 +637,7 @@ H5VLfree_connector_info(hid_t connector_id, void *info)
     H5VL_connector_t *connector;           /* VOL connector */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get VOL connector */
     if (NULL == (connector = H5I_object_verify(connector_id, H5I_VOL)))
@@ -666,7 +666,7 @@ H5VLconnector_info_to_str(const void *info, hid_t connector_id, char **str)
 {
     herr_t ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Only serialize info object, if it's non-NULL */
     if (info) {
@@ -753,7 +753,7 @@ H5VLconnector_str_to_info(const char *str, hid_t connector_id, void **info /*out
     H5VL_connector_t *connector = NULL;
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get VOL connector */
     if (NULL == (connector = H5I_object_verify(connector_id, H5I_VOL)))
@@ -783,7 +783,7 @@ H5VLget_object(void *obj, hid_t connector_id)
     H5VL_connector_t *connector;        /* VOL connector */
     void             *ret_value = NULL; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(NULL)
 
     /* Check args */
     if (NULL == obj)
@@ -826,7 +826,7 @@ H5VLget_wrap_ctx(void *obj, hid_t connector_id, void **wrap_ctx /*out*/)
     H5VL_connector_t *connector;           /* VOL connector */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == (connector = H5I_object_verify(connector_id, H5I_VOL)))
@@ -910,7 +910,7 @@ H5VLwrap_object(void *obj, H5I_type_t obj_type, hid_t connector_id, void *wrap_c
     H5VL_connector_t *connector;        /* VOL connector */
     void             *ret_value = NULL; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(NULL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -982,7 +982,7 @@ H5VLunwrap_object(void *obj, hid_t connector_id)
     H5VL_connector_t *connector;        /* VOL connector */
     void             *ret_value = NULL; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(NULL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -1014,7 +1014,7 @@ H5VLfree_wrap_ctx(void *wrap_ctx, hid_t connector_id)
     H5VL_connector_t *connector;           /* VOL connector */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == (connector = H5I_object_verify(connector_id, H5I_VOL)))
@@ -1133,7 +1133,7 @@ H5VLattr_create(void *obj, const H5VL_loc_params_t *loc_params, hid_t connector_
     H5P_genplist_t   *aapl;             /* Attribute access property list */
     void             *ret_value = NULL; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(NULL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -1255,7 +1255,7 @@ H5VLattr_open(void *obj, const H5VL_loc_params_t *loc_params, hid_t connector_id
     H5P_genplist_t   *aapl;             /* Attribute access property list */
     void             *ret_value = NULL; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(NULL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -1368,7 +1368,7 @@ H5VLattr_read(void *obj, hid_t connector_id, hid_t mem_type_id, void *buf, hid_t
     H5P_genplist_t   *dxpl;                /* Dataset transfer property list */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -1478,7 +1478,7 @@ H5VLattr_write(void *obj, hid_t connector_id, hid_t mem_type_id, const void *buf
     H5P_genplist_t   *dxpl;                /* Dataset transfer property list */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -1586,7 +1586,7 @@ H5VLattr_get(void *obj, hid_t connector_id, H5VL_attr_get_args_t *args, hid_t dx
     H5P_genplist_t   *dxpl;                /* Dataset transfer property list */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -1701,7 +1701,7 @@ H5VLattr_specific(void *obj, const H5VL_loc_params_t *loc_params, hid_t connecto
     H5P_genplist_t   *dxpl;                /* Dataset transfer property list */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -1814,7 +1814,7 @@ H5VLattr_optional(void *obj, hid_t connector_id, H5VL_optional_args_t *args, hid
     H5P_genplist_t   *dxpl;                /* dxpl */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -1978,7 +1978,7 @@ H5VLattr_close(void *obj, hid_t connector_id, hid_t dxpl_id, void **req /*out*/)
     H5P_genplist_t   *dxpl;                /* Dataset transfer property list */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -2098,7 +2098,7 @@ H5VLdataset_create(void *obj, const H5VL_loc_params_t *loc_params, hid_t connect
     H5P_genplist_t   *dxpl;             /* Dataset transfer property list */
     void             *ret_value = NULL; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(NULL)
 
     /* Check args and pointers */
     if (NULL == obj)
@@ -2216,7 +2216,7 @@ H5VLdataset_open(void *obj, const H5VL_loc_params_t *loc_params, hid_t connector
     H5P_genplist_t   *dxpl;             /* Dataset transfer property list */
     void             *ret_value = NULL; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(NULL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -2346,7 +2346,7 @@ H5VLdataset_read(size_t count, void *obj[], hid_t connector_id, hid_t mem_type_i
     H5P_genplist_t   *dxpl;                /* Dataset transfer property list pointer */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -2490,7 +2490,7 @@ H5VLdataset_write(size_t count, void *obj[], hid_t connector_id, hid_t mem_type_
     H5P_genplist_t   *dxpl;                /* Dataset transfer property list pointer */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -2611,7 +2611,7 @@ H5VLdataset_get(void *obj, hid_t connector_id, H5VL_dataset_get_args_t *args, hi
     H5P_genplist_t   *dxpl;                /* Dataset transfer property list pointer */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -2720,7 +2720,7 @@ H5VLdataset_specific(void *obj, hid_t connector_id, H5VL_dataset_specific_args_t
     H5P_genplist_t   *dxpl;                /* Dataset transfer property list pointer */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -2830,7 +2830,7 @@ H5VLdataset_optional(void *obj, hid_t connector_id, H5VL_optional_args_t *args, 
     H5P_genplist_t   *dxpl;                /* Dataset transfer property list pointer */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -3002,7 +3002,7 @@ H5VLdataset_close(void *obj, hid_t connector_id, hid_t dxpl_id, void **req /*out
     H5P_genplist_t   *dxpl;                /* Dataset transfer property list pointer */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -3121,7 +3121,7 @@ H5VLdatatype_commit(void *obj, const H5VL_loc_params_t *loc_params, hid_t connec
     H5P_genplist_t   *dxpl;             /* Dataset transfer property list */
     void             *ret_value = NULL; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(NULL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -3239,7 +3239,7 @@ H5VLdatatype_open(void *obj, const H5VL_loc_params_t *loc_params, hid_t connecto
     H5P_genplist_t   *dxpl;             /* Dataset transfer property list */
     void             *ret_value = NULL; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(NULL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -3350,7 +3350,7 @@ H5VLdatatype_get(void *obj, hid_t connector_id, H5VL_datatype_get_args_t *args, 
     H5P_genplist_t   *dxpl;                /* Dataset transfer property list */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -3460,7 +3460,7 @@ H5VLdatatype_specific(void *obj, hid_t connector_id, H5VL_datatype_specific_args
     H5P_genplist_t   *dxpl;                /* Dataset transfer property list */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -3578,7 +3578,7 @@ H5VLdatatype_optional(void *obj, hid_t connector_id, H5VL_optional_args_t *args,
     H5P_genplist_t   *dxpl;                /* Dataset transfer property list */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -3744,7 +3744,7 @@ H5VLdatatype_close(void *obj, hid_t connector_id, hid_t dxpl_id, void **req /*ou
     H5P_genplist_t   *dxpl;                /* Dataset transfer property list */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -3854,7 +3854,7 @@ H5VLfile_create(const char *name, unsigned flags, hid_t fcpl_id, hid_t fapl_id, 
     H5VL_connector_prop_t connector_prop;   /* Property for VOL connector ID & info */
     void                 *ret_value = NULL; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(NULL)
 
     /* Check args and pointers */
     if (NULL == (fcpl = H5P_object_verify(fcpl_id, H5P_TYPE_FILE_CREATE, true)))
@@ -4084,7 +4084,7 @@ H5VLfile_open(const char *name, unsigned flags, hid_t fapl_id, hid_t dxpl_id, vo
     H5VL_connector_prop_t connector_prop;   /* Property for VOL connector ID & info */
     void                 *ret_value = NULL; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(NULL)
 
     /* Get the VOL info from the fapl */
     if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
@@ -4192,7 +4192,7 @@ H5VLfile_get(void *obj, hid_t connector_id, H5VL_file_get_args_t *args, hid_t dx
     H5P_genplist_t   *dxpl;                /* Dataset transfer property list pointer */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -4336,7 +4336,7 @@ H5VLfile_specific(void *obj, hid_t connector_id, H5VL_file_specific_args_t *args
     H5P_genplist_t   *dxpl;                /* dxpl */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == (connector = H5I_object_verify(connector_id, H5I_VOL)))
@@ -4443,7 +4443,7 @@ H5VLfile_optional(void *obj, hid_t connector_id, H5VL_optional_args_t *args, hid
     H5P_genplist_t   *dxpl;                /* dxpl */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -4606,7 +4606,7 @@ H5VLfile_close(void *obj, hid_t connector_id, hid_t dxpl_id, void **req /*out*/)
     H5P_genplist_t   *dxpl;                /* Dataset transfer property list */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -4722,7 +4722,7 @@ H5VLgroup_create(void *obj, const H5VL_loc_params_t *loc_params, hid_t connector
     H5P_genplist_t   *dxpl;             /* Dataset transfer property list */
     void             *ret_value = NULL; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(NULL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -4842,7 +4842,7 @@ H5VLgroup_open(void *obj, const H5VL_loc_params_t *loc_params, hid_t connector_i
     H5P_genplist_t   *dxpl;             /* Dataset transfer property list */
     void             *ret_value = NULL; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(NULL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -4952,7 +4952,7 @@ H5VLgroup_get(void *obj, hid_t connector_id, H5VL_group_get_args_t *args, hid_t 
     H5P_genplist_t   *dxpl;                /* Dataset transfer property list */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -5061,7 +5061,7 @@ H5VLgroup_specific(void *obj, hid_t connector_id, H5VL_group_specific_args_t *ar
     H5P_genplist_t   *dxpl;                /* dxpl */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -5173,7 +5173,7 @@ H5VLgroup_optional(void *obj, hid_t connector_id, H5VL_optional_args_t *args, hi
     H5P_genplist_t   *dxpl;                /* dxpl */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -5338,7 +5338,7 @@ H5VLgroup_close(void *obj, hid_t connector_id, hid_t dxpl_id, void **req /*out*/
     H5P_genplist_t   *dxpl;                /* dxpl */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -5474,7 +5474,7 @@ H5VLlink_create(H5VL_link_create_args_t *args, void *obj, const H5VL_loc_params_
     H5P_genplist_t   *dxpl;                /* Dataset transfer property list */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Get connector pointer */
     if (NULL == (connector = H5I_object_verify(connector_id, H5I_VOL)))
@@ -5595,7 +5595,7 @@ H5VLlink_copy(void *src_obj, const H5VL_loc_params_t *loc_params1, void *dst_obj
     H5P_genplist_t   *dxpl;                /* Dataset transfer property list */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Get connector pointer */
     if (NULL == (connector = H5I_object_verify(connector_id, H5I_VOL)))
@@ -5721,7 +5721,7 @@ H5VLlink_move(void *src_obj, const H5VL_loc_params_t *loc_params1, void *dst_obj
     H5P_genplist_t   *dxpl;                /* Dataset transfer property list */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Get connector pointer */
     if (NULL == (connector = H5I_object_verify(connector_id, H5I_VOL)))
@@ -5833,7 +5833,7 @@ H5VLlink_get(void *obj, const H5VL_loc_params_t *loc_params, hid_t connector_id,
     H5P_genplist_t   *dxpl;                /* Dataset transfer property list */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -5944,7 +5944,7 @@ H5VLlink_specific(void *obj, const H5VL_loc_params_t *loc_params, hid_t connecto
     H5P_genplist_t   *dxpl;                /* Dataset transfer property list */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -6017,7 +6017,7 @@ H5VLlink_optional(void *obj, const H5VL_loc_params_t *loc_params, hid_t connecto
     H5P_genplist_t   *dxpl;                /* Dataset transfer property list */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -6202,7 +6202,7 @@ H5VLobject_open(void *obj, const H5VL_loc_params_t *params, hid_t connector_id, 
     H5P_genplist_t   *dxpl;             /* Dataset transfer property list */
     void             *ret_value = NULL; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(NULL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -6323,7 +6323,7 @@ H5VLobject_copy(void *src_obj, const H5VL_loc_params_t *src_loc_params, const ch
     H5P_genplist_t   *dxpl;                /* Dataset transfer property list */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointers */
     if (NULL == src_obj || NULL == dst_obj)
@@ -6437,7 +6437,7 @@ H5VLobject_get(void *obj, const H5VL_loc_params_t *loc_params, hid_t connector_i
     H5P_genplist_t   *dxpl;                /* Dataset transfer property list */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -6548,7 +6548,7 @@ H5VLobject_specific(void *obj, const H5VL_loc_params_t *loc_params, hid_t connec
     H5P_genplist_t   *dxpl;                /* Dataset transfer property list */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -6658,7 +6658,7 @@ H5VLobject_optional(void *obj, const H5VL_loc_params_t *loc_params, hid_t connec
     H5P_genplist_t   *dxpl;                /* Dataset transfer property list */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -6851,7 +6851,7 @@ H5VLintrospect_get_conn_cls(void *obj, hid_t connector_id, H5VL_get_conn_lvl_t l
     H5VL_connector_t *connector;           /* VOL connector */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args */
     if (NULL == obj)
@@ -6928,7 +6928,7 @@ H5VLintrospect_get_cap_flags(const void *info, hid_t connector_id, uint64_t *cap
     H5VL_connector_t *connector;           /* VOL connector */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args */
     if (NULL == cap_flags)
@@ -7037,7 +7037,7 @@ H5VLintrospect_opt_query(void *obj, hid_t connector_id, H5VL_subclass_t subcls, 
     H5VL_connector_t *connector;           /* VOL connector */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Get connector pointer */
     if (NULL == (connector = H5I_object_verify(connector_id, H5I_VOL)))
@@ -7145,7 +7145,7 @@ H5VLrequest_wait(void *req, hid_t connector_id, uint64_t timeout, H5VL_request_s
     H5VL_connector_t *connector;           /* VOL connector */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Get connector pointer */
     if (NULL == (connector = H5I_object_verify(connector_id, H5I_VOL)))
@@ -7255,7 +7255,7 @@ H5VLrequest_notify(void *req, hid_t connector_id, H5VL_request_notify_t cb, void
     H5VL_connector_t *connector;           /* VOL connector */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Get connector pointer */
     if (NULL == (connector = H5I_object_verify(connector_id, H5I_VOL)))
@@ -7362,7 +7362,7 @@ H5VLrequest_cancel(void *req, hid_t connector_id, H5VL_request_status_t *status 
     H5VL_connector_t *connector;           /* VOL connector */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Get connector pointer */
     if (NULL == (connector = H5I_object_verify(connector_id, H5I_VOL)))
@@ -7471,7 +7471,7 @@ H5VLrequest_specific(void *req, hid_t connector_id, H5VL_request_specific_args_t
     H5VL_connector_t *connector;           /* VOL connector */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Get connector pointer */
     if (NULL == (connector = H5I_object_verify(connector_id, H5I_VOL)))
@@ -7581,7 +7581,7 @@ H5VLrequest_optional(void *req, hid_t connector_id, H5VL_optional_args_t *args)
     H5VL_connector_t *connector;           /* VOL connector */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Get connector pointer */
     if (NULL == (connector = H5I_object_verify(connector_id, H5I_VOL)))
@@ -7725,7 +7725,7 @@ H5VLrequest_free(void *req, hid_t connector_id)
     H5VL_connector_t *connector;           /* VOL connector */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Get connector pointer */
     if (NULL == (connector = H5I_object_verify(connector_id, H5I_VOL)))
@@ -7823,7 +7823,7 @@ H5VLblob_put(void *obj, hid_t connector_id, const void *buf, size_t size, void *
     H5VL_connector_t *connector;           /* VOL connector */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Get connector pointer */
     if (NULL == obj)
@@ -7923,7 +7923,7 @@ H5VLblob_get(void *obj, hid_t connector_id, const void *blob_id, void *buf /*out
     H5VL_connector_t *connector;           /* VOL connector */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Get connector pointer */
     if (NULL == obj)
@@ -8022,7 +8022,7 @@ H5VLblob_specific(void *obj, hid_t connector_id, void *blob_id, H5VL_blob_specif
     H5VL_connector_t *connector;           /* VOL connector */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Get connector pointer */
     if (NULL == obj)
@@ -8121,7 +8121,7 @@ H5VLblob_optional(void *obj, hid_t connector_id, void *blob_id, H5VL_optional_ar
     H5VL_connector_t *connector;           /* VOL connector */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Get connector pointer */
     if (NULL == obj)
@@ -8248,7 +8248,7 @@ H5VLtoken_cmp(void *obj, hid_t connector_id, const H5O_token_t *token1, const H5
     H5VL_connector_t *connector;           /* VOL connector */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -8358,7 +8358,7 @@ H5VLtoken_to_str(void *obj, H5I_type_t obj_type, hid_t connector_id, const H5O_t
     H5VL_connector_t *connector;           /* VOL connector */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -8470,7 +8470,7 @@ H5VLtoken_from_str(void *obj, H5I_type_t obj_type, hid_t connector_id, const cha
     H5VL_connector_t *connector;           /* VOL connector */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
@@ -8578,7 +8578,7 @@ H5VLoptional(void *obj, hid_t connector_id, H5VL_optional_args_t *args, hid_t dx
     H5P_genplist_t   *dxpl;                /* Dataset transfer property list */
     herr_t            ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_API_NOINIT
+    FUNC_ENTER_API_NOINIT(FAIL)
 
     /* Check args and get connector pointer */
     if (NULL == obj)
