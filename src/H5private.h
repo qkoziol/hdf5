@@ -1178,13 +1178,13 @@ extern char H5_lib_vers_info_g[];
 /* Macros for entering & leaving an API routine in a threadsafe manner */
 #define H5_API_LOCK                                                                                          \
     /* Acquire the API lock */                                                                               \
-    H5TS_api_lock();                                                          \
+    H5TS_api_lock();                                                                                         \
                                                                                                              \
     /* Set thread cancellation state to 'disable', and remember previous state */                            \
     H5TS_DISABLE_CANCEL;
 #define H5_API_UNLOCK                                                                                        \
     /* Release the API lock */                                                                               \
-    H5TS_api_unlock();                                                          \
+    H5TS_api_unlock();                                                                                       \
                                                                                                              \
     /* Restore previous thread cancellation state */                                                         \
     H5TS_RESTORE_CANCEL;
@@ -1195,7 +1195,7 @@ extern char H5_lib_vers_info_g[];
 /* Macros for entering & leaving an API routine in a threadsafe manner */
 #define H5_API_LOCK                                                                                          \
     /* Acquire the API lock */                                                                               \
-    H5TS_api_lock(&dlftt);                                                        \
+    H5TS_api_lock(&dlftt);                                                                                   \
                                                                                                              \
     /* Set thread cancellation state to 'disable', and remember previous state */                            \
     if (0 == dlftt)                                                                                          \
@@ -1203,7 +1203,7 @@ extern char H5_lib_vers_info_g[];
 #define H5_API_UNLOCK                                                                                        \
     if (0 == dlftt) {                                                                                        \
         /* Release the API lock */                                                                           \
-        H5TS_api_unlock();                                                          \
+        H5TS_api_unlock();                                                                                   \
                                                                                                              \
         /* Restore previous thread cancellation state */                                                     \
         H5TS_RESTORE_CANCEL;                                                                                 \
