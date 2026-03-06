@@ -5427,7 +5427,7 @@ public class H5 implements java.io.Serializable {
      *            Error from the HDF5 Library.
      **/
     public synchronized static native boolean H5FDcmp_driver_cls(long drvr_id1, long drvr_id2)
-        throws HDF5LibraryException;
+        throws HDF5LibraryException
     {
         boolean ret = _H5FDcmp_driver_cls(drvr_id1, drvr_id2);
         return ret;
