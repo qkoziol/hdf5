@@ -24,7 +24,7 @@ extern "C" {
  * Method:    H5FDcmp_driver_cls
  * Signature: (JJ)Z
  */
-JNIEXPORT jboolean JNICALL Java_hdf_hdf5lib_H5_H5FDcmp_1driver_1cls(JNIEnv *, jclass, jlong, jlong);
+JNIEXPORT jboolean JNICALL Java_hdf_hdf5lib_H5__H5FDcmp_1driver_1cls(JNIEnv *, jclass, jlong, jlong);
 
 #ifdef __cplusplus
 } /* end extern "C" */
