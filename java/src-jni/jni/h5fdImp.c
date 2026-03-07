@@ -27,7 +27,7 @@ extern "C" {
  * Signature: (JJ)Z
  */
 JNIEXPORT jboolean JNICALL
-Java_hdf_hdf5lib_H5__H5FDcmp_1driver_1cls(JNIEnv *env, jclass clss, jlong drvr_id1, jlong drvr_id2)
+Java_hdf_hdf5lib_H5__1H5FDcmp_1driver_1cls(JNIEnv *env, jclass clss, jlong drvr_id1, jlong drvr_id2)
 {
     int      cmp_value = 0;
     jboolean bval      = JNI_FALSE;
