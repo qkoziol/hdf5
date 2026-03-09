@@ -7631,10 +7631,11 @@ public class H5 implements java.io.Serializable {
         boolean is_equal = false;
         int cmp_value    = 0;
         try (Arena arena = Arena.ofConfined()) {
-            int retVal       = -1;
+            int retVal = -1;
 
             MemorySegment cmp_value_segment = arena.allocate(ValueLayout.JAVA_INT, 1);
-            if ((retVal = org.hdfgroup.javahdf5.hdf5_h.H5FDcmp_driver_cls(cmp_value_segment, drvr_id1, drvr_id2)) < 0)
+            if ((retVal = org.hdfgroup.javahdf5.hdf5_h.H5FDcmp_driver_cls(cmp_value_segment, drvr_id1,
+                                                                          drvr_id2)) < 0)
                 h5libraryError();
             cmp_value = cmp_value_segment.get(ValueLayout.JAVA_INT, 0);
         }
