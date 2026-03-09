@@ -666,7 +666,7 @@ H5_DLL herr_t HDqsort_fallback(void *base, size_t nel, size_t size,
 #ifndef HDfstat
 #define HDfstat(F, B) fstat(F, B)
 #endif
-#ifdef H5_HAVE_UNISTD_H
+#if defined(H5_HAVE_UNISTD_H) && !defined(H5_HAVE_MINGW)
 #ifndef HDfsync
 #define HDfsync(F) fsync(F)
 #endif
