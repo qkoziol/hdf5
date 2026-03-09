@@ -7605,6 +7605,44 @@ public class H5 implements java.io.Serializable {
     // H5FD: File Driver Interface Functions //
     // //
     // ////////////////////////////////////////////////////////////
+    /**
+     * @defgroup JH5FD Java VFD (H5FD) Interface
+     *
+     * @see H5FD, C-API
+     **/
+
+    /**
+     * @ingroup JH5FD
+     *
+     * H5FDcmp_driver_cls Determines whether two driver identifiers refer to the same driver.
+     *
+     * @param drvr_id1
+     *            IN: Identifier of driver to compare.
+     * @param drvr_id2
+     *            IN: Identifier of driver to compare.
+     *
+     * @return true if the driver identifiers refer to the same driver, else false.
+     *
+     * @exception HDF5LibraryException
+     *            Error from the HDF5 Library.
+     **/
+    public static boolean H5FDcmp_driver_cls(long drvr_id1, long drvr_id2) throws HDF5LibraryException
+    {
+        boolean is_equal = false;
+        int cmp_value    = 0;
+        try (Arena arena = Arena.ofConfined()) {
+            int retVal = -1;
+
+            MemorySegment cmp_value_segment = arena.allocate(ValueLayout.JAVA_INT, 1);
+            if ((retVal = org.hdfgroup.javahdf5.hdf5_h.H5FDcmp_driver_cls(cmp_value_segment, drvr_id1,
+                                                                          drvr_id2)) < 0)
+                h5libraryError();
+            cmp_value = cmp_value_segment.get(ValueLayout.JAVA_INT, 0);
+        }
+        if (cmp_value == 0)
+            is_equal = true;
+        return is_equal;
+    }
 
     // /////// unimplemented ////////
     //  hid_t H5FDregister(const H5FD_class_t *cls);
