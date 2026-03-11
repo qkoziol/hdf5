@@ -66,21 +66,15 @@ typedef struct H5I_id_info_t {
         const void *c_object; /* Const pointer associated with the ID */
         void       *object;   /* Pointer associated with the ID */
     } u;
-    bool     del_later; /* Indicate that ID should be deleted in clear operation */
-    unsigned gen;       /* Type generation the ID belongs to */
 
     /* Future ID info */
     bool                      is_future;  /* Whether this ID represents a future object */
     H5I_future_realize_func_t realize_cb; /* 'realize' callback for future object */
     H5I_future_discard_func_t discard_cb; /* 'discard' callback for future object */
 
-#ifdef H5_HAVE_CONCURRENCY
-    H5TS_dlftt_mutex_t mutex;      /* Guard the ID info struct */
-    bool               mutex_init; /* Whether the mutex has been initialized */
-#endif                             /* H5_HAVE_CONCURRENCY */
-
     /* Hash table ID fields */
-    UT_hash_handle hh; /* Hash table handle (must be LAST) */
+    bool           marked; /* Marked for deletion */
+    UT_hash_handle hh;     /* Hash table handle (must be LAST) */
 } H5I_id_info_t;
 
 /* Type information structure used */
@@ -94,8 +88,7 @@ typedef struct H5I_type_info_t {
     unsigned           init_count;   /* # of times this type has been initialized */
     uint64_t           id_count;     /* Current number of IDs held */
     uint64_t           nextid;       /* ID to use for the next object */
-    bool               iterating;    /* Whether the type is being iterated */
-    unsigned           gen;          /* Generation count for type */
+    bool               marking;      /* Whether the ID type is being marked for clearing */
     H5I_id_info_t     *last_id_info; /* Info for most recent ID looked up */
     H5I_id_info_t     *hash_table;   /* Hash table pointer for this ID type */
 } H5I_type_info_t;
@@ -144,7 +137,6 @@ H5_DLL H5I_id_info_t *H5I__find_id(hid_t id);
 H5_DLL htri_t         H5I__is_type_valid(H5I_type_t type);
 H5_DLL herr_t         H5I__type_info_acquire(H5I_type_t type);
 H5_DLL herr_t         H5I__type_info_release(H5I_type_t type);
-H5_DLL herr_t         H5I__id_info_release(H5I_id_info_t *info);
 
 /* Testing functions */
 #ifdef H5I_TESTING

@@ -57,6 +57,13 @@ typedef struct {
     H5I_type_t        obj_type;   /* Type of object we are iterating over */
 } H5I_iterate_ud_t;
 
+/* User data for H5I__clear_type_cb */
+typedef struct {
+    H5I_type_info_t *type_info; /* Pointer to the type's info to be cleared */
+    bool             force;     /* Whether to always remove the ID */
+    bool             app_ref;   /* Whether this is an appl. ref. call */
+} H5I_clear_type_ud_t;
+
 /********************/
 /* Package Typedefs */
 /********************/
@@ -65,18 +72,16 @@ typedef struct {
 /* Local Prototypes */
 /********************/
 
-static void          *H5I__unwrap(void *object, H5I_type_t type);
-static herr_t         H5I__clear_type(H5I_type_info_t *type_info, bool force, bool app_ref);
-static herr_t         H5I__destroy_type_info(H5I_type_t type, H5I_type_info_t *type_info);
-static void          *H5I__remove_common(H5I_type_info_t *type_info, H5I_id_info_t *info);
-static int            H5I__dec_ref(hid_t id, void **request);
-static int            H5I__dec_app_ref(hid_t id, void **request);
-static int            H5I__dec_app_ref_always_close(hid_t id, void **request);
-static H5I_id_info_t *H5I__lookup_id(H5I_type_info_t *type_info, hid_t id);
-static int            H5I__find_id_cb(void *_item, void *_key, void *_udata);
-static herr_t         H5I__type_info_free(H5I_type_info_t *type_info);
-static herr_t         H5I__id_info_acquire(H5I_id_info_t *info);
-static herr_t         H5I__id_info_free(H5I_id_info_t *info, bool is_locked);
+static void  *H5I__unwrap(void *object, H5I_type_t type);
+static herr_t H5I__clear_type(H5I_type_info_t *type_info, bool force, bool app_ref);
+static herr_t H5I__mark_node(void *_id, void *key, void *udata);
+static herr_t H5I__destroy_type_info(H5I_type_t type, H5I_type_info_t *type_info);
+static void  *H5I__remove_common(H5I_type_info_t *type_info, hid_t id);
+static int    H5I__dec_ref(hid_t id, void **request);
+static int    H5I__dec_app_ref(hid_t id, void **request);
+static int    H5I__dec_app_ref_always_close(hid_t id, void **request);
+static int    H5I__find_id_cb(void *_item, void *_key, void *_udata);
+static herr_t H5I__type_info_free(H5I_type_info_t *type_info);
 
 /*********************/
 /* Package Variables */
@@ -139,7 +144,8 @@ H5I__init_package(void)
     /* Initialize the mutexes protecting the type information */
     for (unsigned u = 0; u < H5I_MAX_NUM_TYPES; u++) {
         if (H5TS_dlftt_mutex_init(&H5I_type_info_array_g[u].mutex) < 0)
-            HGOTO_ERROR(H5E_ID, H5E_CANTINIT, FAIL, "can't initialize global type info's mutex");
+            HGOTO_ERROR(H5E_ID, H5E_CANTINIT, FAIL,
+                        "can't initialize global type info array type_info->mutexmutex");
         H5I_type_info_array_g[u].mutex_init = true;
     } /* end for */
 
@@ -251,9 +257,9 @@ H5I_term_package(void)
 herr_t
 H5I_register_type(H5I_class_t *cls)
 {
-    H5I_type_info_t *type_info      = NULL;    /* Pointer to the ID type*/
-    bool             have_type_lock = false;   /* Whether the type's lock is held */
-    herr_t           ret_value      = SUCCEED; /* Return value */
+    H5I_type_info_t *type_info = NULL;    /* Pointer to the ID type*/
+    bool             have_lock = false;   /* Whether the type's lock is held */
+    herr_t           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
@@ -283,7 +289,7 @@ H5I_register_type(H5I_class_t *cls)
                 /* Acquire the mutex protecting the global type info */
                 if (H5I__type_info_acquire(i) < 0)
                     HGOTO_ERROR(H5E_ID, H5E_CANTLOCK, FAIL, "can't lock type info's mutex");
-                have_type_lock = true;
+                have_lock = true;
 
                 if (NULL == H5I_type_info_array_g[i].type_info) {
                     /* Found a free type ID */
@@ -293,7 +299,7 @@ H5I_register_type(H5I_class_t *cls)
                 }
 
                 /* Release the mutex protecting the global type info */
-                have_type_lock = false;
+                have_lock = false;
                 if (H5I__type_info_release(i) < 0)
                     HGOTO_ERROR(H5E_ID, H5E_CANTUNLOCK, FAIL, "can't unlock type info's mutex");
             }
@@ -308,11 +314,11 @@ H5I_register_type(H5I_class_t *cls)
     }
 
     /* Acquire the lock if not already held */
-    if (!have_type_lock) {
+    if (!have_lock) {
         /* Acquire the mutex protecting the global type info */
         if (H5I__type_info_acquire(cls->type) < 0)
             HGOTO_ERROR(H5E_ID, H5E_CANTLOCK, FAIL, "can't lock type info's mutex");
-        have_type_lock = true;
+        have_lock = true;
     }
 
     /* Claim the location in the array */
@@ -320,7 +326,7 @@ H5I_register_type(H5I_class_t *cls)
 
 done:
     /* Release the lock if held */
-    if (have_type_lock && H5I__type_info_release(cls->type) < 0)
+    if (have_lock && H5I__type_info_release(cls->type) < 0)
         HDONE_ERROR(H5E_ID, H5E_CANTUNLOCK, FAIL, "can't unlock type info's mutex");
 
     /* Clean up on error */
@@ -345,9 +351,9 @@ done:
 int64_t
 H5I_nmembers(H5I_type_t type)
 {
-    H5I_type_info_t *type_info      = NULL;  /* Pointer to the ID type */
-    bool             have_type_lock = false; /* Whether the type's lock is held */
-    int64_t          ret_value      = 0;     /* Return value */
+    H5I_type_info_t *type_info = NULL;  /* Pointer to the ID type */
+    bool             have_lock = false; /* Whether the type's lock is held */
+    int64_t          ret_value = 0;     /* Return value */
 
     FUNC_ENTER_NOAPI((-1))
 
@@ -358,7 +364,7 @@ H5I_nmembers(H5I_type_t type)
     /* Acquire the mutex protecting the global type info */
     if (H5I__type_info_acquire(type) < 0)
         HGOTO_ERROR(H5E_ID, H5E_CANTLOCK, FAIL, "can't lock type info's mutex");
-    have_type_lock = true;
+    have_lock = true;
 
     /* Check for valid type */
     if (NULL == (type_info = H5I_type_info_array_g[type].type_info))
@@ -373,7 +379,7 @@ H5I_nmembers(H5I_type_t type)
 
 done:
     /* Release the lock if held */
-    if (have_type_lock && H5I__type_info_release(type) < 0)
+    if (have_lock && H5I__type_info_release(type) < 0)
         HDONE_ERROR(H5E_ID, H5E_CANTUNLOCK, FAIL, "can't unlock type info's mutex");
 
     FUNC_LEAVE_NOAPI(ret_value)
@@ -403,8 +409,9 @@ H5I__unwrap(void *object, H5I_type_t type)
      * case we'll need to get the wrapped object struct (H5F_t *, etc.).
      */
     if (H5I_FILE == type || H5I_GROUP == type || H5I_DATASET == type || H5I_ATTR == type) {
-        const H5VL_object_t *vol_obj = (const H5VL_object_t *)object;
+        const H5VL_object_t *vol_obj;
 
+        vol_obj   = (const H5VL_object_t *)object;
         ret_value = H5VL_object_data(vol_obj);
     }
     else if (H5I_DATATYPE == type) {
@@ -431,93 +438,48 @@ H5I__unwrap(void *object, H5I_type_t type)
 static herr_t
 H5I__clear_type(H5I_type_info_t *type_info, bool force, bool app_ref)
 {
-    H5I_id_info_t *item = NULL;
-    H5I_id_info_t *tmp  = NULL;
+    H5I_clear_type_ud_t udata; /* udata struct for callback */
+    H5I_id_info_t      *item      = NULL;
+    H5I_id_info_t      *tmp       = NULL;
+    herr_t              ret_value = SUCCEED; /* Return value */
 
-    FUNC_ENTER_PACKAGE_NOERR
+    FUNC_ENTER_PACKAGE
 
-    /* Increment the generation of the type */
-    type_info->gen++;
+    /* Construct udata */
+    udata.type_info = type_info;
+    udata.force     = force;
+    udata.app_ref   = app_ref;
 
-    /* Indicate that we're iterating this type right now */
-    type_info->iterating = true;
+    /* Clearing a type is done in two phases (mark-and-sweep). This is because
+     * the type's free callback can free other IDs, potentially corrupting
+     * the data structure during the traversal.
+     */
 
-    /* Delete nodes from the local hash table */
-    HASH_ITER(hh, type_info->hash_table, item, tmp)
+    /* Set marking flag */
+    udata.type_info->marking = true;
+
+    /* Mark nodes for deletion */
+    HASH_ITER(hh, udata.type_info->hash_table, item, tmp)
     {
-        bool del_node = false; /* Whether to delete the node */
-
-        if (item->del_later)
-            del_node = true;
-        else
-            /* Do nothing to the object if the reference count is larger than
-             * one and forcing is off.
-             */
-            if (force || (item->count - (!app_ref * item->app_count)) <= 1) {
-                herr_t status;
-
-                /* Check if this is an un-realized future object */
-                if (item->is_future) {
-                    /* Prepare & restore library for user callback */
-                    H5_BEFORE_USER_CB_NOCHECK
-                        {
-                            /* Discard the future object */
-                            status = (item->discard_cb)(item->u.object);
-                        }
-                    H5_AFTER_USER_CB_NOCHECK
-                    if (status < 0) {
-                        if (force)
-                            /* Indicate node should be removed from list */
-                            del_node = true;
-                    }
-                    else
-                        /* Indicate node should be removed from list */
-                        del_node = true;
-                }
-                else {
-                    /* Check for a 'free' function and call it, if it exists */
-                    if (type_info->cls->free_func) {
-                        /* Prepare & restore library for user callback */
-                        H5_BEFORE_USER_CB_NOCHECK
-                            {
-                                status = (type_info->cls->free_func)(item->u.object, H5_REQUEST_NULL);
-                            }
-                        H5_AFTER_USER_CB_NOCHECK
-                        if (status < 0) {
-                            if (force)
-                                /* Indicate node should be removed from list */
-                                del_node = true;
-                        }
-                        else
-                            /* Indicate node should be removed from list */
-                            del_node = true;
-                    }
-                    else
-                        /* Indicate node should be removed from list */
-                        del_node = true;
-                }
-            }
-
-        /* Remove ID node if requested */
-        if (del_node) {
-            /* Decrement the number of IDs in the type */
-            type_info->id_count--;
-
-            /* Remove ID from (local) hash table */
-            HASH_DELETE(hh, type_info->hash_table, item);
-
-            /* Delete ID info */
-            H5I__id_info_free(item, false);
-        }
-        else
-            /* Move item to new type generation */
-            item->gen = type_info->gen;
+        if (!item->marked)
+            if (H5I__mark_node((void *)item, NULL, (void *)&udata) < 0)
+                HGOTO_ERROR(H5E_ID, H5E_BADITER, FAIL, "iteration failed while clearing the ID type");
     }
 
-    /* Indicate that we're done iterating this type */
-    type_info->iterating = false;
+    /* Unset marking flag */
+    udata.type_info->marking = false;
 
-    FUNC_LEAVE_NOAPI(SUCCEED)
+    /* Perform sweep */
+    HASH_ITER(hh, udata.type_info->hash_table, item, tmp)
+    {
+        if (item->marked) {
+            HASH_DELETE(hh, udata.type_info->hash_table, item);
+            item = H5FL_FREE(H5I_id_info_t, item);
+        }
+    }
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5I__clear_type() */
 
 /*-------------------------------------------------------------------------
@@ -533,8 +495,8 @@ H5I__clear_type(H5I_type_info_t *type_info, bool force, bool app_ref)
 herr_t
 H5I_clear_type(H5I_type_t type, bool force, bool app_ref)
 {
-    bool   have_type_lock = false;   /* Whether the lock is held */
-    herr_t ret_value      = SUCCEED; /* Return value */
+    bool   have_lock = false;   /* Whether the lock is held */
+    herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
@@ -545,7 +507,7 @@ H5I_clear_type(H5I_type_t type, bool force, bool app_ref)
     /* Acquire exclusive access for the type */
     if (H5I__type_info_acquire(type) < 0)
         HGOTO_ERROR(H5E_ID, H5E_CANTLOCK, FAIL, "can't acquire lock on type");
-    have_type_lock = true;
+    have_lock = true;
 
     /* Clear the objects from the type */
     if (H5I__clear_type(H5I_type_info_array_g[type].type_info, force, app_ref) < 0)
@@ -553,11 +515,101 @@ H5I_clear_type(H5I_type_t type, bool force, bool app_ref)
 
 done:
     /* Release exclusive access for the type */
-    if (have_type_lock && H5I__type_info_release(type) < 0)
+    if (have_lock && H5I__type_info_release(type) < 0)
         HDONE_ERROR(H5E_ID, H5E_CANTUNLOCK, FAIL, "can't release lock on type");
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5I_clear_type() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5I__mark_node
+ *
+ * Purpose:     Attempts to mark the node for freeing and calls the free
+ *              function for the object, if any
+ *
+ * Return:      SUCCEED/FAIL
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t
+H5I__mark_node(void *_info, void H5_ATTR_UNUSED *key, void *_udata)
+{
+    H5I_id_info_t       *info  = (H5I_id_info_t *)_info;        /* Current ID info being worked with */
+    H5I_clear_type_ud_t *udata = (H5I_clear_type_ud_t *)_udata; /* udata struct */
+    bool                 mark  = false;
+
+    FUNC_ENTER_PACKAGE_NOERR
+
+    /* Sanity checks */
+    assert(info);
+    assert(udata);
+    assert(udata->type_info);
+
+    /* Do nothing to the object if the reference count is larger than
+     * one and forcing is off.
+     */
+    if (udata->force || (info->count - (!udata->app_ref * info->app_count)) <= 1) {
+        /* Check if this is an un-realized future object */
+        if (info->is_future) {
+            herr_t status;
+
+            /* Prepare & restore library for user callback */
+            H5_BEFORE_USER_CB_NOCHECK
+                {
+                    /* Discard the future object */
+                    status = (info->discard_cb)(info->u.object);
+                }
+            H5_AFTER_USER_CB_NOCHECK
+            if (status < 0) {
+                if (udata->force) {
+                    /* Indicate node should be removed from list */
+                    mark = true;
+                }
+            }
+            else {
+                /* Indicate node should be removed from list */
+                mark = true;
+            }
+        }
+        else {
+            /* Check for a 'free' function and call it, if it exists */
+            if (udata->type_info->cls->free_func) {
+                herr_t status;
+
+                /* Prepare & restore library for user callback */
+                H5_BEFORE_USER_CB_NOCHECK
+                    {
+                        status = (udata->type_info->cls->free_func)(info->u.object, H5_REQUEST_NULL);
+                    }
+                H5_AFTER_USER_CB_NOCHECK
+                if (status < 0) {
+                    if (udata->force) {
+                        /* Indicate node should be removed from list */
+                        mark = true;
+                    }
+                }
+                else
+                    /* Indicate node should be removed from list */
+                    mark = true;
+            }
+            else {
+                /* Indicate node should be removed from list */
+                mark = true;
+            }
+        }
+
+        /* Remove ID if requested */
+        if (mark) {
+            /* Mark ID for deletion */
+            info->marked = true;
+
+            /* Decrement the number of IDs in the type */
+            udata->type_info->id_count--;
+        }
+    }
+
+    FUNC_LEAVE_NOAPI(SUCCEED)
+} /* end H5I__mark_node() */
 
 /*-------------------------------------------------------------------------
  * Function:    H5I__destroy_type_info
@@ -608,9 +660,9 @@ done:
 herr_t
 H5I__destroy_type(H5I_type_t type)
 {
-    H5I_type_info_t *type_info      = NULL;    /* Pointer to the ID type */
-    bool             have_type_lock = false;   /* Whether the lock is held */
-    herr_t           ret_value      = SUCCEED; /* Return value */
+    H5I_type_info_t *type_info = NULL;    /* Pointer to the ID type */
+    bool             have_lock = false;   /* Whether the lock is held */
+    herr_t           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -621,7 +673,7 @@ H5I__destroy_type(H5I_type_t type)
     /* Acquire exclusive access for the type */
     if (H5I__type_info_acquire(type) < 0)
         HGOTO_ERROR(H5E_ID, H5E_CANTLOCK, FAIL, "can't acquire lock on type");
-    have_type_lock = true;
+    have_lock = true;
 
     /* Get the pointer to the type info */
     type_info = H5I_type_info_array_g[type].type_info;
@@ -634,7 +686,7 @@ H5I__destroy_type(H5I_type_t type)
 
 done:
     /* Release exclusive access for the type */
-    if (have_type_lock && H5I__type_info_release(type) < 0)
+    if (have_lock && H5I__type_info_release(type) < 0)
         HDONE_ERROR(H5E_ID, H5E_CANTUNLOCK, FAIL, "can't release lock on type");
 
     FUNC_LEAVE_NOAPI(ret_value)
@@ -663,11 +715,11 @@ hid_t
 H5I__register(H5I_type_t type, const void *object, bool app_ref, H5I_future_realize_func_t realize_cb,
               H5I_future_discard_func_t discard_cb)
 {
-    H5I_type_info_t *type_info      = NULL;            /* Pointer to the type */
-    H5I_id_info_t   *info           = NULL;            /* Pointer to the new ID information */
-    hid_t            new_id         = H5I_INVALID_HID; /* New ID */
-    bool             have_type_lock = false;           /* Whether the lock is held */
-    hid_t            ret_value      = H5I_INVALID_HID; /* Return value */
+    H5I_type_info_t *type_info = NULL;            /* Pointer to the type */
+    H5I_id_info_t   *info      = NULL;            /* Pointer to the new ID information */
+    hid_t            new_id    = H5I_INVALID_HID; /* New ID */
+    bool             have_lock = false;           /* Whether the lock is held */
+    hid_t            ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -686,17 +738,12 @@ H5I__register(H5I_type_t type, const void *object, bool app_ref, H5I_future_real
     info->is_future  = (NULL != realize_cb);
     info->realize_cb = realize_cb;
     info->discard_cb = discard_cb;
-#ifdef H5_HAVE_CONCURRENCY
-    /* Initialize the mutex protecting the ID info */
-    if (H5TS_dlftt_mutex_init(&info->mutex) < 0)
-        HGOTO_ERROR(H5E_ID, H5E_CANTINIT, H5I_INVALID_HID, "can't initialize ID's mutex");
-    info->mutex_init = true;
-#endif /* H5_HAVE_CONCURRENCY */
+    info->marked     = false;
 
     /* Acquire exclusive access for the type */
     if (H5I__type_info_acquire(type) < 0)
         HGOTO_ERROR(H5E_ID, H5E_CANTLOCK, H5I_INVALID_HID, "can't acquire lock on type");
-    have_type_lock = true;
+    have_lock = true;
 
     /* Get the pointer to the type info */
     type_info = H5I_type_info_array_g[type].type_info;
@@ -704,9 +751,8 @@ H5I__register(H5I_type_t type, const void *object, bool app_ref, H5I_future_real
         HGOTO_ERROR(H5E_ID, H5E_BADGROUP, H5I_INVALID_HID, "invalid type");
 
     /* Set up the ID for the object */
-    new_id    = H5I_MAKE(type, type_info->nextid);
-    info->id  = new_id;
-    info->gen = type_info->gen;
+    new_id   = H5I_MAKE(type, type_info->nextid);
+    info->id = new_id;
 
     /* Insert into the type */
     HASH_ADD(hh, type_info->hash_table, id, sizeof(hid_t), info);
@@ -724,13 +770,13 @@ H5I__register(H5I_type_t type, const void *object, bool app_ref, H5I_future_real
 
 done:
     /* Release exclusive access for the type */
-    if (have_type_lock && H5I__type_info_release(type) < 0)
+    if (have_lock && H5I__type_info_release(type) < 0)
         HDONE_ERROR(H5E_ID, H5E_CANTUNLOCK, H5I_INVALID_HID, "can't release lock on type");
 
     /* Release the ID info on error */
     if (ret_value < 0)
         if (info)
-            H5I__id_info_free(info, false);
+            H5FL_FREE(H5I_id_info_t, info);
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5I__register() */
@@ -785,10 +831,10 @@ done:
 herr_t
 H5I_register_using_existing_id(H5I_type_t type, void *object, bool app_ref, hid_t existing_id)
 {
-    H5I_type_info_t *type_info      = NULL;    /* Pointer to the type */
-    H5I_id_info_t   *info           = NULL;    /* Pointer to the new ID information */
-    bool             have_type_lock = false;   /* Whether the type lock is held */
-    herr_t           ret_value      = SUCCEED; /* Return value */
+    H5I_type_info_t *type_info = NULL;    /* Pointer to the type */
+    H5I_id_info_t   *info      = NULL;    /* Pointer to the new ID information */
+    bool             have_lock = false;   /* Whether the lock is held */
+    herr_t           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
@@ -796,11 +842,8 @@ H5I_register_using_existing_id(H5I_type_t type, void *object, bool app_ref, hid_
     assert(object);
 
     /* Make sure ID is not already in use */
-    if (NULL != (info = H5I__find_id(existing_id))) {
-        H5I__id_info_release(info);
-        info = NULL;
+    if (NULL != (info = H5I__find_id(existing_id)))
         HGOTO_ERROR(H5E_ID, H5E_BADRANGE, FAIL, "ID already in use");
-    } /* end if */
 
     /* Make sure type number is valid */
     if (type <= H5I_BADID || (int)type >= H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g))
@@ -825,25 +868,17 @@ H5I_register_using_existing_id(H5I_type_t type, void *object, bool app_ref, hid_
     info->is_future  = false;
     info->realize_cb = NULL;
     info->discard_cb = NULL;
-#ifdef H5_HAVE_CONCURRENCY
-    /* Initialize the mutex protecting the ID info */
-    if (H5TS_dlftt_mutex_init(&info->mutex) < 0)
-        HGOTO_ERROR(H5E_ID, H5E_CANTINIT, FAIL, "can't initialize ID's mutex");
-    info->mutex_init = true;
-#endif /* H5_HAVE_CONCURRENCY */
+    info->marked     = false;
 
     /* Acquire exclusive access for the type */
     if (H5I__type_info_acquire(type) < 0)
-        HGOTO_ERROR(H5E_ID, H5E_CANTLOCK, FAIL, "can't acquire lock on type");
-    have_type_lock = true;
+        HGOTO_ERROR(H5E_ID, H5E_CANTLOCK, H5I_INVALID_HID, "can't acquire lock on type");
+    have_lock = true;
 
     /* Get type pointer from list of types */
     type_info = H5I_type_info_array_g[type].type_info;
     if (NULL == type_info || type_info->init_count <= 0)
         HGOTO_ERROR(H5E_ID, H5E_BADGROUP, FAIL, "invalid type");
-
-    /* Set up the ID for the object */
-    info->gen = type_info->gen;
 
     /* Insert into the type */
     HASH_ADD(hh, type_info->hash_table, id, sizeof(hid_t), info);
@@ -854,13 +889,13 @@ H5I_register_using_existing_id(H5I_type_t type, void *object, bool app_ref, hid_
 
 done:
     /* Release exclusive access for the type */
-    if (have_type_lock && H5I__type_info_release(type) < 0)
-        HDONE_ERROR(H5E_ID, H5E_CANTUNLOCK, FAIL, "can't release lock on type");
+    if (have_lock && H5I__type_info_release(type) < 0)
+        HDONE_ERROR(H5E_ID, H5E_CANTUNLOCK, H5I_INVALID_HID, "can't release lock on type");
 
     /* Release the ID info on error */
     if (ret_value < 0)
         if (info)
-            H5I__id_info_free(info, false);
+            H5FL_FREE(H5I_id_info_t, info);
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5I_register_using_existing_id() */
@@ -879,16 +914,14 @@ done:
 void *
 H5I_subst(hid_t id, const void *new_object)
 {
-    H5I_id_info_t *info         = NULL;  /* Pointer to the ID's info */
-    bool           have_id_lock = false; /* Whether the ID lock is held */
-    void          *ret_value    = NULL;  /* Return value */
+    H5I_id_info_t *info      = NULL; /* Pointer to the ID's info */
+    void          *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_NOAPI(NULL)
 
     /* General lookup of the ID */
     if (NULL == (info = H5I__find_id(id)))
         HGOTO_ERROR(H5E_ID, H5E_NOTFOUND, NULL, "can't get ID ref count");
-    have_id_lock = true;
 
     /* Get the old object pointer to return */
     ret_value = info->u.object;
@@ -897,10 +930,6 @@ H5I_subst(hid_t id, const void *new_object)
     info->u.c_object = new_object;
 
 done:
-    /* Release exclusive access for the ID */
-    if (have_id_lock && H5I__id_info_release(info) < 0)
-        HDONE_ERROR(H5E_ID, H5E_CANTUNLOCK, NULL, "can't release lock on ID");
-
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5I_subst() */
 
@@ -919,26 +948,17 @@ done:
 void *
 H5I_object(hid_t id)
 {
-    H5I_id_info_t *info         = NULL;  /* Pointer to the ID info */
-    bool           have_id_lock = false; /* Whether the ID lock is held */
-    void          *ret_value    = NULL;  /* Return value */
+    H5I_id_info_t *info      = NULL; /* Pointer to the ID info */
+    void          *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_NOAPI(NULL)
 
     /* General lookup of the ID */
-    if (NULL != (info = H5I__find_id(id))) {
-        /* We are holding the ID lock */
-        have_id_lock = true;
-
+    if (NULL != (info = H5I__find_id(id)))
         /* Get the object pointer to return */
         ret_value = info->u.object;
-    }
 
 done:
-    /* Release exclusive access for the ID */
-    if (have_id_lock && H5I__id_info_release(info) < 0)
-        HDONE_ERROR(H5E_ID, H5E_CANTUNLOCK, NULL, "can't release lock on ID");
-
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5I_object() */
 
@@ -957,28 +977,19 @@ done:
 void *
 H5I_object_verify(hid_t id, H5I_type_t type)
 {
-    H5I_id_info_t *info         = NULL;  /* Pointer to the ID info */
-    bool           have_id_lock = false; /* Whether the ID lock is held */
-    void          *ret_value    = NULL;  /* Return value */
+    H5I_id_info_t *info      = NULL; /* Pointer to the ID info */
+    void          *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_NOAPI(NULL)
 
     assert(type >= 1 && (int)type < H5TS_ATOMIC_LOAD_INT(&H5I_next_type_g));
 
     /* Verify that the type of the ID is correct & lookup the ID */
-    if (type == H5I_TYPE(id) && NULL != (info = H5I__find_id(id))) {
-        /* We are holding the ID lock */
-        have_id_lock = true;
-
+    if (type == H5I_TYPE(id) && NULL != (info = H5I__find_id(id)))
         /* Get the object pointer to return */
         ret_value = info->u.object;
-    }
 
 done:
-    /* Release exclusive access for the ID */
-    if (have_id_lock && H5I__id_info_release(info) < 0)
-        HDONE_ERROR(H5E_ID, H5E_CANTUNLOCK, NULL, "can't release lock on ID");
-
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5I_object_verify() */
 
@@ -1046,7 +1057,8 @@ H5I_is_file_object(hid_t id)
     if (H5I_DATASET == type || H5I_GROUP == type || H5I_MAP == type)
         ret_value = true;
     else if (H5I_DATATYPE == type) {
-        H5T_t *dt;
+
+        H5T_t *dt = NULL;
 
         if (NULL == (dt = (H5T_t *)H5I_object(id)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "unable to get underlying datatype struct");
@@ -1102,28 +1114,24 @@ H5I__remove_verify(hid_t id, H5I_type_t type)
  *-------------------------------------------------------------------------
  */
 static void *
-H5I__remove_common(H5I_type_info_t *type_info, H5I_id_info_t *info)
+H5I__remove_common(H5I_type_info_t *type_info, hid_t id)
 {
-    bool  del_node  = false; /* Whether to delete the node */
-    void *ret_value = NULL;  /* Return value */
+    H5I_id_info_t *info      = NULL; /* Pointer to the current ID */
+    void          *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
     /* Sanity check */
     assert(type_info);
 
-    /* Delete the node */
+    /* Delete or mark the node */
+    HASH_FIND(hh, type_info->hash_table, &id, sizeof(hid_t), info);
     if (info) {
-        /* Delete the node if we're not iterating the type, or if we've already
-         * visited the node when iterating
-         */
-        if (!type_info->iterating || info->gen >= type_info->gen)
-            del_node = true;
-        else
-            info->del_later = true;
-
-        if (del_node)
+        assert(!info->marked);
+        if (!type_info->marking)
             HASH_DELETE(hh, type_info->hash_table, info);
+        else
+            info->marked = true;
     }
     else
         HGOTO_ERROR(H5E_ID, H5E_CANTDELETE, NULL, "can't remove ID node from hash table");
@@ -1134,10 +1142,11 @@ H5I__remove_common(H5I_type_info_t *type_info, H5I_id_info_t *info)
 
     ret_value = info->u.object;
 
-    if (del_node) {
-        H5I__id_info_free(info, true);
-        type_info->id_count--;
-    }
+    if (!type_info->marking)
+        info = H5FL_FREE(H5I_id_info_t, info);
+
+    /* Decrement the number of IDs in the type */
+    (type_info->id_count)--;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -1158,12 +1167,10 @@ done:
 void *
 H5I_remove(hid_t id)
 {
-    H5I_type_info_t *type_info      = NULL;      /* Pointer to the ID type */
-    H5I_type_t       type           = H5I_BADID; /* ID's type */
-    H5I_id_info_t   *id_info        = NULL;      /* ID's info */
-    bool             have_type_lock = false;     /* Whether the type lock is held */
-    bool             have_id_lock   = false;     /* Whether the ID lock is held */
-    void            *ret_value      = NULL;      /* Return value */
+    H5I_type_info_t *type_info = NULL;      /* Pointer to the ID type */
+    H5I_type_t       type      = H5I_BADID; /* ID's type */
+    bool             have_lock = false;     /* Whether the lock is held */
+    void            *ret_value = NULL;      /* Return value */
 
     FUNC_ENTER_NOAPI(NULL)
 
@@ -1175,30 +1182,20 @@ H5I_remove(hid_t id)
     /* Acquire exclusive access for the type */
     if (H5I__type_info_acquire(type) < 0)
         HGOTO_ERROR(H5E_ID, H5E_CANTLOCK, NULL, "can't acquire lock on type");
-    have_type_lock = true;
+    have_lock = true;
 
     /* Get the pointer to the type info */
     type_info = H5I_type_info_array_g[type].type_info;
     if (type_info == NULL || type_info->init_count <= 0)
         HGOTO_ERROR(H5E_ID, H5E_BADGROUP, NULL, "invalid type");
 
-    /* Look up the ID in the type info */
-    if (NULL == (id_info = H5I__lookup_id(type_info, id)))
-        HGOTO_ERROR(H5E_ID, H5E_CANTGET, NULL, "can't lookup ID");
-    have_id_lock = true;
-
     /* Remove the node from the type */
-    if (NULL == (ret_value = H5I__remove_common(type_info, id_info)))
+    if (NULL == (ret_value = H5I__remove_common(type_info, id)))
         HGOTO_ERROR(H5E_ID, H5E_CANTDELETE, NULL, "can't remove ID node");
-    have_id_lock = false; /* Deleting the ID will unlock & destroy its mutex */
 
 done:
-    /* Release exclusive access for the ID, if still held */
-    if (have_id_lock && H5I__id_info_release(id_info) < 0)
-        HDONE_ERROR(H5E_ID, H5E_CANTUNLOCK, NULL, "can't release lock on ID");
-
     /* Release exclusive access for the type */
-    if (have_type_lock && H5I__type_info_release(type) < 0)
+    if (have_lock && H5I__type_info_release(type) < 0)
         HDONE_ERROR(H5E_ID, H5E_CANTUNLOCK, NULL, "can't release lock on type");
 
     FUNC_LEAVE_NOAPI(ret_value)
@@ -1223,10 +1220,9 @@ done:
 static int
 H5I__dec_ref(hid_t id, void **request)
 {
-    H5I_id_info_t *info           = NULL;  /* Pointer to the ID */
-    bool           have_id_lock   = false; /* Whether the ID lock is held */
-    bool           have_type_lock = false; /* Whether the type lock is held */
-    int            ret_value      = 0;     /* Return value */
+    H5I_id_info_t *info      = NULL;  /* Pointer to the ID */
+    bool           have_lock = false; /* Whether the lock is held */
+    int            ret_value = 0;     /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -1236,7 +1232,6 @@ H5I__dec_ref(hid_t id, void **request)
     /* General lookup of the ID */
     if (NULL == (info = H5I__find_id(id)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, (-1), "can't locate ID");
-    have_id_lock = true;
 
     /* If this is the last reference to the object then invoke the type's
      * free method on the object. If the free method is undefined or
@@ -1259,7 +1254,7 @@ H5I__dec_ref(hid_t id, void **request)
         /* Acquire exclusive access for the type */
         if (H5I__type_info_acquire(H5I_TYPE(id)) < 0)
             HGOTO_ERROR(H5E_ID, H5E_CANTLOCK, (-1), "can't acquire lock on type");
-        have_type_lock = true;
+        have_lock = true;
 
         /* Get the ID's type */
         type_info = H5I_type_info_array_g[H5I_TYPE(id)].type_info;
@@ -1282,10 +1277,9 @@ H5I__dec_ref(hid_t id, void **request)
 
         if (remove_node) {
             /* Remove the node from the type */
-            if (NULL == H5I__remove_common(type_info, info))
+            if (NULL == H5I__remove_common(type_info, id))
                 HGOTO_ERROR(H5E_ID, H5E_CANTDELETE, (-1), "can't remove ID node");
-            have_id_lock = false; /* Deleting the ID will unlock & destroy its mutex */
-        }                         /* end if */
+        } /* end if */
         else
             ret_value = -1;
     } /* end if */
@@ -1295,12 +1289,8 @@ H5I__dec_ref(hid_t id, void **request)
     } /* end else */
 
 done:
-    /* Release exclusive access for the ID, if still held */
-    if (have_id_lock && H5I__id_info_release(info) < 0)
-        HDONE_ERROR(H5E_ID, H5E_CANTUNLOCK, (-1), "can't release lock on ID");
-
     /* Release exclusive access for the type */
-    if (have_type_lock && H5I__type_info_release(H5I_TYPE(id)) < 0)
+    if (have_lock && H5I__type_info_release(H5I_TYPE(id)) < 0)
         HDONE_ERROR(H5E_ID, H5E_CANTUNLOCK, (-1), "can't release lock on type");
 
     FUNC_LEAVE_NOAPI(ret_value)
@@ -1351,9 +1341,7 @@ done:
 static int
 H5I__dec_app_ref(hid_t id, void **request)
 {
-    H5I_id_info_t *info         = NULL;  /* Pointer to the ID info */
-    bool           have_id_lock = false; /* Whether the ID lock is held */
-    int            ret_value    = 0;     /* Return value */
+    int ret_value = 0; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -1366,10 +1354,11 @@ H5I__dec_app_ref(hid_t id, void **request)
 
     /* Check if the ID still exists */
     if (ret_value > 0) {
+        H5I_id_info_t *info = NULL; /* Pointer to the ID info */
+
         /* General lookup of the ID */
         if (NULL == (info = H5I__find_id(id)))
             HGOTO_ERROR(H5E_ID, H5E_BADID, (-1), "can't locate ID");
-        have_id_lock = true;
 
         /* Adjust app_ref */
         --(info->app_count);
@@ -1380,10 +1369,6 @@ H5I__dec_app_ref(hid_t id, void **request)
     } /* end if */
 
 done:
-    /* Release exclusive access for the ID, if still held */
-    if (have_id_lock && H5I__id_info_release(info) < 0)
-        HDONE_ERROR(H5E_ID, H5E_CANTUNLOCK, (-1), "can't release lock on ID");
-
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5I__dec_app_ref() */
 
@@ -1566,9 +1551,8 @@ done:
 int
 H5I_inc_ref(hid_t id, bool app_ref)
 {
-    H5I_id_info_t *info         = NULL;  /* Pointer to the ID info */
-    bool           have_id_lock = false; /* Whether the ID lock is held */
-    int            ret_value    = 0;     /* Return value */
+    H5I_id_info_t *info      = NULL; /* Pointer to the ID info */
+    int            ret_value = 0;    /* Return value */
 
     FUNC_ENTER_NOAPI((-1))
 
@@ -1578,7 +1562,6 @@ H5I_inc_ref(hid_t id, bool app_ref)
     /* General lookup of the ID */
     if (NULL == (info = H5I__find_id(id)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, (-1), "can't locate ID");
-    have_id_lock = true;
 
     /* Adjust reference counts */
     ++(info->count);
@@ -1589,10 +1572,6 @@ H5I_inc_ref(hid_t id, bool app_ref)
     ret_value = (int)(app_ref ? info->app_count : info->count);
 
 done:
-    /* Release exclusive access for the ID, if still held */
-    if (have_id_lock && H5I__id_info_release(info) < 0)
-        HDONE_ERROR(H5E_ID, H5E_CANTUNLOCK, (-1), "can't release lock on ID");
-
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5I_inc_ref() */
 
@@ -1609,9 +1588,8 @@ done:
 int
 H5I_get_ref(hid_t id, bool app_ref)
 {
-    H5I_id_info_t *info         = NULL;  /* Pointer to the ID */
-    bool           have_id_lock = false; /* Whether the ID lock is held */
-    int            ret_value    = 0;     /* Return value */
+    H5I_id_info_t *info      = NULL; /* Pointer to the ID */
+    int            ret_value = 0;    /* Return value */
 
     FUNC_ENTER_NOAPI((-1))
 
@@ -1621,16 +1599,11 @@ H5I_get_ref(hid_t id, bool app_ref)
     /* General lookup of the ID */
     if (NULL == (info = H5I__find_id(id)))
         HGOTO_ERROR(H5E_ID, H5E_BADID, (-1), "can't locate ID");
-    have_id_lock = true;
 
     /* Set return value */
     ret_value = (int)(app_ref ? info->app_count : info->count);
 
 done:
-    /* Release exclusive access for the ID, if still held */
-    if (have_id_lock && H5I__id_info_release(info) < 0)
-        HDONE_ERROR(H5E_ID, H5E_CANTUNLOCK, (-1), "can't release lock on ID");
-
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5I_get_ref() */
 
@@ -1647,9 +1620,9 @@ done:
 int
 H5I__inc_type_ref(H5I_type_t type)
 {
-    H5I_type_info_t *type_info      = NULL;  /* Pointer to the type */
-    bool             have_type_lock = false; /* Whether the lock is held */
-    int              ret_value      = -1;    /* Return value */
+    H5I_type_info_t *type_info = NULL;  /* Pointer to the type */
+    bool             have_lock = false; /* Whether the lock is held */
+    int              ret_value = -1;    /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -1659,7 +1632,7 @@ H5I__inc_type_ref(H5I_type_t type)
     /* Acquire exclusive access for the type */
     if (H5I__type_info_acquire(type) < 0)
         HGOTO_ERROR(H5E_ID, H5E_CANTLOCK, (-1), "can't acquire lock on type");
-    have_type_lock = true;
+    have_lock = true;
 
     /* Check arguments */
     type_info = H5I_type_info_array_g[type].type_info;
@@ -1671,7 +1644,7 @@ H5I__inc_type_ref(H5I_type_t type)
 
 done:
     /* Release exclusive access for the type */
-    if (have_type_lock && H5I__type_info_release(type) < 0)
+    if (have_lock && H5I__type_info_release(type) < 0)
         HDONE_ERROR(H5E_ID, H5E_CANTUNLOCK, (-1), "can't release lock on type");
 
     FUNC_LEAVE_NOAPI(ret_value)
@@ -1699,9 +1672,9 @@ done:
 int
 H5I_dec_type_ref(H5I_type_t type)
 {
-    H5I_type_info_t *type_info      = NULL;  /* Pointer to the ID type */
-    bool             have_type_lock = false; /* Whether the lock is held */
-    herr_t           ret_value      = 0;     /* Return value */
+    H5I_type_info_t *type_info = NULL;  /* Pointer to the ID type */
+    bool             have_lock = false; /* Whether the lock is held */
+    herr_t           ret_value = 0;     /* Return value */
 
     FUNC_ENTER_NOAPI((-1))
 
@@ -1711,7 +1684,7 @@ H5I_dec_type_ref(H5I_type_t type)
     /* Acquire exclusive access for the type */
     if (H5I__type_info_acquire(type) < 0)
         HGOTO_ERROR(H5E_ID, H5E_CANTLOCK, (-1), "can't acquire lock on type");
-    have_type_lock = true;
+    have_lock = true;
 
     /* Get the pointer to the type info */
     type_info = H5I_type_info_array_g[type].type_info;
@@ -1734,7 +1707,7 @@ H5I_dec_type_ref(H5I_type_t type)
 
 done:
     /* Release exclusive access for the type */
-    if (have_type_lock && H5I__type_info_release(type) < 0)
+    if (have_lock && H5I__type_info_release(type) < 0)
         HDONE_ERROR(H5E_ID, H5E_CANTUNLOCK, FAIL, "can't release lock on type");
 
     FUNC_LEAVE_NOAPI(ret_value)
@@ -1754,9 +1727,9 @@ done:
 int
 H5I__get_type_ref(H5I_type_t type)
 {
-    H5I_type_info_t *type_info      = NULL;  /* Pointer to the type  */
-    bool             have_type_lock = false; /* Whether the lock is held */
-    int              ret_value      = -1;    /* Return value         */
+    H5I_type_info_t *type_info = NULL;  /* Pointer to the type  */
+    bool             have_lock = false; /* Whether the lock is held */
+    int              ret_value = -1;    /* Return value         */
 
     FUNC_ENTER_PACKAGE
 
@@ -1766,7 +1739,7 @@ H5I__get_type_ref(H5I_type_t type)
     /* Acquire exclusive access for the type */
     if (H5I__type_info_acquire(type) < 0)
         HGOTO_ERROR(H5E_ID, H5E_CANTLOCK, (-1), "can't acquire lock on type");
-    have_type_lock = true;
+    have_lock = true;
 
     /* Get the pointer to the type info */
     type_info = H5I_type_info_array_g[type].type_info;
@@ -1778,7 +1751,7 @@ H5I__get_type_ref(H5I_type_t type)
 
 done:
     /* Release exclusive access for the type */
-    if (have_type_lock && H5I__type_info_release(type) < 0)
+    if (have_lock && H5I__type_info_release(type) < 0)
         HDONE_ERROR(H5E_ID, H5E_CANTUNLOCK, (-1), "can't release lock on type");
 
     FUNC_LEAVE_NOAPI(ret_value)
@@ -1863,11 +1836,9 @@ H5I__iterate_cb(void *_item, void H5_ATTR_UNUSED *_key, void *_udata)
 herr_t
 H5I_iterate(H5I_type_t type, H5I_search_func_t func, void *udata, bool app_ref)
 {
-    H5I_type_info_t *type_info      = NULL; /* Pointer to the type */
-    H5I_id_info_t   *item           = NULL;
-    bool             have_id_lock   = false;   /* Whether the ID lock is held */
-    bool             have_type_lock = false;   /* Whether the lock is held */
-    herr_t           ret_value      = SUCCEED; /* Return value */
+    H5I_type_info_t *type_info = NULL;    /* Pointer to the type */
+    bool             have_lock = false;   /* Whether the lock is held */
+    herr_t           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
@@ -1878,7 +1849,7 @@ H5I_iterate(H5I_type_t type, H5I_search_func_t func, void *udata, bool app_ref)
     /* Acquire exclusive access for the type */
     if (H5I__type_info_acquire(type) < 0)
         HGOTO_ERROR(H5E_ID, H5E_CANTLOCK, FAIL, "can't acquire lock on type");
-    have_type_lock = true;
+    have_lock = true;
 
     /* Get the pointer to the type info */
     type_info = H5I_type_info_array_g[type].type_info;
@@ -1886,13 +1857,8 @@ H5I_iterate(H5I_type_t type, H5I_search_func_t func, void *udata, bool app_ref)
     /* Only iterate through ID list if it is initialized and there are IDs in type */
     if (type_info && type_info->init_count > 0 && type_info->id_count > 0) {
         H5I_iterate_ud_t iter_udata; /* User data for iteration callback */
-        H5I_id_info_t   *tmp = NULL;
-
-        /* Increment the generation of the type */
-        type_info->gen++;
-
-        /* Indicate that we're iterating this type right now */
-        type_info->iterating = true;
+        H5I_id_info_t   *item = NULL;
+        H5I_id_info_t   *tmp  = NULL;
 
         /* Set up iterator user data */
         iter_udata.user_func  = func;
@@ -1903,102 +1869,23 @@ H5I_iterate(H5I_type_t type, H5I_search_func_t func, void *udata, bool app_ref)
         /* Iterate over IDs */
         HASH_ITER(hh, type_info->hash_table, item, tmp)
         {
-            int ret;
-
-            /* Check if this ID node was deleted, through the iteration callback */
-            if (item->del_later) {
-                /* Decrement the number of IDs in the type */
-                type_info->id_count--;
-
-                /* Remove ID from (local) hash table */
-                HASH_DELETE(hh, type_info->hash_table, item);
-
-                /* Delete ID info */
-                H5I__id_info_free(item, false);
-            }
-            else {
-                /* Acquire exclusive access to the ID */
-                if (H5I__id_info_acquire(item) < 0) {
-                    type_info->iterating = false;
-                    HGOTO_ERROR(H5E_ID, H5E_CANTLOCK, FAIL, "can't acquire lock on ID");
-                }
-                have_id_lock = true;
-
-                ret = H5I__iterate_cb((void *)item, NULL, (void *)&iter_udata);
-                if (H5_ITER_ERROR == ret) {
-                    type_info->iterating = false;
+            if (!item->marked) {
+                int ret = H5I__iterate_cb((void *)item, NULL, (void *)&iter_udata);
+                if (H5_ITER_ERROR == ret)
                     HGOTO_ERROR(H5E_ID, H5E_BADITER, FAIL, "iteration failed");
-                }
                 if (H5_ITER_STOP == ret)
                     break;
-
-                /* Move item to new type generation */
-                item->gen = type_info->gen;
-
-                /* Release exclusive access for the ID */
-                if (H5I__id_info_release(item) < 0) {
-                    type_info->iterating = false;
-                    HGOTO_ERROR(H5E_ID, H5E_CANTUNLOCK, FAIL, "can't release lock on ID");
-                }
-                have_id_lock = false;
             }
         }
-
-        /* Indicate that we're done iterating this type */
-        type_info->iterating = false;
     }
 
 done:
-    /* Release exclusive access for the ID */
-    if (have_id_lock && H5I__id_info_release(item) < 0)
-        HDONE_ERROR(H5E_ID, H5E_CANTUNLOCK, FAIL, "can't release lock on ID");
-
     /* Release exclusive access for the type */
-    if (have_type_lock && H5I__type_info_release(type) < 0)
+    if (have_lock && H5I__type_info_release(type) < 0)
         HDONE_ERROR(H5E_ID, H5E_CANTUNLOCK, FAIL, "can't release lock on type");
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5I_iterate() */
-
-/*-------------------------------------------------------------------------
- * Function:    H5I__lookup_id
- *
- * Purpose:     Find an object ID within a type info object
- *
- * Return:      Success:    A pointer to the object's info struct.
- *              Failure:    NULL
- *
- *-------------------------------------------------------------------------
- */
-static H5I_id_info_t *
-H5I__lookup_id(H5I_type_info_t *type_info, hid_t id)
-{
-    H5I_id_info_t *ret_value = NULL; /* Return value */
-
-    FUNC_ENTER_PACKAGE
-
-    /* Sanity check */
-    assert(type_info);
-
-    /* Check for same ID as we have looked up last time */
-    if (type_info->last_id_info && type_info->last_id_info->id == id)
-        ret_value = type_info->last_id_info;
-    else {
-        HASH_FIND(hh, type_info->hash_table, &id, sizeof(hid_t), ret_value);
-
-        /* Remember this ID, if found */
-        if (ret_value)
-            type_info->last_id_info = ret_value;
-    }
-
-    /* Acquire exclusive access to the ID */
-    if (ret_value)
-        if (H5I__id_info_acquire(ret_value) < 0)
-            HGOTO_ERROR(H5E_ID, H5E_CANTLOCK, NULL, "can't acquire lock on ID");
-
-done:
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5I__lookup_id() */
 
 /*-------------------------------------------------------------------------
  * Function:    H5I__find_id
@@ -2014,12 +1901,11 @@ done:
 H5I_id_info_t *
 H5I__find_id(hid_t id)
 {
-    H5I_type_t       type;                   /* ID's type */
-    H5I_type_info_t *type_info      = NULL;  /* Pointer to the type */
-    H5I_id_info_t   *id_info        = NULL;  /* ID's info */
-    bool             have_id_lock   = false; /* Whether the ID lock is held */
-    bool             have_type_lock = false; /* Whether the type lock is held */
-    H5I_id_info_t   *ret_value      = NULL;  /* Return value */
+    H5I_type_t       type;              /* ID's type */
+    H5I_type_info_t *type_info = NULL;  /* Pointer to the type */
+    H5I_id_info_t   *id_info   = NULL;  /* ID's info */
+    bool             have_lock = false; /* Whether the lock is held */
+    H5I_id_info_t   *ret_value = NULL;  /* Return value */
 
     FUNC_ENTER_PACKAGE_NOERR
 
@@ -2031,25 +1917,30 @@ H5I__find_id(hid_t id)
     /* Acquire exclusive access for the type */
     if (H5I__type_info_acquire(type) < 0)
         HGOTO_DONE(NULL);
-    have_type_lock = true;
+    have_lock = true;
 
     /* Get the pointer to the type info */
     type_info = H5I_type_info_array_g[type].type_info;
     if (!type_info || type_info->init_count <= 0)
         HGOTO_DONE(NULL);
 
-    /* Look up the ID in the type info */
-    if (NULL == (id_info = H5I__lookup_id(type_info, id)))
-        HGOTO_DONE(NULL);
-    have_id_lock = true;
+    /* Check for same ID as we have looked up last time */
+    if (type_info->last_id_info && type_info->last_id_info->id == id)
+        id_info = type_info->last_id_info;
+    else {
+        HASH_FIND(hh, type_info->hash_table, &id, sizeof(hid_t), id_info);
+
+        /* Remember this ID, if found */
+        if (id_info)
+            type_info->last_id_info = id_info;
+    }
 
     /* Check if this is a future ID */
     if (id_info && id_info->is_future) {
-        hid_t          actual_id      = H5I_INVALID_HID; /* ID for actual object */
-        H5I_id_info_t *actual_id_info = NULL;            /* Actual ID's info */
-        void          *future_object;                    /* Pointer to the future object */
-        void          *actual_object;                    /* Pointer to the actual object */
-        herr_t         status = FAIL;
+        hid_t  actual_id = H5I_INVALID_HID; /* ID for actual object */
+        void  *future_object;               /* Pointer to the future object */
+        void  *actual_object;               /* Pointer to the actual object */
+        herr_t status = FAIL;
 
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB_NOERR(NULL)
@@ -2067,16 +1958,10 @@ H5I__find_id(hid_t id)
         if (H5I_TYPE(id) != H5I_TYPE(actual_id))
             HGOTO_DONE(NULL);
 
-        /* Look up the actual ID in the type info */
-        if (NULL == (actual_id_info = H5I__lookup_id(type_info, actual_id)))
-            HGOTO_DONE(NULL);
-
         /* Swap the actual object in for the future object */
         future_object = id_info->u.object;
-        if (NULL == (actual_object = H5I__remove_common(type_info, actual_id_info))) {
-            H5I__id_info_release(actual_id_info);
-            HGOTO_DONE(NULL);
-        }
+        actual_object = H5I__remove_common(type_info, actual_id);
+        assert(actual_object);
         id_info->u.object = actual_object;
 
         /* Prepare & restore library for user callback */
@@ -2100,12 +1985,8 @@ H5I__find_id(hid_t id)
     ret_value = id_info;
 
 done:
-    /* Release exclusive access for the ID, on error */
-    if (NULL == ret_value && have_id_lock)
-        H5I__id_info_release(id_info);
-
     /* Release exclusive access for the type */
-    if (have_type_lock && H5I__type_info_release(type) < 0)
+    if (have_lock && H5I__type_info_release(type) < 0)
         ret_value = NULL;
 
     FUNC_LEAVE_NOAPI(ret_value)
@@ -2162,9 +2043,9 @@ H5I__find_id_cb(void *_item, void H5_ATTR_UNUSED *_key, void *_udata)
 herr_t
 H5I_find_id(const void *object, H5I_type_t type, hid_t *id)
 {
-    H5I_type_info_t *type_info      = NULL;    /* Pointer to the type */
-    bool             have_type_lock = false;   /* Whether the lock is held */
-    herr_t           ret_value      = SUCCEED; /* Return value */
+    H5I_type_info_t *type_info = NULL;    /* Pointer to the type */
+    bool             have_lock = false;   /* Whether the lock is held */
+    herr_t           ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
@@ -2175,8 +2056,8 @@ H5I_find_id(const void *object, H5I_type_t type, hid_t *id)
 
     /* Acquire exclusive access for the type */
     if (H5I__type_info_acquire(type) < 0)
-        HGOTO_ERROR(H5E_ID, H5E_CANTLOCK, FAIL, "can't acquire lock on type");
-    have_type_lock = true;
+        HGOTO_ERROR(H5E_ID, H5E_CANTLOCK, (-1), "can't acquire lock on type");
+    have_lock = true;
 
     /* Get the pointer to the type info */
     type_info = H5I_type_info_array_g[type].type_info;
@@ -2209,8 +2090,8 @@ H5I_find_id(const void *object, H5I_type_t type, hid_t *id)
 
 done:
     /* Release exclusive access for the type */
-    if (have_type_lock && H5I__type_info_release(type) < 0)
-        HDONE_ERROR(H5E_ID, H5E_CANTUNLOCK, FAIL, "can't release lock on type");
+    if (have_lock && H5I__type_info_release(type) < 0)
+        HDONE_ERROR(H5E_ID, H5E_CANTUNLOCK, (-1), "can't release lock on type");
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5I_find_id() */
@@ -2228,9 +2109,9 @@ htri_t
 H5I__is_type_valid(H5I_type_t type)
 {
 #ifdef H5_HAVE_CONCURRENCY
-    bool have_type_lock = false; /* Whether the lock is held */
-#endif                           /* H5_HAVE_CONCURRENCY */
-    htri_t ret_value = true;     /* Return value */
+    bool have_lock = false;  /* Whether the lock is held */
+#endif                       /* H5_HAVE_CONCURRENCY */
+    htri_t ret_value = true; /* Return value */
 
 #ifdef H5_HAVE_CONCURRENCY
     FUNC_ENTER_PACKAGE
@@ -2242,7 +2123,7 @@ H5I__is_type_valid(H5I_type_t type)
     /* Acquire the mutex protecting the global type info */
     if (H5I__type_info_acquire(type) < 0)
         HGOTO_ERROR(H5E_ID, H5E_CANTLOCK, FAIL, "can't lock type info's mutex");
-    have_type_lock = true;
+    have_lock = true;
 #endif /* H5_HAVE_CONCURRENCY */
 
     /* Check for valid type */
@@ -2252,7 +2133,7 @@ H5I__is_type_valid(H5I_type_t type)
 done:
 #ifdef H5_HAVE_CONCURRENCY
     /* Release the lock if held */
-    if (have_type_lock && H5I__type_info_release(type) < 0)
+    if (have_lock && H5I__type_info_release(type) < 0)
         HDONE_ERROR(H5E_ID, H5E_CANTUNLOCK, FAIL, "can't unlock type info's mutex");
 #endif /* H5_HAVE_CONCURRENCY */
 
@@ -2264,7 +2145,8 @@ done:
  *
  * Purpose:     Acquire exclusive access to a type info object
  *
- * Return:      SUCCEED/FAIL
+ * Return:      Pointer to type info object on success
+ *              NULL on failure
  *
  *-------------------------------------------------------------------------
  */
@@ -2358,120 +2240,3 @@ H5I__type_info_free(H5I_type_info_t *type_info)
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5I__type_info_free() */
-
-/*-------------------------------------------------------------------------
- * Function:    H5I__id_info_acquire
- *
- * Purpose:     Acquire exclusive access to an ID info object
- *
- * Return:      SUCCEED/FAIL
- *
- *-------------------------------------------------------------------------
- */
-static herr_t
-H5I__id_info_acquire(H5I_id_info_t
-#ifndef H5_HAVE_CONCURRENCY
-                         H5_ATTR_UNUSED
-#endif /* NDEBUG */
-                             *info)
-{
-    herr_t ret_value = SUCCEED; /* Return value */
-
-#ifdef H5_HAVE_CONCURRENCY
-    FUNC_ENTER_PACKAGE
-#else  /* H5_HAVE_CONCURRENCY */
-    FUNC_ENTER_PACKAGE_NOERR
-#endif /* H5_HAVE_CONCURRENCY */
-
-#ifdef H5_HAVE_CONCURRENCY
-    /* Acquire the mutex protecting the ID info */
-    assert(info->mutex_init);
-    if (H5TS_dlftt_mutex_acquire(&info->mutex) < 0)
-        HGOTO_ERROR(H5E_ID, H5E_CANTLOCK, FAIL, "can't lock ID info's mutex");
-
-done:
-#endif /* H5_HAVE_CONCURRENCY */
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5I__id_info_acquire() */
-
-/*-------------------------------------------------------------------------
- * Function:    H5I__id_info_release
- *
- * Purpose:     Release exclusive access to an ID info object
- *
- * Return:      SUCCEED/FAIL
- *
- *-------------------------------------------------------------------------
- */
-herr_t
-H5I__id_info_release(H5I_id_info_t
-#ifndef H5_HAVE_CONCURRENCY
-                         H5_ATTR_UNUSED
-#endif /* NDEBUG */
-                             *info)
-{
-    herr_t ret_value = SUCCEED; /* Return value */
-
-#ifdef H5_HAVE_CONCURRENCY
-    FUNC_ENTER_PACKAGE
-#else  /* H5_HAVE_CONCURRENCY */
-    FUNC_ENTER_PACKAGE_NOERR
-#endif /* H5_HAVE_CONCURRENCY */
-
-#ifdef H5_HAVE_CONCURRENCY
-    /* Release the mutex protecting the ID info */
-    assert(info->mutex_init);
-    if (H5TS_dlftt_mutex_release(&info->mutex) < 0)
-        HGOTO_ERROR(H5E_ID, H5E_CANTUNLOCK, FAIL, "can't unlock ID info's mutex");
-
-done:
-#endif /* H5_HAVE_CONCURRENCY */
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5I__id_info_release() */
-
-/*-------------------------------------------------------------------------
- * Function:    H5I__id_info_free
- *
- * Purpose:     Release an ID info object
- *
- * Return:      SUCCEED/FAIL
- *
- *-------------------------------------------------------------------------
- */
-static herr_t
-H5I__id_info_free(H5I_id_info_t *info, bool
-#ifndef H5_HAVE_CONCURRENCY
-                                           H5_ATTR_UNUSED
-#endif /* NDEBUG */
-                                               is_locked)
-{
-    herr_t ret_value = SUCCEED; /* Return value */
-
-#ifdef H5_HAVE_CONCURRENCY
-    FUNC_ENTER_PACKAGE
-#else  /* H5_HAVE_CONCURRENCY */
-    FUNC_ENTER_PACKAGE_NOERR
-#endif /* H5_HAVE_CONCURRENCY */
-
-    /* Sanity check */
-    assert(info);
-
-#ifdef H5_HAVE_CONCURRENCY
-    /* If locked, release the mutex protecting the ID info */
-    if (is_locked) {
-        assert(info->mutex_init);
-        if (H5TS_dlftt_mutex_release(&info->mutex) < 0)
-            HGOTO_ERROR(H5E_ID, H5E_CANTUNLOCK, FAIL, "can't unlock ID info's mutex");
-    }
-
-    if (info->mutex_init)
-        H5TS_dlftt_mutex_destroy(&info->mutex);
-#endif /* H5_HAVE_CONCURRENCY */
-
-    H5FL_FREE(H5I_id_info_t, info);
-
-#ifdef H5_HAVE_CONCURRENCY
-done:
-#endif /* H5_HAVE_CONCURRENCY */
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5I__id_info_free() */

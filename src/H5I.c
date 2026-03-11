@@ -550,7 +550,7 @@ done:
  *              re-initialized before it can be used again (and should probably
  *              be set to H5I_UNINIT).
  *
- * NOTE:        Using an error type to also represent a count is semantically
+ * NOTE:        Using an error type to also represent a count is semantially
  *              incorrect. We should consider fixing this in a future major
  *              release (DER).
  *
@@ -631,10 +631,6 @@ H5Iis_valid(hid_t id)
         ret_value = false;
 
 done:
-    /* Release exclusive access for the ID, if still held */
-    if (info && H5I__id_info_release(info) < 0)
-        HDONE_ERROR(H5E_ID, H5E_CANTUNLOCK, FAIL, "can't release lock on ID");
-
     FUNC_LEAVE_API(ret_value)
 } /* end H5Iis_valid() */
 
