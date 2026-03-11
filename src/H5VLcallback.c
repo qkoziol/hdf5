@@ -99,7 +99,8 @@ static void  *H5VL__dataset_create(void *obj, const H5VL_loc_params_t *loc_param
 static void  *H5VL__dataset_open(void *obj, const H5VL_loc_params_t *loc_params, const H5VL_class_t *cls,
                                  const char *name, H5P_genplist_t *dapl, H5P_genplist_t *dxpl, void **req);
 static herr_t H5VL__dataset_read(size_t count, void *obj[], const H5VL_class_t *cls, hid_t mem_type_id[],
-                                 hid_t mem_space_id[], hid_t file_space_id[], hid_t dxpl_id, void *buf[], void **req);
+                                 hid_t mem_space_id[], hid_t file_space_id[], hid_t dxpl_id, void *buf[],
+                                 void **req);
 static herr_t H5VL__dataset_write(size_t count, void *obj[], const H5VL_class_t *cls, hid_t mem_type_id[],
                                   hid_t mem_space_id[], hid_t file_space_id[], H5P_genplist_t *dxpl,
                                   const void *buf[], void **req);
@@ -2261,7 +2262,8 @@ H5VL__dataset_read(size_t count, void *obj[], const H5VL_class_t *cls, hid_t mem
     H5_BEFORE_USER_CB(FAIL)
         {
             /* Call the corresponding VOL callback */
-            ret_value = (cls->dataset_cls.read)(count, obj, mem_type_id, mem_space_id, file_space_id, dxpl_id, buf, req);
+            ret_value = (cls->dataset_cls.read)(count, obj, mem_type_id, mem_space_id, file_space_id, dxpl_id,
+                                                buf, req);
         }
     H5_AFTER_USER_CB(FAIL)
     if (ret_value < 0)

@@ -190,8 +190,8 @@ H5_DLL void  *H5VL_dataset_create(const H5VL_object_t *vol_obj, const H5VL_loc_p
 H5_DLL void  *H5VL_dataset_open(const H5VL_object_t *vol_obj, const H5VL_loc_params_t *loc_params,
                                 const char *name, H5P_genplist_t *dapl, void **req);
 H5_DLL herr_t H5VL_dataset_read(size_t count, void *obj[], H5VL_connector_t *connector, hid_t mem_type_id[],
-                                hid_t mem_space_id[], hid_t file_space_id[], hid_t dxpl_id,
-                                void *buf[], void **req);
+                                hid_t mem_space_id[], hid_t file_space_id[], hid_t dxpl_id, void *buf[],
+                                void **req);
 H5_DLL herr_t H5VL_dataset_write(size_t count, void *obj[], H5VL_connector_t *connector, hid_t mem_type_id[],
                                  hid_t mem_space_id[], hid_t file_space_id[], H5P_genplist_t *dxpl,
                                  const void *buf[], void **req);

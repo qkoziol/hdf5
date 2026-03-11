@@ -52,8 +52,8 @@ static hid_t  H5D__open_api_common(hid_t loc_id, const char *name, H5P_genplist_
                                    H5VL_object_t **_vol_obj_ptr);
 static hid_t  H5D__get_space_api_common(hid_t dset_id, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
 static herr_t H5D__read_api_common(size_t count, hid_t dset_ids[], hid_t mem_type_ids[],
-                                   hid_t mem_space_ids[], hid_t file_space_ids[], hid_t dxpl_id,
-                                   void *bufs[], void **token_ptr, H5VL_object_t **_vol_obj_ptr);
+                                   hid_t mem_space_ids[], hid_t file_space_ids[], hid_t dxpl_id, void *bufs[],
+                                   void **token_ptr, H5VL_object_t **_vol_obj_ptr);
 static herr_t H5D__write_api_common(size_t count, hid_t dset_ids[], hid_t mem_type_ids[],
                                     hid_t mem_space_ids[], hid_t file_space_ids[], H5P_genplist_t *dxpl,
                                     const void *bufs[], void **token_ptr, H5VL_object_t **_vol_obj_ptr);
@@ -1134,7 +1134,7 @@ herr_t
 H5Dread(hid_t dset_id, hid_t mem_type_id, hid_t mem_space_id, hid_t file_space_id, hid_t dxpl_id,
         void *buf /*out*/)
 {
-    herr_t          ret_value = SUCCEED; /* Return value */
+    herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API_TS(FAIL)
 
@@ -1160,10 +1160,10 @@ herr_t
 H5Dread_async(const char *app_file, const char *app_func, unsigned app_line, hid_t dset_id, hid_t mem_type_id,
               hid_t mem_space_id, hid_t file_space_id, hid_t dxpl_id, void *buf /*out*/, hid_t es_id)
 {
-    H5VL_object_t  *vol_obj   = NULL;            /* Dataset VOL object */
-    void           *token     = NULL;            /* Request token for async operation        */
-    void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    herr_t          ret_value = SUCCEED;         /* Return value */
+    H5VL_object_t *vol_obj   = NULL;            /* Dataset VOL object */
+    void          *token     = NULL;            /* Request token for async operation        */
+    void         **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
+    herr_t         ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API_TS(FAIL)
 
@@ -1172,8 +1172,8 @@ H5Dread_async(const char *app_file, const char *app_func, unsigned app_line, hid
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Read the data */
-    if (H5D__read_api_common(1, &dset_id, &mem_type_id, &mem_space_id, &file_space_id, dxpl_id, &buf, token_ptr,
-                             &vol_obj) < 0)
+    if (H5D__read_api_common(1, &dset_id, &mem_type_id, &mem_space_id, &file_space_id, dxpl_id, &buf,
+                             token_ptr, &vol_obj) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_READERROR, FAIL, "can't asynchronously read data");
 
     /* If a token was created, add the token to the event set */
@@ -1209,14 +1209,15 @@ herr_t
 H5Dread_multi(size_t count, hid_t dset_id[], hid_t mem_type_id[], hid_t mem_space_id[], hid_t file_space_id[],
               hid_t dxpl_id, void *buf[] /*out*/)
 {
-    herr_t          ret_value = SUCCEED; /* Return value */
+    herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API_TS(FAIL)
 
     /* Check for actual I/O */
     if (count > 0)
         /* Read the data */
-        if (H5D__read_api_common(count, dset_id, mem_type_id, mem_space_id, file_space_id, dxpl_id, buf, NULL, NULL) < 0)
+        if (H5D__read_api_common(count, dset_id, mem_type_id, mem_space_id, file_space_id, dxpl_id, buf, NULL,
+                                 NULL) < 0)
             HGOTO_ERROR(H5E_DATASET, H5E_READERROR, FAIL, "can't synchronously read data");
 
 done:
@@ -1238,10 +1239,10 @@ H5Dread_multi_async(const char *app_file, const char *app_func, unsigned app_lin
                     hid_t dset_id[], hid_t mem_type_id[], hid_t mem_space_id[], hid_t file_space_id[],
                     hid_t dxpl_id, void *buf[] /*out*/, hid_t es_id)
 {
-    H5VL_object_t  *vol_obj   = NULL;            /* Dataset VOL object */
-    void           *token     = NULL;            /* Request token for async operation        */
-    void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    herr_t          ret_value = SUCCEED;         /* Return value */
+    H5VL_object_t *vol_obj   = NULL;            /* Dataset VOL object */
+    void          *token     = NULL;            /* Request token for async operation        */
+    void         **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
+    herr_t         ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API_TS(FAIL)
 
@@ -1250,7 +1251,8 @@ H5Dread_multi_async(const char *app_file, const char *app_func, unsigned app_lin
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Read the data */
-    if (H5D__read_api_common(count, dset_id, mem_type_id, mem_space_id, file_space_id, dxpl_id, buf, token_ptr, &vol_obj) < 0)
+    if (H5D__read_api_common(count, dset_id, mem_type_id, mem_space_id, file_space_id, dxpl_id, buf,
+                             token_ptr, &vol_obj) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_READERROR, FAIL, "can't asynchronously read data");
 
     /* If a token was created, add the token to the event set */
