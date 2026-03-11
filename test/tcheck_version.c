@@ -103,7 +103,7 @@ parse(int ac, char **av)
 H5_ATTR_NORETURN void
 abort_intercept(int H5_ATTR_UNUSED sig)
 {
-    _Exit(6);
+    exit(6);
 }
 
 #ifdef H5_HAVE_WIN32_API
