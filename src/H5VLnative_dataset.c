@@ -340,9 +340,9 @@ H5VL__native_dataset_read(size_t count, void *obj[], hid_t mem_type_id[], hid_t 
                           hid_t file_space_id[], hid_t dxpl_id, void *buf[], void H5_ATTR_UNUSED **req)
 {
     H5D_dset_io_info_t  dinfo_local;
-    H5D_dset_io_info_t *dinfo = &dinfo_local;
-    H5P_genplist_t     *dxpl = NULL;          /* Dataset transfer property list */
-    herr_t              ret_value = SUCCEED;  /* Return value */
+    H5D_dset_io_info_t *dinfo     = &dinfo_local;
+    H5P_genplist_t     *dxpl      = NULL;    /* Dataset transfer property list */
+    herr_t              ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
