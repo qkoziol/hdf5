@@ -45,7 +45,7 @@
 
 /* Helper routines for sync/async API calls */
 static hid_t  H5D__create_api_common(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id,
-                                     H5P_genplist_t *lcpl, H5P_genplist_t *dcpl, H5P_genplist_t *dapl,
+                                     hid_t lcpl_id, H5P_genplist_t *dcpl, H5P_genplist_t *dapl,
                                      void **token_ptr, H5VL_object_t **_vol_obj_ptr);
 static hid_t  H5D__open_api_common(hid_t loc_id, const char *name, H5P_genplist_t *dapl, void **token_ptr,
                                    H5VL_object_t **_vol_obj_ptr);
@@ -91,7 +91,7 @@ H5FL_BLK_EXTERN(type_conv);
  *-------------------------------------------------------------------------
  */
 static hid_t
-H5D__create_api_common(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, H5P_genplist_t *lcpl,
+H5D__create_api_common(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t lcpl_id,
                        H5P_genplist_t *dcpl, H5P_genplist_t *dapl, void **token_ptr,
                        H5VL_object_t **_vol_obj_ptr)
 {
@@ -116,8 +116,17 @@ H5D__create_api_common(hid_t loc_id, const char *name, hid_t type_id, hid_t spac
     if (H5VL_setup_acc_args(loc_id, H5P_CLS_DACC, true, &dapl_id, vol_obj_ptr, &loc_params) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, H5I_INVALID_HID, "can't set object access arguments");
 
+    /* Get link creation property list */
+    if (H5P_DEFAULT == lcpl_id)
+        lcpl_id = H5P_LINK_CREATE_DEFAULT;
+    else if (true != H5P_isa_class(lcpl_id, H5P_LINK_CREATE))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "lcpl_id is not a link creation property list");
+
+    /* Set the LCPL for the API context */
+    H5CX_set_lcpl(lcpl_id);
+
     /* Create the dataset */
-    if (NULL == (dset = H5VL_dataset_create(*vol_obj_ptr, &loc_params, name, lcpl, type_id, space_id, dcpl,
+    if (NULL == (dset = H5VL_dataset_create(*vol_obj_ptr, &loc_params, name, lcpl_id, type_id, space_id, dcpl,
                                             dapl, H5P_DATASET_XFER_DEFAULT, token_ptr)))
         HGOTO_ERROR(H5E_DATASET, H5E_CANTCREATE, H5I_INVALID_HID, "unable to create dataset");
 
@@ -163,21 +172,11 @@ hid_t
 H5Dcreate2(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t lcpl_id, hid_t dcpl_id,
            hid_t dapl_id)
 {
-    H5P_genplist_t *lcpl;                        /* Link creation property list */
     H5P_genplist_t *dcpl;                        /* Dataset creation property list */
     H5P_genplist_t *dapl;                        /* Dataset access property list */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
-
-    /* Get link creation property list */
-    if (H5P_DEFAULT == lcpl_id)
-        lcpl_id = H5P_LINK_CREATE_DEFAULT;
-    if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
-        HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
-
-    /* Set the LCPL for the API context */
-    H5CX_set_lcpl(lcpl_id);
 
     /* Get the pointer to the dataset create property list */
     if (H5P_DEFAULT == dcpl_id)
@@ -195,8 +194,8 @@ H5Dcreate2(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t 
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Create the dataset synchronously */
-    if ((ret_value = H5D__create_api_common(loc_id, name, type_id, space_id, lcpl, dcpl, dapl, NULL, NULL)) <
-        0)
+    if ((ret_value =
+             H5D__create_api_common(loc_id, name, type_id, space_id, lcpl_id, dcpl, dapl, NULL, NULL)) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTCREATE, H5I_INVALID_HID, "unable to synchronously create dataset");
 
 done:
@@ -218,7 +217,6 @@ H5Dcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
                 hid_t type_id, hid_t space_id, hid_t lcpl_id, hid_t dcpl_id, hid_t dapl_id, hid_t es_id)
 {
     H5VL_object_t  *vol_obj = NULL;              /* Object for loc_id */
-    H5P_genplist_t *lcpl;                        /* Link creation property list */
     H5P_genplist_t *dcpl;                        /* Dataset creation property list */
     H5P_genplist_t *dapl;                        /* Dataset access property list */
     void           *token     = NULL;            /* Request token for async operation        */
@@ -227,14 +225,9 @@ H5Dcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
-    /* Get link creation property list */
-    if (H5P_DEFAULT == lcpl_id)
-        lcpl_id = H5P_LINK_CREATE_DEFAULT;
-    if (NULL == (lcpl = H5P_object_verify(lcpl_id, H5P_TYPE_LINK_CREATE, true)))
-        HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
-
-    /* Set the LCPL for the API context */
-    H5CX_set_lcpl(lcpl_id);
+    /* Set up request token pointer for asynchronous operation */
+    if (H5ES_NONE != es_id)
+        token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Get the pointer to the dataset create property list */
     if (H5P_DEFAULT == dcpl_id)
@@ -251,12 +244,8 @@ H5Dcreate_async(const char *app_file, const char *app_func, unsigned app_line, h
     if (NULL == (dapl = H5P_object_verify(dapl_id, H5P_TYPE_DATASET_ACCESS, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
-    /* Set up request token pointer for asynchronous operation */
-    if (H5ES_NONE != es_id)
-        token_ptr = &token; /* Point at token for VOL connector to set up */
-
     /* Create the dataset asynchronously */
-    if ((ret_value = H5D__create_api_common(loc_id, name, type_id, space_id, lcpl, dcpl, dapl, token_ptr,
+    if ((ret_value = H5D__create_api_common(loc_id, name, type_id, space_id, lcpl_id, dcpl, dapl, token_ptr,
                                             &vol_obj)) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTCREATE, H5I_INVALID_HID, "unable to asynchronously create dataset");
 
@@ -311,7 +300,6 @@ hid_t
 H5Dcreate_anon(hid_t loc_id, hid_t type_id, hid_t space_id, hid_t dcpl_id, hid_t dapl_id)
 {
     void             *dset = NULL;                 /* dset object from VOL connector */
-    H5P_genplist_t   *def_lcpl;                    /* Default link creation property list */
     H5P_genplist_t   *dcpl;                        /* Dataset creation property list */
     H5P_genplist_t   *dapl;                        /* Dataset access property list */
     H5VL_object_t    *vol_obj = NULL;              /* Object for loc_id */
@@ -319,10 +307,6 @@ H5Dcreate_anon(hid_t loc_id, hid_t type_id, hid_t space_id, hid_t dcpl_id, hid_t
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
-
-    /* Get default link creation property list */
-    if (NULL == (def_lcpl = H5I_object(H5P_LINK_CREATE_DEFAULT)))
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, H5I_INVALID_HID, "can't find object for ID");
 
     /* Check arguments */
     if (H5P_DEFAULT == dcpl_id)
@@ -352,8 +336,8 @@ H5Dcreate_anon(hid_t loc_id, hid_t type_id, hid_t space_id, hid_t dcpl_id, hid_t
     loc_params.obj_type = H5I_get_type(loc_id);
 
     /* Create the dataset */
-    if (NULL == (dset = H5VL_dataset_create(vol_obj, &loc_params, NULL, def_lcpl, type_id, space_id, dcpl,
-                                            dapl, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL)))
+    if (NULL == (dset = H5VL_dataset_create(vol_obj, &loc_params, NULL, H5P_LINK_CREATE_DEFAULT, type_id,
+                                            space_id, dcpl, dapl, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, H5I_INVALID_HID, "unable to create dataset");
 
     /* Get an ID for the dataset */

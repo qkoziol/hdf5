@@ -323,8 +323,7 @@ H5FL_EXTERN(H5G_shared_t);
  * General group routines
  */
 H5_DLL H5G_t *H5G__create(H5F_t *file, H5G_obj_create_t *gcrt_info);
-H5_DLL H5G_t *H5G__create_named(const H5G_loc_t *loc, const char *name, H5P_genplist_t *lcpl,
-                                H5P_genplist_t *gcpl);
+H5_DLL H5G_t *H5G__create_named(const H5G_loc_t *loc, const char *name, hid_t lcpl_id, H5P_genplist_t *gcpl);
 H5_DLL H5G_t *H5G__open_name(const H5G_loc_t *loc, const char *name);
 H5_DLL herr_t H5G__get_info_by_name(const H5G_loc_t *loc, const char *name, H5G_info_t *grp_info);
 H5_DLL herr_t H5G__get_info_by_idx(const H5G_loc_t *loc, const char *group_name, H5_index_t idx_type,

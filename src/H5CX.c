@@ -265,7 +265,7 @@ herr_t
 H5CX__init_package(void)
 {
     H5P_genplist_t *dx_plist;            /* Data transfer property list */
-    H5P_genplist_t *lcpl;                /* Link creation property list */
+    H5P_genplist_t *lc_plist;            /* Link creation property list */
     H5P_genplist_t *la_plist;            /* Link access property list */
     H5P_genplist_t *dcpl;                /* Dataset creation property list */
     H5P_genplist_t *dapl;                /* Dataset access property list */
@@ -383,15 +383,15 @@ H5CX__init_package(void)
     /* Get the default LCPL cache information */
 
     /* Get the default link creation property list */
-    if (NULL == (lcpl = (H5P_genplist_t *)H5I_object(H5P_LINK_CREATE_DEFAULT)))
+    if (NULL == (lc_plist = (H5P_genplist_t *)H5I_object(H5P_LINK_CREATE_DEFAULT)))
         HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "not a link creation property list");
 
     /* Get link name character encoding */
-    if (H5P_get(lcpl, H5P_STRCRT_CHAR_ENCODING_NAME, &H5CX_def_lcpl_cache.encoding) < 0)
+    if (H5P_get(lc_plist, H5P_STRCRT_CHAR_ENCODING_NAME, &H5CX_def_lcpl_cache.encoding) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve link name encoding");
 
     /* Get flag whether to create intermediate groups */
-    if (H5P_get(lcpl, H5L_CRT_INTERMEDIATE_GROUP_NAME, &H5CX_def_lcpl_cache.intermediate_group) < 0)
+    if (H5P_get(lc_plist, H5L_CRT_INTERMEDIATE_GROUP_NAME, &H5CX_def_lcpl_cache.intermediate_group) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve intermediate group creation flag");
 
     /* Reset the "default LAPL cache" information */

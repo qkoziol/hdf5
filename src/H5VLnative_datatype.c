@@ -112,12 +112,8 @@ H5VL__native_datatype_commit(void *obj, const H5VL_loc_params_t *loc_params, con
 
     /* Commit the datatype */
     if (NULL != name) {
-        H5P_genplist_t *lcpl; /* Link creation property list */
-
         /* H5Tcommit */
-        if (NULL == (lcpl = H5I_object(lcpl_id)))
-            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a property list");
-        if (H5T__commit_named(&loc, name, type, lcpl, tcpl) < 0)
+        if (H5T__commit_named(&loc, name, type, lcpl_id, tcpl) < 0)
             HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINIT, NULL, "unable to commit datatype");
     } /* end if */
     else {

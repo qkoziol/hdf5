@@ -685,7 +685,7 @@ H5_DLLVAR const unsigned H5O_layout_ver_bounds[H5F_LIBVER_NBOUNDS + 1];
 H5_DLL H5D_t  *H5D__create(H5F_t *file, hid_t type_id, const H5S_t *space, H5P_genplist_t *dcpl,
                            H5P_genplist_t *dapl);
 H5_DLL H5D_t  *H5D__create_named(const H5G_loc_t *loc, const char *name, hid_t type_id, const H5S_t *space,
-                                 H5P_genplist_t *lcpl, H5P_genplist_t *dcpl, H5P_genplist_t *dapl);
+                                 hid_t lcpl_id, H5P_genplist_t *dcpl, H5P_genplist_t *dapl);
 H5_DLL H5D_t  *H5D__open_name(const H5G_loc_t *loc, const char *name, H5P_genplist_t *dapl);
 H5_DLL hid_t   H5D__get_space(const H5D_t *dset);
 H5_DLL hid_t   H5D__get_type(const H5D_t *dset);

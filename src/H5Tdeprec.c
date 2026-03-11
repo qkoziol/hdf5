@@ -92,7 +92,6 @@ herr_t
 H5Tcommit1(hid_t loc_id, const char *name, hid_t type_id)
 {
     void             *data = NULL;    /* VOL-managed datatype data */
-    H5P_genplist_t   *def_lcpl;       /* Link creation property list */
     H5P_genplist_t   *def_tcpl;       /* Datatype creation property list */
     H5P_genplist_t   *def_tapl;       /* Datatype access property list */
     H5VL_object_t    *new_obj = NULL; /* VOL object that holds the datatype object and the VOL info */
@@ -110,10 +109,6 @@ H5Tcommit1(hid_t loc_id, const char *name, hid_t type_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a datatype");
     if (H5T_is_named(dt))
         HGOTO_ERROR(H5E_ARGS, H5E_CANTSET, FAIL, "datatype is already committed");
-
-    /* Get default link creation property list */
-    if (NULL == (def_lcpl = H5I_object(H5P_LINK_CREATE_DEFAULT)))
-        HGOTO_ERROR(H5E_DATATYPE, H5E_CANTGET, FAIL, "can't find object for ID");
 
     /* Get default datatype creation property list */
     if (NULL == (def_tcpl = H5I_object(H5P_DATATYPE_CREATE_DEFAULT)))
@@ -135,8 +130,8 @@ H5Tcommit1(hid_t loc_id, const char *name, hid_t type_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "invalid object identifier");
 
     /* Commit the datatype */
-    if (NULL == (data = H5VL_datatype_commit(vol_obj, &loc_params, name, type_id, def_lcpl, def_tcpl,
-                                             def_tapl, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL)))
+    if (NULL == (data = H5VL_datatype_commit(vol_obj, &loc_params, name, type_id, H5P_LINK_CREATE_DEFAULT,
+                                             def_tcpl, def_tapl, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINIT, FAIL, "unable to commit datatype");
 
     /* Set up VOL object */
