@@ -66,8 +66,7 @@ typedef struct H5I_id_info_t {
         const void *c_object; /* Const pointer associated with the ID */
         void       *object;   /* Pointer associated with the ID */
     } u;
-    bool del_later;     /* Indicate that ID should be deleted in clear operation */
-    bool make_cb_later; /* Indicate the that the ID free callbacks should be performed, when deleting later */
+    bool     del_later; /* Indicate that ID should be deleted in clear operation */
     unsigned gen;       /* Type generation the ID belongs to */
 
     /* Future ID info */
@@ -95,7 +94,7 @@ typedef struct H5I_type_info_t {
     unsigned           init_count;   /* # of times this type has been initialized */
     uint64_t           id_count;     /* Current number of IDs held */
     uint64_t           nextid;       /* ID to use for the next object */
-    unsigned           iterating;    /* Whether the type is being iterated */
+    bool               iterating;    /* Whether the type is being iterated */
     unsigned           gen;          /* Generation count for type */
     H5I_id_info_t     *last_id_info; /* Info for most recent ID looked up */
     H5I_id_info_t     *hash_table;   /* Hash table pointer for this ID type */
