@@ -1132,13 +1132,13 @@ H5D__virtual_copy_layout(H5O_layout_t *layout)
     if (orig_source_fapl >= 0) {
         if (NULL == (plist = (H5P_genplist_t *)H5I_object_verify(orig_source_fapl, H5I_GENPROP_LST)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
-        if ((virt->source_fapl = H5P_copy_plist_id(plist, false)) < 0)
+        if ((virt->source_fapl = H5P_copy_plist(plist, false)) < 0)
             HGOTO_ERROR(H5E_DATASET, H5E_CANTCOPY, FAIL, "can't copy fapl");
     } /* end if */
     if (orig_source_dapl >= 0) {
         if (NULL == (plist = (H5P_genplist_t *)H5I_object_verify(orig_source_dapl, H5I_GENPROP_LST)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
-        if ((virt->source_dapl = H5P_copy_plist_id(plist, false)) < 0)
+        if ((virt->source_dapl = H5P_copy_plist(plist, false)) < 0)
             HGOTO_ERROR(H5E_DATASET, H5E_CANTCOPY, FAIL, "can't copy dapl");
     } /* end if */
 
@@ -2802,7 +2802,7 @@ H5D__virtual_init(H5F_t *f, H5D_t *dset, hid_t dapl_id, bool H5_ATTR_UNUSED open
 
     /* Copy DAPL to layout */
     if (storage->source_dapl <= 0)
-        if ((storage->source_dapl = H5P_copy_plist_id(dapl, false)) < 0)
+        if ((storage->source_dapl = H5P_copy_plist(dapl, false)) < 0)
             HGOTO_ERROR(H5E_DATASET, H5E_CANTCOPY, FAIL, "can't copy dapl");
 
     /* Mark layout as not fully initialized (must be done prior to I/O for

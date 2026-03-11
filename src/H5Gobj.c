@@ -245,7 +245,7 @@ H5G__obj_create_real(H5F_t *f, const H5O_ginfo_t *ginfo, const H5O_linfo_t *linf
      * since nothing refers to it yet.	The link count will be
      * incremented if the object is added to the group directed graph.
      */
-    if (H5O_create_id(f, hdr_size, (size_t)1, gcpl_id, oloc /*out*/) < 0)
+    if (H5O_create(f, hdr_size, (size_t)1, gcpl_id, oloc /*out*/) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTINIT, FAIL, "can't create header");
 
     /* Check for format of group to create */

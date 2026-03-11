@@ -269,7 +269,7 @@ H5O__dset_create(H5F_t *f, void *_crt_info, H5G_loc_t *obj_loc)
 
     /* Create the dataset */
     if (NULL ==
-        (dset = H5D__create(f, crt_info->type_id, crt_info->space, crt_info->dcpl, crt_info->dapl_id)))
+        (dset = H5D__create(f, crt_info->type_id, crt_info->space, crt_info->dcpl_id, crt_info->dapl_id)))
         HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, NULL, "unable to create dataset");
 
     /* Set up the new dataset's location */

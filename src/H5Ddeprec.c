@@ -97,8 +97,7 @@
 hid_t
 H5Dcreate1(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t dcpl_id)
 {
-    void             *dset = NULL;    /* dset object from VOL connector */
-    H5P_genplist_t   *dcpl;           /* Dataset creation property list */
+    void             *dset    = NULL; /* dset object from VOL connector */
     H5VL_object_t    *vol_obj = NULL; /* object of loc_id */
     H5VL_loc_params_t loc_params;
     hid_t             ret_value = H5I_INVALID_HID; /* Return value */
@@ -117,8 +116,8 @@ H5Dcreate1(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t 
 
     if (H5P_DEFAULT == dcpl_id)
         dcpl_id = H5P_DATASET_CREATE_DEFAULT;
-    if (NULL == (dcpl = H5P_object_verify(dcpl_id, H5P_TYPE_DATASET_CREATE, true)))
-        HGOTO_ERROR(H5E_DATASET, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
+    else if (true != H5P_isa_class(dcpl_id, H5P_DATASET_CREATE))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not dataset create property list ID");
 
     /* Set the DCPL for the API context */
     H5CX_set_dcpl(dcpl_id);
@@ -133,7 +132,7 @@ H5Dcreate1(hid_t loc_id, const char *name, hid_t type_id, hid_t space_id, hid_t 
 
     /* Create the dataset */
     if (NULL == (dset = H5VL_dataset_create(vol_obj, &loc_params, name, H5P_LINK_CREATE_DEFAULT, type_id,
-                                            space_id, dcpl, H5P_DATASET_ACCESS_DEFAULT,
+                                            space_id, dcpl_id, H5P_DATASET_ACCESS_DEFAULT,
                                             H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, H5I_INVALID_HID, "unable to create dataset");
 

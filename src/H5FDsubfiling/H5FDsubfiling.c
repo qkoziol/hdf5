@@ -451,7 +451,7 @@ H5Pset_fapl_subfiling(hid_t fapl_id, const H5FD_subfiling_config_t *vfd_config)
 
     FUNC_ENTER_API(FAIL)
 
-    if (NULL == (plist = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
+    if (NULL == (plist = H5P_object_verify(fapl_id, H5P_FILE_ACCESS, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
 
     /* Initialize driver, if it's not yet */
@@ -479,7 +479,7 @@ H5Pset_fapl_subfiling(hid_t fapl_id, const H5FD_subfiling_config_t *vfd_config)
         comm = MPI_COMM_WORLD;
 
     /* Set MPI parameters on IOC FAPL */
-    if (NULL == (ioc_plist = H5P_object_verify(vfd_config->ioc_fapl_id, H5P_TYPE_FILE_ACCESS, false)))
+    if (NULL == (ioc_plist = H5P_object_verify(vfd_config->ioc_fapl_id, H5P_FILE_ACCESS, false)))
         HGOTO_ERROR(H5E_VFL, H5E_BADTYPE, FAIL, "not a file access property list");
     if (H5P_set(ioc_plist, H5F_ACS_MPI_PARAMS_COMM_NAME, &comm) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set MPI communicator on plist");
@@ -532,7 +532,7 @@ H5Pget_fapl_subfiling(hid_t fapl_id, H5FD_subfiling_config_t *config_out)
 
     if (config_out == NULL)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "config_out is NULL");
-    if (NULL == (plist = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+    if (NULL == (plist = H5P_object_verify(fapl_id, H5P_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
 
     /* Initialize driver, if it's not yet */
@@ -1089,7 +1089,7 @@ done:
 /*-------------------------------------------------------------------------
  * Function:    H5FD__copy_plist
  *
- * Purpose:     Sanity-wrapped H5P_copy_plist_id() for each channel.
+ * Purpose:     Sanity-wrapped H5P_copy_plist() for each channel.
  *              Utility function for operation in multiple locations.
  *
  * Return:      Non-negative on success/Negative on failure
@@ -1111,7 +1111,7 @@ H5FD__copy_plist(hid_t fapl_id, hid_t *id)
     if (NULL == (plist = (H5P_genplist_t *)H5I_object(fapl_id)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "unable to get property list");
 
-    if (H5I_INVALID_HID == (*id = H5P_copy_plist_id(plist, false)))
+    if (H5I_INVALID_HID == (*id = H5P_copy_plist(plist, false)))
         HGOTO_ERROR(H5E_VFL, H5E_BADTYPE, FAIL, "unable to copy file access property list");
 
 done:
@@ -1892,7 +1892,7 @@ H5FD__subfiling_delete(const char *name, hid_t fapl)
         if (H5FD__subfiling_init() < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, FAIL, "can't initialize driver");
 
-    if (NULL == (plist = H5P_object_verify(fapl, H5P_TYPE_FILE_ACCESS, true)))
+    if (NULL == (plist = H5P_object_verify(fapl, H5P_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
 
     if (H5FD_SUBFILING != H5P_peek_driver(plist))

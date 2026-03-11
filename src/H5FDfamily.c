@@ -178,7 +178,7 @@ H5FD__family_get_default_config(H5FD_family_fapl_t *fa_out)
      */
     if (NULL == (def_plist = (H5P_genplist_t *)H5I_object(H5P_FILE_ACCESS_DEFAULT)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
-    if ((fa_out->memb_fapl_id = H5P_copy_plist_id(def_plist, false)) < 0)
+    if ((fa_out->memb_fapl_id = H5P_copy_plist(def_plist, false)) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, FAIL, "can't copy property list");
     if (NULL == (plist = (H5P_genplist_t *)H5I_object(fa_out->memb_fapl_id)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
@@ -378,7 +378,7 @@ H5Pget_fapl_family(hid_t fapl_id, hsize_t *msize /*out*/, hid_t *memb_fapl_id /*
 
     FUNC_ENTER_API(FAIL)
 
-    if (NULL == (plist = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+    if (NULL == (plist = H5P_object_verify(fapl_id, H5P_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access list");
     if (H5FD_FAMILY != H5P_peek_driver(plist))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "incorrect VFL driver");
@@ -389,7 +389,7 @@ H5Pget_fapl_family(hid_t fapl_id, hsize_t *msize /*out*/, hid_t *memb_fapl_id /*
     if (memb_fapl_id) {
         if (NULL == (plist = (H5P_genplist_t *)H5I_object(fa->memb_fapl_id)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access list");
-        *memb_fapl_id = H5P_copy_plist_id(plist, true);
+        *memb_fapl_id = H5P_copy_plist(plist, true);
     } /* end if */
 
 done:
@@ -424,7 +424,7 @@ H5FD__family_fapl_get(H5FD_t *_file)
     fa->memb_size = file->memb_size;
     if (NULL == (plist = (H5P_genplist_t *)H5I_object(file->memb_fapl_id)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file access property list");
-    fa->memb_fapl_id = H5P_copy_plist_id(plist, false);
+    fa->memb_fapl_id = H5P_copy_plist(plist, false);
 
     /* Set return value */
     ret_value = fa;
@@ -472,7 +472,7 @@ H5FD__family_fapl_copy(const void *_old_fa)
     else {
         if (NULL == (plist = (H5P_genplist_t *)H5I_object(old_fa->memb_fapl_id)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file access property list");
-        new_fa->memb_fapl_id = H5P_copy_plist_id(plist, false);
+        new_fa->memb_fapl_id = H5P_copy_plist(plist, false);
     } /* end else */
 
     /* Set return value */
@@ -707,7 +707,7 @@ H5FD__family_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxad
         else {
             if (NULL == (plist = (H5P_genplist_t *)H5I_object(fa->memb_fapl_id)))
                 HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file access property list");
-            file->memb_fapl_id = H5P_copy_plist_id(plist, false);
+            file->memb_fapl_id = H5P_copy_plist(plist, false);
         }                                /* end else */
         file->memb_size = fa->memb_size; /* Actual member size to be updated later */
         file->pmem_size = fa->memb_size; /* Member size passed in through property */
@@ -1109,7 +1109,7 @@ H5FD__family_get_handle(H5FD_t *_file, hid_t fapl, void **file_handle)
     FUNC_ENTER_PACKAGE
 
     /* Get the plist structure and family offset */
-    if (NULL == (plist = H5P_object_verify(fapl, H5P_TYPE_FILE_ACCESS, true)))
+    if (NULL == (plist = H5P_object_verify(fapl, H5P_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_VFL, H5E_BADID, FAIL, "can't find object for ID");
     if (H5P_get(plist, H5F_ACS_FAMILY_OFFSET_NAME, &offset) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get offset for family driver");

@@ -214,7 +214,7 @@ H5FD__splitter_unregister(void)
 /*-------------------------------------------------------------------------
  * Function:    H5FD__copy_plist
  *
- * Purpose:     Sanity-wrapped H5P_copy_plist_id() for each channel.
+ * Purpose:     Sanity-wrapped H5P_copy_plist() for each channel.
  *              Utility function for operation in multiple locations.
  *
  * Return:      0 on success, -1 on error.
@@ -239,7 +239,7 @@ H5FD__copy_plist(hid_t fapl_id, hid_t *id_out_ptr)
     if (NULL == plist_ptr)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, -1, "unable to get property list");
 
-    *id_out_ptr = H5P_copy_plist_id(plist_ptr, false);
+    *id_out_ptr = H5P_copy_plist(plist_ptr, false);
     if (H5I_INVALID_HID == *id_out_ptr)
         HGOTO_ERROR(H5E_VFL, H5E_BADTYPE, -1, "unable to copy file access property list");
 
@@ -329,7 +329,7 @@ H5Pget_fapl_splitter(hid_t fapl_id, H5FD_splitter_vfd_config_t *config /*out*/)
     config->wo_fapl_id = H5I_INVALID_HID;
 
     /* Check and get the splitter fapl */
-    if (NULL == (plist_ptr = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+    if (NULL == (plist_ptr = H5P_object_verify(fapl_id, H5P_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
     if (H5FD_SPLITTER != H5P_peek_driver(plist_ptr))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "incorrect VFL driver");
@@ -445,7 +445,7 @@ H5FD__splitter_populate_config(H5FD_splitter_vfd_config_t *vfd_config, H5FD_spli
          * driver might have been replaced with the Splitter VFD, which
          * would cause recursion badness.
          */
-        if ((fapl_out->rw_fapl_id = H5P_copy_plist_id(def_plist, false)) < 0)
+        if ((fapl_out->rw_fapl_id = H5P_copy_plist(def_plist, false)) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, FAIL, "can't copy property list");
         if (NULL == (plist = (H5P_genplist_t *)H5I_object(fapl_out->rw_fapl_id)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
@@ -463,7 +463,7 @@ H5FD__splitter_populate_config(H5FD_splitter_vfd_config_t *vfd_config, H5FD_spli
          * driver might have been replaced with the Splitter VFD, which
          * would cause recursion badness.
          */
-        if ((fapl_out->wo_fapl_id = H5P_copy_plist_id(def_plist, false)) < 0)
+        if ((fapl_out->wo_fapl_id = H5P_copy_plist(def_plist, false)) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTCOPY, FAIL, "can't copy property list");
         if (NULL == (plist = (H5P_genplist_t *)H5I_object(fapl_out->wo_fapl_id)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");

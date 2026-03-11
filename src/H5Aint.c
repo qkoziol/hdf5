@@ -1103,27 +1103,29 @@ done:
 hid_t
 H5A__get_create_plist(H5A_t *attr)
 {
+    H5P_genplist_t *plist;                       /* Default property list */
+    hid_t           new_plist_id;                /* ID of ACPL to return */
     H5P_genplist_t *new_plist;                   /* ACPL to return */
     hid_t           ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
+    if (NULL == (plist = (H5P_genplist_t *)H5I_object(H5P_LST_ATTRIBUTE_CREATE_ID_g)))
+        HGOTO_ERROR(H5E_PLIST, H5E_BADTYPE, FAIL, "can't get default ACPL");
+
     /* Create the property list object to return */
-    if (NULL == (new_plist = H5P_new_plist_of_type(H5P_TYPE_ATTRIBUTE_CREATE, true)))
-        HGOTO_ERROR(H5E_ATTR, H5E_CANTCREATE, H5I_INVALID_HID,
-                    "unable to create attribute creation property list");
+    if ((new_plist_id = H5P_copy_plist(plist, true)) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, FAIL, "unable to copy attribute creation properties");
+    if (NULL == (new_plist = (H5P_genplist_t *)H5I_object(new_plist_id)))
+        HGOTO_ERROR(H5E_PLIST, H5E_BADTYPE, FAIL, "can't get property list");
 
     /* Set the character encoding on the new property list */
     if (H5P_set(new_plist, H5P_STRCRT_CHAR_ENCODING_NAME, &(attr->shared->encoding)) < 0)
-        HGOTO_ERROR(H5E_ATTR, H5E_CANTSET, H5I_INVALID_HID, "can't set character encoding");
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set character encoding");
 
-    ret_value = H5P_PLIST_ID(new_plist);
+    ret_value = new_plist_id;
 
 done:
-    if (ret_value < 0)
-        if (new_plist && H5P_release(new_plist) < 0)
-            HDONE_ERROR(H5E_ATTR, H5E_CANTCLOSEOBJ, H5I_INVALID_HID, "can't free property list");
-
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5A__get_create_plist() */
 

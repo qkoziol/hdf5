@@ -472,7 +472,7 @@ H5T__commit(H5F_t *file, H5T_t *type, hid_t tcpl_id)
      * Create the object header and open it for write access. Insert the data
      * type message and then give the object header a name.
      */
-    if (H5O_create_id(file, dtype_size, (size_t)1, tcpl_id, &temp_oloc) < 0)
+    if (H5O_create(file, dtype_size, (size_t)1, tcpl_id, &temp_oloc) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINIT, FAIL, "unable to create datatype object header");
     ohdr_created = true;
 
@@ -776,13 +776,12 @@ H5Tget_create_plist(hid_t dtype_id)
     if (false == is_named) {
         H5P_genplist_t *tcpl_plist = NULL;
 
-        /* Create the property list object to return */
-        if (NULL == (tcpl_plist = H5P_new_plist_of_type(H5P_TYPE_DATATYPE_CREATE, true)))
-            HGOTO_ERROR(H5E_DATATYPE, H5E_CANTCREATE, H5I_INVALID_HID,
-                        "unable to create datatype creation property list");
-
-        /* Set return value */
-        ret_value = H5P_PLIST_ID(tcpl_plist);
+        /* Copy the default datatype creation property list */
+        if (NULL == (tcpl_plist = (H5P_genplist_t *)H5I_object(H5P_LST_DATATYPE_CREATE_ID_g)))
+            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "can't get default creation property list");
+        if ((ret_value = H5P_copy_plist(tcpl_plist, true)) < 0)
+            HGOTO_ERROR(H5E_DATATYPE, H5E_CANTGET, H5I_INVALID_HID,
+                        "unable to copy the creation property list");
     } /* end if */
     /* If the datatype is committed, retrieve further information */
     else {
@@ -923,7 +922,7 @@ H5T__get_create_plist(const H5T_t *type)
     /* Copy the default datatype creation property list */
     if (NULL == (tcpl_plist = (H5P_genplist_t *)H5I_object(H5P_LST_DATATYPE_CREATE_ID_g)))
         HGOTO_ERROR(H5E_DATATYPE, H5E_BADTYPE, H5I_INVALID_HID, "can't get default creation property list");
-    if ((new_tcpl_id = H5P_copy_plist_id(tcpl_plist, true)) < 0)
+    if ((new_tcpl_id = H5P_copy_plist(tcpl_plist, true)) < 0)
         HGOTO_ERROR(H5E_DATATYPE, H5E_CANTGET, H5I_INVALID_HID, "unable to copy the creation property list");
 
     /* Get property list object for new TCPL */

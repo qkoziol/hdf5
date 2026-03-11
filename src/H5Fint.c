@@ -367,7 +367,8 @@ done:
 hid_t
 H5F_get_access_plist(H5F_t *f, bool app_ref)
 {
-    H5P_genplist_t       *new_plist = NULL;           /* New property list */
+    H5P_genplist_t       *new_plist;                  /* New property list */
+    H5P_genplist_t       *old_plist;                  /* Old property list */
     H5FD_driver_prop_t    driver_prop;                /* Property for driver ID & info */
     bool                  driver_prop_copied = false; /* Whether the driver property has been set up */
     H5VL_connector_prop_t connector_prop;             /* Property for VOL connector ID & info */
@@ -379,9 +380,13 @@ H5F_get_access_plist(H5F_t *f, bool app_ref)
     /* Check args */
     assert(f);
 
-    /* Create the property list object to return */
-    if (NULL == (new_plist = H5P_new_plist_of_type(H5P_TYPE_FILE_ACCESS, app_ref)))
-        HGOTO_ERROR(H5E_FILE, H5E_CANTCREATE, H5I_INVALID_HID, "unable to create file access property list");
+    /* Make a copy of the default file access property list */
+    if (NULL == (old_plist = (H5P_genplist_t *)H5I_object(H5P_LST_FILE_ACCESS_ID_g)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a property list");
+    if ((ret_value = H5P_copy_plist(old_plist, app_ref)) < 0)
+        HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, H5I_INVALID_HID, "can't copy file access property list");
+    if (NULL == (new_plist = (H5P_genplist_t *)H5I_object(ret_value)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a property list");
 
     /* Copy properties of the file access property list */
     if (H5P_set(new_plist, H5F_ACS_META_CACHE_INIT_CONFIG_NAME, &(f->shared->mdc_initCacheCfg)) < 0)
@@ -469,7 +474,7 @@ H5F_get_access_plist(H5F_t *f, bool app_ref)
     /* Prepare the driver property */
     driver_prop.driver_id         = f->shared->lf->driver_id;
     driver_prop.driver_info       = H5FD_fapl_get(f->shared->lf);
-    driver_prop.driver_config_str = H5P_peek_driver_config_str(new_plist);
+    driver_prop.driver_config_str = H5P_peek_driver_config_str(old_plist);
     driver_prop_copied            = true;
 
     /* Set the driver property */
@@ -490,17 +495,10 @@ H5F_get_access_plist(H5F_t *f, bool app_ref)
              H5P_set(new_plist, H5F_ACS_CLOSE_DEGREE_NAME, &(f->shared->fc_degree)) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, H5I_INVALID_HID, "can't set file close degree");
 
-    /* Set return value */
-    ret_value = H5P_PLIST_ID(new_plist);
-
 done:
     /* Release the copy of the driver info, if it was set up */
     if (driver_prop_copied && H5FD_free_driver_info(driver_prop.driver_id, driver_prop.driver_info) < 0)
         HDONE_ERROR(H5E_FILE, H5E_CANTCLOSEOBJ, H5I_INVALID_HID, "can't close copy of driver info");
-
-    if (ret_value < 0)
-        if (new_plist && H5P_release(new_plist) < 0)
-            HDONE_ERROR(H5E_FILE, H5E_CANTCLOSEOBJ, H5I_INVALID_HID, "can't free property list");
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5F_get_access_plist() */
@@ -1184,7 +1182,7 @@ H5F__new(H5F_shared_t *shared, unsigned flags, hid_t fcpl_id, hid_t fapl_id, H5F
          */
         if (NULL == (plist = (H5P_genplist_t *)H5I_object(fcpl_id)))
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not property list");
-        f->shared->fcpl_id = H5P_copy_plist_id(plist, false);
+        f->shared->fcpl_id = H5P_copy_plist(plist, false);
 
         /* Get the FCPL values to cache */
         if (H5P_get(plist, H5F_CRT_ADDR_BYTE_NUM_NAME, &f->shared->sizeof_addr) < 0)
@@ -2872,7 +2870,7 @@ H5F__build_actual_name(const H5F_t *f, const H5P_genplist_t *fapl, const char *n
              */
 
             /* Copy the FAPL object to modify */
-            if ((new_fapl_id = H5P_copy_plist_id(fapl, false)) < 0)
+            if ((new_fapl_id = H5P_copy_plist(fapl, false)) < 0)
                 HGOTO_ERROR(H5E_FILE, H5E_CANTCOPY, FAIL, "unable to copy file access property list");
             if (NULL == (new_fapl = (H5P_genplist_t *)H5I_object(new_fapl_id)))
                 HGOTO_ERROR(H5E_FILE, H5E_CANTCREATE, FAIL, "can't get property list");

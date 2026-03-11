@@ -181,7 +181,7 @@ H5VL__native_file_get(void *obj, H5VL_file_get_args_t *args, hid_t H5_ATTR_UNUSE
                 HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
 
             /* Create the property list object to return */
-            if ((args->args.get_fcpl.fcpl_id = H5P_copy_plist_id(plist, true)) < 0)
+            if ((args->args.get_fcpl.fcpl_id = H5P_copy_plist(plist, true)) < 0)
                 HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, FAIL, "unable to copy file creation properties");
 
             break;

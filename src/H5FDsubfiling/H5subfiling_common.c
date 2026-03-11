@@ -491,6 +491,7 @@ H5FD__subfiling_open_stub_file(const char *name, unsigned flags, MPI_Comm file_c
     uint64_t        stub_file_id  = UINT64_MAX;
     bool            bcasted_inode = false;
     H5FD_t         *stub_file     = NULL;
+    hid_t           fapl_id       = H5I_INVALID_HID;
     int             mpi_rank      = 0;
     int             mpi_size      = 1;
     int             mpi_code;
@@ -519,9 +520,10 @@ H5FD__subfiling_open_stub_file(const char *name, unsigned flags, MPI_Comm file_c
         MPI_Comm  stub_comm = MPI_COMM_SELF;
         MPI_Info  stub_info = MPI_INFO_NULL;
 
-        /* Create new file access property list */
-        if (NULL == (plist = H5P_new_plist_of_type(H5P_TYPE_FILE_ACCESS, false)))
-            HGOTO_ERROR(H5E_VFL, H5E_CANTCREATE, FAIL, "can't create FAPL for stub file");
+        if ((fapl_id = H5P_create_id(H5P_CLS_FILE_ACCESS_g, false)) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTREGISTER, FAIL, "can't create FAPL for stub file");
+        if (NULL == (plist = H5P_object_verify(fapl_id, H5P_FILE_ACCESS, true)))
+            HGOTO_ERROR(H5E_VFL, H5E_BADTYPE, FAIL, "not a file access property list");
 
         /* Use MPI I/O driver for stub file to allow access to vector I/O */
         if (H5P_set(plist, H5F_ACS_MPI_PARAMS_COMM_NAME, &stub_comm) < 0)
@@ -531,7 +533,7 @@ H5FD__subfiling_open_stub_file(const char *name, unsigned flags, MPI_Comm file_c
         if (H5P_set_driver(plist, H5FD_MPIO, NULL, NULL) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set MPI I/O driver on FAPL");
 
-        if (H5FD_open(false, &stub_file, name, flags, H5P_PLIST_ID(plist), HADDR_UNDEF) < 0)
+        if (H5FD_open(false, &stub_file, name, flags, fapl_id, HADDR_UNDEF) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, FAIL, "couldn't open HDF5 stub file");
 
         HDcompile_assert(sizeof(uint64_t) >= sizeof(ino_t));
@@ -558,8 +560,8 @@ H5FD__subfiling_open_stub_file(const char *name, unsigned flags, MPI_Comm file_c
     *file_id = stub_file_id;
 
 done:
-    if (plist && H5P_release(plist) < 0)
-        HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "can't close FAPL ID");
+    if (fapl_id >= 0 && H5I_dec_ref(fapl_id) < 0)
+        HDONE_ERROR(H5E_VFL, H5E_CANTDEC, FAIL, "can't close FAPL ID");
 
     if (ret_value < 0) {
         if (!bcasted_inode && (mpi_size > 1))

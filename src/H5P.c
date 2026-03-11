@@ -103,7 +103,7 @@ H5Pcopy(hid_t id)
 
     /* Compare property lists */
     if (H5I_GENPROP_LST == H5I_get_type(id)) {
-        if ((ret_value = H5P_copy_plist_id((H5P_genplist_t *)obj, true)) < 0)
+        if ((ret_value = H5P_copy_plist((H5P_genplist_t *)obj, true)) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTCOPY, H5I_INVALID_HID, "can't copy property list");
     } /* end if */
     /* Must be property classes */
@@ -228,21 +228,17 @@ hid_t
 H5Pcreate(hid_t cls_id)
 {
     H5P_genclass_t *pclass;                      /* Property list class to modify */
-    H5P_genplist_t *plist;                       /* Property list created */
     hid_t           ret_value = H5I_INVALID_HID; /* return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
-    /* Check arguments */
+    /* Check arguments. */
     if (NULL == (pclass = (H5P_genclass_t *)H5I_object_verify(cls_id, H5I_GENPROP_CLS)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a property list class");
 
     /* Create the new property list */
-    if (NULL == (plist = H5P__create(pclass, true)))
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTCREATE, H5I_INVALID_HID, "unable to decode property list");
-
-    /* Set the return value */
-    ret_value = plist->plist_id;
+    if ((ret_value = H5P_create_id(pclass, true)) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTCREATE, H5I_INVALID_HID, "unable to create property list");
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -861,17 +857,13 @@ done:
 hid_t
 H5Pdecode(const void *buf)
 {
-    H5P_genplist_t *plist;                       /* Property list created */
-    hid_t           ret_value = H5I_INVALID_HID; /* Return value */
+    hid_t ret_value = H5I_INVALID_HID; /* return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
     /* Call the internal decode routine */
-    if (NULL == (plist = H5P__decode(buf)))
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTCREATE, H5I_INVALID_HID, "unable to create property list");
-
-    /* Set the return value */
-    ret_value = plist->plist_id;
+    if ((ret_value = H5P__decode(buf)) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTDECODE, H5I_INVALID_HID, "unable to decode property list");
 
 done:
     FUNC_LEAVE_API(ret_value)

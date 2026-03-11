@@ -176,7 +176,7 @@ H5Gcreate1(hid_t loc_id, const char *name, size_t size_hint)
             HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a property list");
 
         /* Make a copy of the default property list */
-        if ((tmp_gcpl = H5P_copy_plist_id(gc_plist, false)) < 0)
+        if ((tmp_gcpl = H5P_copy_plist(gc_plist, false)) < 0)
             HGOTO_ERROR(H5E_SYM, H5E_CANTGET, H5I_INVALID_HID, "unable to copy the creation property list");
 
         /* Get pointer to the copied property list */

@@ -697,8 +697,8 @@ done:
     H5P_genplist_t *H5P__decode(buf)
         const void *buf;    IN: buffer that holds the encoded plist
  RETURNS
-    Success: pointer to valid property list on success (non-NULL)
-    Failure: NULL
+    Returns non-negative ID of new property list object on success, negative
+        on failure.
  DESCRIPTION
      Decodes a property list from a binary buffer. The contents of the buffer
      contain the values for the corresponding properties of the plist. The decode
@@ -711,37 +711,42 @@ done:
  EXAMPLES
  REVISION LOG
 --------------------------------------------------------------------------*/
-H5P_genplist_t *
+hid_t
 H5P__decode(const void *buf)
 {
-    H5P_genplist_t  *plist     = NULL;                 /* Property list to decode into */
+    H5P_genplist_t  *plist;                            /* Property list to decode into */
     void            *value_buf = NULL;                 /* Pointer to buffer to use when decoding values */
     const uint8_t   *p         = (const uint8_t *)buf; /* Current pointer into buffer */
     H5P_plist_type_t type;                             /* Type of encoded property list */
+    hid_t            plist_id       = -1;              /* ID of new property list */
     size_t           value_buf_size = 0;               /* Size of current value buffer */
     uint8_t          vers;                             /* Version of encoded property list */
-    H5P_genplist_t  *ret_value = NULL;                 /* Return value */
+    hid_t            ret_value = H5I_INVALID_HID;      /* Return value */
 
     FUNC_ENTER_PACKAGE
 
     /* Sanity check */
     if (NULL == p)
-        HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, NULL, "decode buffer is NULL");
+        HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "decode buffer is NULL");
 
     /* Get the version number of the encoded property list */
     vers = (uint8_t)*p++;
     if ((uint8_t)H5P_ENCODE_VERS != vers)
-        HGOTO_ERROR(H5E_PLIST, H5E_VERSION, NULL, "bad version # of encoded information, expected %u, got %u",
+        HGOTO_ERROR(H5E_PLIST, H5E_VERSION, FAIL, "bad version # of encoded information, expected %u, got %u",
                     (unsigned)H5P_ENCODE_VERS, (unsigned)vers);
 
     /* Get the type of the property list */
     type = (H5P_plist_type_t)*p++;
     if (type <= H5P_TYPE_USER || type >= H5P_TYPE_MAX_TYPE)
-        HGOTO_ERROR(H5E_PLIST, H5E_BADRANGE, NULL, "bad type of encoded information: %u", (unsigned)type);
+        HGOTO_ERROR(H5E_PLIST, H5E_BADRANGE, FAIL, "bad type of encoded information: %u", (unsigned)type);
 
     /* Create new property list of the specified type */
-    if (NULL == (plist = H5P_new_plist_of_type(type, true)))
-        HGOTO_ERROR(H5E_PLIST, H5E_VERSION, NULL, "can't create property list of type: %u\n", (unsigned)type);
+    if ((plist_id = H5P__new_plist_of_type(type)) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_VERSION, FAIL, "can't create property list of type: %u\n", (unsigned)type);
+
+    /* Get the property list object */
+    if (NULL == (plist = (H5P_genplist_t *)H5I_object(plist_id)))
+        HGOTO_ERROR(H5E_PLIST, H5E_BADTYPE, FAIL, "not a property class");
 
     /* Loop over encoded properties, deserializing their values */
     while (p) {
@@ -758,39 +763,37 @@ H5P__decode(const void *buf)
 
         /* Find property with name */
         if (NULL == (prop = H5P__find_prop_plist(plist, name)))
-            HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, NULL, "property doesn't exist: '%s'", name);
+            HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, FAIL, "property doesn't exist: '%s'", name);
 
         /* Check if we should increase the size of the value buffer */
         if (prop->size > value_buf_size) {
             if (NULL == (value_buf = H5MM_realloc(value_buf, prop->size)))
-                HGOTO_ERROR(H5E_PLIST, H5E_CANTALLOC, NULL, "decoding buffer allocation failed");
+                HGOTO_ERROR(H5E_PLIST, H5E_CANTALLOC, FAIL, "decoding buffer allocation failed");
             value_buf_size = prop->size;
         } /* end if */
 
         /* Decode serialized value */
         if (prop->decode) {
-            herr_t status;
-
             /* Prepare & restore library for user callback */
-            H5_BEFORE_USER_CB(NULL)
+            H5_BEFORE_USER_CB(FAIL)
                 {
-                    status = (prop->decode)((const void **)&p, value_buf);
+                    ret_value = (prop->decode)((const void **)&p, value_buf);
                 }
-            H5_AFTER_USER_CB(NULL)
-            if (status < 0)
-                HGOTO_ERROR(H5E_PLIST, H5E_CANTDECODE, NULL,
+            H5_AFTER_USER_CB(FAIL)
+            if (ret_value < 0)
+                HGOTO_ERROR(H5E_PLIST, H5E_CANTDECODE, FAIL,
                             "property decoding routine failed, property: '%s'", name);
         } /* end if */
         else
-            HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, NULL, "no decode callback for property: '%s'", name);
+            HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, FAIL, "no decode callback for property: '%s'", name);
 
         /* Set the value for the property */
         if (H5P_poke(plist, name, value_buf) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, NULL, "unable to set value for property: '%s'", name);
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "unable to set value for property: '%s'", name);
     } /* end while */
 
     /* Set return value */
-    ret_value = plist;
+    ret_value = plist_id;
 
 done:
     /* Release resources */
@@ -798,10 +801,11 @@ done:
         value_buf = H5MM_xfree(value_buf);
 
     /* Cleanup on error */
-    if (NULL == ret_value)
-        if (plist && H5P_release(plist) < 0)
-            HDONE_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, NULL,
+    if (ret_value < 0) {
+        if (plist_id > 0 && H5I_dec_ref(plist_id) < 0)
+            HDONE_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, FAIL,
                         "unable to close partially initialized property list");
+    } /* end if */
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5P__decode() */
