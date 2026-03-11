@@ -42,7 +42,7 @@
 /* Setup/teardown routines */
 static herr_t H5D__ioinfo_init(size_t count, H5D_io_op_type_t op_type, H5D_dset_io_info_t *dset_info,
                                H5D_io_info_t *io_info);
-static herr_t H5D__dset_ioinfo_init(H5D_t *dset, H5D_dset_io_info_t *dset_info, H5D_storage_t *store);
+static herr_t H5D__dset_ioinfo_init(H5D_dset_io_info_t *dset_info, H5D_storage_t *store);
 static herr_t H5D__typeinfo_init(H5D_io_info_t *io_info, H5D_dset_io_info_t *dset_info,
                                  const H5T_t *mem_type);
 static herr_t H5D__typeinfo_init_phase2(H5D_io_info_t *io_info);
@@ -229,7 +229,7 @@ H5D__read(size_t count, H5D_dset_io_info_t *dset_info)
         } /* end if */
 
         /* Set up I/O operation */
-        if (H5D__dset_ioinfo_init(dset_info[i].dset, &(dset_info[i]), &(store[i])) < 0)
+        if (H5D__dset_ioinfo_init(&dset_info[i], &store[i]) < 0)
             HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, FAIL, "unable to set up I/O operation");
 
         /* Check if any filters are applied to the dataset */
@@ -682,7 +682,7 @@ H5D__write(size_t count, H5D_dset_io_info_t *dset_info)
         /* <none needed currently> */
 
         /* Set up I/O operation */
-        if (H5D__dset_ioinfo_init(dset_info[i].dset, &(dset_info[i]), &(store[i])) < 0)
+        if (H5D__dset_ioinfo_init(&dset_info[i], &store[i]) < 0)
             HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, FAIL, "unable to set up I/O operation");
 
         /* Check if any filters are applied to the dataset */
@@ -992,7 +992,7 @@ H5D__ioinfo_init(size_t count, H5D_io_op_type_t op_type, H5D_dset_io_info_t *dse
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5D__dset_ioinfo_init(H5D_t *dset, H5D_dset_io_info_t *dset_info, H5D_storage_t *store)
+H5D__dset_ioinfo_init(H5D_dset_io_info_t *dset_info, H5D_storage_t *store)
 {
     FUNC_ENTER_PACKAGE_NOERR
 
@@ -1002,7 +1002,6 @@ H5D__dset_ioinfo_init(H5D_t *dset, H5D_dset_io_info_t *dset_info, H5D_storage_t 
     assert(dset_info->type_info.tpath);
 
     /* Set up "normal" I/O fields */
-    dset_info->dset  = dset;
     dset_info->store = store;
 
     /* Set I/O operations to initial values */
