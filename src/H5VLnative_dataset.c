@@ -258,7 +258,6 @@ H5VL__native_dataset_create(void *obj, const H5VL_loc_params_t *loc_params, cons
     H5D_t          *dset = NULL; /* New dataset's info */
     const H5S_t    *space;       /* Dataspace for dataset */
     H5P_genplist_t *dcpl;        /* Dataset creation property list */
-    H5P_genplist_t *dapl;        /* Dataset access property list */
     void           *ret_value;
 
     FUNC_ENTER_PACKAGE
@@ -272,19 +271,17 @@ H5VL__native_dataset_create(void *obj, const H5VL_loc_params_t *loc_params, cons
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a dataspace ID");
     if (NULL == (dcpl = H5I_object(dcpl_id)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a property list");
-    if (NULL == (dapl = H5I_object(dapl_id)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a property list");
 
     /* H5Dcreate_anon */
     if (NULL == name) {
         /* build and open the new dataset */
-        if (NULL == (dset = H5D__create(loc.oloc->file, type_id, space, dcpl, dapl)))
+        if (NULL == (dset = H5D__create(loc.oloc->file, type_id, space, dcpl, dapl_id)))
             HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, NULL, "unable to create dataset");
     } /* end if */
     /* H5Dcreate2 */
     else {
         /* Create the new dataset & get its ID */
-        if (NULL == (dset = H5D__create_named(&loc, name, type_id, space, lcpl_id, dcpl, dapl)))
+        if (NULL == (dset = H5D__create_named(&loc, name, type_id, space, lcpl_id, dcpl, dapl_id)))
             HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, NULL, "unable to create dataset");
     } /* end else */
 
@@ -324,10 +321,9 @@ void *
 H5VL__native_dataset_open(void *obj, const H5VL_loc_params_t *loc_params, const char *name, hid_t dapl_id,
                           hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
-    H5D_t          *dset = NULL;
-    H5P_genplist_t *dapl; /* Dataset access property list */
-    H5G_loc_t       loc;  /* Object location of group */
-    void           *ret_value = NULL;
+    H5D_t    *dset = NULL;
+    H5G_loc_t loc; /* Object location of group */
+    void     *ret_value = NULL;
 
     FUNC_ENTER_PACKAGE
 
@@ -335,9 +331,7 @@ H5VL__native_dataset_open(void *obj, const H5VL_loc_params_t *loc_params, const 
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file or file object");
 
     /* Open the dataset */
-    if (NULL == (dapl = H5I_object(dapl_id)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a property list");
-    if (NULL == (dset = H5D__open_name(&loc, name, dapl)))
+    if (NULL == (dset = H5D__open_name(&loc, name, dapl_id)))
         HGOTO_ERROR(H5E_DATASET, H5E_CANTOPENOBJ, NULL, "unable to open dataset");
 
     ret_value = (void *)dset;
@@ -496,11 +490,8 @@ H5VL__native_dataset_get(void *obj, H5VL_dataset_get_args_t *args, hid_t H5_ATTR
 
         /* H5Dget_access_plist */
         case H5VL_DATASET_GET_DAPL: {
-            H5P_genplist_t *dapl;
-
-            if (NULL == (dapl = H5D_get_access_plist(dset)))
+            if ((args->args.get_dapl.dapl_id = H5D_get_access_plist(dset)) < 0)
                 HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get access property list for dataset");
-            args->args.get_dapl.dapl_id = H5P_PLIST_ID(dapl);
 
             break;
         }

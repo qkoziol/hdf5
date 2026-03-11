@@ -198,7 +198,7 @@ typedef struct H5CX_dcpl_cache_t {
 } H5CX_dcpl_cache_t;
 
 /* Typedef for cached default dataset access property list information */
-/* (Same as the cached DXPL struct, above, except for the default DAPL) */
+/* (Same as the cached DXPL struct, above, except for the default DXPL) */
 typedef struct H5CX_dapl_cache_t {
     const char *extfile_prefix; /* Prefix for external file */
     const char *vds_prefix;     /* Prefix for VDS           */
@@ -268,7 +268,7 @@ H5CX__init_package(void)
     H5P_genplist_t *lc_plist;            /* Link creation property list */
     H5P_genplist_t *la_plist;            /* Link access property list */
     H5P_genplist_t *dcpl;                /* Dataset creation property list */
-    H5P_genplist_t *dapl;                /* Dataset access property list */
+    H5P_genplist_t *da_plist;            /* Dataset access property list */
     H5P_genplist_t *fa_plist;            /* File access property list */
     herr_t          ret_value = SUCCEED; /* Return value */
 
@@ -430,15 +430,15 @@ H5CX__init_package(void)
     /* Get the default DAPL cache information */
 
     /* Get the default dataset access property list */
-    if (NULL == (dapl = (H5P_genplist_t *)H5I_object(H5P_DATASET_ACCESS_DEFAULT)))
+    if (NULL == (da_plist = (H5P_genplist_t *)H5I_object(H5P_DATASET_ACCESS_DEFAULT)))
         HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "not a dataset create property list");
 
     /* Get the prefix for the external file */
-    if (H5P_peek(dapl, H5D_ACS_EFILE_PREFIX_NAME, &H5CX_def_dapl_cache.extfile_prefix) < 0)
+    if (H5P_peek(da_plist, H5D_ACS_EFILE_PREFIX_NAME, &H5CX_def_dapl_cache.extfile_prefix) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve prefix for external file");
 
     /* Get the prefix for the VDS file */
-    if (H5P_peek(dapl, H5D_ACS_VDS_PREFIX_NAME, &H5CX_def_dapl_cache.vds_prefix) < 0)
+    if (H5P_peek(da_plist, H5D_ACS_VDS_PREFIX_NAME, &H5CX_def_dapl_cache.vds_prefix) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve prefix for VDS");
 
     /* Reset the "default FAPL cache" information */
@@ -960,6 +960,32 @@ H5CX_set_lcpl(hid_t lcpl_id)
 
     FUNC_LEAVE_NOAPI_VOID
 } /* end H5CX_set_lcpl() */
+
+/*-------------------------------------------------------------------------
+ * Function:    H5CX_set_lapl
+ *
+ * Purpose:     Sets the LAPL for the current API call context.
+ *
+ * Return:      <none>
+ *
+ *-------------------------------------------------------------------------
+ */
+void
+H5CX_set_lapl(hid_t lapl_id)
+{
+    H5CX_node_t **head = NULL; /* Pointer to head of API context list */
+
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    /* Sanity check */
+    head = H5CX_get_my_context(); /* Get the pointer to the head of the API context, for this thread */
+    assert(head && *head);
+
+    /* Set the API context's LAPL to a new value */
+    (*head)->ctx.lapl_id = lapl_id;
+
+    FUNC_LEAVE_NOAPI_VOID
+} /* end H5CX_set_lapl() */
 
 /*-------------------------------------------------------------------------
  * Function:    H5CX_set_apl

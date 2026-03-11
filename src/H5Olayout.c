@@ -540,14 +540,14 @@ H5O__layout_decode(H5F_t *f, H5O_t H5_ATTR_UNUSED *open_oh, unsigned H5_ATTR_UNU
                 UINT32DECODE(p, mesg->storage.u.virt.serial_list_hobjid.idx);
 
                 /* Initialize other fields */
-                mesg->storage.u.virt.list_nused     = 0;
-                mesg->storage.u.virt.list           = NULL;
-                mesg->storage.u.virt.list_nalloc    = 0;
-                mesg->storage.u.virt.view           = H5D_VDS_ERROR;
-                mesg->storage.u.virt.printf_gap     = HSIZE_UNDEF;
-                mesg->storage.u.virt.source_fapl_id = H5I_INVALID_HID;
-                mesg->storage.u.virt.source_dapl    = NULL;
-                mesg->storage.u.virt.init           = false;
+                mesg->storage.u.virt.list_nused  = 0;
+                mesg->storage.u.virt.list        = NULL;
+                mesg->storage.u.virt.list_nalloc = 0;
+                mesg->storage.u.virt.view        = H5D_VDS_ERROR;
+                mesg->storage.u.virt.printf_gap  = HSIZE_UNDEF;
+                mesg->storage.u.virt.source_fapl = -1;
+                mesg->storage.u.virt.source_dapl = -1;
+                mesg->storage.u.virt.init        = false;
 
                 /* Set the layout operations */
                 mesg->ops = H5D_LOPS_VIRTUAL;
