@@ -19,7 +19,6 @@ import static org.junit.Assert.fail;
 import hdf.hdf5lib.H5;
 import hdf.hdf5lib.HDF5Constants;
 import hdf.hdf5lib.exceptions.HDF5FunctionArgumentException;
-import hdf.hdf5lib.exceptions.HDF5IdException;
 import hdf.hdf5lib.exceptions.HDF5LibraryException;
 
 import org.junit.After;
@@ -259,7 +258,7 @@ public class TestH5Edefault {
         H5.H5Eclose_stack(-1);
     }
 
-    @Test(expected = HDF5IdException.class)
+    @Test(expected = HDF5FunctionArgumentException.class)
     public void testH5Eget_class_name_invalid_classid() throws Throwable
     {
         H5.H5Eget_class_name(-1);
@@ -277,13 +276,13 @@ public class TestH5Edefault {
         H5.H5Eclose_msg(-1);
     }
 
-    @Test(expected = HDF5IdException.class)
+    @Test(expected = HDF5FunctionArgumentException.class)
     public void testH5Ecreate_msg_invalid_errid() throws Throwable
     {
         H5.H5Ecreate_msg(-1, HDF5Constants.H5E_MAJOR, "null");
     }
 
-    @Test(expected = HDF5IdException.class)
+    @Test(expected = HDF5FunctionArgumentException.class)
     public void testH5Eget_msg_invalid_msgid() throws Throwable
     {
         int[] error_msg_type = {HDF5Constants.H5E_MAJOR};
@@ -304,7 +303,7 @@ public class TestH5Edefault {
         }
     }
 
-    @Test(expected = HDF5IdException.class)
+    @Test(expected = HDF5FunctionArgumentException.class)
     public void testH5Eset_current_stack_invalid_stkid() throws Throwable
     {
         H5.H5Eset_current_stack(-1);
@@ -409,7 +408,7 @@ public class TestH5Edefault {
         assertTrue("H5.H5Eset_current_stack: get_num - " + num_msg, num_msg == saved_num_msg);
     }
 
-    @Test(expected = HDF5IdException.class)
+    @Test(expected = HDF5FunctionArgumentException.class)
     public void testH5Epop_invalid_stkid() throws Throwable
     {
         H5.H5Epop(-1, 0);
@@ -502,7 +501,7 @@ public class TestH5Edefault {
         }
     }
 
-    @Test(expected = HDF5IdException.class)
+    @Test(expected = HDF5FunctionArgumentException.class)
     public void testH5Eclear2_invalid_stkid() throws Throwable
     {
         H5.H5Eclear2(-1);
@@ -548,7 +547,7 @@ public class TestH5Edefault {
         assertTrue("H5.H5Eclear2_with_msg after #:" + num_msg, num_msg == 0);
     }
 
-    @Test(expected = HDF5IdException.class)
+    @Test(expected = HDF5FunctionArgumentException.class)
     public void testH5Eauto_is_v2_invalid_stkid() throws Throwable
     {
         H5.H5Eauto_is_v2(-1);
@@ -568,7 +567,7 @@ public class TestH5Edefault {
         assertTrue("H5.H5Eauto_is_v2: ", is_v2);
     }
 
-    @Test(expected = HDF5IdException.class)
+    @Test(expected = HDF5FunctionArgumentException.class)
     public void testH5Eget_num_invalid_stkid() throws Throwable
     {
         H5.H5Eget_num(-1);

@@ -76,8 +76,8 @@ typedef struct H5I_id_info_t {
     H5I_future_discard_func_t discard_cb; /* 'discard' callback for future object */
 
 #ifdef H5_HAVE_CONCURRENCY
-    H5TS_dlftt_rwlock_t lock;      /* Guard the ID info struct */
-    bool                lock_init; /* Whether the lock has been initialized */
+    H5TS_dlftt_mutex_t mutex;      /* Guard the ID info struct */
+    bool               mutex_init; /* Whether the mutex has been initialized */
 #endif                             /* H5_HAVE_CONCURRENCY */
 
     /* Hash table ID fields */
@@ -86,10 +86,14 @@ typedef struct H5I_id_info_t {
 
 /* Type information structure used */
 typedef struct H5I_type_info_t {
+#ifdef H5_HAVE_CONCURRENCY
+    H5TS_dlftt_mutex_t mutex;      /* Guard the type info struct */
+    bool               mutex_init; /* Whether the mutex has been initialized */
+#endif                             /* H5_HAVE_CONCURRENCY */
+
     const H5I_class_t *cls;          /* Pointer to ID class */
     unsigned           init_count;   /* # of times this type has been initialized */
     uint64_t           id_count;     /* Current number of IDs held */
-    uint64_t           num_fut_ids;  /* Number of IDs which are future IDs */
     uint64_t           nextid;       /* ID to use for the next object */
     unsigned           iterating;    /* Whether the type is being iterated */
     unsigned           gen;          /* Generation count for type */
@@ -100,8 +104,8 @@ typedef struct H5I_type_info_t {
 /* Elements for global type info array */
 typedef struct {
 #ifdef H5_HAVE_CONCURRENCY
-    H5TS_dlftt_rwlock_t lock;      /* Guard the type info pointer */
-    bool                lock_init; /* Whether the lock has been initialized */
+    H5TS_dlftt_mutex_t mutex;      /* Guard the type info pointer */
+    bool               mutex_init; /* Whether the mutex has been initialized */
 #endif                             /* H5_HAVE_CONCURRENCY */
 
     H5I_type_info_t *type_info; /* Pointer to type info object */
@@ -131,18 +135,17 @@ H5_DLLVAR int H5I_next_type_g;
 /* Package Private Prototypes */
 /******************************/
 
-H5_DLL hid_t  H5I__register(H5I_type_t type, const void *object, bool app_ref,
-                            H5I_future_realize_func_t realize_cb, H5I_future_discard_func_t discard_cb);
-H5_DLL int    H5I__destroy_type(H5I_type_t type);
-H5_DLL void  *H5I__remove_verify(hid_t id, H5I_type_t type);
-H5_DLL int    H5I__inc_type_ref(H5I_type_t type);
-H5_DLL int    H5I__get_type_ref(H5I_type_t type);
-H5_DLL herr_t H5I__is_id_valid(hid_t id, bool *is_valid);
-H5_DLL htri_t H5I__is_type_valid(H5I_type_t type);
-H5_DLL herr_t H5I__type_info_wrlock(H5I_type_t type);
-H5_DLL herr_t H5I__type_info_rdlock(H5I_type_t type);
-H5_DLL herr_t H5I__type_info_wrunlock(H5I_type_t type);
-H5_DLL herr_t H5I__type_info_rdunlock(H5I_type_t type);
+H5_DLL hid_t          H5I__register(H5I_type_t type, const void *object, bool app_ref,
+                                    H5I_future_realize_func_t realize_cb, H5I_future_discard_func_t discard_cb);
+H5_DLL int            H5I__destroy_type(H5I_type_t type);
+H5_DLL void          *H5I__remove_verify(hid_t id, H5I_type_t type);
+H5_DLL int            H5I__inc_type_ref(H5I_type_t type);
+H5_DLL int            H5I__get_type_ref(H5I_type_t type);
+H5_DLL H5I_id_info_t *H5I__find_id(hid_t id);
+H5_DLL htri_t         H5I__is_type_valid(H5I_type_t type);
+H5_DLL herr_t         H5I__type_info_acquire(H5I_type_t type);
+H5_DLL herr_t         H5I__type_info_release(H5I_type_t type);
+H5_DLL herr_t         H5I__id_info_release(H5I_id_info_t *info);
 
 /* Testing functions */
 #ifdef H5I_TESTING

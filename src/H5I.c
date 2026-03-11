@@ -619,19 +619,22 @@ done:
 htri_t
 H5Iis_valid(hid_t id)
 {
-    bool   is_valid  = false; /* Whether ID is valid */
-    htri_t ret_value = true;  /* Return value */
+    H5I_id_info_t *info      = NULL; /* Pointer to the ID info */
+    htri_t         ret_value = true; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
-    /* Check the ID */
-    if (H5I__is_id_valid(id, &is_valid) < 0)
-        HGOTO_ERROR(H5E_ID, H5E_CANTGET, FAIL, "can't check if ID is valid");
-
-    /* Set return value */
-    ret_value = is_valid;
+    /* Find the ID */
+    if (NULL == (info = H5I__find_id(id)))
+        ret_value = false;
+    else if (!info->app_count) /* Check if the found id is an internal id */
+        ret_value = false;
 
 done:
+    /* Release exclusive access for the ID, if still held */
+    if (info && H5I__id_info_release(info) < 0)
+        HDONE_ERROR(H5E_ID, H5E_CANTUNLOCK, FAIL, "can't release lock on ID");
+
     FUNC_LEAVE_API(ret_value)
 } /* end H5Iis_valid() */
 

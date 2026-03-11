@@ -311,13 +311,6 @@ typedef struct H5TS_dlftt_mutex_t {
     unsigned     rc;     /* Refcount of locks bypassed */
 } H5TS_dlftt_mutex_t;
 
-/* R/W lock that efficiently obeys the "DLFTT" locking protocol */
-typedef struct H5TS_dlftt_rwlock_t {
-    H5TS_rwlock_t lck;    /* Underlying R/W lock */
-    bool          bypass; /* Whether locking is being bypassed (due to DLFTT protocol) */
-    unsigned      rc;     /* Refcount of locks bypassed */
-} H5TS_dlftt_rwlock_t;
-
 /*****************************/
 /* Library-private Variables */
 /*****************************/
@@ -381,11 +374,6 @@ static inline herr_t H5TS_rwlock_wrlock_downgrade(H5TS_rwlock_t *lock);
 static inline herr_t H5TS_rwlock_wrunlock(H5TS_rwlock_t *lock);
 #endif
 H5_DLL herr_t H5TS_rwlock_destroy(H5TS_rwlock_t *lock);
-
-/* "DLFTT" aware R/W lock operations */
-H5_DLL herr_t H5TS_dlftt_rwlock_init(H5TS_dlftt_rwlock_t *mutex);
-/* DLFTT R/W lock & unlock calls are defined in H5TSdlftt_rwlock.h */
-H5_DLL herr_t H5TS_dlftt_rwlock_destroy(H5TS_dlftt_rwlock_t *mutex);
 
 /* Condition variable operations */
 H5_DLL herr_t H5TS_cond_init(H5TS_cond_t *cond);
@@ -477,7 +465,6 @@ H5_DLL herr_t H5TS_semaphore_destroy(H5TS_semaphore_t *sem);
 #endif /* H5_HAVE_STDATOMIC_H */
 #include "H5TSbarrier.h"
 #include "H5TSrwlock.h"
-#include "H5TSdlftt_rwlock.h"
 #include "H5TSsemaphore.h"
 #include "H5TSpool.h"
 #endif /* __cplusplus */

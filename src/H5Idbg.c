@@ -175,7 +175,7 @@ H5I_dump_ids_for_type(H5I_type_t type)
     fprintf(stderr, "Dumping ID type %d\n", (int)type);
 
     /* Acquire the mutex protecting the global type info */
-    if (H5I__type_info_rdlock(type) < 0)
+    if (H5I__type_info_acquire(type) < 0)
         HGOTO_ERROR(H5E_ID, H5E_CANTLOCK, FAIL, "can't lock type info's mutex");
     have_lock = true;
 
@@ -215,7 +215,7 @@ H5I_dump_ids_for_type(H5I_type_t type)
 
 done:
     /* Release exclusive access for the type */
-    if (have_lock && H5I__type_info_rdunlock(type) < 0)
+    if (have_lock && H5I__type_info_release(type) < 0)
         HDONE_ERROR(H5E_ID, H5E_CANTUNLOCK, FAIL, "can't release lock on type");
 
     FUNC_LEAVE_NOAPI(ret_value)

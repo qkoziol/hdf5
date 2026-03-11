@@ -86,8 +86,6 @@ static H5I_class_t H5I_DATASPACE_CLS[1] = {{
     H5I_DATASPACE,            /* ID class value */
     0,                        /* Class flags */
     3,                        /* # of reserved IDs for class */
-    NULL,                     /* Callback for locking objects of this class */
-    NULL,                     /* Callback for unlocking objects of this class */
     (H5I_free_t)H5S__close_cb /* Callback routine for closing objects of this class */
 }};
 
@@ -96,8 +94,6 @@ static H5I_class_t H5I_SPACE_SEL_ITER_CLS[1] = {{
     H5I_SPACE_SEL_ITER,                /* ID class value */
     0,                                 /* Class flags */
     0,                                 /* # of reserved IDs for class */
-    NULL,                              /* Callback for locking objects of this class */
-    NULL,                              /* Callback for unlocking objects of this class */
     (H5I_free_t)H5S__sel_iter_close_cb /* Callback routine for closing objects of this class */
 }};
 

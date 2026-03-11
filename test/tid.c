@@ -648,7 +648,7 @@ test_is_valid(void)
 
     /* Check that an id of -1 is invalid */
     tri_ret = H5Iis_valid((hid_t)H5I_INVALID_HID);
-    VERIFY(tri_ret, false, "H5Iis_valid");
+    VERIFY(tri_ret, false, "H4Iis_valid");
     if (tri_ret != false)
         goto out;
 

@@ -41,39 +41,17 @@
 /* Library Private Typedefs */
 /****************************/
 
-/* Types of locks that can be acquired */
-typedef enum H5I_lock_mode_t { H5I_LOCK_EXCLUSIVE = 0, H5I_LOCK_SHARED = 1 } H5I_lock_mode_t;
-
-/**
- * Functions for locking and unlocking an object of a given class.
- *
- * The lock function will be called with a pointer to the object and the type
- * of lock requested, either shared or exclusive.
- *
- * The unlock callback is invoked for both shared and exclusive locks.
- *
- * It is assumed that the locking is non-recursive.
- *
- * The H5I package does not have any mechanism for actually performing the
- * locking/unlocking on the object, that is the responsibility of the callbacks.
- *
- */
-typedef herr_t (*H5I_lock_cb_t)(void *obj, H5I_lock_mode_t mode);
-typedef herr_t (*H5I_unlock_cb_t)(void *obj);
-
 typedef struct H5I_class_t {
-    H5I_type_t type;             /* Class "value" for the type */
-    unsigned   flags;            /* Class behavior flags */
-    unsigned   reserved;         /* Number of reserved IDs for this type */
-                                 /* [A specific number of type entries may be
-                                  * reserved to enable "constant" values to be
-                                  * handed out which are valid IDs in the type,
-                                  * but which do not map to any data structures
-                                  * and are not allocated dynamically later.]
-                                  */
-    H5I_lock_cb_t   lock_func;   /* Function for locking objects of this type */
-    H5I_unlock_cb_t unlock_func; /* Function for unlocking objects of this type */
-    H5I_free_t      free_func;   /* Free function for objects of this type */
+    H5I_type_t type;      /* Class "value" for the type */
+    unsigned   flags;     /* Class behavior flags */
+    unsigned   reserved;  /* Number of reserved IDs for this type */
+                          /* [A specific number of type entries may be
+                           * reserved to enable "constant" values to be
+                           * handed out which are valid IDs in the type,
+                           * but which do not map to any data structures
+                           * and are not allocated dynamically later.]
+                           */
+    H5I_free_t free_func; /* Free function for object's of this type */
 } H5I_class_t;
 
 /*****************************/
@@ -114,8 +92,6 @@ H5_DLL void  *H5I_object_verify(hid_t id, H5I_type_t type);
 H5_DLL void  *H5I_remove(hid_t id);
 H5_DLL void  *H5I_subst(hid_t id, const void *new_object);
 H5_DLL htri_t H5I_is_file_object(hid_t id);
-H5_DLL void  *H5I_acquire(hid_t id, H5I_type_t type, H5I_lock_mode_t mode);
-H5_DLL herr_t H5I_release(void *obj, H5I_type_t type);
 
 /* ID registration functions */
 H5_DLL hid_t  H5I_register(H5I_type_t type, const void *object, bool app_ref);
