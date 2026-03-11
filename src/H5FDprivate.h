@@ -112,7 +112,7 @@ union H5PL_key_t;
 H5_DLL herr_t        H5FD_init(void);
 H5_DLL int           H5FD_term_interface(void);
 H5_DLL herr_t        H5FD_locate_signature(H5FD_t *file, haddr_t *sig_addr);
-H5_DLL H5FD_class_t *H5FD_get_class(H5P_genplist_t *fapl);
+H5_DLL H5FD_class_t *H5FD_get_class(hid_t id);
 H5_DLL hsize_t       H5FD_sb_size(H5FD_t *file);
 H5_DLL herr_t        H5FD_sb_encode(H5FD_t *file, char *name /*out*/, uint8_t *buf);
 H5_DLL herr_t        H5FD_sb_load(H5FD_t *file, const char *name, const uint8_t *buf);
@@ -125,7 +125,7 @@ H5_DLL htri_t        H5FD_is_driver_registered_by_name(const char *driver_name, 
 H5_DLL htri_t  H5FD_is_driver_registered_by_value(H5FD_class_value_t driver_value, hid_t *registered_id);
 H5_DLL hid_t   H5FD_get_driver_id_by_name(const char *name, bool is_api);
 H5_DLL hid_t   H5FD_get_driver_id_by_value(H5FD_class_value_t value, bool is_api);
-H5_DLL herr_t  H5FD_open(bool attempt, H5FD_t **file, const char *name, unsigned flags, H5P_genplist_t *fapl,
+H5_DLL herr_t  H5FD_open(bool attempt, H5FD_t **file, const char *name, unsigned flags, hid_t fapl_id,
                          haddr_t maxaddr);
 H5_DLL herr_t  H5FD_close(H5FD_t *file);
 H5_DLL int     H5FD_cmp(const H5FD_t *f1, const H5FD_t *f2);
@@ -180,10 +180,10 @@ H5_DLL herr_t  H5FD_flush(H5FD_t *file, bool closing);
 H5_DLL herr_t  H5FD_truncate(H5FD_t *file, bool closing);
 H5_DLL herr_t  H5FD_lock(H5FD_t *file, bool rw);
 H5_DLL herr_t  H5FD_unlock(H5FD_t *file);
-H5_DLL herr_t  H5FD_delete(const char *name, H5P_genplist_t *fapl);
+H5_DLL herr_t  H5FD_delete(const char *name, hid_t fapl_id);
 H5_DLL herr_t  H5FD_ctl(H5FD_t *file, uint64_t op_code, uint64_t flags, const void *input, void **output);
 H5_DLL herr_t  H5FD_get_fileno(const H5FD_t *file, unsigned long *filenum);
-H5_DLL herr_t  H5FD_get_vfd_handle(H5FD_t *file, H5P_genplist_t *fapl, void **file_handle);
+H5_DLL herr_t  H5FD_get_vfd_handle(H5FD_t *file, hid_t fapl, void **file_handle);
 H5_DLL herr_t  H5FD_set_base_addr(H5FD_t *file, haddr_t base_addr);
 H5_DLL haddr_t H5FD_get_base_addr(const H5FD_t *file);
 H5_DLL herr_t  H5FD_set_paged_aggr(H5FD_t *file, bool paged);

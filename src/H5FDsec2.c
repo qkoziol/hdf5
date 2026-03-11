@@ -103,9 +103,9 @@ static haddr_t H5FD__sec2_get_eoa(const H5FD_t *_file, H5FD_mem_t type);
 static herr_t  H5FD__sec2_set_eoa(H5FD_t *_file, H5FD_mem_t type, haddr_t addr);
 static haddr_t H5FD__sec2_get_eof(const H5FD_t *_file, H5FD_mem_t type);
 static herr_t  H5FD__sec2_get_handle(H5FD_t *_file, hid_t fapl, void **file_handle);
-static herr_t  H5FD__sec2_read(H5FD_t *_file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, size_t size,
+static herr_t  H5FD__sec2_read(H5FD_t *_file, H5FD_mem_t type, hid_t fapl_id, haddr_t addr, size_t size,
                                void *buf);
-static herr_t  H5FD__sec2_write(H5FD_t *_file, H5FD_mem_t type, hid_t dxpl_id, haddr_t addr, size_t size,
+static herr_t  H5FD__sec2_write(H5FD_t *_file, H5FD_mem_t type, hid_t fapl_id, haddr_t addr, size_t size,
                                 const void *buf);
 static herr_t  H5FD__sec2_truncate(H5FD_t *_file, hid_t dxpl_id, bool closing);
 static herr_t  H5FD__sec2_lock(H5FD_t *_file, bool rw);
@@ -218,15 +218,15 @@ H5FD__sec2_unregister(void)
 herr_t
 H5Pset_fapl_sec2(hid_t fapl_id)
 {
-    H5P_genplist_t *fapl; /* Property list pointer */
+    H5P_genplist_t *plist; /* Property list pointer */
     herr_t          ret_value;
 
     FUNC_ENTER_API(FAIL)
 
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
+    if (NULL == (plist = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
 
-    ret_value = H5P_set_driver(fapl, H5FD_SEC2, NULL, NULL);
+    ret_value = H5P_set_driver(plist, H5FD_SEC2, NULL, NULL);
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -254,7 +254,7 @@ H5FD__sec2_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr
     struct _BY_HANDLE_FILE_INFORMATION fileinfo;
 #endif
     h5_stat_t       sb;
-    H5P_genplist_t *fapl;             /* Property list pointer */
+    H5P_genplist_t *plist;            /* Property list pointer */
     H5FD_t         *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -319,7 +319,7 @@ H5FD__sec2_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr
 #endif /* H5_HAVE_WIN32_API */
 
     /* Get the FAPL */
-    if (NULL == (fapl = (H5P_genplist_t *)H5I_object(fapl_id)))
+    if (NULL == (plist = (H5P_genplist_t *)H5I_object(fapl_id)))
         HGOTO_ERROR(H5E_VFL, H5E_BADTYPE, NULL, "not a file access property list");
 
     /* Check the file locking flags in the fapl */
@@ -328,7 +328,7 @@ H5FD__sec2_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr
         file->ignore_disabled_file_locks = H5FD_ignore_disabled_file_locks_p;
     else {
         /* Use the value in the property list */
-        if (H5P_get(fapl, H5F_ACS_IGNORE_DISABLED_FILE_LOCKS_NAME, &file->ignore_disabled_file_locks) < 0)
+        if (H5P_get(plist, H5F_ACS_IGNORE_DISABLED_FILE_LOCKS_NAME, &file->ignore_disabled_file_locks) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get ignore disabled file locks property");
     }
 
@@ -344,8 +344,8 @@ H5FD__sec2_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr
          * private property should be set so that in the later step, the library can ignore
          * the family driver information saved in the superblock.
          */
-        if (H5P_exist_plist(fapl, H5F_ACS_FAMILY_TO_SINGLE_NAME) > 0)
-            if (H5P_get(fapl, H5F_ACS_FAMILY_TO_SINGLE_NAME, &file->fam_to_single) < 0)
+        if (H5P_exist_plist(plist, H5F_ACS_FAMILY_TO_SINGLE_NAME) > 0)
+            if (H5P_get(plist, H5F_ACS_FAMILY_TO_SINGLE_NAME, &file->fam_to_single) < 0)
                 HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get property of changing family to single");
     } /* end if */
 

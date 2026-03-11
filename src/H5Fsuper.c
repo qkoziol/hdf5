@@ -307,7 +307,7 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5F__super_read(H5F_t *f, H5P_genplist_t *fapl, bool initial_read)
+H5F__super_read(H5F_t *f, H5P_genplist_t *fa_plist, bool initial_read)
 {
     H5AC_ring_t               orig_ring = H5AC_RING_INV;
     H5F_super_t              *sblock    = NULL; /* Superblock structure */
@@ -552,8 +552,8 @@ H5F__super_read(H5F_t *f, H5P_genplist_t *fapl, bool initial_read)
      */
 
     /* Check if this private property exists in fapl */
-    if (H5P_exist_plist(fapl, H5F_ACS_SKIP_EOF_CHECK_NAME) > 0)
-        if (H5P_get(fapl, H5F_ACS_SKIP_EOF_CHECK_NAME, &skip_eof_check) < 0)
+    if (H5P_exist_plist(fa_plist, H5F_ACS_SKIP_EOF_CHECK_NAME) > 0)
+        if (H5P_get(fa_plist, H5F_ACS_SKIP_EOF_CHECK_NAME, &skip_eof_check) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get skip EOF check value");
 
     if (H5F_INTENT(f) & H5F_ACC_SWMR_READ) {
@@ -735,8 +735,8 @@ H5F__super_read(H5F_t *f, H5P_genplist_t *fapl, bool initial_read)
                 /* The h5clear tool uses this property to tell the library
                  * to drop free-space to the floor
                  */
-                if (H5P_exist_plist(fapl, H5F_ACS_NULL_FSM_ADDR_NAME) > 0)
-                    if (H5P_get(fapl, H5F_ACS_NULL_FSM_ADDR_NAME, &f->shared->null_fsm_addr) < 0)
+                if (H5P_exist_plist(fa_plist, H5F_ACS_NULL_FSM_ADDR_NAME) > 0)
+                    if (H5P_get(fa_plist, H5F_ACS_NULL_FSM_ADDR_NAME, &f->shared->null_fsm_addr) < 0)
                         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL,
                                     "can't get clearance for persisting fsm addr");
 

@@ -3032,10 +3032,11 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5FD_delete(const char *filename, H5P_genplist_t *fapl)
+H5FD_delete(const char *filename, hid_t fapl_id)
 {
     H5FD_class_t      *driver;              /* VFD for file */
     H5FD_driver_prop_t driver_prop;         /* Property for driver ID & info */
+    H5P_genplist_t    *plist;               /* Property list pointer */
     herr_t             ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
@@ -3044,8 +3045,12 @@ H5FD_delete(const char *filename, H5P_genplist_t *fapl)
 
     assert(filename);
 
+    /* Get file access property list */
+    if (NULL == (plist = (H5P_genplist_t *)H5I_object(fapl_id)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
+
     /* Get the VFD to open the file with */
-    if (H5P_peek(fapl, H5F_ACS_FILE_DRV_NAME, &driver_prop) < 0)
+    if (H5P_peek(plist, H5F_ACS_FILE_DRV_NAME, &driver_prop) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get driver ID & info");
 
     /* Get driver info */
@@ -3058,7 +3063,7 @@ H5FD_delete(const char *filename, H5P_genplist_t *fapl)
     H5_BEFORE_USER_CB(FAIL)
         {
             /* Dispatch to file driver */
-            ret_value = (driver->del)(filename, H5P_PLIST_ID(fapl));
+            ret_value = (driver->del)(filename, fapl_id);
         }
     H5_AFTER_USER_CB(FAIL)
     if (ret_value < 0)

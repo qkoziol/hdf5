@@ -510,7 +510,9 @@ done:
  * Function:    H5FD_get_class
  *
  * Purpose:     Obtains a pointer to the driver struct containing all the
- *              callback pointers, etc.
+ *              callback pointers, etc. The PLIST_ID argument can be a file
+ *              access property list, a data transfer property list, or a
+ *              file driver identifier.
  *
  * Return:      Success:    Ptr to the driver information. The pointer is
  *                          only valid as long as the driver remains
@@ -522,20 +524,31 @@ done:
  *-------------------------------------------------------------------------
  */
 H5FD_class_t *
-H5FD_get_class(H5P_genplist_t *fapl)
+H5FD_get_class(hid_t id)
 {
-    H5FD_driver_prop_t driver_prop; /* Property for driver ID & info */
-    H5FD_class_t      *ret_value = NULL;
+    H5FD_class_t *ret_value = NULL;
 
     FUNC_ENTER_NOAPI(NULL)
 
-    /* Get driver property */
-    if (H5P_peek(fapl, H5F_ACS_FILE_DRV_NAME, &driver_prop) < 0)
-        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get driver ID & info");
+    if (H5I_VFL == H5I_get_type(id))
+        ret_value = (H5FD_class_t *)H5I_object(id);
+    else {
+        H5P_genplist_t *plist; /* Property list pointer */
 
-    /* Get the class from the property's ID */
-    if (NULL == (ret_value = H5I_object(driver_prop.driver_id)))
-        HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get driver class structure");
+        /* Get the plist structure */
+        if (NULL == (plist = (H5P_genplist_t *)H5I_object(id)))
+            HGOTO_ERROR(H5E_ID, H5E_BADID, NULL, "can't find object for ID");
+
+        if (true == H5P_isa_class(id, H5P_FILE_ACCESS)) {
+            H5FD_driver_prop_t driver_prop; /* Property for driver ID & info */
+
+            if (H5P_peek(plist, H5F_ACS_FILE_DRV_NAME, &driver_prop) < 0)
+                HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, NULL, "can't get driver ID & info");
+            ret_value = H5FD_get_class(driver_prop.driver_id);
+        } /* end if */
+        else
+            HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a driver id or file access property list");
+    } /* end if */
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -836,19 +849,18 @@ done:
 H5FD_t *
 H5FDopen(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
 {
-    H5P_genplist_t *fapl; /* File access property list */
-    H5FD_t         *ret_value = NULL;
+    H5FD_t *ret_value = NULL;
 
     FUNC_ENTER_API(NULL)
 
     /* Check arguments */
     if (H5P_DEFAULT == fapl_id)
         fapl_id = H5P_FILE_ACCESS_DEFAULT;
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+    else if (true != H5P_isa_class(fapl_id, H5P_FILE_ACCESS))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file access property list");
 
     /* Call private function */
-    if (H5FD_open(false, &ret_value, name, flags, fapl, maxaddr) < 0)
+    if (H5FD_open(false, &ret_value, name, flags, fapl_id, maxaddr) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, NULL, "unable to open file");
 
 done:
@@ -876,11 +888,12 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5FD_open(bool try, H5FD_t **_file, const char *name, unsigned flags, H5P_genplist_t *fapl, haddr_t maxaddr)
+H5FD_open(bool try, H5FD_t **_file, const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
 {
     H5FD_t                *file = NULL;         /* File opened */
     H5FD_class_t          *driver;              /* VFD for file */
     H5FD_driver_prop_t     driver_prop;         /* Property for driver ID & info */
+    H5P_genplist_t        *plist;               /* Property list pointer */
     unsigned long          driver_flags = 0;    /* File-inspecific driver feature flags */
     H5FD_file_image_info_t file_image_info;     /* Initial file image */
     herr_t                 ret_value = SUCCEED; /* Return value */
@@ -894,8 +907,12 @@ H5FD_open(bool try, H5FD_t **_file, const char *name, unsigned flags, H5P_genpli
     if (0 == maxaddr)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "zero format address range");
 
+    /* Get file access property list */
+    if (NULL == (plist = (H5P_genplist_t *)H5I_object(fapl_id)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
+
     /* Get the VFD to open the file with */
-    if (H5P_peek(fapl, H5F_ACS_FILE_DRV_NAME, &driver_prop) < 0)
+    if (H5P_peek(plist, H5F_ACS_FILE_DRV_NAME, &driver_prop) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get driver ID & info");
 
     /* Get driver info */
@@ -909,7 +926,7 @@ H5FD_open(bool try, H5FD_t **_file, const char *name, unsigned flags, H5P_genpli
         HGOTO_ERROR(H5E_VFL, H5E_BADVALUE, FAIL, "can't query VFD flags");
 
     /* Get initial file image info */
-    if (H5P_peek(fapl, H5F_ACS_FILE_IMAGE_INFO_NAME, &file_image_info) < 0)
+    if (H5P_peek(plist, H5F_ACS_FILE_IMAGE_INFO_NAME, &file_image_info) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get file image info");
 
     /* If an image is provided, make sure the driver supports this feature */
@@ -929,7 +946,7 @@ H5FD_open(bool try, H5FD_t **_file, const char *name, unsigned flags, H5P_genpli
             {/* Prepare & restore library for user callback */
                  H5_BEFORE_USER_CB(FAIL)
                     {
-                        file = (driver->open)(name, flags, H5P_PLIST_ID(fapl), maxaddr);
+                        file = (driver->open)(name, flags, fapl_id, maxaddr);
                     }
                 H5_AFTER_USER_CB(FAIL)
             }
@@ -944,7 +961,7 @@ H5FD_open(bool try, H5FD_t **_file, const char *name, unsigned flags, H5P_genpli
         /* Prepare & restore library for user callback */
         H5_BEFORE_USER_CB(FAIL)
             {
-                file = (driver->open)(name, flags, H5P_PLIST_ID(fapl), maxaddr);
+                file = (driver->open)(name, flags, fapl_id, maxaddr);
             }
         H5_AFTER_USER_CB(FAIL)
         if (NULL == file)
@@ -962,9 +979,9 @@ H5FD_open(bool try, H5FD_t **_file, const char *name, unsigned flags, H5P_genpli
         HGOTO_ERROR(H5E_VFL, H5E_CANTINC, FAIL, "unable to increment ref count on VFL driver");
     file->cls     = driver;
     file->maxaddr = maxaddr;
-    if (H5P_get(fapl, H5F_ACS_ALIGN_THRHD_NAME, &file->threshold) < 0)
+    if (H5P_get(plist, H5F_ACS_ALIGN_THRHD_NAME, &file->threshold) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get alignment threshold");
-    if (H5P_get(fapl, H5F_ACS_ALIGN_NAME, &file->alignment) < 0)
+    if (H5P_get(plist, H5F_ACS_ALIGN_NAME, &file->alignment) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get alignment");
 
     /* Retrieve the VFL driver feature flags */
@@ -2826,8 +2843,7 @@ H5FD_get_fileno(const H5FD_t *file, unsigned long *filenum)
 herr_t
 H5FDget_vfd_handle(H5FD_t *file, hid_t fapl_id, void **file_handle /*out*/)
 {
-    H5P_genplist_t *fapl; /* File access property list */
-    herr_t          ret_value = SUCCEED;
+    herr_t ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
 
@@ -2836,13 +2852,13 @@ H5FDget_vfd_handle(H5FD_t *file, hid_t fapl_id, void **file_handle /*out*/)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "file pointer cannot be NULL");
     if (!file->cls)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "file class pointer cannot be NULL");
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+    if (false == H5P_isa_class(fapl_id, H5P_FILE_ACCESS))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "fapl_id parameter is not a file access property list");
     if (!file_handle)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "file handle parameter cannot be NULL");
 
     /* Call private function */
-    if (H5FD_get_vfd_handle(file, fapl, file_handle) < 0)
+    if (H5FD_get_vfd_handle(file, fapl_id, file_handle) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get file handle for file driver");
 
 done:
@@ -2864,7 +2880,7 @@ done:
  *--------------------------------------------------------------------------
  */
 herr_t
-H5FD_get_vfd_handle(H5FD_t *file, H5P_genplist_t *fapl, void **file_handle)
+H5FD_get_vfd_handle(H5FD_t *file, hid_t fapl_id, void **file_handle)
 {
     herr_t ret_value = SUCCEED;
 
@@ -2882,7 +2898,7 @@ H5FD_get_vfd_handle(H5FD_t *file, H5P_genplist_t *fapl, void **file_handle)
     /* Prepare & restore library for user callback */
     H5_BEFORE_USER_CB(FAIL)
         {
-            ret_value = (file->cls->get_handle)(file, H5P_PLIST_ID(fapl), file_handle);
+            ret_value = (file->cls->get_handle)(file, fapl_id, file_handle);
         }
     H5_AFTER_USER_CB(FAIL)
     if (ret_value < 0)
@@ -3007,8 +3023,7 @@ done:
 herr_t
 H5FDdelete(const char *filename, hid_t fapl_id)
 {
-    H5P_genplist_t *fapl; /* File access property list */
-    herr_t          ret_value = SUCCEED;
+    herr_t ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
 
@@ -3018,11 +3033,11 @@ H5FDdelete(const char *filename, hid_t fapl_id)
 
     if (H5P_DEFAULT == fapl_id)
         fapl_id = H5P_FILE_ACCESS_DEFAULT;
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+    else if (true != H5P_isa_class(fapl_id, H5P_FILE_ACCESS))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
 
     /* Call private function */
-    if (H5FD_delete(filename, fapl) < 0)
+    if (H5FD_delete(filename, fapl_id) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTDELETEFILE, FAIL, "unable to delete file");
 
 done:

@@ -96,7 +96,7 @@ H5_DLL herr_t H5R__destroy(H5R_ref_priv_t *ref);
 
 H5_DLL herr_t H5R__set_loc_id(H5R_ref_priv_t *ref, hid_t id, bool inc_ref, bool app_ref);
 H5_DLL hid_t  H5R__get_loc_id(const H5R_ref_priv_t *ref);
-H5_DLL hid_t  H5R__reopen_file(H5R_ref_priv_t *ref, H5P_genplist_t *fapl);
+H5_DLL hid_t  H5R__reopen_file(H5R_ref_priv_t *ref, hid_t fapl_id);
 
 H5_DLL H5R_type_t H5R__get_type(const H5R_ref_priv_t *ref);
 H5_DLL htri_t     H5R__equal(const H5R_ref_priv_t *ref1, const H5R_ref_priv_t *ref2);

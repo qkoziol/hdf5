@@ -101,8 +101,8 @@ H5_DLL herr_t H5Pset_fapl_splitter(hid_t fapl_id, H5FD_splitter_vfd_config_t *co
  * \param[out] config_ptr Configuration options for the VFD
  * \returns \herr_t
  *
- * \details H5Pget_fapl_splitter() retrieves the configuration information for
- *          the splitter driver.
+ * \details H5Pset_fapl_splitter() sets the file access property list identifier,
+ *          \p fapl_id, to use the splitter driver.
  *
  *          The splitter VFD echoes file manipulation (e.g. create, truncate)
  *          and write calls to a second file.

@@ -487,7 +487,7 @@ herr_t
 H5FD__subfiling_open_stub_file(const char *name, unsigned flags, MPI_Comm file_comm, H5FD_t **file_ptr,
                                uint64_t *file_id)
 {
-    H5P_genplist_t *fapl          = NULL;
+    H5P_genplist_t *plist         = NULL;
     uint64_t        stub_file_id  = UINT64_MAX;
     bool            bcasted_inode = false;
     H5FD_t         *stub_file     = NULL;
@@ -520,18 +520,18 @@ H5FD__subfiling_open_stub_file(const char *name, unsigned flags, MPI_Comm file_c
         MPI_Info  stub_info = MPI_INFO_NULL;
 
         /* Create new file access property list */
-        if (NULL == (fapl = H5P_new_plist_of_type(H5P_TYPE_FILE_ACCESS, false)))
+        if (NULL == (plist = H5P_new_plist_of_type(H5P_TYPE_FILE_ACCESS, false)))
             HGOTO_ERROR(H5E_VFL, H5E_CANTCREATE, FAIL, "can't create FAPL for stub file");
 
         /* Use MPI I/O driver for stub file to allow access to vector I/O */
-        if (H5P_set(fapl, H5F_ACS_MPI_PARAMS_COMM_NAME, &stub_comm) < 0)
+        if (H5P_set(plist, H5F_ACS_MPI_PARAMS_COMM_NAME, &stub_comm) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set MPI communicator");
-        if (H5P_set(fapl, H5F_ACS_MPI_PARAMS_INFO_NAME, &stub_info) < 0)
+        if (H5P_set(plist, H5F_ACS_MPI_PARAMS_INFO_NAME, &stub_info) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set MPI info object");
-        if (H5P_set_driver(fapl, H5FD_MPIO, NULL, NULL) < 0)
+        if (H5P_set_driver(plist, H5FD_MPIO, NULL, NULL) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't set MPI I/O driver on FAPL");
 
-        if (H5FD_open(false, &stub_file, name, flags, fapl, HADDR_UNDEF) < 0)
+        if (H5FD_open(false, &stub_file, name, flags, H5P_PLIST_ID(plist), HADDR_UNDEF) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTOPENFILE, FAIL, "couldn't open HDF5 stub file");
 
         HDcompile_assert(sizeof(uint64_t) >= sizeof(ino_t));
@@ -558,7 +558,7 @@ H5FD__subfiling_open_stub_file(const char *name, unsigned flags, MPI_Comm file_c
     *file_id = stub_file_id;
 
 done:
-    if (fapl && H5P_release(fapl) < 0)
+    if (plist && H5P_release(plist) < 0)
         HDONE_ERROR(H5E_VFL, H5E_CANTCLOSEOBJ, FAIL, "can't close FAPL ID");
 
     if (ret_value < 0) {

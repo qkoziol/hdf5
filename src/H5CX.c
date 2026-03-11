@@ -205,7 +205,7 @@ typedef struct H5CX_dapl_cache_t {
 } H5CX_dapl_cache_t;
 
 /* Typedef for cached default file access property list information */
-/* (Same as the cached DXPL struct, above, except for the default FAPL) */
+/* (Same as the cached DXPL struct, above, except for the default DCPL) */
 typedef struct H5CX_fapl_cache_t {
     H5F_libver_t low_bound;  /* low_bound property for H5Pset_libver_bounds() */
     H5F_libver_t high_bound; /* high_bound property for H5Pset_libver_bounds */
@@ -269,7 +269,7 @@ H5CX__init_package(void)
     H5P_genplist_t *lapl;                /* Link access property list */
     H5P_genplist_t *dcpl;                /* Dataset creation property list */
     H5P_genplist_t *dapl;                /* Dataset access property list */
-    H5P_genplist_t *fapl;                /* File access property list */
+    H5P_genplist_t *fa_plist;            /* File access property list */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -447,14 +447,14 @@ H5CX__init_package(void)
     /* Get the default FAPL cache information */
 
     /* Get the default file access property list */
-    if (NULL == (fapl = (H5P_genplist_t *)H5I_object(H5P_FILE_ACCESS_DEFAULT)))
+    if (NULL == (fa_plist = (H5P_genplist_t *)H5I_object(H5P_FILE_ACCESS_DEFAULT)))
         HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "not a dataset create property list");
 
     /* Get low_bound */
-    if (H5P_get(fapl, H5F_ACS_LIBVER_LOW_BOUND_NAME, &H5CX_def_fapl_cache.low_bound) < 0)
+    if (H5P_get(fa_plist, H5F_ACS_LIBVER_LOW_BOUND_NAME, &H5CX_def_fapl_cache.low_bound) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve dataset minimize flag");
 
-    if (H5P_get(fapl, H5F_ACS_LIBVER_HIGH_BOUND_NAME, &H5CX_def_fapl_cache.high_bound) < 0)
+    if (H5P_get(fa_plist, H5F_ACS_LIBVER_HIGH_BOUND_NAME, &H5CX_def_fapl_cache.high_bound) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve dataset minimize flag");
 
 done:

@@ -836,7 +836,7 @@ test_fapl(void)
         TEST_ERROR;
     if (H5FD_ONION_FAPL_INFO_VERSION_CURR != info_out.version)
         TEST_ERROR;
-    if (true != H5Pequal(H5P_FILE_ACCESS_DEFAULT, info_out.backing_fapl_id))
+    if (H5P_DEFAULT != info_out.backing_fapl_id)
         TEST_ERROR;
     if (ONION_TEST_PAGE_SIZE_1 != info_out.page_size)
         TEST_ERROR;

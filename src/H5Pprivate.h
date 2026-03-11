@@ -187,13 +187,13 @@ H5_DLL herr_t          H5P_get_nprops_pclass(const H5P_genclass_t *pclass, size_
 H5_DLL hid_t           H5P_peek_driver(H5P_genplist_t *plist);
 H5_DLL const void     *H5P_peek_driver_info(H5P_genplist_t *plist);
 H5_DLL const char     *H5P_peek_driver_config_str(H5P_genplist_t *plist);
-H5_DLL herr_t          H5P_set_driver(H5P_genplist_t *fapl, hid_t new_driver_id, const void *new_driver_info,
+H5_DLL herr_t          H5P_set_driver(H5P_genplist_t *plist, hid_t new_driver_id, const void *new_driver_info,
                                       const char *new_driver_config_str);
-H5_DLL herr_t H5P_set_driver_by_name(H5P_genplist_t *fapl, const char *driver_name, const char *driver_config,
-                                     bool app_ref);
-H5_DLL herr_t H5P_set_driver_by_value(H5P_genplist_t *fapl, H5FD_class_value_t driver_value,
-                                      const char *driver_config, bool app_ref);
-H5_DLL herr_t H5P_set_vol(H5P_genplist_t *fapl, struct H5VL_connector_t *connector, const void *vol_info);
+H5_DLL herr_t          H5P_set_driver_by_name(H5P_genplist_t *plist, const char *driver_name,
+                                              const char *driver_config, bool app_ref);
+H5_DLL herr_t          H5P_set_driver_by_value(H5P_genplist_t *plist, H5FD_class_value_t driver_value,
+                                               const char *driver_config, bool app_ref);
+H5_DLL herr_t H5P_set_vol(H5P_genplist_t *plist, struct H5VL_connector_t *connector, const void *vol_info);
 H5_DLL herr_t H5P_reset_vol_class(const H5P_genclass_t *pclass, const struct H5VL_connector_prop_t *vol_prop);
 H5_DLL herr_t H5P_set_vlen_mem_manager(H5P_genplist_t *plist, H5MM_allocate_t alloc_func, void *alloc_info,
                                        H5MM_free_t free_func, void *free_info);
@@ -219,5 +219,7 @@ H5_DLL H5P_genplist_t *H5P_object_verify(hid_t plist_id, H5P_plist_type_t type, 
 /* Private DCPL routines */
 H5_DLL herr_t H5P_fill_value_defined(H5P_genplist_t *plist, H5D_fill_value_t *status);
 H5_DLL herr_t H5P_get_fill_value(H5P_genplist_t *plist, const struct H5T_t *type, void *value);
+H5_DLL int    H5P_ignore_cmp(const void H5_ATTR_UNUSED *val1, const void H5_ATTR_UNUSED *val2,
+                             size_t H5_ATTR_UNUSED size);
 
 #endif /* H5Pprivate_H */

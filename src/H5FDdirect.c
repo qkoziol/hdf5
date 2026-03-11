@@ -93,6 +93,8 @@ typedef struct H5FD_direct_t {
 /* Prototypes */
 static herr_t  H5FD__direct_populate_config(size_t boundary, size_t block_size, size_t cbuf_size,
                                             H5FD_direct_fapl_t *fa_out);
+static void   *H5FD__direct_fapl_get(H5FD_t *file);
+static void   *H5FD__direct_fapl_copy(const void *_old_fa);
 static H5FD_t *H5FD__direct_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr);
 static herr_t  H5FD__direct_close(H5FD_t *_file);
 static int     H5FD__direct_cmp(const H5FD_t *_f1, const H5FD_t *_f2);
@@ -121,8 +123,8 @@ static const H5FD_class_t H5FD_direct_g = {
     NULL,                       /* sb_encode            */
     NULL,                       /* sb_decode            */
     sizeof(H5FD_direct_fapl_t), /* fapl_size            */
-    NULL,                       /* fapl_get             */
-    NULL,                       /* fapl_copy            */
+    H5FD__direct_fapl_get,      /* fapl_get             */
+    H5FD__direct_fapl_copy,     /* fapl_copy            */
     NULL,                       /* fapl_free            */
     0,                          /* dxpl_size            */
     NULL,                       /* dxpl_copy            */
@@ -214,19 +216,19 @@ H5FD__direct_unregister(void)
 herr_t
 H5Pset_fapl_direct(hid_t fapl_id, size_t boundary, size_t block_size, size_t cbuf_size)
 {
-    H5P_genplist_t    *fapl; /* Property list pointer */
+    H5P_genplist_t    *plist; /* Property list pointer */
     H5FD_direct_fapl_t fa;
     herr_t             ret_value;
 
     FUNC_ENTER_API(FAIL)
 
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
+    if (NULL == (plist = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
 
     if (H5FD__direct_populate_config(boundary, block_size, cbuf_size, &fa) < 0)
         HGOTO_ERROR(H5E_VFL, H5E_CANTSET, FAIL, "can't initialize driver configuration info");
 
-    ret_value = H5P_set_driver(fapl, H5FD_DIRECT, &fa, NULL);
+    ret_value = H5P_set_driver(plist, H5FD_DIRECT, &fa, NULL);
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -248,17 +250,17 @@ herr_t
 H5Pget_fapl_direct(hid_t fapl_id, size_t *boundary /*out*/, size_t *block_size /*out*/,
                    size_t *cbuf_size /*out*/)
 {
-    H5P_genplist_t           *fapl; /* Property list pointer */
+    H5P_genplist_t           *plist; /* Property list pointer */
     const H5FD_direct_fapl_t *fa;
     herr_t                    ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
 
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+    if (NULL == (plist = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access list");
-    if (H5FD_DIRECT != H5P_peek_driver(fapl))
+    if (H5FD_DIRECT != H5P_peek_driver(plist))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "incorrect VFL driver");
-    if (NULL == (fa = H5P_peek_driver_info(fapl)))
+    if (NULL == (fa = H5P_peek_driver_info(plist)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "bad VFL driver info");
     if (boundary)
         *boundary = fa->mboundary;
@@ -319,6 +321,61 @@ done:
 } /* end H5FD__direct_populate_config() */
 
 /*-------------------------------------------------------------------------
+ * Function:  H5FD__direct_fapl_get
+ *
+ * Purpose:  Returns a file access property list which indicates how the
+ *    specified file is being accessed. The return list could be
+ *    used to access another file the same way.
+ *
+ * Return:  Success:  Ptr to new file access property list with all
+ *        members copied from the file struct.
+ *
+ *    Failure:  NULL
+ *
+ *-------------------------------------------------------------------------
+ */
+static void *
+H5FD__direct_fapl_get(H5FD_t *_file)
+{
+    H5FD_direct_t *file      = (H5FD_direct_t *)_file;
+    void          *ret_value = NULL; /* Return value */
+
+    FUNC_ENTER_PACKAGE_NOERR
+
+    /* Set return value */
+    ret_value = H5FD__direct_fapl_copy(&(file->fa));
+
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5FD__direct_fapl_get() */
+
+/*-------------------------------------------------------------------------
+ * Function:  H5FD__direct_fapl_copy
+ *
+ * Purpose:  Copies the direct-specific file access properties.
+ *
+ * Return:  Success:  Ptr to a new property list
+ *
+ *    Failure:  NULL
+ *
+ *-------------------------------------------------------------------------
+ */
+static void *
+H5FD__direct_fapl_copy(const void *_old_fa)
+{
+    const H5FD_direct_fapl_t *old_fa = (const H5FD_direct_fapl_t *)_old_fa;
+    H5FD_direct_fapl_t       *new_fa = H5MM_calloc(sizeof(H5FD_direct_fapl_t));
+
+    FUNC_ENTER_PACKAGE_NOERR
+
+    assert(new_fa);
+
+    /* Copy the general information */
+    H5MM_memcpy(new_fa, old_fa, sizeof(H5FD_direct_fapl_t));
+
+    FUNC_LEAVE_NOAPI(new_fa)
+} /* end H5FD__direct_fapl_copy() */
+
+/*-------------------------------------------------------------------------
  * Function:  H5FD__direct_open
  *
  * Purpose:  Create and/or opens a Unix file for direct I/O as an HDF5 file.
@@ -344,7 +401,7 @@ H5FD__direct_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxad
     struct _BY_HANDLE_FILE_INFORMATION fileinfo;
 #endif
     h5_stat_t       sb;
-    H5P_genplist_t *fapl; /* Property list */
+    H5P_genplist_t *plist; /* Property list */
     void           *buf1, *buf2;
     H5FD_t         *ret_value = NULL;
 
@@ -386,9 +443,9 @@ H5FD__direct_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxad
         HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "unable to allocate file struct");
 
     /* Get the driver specific information */
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+    if (NULL == (plist = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file access property list");
-    if (NULL == (fa = (const H5FD_direct_fapl_t *)H5P_peek_driver_info(fapl))) {
+    if (NULL == (fa = (const H5FD_direct_fapl_t *)H5P_peek_driver_info(plist))) {
         if (H5FD__direct_populate_config(0, 0, 0, &default_fa) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTSET, NULL, "can't initialize driver configuration info");
         fa = &default_fa;
@@ -417,7 +474,7 @@ H5FD__direct_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxad
         file->ignore_disabled_file_locks = H5FD_ignore_disabled_file_locks_p;
     else {
         /* Use the value in the property list */
-        if (H5P_get(fapl, H5F_ACS_IGNORE_DISABLED_FILE_LOCKS_NAME, &file->ignore_disabled_file_locks) < 0)
+        if (H5P_get(plist, H5F_ACS_IGNORE_DISABLED_FILE_LOCKS_NAME, &file->ignore_disabled_file_locks) < 0)
             HGOTO_ERROR(H5E_VFL, H5E_CANTGET, NULL, "can't get ignore disabled file locks property");
     }
 

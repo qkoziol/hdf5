@@ -2572,7 +2572,7 @@ done:
  *-------------------------------------------------------------------------
  */
 void
-H5VL__is_default_conn(H5P_genplist_t *fapl, const H5VL_connector_t *connector, bool *is_default)
+H5VL__is_default_conn(hid_t fapl_id, const H5VL_connector_t *connector, bool *is_default)
 {
     FUNC_ENTER_PACKAGE_NOERR
 
@@ -2584,7 +2584,7 @@ H5VL__is_default_conn(H5P_genplist_t *fapl, const H5VL_connector_t *connector, b
      * variable being set.
      */
     *is_default = (H5VL_def_conn_s.connector == H5_DEFAULT_VOL) &&
-                  (H5P_PLIST_IS_DEFAULT(fapl) || connector == H5_DEFAULT_VOL);
+                  (H5P_FILE_ACCESS_DEFAULT == fapl_id || connector == H5_DEFAULT_VOL);
 
     FUNC_LEAVE_NOAPI_VOID
 } /* end H5VL__is_default_conn() */

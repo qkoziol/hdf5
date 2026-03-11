@@ -1237,7 +1237,7 @@ herr_t
 H5Pget_fapl_mirror(hid_t fapl_id, H5FD_mirror_fapl_t *fa_dst /*out*/)
 {
     const H5FD_mirror_fapl_t *fa_src    = NULL;
-    H5P_genplist_t           *fapl      = NULL;
+    H5P_genplist_t           *plist     = NULL;
     herr_t                    ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
@@ -1247,12 +1247,13 @@ H5Pget_fapl_mirror(hid_t fapl_id, H5FD_mirror_fapl_t *fa_dst /*out*/)
     if (NULL == fa_dst)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "fa_dst is NULL");
 
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true)))
+    plist = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, true);
+    if (NULL == plist)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
-    if (H5P_peek_driver(fapl) != H5FD_MIRROR)
+    if (H5P_peek_driver(plist) != H5FD_MIRROR)
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "incorrect VFL driver");
 
-    fa_src = (const H5FD_mirror_fapl_t *)H5P_peek_driver_info(fapl);
+    fa_src = (const H5FD_mirror_fapl_t *)H5P_peek_driver_info(plist);
     if (NULL == fa_src)
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "bad VFL driver info");
 
@@ -1276,14 +1277,15 @@ done:
 herr_t
 H5Pset_fapl_mirror(hid_t fapl_id, H5FD_mirror_fapl_t *fa)
 {
-    H5P_genplist_t *fapl      = NULL;
+    H5P_genplist_t *plist     = NULL;
     herr_t          ret_value = FAIL;
 
     FUNC_ENTER_API(FAIL)
 
     LOG_OP_CALL(__func__);
 
-    if (NULL == (fapl = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false)))
+    plist = H5P_object_verify(fapl_id, H5P_TYPE_FILE_ACCESS, false);
+    if (NULL == plist)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
     if (NULL == fa)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "null fapl_t pointer");
@@ -1292,7 +1294,7 @@ H5Pset_fapl_mirror(hid_t fapl_id, H5FD_mirror_fapl_t *fa)
     if (H5FD_MIRROR_CURR_FAPL_T_VERSION != fa->version)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "unknown fapl_t version");
 
-    ret_value = H5P_set_driver(fapl, H5FD_MIRROR, (const void *)fa, NULL);
+    ret_value = H5P_set_driver(plist, H5FD_MIRROR, (const void *)fa, NULL);
 
 done:
     FUNC_LEAVE_API(ret_value)

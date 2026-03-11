@@ -161,7 +161,7 @@ public class TestH5Pfaplhdfs {
         // This test expects HDF5LibraryException (either "not available" or "struct conversion not yet
         // implemented")
         H5.H5Pset_fapl_sec2(fapl_id);
-        // assertEquals("fapl_id was not set properly", HDF5Constants.H5FD_SEC2, H5.H5Pget_driver(fapl_id));
+        assertEquals("fapl_id was not set properly", HDF5Constants.H5FD_SEC2, H5.H5Pget_driver(fapl_id));
         H5FD_hdfs_fapl_t fails = H5.H5Pget_fapl_hdfs(fapl_id);
     }
 }

@@ -454,9 +454,9 @@ H5R__get_loc_id(const H5R_ref_priv_t *ref)
  *-------------------------------------------------------------------------
  */
 hid_t
-H5R__reopen_file(H5R_ref_priv_t *ref, H5P_genplist_t *fapl)
+H5R__reopen_file(H5R_ref_priv_t *ref, hid_t fapl_id)
 {
-    hid_t                 fapl_id;         /* ID for FAPL */
+    H5P_genplist_t       *plist;           /* Property list for FAPL */
     void                 *new_file = NULL; /* File object opened */
     H5VL_connector_prop_t connector_prop;  /* Property for VOL connector ID & info     */
     H5VL_object_t        *vol_obj = NULL;  /* VOL object for file */
@@ -468,12 +468,13 @@ H5R__reopen_file(H5R_ref_priv_t *ref, H5P_genplist_t *fapl)
     /* TODO add search path */
 
     /* Verify access property list and set up collective metadata if appropriate */
-    fapl_id = H5P_PLIST_ID(fapl);
     if (H5CX_set_apl(&fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, true) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTSET, H5I_INVALID_HID, "can't set access property list info");
 
     /* Get the VOL info from the fapl */
-    if (H5P_peek(fapl, H5F_ACS_VOL_CONN_NAME, &connector_prop) < 0)
+    if (NULL == (plist = (H5P_genplist_t *)H5I_object(fapl_id)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a file access property list");
+    if (H5P_peek(plist, H5F_ACS_VOL_CONN_NAME, &connector_prop) < 0)
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTGET, H5I_INVALID_HID, "can't get VOL connector info");
 
     /* Stash a copy of the "top-level" connector property, before any pass-through
@@ -486,7 +487,7 @@ H5R__reopen_file(H5R_ref_priv_t *ref, H5P_genplist_t *fapl)
     /* Open the file */
     /* (Must open file read-write to allow for object modifications) */
     if (NULL == (new_file = H5VL_file_open(connector_prop.connector, H5R_REF_FILENAME(ref), H5F_ACC_RDWR,
-                                           fapl, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL)))
+                                           fapl_id, H5P_DATASET_XFER_DEFAULT, H5_REQUEST_NULL)))
         HGOTO_ERROR(H5E_REFERENCE, H5E_CANTOPENFILE, H5I_INVALID_HID, "unable to open file");
 
     /* Get an ID for the file */

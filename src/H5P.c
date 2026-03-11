@@ -238,7 +238,7 @@ H5Pcreate(hid_t cls_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not a property list class");
 
     /* Create the new property list */
-    if (NULL == (plist = H5P__create(pclass, false, true)))
+    if (NULL == (plist = H5P__create(pclass, true)))
         HGOTO_ERROR(H5E_PLIST, H5E_CANTCREATE, H5I_INVALID_HID, "unable to decode property list");
 
     /* Set the return value */

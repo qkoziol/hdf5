@@ -1490,7 +1490,6 @@ H5E_get_default_auto_func(H5E_auto2_t *func)
         HGOTO_ERROR(H5E_ERROR, H5E_CANTGET, FAIL, "can't get current error stack");
 
     /* Get the automatic error reporting information */
-    memset(&op, 0, sizeof(op));
     if (H5E__get_auto(estack, &op, NULL) < 0)
         HGOTO_ERROR(H5E_ERROR, H5E_CANTGET, FAIL, "can't get automatic error info");
 

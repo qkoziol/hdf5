@@ -77,9 +77,8 @@ H5VL__native_file_create(const char *name, unsigned flags, hid_t fcpl_id, hid_t 
                          hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
     H5F_t          *new_file = NULL;
-    H5P_genplist_t *fcpl;             /* File creation property list */
-    H5P_genplist_t *fapl;             /* File access property list */
-    void           *ret_value = NULL; /* Return value */
+    H5P_genplist_t *fcpl; /* File creation property list */
+    void           *ret_value = NULL;
 
     FUNC_ENTER_PACKAGE
 
@@ -94,9 +93,7 @@ H5VL__native_file_create(const char *name, unsigned flags, hid_t fcpl_id, hid_t 
     /* Create the file */
     if (NULL == (fcpl = H5I_object(fcpl_id)))
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, NULL, "can't get file creation property list");
-    if (NULL == (fapl = H5I_object(fapl_id)))
-        HGOTO_ERROR(H5E_FILE, H5E_CANTGET, NULL, "can't get file access property list");
-    if (H5F_open(false, &new_file, name, flags, fcpl, fapl) < 0)
+    if (H5F_open(false, &new_file, name, flags, fcpl, fapl_id) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, NULL, "unable to create file");
     new_file->id_exists = true;
 
@@ -125,18 +122,15 @@ H5VL__native_file_open(const char *name, unsigned flags, hid_t fapl_id, hid_t H5
                        void H5_ATTR_UNUSED **req)
 {
     H5F_t          *new_file = NULL;
-    H5P_genplist_t *fcpl;             /* File creation property list */
-    H5P_genplist_t *fapl;             /* File access property list */
-    void           *ret_value = NULL; /* Return value */
+    H5P_genplist_t *fcpl; /* File creation property list */
+    void           *ret_value = NULL;
 
     FUNC_ENTER_PACKAGE
 
     /* Open the file */
     if (NULL == (fcpl = H5I_object(H5P_FILE_CREATE_DEFAULT)))
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, NULL, "can't get default file creation property list");
-    if (NULL == (fapl = H5I_object(fapl_id)))
-        HGOTO_ERROR(H5E_FILE, H5E_CANTGET, NULL, "can't get file access property list");
-    if (H5F_open(false, &new_file, name, flags, fcpl, fapl) < 0)
+    if (H5F_open(false, &new_file, name, flags, fcpl, fapl_id) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, NULL, "unable to open file");
     new_file->id_exists = true;
 
@@ -178,12 +172,8 @@ H5VL__native_file_get(void *obj, H5VL_file_get_args_t *args, hid_t H5_ATTR_UNUSE
 
         /* H5Fget_access_plist */
         case H5VL_FILE_GET_FAPL: {
-            H5P_genplist_t *fapl; /* Property list */
-
-            /* Create the property list object to return */
-            if (NULL == (fapl = H5F_get_access_plist((H5F_t *)obj, true)))
-                HGOTO_ERROR(H5E_FILE, H5E_CANTCOPY, FAIL, "unable to copy file access properties");
-            args->args.get_fapl.fapl_id = H5P_PLIST_ID(fapl);
+            if ((args->args.get_fapl.fapl_id = H5F_get_access_plist((H5F_t *)obj, true)) < 0)
+                HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get file access property list");
 
             break;
         }
@@ -353,12 +343,8 @@ H5VL__native_file_specific(void *obj, H5VL_file_specific_args_t *args, hid_t H5_
 
         /* H5Fis_accessible */
         case H5VL_FILE_IS_ACCESSIBLE: {
-            H5P_genplist_t *fapl; /* File access property list */
-
-            if (NULL == (fapl = H5I_object(args->args.is_accessible.fapl_id)))
-                HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get file access property list");
-            if (H5F__is_hdf5(args->args.is_accessible.filename, fapl, args->args.is_accessible.accessible) <
-                0)
+            if (H5F__is_hdf5(args->args.is_accessible.filename, args->args.is_accessible.fapl_id,
+                             args->args.is_accessible.accessible) < 0)
                 HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "error in HDF5 file check");
 
             break;
@@ -366,11 +352,7 @@ H5VL__native_file_specific(void *obj, H5VL_file_specific_args_t *args, hid_t H5_
 
         /* H5Fdelete */
         case H5VL_FILE_DELETE: {
-            H5P_genplist_t *fapl; /* File access property list */
-
-            if (NULL == (fapl = H5I_object(args->args.del.fapl_id)))
-                HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get file access property list");
-            if (H5F__delete(args->args.del.filename, fapl) < 0)
+            if (H5F__delete(args->args.del.filename, args->args.del.fapl_id) < 0)
                 HGOTO_ERROR(H5E_FILE, H5E_CANTDELETEFILE, FAIL, "error in HDF5 file deletion");
 
             break;
@@ -515,12 +497,9 @@ H5VL__native_file_optional(void *obj, H5VL_optional_args_t *args, hid_t H5_ATTR_
         /* H5Fget_vfd_handle */
         case H5VL_NATIVE_FILE_GET_VFD_HANDLE: {
             H5VL_native_file_get_vfd_handle_t *gvh_args = &opt_args->get_vfd_handle;
-            H5P_genplist_t                    *fapl; /* File access property list */
 
             /* Retrieve the VFD handle for the file */
-            if (NULL == (fapl = H5I_object(gvh_args->fapl_id)))
-                HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't get file access property list");
-            if (H5F_get_vfd_handle(f, fapl, gvh_args->file_handle) < 0)
+            if (H5F_get_vfd_handle(f, gvh_args->fapl_id, gvh_args->file_handle) < 0)
                 HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "can't retrieve VFD handle");
 
             break;

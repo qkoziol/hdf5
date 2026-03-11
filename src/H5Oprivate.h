@@ -601,18 +601,18 @@ typedef struct H5O_storage_virtual_t {
             view; /* Method for calculating the extent of the virtual dataset with unlimited selections */
     hsize_t printf_gap; /* Maximum number of sequential missing source datasets before terminating the search
                            for more */
-    H5P_genplist_t *source_fapl; /* FAPL to use to open source files */
-    H5P_genplist_t *source_dapl; /* DAPL to use to open source datasets */
-    bool            init;        /* Whether all information has been completely initialized */
+    hid_t           source_fapl_id; /* FAPL to use to open source files */
+    H5P_genplist_t *source_dapl;    /* DAPL to use to open source datasets */
+    bool            init;           /* Whether all information has been completely initialized */
     H5O_storage_virtual_ent_t
-        *source_file_hash_table; /* Hash table of virtual entries sorted by source file name.
-                                    Only the first occurrence of each source file name is stored. */
+        *source_file_hash_table; /* Hash table of virtual entries sorted by source file name. Only the first
+                                    occurrence of each source file name is stored. */
     H5O_storage_virtual_ent_t
-        *source_dset_hash_table; /* Hash table of virtual entries sorted by source dataset name.
-                                    Only the first occurrence of each source dataset name is stored. */
-    H5RT_t *tree;                /* R-tree for mapping lookups */
-    size_t  not_in_tree_nused;   /* Number of entries in not_in_tree_list */
-    size_t  not_in_tree_nalloc;  /* Allocated size of not_in_tree_list (grows by power of 2) */
+        *source_dset_hash_table; /* Hash table of virtual entries sorted by source dataset name. Only the
+                                    first occurrence of each source dataset name is stored. */
+    H5RT_t *tree;
+    size_t  not_in_tree_nused;  /* Number of entries in not_in_tree_list */
+    size_t  not_in_tree_nalloc; /* Allocated size of not_in_tree_list (grows by power of 2) */
     H5O_storage_virtual_ent_t *
         *not_in_tree_list; /* Array of POINTERS to mappings NOT in tree for quick access
                             * Some mappings cannot be stored in the tree and must be searched manually */
