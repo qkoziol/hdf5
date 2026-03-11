@@ -966,7 +966,6 @@ H5C__collective_write(H5F_t *f)
     haddr_t         *addrs          = NULL;
     size_t          *sizes          = NULL;
     uint32_t         count32;
-    ssize_t          scount;
     size_t           count;
     herr_t           ret_value = SUCCEED;
 
@@ -987,9 +986,7 @@ H5C__collective_write(H5F_t *f)
         HGOTO_ERROR(H5E_CACHE, H5E_CANTSET, FAIL, "can't set MPI-I/O transfer mode");
 
     /* Get number of entries in collective write list */
-    if ((scount = H5SL_count(cache_ptr->coll_write_list)) < 0)
-        HGOTO_ERROR(H5E_CACHE, H5E_CANTGET, FAIL, "can't get # of entries in collective write list");
-    count = (size_t)scount;
+    count = H5SL_count(cache_ptr->coll_write_list);
     H5_CHECKED_ASSIGN(count32, uint32_t, count, size_t);
 
     if (count > 0) {
@@ -1008,7 +1005,7 @@ H5C__collective_write(H5F_t *f)
             HGOTO_ERROR(H5E_CACHE, H5E_CANTALLOC, FAIL, "couldn't allocate types array");
 
         /* Fill arrays */
-        node = H5SL_first(cache_ptr->coll_write_list, H5SL_LOCK_SHARED);
+        node = H5SL_first(cache_ptr->coll_write_list);
         assert(node);
         if (NULL == (entry_ptr = (H5C_cache_entry_t *)H5SL_item(node)))
             HGOTO_ERROR(H5E_CACHE, H5E_NOTFOUND, FAIL, "can't retrieve skip list item");

@@ -57,9 +57,6 @@
 /* Package Private Typedefs */
 /****************************/
 
-/* Define portable atomic types */
-H5TS_DEF_ATOMIC_TYPE(int)
-
 /* ID information structure used */
 typedef struct H5I_id_info_t {
     hid_t    id;        /* ID for this info */
@@ -124,7 +121,11 @@ H5_DLLVAR H5I_ti_arr_elmt_t H5I_type_info_array_g[H5I_MAX_NUM_TYPES];
  * types (or IDs within a type) are needed, adjust TYPE_BITS in H5Ipkg.h
  * and/or increase size of hid_t
  */
-H5_DLLVAR H5TS_ATOMIC_TYPE(int) H5I_next_type_g;
+#ifdef H5_HAVE_CONCURRENCY
+H5_DLLVAR H5TS_atomic_int_t H5I_next_type_g;
+#else  /* H5_HAVE_CONCURRENCY */
+H5_DLLVAR int H5I_next_type_g;
+#endif /* H5_HAVE_CONCURRENCY */
 
 /******************************/
 /* Package Private Prototypes */

@@ -50,9 +50,6 @@ typedef enum {
 /* Macros */
 /**********/
 
-/* Types of locks that can be acquired */
-typedef enum H5SL_lock_mode_t { H5SL_LOCK_EXCLUSIVE = 1, H5SL_LOCK_SHARED = 2 } H5SL_lock_mode_t;
-
 /* Typedef for comparison operations */
 typedef int (*H5SL_cmp_t)(const void *key1, const void *key2);
 
@@ -63,24 +60,24 @@ typedef herr_t (*H5SL_operator_t)(void *item, void *key, void *operator_data /*i
 /* Private routines */
 /********************/
 H5_DLL H5SL_t      *H5SL_create(H5SL_type_t type, H5SL_cmp_t cmp);
-H5_DLL ssize_t      H5SL_count(H5SL_t *slist);
-H5_DLL herr_t       H5SL_insert(H5SL_t *slist, void *item, const void *key, bool already_locked);
-H5_DLL H5SL_node_t *H5SL_add(H5SL_t *slist, void *item, const void *key, H5SL_lock_mode_t mode);
+H5_DLL size_t       H5SL_count(H5SL_t *slist);
+H5_DLL herr_t       H5SL_insert(H5SL_t *slist, void *item, const void *key);
+H5_DLL H5SL_node_t *H5SL_add(H5SL_t *slist, void *item, const void *key);
 H5_DLL void        *H5SL_remove(H5SL_t *slist, const void *key, bool return_if_checked_out,
                                 bool *checked_out_node_was_returned);
 H5_DLL void        *H5SL_remove_first(H5SL_t *slist);
 H5_DLL void        *H5SL_search(H5SL_t *slist, const void *key);
 H5_DLL void        *H5SL_less(H5SL_t *slist, const void *key);
 H5_DLL void        *H5SL_greater(H5SL_t *slist, const void *key);
-H5_DLL H5SL_node_t *H5SL_find(H5SL_t *slist, const void *key, H5SL_lock_mode_t mode);
-H5_DLL H5SL_node_t *H5SL_below(H5SL_t *slist, const void *key, H5SL_lock_mode_t mode);
-H5_DLL H5SL_node_t *H5SL_above(H5SL_t *slist, const void *key, H5SL_lock_mode_t mode);
-H5_DLL H5SL_node_t *H5SL_first(H5SL_t *slist, H5SL_lock_mode_t mode);
+H5_DLL H5SL_node_t *H5SL_find(H5SL_t *slist, const void *key);
+H5_DLL H5SL_node_t *H5SL_below(H5SL_t *slist, const void *key);
+H5_DLL H5SL_node_t *H5SL_above(H5SL_t *slist, const void *key);
+H5_DLL H5SL_node_t *H5SL_first(H5SL_t *slist);
 H5_DLL H5SL_node_t *H5SL_next(H5SL_node_t *slist_node);
 H5_DLL H5SL_node_t *H5SL_after(H5SL_node_t *slist_node);
 H5_DLL H5SL_node_t *H5SL_prev(H5SL_node_t *slist_node);
 H5_DLL H5SL_node_t *H5SL_before(H5SL_node_t *slist_node);
-H5_DLL H5SL_node_t *H5SL_last(H5SL_t *slist, H5SL_lock_mode_t mode);
+H5_DLL H5SL_node_t *H5SL_last(H5SL_t *slist);
 H5_DLL void        *H5SL_item(H5SL_node_t *slist_node);
 H5_DLL herr_t       H5SL_iterate(H5SL_t *slist, H5SL_operator_t op, void *op_data);
 H5_DLL herr_t       H5SL_return(H5SL_node_t *slist_node);

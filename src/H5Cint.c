@@ -1058,7 +1058,6 @@ H5C__flush_invalidate_cache(H5F_t *f, unsigned flags)
     if (!(flags & H5C__EVICT_ALLOW_LAST_PINS_FLAG)) {
         assert(cache_ptr->index_size == 0);
         assert(cache_ptr->clean_index_size == 0);
-        assert(cache_ptr->dirty_index_size == 0);
         assert(cache_ptr->pel_len == 0);
         assert(cache_ptr->pel_size == 0);
     } /* end if */
@@ -1072,7 +1071,6 @@ H5C__flush_invalidate_cache(H5F_t *f, unsigned flags)
             assert(cache_ptr->index_ring_len[u] == 0);
             assert(cache_ptr->index_ring_size[u] == 0);
             assert(cache_ptr->clean_index_ring_size[u] == 0);
-            assert(cache_ptr->dirty_index_ring_size[u] == 0);
         } /* end for */
 
         /* Check that any remaining pinned entries are in the superblock ring */
@@ -1234,8 +1232,13 @@ H5C__flush_invalidate_ring(H5F_t *f, H5C_ring_t ring, unsigned flags)
         cache_ptr->slist_size_increase = 0;
 #endif /* H5C_DO_SANITY_CHECKS */
 
+        /* Set the skip list scanning fields to indicate that skip list
+         * modifications need to update the rescan information correctly.
+         */
+        cache_ptr->slist_scan_in_progress = true;
+
         /* Start the scan of the skip list */
-        node_ptr = H5SL_first(cache_ptr->slist_ptr, H5SL_LOCK_EXCLUSIVE);
+        node_ptr = H5SL_first(cache_ptr->slist_ptr);
         while (node_ptr) {
             /* Get the current entry's pointer */
             if (NULL == (entry_ptr = H5SL_item(node_ptr)))
@@ -1264,15 +1267,7 @@ H5C__flush_invalidate_ring(H5F_t *f, H5C_ring_t ring, unsigned flags)
                 entry_ptr->flush_dep_nchildren == 0 && entry_ptr->ring == ring) {
 
                 /* Reset flag for detecting that the node_ptr entry was removed */
-                cache_ptr->slist_restart_scan = false;
-
-                /* Set the 'during flush' flag when the node_ptr is still within
-                 * the list.  The flag indicates that the entry flush, and any
-                 * other operations that occur until it's finished, are
-                 * occurring within the context of a cache flush operation.
-                 */
-                if (node_ptr)
-                    cache_ptr->slist_during_flush = true;
+                cache_ptr->slist_scan_next_addr_removed = false;
 
                 if (entry_ptr->is_protected) {
                     /* We have major problems -- but lets flush everything we
@@ -1281,30 +1276,23 @@ H5C__flush_invalidate_ring(H5F_t *f, H5C_ring_t ring, unsigned flags)
                     protected_entries++;
                 } /* end if */
                 else if (entry_ptr->is_pinned) {
-                    if (H5C__flush_single_entry(f, entry_ptr, 0) < 0) {
-                        cache_ptr->slist_during_flush = false;
+                    if (H5C__flush_single_entry(f, entry_ptr, 0) < 0)
                         HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL, "dirty pinned entry flush failed");
-                    }
                 } /* end else-if */
                 else {
                     if (H5C__flush_single_entry(f, entry_ptr,
                                                 (cooked_flags | H5C__FLUSH_INVALIDATE_FLAG |
-                                                 H5C__DEL_FROM_SLIST_ON_DESTROY_FLAG)) < 0) {
-                        cache_ptr->slist_during_flush = false;
+                                                 H5C__DEL_FROM_SLIST_ON_DESTROY_FLAG)) < 0)
                         HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL, "dirty entry flush destroy failed");
-                    }
                 } /* end else */
 
-                /* Reset the 'during flush' flag */
-                cache_ptr->slist_during_flush = false;
-
                 /* Check for restarting scan */
-                if (cache_ptr->slist_restart_scan) {
+                if (cache_ptr->slist_scan_next_addr_removed) {
                     /* Reset flag */
-                    cache_ptr->slist_restart_scan = false;
+                    cache_ptr->slist_scan_next_addr_removed = false;
 
                     /* Restart scan */
-                    if (NULL == (node_ptr = H5SL_first(cache_ptr->slist_ptr, H5SL_LOCK_EXCLUSIVE)))
+                    if (NULL == (node_ptr = H5SL_first(cache_ptr->slist_ptr)))
                         HGOTO_ERROR(H5E_CACHE, H5E_NOTFOUND, FAIL, "can't locate entry for rescan");
 
                     /* Update stats for rescan */
@@ -1312,6 +1300,9 @@ H5C__flush_invalidate_ring(H5F_t *f, H5C_ring_t ring, unsigned flags)
                 }
             } /* end if */
         }     /* end while loop scanning skip list */
+
+        /* Reset the skip list scanning flag */
+        cache_ptr->slist_scan_in_progress = false;
 
 #ifdef H5C_DO_SANITY_CHECKS
         /* It is possible that entries were added to the skip list during
@@ -1484,6 +1475,9 @@ done:
     if (node_ptr && H5SL_return(node_ptr) < 0)
         HDONE_ERROR(H5E_CACHE, H5E_CANTRELEASE, FAIL, "can't return skip list node");
 
+    /* Reset the cache_ptr->slist_scan_in_progress to false */
+    cache_ptr->slist_scan_in_progress = false;
+
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5C__flush_invalidate_ring() */
 
@@ -1554,6 +1548,11 @@ H5C__flush_ring(H5F_t *f, H5C_ring_t ring, unsigned flags)
      */
     flushed_entries_last_pass = true;
 
+    /* Set the skip list scanning fields to indicate that skip list
+     * modifications need to update the rescan information correctly.
+     */
+    cache_ptr->slist_scan_in_progress = true;
+
     while (cache_ptr->slist_ring_len[ring] > 0 && protected_entries == 0 && flushed_entries_last_pass) {
         flushed_entries_last_pass = false;
 
@@ -1594,7 +1593,7 @@ H5C__flush_ring(H5F_t *f, H5C_ring_t ring, unsigned flags)
 #endif /* H5C_DO_SANITY_CHECKS */
 
         /* Start the scan of the skip list */
-        node_ptr = H5SL_first(cache_ptr->slist_ptr, H5SL_LOCK_EXCLUSIVE);
+        node_ptr = H5SL_first(cache_ptr->slist_ptr);
         while (node_ptr) {
             /* Get the current entry's pointer */
             if (NULL == (entry_ptr = H5SL_item(node_ptr)))
@@ -1610,10 +1609,10 @@ H5C__flush_ring(H5F_t *f, H5C_ring_t ring, unsigned flags)
              */
             node_ptr = H5SL_next(node_ptr);
 
-            if ((!entry_ptr->flush_me_last ||
-                 (entry_ptr->flush_me_last && cache_ptr->num_last_entries >= cache_ptr->slist_len)) &&
-                (entry_ptr->flush_dep_nchildren == 0 || entry_ptr->flush_dep_ndirty_children == 0) &&
-                entry_ptr->ring == ring) {
+            if (((!entry_ptr->flush_me_last) ||
+                 ((entry_ptr->flush_me_last) && cache_ptr->num_last_entries >= cache_ptr->slist_len)) &&
+                ((entry_ptr->flush_dep_nchildren == 0) || (entry_ptr->flush_dep_ndirty_children == 0)) &&
+                (entry_ptr->ring == ring)) {
 
                 assert(entry_ptr->flush_dep_nunser_children == 0);
 
@@ -1626,31 +1625,17 @@ H5C__flush_ring(H5F_t *f, H5C_ring_t ring, unsigned flags)
                 } /* end if */
                 else {
                     /* Reset flag for detecting that the node_ptr entry was removed */
-                    cache_ptr->slist_restart_scan = false;
+                    cache_ptr->slist_scan_next_addr_removed = false;
 
-                    /* Set the 'during flush' flag when the node_ptr is still
-                     * within the list.  The flag indicates that the entry
-                     * flush, and any other operations that occur until it's
-                     * finished, are occurring within the context of a cache
-                     * flush operation.
-                     */
-                    if (node_ptr)
-                        cache_ptr->slist_during_flush = true;
-
-                    if (H5C__flush_single_entry(f, entry_ptr, flags) < 0) {
-                        cache_ptr->slist_during_flush = false;
+                    if (H5C__flush_single_entry(f, entry_ptr, flags) < 0)
                         HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL, "Can't flush entry");
-                    }
-
-                    /* Reset the 'during flush' flag */
-                    cache_ptr->slist_during_flush = false;
 
                     flushed_entries_last_pass = true;
 
                     /* Check for restarting scan */
-                    if (cache_ptr->slist_restart_scan) {
+                    if (cache_ptr->slist_scan_next_addr_removed) {
                         /* Reset flag */
-                        cache_ptr->slist_restart_scan = false;
+                        cache_ptr->slist_scan_next_addr_removed = false;
 
                         /* Update stats for rescan */
                         H5C__UPDATE_STATS_FOR_SLIST_SCAN_RESTART(cache_ptr);
@@ -1685,6 +1670,9 @@ done:
     /* Return the skip list node */
     if (node_ptr && H5SL_return(node_ptr) < 0)
         HDONE_ERROR(H5E_CACHE, H5E_CANTRELEASE, FAIL, "can't return skip list node");
+
+    /* Reset the cache_ptr->slist_scan_in_progress to false */
+    cache_ptr->slist_scan_in_progress = false;
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5C__flush_ring() */

@@ -1084,10 +1084,10 @@ static herr_t
 H5D__mpio_get_sum_chunk_dset(const H5D_io_info_t *io_info, const H5D_dset_io_info_t *dset_info,
                              int *sum_chunkf)
 {
-    int     num_chunkf; /* Number of chunks to iterate over */
-    ssize_t ori_num_chunkf;
-    int     mpi_code; /* MPI return code */
-    herr_t  ret_value = SUCCEED;
+    int    num_chunkf; /* Number of chunks to iterate over */
+    size_t ori_num_chunkf;
+    int    mpi_code; /* MPI return code */
+    herr_t ret_value = SUCCEED;
 
     FUNC_ENTER_PACKAGE
 
@@ -1096,10 +1096,9 @@ H5D__mpio_get_sum_chunk_dset(const H5D_io_info_t *io_info, const H5D_dset_io_inf
     assert(dset_info->layout->type == H5D_CHUNKED);
 
     /* Get the number of chunks to perform I/O on */
-    num_chunkf = 0;
-    if ((ori_num_chunkf = H5SL_count(dset_info->layout_io_info.chunk_map->dset_sel_pieces)) < 0)
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get # of pieces");
-    H5_CHECKED_ASSIGN(num_chunkf, int, ori_num_chunkf, ssize_t);
+    num_chunkf     = 0;
+    ori_num_chunkf = H5SL_count(dset_info->layout_io_info.chunk_map->dset_sel_pieces);
+    H5_CHECKED_ASSIGN(num_chunkf, int, ori_num_chunkf, size_t);
 
     /* Determine the summation of number of chunks for all processes */
     if (MPI_SUCCESS !=
@@ -2050,7 +2049,6 @@ H5D__multi_chunk_collective_io(H5D_io_info_t *io_info, H5D_dset_io_info_t *dset_
     H5FD_mpio_collective_opt_t orig_coll_opt_mode =
         H5FD_MPIO_COLLECTIVE_IO;           /* Original parallel transfer property on entering this function */
     size_t                    total_chunk; /* Total # of chunks in dataset */
-    ssize_t                   snum_chunk;  /* Number of chunks for this process */
     size_t                    num_chunk;   /* Number of chunks for this process */
     H5SL_node_t              *piece_node      = NULL; /* Current node in chunk skip list */
     H5D_piece_info_t         *next_chunk_info = NULL; /* Chunk info for next selected chunk */
@@ -2093,16 +2091,13 @@ H5D__multi_chunk_collective_io(H5D_io_info_t *io_info, H5D_dset_io_info_t *dset_
     dset_info->store = &store;
 
     /* Get the number of chunks with a selection */
-    if ((snum_chunk = H5SL_count(dset_info->layout_io_info.chunk_map->dset_sel_pieces)) < 0)
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get # of pieces");
-    num_chunk = (size_t)snum_chunk;
+    num_chunk = H5SL_count(dset_info->layout_io_info.chunk_map->dset_sel_pieces);
 
     if (num_chunk) {
         /* Start at the beginning of the chunk map skiplist.  Since these chunks are
          * stored in index order and since we're iterating in index order we can
          * just check for each chunk being selected in order */
-        if (NULL ==
-            (piece_node = H5SL_first(dset_info->layout_io_info.chunk_map->dset_sel_pieces, H5SL_LOCK_SHARED)))
+        if (NULL == (piece_node = H5SL_first(dset_info->layout_io_info.chunk_map->dset_sel_pieces)))
             HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "couldn't get piece node from skip list");
         if (NULL == (next_chunk_info = (H5D_piece_info_t *)H5SL_item(piece_node)))
             HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "couldn't get piece info from skip list");
@@ -2228,10 +2223,6 @@ H5D__multi_chunk_collective_io(H5D_io_info_t *io_info, H5D_dset_io_info_t *dset_
     H5CX_set_mpio_actual_io_mode(actual_io_mode);
 
 done:
-    /* Return the skip list node */
-    if (piece_node && H5SL_return(piece_node) < 0)
-        HDONE_ERROR(H5E_DATASET, H5E_CANTRELEASE, FAIL, "can't return skip list node");
-
     if (ret_value < 0)
         H5CX_set_mpio_actual_chunk_opt(H5D_MPIO_NO_CHUNK_OPTIMIZATION);
 
@@ -2964,7 +2955,7 @@ H5D__obtain_mpio_mode(H5D_io_info_t *io_info, H5D_dset_io_info_t *di, uint8_t as
     uint8_t                *recv_io_mode_info = NULL;
     uint8_t                *mergebuf          = NULL;
     uint8_t                *tempbuf;
-    H5SL_node_t            *chunk_node = NULL;
+    H5SL_node_t            *chunk_node;
     H5D_piece_info_t       *chunk_info;
     H5P_coll_md_read_flag_t md_reads_file_flag;
     bool                    md_reads_context_flag;
@@ -3010,7 +3001,7 @@ H5D__obtain_mpio_mode(H5D_io_info_t *io_info, H5D_dset_io_info_t *di, uint8_t as
             HGOTO_ERROR(H5E_DATASET, H5E_CANTALLOC, FAIL, "couldn't allocate recv I/O mode info buffer");
 
     /* Obtain the regularity and selection information for all chunks in this process. */
-    chunk_node = H5SL_first(di->layout_io_info.chunk_map->dset_sel_pieces, H5SL_LOCK_SHARED);
+    chunk_node = H5SL_first(di->layout_io_info.chunk_map->dset_sel_pieces);
     while (chunk_node) {
         chunk_info = (H5D_piece_info_t *)H5SL_item(chunk_node);
 
@@ -3127,10 +3118,6 @@ H5D__obtain_mpio_mode(H5D_io_info_t *io_info, H5D_dset_io_info_t *di, uint8_t as
 #endif
 
 done:
-    /* Return the skip list node */
-    if (chunk_node && H5SL_return(chunk_node) < 0)
-        HDONE_ERROR(H5E_DATASET, H5E_CANTRELEASE, FAIL, "can't return skip list node");
-
     /* Re-enable collective metadata reads if we disabled them */
     if (restore_md_reads_state)
         H5F_set_coll_metadata_reads(di->dset->oloc.file, &md_reads_file_flag, &md_reads_context_flag);
@@ -3169,7 +3156,6 @@ H5D__mpio_collective_filtered_chunk_io_setup(const H5D_io_info_t *io_info, const
 {
     H5D_filtered_collective_chunk_info_t *local_info_array    = NULL;
     H5D_mpio_filtered_dset_info_t        *curr_dset_info      = NULL;
-    H5SL_node_t                          *chunk_node          = NULL;
     size_t                                num_chunks_selected = 0;
     size_t                                num_chunks_to_read  = 0;
     size_t                                buf_idx             = 0;
@@ -3205,8 +3191,6 @@ H5D__mpio_collective_filtered_chunk_io_setup(const H5D_io_info_t *io_info, const
 
     /* Calculate size needed for total chunk list */
     for (size_t dset_idx = 0; dset_idx < num_dset_infos; dset_idx++) {
-        ssize_t snum_chunks_selected;
-
         /* Skip this dataset if no I/O is being performed */
         if (di[dset_idx].skip_io)
             continue;
@@ -3222,9 +3206,7 @@ H5D__mpio_collective_filtered_chunk_io_setup(const H5D_io_info_t *io_info, const
         assert(di[dset_idx].layout->type == H5D_CHUNKED);
         assert(di[dset_idx].layout->storage.type == H5D_CHUNKED);
 
-        if ((snum_chunks_selected = H5SL_count(di[dset_idx].layout_io_info.chunk_map->dset_sel_pieces)) < 0)
-            HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get # of pieces");
-        num_chunks_selected += (size_t)snum_chunks_selected;
+        num_chunks_selected += H5SL_count(di[dset_idx].layout_io_info.chunk_map->dset_sel_pieces);
     }
 
     if (num_chunks_selected)
@@ -3234,7 +3216,6 @@ H5D__mpio_collective_filtered_chunk_io_setup(const H5D_io_info_t *io_info, const
     for (size_t dset_idx = 0; dset_idx < num_dset_infos; dset_idx++) {
         H5D_chunk_ud_t udata;
         H5O_fill_t    *fill_msg;
-        ssize_t        num_pieces; /* # of pieces in the skip list */
         haddr_t        prev_tag = HADDR_UNDEF;
 
         /* Skip this dataset if no I/O is being performed */
@@ -3344,18 +3325,15 @@ H5D__mpio_collective_filtered_chunk_io_setup(const H5D_io_info_t *io_info, const
         /* Set metadata tagging with dataset oheader addr */
         H5AC_tag(di[dset_idx].dset->oloc.addr, &prev_tag);
 
-        /* Get # of pieces in list */
-        if ((num_pieces = H5SL_count(di[dset_idx].layout_io_info.chunk_map->dset_sel_pieces)) < 0)
-            HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get # of pieces in skip list");
-
-        if (num_pieces > 0) {
-            bool filter_partial_edge_chunks;
+        if (H5SL_count(di[dset_idx].layout_io_info.chunk_map->dset_sel_pieces)) {
+            H5SL_node_t *chunk_node;
+            bool         filter_partial_edge_chunks;
 
             /* Determine whether partial edge chunks should be filtered */
             filter_partial_edge_chunks = !(di[dset_idx].dset->shared->layout.u.chunk.flags &
                                            H5O_LAYOUT_CHUNK_DONT_FILTER_PARTIAL_BOUND_CHUNKS);
 
-            chunk_node = H5SL_first(di[dset_idx].layout_io_info.chunk_map->dset_sel_pieces, H5SL_LOCK_SHARED);
+            chunk_node = H5SL_first(di[dset_idx].layout_io_info.chunk_map->dset_sel_pieces);
             while (chunk_node) {
                 H5D_piece_info_t *chunk_info;
                 hsize_t           select_npoints;
@@ -3509,10 +3487,6 @@ H5D__mpio_collective_filtered_chunk_io_setup(const H5D_io_info_t *io_info, const
 #endif
 
 done:
-    /* Return the skip list node */
-    if (chunk_node && H5SL_return(chunk_node) < 0)
-        HDONE_ERROR(H5E_DATASET, H5E_CANTRELEASE, FAIL, "can't return skip list node");
-
     if (ret_value < 0) {
         /* Free temporary cached dataset info object */
         if (curr_dset_info) {

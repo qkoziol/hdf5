@@ -1069,7 +1069,7 @@ H5G__visit_cb(const H5O_link_t *lnk, void *_udata)
                 *new_node = obj_pos;
 
                 /* Add to list of visited objects */
-                if (H5SL_insert(udata->visited, new_node, new_node, false) < 0)
+                if (H5SL_insert(udata->visited, new_node, new_node) < 0)
                     HGOTO_ERROR(H5E_SYM, H5E_CANTINSERT, H5_ITER_ERROR,
                                 "can't insert object node into visited list");
             }
@@ -1221,7 +1221,7 @@ H5G_visit(H5G_loc_t *loc, const char *group_name, H5_index_t idx_type, H5_iter_o
         obj_pos->addr = grp->oloc.addr;
 
         /* Add to list of visited objects */
-        if (H5SL_insert(udata.visited, obj_pos, obj_pos, false) < 0)
+        if (H5SL_insert(udata.visited, obj_pos, obj_pos) < 0)
             HGOTO_ERROR(H5E_SYM, H5E_CANTINSERT, FAIL, "can't insert object node into visited list");
     }
 

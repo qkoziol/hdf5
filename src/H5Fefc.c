@@ -343,7 +343,7 @@ H5F__efc_open(bool try, H5F_efc_t *efc, H5F_t **_file, const char *name, unsigne
 
         /* Add the file to the cache */
         /* Skip list */
-        if (H5SL_insert(efc->slist, ent, ent->name, false) < 0)
+        if (H5SL_insert(efc->slist, ent, ent->name) < 0)
             HGOTO_ERROR(H5E_FILE, H5E_CANTINSERT, FAIL, "can't insert entry into skip list");
 
         /* Add to head of LRU list and update tail if necessary */

@@ -583,7 +583,7 @@ H5C__flush_single_entry(H5F_t *f, H5C_cache_entry_t *entry_ptr, unsigned flags)
 
 #ifdef H5_HAVE_PARALLEL
             if (cache_ptr->coll_write_list) {
-                if (H5SL_insert(cache_ptr->coll_write_list, entry_ptr, &entry_ptr->addr, false) < 0)
+                if (H5SL_insert(cache_ptr->coll_write_list, entry_ptr, &entry_ptr->addr) < 0)
                     HGOTO_ERROR(H5E_CACHE, H5E_CANTINSERT, FAIL, "unable to insert skip list item");
             } /* end if */
             else {

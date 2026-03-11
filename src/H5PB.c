@@ -532,7 +532,7 @@ H5PB_add_new_page(H5F_shared_t *f_sh, H5FD_mem_t type, haddr_t page_addr)
         page_entry->is_dirty = false;
 
         /* Insert entry in skip list */
-        if (H5SL_insert(page_buf->mf_slist_ptr, page_entry, &page_entry->addr, false) < 0)
+        if (H5SL_insert(page_buf->mf_slist_ptr, page_entry, &(page_entry->addr)) < 0)
             HGOTO_ERROR(H5E_PAGEBUF, H5E_BADVALUE, FAIL, "Can't insert entry in skip list");
     } /* end if */
 
@@ -626,7 +626,7 @@ H5PB_remove_entry(const H5F_shared_t *f_sh, haddr_t addr)
 
         /* Remove from LRU list */
         H5PB__REMOVE_LRU(page_buf, page_entry)
-        assert((size_t)H5SL_count(page_buf->slist_ptr) == page_buf->LRU_list_len);
+        assert(H5SL_count(page_buf->slist_ptr) == page_buf->LRU_list_len);
 
         page_buf->meta_count--;
 
@@ -756,13 +756,13 @@ H5PB_read(H5F_shared_t *f_sh, H5FD_mem_t type, haddr_t addr, size_t size, void *
          * update the buffer with what's in the page so we get the up
          * to date data into the buffer after the big read from the file.
          */
-        node = H5SL_find(page_buf->slist_ptr, &first_page_addr, H5SL_LOCK_SHARED);
+        node = H5SL_find(page_buf->slist_ptr, (void *)(&first_page_addr));
         for (i = 0; i < num_touched_pages; i++) {
             search_addr = i * page_buf->page_size + first_page_addr;
 
             /* if we still haven't located a starting page, search again */
             if (!node && i != 0)
-                node = H5SL_find(page_buf->slist_ptr, &search_addr, H5SL_LOCK_SHARED);
+                node = H5SL_find(page_buf->slist_ptr, (void *)(&search_addr));
 
             /* if the current page is in the Page Buffer, do the updates */
             if (node) {
@@ -861,15 +861,10 @@ H5PB_read(H5F_shared_t *f_sh, H5FD_mem_t type, haddr_t addr, size_t size, void *
             else {
                 void   *new_page_buf = NULL;
                 size_t  page_size    = page_buf->page_size;
-                ssize_t snpages;
-                size_t  npages;
                 haddr_t eoa;
 
                 /* make space for new entry */
-                if ((snpages = H5SL_count(page_buf->slist_ptr)) < 0)
-                    HGOTO_ERROR(H5E_PAGEBUF, H5E_CANTGET, FAIL, "can't get # of pages");
-                npages = (size_t)snpages;
-                if ((npages * page_buf->page_size) >= page_buf->max_size) {
+                if ((H5SL_count(page_buf->slist_ptr) * page_buf->page_size) >= page_buf->max_size) {
                     htri_t can_make_space;
 
                     /* check if we can make space in page buffer */
@@ -1173,16 +1168,11 @@ H5PB_write(H5F_shared_t *f_sh, H5FD_mem_t type, haddr_t addr, size_t size, const
             } /* end if */
             /* If not found */
             else {
-                void   *new_page_buf;
-                ssize_t snpages;
-                size_t  npages;
-                size_t  page_size = page_buf->page_size;
+                void  *new_page_buf;
+                size_t page_size = page_buf->page_size;
 
                 /* Make space for new entry */
-                if ((snpages = H5SL_count(page_buf->slist_ptr)) < 0)
-                    HGOTO_ERROR(H5E_PAGEBUF, H5E_CANTGET, FAIL, "can't get # of pages");
-                npages = (size_t)snpages;
-                if ((npages * page_buf->page_size) >= page_buf->max_size) {
+                if ((H5SL_count(page_buf->slist_ptr) * page_buf->page_size) >= page_buf->max_size) {
                     htri_t can_make_space;
 
                     /* Check if we can make space in page buffer */
@@ -1395,9 +1385,9 @@ H5PB__insert_entry(H5PB_t *page_buf, H5PB_entry_t *page_entry)
     FUNC_ENTER_PACKAGE
 
     /* Insert entry in skip list */
-    if (H5SL_insert(page_buf->slist_ptr, page_entry, &page_entry->addr, false) < 0)
+    if (H5SL_insert(page_buf->slist_ptr, page_entry, &(page_entry->addr)) < 0)
         HGOTO_ERROR(H5E_PAGEBUF, H5E_CANTINSERT, FAIL, "can't insert entry in skip list");
-    assert((size_t)H5SL_count(page_buf->slist_ptr) * page_buf->page_size <= page_buf->max_size);
+    assert(H5SL_count(page_buf->slist_ptr) * page_buf->page_size <= page_buf->max_size);
 
     /* Increment appropriate page count */
     if (H5F_MEM_PAGE_DRAW == page_entry->type || H5F_MEM_PAGE_GHEAP == page_entry->type)
@@ -1486,7 +1476,7 @@ H5PB__make_space(H5F_shared_t *f_sh, H5PB_t *page_buf, H5FD_mem_t inserted_type)
 
     /* Remove entry from LRU list */
     H5PB__REMOVE_LRU(page_buf, page_entry)
-    assert((size_t)H5SL_count(page_buf->slist_ptr) == page_buf->LRU_list_len);
+    assert(H5SL_count(page_buf->slist_ptr) == page_buf->LRU_list_len);
 
     /* Decrement appropriate page type counter */
     if (H5F_MEM_PAGE_DRAW == page_entry->type || H5F_MEM_PAGE_GHEAP == page_entry->type)

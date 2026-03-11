@@ -156,7 +156,7 @@ H5AC_proxy_entry_add_parent(H5AC_proxy_entry_t *pentry, void *_parent)
                         "unable to create skip list for parents of proxy entry");
 
     /* Insert parent address into skip list */
-    if (H5SL_insert(pentry->parents, parent, &parent->addr, false) < 0)
+    if (H5SL_insert(pentry->parents, parent, &parent->addr) < 0)
         HGOTO_ERROR(H5E_CACHE, H5E_CANTINSERT, FAIL, "unable to insert parent into proxy's skip list");
 
     /* Add flush dependency on parent */
@@ -186,7 +186,6 @@ H5AC_proxy_entry_remove_parent(H5AC_proxy_entry_t *pentry, void *_parent)
 {
     H5AC_info_t *parent = (H5AC_info_t *)_parent; /* Pointer to the parent entry */
     H5AC_info_t *rem_parent;                      /* Pointer to the removed parent entry */
-    ssize_t      num_parents;                     /* # of parent entries in skip list */
     herr_t       ret_value = SUCCEED;             /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
@@ -202,12 +201,8 @@ H5AC_proxy_entry_remove_parent(H5AC_proxy_entry_t *pentry, void *_parent)
     if (!H5_addr_eq(rem_parent->addr, parent->addr))
         HGOTO_ERROR(H5E_CACHE, H5E_BADVALUE, FAIL, "removed proxy entry parent not the same as real parent");
 
-    /* Get # of parent entries */
-    if ((num_parents = H5SL_count(pentry->parents)) < 0)
-        HGOTO_ERROR(H5E_CACHE, H5E_CANTGET, FAIL, "can't get # of parent entries");
-
     /* Shut down the skip list, if this is the last parent */
-    if (0 == num_parents) {
+    if (0 == H5SL_count(pentry->parents)) {
         /* Sanity check */
         assert(0 == pentry->nchildren);
 

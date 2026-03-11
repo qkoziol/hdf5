@@ -282,8 +282,8 @@ H5FD__core_add_dirty_region(H5FD_core_t *file, haddr_t start, haddr_t end)
             item        = (H5FD_core_region_t *)H5FL_CALLOC(H5FD_core_region_t);
             item->start = start;
             item->end   = end;
-            if (H5SL_insert(file->dirty_list, item, &item->start, false) < 0)
-                HGOTO_ERROR(H5E_VFL, H5E_CANTINSERT, FAIL, "can't insert new dirty region: (%llu, %llu)\n",
+            if (H5SL_insert(file->dirty_list, item, &item->start) < 0)
+                HGOTO_ERROR(H5E_SLIST, H5E_CANTINSERT, FAIL, "can't insert new dirty region: (%llu, %llu)\n",
                             (unsigned long long)start, (unsigned long long)end);
         } /* end if */
         else {
@@ -327,7 +327,7 @@ H5FD__core_destroy_dirty_list(H5FD_core_t *file)
             region = H5FL_FREE(H5FD_core_region_t, region);
 
         if (H5SL_close(file->dirty_list) < 0)
-            HGOTO_ERROR(H5E_VFL, H5E_CLOSEERROR, FAIL, "can't close core vfd dirty list");
+            HGOTO_ERROR(H5E_SLIST, H5E_CLOSEERROR, FAIL, "can't close core vfd dirty list");
         file->dirty_list = NULL;
     } /* end if */
 
@@ -939,7 +939,7 @@ H5FD__core_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr
         /* initialize the dirty list */
         if (use_write_tracking)
             if (NULL == (file->dirty_list = H5SL_create(H5SL_TYPE_HADDR, NULL)))
-                HGOTO_ERROR(H5E_VFL, H5E_CANTCREATE, NULL, "can't create core vfd dirty region list");
+                HGOTO_ERROR(H5E_SLIST, H5E_CANTCREATE, NULL, "can't create core vfd dirty region list");
     } /* end if */
 
     /* Set return value */

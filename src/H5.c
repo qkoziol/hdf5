@@ -262,8 +262,10 @@ H5_init_library(void)
      *   default FAPL.
      *
      */
+#ifdef H5_HAVE_CONCURRENCY
     if (H5FL_init() < 0)
         HGOTO_ERROR(H5E_FUNC, H5E_CANTINIT, FAIL, "unable to initialize free list interface");
+#endif
     if (H5E_init() < 0)
         HGOTO_ERROR(H5E_FUNC, H5E_CANTINIT, FAIL, "unable to initialize error interface");
     if (H5FD_init() < 0)
