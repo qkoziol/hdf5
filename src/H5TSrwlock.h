@@ -231,46 +231,6 @@ H5TS_rwlock_trywrlock(H5TS_rwlock_t *lock, bool *acquired)
 } /* end H5TS_rwlock_trywrlock() */
 
 /*-------------------------------------------------------------------------
- * Function: H5TS_rwlock_wrlock_downgrade
- *
- * Purpose:  Downgrade a write lock to read lock without releasing it
- *
- * Return:   Non-negative on success / Negative on failure
- *
- *-------------------------------------------------------------------------
- */
-static inline herr_t
-H5TS_rwlock_wrlock_downgrade(H5TS_rwlock_t *lock)
-{
-    /* Check argument */
-    if (H5_UNLIKELY(NULL == lock))
-        return FAIL;
-
-    /* Acquire the lock's mutex */
-    if (H5_UNLIKELY(mtx_lock(&lock->mutex) != thrd_success))
-        return FAIL;
-
-    /* Decrement # of writers */
-    lock->writers--;
-
-    /* Increment # of readers */
-    lock->readers++;
-
-    /* Wake other readers, if no waiting writers */
-    if (lock->read_waiters && 0 == lock->write_waiters)
-        if (H5_UNLIKELY(cnd_broadcast(&lock->read_cv) != thrd_success)) {
-            mtx_unlock(&lock->mutex);
-            return FAIL;
-        }
-
-    /* Release mutex */
-    if (H5_UNLIKELY(mtx_unlock(&lock->mutex) != thrd_success))
-        return FAIL;
-
-    return SUCCEED;
-} /* end H5TS_rwlock_wrlock_downgrade() */
-
-/*-------------------------------------------------------------------------
  * Function: H5TS_rwlock_wrunlock
  *
  * Purpose:  Release a write lock
@@ -314,6 +274,116 @@ H5TS_rwlock_wrunlock(H5TS_rwlock_t *lock)
 } /* end H5TS_rwlock_wrunlock() */
 
 #else
+#ifdef H5_HAVE_WIN_THREADS
+/*-------------------------------------------------------------------------
+ * Function: H5TS_rwlock_rdlock
+ *
+ * Purpose:  Acquire a read lock
+ *
+ * Return:   Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+static inline herr_t
+H5TS_rwlock_rdlock(H5TS_rwlock_t *lock)
+{
+    /* Check argument */
+    if (H5_UNLIKELY(NULL == lock))
+        return FAIL;
+
+    AcquireSRWLockShared(lock);
+
+    return SUCCEED;
+} /* end H5TS_rwlock_rdlock() */
+
+/*-------------------------------------------------------------------------
+ * Function: H5TS_rwlock_rdunlock
+ *
+ * Purpose:  Release a read lock
+ *
+ * Return:   Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+static inline herr_t
+H5TS_rwlock_rdunlock(H5TS_rwlock_t *lock)
+{
+    /* Check argument */
+    if (H5_UNLIKELY(NULL == lock))
+        return FAIL;
+
+    ReleaseSRWLockShared(lock);
+
+    return SUCCEED;
+} /* end H5TS_rwlock_rdunlock() */
+
+/*-------------------------------------------------------------------------
+ * Function: H5TS_rwlock_wrlock
+ *
+ * Purpose:  Acquire a write lock
+ *
+ * Return:   Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+static inline herr_t
+H5TS_rwlock_wrlock(H5TS_rwlock_t *lock)
+{
+    /* Check argument */
+    if (H5_UNLIKELY(NULL == lock))
+        return FAIL;
+
+    AcquireSRWLockExclusive(lock);
+
+    return SUCCEED;
+} /* end H5TS_rwlock_wrlock() */
+
+/*-------------------------------------------------------------------------
+ * Function: H5TS_rwlock_trywrlock
+ *
+ * Purpose:  Attempt to acquire a write lock
+ *
+ * Return:   Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+static inline herr_t
+H5TS_rwlock_trywrlock(H5TS_rwlock_t *lock, bool *acquired)
+{
+    /* Check argument */
+    if (H5_UNLIKELY(NULL == lock || NULL == acquired))
+        return FAIL;
+
+    if (TryAcquireSRWLockExclusive(lock))
+        *acquired = true;
+    else
+        *acquired = false;
+
+    return SUCCEED;
+} /* end H5TS_rwlock_trywrlock() */
+
+/*-------------------------------------------------------------------------
+ * Function: H5TS_rwlock_wrunlock
+ *
+ * Purpose:  Release a write lock
+ *
+ * Return:   Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+static inline herr_t
+H5TS_rwlock_wrunlock(H5TS_rwlock_t *lock)
+{
+    /* Check argument */
+    if (H5_UNLIKELY(NULL == lock))
+        return FAIL;
+
+    ReleaseSRWLockExclusive(lock);
+
+    return SUCCEED;
+} /* end H5TS_rwlock_wrunlock() */
+
+#elif defined(__MACH__)
 /*-------------------------------------------------------------------------
  * Function: H5TS_rwlock_rdlock
  *
@@ -331,7 +401,7 @@ H5TS_rwlock_rdlock(H5TS_rwlock_t *lock)
         return FAIL;
 
     /* Acquire the lock's mutex */
-    if (H5_UNLIKELY(H5TS_mutex_lock(&lock->mutex)))
+    if (H5_UNLIKELY(pthread_mutex_lock(&lock->mutex)))
         return FAIL;
 
     /* Check for writers */
@@ -341,8 +411,8 @@ H5TS_rwlock_rdlock(H5TS_rwlock_t *lock)
 
         /* Wait for writers */
         do {
-            if (H5_UNLIKELY(H5TS_cond_wait(&lock->read_cv, &lock->mutex))) {
-                H5TS_mutex_unlock(&lock->mutex);
+            if (H5_UNLIKELY(pthread_cond_wait(&lock->read_cv, &lock->mutex))) {
+                pthread_mutex_unlock(&lock->mutex);
                 return FAIL;
             }
         } while (lock->writers || lock->write_waiters);
@@ -355,7 +425,7 @@ H5TS_rwlock_rdlock(H5TS_rwlock_t *lock)
     lock->readers++;
 
     /* Release mutex */
-    if (H5_UNLIKELY(H5TS_mutex_unlock(&lock->mutex)))
+    if (H5_UNLIKELY(pthread_mutex_unlock(&lock->mutex)))
         return FAIL;
 
     return SUCCEED;
@@ -378,7 +448,7 @@ H5TS_rwlock_rdunlock(H5TS_rwlock_t *lock)
         return FAIL;
 
     /* Acquire the lock's mutex */
-    if (H5_UNLIKELY(H5TS_mutex_lock(&lock->mutex)))
+    if (H5_UNLIKELY(pthread_mutex_lock(&lock->mutex)))
         return FAIL;
 
     /* Decrement # of readers */
@@ -386,13 +456,13 @@ H5TS_rwlock_rdunlock(H5TS_rwlock_t *lock)
 
     /* Check for waiting writers when last readers */
     if (lock->write_waiters && 0 == lock->readers)
-        if (H5_UNLIKELY(H5TS_cond_signal(&lock->write_cv))) {
-            H5TS_mutex_unlock(&lock->mutex);
+        if (H5_UNLIKELY(pthread_cond_signal(&lock->write_cv))) {
+            pthread_mutex_unlock(&lock->mutex);
             return FAIL;
         }
 
     /* Release mutex */
-    if (H5_UNLIKELY(H5TS_mutex_unlock(&lock->mutex)))
+    if (H5_UNLIKELY(pthread_mutex_unlock(&lock->mutex)))
         return FAIL;
 
     return SUCCEED;
@@ -415,7 +485,7 @@ H5TS_rwlock_wrlock(H5TS_rwlock_t *lock)
         return FAIL;
 
     /* Acquire the lock's mutex */
-    if (H5_UNLIKELY(H5TS_mutex_lock(&lock->mutex)))
+    if (H5_UNLIKELY(pthread_mutex_lock(&lock->mutex)))
         return FAIL;
 
     /* Check for readers or other writers */
@@ -425,8 +495,8 @@ H5TS_rwlock_wrlock(H5TS_rwlock_t *lock)
 
         /* Wait for mutex */
         do {
-            if (H5_UNLIKELY(H5TS_cond_wait(&lock->write_cv, &lock->mutex))) {
-                H5TS_mutex_unlock(&lock->mutex);
+            if (H5_UNLIKELY(pthread_cond_wait(&lock->write_cv, &lock->mutex))) {
+                pthread_mutex_unlock(&lock->mutex);
                 return FAIL;
             }
         } while (lock->readers || lock->writers);
@@ -439,7 +509,7 @@ H5TS_rwlock_wrlock(H5TS_rwlock_t *lock)
     lock->writers++;
 
     /* Release mutex */
-    if (H5_UNLIKELY(H5TS_mutex_unlock(&lock->mutex)))
+    if (H5_UNLIKELY(pthread_mutex_unlock(&lock->mutex)))
         return FAIL;
 
     return SUCCEED;
@@ -457,16 +527,21 @@ H5TS_rwlock_wrlock(H5TS_rwlock_t *lock)
 static inline herr_t
 H5TS_rwlock_trywrlock(H5TS_rwlock_t *lock, bool *acquired)
 {
+    int rc;
+
     /* Check argument */
     if (H5_UNLIKELY(NULL == lock || NULL == acquired))
         return FAIL;
 
-    /* Attempt to acquire the lock */
-    if (H5_UNLIKELY(H5TS_mutex_trylock(&lock->mutex, acquired) < 0))
-        return FAIL;
-    if (!*acquired)
+    /* Acquire the lock's mutex */
+    rc = pthread_mutex_trylock(&lock->mutex);
+    if (EBUSY == rc) {
         /* We did not acquire the lock */
+        *acquired = false;
         return SUCCEED;
+    }
+    else if (0 != rc)
+        return FAIL;
 
     /* Check for readers or other writers */
     if (lock->readers || lock->writers)
@@ -481,51 +556,11 @@ H5TS_rwlock_trywrlock(H5TS_rwlock_t *lock, bool *acquired)
     }
 
     /* Release mutex */
-    if (H5_UNLIKELY(H5TS_mutex_unlock(&lock->mutex)))
+    if (H5_UNLIKELY(pthread_mutex_unlock(&lock->mutex)))
         return FAIL;
 
     return SUCCEED;
 } /* end H5TS_rwlock_trywrlock() */
-
-/*-------------------------------------------------------------------------
- * Function: H5TS_rwlock_wrlock_downgrade
- *
- * Purpose:  Downgrade a write lock to read lock without releasing it
- *
- * Return:   Non-negative on success / Negative on failure
- *
- *-------------------------------------------------------------------------
- */
-static inline herr_t
-H5TS_rwlock_wrlock_downgrade(H5TS_rwlock_t *lock)
-{
-    /* Check argument */
-    if (H5_UNLIKELY(NULL == lock))
-        return FAIL;
-
-    /* Acquire the lock's mutex */
-    if (H5_UNLIKELY(H5TS_mutex_lock(&lock->mutex)))
-        return FAIL;
-
-    /* Decrement # of writers */
-    lock->writers--;
-
-    /* Increment # of readers */
-    lock->readers++;
-
-    /* Wake other readers, if no waiting writers */
-    if (lock->read_waiters && 0 == lock->write_waiters)
-        if (H5_UNLIKELY(H5TS_cond_broadcast(&lock->read_cv))) {
-            H5TS_mutex_unlock(&lock->mutex);
-            return FAIL;
-        }
-
-    /* Release mutex */
-    if (H5_UNLIKELY(H5TS_mutex_unlock(&lock->mutex)))
-        return FAIL;
-
-    return SUCCEED;
-} /* end H5TS_rwlock_wrlock_downgrade() */
 
 /*-------------------------------------------------------------------------
  * Function: H5TS_rwlock_wrunlock
@@ -544,7 +579,7 @@ H5TS_rwlock_wrunlock(H5TS_rwlock_t *lock)
         return FAIL;
 
     /* Acquire the lock's mutex */
-    if (H5_UNLIKELY(H5TS_mutex_lock(&lock->mutex)))
+    if (H5_UNLIKELY(pthread_mutex_lock(&lock->mutex)))
         return FAIL;
 
     /* Decrement # of writers */
@@ -552,21 +587,140 @@ H5TS_rwlock_wrunlock(H5TS_rwlock_t *lock)
 
     /* Check for waiting writers */
     if (lock->write_waiters) {
-        if (H5_UNLIKELY(H5TS_cond_signal(&lock->write_cv))) {
-            H5TS_mutex_unlock(&lock->mutex);
+        if (H5_UNLIKELY(pthread_cond_signal(&lock->write_cv))) {
+            pthread_mutex_unlock(&lock->mutex);
             return FAIL;
         }
     }
     else if (lock->read_waiters)
-        if (H5_UNLIKELY(H5TS_cond_broadcast(&lock->read_cv))) {
-            H5TS_mutex_unlock(&lock->mutex);
+        if (H5_UNLIKELY(pthread_cond_broadcast(&lock->read_cv))) {
+            pthread_mutex_unlock(&lock->mutex);
             return FAIL;
         }
 
     /* Release mutex */
-    if (H5_UNLIKELY(H5TS_mutex_unlock(&lock->mutex)))
+    if (H5_UNLIKELY(pthread_mutex_unlock(&lock->mutex)))
         return FAIL;
 
     return SUCCEED;
 } /* end H5TS_rwlock_wrunlock() */
+
+#else
+/*-------------------------------------------------------------------------
+ * Function: H5TS_rwlock_rdlock
+ *
+ * Purpose:  Acquire a read lock
+ *
+ * Return:   Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+static inline herr_t
+H5TS_rwlock_rdlock(H5TS_rwlock_t *lock)
+{
+    /* Check argument */
+    if (H5_UNLIKELY(NULL == lock))
+        return FAIL;
+
+    if (H5_UNLIKELY(pthread_rwlock_rdlock(lock)))
+        return FAIL;
+
+    return SUCCEED;
+} /* end H5TS_rwlock_rdlock() */
+
+/*-------------------------------------------------------------------------
+ * Function: H5TS_rwlock_rdunlock
+ *
+ * Purpose:  Release a read lock
+ *
+ * Return:   Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+static inline herr_t
+H5TS_rwlock_rdunlock(H5TS_rwlock_t *lock)
+{
+    /* Check argument */
+    if (H5_UNLIKELY(NULL == lock))
+        return FAIL;
+
+    if (H5_UNLIKELY(pthread_rwlock_unlock(lock)))
+        return FAIL;
+
+    return SUCCEED;
+} /* end H5TS_rwlock_rdunlock() */
+
+/*-------------------------------------------------------------------------
+ * Function: H5TS_rwlock_wrlock
+ *
+ * Purpose:  Acquire a write lock
+ *
+ * Return:   Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+static inline herr_t
+H5TS_rwlock_wrlock(H5TS_rwlock_t *lock)
+{
+    /* Check argument */
+    if (H5_UNLIKELY(NULL == lock))
+        return FAIL;
+
+    if (H5_UNLIKELY(pthread_rwlock_wrlock(lock)))
+        return FAIL;
+
+    return SUCCEED;
+} /* end H5TS_rwlock_wrlock() */
+
+/*-------------------------------------------------------------------------
+ * Function: H5TS_rwlock_trywrlock
+ *
+ * Purpose:  Attempt to acquire a write lock
+ *
+ * Return:   Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5TS_rwlock_trywrlock(H5TS_rwlock_t *lock, bool *acquired)
+{
+    int ret;
+
+    /* Check argument */
+    if (H5_UNLIKELY(NULL == lock || NULL == acquired))
+        return FAIL;
+
+    ret = pthread_rwlock_trywrlock(lock);
+    if (EBUSY == ret)
+        *acquired = false; /* We did not acquire the lock */
+    else if (H5_UNLIKELY(0 != ret))
+        return FAIL;
+    else
+        *acquired = true; /* We acquired the lock */
+
+    return SUCCEED;
+} /* end H5TS_rwlock_trywrlock() */
+
+/*-------------------------------------------------------------------------
+ * Function: H5TS_rwlock_rdunlock
+ *
+ * Purpose:  Release a write lock
+ *
+ * Return:   Non-negative on success / Negative on failure
+ *
+ *-------------------------------------------------------------------------
+ */
+static inline herr_t
+H5TS_rwlock_wrunlock(H5TS_rwlock_t *lock)
+{
+    /* Check argument */
+    if (H5_UNLIKELY(NULL == lock))
+        return FAIL;
+
+    if (H5_UNLIKELY(pthread_rwlock_unlock(lock)))
+        return FAIL;
+
+    return SUCCEED;
+} /* end H5TS_rwlock_wrunlock() */
+#endif
 #endif
