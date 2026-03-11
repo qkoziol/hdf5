@@ -90,9 +90,7 @@
 #define H5TS_atomic_store_int(obj, desired) atomic_store((obj), (desired))
 #define H5TS_atomic_fetch_add_int(obj, arg) atomic_fetch_add((obj), (arg))
 #define H5TS_atomic_fetch_sub_int(obj, arg) atomic_fetch_sub((obj), (arg))
-#define H5TS_atomic_compare_exchange_weak_int(obj, expected, desired)                                        \
-    atomic_compare_exchange_weak((obj), (expected), (desired))
-#define H5TS_atomic_destroy_int(obj) /* void */
+#define H5TS_atomic_destroy_int(obj)        /* void */
 
 /* atomic_uint */
 #define H5TS_atomic_init_uint(obj, desired)  atomic_init((obj), (desired))
@@ -306,9 +304,8 @@ typedef atomic_flag H5TS_spinlock_t;
 
 /* Mutex that efficiently obeys the "DLFTT" locking protocol */
 typedef struct H5TS_dlftt_mutex_t {
-    H5TS_mutex_t mtx;    /* Underlying mutex */
-    bool         bypass; /* Whether locking is being bypassed (due to DLFTT protocol) */
-    unsigned     rc;     /* Refcount of locks bypassed */
+    H5TS_mutex_t mtx;
+    unsigned     dlftt;
 } H5TS_dlftt_mutex_t;
 
 /*****************************/
@@ -407,7 +404,6 @@ static inline int  H5TS_atomic_load_int(H5TS_atomic_int_t *obj);
 static inline void H5TS_atomic_store_int(H5TS_atomic_int_t *obj, int desired);
 static inline int  H5TS_atomic_fetch_add_int(H5TS_atomic_int_t *obj, int arg);
 static inline int  H5TS_atomic_fetch_sub_int(H5TS_atomic_int_t *obj, int arg);
-static inline bool H5TS_atomic_compare_exchange_weak_int(H5TS_atomic_int_t *obj, int *expected, int desired);
 H5_DLL void        H5TS_atomic_destroy_int(H5TS_atomic_int_t *obj);
 
 /* atomic_uint */
@@ -471,7 +467,6 @@ H5_DLL herr_t H5TS_semaphore_destroy(H5TS_semaphore_t *sem);
 #else /* H5_HAVE_THREADS */
 
 /* Aliases for atomic types used when single-threaded */
-typedef int    H5TS_atomic_int_t;
 typedef size_t H5TS_atomic_size_t;
 #define H5TS_atomic_init_size_t(obj, desired)  *(obj) = (desired)
 #define H5TS_atomic_load_size_t(obj)           *(obj)
@@ -483,8 +478,20 @@ typedef size_t H5TS_atomic_size_t;
 #endif /* H5_HAVE_THREADS */
 
 /* Wrappers for atomics that are used for concurrent multithreaded support */
-#ifndef __cplusplus
-#include "H5TSconcurrency.h"
-#endif /* __cplusplus */
+#ifdef H5_HAVE_CONCURRENCY
+#define H5TS_ATOMIC_INIT_SIZE_T(obj, desired)  H5TS_atomic_init_size_t(obj, desired)
+#define H5TS_ATOMIC_LOAD_SIZE_T(obj)           H5TS_atomic_load_size_t(obj)
+#define H5TS_ATOMIC_STORE_SIZE_T(obj, desired) H5TS_atomic_store_size_t(obj, desired)
+#define H5TS_ATOMIC_FETCH_ADD_SIZE_T(obj, arg) H5TS_atomic_fetch_add_size_t(obj, arg)
+#define H5TS_ATOMIC_FETCH_SUB_SIZE_T(obj, arg) H5TS_atomic_fetch_sub_size_t(obj, arg)
+#define H5TS_ATOMIC_DESTROY_SIZE_T(obj)        H5TS_atomic_destroy_size_t(obj)
+#else /* H5_HAVE_CONCURRENCY */
+#define H5TS_ATOMIC_INIT_SIZE_T(obj, desired)  *(obj) = (desired)
+#define H5TS_ATOMIC_LOAD_SIZE_T(obj)           *(obj)
+#define H5TS_ATOMIC_STORE_SIZE_T(obj, desired) *(obj) = (desired)
+#define H5TS_ATOMIC_FETCH_ADD_SIZE_T(obj, arg) *(obj) += (arg)
+#define H5TS_ATOMIC_FETCH_SUB_SIZE_T(obj, arg) *(obj) -= (arg)
+#define H5TS_ATOMIC_DESTROY_SIZE_T(obj)        /* */
+#endif                                         /* H5_HAVE_CONCURRENCY */
 
 #endif /* H5TSprivate_H_ */

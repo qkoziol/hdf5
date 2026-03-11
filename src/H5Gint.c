@@ -108,7 +108,7 @@ H5FL_DEFINE(H5_obj_t);
 /*******************/
 
 /* Group ID class */
-static H5I_class_t H5I_GROUP_CLS[1] = {{
+static const H5I_class_t H5I_GROUP_CLS[1] = {{
     H5I_GROUP,                /* ID class value */
     0,                        /* Class flags */
     0,                        /* # of reserved IDs for class */

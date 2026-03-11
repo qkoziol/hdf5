@@ -173,7 +173,7 @@ hid_t H5E_first_min_id_g = H5I_INVALID_HID;
 hid_t H5E_last_min_id_g  = H5I_INVALID_HID;
 
 /* Error class ID class */
-static H5I_class_t H5I_ERRCLS_CLS[1] = {{
+static const H5I_class_t H5I_ERRCLS_CLS[1] = {{
     H5I_ERROR_CLASS,                  /* ID class value */
     0,                                /* Class flags */
     0,                                /* # of reserved IDs for class */
@@ -181,7 +181,7 @@ static H5I_class_t H5I_ERRCLS_CLS[1] = {{
 }};
 
 /* Error message ID class */
-static H5I_class_t H5I_ERRMSG_CLS[1] = {{
+static const H5I_class_t H5I_ERRMSG_CLS[1] = {{
     H5I_ERROR_MSG,             /* ID class value */
     0,                         /* Class flags */
     0,                         /* # of reserved IDs for class */
@@ -189,7 +189,7 @@ static H5I_class_t H5I_ERRMSG_CLS[1] = {{
 }};
 
 /* Error stack ID class */
-static H5I_class_t H5I_ERRSTK_CLS[1] = {{
+static const H5I_class_t H5I_ERRSTK_CLS[1] = {{
     H5I_ERROR_STACK,             /* ID class value */
     0,                           /* Class flags */
     0,                           /* # of reserved IDs for class */

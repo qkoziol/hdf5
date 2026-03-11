@@ -132,7 +132,7 @@ static H5D_shared_t H5D_def_dset;
 H5_WARN_LARGE_STACK_OBJECTS_ON
 
 /* Dataset ID class */
-static H5I_class_t H5I_DATASET_CLS[1] = {{
+static const H5I_class_t H5I_DATASET_CLS[1] = {{
     H5I_DATASET,              /* ID class value */
     0,                        /* Class flags */
     0,                        /* # of reserved IDs for class */

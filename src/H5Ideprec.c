@@ -84,37 +84,14 @@
 H5I_type_t
 H5Iregister_type1(size_t H5_ATTR_UNUSED hash_size, unsigned reserved, H5I_free_t free_func)
 {
-    H5I_class_t *cls       = NULL; /* New ID class */
-    H5I_type_t   ret_value = H5I_BADID;
+    H5I_type_t ret_value = H5I_BADID;
 
     FUNC_ENTER_API(H5I_BADID)
 
-    /* Allocate new ID class */
-    if (NULL == (cls = H5MM_calloc(sizeof(H5I_class_t))))
-        HGOTO_ERROR(H5E_ID, H5E_CANTALLOC, H5I_BADID, "ID class allocation failed");
-
-    /* Initialize non-zero class fields */
-    cls->type      = H5I_UNINIT;
-    cls->reserved  = reserved;
-    cls->free_func = free_func;
-
-    /* Register the new ID class */
-    if (H5I_register_type(cls) < 0)
+    if (H5I_BADID == (ret_value = H5I__register_type_common(reserved, free_func)))
         HGOTO_ERROR(H5E_ID, H5E_CANTINIT, H5I_BADID, "can't initialize ID class");
 
-    /* Indicate that the class object should be freed when the type is destroyed */
-    /* (Should be set after errors could occur) */
-    cls->flags = H5I_CLASS_IS_APPLICATION;
-
-    /* Set return value */
-    ret_value = cls->type;
-
 done:
-    /* Clean up on error */
-    if (ret_value < 0)
-        if (cls)
-            cls = H5MM_xfree(cls);
-
     FUNC_LEAVE_API(ret_value)
 } /* end H5Iregister_type1() */
 #endif /* H5_NO_DEPRECATED_SYMBOLS */

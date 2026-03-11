@@ -115,7 +115,7 @@ bool H5_PKG_INIT_VAR = false;
 /*******************/
 
 /* Event Set ID class */
-static H5I_class_t H5I_EVENTSET_CLS[1] = {{
+static const H5I_class_t H5I_EVENTSET_CLS[1] = {{
     H5I_EVENTSET,              /* ID class value */
     0,                         /* Class flags */
     0,                         /* # of reserved IDs for class */
