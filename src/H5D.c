@@ -52,7 +52,7 @@ static hid_t  H5D__open_api_common(hid_t loc_id, const char *name, H5P_genplist_
                                    H5VL_object_t **_vol_obj_ptr);
 static hid_t  H5D__get_space_api_common(hid_t dset_id, void **token_ptr, H5VL_object_t **_vol_obj_ptr);
 static herr_t H5D__read_api_common(size_t count, hid_t dset_ids[], hid_t mem_type_ids[],
-                                   hid_t mem_space_ids[], hid_t file_space_ids[], H5P_genplist_t *dxpl,
+                                   hid_t mem_space_ids[], hid_t file_space_ids[], hid_t dxpl_id,
                                    void *bufs[], void **token_ptr, H5VL_object_t **_vol_obj_ptr);
 static herr_t H5D__write_api_common(size_t count, hid_t dset_ids[], hid_t mem_type_ids[],
                                     hid_t mem_space_ids[], hid_t file_space_ids[], H5P_genplist_t *dxpl,
@@ -1025,7 +1025,7 @@ done:
  */
 static herr_t
 H5D__read_api_common(size_t count, hid_t dset_ids[], hid_t mem_type_ids[], hid_t mem_space_ids[],
-                     hid_t file_space_ids[], H5P_genplist_t *dxpl, void *bufs[], void **token_ptr,
+                     hid_t file_space_ids[], hid_t dxpl_id, void *bufs[], void **token_ptr,
                      H5VL_object_t **_vol_obj_ptr)
 {
     H5VL_object_t  *tmp_vol_obj = NULL; /* Object for loc_id */
@@ -1052,10 +1052,6 @@ H5D__read_api_common(size_t count, hid_t dset_ids[], hid_t mem_type_ids[], hid_t
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "file_space_id array not provided");
     if (!bufs)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "buf array not provided");
-
-    /* Set the DXPL for the API context */
-    if (H5CX_set_dxpl(dxpl) < 0)
-        HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "can't set dataset transfer property list");
 
     /* Allocate obj array if necessary */
     if (count > 1)
@@ -1091,7 +1087,7 @@ H5D__read_api_common(size_t count, hid_t dset_ids[], hid_t mem_type_ids[], hid_t
     }
 
     /* Read the data */
-    if (H5VL_dataset_read(count, objs, connector, mem_type_ids, mem_space_ids, file_space_ids, dxpl, bufs,
+    if (H5VL_dataset_read(count, objs, connector, mem_type_ids, mem_space_ids, file_space_ids, dxpl_id, bufs,
                           token_ptr) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_READERROR, FAIL, "can't read data");
 
@@ -1138,29 +1134,16 @@ herr_t
 H5Dread(hid_t dset_id, hid_t mem_type_id, hid_t mem_space_id, hid_t file_space_id, hid_t dxpl_id,
         void *buf /*out*/)
 {
-    H5P_genplist_t *dxpl      = NULL;    /* Dataset transfer property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API_TS(FAIL)
 
-    /* Get the pointer to the dataset transfer property list */
-    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5P_LOCK_EXCLUSIVE, true)))
-        HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
-
     /* Read the data */
-    if (H5D__read_api_common(1, &dset_id, &mem_type_id, &mem_space_id, &file_space_id, dxpl, &buf, NULL,
+    if (H5D__read_api_common(1, &dset_id, &mem_type_id, &mem_space_id, &file_space_id, dxpl_id, &buf, NULL,
                              NULL) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_READERROR, FAIL, "can't synchronously read data");
 
 done:
-    /* Release resources */
-    if (dxpl) {
-        if (H5CX_update_dxpl() < 0)
-            HDONE_ERROR(H5E_DATASET, H5E_CANTUPDATE, FAIL, "unable to update DXPL");
-        if (H5P_release(dxpl, H5P_LOCK_EXCLUSIVE) < 0)
-            HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
-    } /* end if */
-
     FUNC_LEAVE_API_TS(ret_value)
 } /* end H5Dread() */
 
@@ -1180,22 +1163,16 @@ H5Dread_async(const char *app_file, const char *app_func, unsigned app_line, hid
     H5VL_object_t  *vol_obj   = NULL;            /* Dataset VOL object */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    H5P_genplist_t *dxpl      = NULL;            /* Dataset transfer property list pointer */
     herr_t          ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API_TS(FAIL)
-
-    /* Get the pointer to the dataset transfer property list */
-    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5P_LOCK_EXCLUSIVE, true)))
-        HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
-    dxpl_id = H5P_PLIST_ID(dxpl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Read the data */
-    if (H5D__read_api_common(1, &dset_id, &mem_type_id, &mem_space_id, &file_space_id, dxpl, &buf, token_ptr,
+    if (H5D__read_api_common(1, &dset_id, &mem_type_id, &mem_space_id, &file_space_id, dxpl_id, &buf, token_ptr,
                              &vol_obj) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_READERROR, FAIL, "can't asynchronously read data");
 
@@ -1215,14 +1192,6 @@ H5Dread_async(const char *app_file, const char *app_func, unsigned app_line, hid
     } /* end if */
 
 done:
-    /* Release resources */
-    if (dxpl) {
-        if (H5CX_update_dxpl() < 0)
-            HDONE_ERROR(H5E_DATASET, H5E_CANTUPDATE, FAIL, "unable to update DXPL");
-        if (H5P_release(dxpl, H5P_LOCK_EXCLUSIVE) < 0)
-            HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
-    } /* end if */
-
     FUNC_LEAVE_API_TS(ret_value)
 } /* end H5Dread_async() */
 
@@ -1240,32 +1209,17 @@ herr_t
 H5Dread_multi(size_t count, hid_t dset_id[], hid_t mem_type_id[], hid_t mem_space_id[], hid_t file_space_id[],
               hid_t dxpl_id, void *buf[] /*out*/)
 {
-    H5P_genplist_t *dxpl      = NULL;    /* Dataset transfer property list pointer */
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API_TS(FAIL)
 
-    /* Get the pointer to the dataset transfer property list */
-    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5P_LOCK_EXCLUSIVE, true)))
-        HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
-
-    if (count == 0)
-        HGOTO_DONE(SUCCEED);
-
-    /* Read the data */
-    if (H5D__read_api_common(count, dset_id, mem_type_id, mem_space_id, file_space_id, dxpl, buf, NULL,
-                             NULL) < 0)
-        HGOTO_ERROR(H5E_DATASET, H5E_READERROR, FAIL, "can't synchronously read data");
+    /* Check for actual I/O */
+    if (count > 0)
+        /* Read the data */
+        if (H5D__read_api_common(count, dset_id, mem_type_id, mem_space_id, file_space_id, dxpl_id, buf, NULL, NULL) < 0)
+            HGOTO_ERROR(H5E_DATASET, H5E_READERROR, FAIL, "can't synchronously read data");
 
 done:
-    /* Release resources */
-    if (dxpl) {
-        if (H5CX_update_dxpl() < 0)
-            HDONE_ERROR(H5E_DATASET, H5E_CANTUPDATE, FAIL, "unable to update DXPL");
-        if (H5P_release(dxpl, H5P_LOCK_EXCLUSIVE) < 0)
-            HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
-    } /* end if */
-
     FUNC_LEAVE_API_TS(ret_value)
 } /* end H5Dread_multi() */
 
@@ -1287,23 +1241,16 @@ H5Dread_multi_async(const char *app_file, const char *app_func, unsigned app_lin
     H5VL_object_t  *vol_obj   = NULL;            /* Dataset VOL object */
     void           *token     = NULL;            /* Request token for async operation        */
     void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    H5P_genplist_t *dxpl      = NULL;            /* Dataset transfer property list pointer */
     herr_t          ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_API_TS(FAIL)
-
-    /* Get the pointer to the dataset transfer property list */
-    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5P_LOCK_EXCLUSIVE, true)))
-        HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
-    dxpl_id = H5P_PLIST_ID(dxpl);
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Read the data */
-    if (H5D__read_api_common(count, dset_id, mem_type_id, mem_space_id, file_space_id, dxpl, buf, token_ptr,
-                             &vol_obj) < 0)
+    if (H5D__read_api_common(count, dset_id, mem_type_id, mem_space_id, file_space_id, dxpl_id, buf, token_ptr, &vol_obj) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_READERROR, FAIL, "can't asynchronously read data");
 
     /* If a token was created, add the token to the event set */
@@ -1322,14 +1269,6 @@ H5Dread_multi_async(const char *app_file, const char *app_func, unsigned app_lin
     } /* end if */
 
 done:
-    /* Release resources */
-    if (dxpl) {
-        if (H5CX_update_dxpl() < 0)
-            HDONE_ERROR(H5E_DATASET, H5E_CANTUPDATE, FAIL, "unable to update DXPL");
-        if (H5P_release(dxpl, H5P_LOCK_EXCLUSIVE) < 0)
-            HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
-    } /* end if */
-
     FUNC_LEAVE_API_TS(ret_value)
 } /* end H5Dread_multi_async() */
 

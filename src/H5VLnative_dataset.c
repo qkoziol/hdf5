@@ -351,9 +351,13 @@ H5VL__native_dataset_read(size_t count, void *obj[], hid_t mem_type_id[], hid_t 
         if (NULL == (dinfo = H5MM_calloc(count * sizeof(H5D_dset_io_info_t))))
             HGOTO_ERROR(H5E_DATASET, H5E_CANTALLOC, FAIL, "couldn't allocate dset info array buffer");
 
-    /* Set DXPL for operation */
-    if (NULL == (dxpl = H5P_object_verify(dxpl_id, H5P_TYPE_DATASET_XFER, true)))
+    /* Get the pointer to the dataset transfer property list */
+    if (NULL == (dxpl = H5P_acquire(dxpl_id, H5P_TYPE_DATASET_XFER, H5P_LOCK_EXCLUSIVE, true)))
         HGOTO_ERROR(H5E_DATASET, H5E_BADID, FAIL, "can't find object for ID");
+
+    /* Set the DXPL for the API context */
+    if (H5CX_set_dxpl(dxpl) < 0)
+        HGOTO_ERROR(H5E_DATASET, H5E_CANTSET, FAIL, "can't set dataset transfer property list");
 
     /* Get file & memory dataspaces */
     if (H5VL__native_dataset_io_setup(count, obj, mem_type_id, mem_space_id, file_space_id,
@@ -368,9 +372,16 @@ done:
     /* Clean up */
     if (H5VL__native_dataset_io_cleanup(count, mem_space_id, file_space_id, dinfo) < 0)
         HDONE_ERROR(H5E_DATASET, H5E_CANTRELEASE, FAIL, "unable to release dataset info");
-
     if (dinfo != &dinfo_local)
         H5MM_xfree(dinfo);
+
+    /* Release resources */
+    if (dxpl) {
+        if (H5CX_update_dxpl() < 0)
+            HDONE_ERROR(H5E_DATASET, H5E_CANTUPDATE, FAIL, "unable to update DXPL");
+        if (H5P_release(dxpl, H5P_LOCK_EXCLUSIVE) < 0)
+            HDONE_ERROR(H5E_DATASET, H5E_CANTUNLOCK, FAIL, "unable to unlock property list");
+    } /* end if */
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5VL__native_dataset_read() */

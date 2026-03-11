@@ -2732,10 +2732,10 @@ H5D__vlen_get_buf_size_gen_cb(void H5_ATTR_UNUSED *elem, hid_t type_id, unsigned
     if (H5S_select_elements(vlen_bufsize->fspace, H5S_SELECT_SET, (size_t)1, point) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_CANTCREATE, FAIL, "can't select point");
 
-    /* Read in the point (with the custom VL memory allocator) */
+    /* Read in the point (with the custom VL memory allocator set in the DXPL) */
     vol_obj_data = H5VL_OBJ_DATA(vlen_bufsize->dset_vol_obj);
     if (H5VL_dataset_read(1, &vol_obj_data, H5VL_OBJ_CONNECTOR(vlen_bufsize->dset_vol_obj), &type_id,
-                          &vlen_bufsize->mspace_id, &vlen_bufsize->fspace_id, vlen_bufsize->dxpl,
+                          &vlen_bufsize->mspace_id, &vlen_bufsize->fspace_id, H5P_PLIST_ID(vlen_bufsize->dxpl),
                           &vlen_bufsize->common.fl_tbuf, H5_REQUEST_NULL) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_READERROR, FAIL, "can't read point");
 
