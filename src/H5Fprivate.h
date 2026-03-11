@@ -70,6 +70,7 @@ typedef struct H5F_t H5F_t;
 #define H5F_SET_SOHM_VERS(F, V)          ((F)->shared->sohm_vers = (V))
 #define H5F_SOHM_NINDEXES(F)             ((F)->shared->sohm_nindexes)
 #define H5F_SET_SOHM_NINDEXES(F, N)      ((F)->shared->sohm_nindexes = (N))
+#define H5F_FCPL(F)                      ((F)->shared->fcpl_id)
 #define H5F_GET_FC_DEGREE(F)             ((F)->shared->fc_degree)
 #define H5F_EVICT_ON_CLOSE(F)            ((F)->shared->evict_on_close)
 #define H5F_RDCC_NSLOTS(F)               ((F)->shared->rdcc_nslots)
@@ -133,6 +134,7 @@ typedef struct H5F_t H5F_t;
 #define H5F_SET_SOHM_VERS(F, V)          (H5F_set_sohm_vers((F), (V)))
 #define H5F_SOHM_NINDEXES(F)             (H5F_get_sohm_nindexes(F))
 #define H5F_SET_SOHM_NINDEXES(F, N)      (H5F_set_sohm_nindexes((F), (N)))
+#define H5F_FCPL(F)                      (H5F_get_fcpl(F))
 #define H5F_GET_FC_DEGREE(F)             (H5F_get_fc_degree(F))
 #define H5F_EVICT_ON_CLOSE(F)            (H5F_get_evict_on_close(F))
 #define H5F_RDCC_NSLOTS(F)               (H5F_rdcc_nslots(F))
@@ -491,7 +493,7 @@ typedef enum H5F_prefix_open_t {
 
 /* Private functions */
 H5_DLL herr_t H5F_init(void);
-H5_DLL herr_t H5F_open(bool attempt, H5F_t **file, const char *name, unsigned flags, H5P_genplist_t *fcpl,
+H5_DLL herr_t H5F_open(bool attempt, H5F_t **file, const char *name, unsigned flags, hid_t fcpl_id,
                        hid_t fapl_id);
 H5_DLL herr_t H5F_try_close(H5F_t *f, bool *was_closed /*out*/);
 H5_DLL hid_t  H5F_get_file_id(H5VL_object_t *vol_obj, H5I_type_t obj_type, bool app_ref);
@@ -540,6 +542,7 @@ H5_DLL unsigned           H5F_get_sohm_vers(const H5F_t *f);
 H5_DLL herr_t             H5F_set_sohm_vers(H5F_t *f, unsigned vers);
 H5_DLL unsigned           H5F_get_sohm_nindexes(const H5F_t *f);
 H5_DLL herr_t             H5F_set_sohm_nindexes(H5F_t *f, unsigned nindexes);
+H5_DLL hid_t              H5F_get_fcpl(const H5F_t *f);
 H5_DLL H5F_close_degree_t H5F_get_fc_degree(const H5F_t *f);
 H5_DLL bool               H5F_get_evict_on_close(const H5F_t *f);
 H5_DLL size_t             H5F_rdcc_nbytes(const H5F_t *f);

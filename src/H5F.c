@@ -69,10 +69,10 @@ static int H5F__get_all_ids_cb(void H5_ATTR_UNUSED *obj_ptr, hid_t obj_id, void 
 
 /* Helper routines for sync/async API calls */
 static herr_t H5F__post_open_api_common(H5VL_object_t *vol_obj, void **token_ptr);
-static hid_t H5F__create_api_common(const char *filename, unsigned flags, H5P_genplist_t *fcpl, hid_t fapl_id,
-                                    void **token_ptr);
-static hid_t H5F__open_api_common(const char *filename, unsigned flags, hid_t fapl_id, void **token_ptr);
-static hid_t H5F__reopen_api_common(hid_t file_id, void **token_ptr);
+static hid_t  H5F__create_api_common(const char *filename, unsigned flags, hid_t fcpl_id, hid_t fapl_id,
+                                     void **token_ptr);
+static hid_t  H5F__open_api_common(const char *filename, unsigned flags, hid_t fapl_id, void **token_ptr);
+static hid_t  H5F__reopen_api_common(hid_t file_id, void **token_ptr);
 static herr_t H5F__flush_api_common(hid_t object_id, H5F_scope_t scope, void **token_ptr,
                                     H5VL_object_t **_vol_obj_ptr);
 
@@ -543,8 +543,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static hid_t
-H5F__create_api_common(const char *filename, unsigned flags, H5P_genplist_t *fcpl, hid_t fapl_id,
-                       void **token_ptr)
+H5F__create_api_common(const char *filename, unsigned flags, hid_t fcpl_id, hid_t fapl_id, void **token_ptr)
 {
     void                 *new_file = NULL;             /* File struct for new file                 */
     H5P_genplist_t       *plist;                       /* Property list pointer                    */
@@ -566,6 +565,12 @@ H5F__create_api_common(const char *filename, unsigned flags, H5P_genplist_t *fcp
     /* The H5F_ACC_EXCL and H5F_ACC_TRUNC flags are mutually exclusive */
     if ((flags & H5F_ACC_EXCL) && (flags & H5F_ACC_TRUNC))
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, H5I_INVALID_HID, "mutually exclusive flags for file creation");
+
+    /* Check file creation property list */
+    if (H5P_DEFAULT == fcpl_id)
+        fcpl_id = H5P_FILE_CREATE_DEFAULT;
+    else if (true != H5P_isa_class(fcpl_id, H5P_FILE_CREATE))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, H5I_INVALID_HID, "not file create property list");
 
     /* Verify access property list and set up collective metadata if appropriate */
     if (H5CX_set_apl(&fapl_id, H5P_CLS_FACC, H5I_INVALID_HID, true) < 0)
@@ -592,7 +597,7 @@ H5F__create_api_common(const char *filename, unsigned flags, H5P_genplist_t *fcp
     flags |= H5F_ACC_RDWR | H5F_ACC_CREAT;
 
     /* Create a new file or truncate an existing file through the VOL */
-    if (NULL == (new_file = H5VL_file_create(connector_prop.connector, filename, flags, fcpl, fapl_id,
+    if (NULL == (new_file = H5VL_file_create(connector_prop.connector, filename, flags, fcpl_id, fapl_id,
                                              H5P_DATASET_XFER_DEFAULT, token_ptr)))
         HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, H5I_INVALID_HID, "unable to create file");
 
@@ -632,20 +637,13 @@ done:
 hid_t
 H5Fcreate(const char *filename, unsigned flags, hid_t fcpl_id, hid_t fapl_id)
 {
-    H5VL_object_t  *vol_obj = NULL;              /* File object */
-    H5P_genplist_t *fcpl;                        /* File creation property list pointer */
-    hid_t           ret_value = H5I_INVALID_HID; /* Return value */
+    H5VL_object_t *vol_obj   = NULL;            /* File object */
+    hid_t          ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
 
-    /* Get the pointer to the file create property list */
-    if (H5P_DEFAULT == fcpl_id)
-        fcpl_id = H5P_FILE_CREATE_DEFAULT;
-    if (NULL == (fcpl = H5P_object_verify(fcpl_id, H5P_TYPE_FILE_CREATE, true)))
-        HGOTO_ERROR(H5E_FILE, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
-
     /* Create the file synchronously */
-    if ((ret_value = H5F__create_api_common(filename, flags, fcpl, fapl_id, NULL)) < 0)
+    if ((ret_value = H5F__create_api_common(filename, flags, fcpl_id, fapl_id, NULL)) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTCREATE, H5I_INVALID_HID, "unable to synchronously create file");
 
     /* Get the file object */
@@ -675,26 +673,19 @@ hid_t
 H5Fcreate_async(const char *app_file, const char *app_func, unsigned app_line, const char *filename,
                 unsigned flags, hid_t fcpl_id, hid_t fapl_id, hid_t es_id)
 {
-    H5VL_object_t  *vol_obj = NULL;              /* File object */
-    H5P_genplist_t *fcpl;                        /* File creation property list pointer */
-    void           *token     = NULL;            /* Request token for async operation        */
-    void          **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
-    hid_t           ret_value = H5I_INVALID_HID; /* Return value */
+    H5VL_object_t *vol_obj   = NULL;            /* File object */
+    void          *token     = NULL;            /* Request token for async operation        */
+    void         **token_ptr = H5_REQUEST_NULL; /* Pointer to request token for async operation        */
+    hid_t          ret_value = H5I_INVALID_HID; /* Return value */
 
     FUNC_ENTER_API(H5I_INVALID_HID)
-
-    /* Get the pointer to the file create property list */
-    if (H5P_DEFAULT == fcpl_id)
-        fcpl_id = H5P_FILE_CREATE_DEFAULT;
-    if (NULL == (fcpl = H5P_object_verify(fcpl_id, H5P_TYPE_FILE_CREATE, true)))
-        HGOTO_ERROR(H5E_FILE, H5E_BADID, H5I_INVALID_HID, "can't find object for ID");
 
     /* Set up request token pointer for asynchronous operation */
     if (H5ES_NONE != es_id)
         token_ptr = &token; /* Point at token for VOL connector to set up */
 
     /* Create the file, possibly asynchronously */
-    if ((ret_value = H5F__create_api_common(filename, flags, fcpl, fapl_id, token_ptr)) < 0)
+    if ((ret_value = H5F__create_api_common(filename, flags, fcpl_id, fapl_id, token_ptr)) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTCREATE, H5I_INVALID_HID, "unable to asynchronously create file");
 
     /* Get the file object */

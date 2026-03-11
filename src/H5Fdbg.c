@@ -38,8 +38,9 @@
 herr_t
 H5F_debug(H5F_t *f, FILE *stream, int indent, int fwidth)
 {
-    hsize_t userblock_size;      /* Userblock size */
-    herr_t  ret_value = SUCCEED; /* Return value */
+    H5P_genplist_t *plist;               /* File creation property list */
+    hsize_t         userblock_size;      /* Userblock size */
+    herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
 
@@ -49,8 +50,12 @@ H5F_debug(H5F_t *f, FILE *stream, int indent, int fwidth)
     assert(indent >= 0);
     assert(fwidth >= 0);
 
+    /* Get property list */
+    if (NULL == (plist = (H5P_genplist_t *)H5I_object(f->shared->fcpl_id)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
+
     /* Retrieve file creation properties */
-    if (H5P_get(f->shared->fcpl, H5F_CRT_USER_BLOCK_NAME, &userblock_size) < 0)
+    if (H5P_get(plist, H5F_CRT_USER_BLOCK_NAME, &userblock_size) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get userblock size");
 
     /* debug */

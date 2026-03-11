@@ -76,9 +76,8 @@ void *
 H5VL__native_file_create(const char *name, unsigned flags, hid_t fcpl_id, hid_t fapl_id,
                          hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
-    H5F_t          *new_file = NULL;
-    H5P_genplist_t *fcpl; /* File creation property list */
-    void           *ret_value = NULL;
+    H5F_t *new_file  = NULL;
+    void  *ret_value = NULL;
 
     FUNC_ENTER_PACKAGE
 
@@ -91,9 +90,7 @@ H5VL__native_file_create(const char *name, unsigned flags, hid_t fcpl_id, hid_t 
     flags |= H5F_ACC_RDWR | H5F_ACC_CREAT;
 
     /* Create the file */
-    if (NULL == (fcpl = H5I_object(fcpl_id)))
-        HGOTO_ERROR(H5E_FILE, H5E_CANTGET, NULL, "can't get file creation property list");
-    if (H5F_open(false, &new_file, name, flags, fcpl, fapl_id) < 0)
+    if (H5F_open(false, &new_file, name, flags, fcpl_id, fapl_id) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, NULL, "unable to create file");
     new_file->id_exists = true;
 
@@ -121,16 +118,13 @@ void *
 H5VL__native_file_open(const char *name, unsigned flags, hid_t fapl_id, hid_t H5_ATTR_UNUSED dxpl_id,
                        void H5_ATTR_UNUSED **req)
 {
-    H5F_t          *new_file = NULL;
-    H5P_genplist_t *fcpl; /* File creation property list */
-    void           *ret_value = NULL;
+    H5F_t *new_file  = NULL;
+    void  *ret_value = NULL;
 
     FUNC_ENTER_PACKAGE
 
     /* Open the file */
-    if (NULL == (fcpl = H5I_object(H5P_FILE_CREATE_DEFAULT)))
-        HGOTO_ERROR(H5E_FILE, H5E_CANTGET, NULL, "can't get default file creation property list");
-    if (H5F_open(false, &new_file, name, flags, fcpl, fapl_id) < 0)
+    if (H5F_open(false, &new_file, name, flags, H5P_FILE_CREATE_DEFAULT, fapl_id) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, NULL, "unable to open file");
     new_file->id_exists = true;
 
@@ -180,13 +174,15 @@ H5VL__native_file_get(void *obj, H5VL_file_get_args_t *args, hid_t H5_ATTR_UNUSE
 
         /* H5Fget_create_plist */
         case H5VL_FILE_GET_FCPL: {
-            H5P_genplist_t *fcpl; /* Property list */
+            H5P_genplist_t *plist; /* Property list */
+
+            f = (H5F_t *)obj;
+            if (NULL == (plist = (H5P_genplist_t *)H5I_object(f->shared->fcpl_id)))
+                HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
 
             /* Create the property list object to return */
-            f = (H5F_t *)obj;
-            if (NULL == (fcpl = H5P_copy_plist(f->shared->fcpl, true)))
-                HGOTO_ERROR(H5E_FILE, H5E_CANTCOPY, FAIL, "unable to copy file creation properties");
-            args->args.get_fcpl.fcpl_id = H5P_PLIST_ID(fcpl);
+            if ((args->args.get_fcpl.fcpl_id = H5P_copy_plist_id(plist, true)) < 0)
+                HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, FAIL, "unable to copy file creation properties");
 
             break;
         }

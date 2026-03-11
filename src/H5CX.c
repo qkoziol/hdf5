@@ -266,7 +266,7 @@ H5CX__init_package(void)
 {
     H5P_genplist_t *dx_plist;            /* Data transfer property list */
     H5P_genplist_t *lcpl;                /* Link creation property list */
-    H5P_genplist_t *lapl;                /* Link access property list */
+    H5P_genplist_t *la_plist;            /* Link access property list */
     H5P_genplist_t *dcpl;                /* Dataset creation property list */
     H5P_genplist_t *dapl;                /* Dataset access property list */
     H5P_genplist_t *fa_plist;            /* File access property list */
@@ -400,11 +400,11 @@ H5CX__init_package(void)
     /* Get the default LAPL cache information */
 
     /* Get the default link access property list */
-    if (NULL == (lapl = (H5P_genplist_t *)H5I_object(H5P_LINK_ACCESS_DEFAULT)))
+    if (NULL == (la_plist = (H5P_genplist_t *)H5I_object(H5P_LINK_ACCESS_DEFAULT)))
         HGOTO_ERROR(H5E_CONTEXT, H5E_BADTYPE, FAIL, "not a link access property list");
 
     /* Get number of soft / UD links to traverse */
-    if (H5P_get(lapl, H5L_ACS_NLINKS_NAME, &H5CX_def_lapl_cache.nlinks) < 0)
+    if (H5P_get(la_plist, H5L_ACS_NLINKS_NAME, &H5CX_def_lapl_cache.nlinks) < 0)
         HGOTO_ERROR(H5E_CONTEXT, H5E_CANTGET, FAIL, "Can't retrieve number of soft / UD links to traverse");
 
     /* Reset the "default DCPL cache" information */
