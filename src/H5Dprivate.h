@@ -129,9 +129,9 @@
 #define H5D_VIRTUAL_TREE_THRESHOLD 50
 
 #ifdef H5D_MODULE
-#define H5D_OBJ_PLIST(D) (((H5D_obj_create_t *)(D))->dcpl)
+#define H5D_OBJ_ID(D) (H5P_PLIST_ID(((H5D_obj_create_t *)(D))->dcpl))
 #else /* H5D_MODULE */
-#define H5D_OBJ_PLIST(D) (H5D_get_dcpl(D))
+#define H5D_OBJ_ID(D) (H5D_get_dcpl_id(D))
 #endif
 
 /****************************/
@@ -182,7 +182,7 @@ H5_DLL H5G_name_t     *H5D_nameof(H5D_t *dataset);
 H5_DLL herr_t          H5D_flush_all(H5F_t *f);
 H5_DLL H5P_genplist_t *H5D_get_create_plist(const H5D_t *dset);
 H5_DLL H5P_genplist_t *H5D_get_access_plist(const H5D_t *dset);
-H5_DLL H5P_genplist_t *H5D_get_dcpl(const H5D_obj_create_t *d);
+H5_DLL hid_t           H5D_get_dcpl_id(const H5D_obj_create_t *d);
 
 /* Functions that operate on chunked storage */
 H5_DLL herr_t H5D_chunk_idx_reset(H5O_storage_chunk_t *storage, bool reset_addr);

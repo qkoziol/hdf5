@@ -73,19 +73,16 @@ H5VL__native_datatype_commit(void *obj, const H5VL_loc_params_t *loc_params, con
                              hid_t lcpl_id, hid_t tcpl_id, hid_t H5_ATTR_UNUSED tapl_id,
                              hid_t H5_ATTR_UNUSED dxpl_id, void H5_ATTR_UNUSED **req)
 {
-    H5G_loc_t       loc;              /* Location to commit datatype */
-    H5T_t          *dt;               /* Datatype for ID */
-    H5T_t          *type = NULL;      /* copy of the original type which will be committed */
-    H5P_genplist_t *tcpl;             /* Datatype creation property list */
-    void           *ret_value = NULL; /* Return value */
+    H5G_loc_t loc;              /* Location to commit datatype */
+    H5T_t    *dt;               /* Datatype for ID */
+    H5T_t    *type      = NULL; /* copy of the original type which will be committed */
+    void     *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
     /* check arguments */
     if (H5G_loc_real(obj, loc_params->obj_type, &loc) < 0)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file or file object");
-    if (NULL == (tcpl = H5I_object(tcpl_id)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a property list");
 
     if (NULL == (dt = (H5T_t *)H5I_object_verify(type_id, H5I_DATATYPE)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a datatype");
@@ -113,12 +110,12 @@ H5VL__native_datatype_commit(void *obj, const H5VL_loc_params_t *loc_params, con
     /* Commit the datatype */
     if (NULL != name) {
         /* H5Tcommit */
-        if (H5T__commit_named(&loc, name, type, lcpl_id, tcpl) < 0)
+        if (H5T__commit_named(&loc, name, type, lcpl_id, tcpl_id) < 0)
             HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINIT, NULL, "unable to commit datatype");
     } /* end if */
     else {
         /* H5Tcommit_anon */
-        if (H5T__commit_anon(loc.oloc->file, type, tcpl) < 0)
+        if (H5T__commit_anon(loc.oloc->file, type, tcpl_id) < 0)
             HGOTO_ERROR(H5E_DATATYPE, H5E_CANTINIT, NULL, "unable to commit datatype");
     } /* end else */
 
@@ -204,11 +201,8 @@ H5VL__native_datatype_get(void *obj, H5VL_datatype_get_args_t *args, hid_t H5_AT
 
         /* H5Tget_create_plist */
         case H5VL_DATATYPE_GET_TCPL: {
-            H5P_genplist_t *tcpl;
-
-            if (NULL == (tcpl = H5T__get_create_plist(dt)))
-                HGOTO_ERROR(H5E_DATATYPE, H5E_CANTGET, FAIL, "can't get creation property list for datatype");
-            args->args.get_tcpl.tcpl_id = H5P_PLIST_ID(tcpl);
+            if (H5I_INVALID_HID == (args->args.get_tcpl.tcpl_id = H5T__get_create_plist(dt)))
+                HGOTO_ERROR(H5E_DATATYPE, H5E_CANTGET, FAIL, "can't get object creation info");
 
             break;
         }

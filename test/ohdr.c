@@ -68,15 +68,14 @@ static const char *FILENAME[] = {"ohdr", "ohdr_min_a", "ohdr_min_b", NULL};
 static herr_t
 test_cont(char *filename, hid_t fapl)
 {
-    hid_t           file = H5I_INVALID_HID;
-    H5F_t          *f    = NULL;
-    H5P_genplist_t *def_gcpl; /* Default group creation property list */
-    H5O_hdr_info_t  hdr_info;
-    H5O_loc_t       oh_locA, oh_locB;
-    time_t          time_new;
-    const char     *short_name = "T";
-    const char     *long_name  = "This is the message";
-    size_t          nchunks;
+    hid_t          file = H5I_INVALID_HID;
+    H5F_t         *f    = NULL;
+    H5O_hdr_info_t hdr_info;
+    H5O_loc_t      oh_locA, oh_locB;
+    time_t         time_new;
+    const char    *short_name = "T";
+    const char    *long_name  = "This is the message";
+    size_t         nchunks;
 
     TESTING("object header continuation block");
 
@@ -94,14 +93,10 @@ test_cont(char *filename, hid_t fapl)
         goto error;
     } /* end if */
 
-    /* Get a pointer to the default GCPL */
-    if (NULL == (def_gcpl = H5I_object(H5P_LST_GROUP_CREATE_ID_g)))
+    if (H5O_create_id(f, (size_t)H5O_MIN_SIZE, (size_t)0, H5P_GROUP_CREATE_DEFAULT, &oh_locA /*out*/) < 0)
         FAIL_STACK_ERROR;
 
-    if (H5O_create(f, (size_t)H5O_MIN_SIZE, (size_t)0, def_gcpl, &oh_locA /*out*/) < 0)
-        FAIL_STACK_ERROR;
-
-    if (H5O_create(f, (size_t)H5O_MIN_SIZE, (size_t)0, def_gcpl, &oh_locB /*out*/) < 0)
+    if (H5O_create_id(f, (size_t)H5O_MIN_SIZE, (size_t)0, H5P_GROUP_CREATE_DEFAULT, &oh_locB /*out*/) < 0)
         FAIL_STACK_ERROR;
 
     time_new = 11111111;
@@ -190,7 +185,6 @@ test_ohdr_cache(char *filename, hid_t fapl)
     hid_t               my_fapl;                              /* FAPL ID */
     H5AC_cache_config_t mdc_config;                           /* Metadata cache configuration info */
     H5F_t              *f = NULL;                             /* File handle */
-    H5P_genplist_t     *def_gcpl;                             /* Default group creation property list */
     H5HL_t             *lheap, *lheap2, *lheap3;              /* Pointer to local heaps */
     haddr_t             lheap_addr, lheap_addr2, lheap_addr3; /* Local heap addresses */
     H5O_loc_t           oh_loc;                               /* Object header location */
@@ -232,13 +226,9 @@ test_ohdr_cache(char *filename, hid_t fapl)
     if (NULL == (lheap = H5HL_protect(f, lheap_addr, H5AC__READ_ONLY_FLAG)))
         FAIL_STACK_ERROR;
 
-    /* Get a pointer to the default GCPL */
-    if (NULL == (def_gcpl = H5I_object(H5P_LST_GROUP_CREATE_ID_g)))
-        FAIL_STACK_ERROR;
-
     /* Create an object header */
     memset(&oh_loc, 0, sizeof(oh_loc));
-    if (H5O_create(f, (size_t)2048, (size_t)1, def_gcpl, &oh_loc /*out*/) < 0)
+    if (H5O_create_id(f, (size_t)2048, (size_t)1, H5P_GROUP_CREATE_DEFAULT, &oh_loc /*out*/) < 0)
         FAIL_STACK_ERROR;
 
     /* Query object header information */
@@ -1834,21 +1824,20 @@ error:
 int
 main(void)
 {
-    hid_t           fapl = H5I_INVALID_HID;
-    hid_t           file = H5I_INVALID_HID;
-    H5F_t          *f    = NULL;
-    H5P_genplist_t *def_gcpl;        /* Default group creation property list */
-    const char     *driver_name;     /* File driver value from environment */
-    bool            single_file_vfd; /* Whether VFD used stores data in a single file */
-    char            filename[1024];
-    H5O_hdr_info_t  hdr_info;  /* Object info */
-    H5O_loc_t       oh_loc;    /* Object header locations */
-    H5F_libver_t    low, high; /* File format bounds */
-    time_t          time_new, ro;
-    int             i;                            /* Local index variable */
-    H5CX_node_t     api_ctx        = {{0}, NULL}; /* API context node to push */
-    bool            api_ctx_pushed = false;       /* Whether API context pushed */
-    herr_t          ret;                          /* Generic return value */
+    hid_t          fapl = H5I_INVALID_HID;
+    hid_t          file = H5I_INVALID_HID;
+    H5F_t         *f    = NULL;
+    const char    *driver_name;     /* File driver value from environment */
+    bool           single_file_vfd; /* Whether VFD used stores data in a single file */
+    char           filename[1024];
+    H5O_hdr_info_t hdr_info;  /* Object info */
+    H5O_loc_t      oh_loc;    /* Object header locations */
+    H5F_libver_t   low, high; /* File format bounds */
+    time_t         time_new, ro;
+    int            i;                            /* Local index variable */
+    H5CX_node_t    api_ctx        = {{0}, NULL}; /* API context node to push */
+    bool           api_ctx_pushed = false;       /* Whether API context pushed */
+    herr_t         ret;                          /* Generic return value */
 
     /* Get the VFD to use */
     driver_name = h5_get_test_driver_name();
@@ -1865,10 +1854,6 @@ main(void)
     if (H5CX_push(&api_ctx) < 0)
         FAIL_STACK_ERROR;
     api_ctx_pushed = true;
-
-    /* Get a pointer to the default GCPL */
-    if (NULL == (def_gcpl = H5I_object(H5P_LST_GROUP_CREATE_ID_g)))
-        FAIL_STACK_ERROR;
 
     /* Loop through all the combinations of low/high library format bounds */
     for (low = H5F_LIBVER_EARLIEST; low < H5F_LIBVER_NBOUNDS; low++) {
@@ -1914,7 +1899,7 @@ main(void)
              */
             TESTING("object header creation");
             memset(&oh_loc, 0, sizeof(oh_loc));
-            if (H5O_create(f, (size_t)64, (size_t)0, def_gcpl, &oh_loc /*out*/) < 0)
+            if (H5O_create_id(f, (size_t)64, (size_t)0, H5P_GROUP_CREATE_DEFAULT, &oh_loc /*out*/) < 0)
                 FAIL_STACK_ERROR;
             PASSED();
 

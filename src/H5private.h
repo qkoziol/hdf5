@@ -341,7 +341,6 @@
  * H5_WARN_USELESS_COMPARISON_(OFF|ON).
  */
 /* clang-format off */
-H5_WARN_STRICT_OVERFLOW_OFF
 #define H5_IS_BUFFER_OVERFLOW(ptr, size, buffer_end)                                                         \
     (                                                                                                        \
       /* Trivial case */                                                                                     \
@@ -355,7 +354,6 @@ H5_WARN_STRICT_OVERFLOW_OFF
         ((size_t)(size) > (size_t)((((const uint8_t *)buffer_end) - ((const uint8_t *)ptr)) + 1))            \
       )                                                                                                      \
     )
-H5_WARN_STRICT_OVERFLOW_ON
 /* clang-format on */
 
 /* Variant of H5_IS_BUFFER_OVERFLOW, used with functions such as H5Tdecode()

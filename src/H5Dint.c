@@ -3979,22 +3979,22 @@ done:
 } /* end H5D__refresh() */
 
 /*-------------------------------------------------------------------------
- * Function: H5D_get_dcpl
+ * Function: H5D_get_dcpl_id
  *
  * Purpose:  Quick and dirty routine to retrieve the
- *           dcpl (dataset creation property list) from the
+ *           dcpl_id (dataset creation property list) from the
  *           dataset creation operation struct
  *
- * Return:   'dcpl' on success/abort on failure (shouldn't fail)
+ * Return:   'dcpl_id' on success/abort on failure (shouldn't fail)
  *-------------------------------------------------------------------------
  */
-H5P_genplist_t *
-H5D_get_dcpl(const H5D_obj_create_t *d)
+hid_t
+H5D_get_dcpl_id(const H5D_obj_create_t *d)
 {
     /* Use FUNC_ENTER_NOAPI_NOINIT_NOERR here to avoid performance issues */
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
     assert(d);
 
-    FUNC_LEAVE_NOAPI(d->dcpl);
-} /* end H5D_get_dcpl() */
+    FUNC_LEAVE_NOAPI(H5P_PLIST_ID(d->dcpl));
+} /* end H5D_get_dcpl_id() */

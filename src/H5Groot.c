@@ -32,9 +32,8 @@
 #include "H5private.h"   /* Generic Functions			*/
 #include "H5Eprivate.h"  /* Error handling		  	*/
 #include "H5Fpkg.h"      /* File access				*/
-#include "H5FLprivate.h" /* Free Lists                          */
+#include "H5FLprivate.h" /* Free Lists                               */
 #include "H5Gpkg.h"      /* Groups		  		*/
-#include "H5Iprivate.h"  /* IDs			  		*/
 #include "H5MMprivate.h" /* Memory management			*/
 
 /****************/
@@ -167,13 +166,9 @@ H5G_mkroot(H5F_t *f, bool create_root)
      * with a hard link count of one since it's pointed to by the superblock.
      */
     if (create_root) {
-        H5P_genplist_t *fcpl; /* Group creation property list */
-
         /* Create root group */
         /* (Pass the FCPL which is a sub-class of the group creation property class) */
-        if (NULL == (fcpl = H5I_object(f->shared->fcpl_id)))
-            HGOTO_ERROR(H5E_SYM, H5E_CANTGET, FAIL, "can't get file creation property list");
-        gcrt_info.gcpl       = fcpl;
+        gcrt_info.gcpl_id    = f->shared->fcpl_id;
         gcrt_info.cache_type = H5G_NOTHING_CACHED;
         if (H5G__obj_create(f, &gcrt_info, root_loc.oloc /*out*/) < 0)
             HGOTO_ERROR(H5E_SYM, H5E_CANTINIT, FAIL, "unable to create group entry");

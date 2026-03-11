@@ -291,7 +291,7 @@ done:
  *-------------------------------------------------------------------------
  */
 H5G_t *
-H5G__create_named(const H5G_loc_t *loc, const char *name, hid_t lcpl_id, H5P_genplist_t *gcpl)
+H5G__create_named(const H5G_loc_t *loc, const char *name, hid_t lcpl_id, hid_t gcpl_id)
 {
     H5O_obj_create_t ocrt_info;        /* Information for object creation */
     H5G_obj_create_t gcrt_info;        /* Information for group creation */
@@ -303,10 +303,10 @@ H5G__create_named(const H5G_loc_t *loc, const char *name, hid_t lcpl_id, H5P_gen
     assert(loc);
     assert(name && *name);
     assert(lcpl_id != H5P_DEFAULT);
-    assert(gcpl);
+    assert(gcpl_id != H5P_DEFAULT);
 
     /* Set up group creation info */
-    gcrt_info.gcpl       = gcpl;
+    gcrt_info.gcpl_id    = gcpl_id;
     gcrt_info.cache_type = H5G_NOTHING_CACHED;
     memset(&gcrt_info.cache, 0, sizeof(gcrt_info.cache));
 
@@ -344,15 +344,15 @@ done:
 H5G_t *
 H5G__create(H5F_t *file, H5G_obj_create_t *gcrt_info)
 {
-    H5G_t *grp       = NULL;  /*new group			*/
-    bool   oloc_init = false; /* Flag to indicate that the group object location was created successfully */
-    H5G_t *ret_value = NULL;  /* Return value */
+    H5G_t   *grp       = NULL; /*new group			*/
+    unsigned oloc_init = 0;    /* Flag to indicate that the group object location was created successfully */
+    H5G_t   *ret_value = NULL; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
     /* check args */
     assert(file);
-    assert(gcrt_info->gcpl);
+    assert(gcrt_info->gcpl_id != H5P_DEFAULT);
 
     /* create an open group */
     if (NULL == (grp = H5FL_CALLOC(H5G_t)))
@@ -363,7 +363,7 @@ H5G__create(H5F_t *file, H5G_obj_create_t *gcrt_info)
     /* Create the group object header */
     if (H5G__obj_create(file, gcrt_info, &(grp->oloc) /*out*/) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTINIT, NULL, "unable to create group object header");
-    oloc_init = true; /* Indicate that the object location information is valid */
+    oloc_init = 1; /* Indicate that the object location information is valid */
 
     /* Add group to list of open objects in file */
     if (H5FO_top_incr(grp->oloc.file, grp->oloc.addr) < 0)
@@ -1273,77 +1273,81 @@ done:
  *
  * Purpose:	Private function for H5Gget_create_plist
  *
- * Return:   Success:    Pointer to a copy of the group creation property list.
- *           Failure:    NULL
+ * Return:	Success:	ID for a copy of the group creation
+ *				property list.  The property list ID should be
+ *				released by calling H5Pclose().
+ *
+ *		Failure:	H5I_INVALID_HID
  *
  *-------------------------------------------------------------------------
  */
-H5P_genplist_t *
+hid_t
 H5G_get_create_plist(const H5G_t *grp)
 {
-    H5P_genplist_t *new_gcpl = NULL;
+    H5P_genplist_t *new_plist = NULL;
     H5O_linfo_t     linfo; /* Link info message            */
     htri_t          ginfo_exists;
     htri_t          linfo_exists;
     htri_t          pline_exists;
-    H5P_genplist_t *ret_value = NULL; /* Return value */
+    hid_t           ret_value = H5I_INVALID_HID;
 
-    FUNC_ENTER_NOAPI(NULL)
+    FUNC_ENTER_NOAPI(H5I_INVALID_HID)
 
     /* Create the property list object to return */
-    if (NULL == (new_gcpl = H5P_new_plist_of_type(H5P_TYPE_GROUP_CREATE, true)))
-        HGOTO_ERROR(H5E_SYM, H5E_CANTCREATE, NULL, "unable to create group creation property list");
+    if (NULL == (new_plist = H5P_new_plist_of_type(H5P_TYPE_GROUP_CREATE, true)))
+        HGOTO_ERROR(H5E_SYM, H5E_CANTCREATE, H5I_INVALID_HID,
+                    "unable to create group creation property list");
 
     /* Retrieve any object creation properties */
-    if (H5O_get_create_plist(&grp->oloc, new_gcpl) < 0)
-        HGOTO_ERROR(H5E_SYM, H5E_CANTGET, NULL, "can't get object creation info");
+    if (H5O_get_create_plist(&grp->oloc, new_plist) < 0)
+        HGOTO_ERROR(H5E_SYM, H5E_CANTGET, H5I_INVALID_HID, "can't get object creation info");
 
     /* Check for the group having a group info message */
     if ((ginfo_exists = H5O_msg_exists(&(grp->oloc), H5O_GINFO_ID)) < 0)
-        HGOTO_ERROR(H5E_SYM, H5E_CANTINIT, NULL, "unable to read object header");
+        HGOTO_ERROR(H5E_SYM, H5E_CANTINIT, H5I_INVALID_HID, "unable to read object header");
     if (ginfo_exists) {
         H5O_ginfo_t ginfo; /* Group info message            */
 
         /* Read the group info */
         if (NULL == H5O_msg_read(&(grp->oloc), H5O_GINFO_ID, &ginfo))
-            HGOTO_ERROR(H5E_SYM, H5E_BADMESG, NULL, "can't get group info");
+            HGOTO_ERROR(H5E_SYM, H5E_BADMESG, H5I_INVALID_HID, "can't get group info");
 
         /* Set the group info for the property list */
-        if (H5P_set(new_gcpl, H5G_CRT_GROUP_INFO_NAME, &ginfo) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, NULL, "can't set group info");
+        if (H5P_set(new_plist, H5G_CRT_GROUP_INFO_NAME, &ginfo) < 0)
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, H5I_INVALID_HID, "can't set group info");
     } /* end if */
 
     /* Check for the group having a link info message */
     if ((linfo_exists = H5G__obj_get_linfo(&(grp->oloc), &linfo)) < 0)
-        HGOTO_ERROR(H5E_SYM, H5E_CANTINIT, NULL, "unable to read object header");
+        HGOTO_ERROR(H5E_SYM, H5E_CANTINIT, H5I_INVALID_HID, "unable to read object header");
     if (linfo_exists) {
         /* Set the link info for the property list */
-        if (H5P_set(new_gcpl, H5G_CRT_LINK_INFO_NAME, &linfo) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, NULL, "can't set link info");
+        if (H5P_set(new_plist, H5G_CRT_LINK_INFO_NAME, &linfo) < 0)
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, H5I_INVALID_HID, "can't set link info");
     } /* end if */
 
     /* Check for the group having a pipeline message */
     if ((pline_exists = H5O_msg_exists(&(grp->oloc), H5O_PLINE_ID)) < 0)
-        HGOTO_ERROR(H5E_SYM, H5E_CANTGET, NULL, "unable to read object header");
+        HGOTO_ERROR(H5E_SYM, H5E_CANTGET, H5I_INVALID_HID, "unable to read object header");
     if (pline_exists) {
         H5O_pline_t pline; /* Pipeline message */
 
         /* Read the pipeline */
         if (NULL == H5O_msg_read(&(grp->oloc), H5O_PLINE_ID, &pline))
-            HGOTO_ERROR(H5E_SYM, H5E_BADMESG, NULL, "can't get link pipeline");
+            HGOTO_ERROR(H5E_SYM, H5E_BADMESG, H5I_INVALID_HID, "can't get link pipeline");
 
         /* Set the pipeline for the property list */
-        if (H5P_poke(new_gcpl, H5O_CRT_PIPELINE_NAME, &pline) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, NULL, "can't set link pipeline");
+        if (H5P_poke(new_plist, H5O_CRT_PIPELINE_NAME, &pline) < 0)
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, H5I_INVALID_HID, "can't set link pipeline");
     } /* end if */
 
     /* Set the return value */
-    ret_value = new_gcpl;
+    ret_value = H5P_PLIST_ID(new_plist);
 
 done:
-    if (NULL == ret_value)
-        if (new_gcpl && H5P_release(new_gcpl) < 0)
-            HDONE_ERROR(H5E_SYM, H5E_CANTCLOSEOBJ, NULL, "can't close group creation property list");
+    if (ret_value < 0)
+        if (new_plist && H5P_release(new_plist) < 0)
+            HDONE_ERROR(H5E_SYM, H5E_CANTCLOSEOBJ, H5I_INVALID_HID, "can't free property list");
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5G_get_create_plist() */
@@ -1442,22 +1446,22 @@ done:
 } /* end H5G__get_info_by_idx() */
 
 /*-------------------------------------------------------------------------
- * Function: H5G_get_gcpl
+ * Function: H5G_get_gcpl_id
  *
  * Purpose:  Quick and dirty routine to retrieve the
- *           gcpl (group creation property list) from the
+ *           gcpl_id (group creation property list) from the
  *           group creation operation struct
  *
- * Return:   'gcpl' on success/abort on failure (shouldn't fail)
+ * Return:   'gcpl_id' on success/abort on failure (shouldn't fail)
  *-------------------------------------------------------------------------
  */
-H5P_genplist_t *
-H5G_get_gcpl(const H5G_obj_create_t *g)
+hid_t
+H5G_get_gcpl_id(const H5G_obj_create_t *g)
 {
     /* Use FUNC_ENTER_NOAPI_NOINIT_NOERR here to avoid performance issues */
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
     assert(g);
 
-    FUNC_LEAVE_NOAPI(g->gcpl);
-} /* end H5G_get_gcpl() */
+    FUNC_LEAVE_NOAPI(g->gcpl_id);
+} /* end H5G_get_gcpl_id() */

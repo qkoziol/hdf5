@@ -103,10 +103,11 @@ static herr_t H5G__obj_remove_update_linfo(const H5O_loc_t *oloc, H5O_linfo_t *l
 herr_t
 H5G__obj_create(H5F_t *f, H5G_obj_create_t *gcrt_info, H5O_loc_t *oloc /*out*/)
 {
-    H5O_ginfo_t ginfo;               /* Group info */
-    H5O_linfo_t linfo;               /* Link info */
-    H5O_pline_t pline;               /* Pipeline */
-    herr_t      ret_value = SUCCEED; /* Return value */
+    H5P_genplist_t *gc_plist;            /* Group creation property list */
+    H5O_ginfo_t     ginfo;               /* Group info */
+    H5O_linfo_t     linfo;               /* Link info */
+    H5O_pline_t     pline;               /* Pipeline */
+    herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -116,16 +117,20 @@ H5G__obj_create(H5F_t *f, H5G_obj_create_t *gcrt_info, H5O_loc_t *oloc /*out*/)
     assert(f);
     assert(oloc);
 
+    /* Get the property list */
+    if (NULL == (gc_plist = (H5P_genplist_t *)H5I_object(gcrt_info->gcpl_id)))
+        HGOTO_ERROR(H5E_SYM, H5E_BADTYPE, FAIL, "not a property list");
+
     /* Get the group info property */
-    if (H5P_get(gcrt_info->gcpl, H5G_CRT_GROUP_INFO_NAME, &ginfo) < 0)
+    if (H5P_get(gc_plist, H5G_CRT_GROUP_INFO_NAME, &ginfo) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTGET, FAIL, "can't get group info");
 
     /* Get the link info property */
-    if (H5P_get(gcrt_info->gcpl, H5G_CRT_LINK_INFO_NAME, &linfo) < 0)
+    if (H5P_get(gc_plist, H5G_CRT_LINK_INFO_NAME, &linfo) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTGET, FAIL, "can't get group info");
 
     /* Get the pipeline property */
-    if (H5P_peek(gcrt_info->gcpl, H5O_CRT_PIPELINE_NAME, &pline) < 0)
+    if (H5P_peek(gc_plist, H5O_CRT_PIPELINE_NAME, &pline) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTGET, FAIL, "can't get group info");
 
     /* Call the "real" group creation routine now */
@@ -149,10 +154,10 @@ herr_t
 H5G__obj_create_real(H5F_t *f, const H5O_ginfo_t *ginfo, const H5O_linfo_t *linfo, const H5O_pline_t *pline,
                      H5G_obj_create_t *gcrt_info, H5O_loc_t *oloc /*out*/)
 {
-    size_t          hdr_size;                    /* Size of object header to request */
-    bool            use_at_least_v18;            /* Flag indicating the new group format should be used */
-    H5P_genplist_t *gcpl      = gcrt_info->gcpl; /* Group creation property list */
-    herr_t          ret_value = SUCCEED;         /* Return value */
+    size_t hdr_size;                       /* Size of object header to request */
+    bool   use_at_least_v18;               /* Flag indicating the new group format should be used */
+    hid_t  gcpl_id   = gcrt_info->gcpl_id; /* Group creation property list ID */
+    herr_t ret_value = SUCCEED;            /* Return value */
 
     FUNC_ENTER_PACKAGE
 
@@ -192,14 +197,14 @@ H5G__obj_create_real(H5F_t *f, const H5O_ginfo_t *ginfo, const H5O_linfo_t *linf
         size_t     link_size;        /* Size of a link message */
 
         /* Calculate message size information, for creating group's object header */
-        linfo_size = H5O_msg_size_f(f, gcpl, H5O_LINFO_ID, linfo, (size_t)0);
+        linfo_size = H5O_msg_size_f(f, gcpl_id, H5O_LINFO_ID, linfo, (size_t)0);
         assert(linfo_size);
 
-        ginfo_size = H5O_msg_size_f(f, gcpl, H5O_GINFO_ID, ginfo, (size_t)0);
+        ginfo_size = H5O_msg_size_f(f, gcpl_id, H5O_GINFO_ID, ginfo, (size_t)0);
         assert(ginfo_size);
 
         if (pline && pline->nused) {
-            pline_size = H5O_msg_size_f(f, gcpl, H5O_PLINE_ID, pline, (size_t)0);
+            pline_size = H5O_msg_size_f(f, gcpl_id, H5O_PLINE_ID, pline, (size_t)0);
             assert(pline_size);
         } /* end if */
 
@@ -208,7 +213,7 @@ H5G__obj_create_real(H5F_t *f, const H5O_ginfo_t *ginfo, const H5O_linfo_t *linf
         lnk.corder_valid = linfo->track_corder;
         lnk.cset         = H5T_CSET_ASCII;
         lnk.name         = &null_char;
-        link_size        = H5O_msg_size_f(f, gcpl, H5O_LINK_ID, &lnk, (size_t)ginfo->est_name_len);
+        link_size        = H5O_msg_size_f(f, gcpl_id, H5O_LINK_ID, &lnk, (size_t)ginfo->est_name_len);
         assert(link_size);
 
         /* Compute size of header to use for creation */
@@ -240,7 +245,7 @@ H5G__obj_create_real(H5F_t *f, const H5O_ginfo_t *ginfo, const H5O_linfo_t *linf
      * since nothing refers to it yet.	The link count will be
      * incremented if the object is added to the group directed graph.
      */
-    if (H5O_create(f, hdr_size, (size_t)1, gcpl, oloc /*out*/) < 0)
+    if (H5O_create_id(f, hdr_size, (size_t)1, gcpl_id, oloc /*out*/) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTINIT, FAIL, "can't create header");
 
     /* Check for format of group to create */

@@ -72,25 +72,22 @@ H5VL__native_group_create(void *obj, const H5VL_loc_params_t *loc_params, const 
                           hid_t gcpl_id, hid_t H5_ATTR_UNUSED gapl_id, hid_t H5_ATTR_UNUSED dxpl_id,
                           void H5_ATTR_UNUSED **req)
 {
-    H5G_loc_t       loc;        /* Location to create group     */
-    H5G_t          *grp = NULL; /* New group created            */
-    H5P_genplist_t *gcpl;       /* Group creation property list */
-    void           *ret_value;
+    H5G_loc_t loc;        /* Location to create group     */
+    H5G_t    *grp = NULL; /* New group created            */
+    void     *ret_value;
 
     FUNC_ENTER_PACKAGE
 
-    /* Check arguments */
+    /* Set up the location */
     if (H5G_loc_real(obj, loc_params->obj_type, &loc) < 0)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a file or file object");
-    if (NULL == (gcpl = H5I_object(gcpl_id)))
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, NULL, "not a property list");
 
     /* if name is NULL then this is from H5Gcreate_anon */
     if (name == NULL) {
         H5G_obj_create_t gcrt_info; /* Information for group creation */
 
         /* Set up group creation info */
-        gcrt_info.gcpl       = gcpl;
+        gcrt_info.gcpl_id    = gcpl_id;
         gcrt_info.cache_type = H5G_NOTHING_CACHED;
         memset(&gcrt_info.cache, 0, sizeof(gcrt_info.cache));
 
@@ -101,7 +98,7 @@ H5VL__native_group_create(void *obj, const H5VL_loc_params_t *loc_params, const 
     /* otherwise it's from H5Gcreate */
     else {
         /* Create the new group & get its ID */
-        if (NULL == (grp = H5G__create_named(&loc, name, lcpl_id, gcpl)))
+        if (NULL == (grp = H5G__create_named(&loc, name, lcpl_id, gcpl_id)))
             HGOTO_ERROR(H5E_SYM, H5E_CANTINIT, NULL, "unable to create group");
     } /* end else */
 
@@ -181,11 +178,8 @@ H5VL__native_group_get(void *obj, H5VL_group_get_args_t *args, hid_t H5_ATTR_UNU
     switch (args->op_type) {
         /* H5Gget_create_plist */
         case H5VL_GROUP_GET_GCPL: {
-            H5P_genplist_t *gcpl;
-
-            if (NULL == (gcpl = H5G_get_create_plist(obj)))
-                HGOTO_ERROR(H5E_DATASET, H5E_CANTGET, FAIL, "can't get creation property list for dataset");
-            args->args.get_gcpl.gcpl_id = H5P_PLIST_ID(gcpl);
+            if ((args->args.get_gcpl.gcpl_id = H5G_get_create_plist((H5G_t *)obj)) < 0)
+                HGOTO_ERROR(H5E_SYM, H5E_CANTGET, FAIL, "can't get creation property list for group");
 
             break;
         }

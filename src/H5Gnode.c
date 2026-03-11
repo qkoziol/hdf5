@@ -1227,7 +1227,7 @@ H5G__node_copy(H5F_t *f, const void H5_ATTR_UNUSED *_lt_key, haddr_t addr, const
              * case so far is for inserting old-style groups (for caching stab
              * info). */
             if (obj_type == H5O_TYPE_GROUP) {
-                gcrt_info.gcpl       = NULL;
+                gcrt_info.gcpl_id    = H5P_DEFAULT;
                 gcrt_info.cache_type = cpy_udata->cache_type;
                 gcrt_info.cache      = cpy_udata->cache;
             } /* end if */
