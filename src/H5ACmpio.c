@@ -352,7 +352,8 @@ H5AC__broadcast_clean_list_cb(void *_item, void H5_ATTR_UNUSED *_key, void *_uda
     /* and also remove the matching entry from the dirtied list
      * if it exists.
      */
-    if (NULL != (slist_entry_ptr = H5SL_remove(udata->aux_ptr->d_slist_ptr, &addr, false, NULL)))
+    if (NULL !=
+        (slist_entry_ptr = (H5AC_slist_entry_t *)H5SL_remove(udata->aux_ptr->d_slist_ptr, (void *)(&addr))))
         slist_entry_ptr = H5FL_FREE(H5AC_slist_entry_t, slist_entry_ptr);
 
     FUNC_LEAVE_NOAPI(SUCCEED)
@@ -660,11 +661,11 @@ H5AC__log_deleted_entry(const H5AC_info_t *entry_ptr)
     assert(aux_ptr->c_slist_ptr != NULL);
 
     /* if the entry appears in the dirtied entry slist, remove it. */
-    if (NULL != (slist_entry_ptr = H5SL_remove(aux_ptr->d_slist_ptr, &addr, false, NULL)))
+    if (NULL != (slist_entry_ptr = (H5AC_slist_entry_t *)H5SL_remove(aux_ptr->d_slist_ptr, (void *)(&addr))))
         slist_entry_ptr = H5FL_FREE(H5AC_slist_entry_t, slist_entry_ptr);
 
     /* if the entry appears in the cleaned entry slist, remove it. */
-    if (NULL != (slist_entry_ptr = H5SL_remove(aux_ptr->c_slist_ptr, &addr, false, NULL)))
+    if (NULL != (slist_entry_ptr = (H5AC_slist_entry_t *)H5SL_remove(aux_ptr->c_slist_ptr, (void *)(&addr))))
         slist_entry_ptr = H5FL_FREE(H5AC_slist_entry_t, slist_entry_ptr);
 
     FUNC_LEAVE_NOAPI(SUCCEED)
@@ -735,7 +736,8 @@ H5AC__log_dirtied_entry(const H5AC_info_t *entry_ptr)
         /* the entry is dirty.  If it exists on the cleaned entries list,
          * remove it.
          */
-        if (NULL != (slist_entry_ptr = H5SL_remove(aux_ptr->c_slist_ptr, &addr, false, NULL)))
+        if (NULL !=
+            (slist_entry_ptr = (H5AC_slist_entry_t *)H5SL_remove(aux_ptr->c_slist_ptr, (void *)(&addr))))
             slist_entry_ptr = H5FL_FREE(H5AC_slist_entry_t, slist_entry_ptr);
     } /* end if */
     else {
@@ -787,9 +789,11 @@ H5AC__log_cleaned_entry(const H5AC_info_t *entry_ptr)
         assert(aux_ptr->c_slist_ptr != NULL);
 
         /* Remove it from both the cleaned list and the dirtied list.  */
-        if (NULL != (slist_entry_ptr = H5SL_remove(aux_ptr->c_slist_ptr, &addr, false, NULL)))
+        if (NULL !=
+            (slist_entry_ptr = (H5AC_slist_entry_t *)H5SL_remove(aux_ptr->c_slist_ptr, (void *)(&addr))))
             slist_entry_ptr = H5FL_FREE(H5AC_slist_entry_t, slist_entry_ptr);
-        if (NULL != (slist_entry_ptr = H5SL_remove(aux_ptr->d_slist_ptr, &addr, false, NULL)))
+        if (NULL !=
+            (slist_entry_ptr = (H5AC_slist_entry_t *)H5SL_remove(aux_ptr->d_slist_ptr, (void *)(&addr))))
             slist_entry_ptr = H5FL_FREE(H5AC_slist_entry_t, slist_entry_ptr);
 
     } /* end if */
@@ -843,9 +847,11 @@ H5AC__log_flushed_entry(H5C_t *cache_ptr, haddr_t addr, bool was_dirty, unsigned
         /* If the entry has been cleared, must remove it from both the
          * cleaned list and the dirtied list.
          */
-        if (NULL != (slist_entry_ptr = H5SL_remove(aux_ptr->c_slist_ptr, &addr, false, NULL)))
+        if (NULL !=
+            (slist_entry_ptr = (H5AC_slist_entry_t *)H5SL_remove(aux_ptr->c_slist_ptr, (void *)(&addr))))
             slist_entry_ptr = H5FL_FREE(H5AC_slist_entry_t, slist_entry_ptr);
-        if (NULL != (slist_entry_ptr = H5SL_remove(aux_ptr->d_slist_ptr, &addr, false, NULL)))
+        if (NULL !=
+            (slist_entry_ptr = (H5AC_slist_entry_t *)H5SL_remove(aux_ptr->d_slist_ptr, (void *)(&addr))))
             slist_entry_ptr = H5FL_FREE(H5AC_slist_entry_t, slist_entry_ptr);
     } /* end if */
     else if (was_dirty) {
@@ -1013,13 +1019,15 @@ H5AC__log_moved_entry(const H5F_t *f, haddr_t old_addr, haddr_t new_addr)
         /* if the entry appears in the cleaned entry slist, under its old
          * address, remove it.
          */
-        if (NULL != (slist_entry_ptr = H5SL_remove(aux_ptr->c_slist_ptr, &old_addr, false, NULL)))
+        if (NULL !=
+            (slist_entry_ptr = (H5AC_slist_entry_t *)H5SL_remove(aux_ptr->c_slist_ptr, (void *)(&old_addr))))
             slist_entry_ptr = H5FL_FREE(H5AC_slist_entry_t, slist_entry_ptr);
 
         /* if the entry appears in the dirtied entry slist under its old
          * address, remove it, but don't free it. Set addr to new_addr.
          */
-        if (NULL != (slist_entry_ptr = H5SL_remove(aux_ptr->d_slist_ptr, &old_addr, false, NULL)))
+        if (NULL !=
+            (slist_entry_ptr = (H5AC_slist_entry_t *)H5SL_remove(aux_ptr->d_slist_ptr, (void *)(&old_addr))))
             slist_entry_ptr->addr = new_addr;
         else {
             /* otherwise, allocate a new entry that is ready
@@ -2160,9 +2168,11 @@ H5AC__tidy_cache_0_lists(H5AC_t *cache_ptr, unsigned num_candidates, haddr_t *ca
         /* addr may be either on the dirtied list, or on the flushed
          * and still clean list.  Remove it.
          */
-        if (NULL != (d_slist_entry_ptr = H5SL_remove(aux_ptr->d_slist_ptr, &addr, false, NULL)))
+        if (NULL !=
+            (d_slist_entry_ptr = (H5AC_slist_entry_t *)H5SL_remove(aux_ptr->d_slist_ptr, (void *)&addr)))
             d_slist_entry_ptr = H5FL_FREE(H5AC_slist_entry_t, d_slist_entry_ptr);
-        if (NULL != (c_slist_entry_ptr = H5SL_remove(aux_ptr->c_slist_ptr, &addr, false, NULL)))
+        if (NULL !=
+            (c_slist_entry_ptr = (H5AC_slist_entry_t *)H5SL_remove(aux_ptr->c_slist_ptr, (void *)&addr)))
             c_slist_entry_ptr = H5FL_FREE(H5AC_slist_entry_t, c_slist_entry_ptr);
     } /* end for */
 

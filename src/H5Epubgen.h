@@ -407,7 +407,6 @@ H5_DLLVAR hid_t H5E_OPENERROR_g;     /* Can't open directory or file */
 
 /* Resource errors */
 #define H5E_ALREADYEXISTS    (H5OPEN H5E_ALREADYEXISTS_g)
-#define H5E_BADRC            (H5OPEN H5E_BADRC_g)
 #define H5E_CANTALLOC        (H5OPEN H5E_CANTALLOC_g)
 #define H5E_CANTCOPY         (H5OPEN H5E_CANTCOPY_g)
 #define H5E_CANTFREE         (H5OPEN H5E_CANTFREE_g)
@@ -418,7 +417,6 @@ H5_DLLVAR hid_t H5E_OPENERROR_g;     /* Can't open directory or file */
 #define H5E_NOSPACE          (H5OPEN H5E_NOSPACE_g)
 #define H5E_OBJOPEN          (H5OPEN H5E_OBJOPEN_g)
 H5_DLLVAR hid_t H5E_ALREADYEXISTS_g; /* Object already exists */
-H5_DLLVAR hid_t H5E_BADRC_g;         /* Reference count is incorrect */
 H5_DLLVAR hid_t H5E_CANTALLOC_g;     /* Can't allocate space */
 H5_DLLVAR hid_t H5E_CANTCOPY_g;      /* Unable to copy object */
 H5_DLLVAR hid_t H5E_CANTFREE_g;      /* Unable to free object */

@@ -267,7 +267,7 @@ H5FD__core_add_dirty_region(H5FD_core_t *file, haddr_t start, haddr_t end)
         less = (H5FD_core_region_t *)H5SL_less(file->dirty_list, &key);
 
         /* Delete this node */
-        a_item = H5SL_remove(file->dirty_list, &a_item->start, false, NULL);
+        a_item = (H5FD_core_region_t *)H5SL_remove(file->dirty_list, &a_item->start);
         a_item = H5FL_FREE(H5FD_core_region_t, a_item);
 
         /* Set up to check the next node */

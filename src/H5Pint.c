@@ -2747,7 +2747,7 @@ H5P_insert(H5P_genplist_t *plist, const char *name, size_t size, void *value, H5
         char *temp_name = NULL;
 
         /* Remove the property name from the deleted property skip list */
-        if (NULL == (temp_name = H5SL_remove(plist->del, name, false, NULL)))
+        if (NULL == (temp_name = (char *)H5SL_remove(plist->del, name)))
             HGOTO_ERROR(H5E_PLIST, H5E_CANTDELETE, FAIL, "can't remove property from deleted skip list");
 
         /* free the name of the removed property */
@@ -4861,7 +4861,7 @@ H5P__del_plist_cb(H5P_genplist_t *plist, const char *name, H5P_genprop_t *prop, 
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into deleted skip list");
 
     /* Remove the property from the skip list */
-    if (NULL == H5SL_remove(plist->props, prop->name, false, NULL))
+    if (NULL == H5SL_remove(plist->props, prop->name))
         HGOTO_ERROR(H5E_PLIST, H5E_CANTDELETE, FAIL, "can't remove property from skip list");
 
     /* Free the property, ignoring return value, nothing we can do */
@@ -5244,7 +5244,7 @@ H5P__unregister(H5P_genclass_t *pclass, const char *name)
         HGOTO_ERROR(H5E_PLIST, H5E_NOTFOUND, FAIL, "can't find property in skip list");
 
     /* Remove the property from the skip list */
-    if (NULL == H5SL_remove(pclass->props, prop->name, false, NULL))
+    if (H5SL_remove(pclass->props, prop->name) == NULL)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTDELETE, FAIL, "can't remove property from skip list");
 
     /* Free the property, ignoring return value, nothing we can do */

@@ -1100,19 +1100,19 @@ done:
 /*-------------------------------------------------------------------------
  * Function:    H5C__flush_invalidate_ring
  *
- * Purpose:     Flush and destroy the entries contained in the target cache
- *              and ring.
+ * Purpose:     Flush and destroy the entries contained in the target
+ *              cache and ring.
  *
- *              If the ring contains protected entries, the function will fail,
- *              as protected entries cannot be either flushed or destroyed.
- *              However all unprotected entries should be flushed and destroyed
- *              before the function returns failure.
+ *              If the ring contains protected entries, the function will
+ *              fail, as protected entries cannot be either flushed or
+ *              destroyed.  However all unprotected entries should be
+ *              flushed and destroyed before the function returns failure.
  *
- *              While pinned entries can usually be flushed, they cannot be
- *              destroyed.  However, they should be unpinned when all the
- *              entries that reference them have been destroyed (thus reducing
- *              the pinned entry's reference count to 0, allowing it to be
- *              unpinned).
+ *              While pinned entries can usually be flushed, they cannot
+ *              be destroyed.  However, they should be unpinned when all
+ *              the entries that reference them have been destroyed (thus
+ *              reduding the pinned entry's reference count to 0, allowing
+ *              it to be unpinned).
  *
  *              If pinned entries are present, the function makes repeated
  *              passes through the cache, flushing all dirty entries
@@ -1134,6 +1134,7 @@ static herr_t
 H5C__flush_invalidate_ring(H5F_t *f, H5C_ring_t ring, unsigned flags)
 {
     H5C_t             *cache_ptr;
+    bool               restart_slist_scan;
     uint32_t           protected_entries = 0;
     int32_t            i;
     uint32_t           cur_ring_pel_len;
@@ -1174,26 +1175,27 @@ H5C__flush_invalidate_ring(H5F_t *f, H5C_ring_t ring, unsigned flags)
      * the ring unpin themselves, or until the number of pinned entries
      * in the ring stops declining.  In this later case, we scream and die.
      *
-     * Since entries can be dirtied, resized, and/or moved in flush calls, it
-     * is possible that the cache will still contain dirty entries at this
-     * point.  If so, we must make more passes through the skip list to allow
-     * it to empty.
+     * Since the fractal heap can dirty, resize, and/or move entries
+     * in is flush callback, it is possible that the cache will still
+     * contain dirty entries at this point.  If so, we must make more
+     * passes through the skip list to allow it to empty.
      *
-     * Further, since clean entries can be dirtied, resized, and/or moved as
-     * the result of a flush call (either the entry's own, or that for some
-     * other cache entry), we can not promise to flush the cache entries in
-     * increasing address order.
+     * Further, since clean entries can be dirtied, resized, and/or moved
+     * as the result of a flush call back (either the entries own, or that
+     * for some other cache entry), we can no longer promise to flush
+     * the cache entries in increasing address order.
      *
-     * Instead, we make a pass through the skip list and then a pass through
-     * the "clean" entries, and repeat as needed.  It is quite possible that an
-     * entry will be evicted from the cache only to be re-loaded later in the
-     * flush process.
+     * Instead, we make a pass through
+     * the skip list, and then a pass through the "clean" entries, and
+     * then repeating as needed.  Thus it is quite possible that an
+     * entry will be evicted from the cache only to be re-loaded later
+     * in the flush process.
      *
-     * The bottom line is that entries will probably be flushed in close to
-     * increasing address order, but there are no guarantees.
+     * The bottom line is that entries will probably be flushed in close
+     * to increasing address order, but there are no guarantees.
      */
 
-    /* Compute the number of pinned entries in this ring */
+    /* compute the number of pinned entries in this ring */
     entry_ptr        = cache_ptr->pel_head_ptr;
     cur_ring_pel_len = 0;
     while (entry_ptr != NULL) {
@@ -1205,107 +1207,165 @@ H5C__flush_invalidate_ring(H5F_t *f, H5C_ring_t ring, unsigned flags)
     } /* end while */
     old_ring_pel_len = cur_ring_pel_len;
 
-    /* Try to flush-destroy any dirty entries.   Do this by making a scan
-     * through the skip list.  Note that new dirty entries may be created by
-     * the flush call, thus we may need to restart the scan (see below).
-     */
     while (cache_ptr->index_ring_len[ring] > 0) {
+        /* First, try to flush-destroy any dirty entries.   Do this by
+         * making a scan through the slist.  Note that new dirty entries
+         * may be created by the flush call back, thus we may need to
+         * restart the scan (see below).
+         */
+
 #ifdef H5C_DO_SANITY_CHECKS
-        /* Depending on circumstances, H5C__flush_single_entry() will remove
-         * dirty entries from the skip list as it flushes them.  Thus for sanity
-         * checks we must make note of the initial skip list length and size
-         * before we do any flushes.
+        /* Depending on circumstances, H5C__flush_single_entry() will
+         * remove dirty entries from the slist as it flushes them.
+         * Thus for sanity checks we must make note of the initial
+         * slist length and size before we do any flushes.
          */
         initial_slist_len  = cache_ptr->slist_len;
         initial_slist_size = cache_ptr->slist_size;
 
-        /* There is also the possibility that entries will be dirtied, resized,
-         * moved, and/or removed from the cache as the result of calls to the
-         * flush callbacks.  We use the slist_len_increase and
-         * slist_size_increase fields in struct H5C_t to track these changes for
-         * purpose of sanity checking.
+        /* There is also the possibility that entries will be
+         * dirtied, resized, moved, and/or removed from the cache
+         * as the result of calls to the flush callbacks.  We use
+         * the slist_len_increase and slist_size_increase increase
+         * fields in struct H5C_t to track these changes for purpose
+         * of sanity checking.
          *
-         * To this end, we must zero these fields before we start the pass
-         * through the skip list.
+         * To this end, we must zero these fields before we start
+         * the pass through the slist.
          */
         cache_ptr->slist_len_increase  = 0;
         cache_ptr->slist_size_increase = 0;
 #endif /* H5C_DO_SANITY_CHECKS */
 
-        /* Set the skip list scanning fields to indicate that skip list
-         * modifications need to update the rescan information correctly.
+        /* Set the cache_ptr->slist_changed to false.
+         *
+         * This flag is set to true by H5C__flush_single_entry if the slist
+         * is modified by a pre_serialize, serialize, or notify callback.
+         *
+         * H5C__flush_invalidate_ring() uses this flag to detect any
+         * modifications to the slist that might corrupt the scan of
+         * the slist -- and restart the scan in this event.
          */
-        cache_ptr->slist_scan_in_progress = true;
+        cache_ptr->slist_changed = false;
 
-        /* Start the scan of the skip list */
-        node_ptr = H5SL_first(cache_ptr->slist_ptr);
-        while (node_ptr) {
-            /* Get the current entry's pointer */
-            if (NULL == (entry_ptr = H5SL_item(node_ptr)))
-                HGOTO_ERROR(H5E_CACHE, H5E_BADVALUE, FAIL, "entry_ptr == NULL");
+        /* this done, start the scan of the slist */
+        restart_slist_scan = true;
+        while (restart_slist_scan || (node_ptr != NULL)) {
+            if (restart_slist_scan) {
+                restart_slist_scan = false;
 
-            /* Sanity checks */
-            assert(entry_ptr->is_dirty);
+                /* Start at beginning of skip list */
+                node_ptr = H5SL_first(cache_ptr->slist_ptr);
+                if (node_ptr == NULL)
+                    /* the slist is empty -- break out of inner loop */
+                    break;
+
+                /* Get cache entry for this node */
+                next_entry_ptr = (H5C_cache_entry_t *)H5SL_item(node_ptr);
+                if (NULL == next_entry_ptr)
+                    HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL, "next_entry_ptr == NULL ?!?!");
+
+                assert(next_entry_ptr->is_dirty);
+                assert(next_entry_ptr->in_slist);
+                assert(next_entry_ptr->ring >= ring);
+            } /* end if */
+
+            entry_ptr = next_entry_ptr;
+
+            /* It is possible that entries will be dirtied, resized,
+             * flushed, or removed from the cache via the take ownership
+             * flag as the result of pre_serialize or serialized callbacks.
+             *
+             * This in turn can corrupt the scan through the slist.
+             *
+             * We test for slist modifications in the pre_serialize
+             * and serialize callbacks, and restart the scan of the
+             * slist if we find them.  However, best we do some extra
+             * sanity checking just in case.
+             */
+            assert(entry_ptr != NULL);
             assert(entry_ptr->in_slist);
+            assert(entry_ptr->is_dirty);
             assert(entry_ptr->ring >= ring);
 
-            /* Advance the node pointer now, before we try to delete the
-             * current entry from the skip list.
+            /* increment node pointer now, before we delete its target
+             * from the slist.
              */
             node_ptr = H5SL_next(node_ptr);
+            if (node_ptr != NULL) {
+                next_entry_ptr = (H5C_cache_entry_t *)H5SL_item(node_ptr);
+                if (NULL == next_entry_ptr)
+                    HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL, "next_entry_ptr == NULL ?!?!");
 
-            /* Note that we remove nodes from the skip list as we flush the
-             * associated entries instead of leaving them there until we are
-             * done and then destroying all nodes in the skip list.
+                assert(next_entry_ptr->is_dirty);
+                assert(next_entry_ptr->in_slist);
+                assert(next_entry_ptr->ring >= ring);
+                assert(entry_ptr != next_entry_ptr);
+            } /* end if */
+            else
+                next_entry_ptr = NULL;
+
+            /* Note that we now remove nodes from the slist as we flush
+             * the associated entries, instead of leaving them there
+             * until we are done, and then destroying all nodes in
+             * the slist.
              *
-             * This is done to keep the skip list in canonical form at all
-             * times because new entries may be added to the skip list in the
-             * midst of the flush.
+             * While this optimization used to be easy, with the possibility
+             * of new entries being added to the slist in the midst of the
+             * flush, we must keep the slist in canonical form at all
+             * times.
              */
-            if ((!entry_ptr->flush_me_last ||
-                 (entry_ptr->flush_me_last && cache_ptr->num_last_entries >= cache_ptr->slist_len)) &&
-                entry_ptr->flush_dep_nchildren == 0 && entry_ptr->ring == ring) {
-
-                /* Reset flag for detecting that the node_ptr entry was removed */
-                cache_ptr->slist_scan_next_addr_removed = false;
-
+            if (((!entry_ptr->flush_me_last) ||
+                 ((entry_ptr->flush_me_last) && (cache_ptr->num_last_entries >= cache_ptr->slist_len))) &&
+                (entry_ptr->flush_dep_nchildren == 0) && (entry_ptr->ring == ring)) {
                 if (entry_ptr->is_protected) {
-                    /* We have major problems -- but lets flush everything we
-                     * can before we flag an error.
+                    /* We have major problems -- but lets flush
+                     * everything we can before we flag an error.
                      */
                     protected_entries++;
                 } /* end if */
                 else if (entry_ptr->is_pinned) {
-                    if (H5C__flush_single_entry(f, entry_ptr, 0) < 0)
+                    if (H5C__flush_single_entry(f, entry_ptr, H5C__DURING_FLUSH_FLAG) < 0)
                         HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL, "dirty pinned entry flush failed");
-                } /* end else-if */
+
+                    if (cache_ptr->slist_changed) {
+                        /* The slist has been modified by something
+                         * other than the simple removal of the
+                         * of the flushed entry after the flush.
+                         *
+                         * This has the potential to corrupt the
+                         * scan through the slist, so restart it.
+                         */
+                        restart_slist_scan       = true;
+                        cache_ptr->slist_changed = false;
+                        H5C__UPDATE_STATS_FOR_SLIST_SCAN_RESTART(cache_ptr);
+                    } /* end if */
+                }     /* end else-if */
                 else {
                     if (H5C__flush_single_entry(f, entry_ptr,
-                                                (cooked_flags | H5C__FLUSH_INVALIDATE_FLAG |
+                                                (cooked_flags | H5C__DURING_FLUSH_FLAG |
+                                                 H5C__FLUSH_INVALIDATE_FLAG |
                                                  H5C__DEL_FROM_SLIST_ON_DESTROY_FLAG)) < 0)
                         HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL, "dirty entry flush destroy failed");
-                } /* end else */
 
-                /* Check for restarting scan */
-                if (cache_ptr->slist_scan_next_addr_removed) {
-                    /* Reset flag */
-                    cache_ptr->slist_scan_next_addr_removed = false;
-
-                    /* Restart scan */
-                    if (NULL == (node_ptr = H5SL_first(cache_ptr->slist_ptr)))
-                        HGOTO_ERROR(H5E_CACHE, H5E_NOTFOUND, FAIL, "can't locate entry for rescan");
-
-                    /* Update stats for rescan */
-                    H5C__UPDATE_STATS_FOR_SLIST_SCAN_RESTART(cache_ptr);
-                }
-            } /* end if */
-        }     /* end while loop scanning skip list */
-
-        /* Reset the skip list scanning flag */
-        cache_ptr->slist_scan_in_progress = false;
+                    if (cache_ptr->slist_changed) {
+                        /* The slist has been modified by something
+                         * other than the simple removal of the
+                         * of the flushed entry after the flush.
+                         *
+                         * This has the potential to corrupt the
+                         * scan through the slist, so restart it.
+                         */
+                        restart_slist_scan       = true;
+                        cache_ptr->slist_changed = false;
+                        H5C__UPDATE_STATS_FOR_SLIST_SCAN_RESTART(cache_ptr);
+                    } /* end if */
+                }     /* end else */
+            }         /* end if */
+        }             /* end while loop scanning skip list */
 
 #ifdef H5C_DO_SANITY_CHECKS
-        /* It is possible that entries were added to the skip list during
+        /* It is possible that entries were added to the slist during
          * the scan, either before or after scan pointer.  The following
          * asserts take this into account.
          *
@@ -1322,9 +1382,16 @@ H5C__flush_invalidate_ring(H5F_t *f, H5C_ring_t ring, unsigned flags)
         } /* end if */
 #endif    /* H5C_DO_SANITY_CHECKS */
 
-        /* It's possible that an earlier flush operation has dirtied another
-         * entry (indirectly), so we must make a pass through the hash table
-         * and try to flush-destroy all entries that remain.
+        /* Since we are doing a destroy, we must make a pass through
+         * the hash table and try to flush - destroy all entries that
+         * remain.
+         *
+         * It used to be that all entries remaining in the cache at
+         * this point had to be clean, but with the fractal heap mods
+         * this may not be the case.  If so, we will flush entries out
+         * in increasing address order.
+         *
+         * Writes to disk are possible here.
          */
 
         /* Reset the counters so that we can detect insertions, loads,
@@ -1346,8 +1413,9 @@ H5C__flush_invalidate_ring(H5F_t *f, H5C_ring_t ring, unsigned flags)
                 (entry_ptr->flush_dep_nchildren == 0) && (entry_ptr->ring == ring)) {
 
                 if (entry_ptr->is_protected) {
-                    /* We have major problems -- but lets flush and destroy
-                     * everything we can before we flag an error.
+                    /* we have major problems -- but lets flush and
+                     * destroy everything we can before we flag an
+                     * error.
                      */
                     protected_entries++;
 
@@ -1355,45 +1423,51 @@ H5C__flush_invalidate_ring(H5F_t *f, H5C_ring_t ring, unsigned flags)
                         assert(!(entry_ptr->is_dirty));
                 } /* end if */
                 else if (!entry_ptr->is_pinned) {
-                    /* If the current entry is dirty, it is possible that one
-                     * or more other entries may be either removed from the
-                     * cache, loaded into the cache, or moved to a new location
-                     * in the file as a side-effect of the flush.
+                    /* if *entry_ptr is dirty, it is possible
+                     * that one or more other entries may be
+                     * either removed from the cache, loaded
+                     * into the cache, or moved to a new location
+                     * in the file as a side effect of the flush.
                      *
-                     * It's also possible that removing a clean entry will
-                     * remove the last child of a proxy entry, allowing it to
-                     * be removed also and invalidating the next_entry_ptr.
+                     * It's also possible that removing a clean
+                     * entry will remove the last child of a proxy
+                     * entry, allowing it to be removed also and
+                     * invalidating the next_entry_ptr.
                      *
-                     * If either of these happen and one of the target or
-                     * proxy entries happens to be the next entry in the hash
-                     * bucket, we could either find ourselves either scanning a
-                     * non-existent entry, scanning through a different bucket,
-                     * or skipping an entry.
+                     * If either of these happen, and one of the target
+                     * or proxy entries happens to be the next entry in
+                     * the hash bucket, we could either find ourselves
+                     * either scanning a non-existent entry, scanning
+                     * through a different bucket, or skipping an entry.
                      *
-                     * None of these are good, so restart the the scan at the
-                     * head of the hash bucket after the flush if we detect
-                     * that the next_entry_ptr becomes invalid.
+                     * Neither of these are good, so restart the
+                     * the scan at the head of the hash bucket
+                     * after the flush if we detect that the next_entry_ptr
+                     * becomes invalid.
                      *
-                     * This is not as inefficient at it might seem, as hash
-                     * buckets typically have at most two or three entries.
+                     * This is not as inefficient at it might seem,
+                     * as hash buckets typically have at most two
+                     * or three entries.
                      */
                     cache_ptr->entry_watched_for_removal = next_entry_ptr;
                     if (H5C__flush_single_entry(f, entry_ptr,
-                                                (cooked_flags | H5C__FLUSH_INVALIDATE_FLAG |
+                                                (cooked_flags | H5C__DURING_FLUSH_FLAG |
+                                                 H5C__FLUSH_INVALIDATE_FLAG |
                                                  H5C__DEL_FROM_SLIST_ON_DESTROY_FLAG)) < 0)
                         HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL, "Entry flush destroy failed");
 
-                    /* Restart the index list scan if necessary.  Must do this
-                     * if the next entry is evicted, and also if one or more
-                     * entries are inserted, loaded, or moved as these
-                     * operations can result in part of the scan being
-                     * skipped -- which can cause a spurious failure if this
-                     * results in the size of the pinned entry failing to
-                     * decline during the pass.
+                    /* Restart the index list scan if necessary.  Must
+                     * do this if the next entry is evicted, and also if
+                     * one or more entries are inserted, loaded, or moved
+                     * as these operations can result in part of the scan
+                     * being skipped -- which can cause a spurious failure
+                     * if this results in the size of the pinned entry
+                     * failing to decline during the pass.
                      */
-                    if ((NULL != next_entry_ptr && NULL == cache_ptr->entry_watched_for_removal) ||
-                        cache_ptr->entries_loaded_counter > 0 || cache_ptr->entries_inserted_counter > 0 ||
-                        cache_ptr->entries_relocated_counter > 0) {
+                    if (((NULL != next_entry_ptr) && (NULL == cache_ptr->entry_watched_for_removal)) ||
+                        (cache_ptr->entries_loaded_counter > 0) ||
+                        (cache_ptr->entries_inserted_counter > 0) ||
+                        (cache_ptr->entries_relocated_counter > 0)) {
 
                         next_entry_ptr = cache_ptr->il_head;
 
@@ -1409,13 +1483,13 @@ H5C__flush_invalidate_ring(H5F_t *f, H5C_ring_t ring, unsigned flags)
             }     /* end if */
         }         /* end for loop scanning hash table */
 
-        /* We can't do anything if entries are pinned.  The hope is that the
-         * entries will be unpinned as the result of destroys of entries that
-         * reference them.
+        /* We can't do anything if entries are pinned.  The
+         * hope is that the entries will be unpinned as the
+         * result of destroys of entries that reference them.
          *
-         * We detect this by noting the change in the number of pinned entries
-         * from pass to pass.  If it stops shrinking before it hits zero, we
-         * scream and die.
+         * We detect this by noting the change in the number
+         * of pinned entries from pass to pass.  If it stops
+         * shrinking before it hits zero, we scream and die.
          */
         old_ring_pel_len = cur_ring_pel_len;
         entry_ptr        = cache_ptr->pel_head_ptr;
@@ -1433,7 +1507,7 @@ H5C__flush_invalidate_ring(H5F_t *f, H5C_ring_t ring, unsigned flags)
         /* Check if the number of pinned entries in the ring is positive, and
          * it is not declining.  Scream and die if so.
          */
-        if (cur_ring_pel_len > 0 && cur_ring_pel_len >= old_ring_pel_len) {
+        if ((cur_ring_pel_len > 0) && (cur_ring_pel_len >= old_ring_pel_len)) {
             /* Don't error if allowed to have pinned entries remaining */
             if (evict_flags)
                 HGOTO_DONE(true);
@@ -1446,7 +1520,7 @@ H5C__flush_invalidate_ring(H5F_t *f, H5C_ring_t ring, unsigned flags)
 
         assert(protected_entries == cache_ptr->pl_len);
 
-        if (protected_entries > 0 && protected_entries == cache_ptr->index_len)
+        if ((protected_entries > 0) && (protected_entries == cache_ptr->index_len))
             HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL,
                         "Only protected entries left in cache, protected_entries = %d",
                         (int)protected_entries);
@@ -1471,13 +1545,6 @@ H5C__flush_invalidate_ring(H5F_t *f, H5C_ring_t ring, unsigned flags)
         HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL, "Can't unpin all pinned entries in ring");
 
 done:
-    /* Return the skip list node */
-    if (node_ptr && H5SL_return(node_ptr) < 0)
-        HDONE_ERROR(H5E_CACHE, H5E_CANTRELEASE, FAIL, "can't return skip list node");
-
-    /* Reset the cache_ptr->slist_scan_in_progress to false */
-    cache_ptr->slist_scan_in_progress = false;
-
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5C__flush_invalidate_ring() */
 
@@ -1494,8 +1561,8 @@ done:
  *              ring should be flushed before the function returns failure.
  *
  *              If flush dependencies appear in the target ring, the
- *              function makes repeated passes through the skip list
- *              flushing entries in flush dependency order.
+ *              function makes repeated passes through the slist flushing
+ *              entries in flush dependency order.
  *
  * Return:      Non-negative on success/Negative on failure or if there was
  *              a request to flush all items and something was protected.
@@ -1509,9 +1576,11 @@ H5C__flush_ring(H5F_t *f, H5C_ring_t ring, unsigned flags)
     bool               flushed_entries_last_pass;
     bool               ignore_protected;
     bool               tried_to_flush_protected_entry = false;
-    uint32_t           protected_entries              = 0;
-    H5SL_node_t       *node_ptr                       = NULL;
-    H5C_cache_entry_t *entry_ptr                      = NULL;
+    bool               restart_slist_scan;
+    uint32_t           protected_entries = 0;
+    H5SL_node_t       *node_ptr          = NULL;
+    H5C_cache_entry_t *entry_ptr         = NULL;
+    H5C_cache_entry_t *next_entry_ptr    = NULL;
 #ifdef H5C_DO_SANITY_CHECKS
     uint32_t initial_slist_len  = 0;
     size_t   initial_slist_size = 0;
@@ -1541,73 +1610,124 @@ H5C__flush_ring(H5F_t *f, H5C_ring_t ring, unsigned flags)
 
     assert(cache_ptr->flush_in_progress);
 
-    /* When we are only flushing marked entries, the skip list will usually
-     * still contain entries when we have flushed everything we should.  Thus
-     * we track whether we have flushed any entries in the last pass, and
-     * terminate if we haven't.
+    /* When we are only flushing marked entries, the slist will usually
+     * still contain entries when we have flushed everything we should.
+     * Thus we track whether we have flushed any entries in the last
+     * pass, and terminate if we haven't.
      */
     flushed_entries_last_pass = true;
 
-    /* Set the skip list scanning fields to indicate that skip list
-     * modifications need to update the rescan information correctly.
+    /* Set the cache_ptr->slist_changed to false.
+     *
+     * This flag is set to true by H5C__flush_single_entry if the
+     * slist is modified by a pre_serialize, serialize, or notify callback.
+     * H5C_flush_cache uses this flag to detect any modifications
+     * to the slist that might corrupt the scan of the slist -- and
+     * restart the scan in this event.
      */
-    cache_ptr->slist_scan_in_progress = true;
+    cache_ptr->slist_changed = false;
 
-    while (cache_ptr->slist_ring_len[ring] > 0 && protected_entries == 0 && flushed_entries_last_pass) {
+    while ((cache_ptr->slist_ring_len[ring] > 0) && (protected_entries == 0) && (flushed_entries_last_pass)) {
         flushed_entries_last_pass = false;
 
 #ifdef H5C_DO_SANITY_CHECKS
-        /* For sanity checking, try to verify that the skip list has the
-         * expected size and number of entries at the end of each internal
-         * while loop (see below).
+        /* For sanity checking, try to verify that the skip list has
+         * the expected size and number of entries at the end of each
+         * internal while loop (see below).
          *
-         * Doing this get a bit tricky, as depending on flags, we may or may
-         * not flush all the entries in the skip list.
+         * Doing this get a bit tricky, as depending on flags, we may
+         * or may not flush all the entries in the slist.
          *
-         * To make things more entertaining, the entry serialize callback can
-         * cause entries to be dirtied, resized, and/or moved.  Also, the
-         * pre_serialize callback can result in an entry being removed from the
-         * cache via the 'take ownership' flag.
+         * To make things more entertaining, with the advent of the
+         * fractal heap, the entry serialize callback can cause entries
+         * to be dirtied, resized, and/or moved.  Also, the
+         * pre_serialize callback can result in an entry being
+         * removed from the cache via the take ownership flag.
          *
-         * To deal with this, we first make note of the initial skip list
-         * length and size:
+         * To deal with this, we first make note of the initial
+         * skip list length and size:
          */
         initial_slist_len  = cache_ptr->slist_len;
         initial_slist_size = cache_ptr->slist_size;
 
-        /* As mentioned above, there is the possibility that entries will be
-         * dirtied, resized, flushed, or removed from the cache via the 'take
-         * ownership' flag during our pass through the skip list.  To capture
-         * the number of entries added, and the skip list size delta, zero the
-         * slist_len_increase and slist_size_increase of the cache's instance
-         * of H5C_t.  These fields will be updated elsewhere to account for
-         * skip list insertions and/or dirty entry size changes.
+        /* As mentioned above, there is the possibility that
+         * entries will be dirtied, resized, flushed, or removed
+         * from the cache via the take ownership flag  during
+         * our pass through the skip list.  To capture the number
+         * of entries added, and the skip list size delta,
+         * zero the slist_len_increase and slist_size_increase of
+         * the cache's instance of H5C_t.  These fields will be
+         * updated elsewhere to account for slist insertions and/or
+         * dirty entry size changes.
          */
         cache_ptr->slist_len_increase  = 0;
         cache_ptr->slist_size_increase = 0;
 
-        /* At the end of the loop, use these values to compute the expected skip
-         * list length and size and compare this with the value recorded in the
-         * cache's instance of H5C_t.
+        /* at the end of the loop, use these values to compute the
+         * expected slist length and size and compare this with the
+         * value recorded in the cache's instance of H5C_t.
          */
 #endif /* H5C_DO_SANITY_CHECKS */
 
-        /* Start the scan of the skip list */
-        node_ptr = H5SL_first(cache_ptr->slist_ptr);
-        while (node_ptr) {
-            /* Get the current entry's pointer */
-            if (NULL == (entry_ptr = H5SL_item(node_ptr)))
-                HGOTO_ERROR(H5E_CACHE, H5E_BADVALUE, FAIL, "entry_ptr == NULL");
+        restart_slist_scan = true;
+        while ((restart_slist_scan) || (node_ptr != NULL)) {
+            if (restart_slist_scan) {
+                restart_slist_scan = false;
 
-            /* Sanity checks */
-            assert(entry_ptr->is_dirty);
+                /* Start at beginning of skip list */
+                node_ptr = H5SL_first(cache_ptr->slist_ptr);
+                if (node_ptr == NULL)
+                    /* the slist is empty -- break out of inner loop */
+                    break;
+
+                /* Get cache entry for this node */
+                next_entry_ptr = (H5C_cache_entry_t *)H5SL_item(node_ptr);
+                if (NULL == next_entry_ptr)
+                    HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL, "next_entry_ptr == NULL ?!?!");
+
+                assert(next_entry_ptr->is_dirty);
+                assert(next_entry_ptr->in_slist);
+            } /* end if */
+
+            entry_ptr = next_entry_ptr;
+
+            /* With the advent of the fractal heap, the free space
+             * manager, and the version 3 cache, it is possible
+             * that the pre-serialize or serialize callback will
+             * dirty, resize, or take ownership of other entries
+             * in the cache.
+             *
+             * To deal with this, there is code to detect any
+             * change in the skip list not directly under the control
+             * of this function.  If such modifications are detected,
+             * we must re-start the scan of the skip list to avoid
+             * the possibility that the target of the next_entry_ptr
+             * may have been flushed or deleted from the cache.
+             *
+             * To verify that all such possibilities have been dealt
+             * with, we do a bit of extra sanity checking on
+             * entry_ptr.
+             */
             assert(entry_ptr->in_slist);
+            assert(entry_ptr->is_dirty);
             assert(entry_ptr->ring >= ring);
 
-            /* Advance the node pointer now, before we try to delete the
-             * current entry from the skip list.
+            /* Advance node pointer now, before we delete its target
+             * from the slist.
              */
             node_ptr = H5SL_next(node_ptr);
+            if (node_ptr != NULL) {
+                next_entry_ptr = (H5C_cache_entry_t *)H5SL_item(node_ptr);
+                if (NULL == next_entry_ptr)
+                    HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL, "next_entry_ptr == NULL ?!?!");
+
+                assert(next_entry_ptr->is_dirty);
+                assert(next_entry_ptr->in_slist);
+                assert(next_entry_ptr->ring >= ring);
+                assert(entry_ptr != next_entry_ptr);
+            } /* end if */
+            else
+                next_entry_ptr = NULL;
 
             if (((!entry_ptr->flush_me_last) ||
                  ((entry_ptr->flush_me_last) && cache_ptr->num_last_entries >= cache_ptr->slist_len)) &&
@@ -1617,38 +1737,37 @@ H5C__flush_ring(H5F_t *f, H5C_ring_t ring, unsigned flags)
                 assert(entry_ptr->flush_dep_nunser_children == 0);
 
                 if (entry_ptr->is_protected) {
-                    /* We probably have major problems -- but lets flush
-                     * everything we can before we flag an error.
+                    /* we probably have major problems -- but lets
+                     * flush everything we can before we decide
+                     * whether to flag an error.
                      */
                     tried_to_flush_protected_entry = true;
                     protected_entries++;
                 } /* end if */
                 else {
-                    /* Reset flag for detecting that the node_ptr entry was removed */
-                    cache_ptr->slist_scan_next_addr_removed = false;
-
-                    if (H5C__flush_single_entry(f, entry_ptr, flags) < 0)
+                    if (H5C__flush_single_entry(f, entry_ptr, (flags | H5C__DURING_FLUSH_FLAG)) < 0)
                         HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL, "Can't flush entry");
 
-                    flushed_entries_last_pass = true;
-
-                    /* Check for restarting scan */
-                    if (cache_ptr->slist_scan_next_addr_removed) {
-                        /* Reset flag */
-                        cache_ptr->slist_scan_next_addr_removed = false;
-
-                        /* Update stats for rescan */
+                    if (cache_ptr->slist_changed) {
+                        /* The slist has been modified by something
+                         * other than the simple removal of the
+                         * of the flushed entry after the flush.
+                         *
+                         * This has the potential to corrupt the
+                         * scan through the slist, so restart it.
+                         */
+                        restart_slist_scan       = true;
+                        cache_ptr->slist_changed = false;
                         H5C__UPDATE_STATS_FOR_SLIST_SCAN_RESTART(cache_ptr);
+                    } /* end if */
 
-                        /* Break out of inner loop */
-                        break;
-                    }
+                    flushed_entries_last_pass = true;
                 } /* end else */
             }     /* end if */
-        }         /* while (node_ptr != NULL) */
+        }         /* while ( ( restart_slist_scan ) || ( node_ptr != NULL ) ) */
 
 #ifdef H5C_DO_SANITY_CHECKS
-        /* Verify that the skip list size and length are as expected. */
+        /* Verify that the slist size and length are as expected. */
         assert((uint32_t)((int32_t)initial_slist_len + cache_ptr->slist_len_increase) ==
                cache_ptr->slist_len);
         assert((size_t)((ssize_t)initial_slist_size + cache_ptr->slist_size_increase) ==
@@ -1658,7 +1777,7 @@ H5C__flush_ring(H5F_t *f, H5C_ring_t ring, unsigned flags)
 
     assert(protected_entries <= cache_ptr->pl_len);
 
-    if ((cache_ptr->pl_len > 0 && !ignore_protected) || tried_to_flush_protected_entry)
+    if (((cache_ptr->pl_len > 0) && !ignore_protected) || tried_to_flush_protected_entry)
         HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL, "cache has protected items");
 
 #ifdef H5C_DO_SANITY_CHECKS
@@ -1667,13 +1786,6 @@ H5C__flush_ring(H5F_t *f, H5C_ring_t ring, unsigned flags)
 #endif /* H5C_DO_SANITY_CHECKS */
 
 done:
-    /* Return the skip list node */
-    if (node_ptr && H5SL_return(node_ptr) < 0)
-        HDONE_ERROR(H5E_CACHE, H5E_CANTRELEASE, FAIL, "can't return skip list node");
-
-    /* Reset the cache_ptr->slist_scan_in_progress to false */
-    cache_ptr->slist_scan_in_progress = false;
-
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5C__flush_ring() */
 

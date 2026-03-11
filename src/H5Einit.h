@@ -758,10 +758,6 @@ if((H5E_OPENERROR_g = H5I_register(H5I_ERROR_MSG, &H5E_OPENERROR_msg_s, false)) 
 assert(H5I_INVALID_HID == H5E_ALREADYEXISTS_g);
 if((H5E_ALREADYEXISTS_g = H5I_register(H5I_ERROR_MSG, &H5E_ALREADYEXISTS_msg_s, false)) < 0)
     HGOTO_ERROR(H5E_ERROR, H5E_CANTREGISTER, FAIL, "can't register error message");
-/* H5E_BADRC */
-assert(H5I_INVALID_HID == H5E_BADRC_g);
-if((H5E_BADRC_g = H5I_register(H5I_ERROR_MSG, &H5E_BADRC_msg_s, false)) < 0)
-    HGOTO_ERROR(H5E_ERROR, H5E_CANTREGISTER, FAIL, "can't register error message");
 /* H5E_CANTALLOC */
 assert(H5I_INVALID_HID == H5E_CANTALLOC_g);
 if((H5E_CANTALLOC_g = H5I_register(H5I_ERROR_MSG, &H5E_CANTALLOC_msg_s, false)) < 0)

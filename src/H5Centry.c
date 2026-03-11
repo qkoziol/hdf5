@@ -359,7 +359,7 @@ H5C__generate_image(H5F_t *f, H5C_t *cache_ptr, H5C_cache_entry_t *entry_ptr)
             if (entry_ptr->addr == old_addr) {
                 /* Delete the entry from the hash table and the slist */
                 H5C__DELETE_FROM_INDEX(cache_ptr, entry_ptr, FAIL);
-                H5C__REMOVE_ENTRY_FROM_SLIST(cache_ptr, entry_ptr, FAIL);
+                H5C__REMOVE_ENTRY_FROM_SLIST(cache_ptr, entry_ptr, false, FAIL);
 
                 /* Update the entry for its new address */
                 entry_ptr->addr = new_addr;
@@ -434,6 +434,7 @@ H5C__flush_single_entry(H5F_t *f, H5C_cache_entry_t *entry_ptr, unsigned flags)
     bool    free_file_space;           /* external flag */
     bool    take_ownership;            /* external flag */
     bool    del_from_slist_on_destroy; /* external flag */
+    bool    during_flush;              /* external flag */
     bool    write_entry;               /* internal flag */
     bool    destroy_entry;             /* internal flag */
     bool    generate_image;            /* internal flag */
@@ -459,6 +460,7 @@ H5C__flush_single_entry(H5F_t *f, H5C_cache_entry_t *entry_ptr, unsigned flags)
     free_file_space           = ((flags & H5C__FREE_FILE_SPACE_FLAG) != 0);
     take_ownership            = ((flags & H5C__TAKE_OWNERSHIP_FLAG) != 0);
     del_from_slist_on_destroy = ((flags & H5C__DEL_FROM_SLIST_ON_DESTROY_FLAG) != 0);
+    during_flush              = ((flags & H5C__DURING_FLUSH_FLAG) != 0);
     generate_image            = ((flags & H5C__GENERATE_IMAGE_FLAG) != 0);
     update_page_buffer        = ((flags & H5C__UPDATE_PAGE_BUFFER_FLAG) != 0);
 
@@ -676,7 +678,7 @@ H5C__flush_single_entry(H5F_t *f, H5C_cache_entry_t *entry_ptr, unsigned flags)
         H5C__DELETE_FROM_INDEX(cache_ptr, entry_ptr, FAIL);
 
         if (entry_ptr->in_slist && del_from_slist_on_destroy)
-            H5C__REMOVE_ENTRY_FROM_SLIST(cache_ptr, entry_ptr, FAIL);
+            H5C__REMOVE_ENTRY_FROM_SLIST(cache_ptr, entry_ptr, during_flush, FAIL);
 
 #ifdef H5_HAVE_PARALLEL
         /* Check for collective read access flag */
@@ -708,7 +710,7 @@ H5C__flush_single_entry(H5F_t *f, H5C_cache_entry_t *entry_ptr, unsigned flags)
          * Hence no differentiation between them.
          */
         H5C__UPDATE_RP_FOR_FLUSH(cache_ptr, entry_ptr, FAIL);
-        H5C__REMOVE_ENTRY_FROM_SLIST(cache_ptr, entry_ptr, FAIL);
+        H5C__REMOVE_ENTRY_FROM_SLIST(cache_ptr, entry_ptr, during_flush, FAIL);
 
         /* mark the entry as clean and update the index for
          * entry clean.  Also, call the clear callback
@@ -2531,7 +2533,7 @@ H5C_mark_entry_clean(void *_thing)
         if (was_dirty)
             H5C__UPDATE_INDEX_FOR_ENTRY_CLEAN(cache_ptr, entry_ptr, FAIL);
         if (entry_ptr->in_slist)
-            H5C__REMOVE_ENTRY_FROM_SLIST(cache_ptr, entry_ptr, FAIL);
+            H5C__REMOVE_ENTRY_FROM_SLIST(cache_ptr, entry_ptr, false, FAIL);
 
         /* Update stats for entry being marked clean */
         H5C__UPDATE_STATS_FOR_CLEAR(cache_ptr, entry_ptr);
@@ -2723,7 +2725,7 @@ H5C_move_entry(H5C_t *cache_ptr, const H5C_class_t *type, haddr_t old_addr, hadd
 
         if (entry_ptr->in_slist) {
             assert(cache_ptr->slist_ptr);
-            H5C__REMOVE_ENTRY_FROM_SLIST(cache_ptr, entry_ptr, FAIL);
+            H5C__REMOVE_ENTRY_FROM_SLIST(cache_ptr, entry_ptr, false, FAIL);
         } /* end if */
     }     /* end if */
 

@@ -191,7 +191,6 @@ static const H5E_msg_t H5E_OPENERROR_msg_s = {false, "Can't open directory or fi
 
 /* RESOURCE: Resource errors */
 static const H5E_msg_t H5E_ALREADYEXISTS_msg_s = {false, "Object already exists", H5E_MINOR, &H5E_err_cls_s};
-static const H5E_msg_t H5E_BADRC_msg_s = {false, "Reference count is incorrect", H5E_MINOR, &H5E_err_cls_s};
 static const H5E_msg_t H5E_CANTALLOC_msg_s = {false, "Can't allocate space", H5E_MINOR, &H5E_err_cls_s};
 static const H5E_msg_t H5E_CANTCOPY_msg_s = {false, "Unable to copy object", H5E_MINOR, &H5E_err_cls_s};
 static const H5E_msg_t H5E_CANTFREE_msg_s = {false, "Unable to free object", H5E_MINOR, &H5E_err_cls_s};

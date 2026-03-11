@@ -963,9 +963,6 @@
  *
  * Skip list modification macros
  *
- * Note: These macros are set up so that H5C_DO_SANITY_CHECKS and
- *       H5C_DO_SLIST_SANITY_CHECKS can be selected independently.
- *
  **************************************************************************/
 
 #ifdef H5C_DO_SLIST_SANITY_CHECKS
@@ -1011,6 +1008,9 @@
  * Purpose:     Insert a cache entry into a cache's skip list.  Updates
  *              the associated length and size fields.
  *
+ * Note:        This macro is set up so that H5C_DO_SANITY_CHECKS and
+ *              H5C_DO_SLIST_SANITY_CHECKS can be selected independently.
+ *
  *-------------------------------------------------------------------------
  */
 
@@ -1033,7 +1033,8 @@
             if (H5SL_insert((cache_ptr)->slist_ptr, entry_ptr, &((entry_ptr)->addr)) < 0)                    \
                 HGOTO_ERROR(H5E_CACHE, H5E_BADVALUE, (fail_val), "can't insert entry in skip list");         \
                                                                                                              \
-            (entry_ptr)->in_slist = true;                                                                    \
+            (entry_ptr)->in_slist      = true;                                                               \
+            (cache_ptr)->slist_changed = true;                                                               \
             (cache_ptr)->slist_len++;                                                                        \
             (cache_ptr)->slist_size += (entry_ptr)->size;                                                    \
             ((cache_ptr)->slist_ring_len[(entry_ptr)->ring])++;                                              \
@@ -1059,13 +1060,11 @@
  *-------------------------------------------------------------------------
  */
 
-#define H5C__REMOVE_ENTRY_FROM_SLIST(cache_ptr, entry_ptr, fail_val)                                         \
+#define H5C__REMOVE_ENTRY_FROM_SLIST(cache_ptr, entry_ptr, during_flush, fail_val)                           \
     do {                                                                                                     \
         assert(cache_ptr);                                                                                   \
                                                                                                              \
         if ((cache_ptr)->slist_enabled) {                                                                    \
-            bool checked_out_node_was_returned = false;                                                      \
-                                                                                                             \
             assert(entry_ptr);                                                                               \
             assert(!(entry_ptr)->is_read_only);                                                              \
             assert((entry_ptr)->ro_ref_count == 0);                                                          \
@@ -1078,19 +1077,12 @@
             assert((cache_ptr)->slist_ring_size[(entry_ptr)->ring] <= (cache_ptr)->slist_size);              \
             assert((cache_ptr)->slist_size >= (entry_ptr)->size);                                            \
                                                                                                              \
-            if (H5SL_remove((cache_ptr)->slist_ptr, &(entry_ptr)->addr, true,                                \
-                            &checked_out_node_was_returned) != (entry_ptr))                                  \
+            if (H5SL_remove((cache_ptr)->slist_ptr, &(entry_ptr)->addr) != (entry_ptr))                      \
                 HGOTO_ERROR(H5E_CACHE, H5E_BADVALUE, (fail_val), "can't delete entry from skip list");       \
                                                                                                              \
-            /* Check for whether to restart the scan */                                                      \
-            if (checked_out_node_was_returned) {                                                             \
-                if ((cache_ptr)->slist_scan_in_progress)                                                     \
-                    (cache_ptr)->slist_scan_next_addr_removed = true;                                        \
-                else                                                                                         \
-                    HGOTO_ERROR(H5E_CACHE, H5E_INCONSISTENTSTATE, (fail_val),                                \
-                                "returned a checked out skip list node when not iterating skip list");       \
-            }                                                                                                \
             assert((cache_ptr)->slist_len > 0);                                                              \
+            if (!(during_flush))                                                                             \
+                (cache_ptr)->slist_changed = true;                                                           \
             (cache_ptr)->slist_len--;                                                                        \
             assert((cache_ptr)->slist_size >= (entry_ptr)->size);                                            \
             (cache_ptr)->slist_size -= (entry_ptr)->size;                                                    \
@@ -2055,14 +2047,12 @@ typedef struct H5C_tag_info_t {
  *        operations on the skip list proceed as usual, and all dirty
  *        entries in the metadata cache must be listed in the skip list.
  *
- * slist_scan_in_progress: Boolean flag that indidates that a scan over the
- *        contents of the skip list is in progress.  This is used to determine
- *        when and at what address to restart a scan, when inserting and
- *        removing entries in the skip list during a scan.  Modifications of
- *        the skip list can occur in pre-serialize or serialize callbacks.
- *
- * slist_scan_next_addr_removed: Boolean flag that indidates that the next
- *        node to examine in the skip list has been removed from the skip list.
+ * slist_changed: Boolean flag used to indicate whether the contents of
+ *        the skip list has changed since the last time this flag was
+ *        reset.  This is used in the cache flush code to detect
+ *        conditions in which pre-serialize or serialize callbacks
+ *        have modified the skip list -- which obliges us to restart
+ *        the scan of the skip list from the beginning.
  *
  * slist_len: Number of entries currently in the skip list. Used to
  *        maintain a sorted list of dirty entries in the cache.
@@ -2905,10 +2895,9 @@ struct H5C_t {
     H5C_cache_entry_t *last_entry_removed_ptr;
     H5C_cache_entry_t *entry_watched_for_removal;
 
-    /* Fields for maintaining list of in-order entries, used when flushing */
+    /* Fields for maintaining list of in-order entries, for flushing */
     bool     slist_enabled;
-    bool     slist_scan_in_progress;
-    bool     slist_scan_next_addr_removed;
+    bool     slist_changed;
     uint32_t slist_len;
     size_t   slist_size;
     uint32_t slist_ring_len[H5C_RING_NTYPES];

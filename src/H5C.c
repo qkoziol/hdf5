@@ -104,17 +104,17 @@ H5FL_DEFINE_STATIC(H5C_t);
 /*-------------------------------------------------------------------------
  * Function:    H5C_create
  *
- * Purpose:     Allocate, initialize, and return the address of a new instance
- *              of H5C_t.
+ * Purpose:     Allocate, initialize, and return the address of a new
+ *        instance of H5C_t.
  *
- *              In general, the max_cache_size parameter must be positive, and
- *              the min_clean_size parameter must lie in the closed interval
- *              [0, max_cache_size].
+ *        In general, the max_cache_size parameter must be positive,
+ *        and the min_clean_size parameter must lie in the closed
+ *        interval [0, max_cache_size].
  *
- *              The check_write_permitted parameter must either be NULL, or
- *              point to a function of type H5C_write_permitted_func_t.
- *              If it is NULL, the cache will use the write_permitted
- *              flag to determine whether writes are permitted.
+ *        The check_write_permitted parameter must either be NULL,
+ *        or point to a function of type H5C_write_permitted_func_t.
+ *        If it is NULL, the cache will use the write_permitted
+ *        flag to determine whether writes are permitted.
  *
  * Return:      Success:        Pointer to the new instance.
  *              Failure:        NULL
@@ -151,10 +151,16 @@ H5C_create(size_t max_cache_size, size_t min_clean_size, int max_type_id,
     if (NULL == (cache_ptr->slist_ptr = H5SL_create(H5SL_TYPE_HADDR, NULL)))
         HGOTO_ERROR(H5E_CACHE, H5E_CANTCREATE, NULL, "can't create skip list");
 
+    cache_ptr->tag_list = NULL;
+
+    /* If we get this far, we should succeed.  Go ahead and initialize all
+     * the fields.
+     */
+
+    cache_ptr->flush_in_progress = false;
+
     if (NULL == (cache_ptr->log_info = (H5C_log_info_t *)H5MM_calloc(sizeof(H5C_log_info_t))))
         HGOTO_ERROR(H5E_CACHE, H5E_CANTALLOC, NULL, "memory allocation failed");
-
-    /* If we get this far we should succeed, initialize all the non-zero fields */
 
     cache_ptr->aux_ptr = aux_ptr;
 
@@ -170,9 +176,103 @@ H5C_create(size_t max_cache_size, size_t min_clean_size, int max_type_id,
 
     cache_ptr->log_flush = log_flush;
 
-    cache_ptr->evictions_enabled = true;
+    cache_ptr->evictions_enabled      = true;
+    cache_ptr->close_warning_received = false;
+
+    cache_ptr->index_len        = 0;
+    cache_ptr->index_size       = (size_t)0;
+    cache_ptr->clean_index_size = (size_t)0;
+    cache_ptr->dirty_index_size = (size_t)0;
+
+    for (i = 0; i < H5C_RING_NTYPES; i++) {
+        cache_ptr->index_ring_len[i]        = 0;
+        cache_ptr->index_ring_size[i]       = (size_t)0;
+        cache_ptr->clean_index_ring_size[i] = (size_t)0;
+        cache_ptr->dirty_index_ring_size[i] = (size_t)0;
+
+        cache_ptr->slist_ring_len[i]  = 0;
+        cache_ptr->slist_ring_size[i] = (size_t)0;
+    } /* end for */
+
+    for (i = 0; i < H5C__HASH_TABLE_LEN; i++)
+        (cache_ptr->index)[i] = NULL;
+
+    cache_ptr->il_len  = 0;
+    cache_ptr->il_size = (size_t)0;
+    cache_ptr->il_head = NULL;
+    cache_ptr->il_tail = NULL;
+
+    /* Tagging Field Initializations */
+    cache_ptr->ignore_tags     = false;
+    cache_ptr->num_objs_corked = 0;
+
+    /* slist field initializations */
+    cache_ptr->slist_enabled = false;
+    cache_ptr->slist_changed = false;
+    cache_ptr->slist_len     = 0;
+    cache_ptr->slist_size    = (size_t)0;
+
+    /* slist_ring_len, slist_ring_size, and
+     * slist_ptr initialized above.
+     */
+
+#ifdef H5C_DO_SANITY_CHECKS
+    cache_ptr->slist_len_increase  = 0;
+    cache_ptr->slist_size_increase = 0;
+#endif /* H5C_DO_SANITY_CHECKS */
+
+    cache_ptr->entries_removed_counter   = 0;
+    cache_ptr->last_entry_removed_ptr    = NULL;
+    cache_ptr->entry_watched_for_removal = NULL;
+
+    cache_ptr->pl_len      = 0;
+    cache_ptr->pl_size     = (size_t)0;
+    cache_ptr->pl_head_ptr = NULL;
+    cache_ptr->pl_tail_ptr = NULL;
+
+    cache_ptr->pel_len      = 0;
+    cache_ptr->pel_size     = (size_t)0;
+    cache_ptr->pel_head_ptr = NULL;
+    cache_ptr->pel_tail_ptr = NULL;
+
+    cache_ptr->LRU_list_len  = 0;
+    cache_ptr->LRU_list_size = (size_t)0;
+    cache_ptr->LRU_head_ptr  = NULL;
+    cache_ptr->LRU_tail_ptr  = NULL;
+
+#ifdef H5_HAVE_PARALLEL
+    cache_ptr->coll_list_len   = 0;
+    cache_ptr->coll_list_size  = (size_t)0;
+    cache_ptr->coll_head_ptr   = NULL;
+    cache_ptr->coll_tail_ptr   = NULL;
+    cache_ptr->coll_write_list = NULL;
+#endif /* H5_HAVE_PARALLEL */
+
+#if H5C_MAINTAIN_CLEAN_AND_DIRTY_LRU_LISTS
+    cache_ptr->cLRU_list_len  = 0;
+    cache_ptr->cLRU_list_size = (size_t)0;
+    cache_ptr->cLRU_head_ptr  = NULL;
+    cache_ptr->cLRU_tail_ptr  = NULL;
+
+    cache_ptr->dLRU_list_len  = 0;
+    cache_ptr->dLRU_list_size = (size_t)0;
+    cache_ptr->dLRU_head_ptr  = NULL;
+    cache_ptr->dLRU_tail_ptr  = NULL;
+#endif /* H5C_MAINTAIN_CLEAN_AND_DIRTY_LRU_LISTS */
+
+    cache_ptr->size_increase_possible        = false;
+    cache_ptr->flash_size_increase_possible  = false;
+    cache_ptr->flash_size_increase_threshold = 0;
+    cache_ptr->size_decrease_possible        = false;
+    cache_ptr->resize_enabled                = false;
+    cache_ptr->cache_full                    = false;
+    cache_ptr->size_decreased                = false;
+    cache_ptr->resize_in_progress            = false;
+    cache_ptr->msic_in_progress              = false;
 
     cache_ptr->resize_ctl.version            = H5C__CURR_AUTO_SIZE_CTL_VER;
+    cache_ptr->resize_ctl.rpt_fcn            = NULL;
+    cache_ptr->resize_ctl.set_initial_size   = false;
     cache_ptr->resize_ctl.initial_size       = H5C__DEF_AR_INIT_SIZE;
     cache_ptr->resize_ctl.min_clean_fraction = H5C__DEF_AR_MIN_CLEAN_FRAC;
     cache_ptr->resize_ctl.max_size           = H5C__DEF_AR_MAX_SIZE;
@@ -198,24 +298,64 @@ H5C_create(size_t max_cache_size, size_t min_clean_size, int max_type_id,
     cache_ptr->resize_ctl.apply_empty_reserve    = true;
     cache_ptr->resize_ctl.empty_reserve          = H5C__DEF_AR_EMPTY_RESERVE;
 
+    cache_ptr->epoch_markers_active = 0;
+
     /* no need to initialize the ring buffer itself */
     cache_ptr->epoch_marker_ringbuf_first = 1;
+    cache_ptr->epoch_marker_ringbuf_last  = 0;
+    cache_ptr->epoch_marker_ringbuf_size  = 0;
+
+    /* Initialize all epoch marker entries' fields to zero/false/NULL */
+    memset(cache_ptr->epoch_markers, 0, sizeof(cache_ptr->epoch_markers));
 
     /* Set non-zero/false/NULL fields for epoch markers */
     for (i = 0; i < H5C__MAX_EPOCH_MARKERS; i++) {
-        cache_ptr->epoch_markers[i].addr = (haddr_t)i;
-        cache_ptr->epoch_markers[i].type = H5AC_EPOCH_MARKER;
+        ((cache_ptr->epoch_markers)[i]).addr = (haddr_t)i;
+        ((cache_ptr->epoch_markers)[i]).type = H5AC_EPOCH_MARKER;
     }
 
     /* Initialize cache image generation on file close related fields.
      * Initial value of image_ctl must match H5C__DEFAULT_CACHE_IMAGE_CTL
      * in H5Cprivate.h.
      */
-    cache_ptr->image_ctl.version      = H5C__CURR_CACHE_IMAGE_CTL_VER;
-    cache_ptr->image_ctl.entry_ageout = -1;
-    cache_ptr->image_ctl.flags        = H5C_CI__ALL_FLAGS;
+    cache_ptr->image_ctl.version            = H5C__CURR_CACHE_IMAGE_CTL_VER;
+    cache_ptr->image_ctl.generate_image     = false;
+    cache_ptr->image_ctl.save_resize_status = false;
+    cache_ptr->image_ctl.entry_ageout       = -1;
+    cache_ptr->image_ctl.flags              = H5C_CI__ALL_FLAGS;
 
-    cache_ptr->image_addr = HADDR_UNDEF;
+    cache_ptr->serialization_in_progress = false;
+    cache_ptr->load_image                = false;
+    cache_ptr->image_loaded              = false;
+    cache_ptr->delete_image              = false;
+    cache_ptr->image_addr                = HADDR_UNDEF;
+    cache_ptr->image_len                 = 0;
+    cache_ptr->image_data_len            = 0;
+
+    cache_ptr->entries_loaded_counter         = 0;
+    cache_ptr->entries_inserted_counter       = 0;
+    cache_ptr->entries_relocated_counter      = 0;
+    cache_ptr->entry_fd_height_change_counter = 0;
+
+    cache_ptr->num_entries_in_image = 0;
+    cache_ptr->image_entries        = NULL;
+    cache_ptr->image_buffer         = NULL;
+
+    /* initialize free space manager related fields: */
+    cache_ptr->rdfsm_settled = false;
+    cache_ptr->mdfsm_settled = false;
+
+    if (H5C_reset_cache_hit_rate_stats(cache_ptr) < 0)
+        /* this should be impossible... */
+        HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, NULL, "H5C_reset_cache_hit_rate_stats failed");
+
+    H5C_stats__reset(cache_ptr);
+
+    cache_ptr->prefix[0] = '\0'; /* empty string */
+
+#ifndef NDEBUG
+    cache_ptr->get_entry_ptr_from_addr_counter = 0;
+#endif
 
     /* Set return value */
     ret_value = cache_ptr;
