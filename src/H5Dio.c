@@ -997,19 +997,20 @@ H5D__dset_ioinfo_init(H5D_dset_io_info_t *dset_info, H5D_storage_t *store)
     FUNC_ENTER_PACKAGE_NOERR
 
     /* check args */
-    assert(dset);
-    assert(dset->oloc.file);
+    assert(dset_info);
+    assert(dset_info->dset);
+    assert(dset_info->dset->oloc.file);
     assert(dset_info->type_info.tpath);
 
     /* Set up "normal" I/O fields */
     dset_info->store = store;
 
     /* Set I/O operations to initial values */
-    dset_info->layout_ops = *dset->shared->layout.ops;
+    dset_info->layout_ops = *dset_info->dset->shared->layout.ops;
 
     /* Set the "high-level" I/O operations for the dataset */
-    dset_info->io_ops.multi_read  = dset->shared->layout.ops->ser_read;
-    dset_info->io_ops.multi_write = dset->shared->layout.ops->ser_write;
+    dset_info->io_ops.multi_read  = dset_info->dset->shared->layout.ops->ser_read;
+    dset_info->io_ops.multi_write = dset_info->dset->shared->layout.ops->ser_write;
 
     /* Set the I/O operations for reading/writing single blocks on disk */
     if (dset_info->type_info.is_xform_noop && dset_info->type_info.is_conv_noop) {
